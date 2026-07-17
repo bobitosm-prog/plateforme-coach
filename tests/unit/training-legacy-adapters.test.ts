@@ -184,6 +184,44 @@ describe('legacy Training adapters', () => {
     expect(exercises[1].prescriptions[0].target).toEqual({ kind: 'distance', minMeters: 100 })
   })
 
+  it('keeps English weekday labels and stable ordering in array programs', () => {
+    const result = adaptCustomProgram({
+      name: 'English weekdays',
+      days: [
+        { weekday: 'Monday', exercises: [{ name: 'Squat', sets: 1, reps: 8, rest: '2min' }] },
+        { weekday: 'Tuesday', is_rest: true, exercises: [] },
+      ],
+    }, clientContext)
+    const program = converted(result)
+    expect(program.weeks[0].days.map(day => ({ index: day.index, label: day.label, kind: day.kind }))).toEqual([
+      { index: 0, label: 'Monday', kind: 'training' },
+      { index: 1, label: 'Tuesday', kind: 'rest' },
+    ])
+  })
+
+  it('reports p1/p2/p3 phases as deliberately unmapped', () => {
+    const result = adaptCustomProgram({
+      name: 'Periodized legacy',
+      phases: [{ name: 'p1' }, { name: 'p2' }, { name: 'p3' }],
+      days: [{
+        name: 'Day',
+        exercises: [{ name: 'Squat', sets: 2, reps: 8, rest: 90, phases: { p1: { reps: 8 }, p2: { reps: 10 }, p3: { reps: 12 } } }],
+      }],
+    }, clientContext)
+    converted(result)
+    expect(result.status === 'converted' && result.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'unmapped_field', path: 'phases' }),
+      expect.objectContaining({ code: 'unmapped_field', path: expect.stringMatching(/\.phases$/) }),
+    ]))
+    expect(result.status === 'converted' && result.unmappedFields).toContain('phases')
+  })
+
+  it('produces byte-for-byte stable values and warnings for identical contexts', () => {
+    const first = adaptClientAssignment(clientWeekdaysFixture, { ...clientContext, id: 'stable', coachId: 'coach-1' })
+    const second = adaptClientAssignment(structuredClone(clientWeekdaysFixture), { ...clientContext, id: 'stable', coachId: 'coach-1' })
+    expect(second).toEqual(first)
+  })
+
   it('does not mutate any input fixture', () => {
     const input = structuredClone(customProgramFixture)
     const before = structuredClone(input)

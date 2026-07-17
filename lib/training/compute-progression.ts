@@ -27,13 +27,18 @@ export type ProgressionResult = {
  *  "10" → 10, "10-12" → 10 (plancher), "AMRAP" → null, null → null */
 export function parseRepsTarget(input: unknown): number | null {
   if (input == null) return null
-  if (typeof input === 'number') return input > 0 ? input : null
+  if (typeof input === 'number') return Number.isFinite(input) && Number.isInteger(input) && input > 0 ? input : null
   const s = String(input).trim()
   if (!s) return null
-  const rangeMatch = s.match(/^(\d+)\s*[-–]\s*\d+$/)
-  if (rangeMatch) return parseInt(rangeMatch[1], 10) || null
-  const n = parseInt(s, 10)
-  return n > 0 ? n : null
+  const rangeMatch = s.match(/^(\d+)\s*[-–]\s*(\d+)$/)
+  if (rangeMatch) {
+    const min = Number(rangeMatch[1])
+    const max = Number(rangeMatch[2])
+    return min > 0 && max >= min ? min : null
+  }
+  if (!/^\d+$/.test(s)) return null
+  const n = Number(s)
+  return Number.isFinite(n) && n > 0 ? n : null
 }
 
 /** Increment intelligent par groupe musculaire.
@@ -43,7 +48,7 @@ export function getIncrementForExercise(name: string): number {
   if (/squat|deadlift|souleve de terre|hip thrust|good morning/i.test(n)) return 5
   if (/bench|developpe couche|developpe militaire|overhead press|push press|incline press/i.test(n)) return 2.5
   if (/\brow\b|tirage|pull-?up|traction|chin-?up/i.test(n)) return 2.5
-  if (/curl|extension|lateral|kickback|fly|ecarte|front raise|rear delt|reverse fly/i.test(n)) return 1.25
+  if (/curl|extension|lateral|élévation|elevation|kickback|fly|ecarte|front raise|rear delt|reverse fly/i.test(n)) return 1.25
   return 2.5
 }
 
@@ -78,7 +83,7 @@ export function computeProgression(
   const refWeight = setsAtTarget.length > 0
     ? Math.max(...setsAtTarget.map(s => s.weight))
     : Math.max(...lastSession.map(s => s.weight))
-  if (refWeight <= 0) return null
+  if (!Number.isFinite(refWeight) || refWeight <= 0) return null
 
   const step = getIncrementForExercise(exerciseName)
   const allReachedTarget = lastSession.every(s => s.reps >= targetReps)

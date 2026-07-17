@@ -152,6 +152,9 @@ export function convertExercise(
   }))
   const technique = readString(input, ['technique'], `${path}.technique`, warnings)
   const techniqueDetails = readString(input, ['technique_details'], `${path}.technique_details`, warnings)
+  if (input.phases !== undefined && input.phases !== null) {
+    warnings.push({ code: 'unmapped_field', path: `${path}.phases`, detail: 'Phases exercice legacy non converties' })
+  }
   return {
     value: {
       id: typeof input.id === 'string' ? input.id : `${path}:exercise:${index}`,

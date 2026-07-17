@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   parseRepsTarget,
   computeProgression,
-  getIncrementForExercise,
   roundToStep,
   type PrevSessionSet,
 } from '../../lib/training/compute-progression'

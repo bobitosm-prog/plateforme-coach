@@ -39,6 +39,10 @@ function programFromDays(
     'id', 'name', 'program_name', 'description', 'days', 'program', 'split', 'duration', 'tags', 'source',
     'created_at', 'updated_at', 'is_template', 'is_active', 'total_weeks', 'current_week', 'phases', 'scheduled', 'start_date',
   ])
+  for (const field of ['split', 'duration', 'total_weeks', 'current_week', 'phases', 'scheduled', 'start_date']) {
+    if (raw[field] !== undefined && raw[field] !== null && !unmappedFields.includes(field)) unmappedFields.push(field)
+  }
+  unmappedFields.sort()
   for (const field of unmappedFields) {
     warnings.push({ code: 'unmapped_field', path: field, detail: 'Champ racine conservé seulement dans la source legacy' })
   }

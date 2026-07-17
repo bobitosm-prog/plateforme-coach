@@ -1,7 +1,7 @@
 /**
  * Equipment Normalization Helper — Phase 6B.0
  *
- * Maps the 43 legacy textual values in exercises_db.equipment to 6 strict enum values.
+ * Maps the 44 legacy textual values in exercises_db.equipment to 6 strict enum values.
  * Used by:
  *   - SQL migration backfill (one-shot)
  *   - Future writes to exercises_db (if user_id-created exos via NutritionPreferences or admin)
@@ -69,12 +69,12 @@ export function isHomeFriendly(equipment: Equipment): boolean {
  */
 export function getLegacyValuesForEquipment(equipment: Equipment): string[] {
   return Object.entries(EQUIPMENT_LEGACY_MAP)
-    .filter(([_, eq]) => eq === equipment)
+    .filter(([, eq]) => eq === equipment)
     .map(([legacy]) => legacy)
 }
 
 /**
- * Complete legacy → normalized mapping (43 → 6).
+ * Complete legacy → normalized mapping (44 → 6).
  * Generated from audit of 30 mai 2026 on exercises_db.
  * Each entry validated against actual exercise names visible at audit time.
  */
@@ -105,6 +105,7 @@ const EQUIPMENT_LEGACY_MAP: Record<string, Equipment> = {
 
   // === band (3 exos) ===
   'Cordes': 'band',
+  'Battle Ropes': 'band',
   'Roue abdominale': 'band',
 
   // === bodyweight (≈27 exos après normalisation) ===

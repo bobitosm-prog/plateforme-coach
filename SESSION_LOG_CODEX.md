@@ -4995,3 +4995,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Renforcer les tests de progression et normalisation.
+
+## Entrée — 2026-07-17 — Renforcement progression et normalisation Training
+
+### Travail effectué
+
+- Audit de `compute-progression`, `program-week`, `equipment-normalize`, `build-program-params`, du modèle canonique et des adaptateurs legacy.
+- Ajout de tests de limites pour le parsing des répétitions, les increments par famille d'exercice, les valeurs de charge non finies, accélérations RIR, deload et stagnation.
+- Ajout de tests pour les équipements legacy, mappings inverses, classification home-friendly, paramètres de génération et overrides sans mutation.
+- Ajout de tests déterministes du calcul de semaine avec horloge contrôlée, dates avant/après programme et entrées invalides.
+- Extension des tests d'adaptateurs aux weekdays anglais, phases `p1/p2/p3` non converties, stabilité de sortie et prescriptions durée/distance/repos.
+- Ajout préalable de tests de régression rouges, puis corrections bornées aux fonctions pures concernées.
+
+### Tâches cochées
+
+- Phase 3 : « Renforcer les tests de progression et normalisation » — terminée.
+- Progression Phase 3 : 3/27 → 4/27 tâches.
+
+### Décisions prises
+
+- `parseRepsTarget` accepte uniquement un entier positif exact ou une plage ordonnée ; les suffixes arbitraires, plages inversées et nombres non finis sont rejetés.
+- Une charge de référence non finie ne produit jamais une recommandation de progression.
+- Les noms français accentués comme « Élévations » suivent le pas isolation de 1,25 kg.
+- `getEffectiveWeek` revient au compteur stocké, ou à 1, lorsqu'une date ou une borne de semaine est invalide.
+- « Battle Ropes » suit le mapping `band` déjà annoncé par la documentation du module.
+- Les phases legacy racine et exercice produisent désormais des warnings `unmapped_field` ; elles ne sont toujours pas converties silencieusement.
+
+### Problèmes rencontrés
+
+- Le premier passage a confirmé que `parseInt` acceptait `10abc` et une plage inversée comme cibles valides.
+- Une charge `NaN` pouvait produire une recommandation `progress` avec un poids `NaN`.
+- Une date de démarrage invalide produisait une semaine effective `NaN`.
+- Le commentaire de normalisation annonçait « Battle Ropes » → `band`, mais la valeur manquait dans le mapping.
+- Les phases `p1/p2/p3` étaient ignorées par les adaptateurs sans warning structuré.
+
+### Risques ou dette restante
+
+- Les règles RIR restent marquées « à valider par un coach » dans le code métier.
+- Les phases `p1/p2/p3` sont détectées mais toujours non converties.
+- Les tests reposent sur des fixtures synthétiques et ne mesurent pas encore les variantes réelles d'un environnement dédié.
+- Les repositories Training, matrices RLS et E2E d'exécution restent à construire.
+- La logique de génération Anthropic elle-même n'est pas appelée : les tests restent volontairement purs et sans réseau.
+
+### Tests exécutés
+
+- Tests Training ciblés : 5 fichiers, 86/86 tests verts.
+- Suite Vitest complète : 65 fichiers, 727 tests actifs verts et 3 `todo`.
+- Inventaire `vitest list tests/unit` : 730 tests déclarés, dont 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les modules et tests Training concernés : vert, sans warning.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucun fichier `app/`, route, E2E, migration ou policy RLS modifié.
+- Aucun accès réseau ni service distant.
+
+### Mesures avant/après
+
+- Tests actifs globaux : 696 → 727.
+- Tests ciblés progression/normalisation/adaptateurs : 86 verts.
+- Régressions pures corrigées : parsing répétitions, poids non fini, semaine invalide, classification accentuée, mapping Battle Ropes et warnings de phases.
+- Tâches Phase 3 terminées : 3/27 → 4/27.
+- Progression globale : 46/138 → 47/138 tâches, soit environ 34 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les repositories programmes, séances et exercices.
