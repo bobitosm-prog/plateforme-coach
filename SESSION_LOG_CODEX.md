@@ -4741,3 +4741,66 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Documenter le cycle de vie des abonnements.
+
+## Entrée — 2026-07-17 — Cycle de vie des abonnements et clôture de Phase 6
+
+### Travail effectué
+
+- Consolidation documentaire des deux cycles Billing : abonnement plateforme (client mensuel/annuel, lifetime ponctuel et Coach Pro) et accompagnement coach/client via Connect.
+- Inventaire des états Stripe, projections legacy, états webhook et états seulement cibles, sans les présenter comme tous persistés.
+- Description des transitions checkout, relecture Stripe, invoice payée, mise à jour/annulation, paiement tardif, ordre différent, replay et réconciliation.
+- Cartographie des autorités : Stripe, session serveur, relation active, claims webhook, `profiles`, `payments`, entitlements futurs et cache non autoritaire.
+- Documentation explicite de l'indépendance métier des cycles et de sa limite actuelle : les deux contrats partagent encore des champs legacy de `profiles`.
+- Ajout d'une procédure de rollback/dégradation qui maintient le webhook des subscriptions existantes et interdit le retour aux autorités navigateur ou aux anciennes permissions RLS.
+- Création de `docs/BILLING_SUBSCRIPTION_LIFECYCLE.md` et ajout d'un lien depuis le modèle métier Billing.
+
+### Tâches cochées
+
+- Phase 6 : « Documenter le cycle de vie des abonnements » — terminée.
+- Progression Phase 6 : 9/10 → 10/10 tâches ; Phase 6 clôturée.
+- Phase active suivante : Phase 3 — Domaine Training et exécution de séance.
+
+### Décisions prises
+
+- `trialing` Stripe peut accorder l'accès après relecture, mais reste projeté comme `active` dans le modèle legacy actuel.
+- `invited`, `beta` et `lifetime` sont des sources d'accès legacy, pas des subscriptions récurrentes interchangeables.
+- Les statuts Stripe autres que `active` ou `trialing`, y compris inconnus, sont fail-closed pour l'octroi d'accès.
+- Le paiement et l'accès restent deux faits séparés, y compris lors d'une invoice ou d'un checkout tardif.
+- La future séparation persistée devra suivre expand → comparaison/double lecture → bascule → contract ; aucune table implicite n'est déclarée livrée.
+
+### Problèmes rencontrés
+
+- Le schéma legacy ne matérialise pas deux subscriptions indépendantes : Coach Pro et accompagnement coach/client traversent encore des champs partagés de `profiles`.
+- Les périodes locales de renouvellement sont estimées à 30/365 jours au lieu d'utiliser systématiquement les bornes Stripe.
+- Certains états sont acceptés ou propagés depuis Stripe sans transition produit dédiée ; la documentation distingue donc état fournisseur, projection locale et effet d'accès.
+
+### Risques ou dette restante
+
+- `setup-products` reste non idempotent.
+- Les mutations webhook multi-tables ne sont pas transactionnelles.
+- Aucun entitlement explicite n'est persisté.
+- Refunds, disputes, annulations planifiées et reprises après impayé restent incomplets.
+- La réconciliation ne corrige rien automatiquement et sa vérification sans divergence en préproduction reste une étape opérationnelle avant déploiement.
+- Le faux Stripe local ne couvre pas toute la sémantique du fournisseur réel.
+
+### Tests exécutés
+
+- Aucun test applicatif exécuté : tranche strictement documentaire.
+- `git diff --check` vert.
+- Vérification automatisée des liens internes des documents modifiés : verte.
+- Contrôle de périmètre : seuls `docs/`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` sont modifiés ; aucun fichier `app/`, `lib/`, `tests/`, `e2e/` ou `supabase/migrations` touché.
+
+### Mesures avant/après
+
+- Cycles d'abonnement consolidés dans un document opérationnel : 0 → 2.
+- Tâches Phase 6 terminées : 9/10 → 10/10.
+- Progression globale : 42/138 → 43/138 tâches, soit environ 31 %.
+- Phase active : Phase 6 → Phase 3.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Cartographier les formats de programme existants.

@@ -2,6 +2,8 @@
 
 > Statut : contrat métier accepté pour guider la Phase 6. Ce document décrit l'état observé et la cible ; il ne crée ni table, ni migration, ni nouveau comportement.
 
+Le comportement effectivement livré et ses limites de projection sont consolidés dans le [cycle de vie des abonnements](BILLING_SUBSCRIPTION_LIFECYCLE.md).
+
 ## 1. Périmètre et vocabulaire
 
 Billing transforme un contrat commercial vérifié en droits produit explicites. Le domaine sépare quatre faits qui sont encore partiellement confondus dans `profiles` :

@@ -4,7 +4,7 @@
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
 > Dernière mise à jour : **17 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 6 — Billing et subscriptions**.
+> Phase active : **Phase 3 — Domaine Training et exécution de séance**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -454,7 +454,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : En cours — 9 tâches sur 10 terminées ; services Stripe extraits et routes publiques réduites à des adaptateurs HTTP documentés**
+**Statut : Phase 6 terminée — 10 tâches sur 10 ; domaine, services, contrats, réconciliation, robustesse webhook et cycle de vie documentés**
 
 ### Pourquoi
 
@@ -473,7 +473,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 | [x] [Créer la réconciliation Stripe/base](docs/BILLING_RECONCILIATION.md) | 3 j | Élevée | Élevé | Critique | Services Billing |
 | [x] [Tester replay, concurrence et événements désordonnés](docs/BILLING_WEBHOOK_ORDERING.md) | 3 j | Élevée | Faible | Critique | Mocks Stripe |
 | [x] [Réduire les routes Stripe à des adaptateurs HTTP](docs/BILLING_HTTP_ADAPTERS.md) | 2 j | Moyenne | Moyen | Élevé | Services complets |
-| [ ] Documenter le cycle de vie des abonnements | 1 j | Moyenne | Faible | Élevé | Modèle final |
+| [x] [Documenter le cycle de vie des abonnements](docs/BILLING_SUBSCRIPTION_LIFECYCLE.md) | 1 j | Moyenne | Faible | Élevé | Modèle final |
 
 ### Définition de terminé
 
@@ -741,7 +741,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈30 % (42/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈31 % (43/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 3 | 🔴 |
