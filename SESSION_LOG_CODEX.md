@@ -4804,3 +4804,63 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Cartographier les formats de programme existants.
+
+## Entrée — 2026-07-17 — Cartographie des formats Training existants
+
+### Travail effectué
+
+- Audit des migrations, types Supabase générés, seeds, scripts, routes, hooks, composants et tests qui produisent ou consomment des programmes, séances, exercices et données de progression.
+- Création de `docs/TRAINING_FORMATS_INVENTORY.md` avec la cartographie des tables, des formats JSON persistés, des formats IA/tableur, des adaptateurs implicites et des historiques d'exécution.
+- Description séparée des modèles coach `training_programs`, affectations `client_programs`, programmes personnels `custom_programs`, catalogues d'exercices, calendrier, exécutions détaillées, complétions d'affectation et records.
+- Inventaire des divergences de noms, types primitifs, colonnes utilisées hors schéma canonique, duplications et accès Supabase directs.
+- Revue des policies Training existantes et consignation des risques liés aux relations coach historiques ou inactives, sans modification RLS.
+
+### Tâches cochées
+
+- Phase 3 : « Cartographier les formats de programme existants » — terminée.
+- Progression Phase 3 : 0/27 → 1/27 tâche.
+
+### Décisions prises
+
+- La cartographie distingue les lignes SQL, leurs colonnes JSON libres et les projections runtime ; aucun format legacy n'est déclaré canonique.
+- `training_programs.program`, `client_programs.program` et `custom_programs.days` sont traités comme trois contrats distincts tant qu'un modèle commun et ses adaptateurs ne sont pas définis.
+- Les tableaux de jours, objets hebdomadaires français et enveloppes `{ days, split, duration }` doivent rester lisibles pendant la transition future.
+- `completed_sessions` et `workout_sessions` représentent deux historiques différents ; leur fusion éventuelle nécessite un contrat explicite plutôt qu'un renommage mécanique.
+- Les écarts de colonnes ne doivent pas être corrigés par ajout opportuniste avant audit de compatibilité et stratégie de migration.
+
+### Problèmes rencontrés
+
+- Les colonnes JSON Training n'ont ni schéma PostgreSQL ni type TypeScript structurel généré.
+- Les composants redéfinissent plusieurs interfaces locales et utilisent quatre clés de nom d'exercice, deux clés de repos et deux marqueurs de jour de repos.
+- Le code utilise notamment `client_programs.program_name`, `client_programs.week_start` et `workout_sessions.date`, absents du schéma canonique généré.
+- La planification, l'exécution détaillée et la complétion d'une affectation ne partagent pas de transaction ni de lien complet.
+
+### Risques ou dette restante
+
+- Absence de modèle Training canonique et d'adaptateurs testés entre formats legacy.
+- Absence de repositories programmes, séances et exercices ; accès Supabase directs nombreux.
+- Couverture limitée des compatibilités producteur → consommateur et absence d'E2E Training complet.
+- Policies coach de certaines tables fondées sur des identifiants mémorisés ou une relation sans contrôle explicite de statut actif ; contrat RLS Training à tester avant correction.
+- Fréquence réelle des variantes JSON inconnue sans jeu de données anonymisé dédié.
+
+### Tests exécutés
+
+- Aucun test applicatif exécuté : tranche strictement documentaire.
+- `git diff --check` vert.
+- Vérification des liens internes du nouveau document : verte.
+- Contrôle de périmètre : seuls `docs/TRAINING_FORMATS_INVENTORY.md`, `ROADMAP_CODEX.md` et `SESSION_LOG_CODEX.md` sont modifiés ; aucun fichier applicatif, test, E2E, migration ou policy touché.
+
+### Mesures avant/après
+
+- Sources de vérité Training explicitement cartographiées : 0 → 10 familles de tables/projections.
+- Formats de programme persistés principaux documentés : 0 → 4 (modèle coach enveloppé, affectation tableau, affectation hebdomadaire, programme personnel tableau).
+- Tâches Phase 3 terminées : 0/27 → 1/27.
+- Progression globale : 43/138 → 44/138 tâches, soit environ 32 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir le modèle Training canonique.
