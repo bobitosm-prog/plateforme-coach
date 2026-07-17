@@ -52,6 +52,12 @@ Le cycle explicite est `idle → loading → ready | not_found | error`. Une seu
 
 Le cache dashboard porte `ownerUserId` et le `profileData.id` doit correspondre à l'identité active. Les anciens caches sans propriétaire et les caches croisés sont rejetés. Le cache ne peut jamais provoquer une redirection onboarding.
 
+## Domaine Training
+
+Le contrat initial est documenté dans [`TRAINING_REPOSITORIES.md`](TRAINING_REPOSITORIES.md).
+Il couvre programmes, séances, complétions, records et exercices avec des
+projections explicites, sans être encore branché dans l'application.
+
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
 
 ## Premiers consommateurs serveur

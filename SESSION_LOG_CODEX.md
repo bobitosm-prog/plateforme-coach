@@ -5063,3 +5063,70 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les repositories programmes, séances et exercices.
+
+## Entrée — 2026-07-17 — Repositories Training programmes, séances et exercices
+
+### Travail effectué
+
+- Lecture du modèle canonique, des adaptateurs, des contrats Supabase/repositories, des types générés et de l'inventaire RLS.
+- Audit des accès directs Training dans `app/` et `lib/`, y compris les projections wildcard, les historiques concurrents et les colonnes runtime absentes des types générés.
+- Création de trois repositories injectables pour programmes, séances/progression et exercices.
+- Ajout de projections TypeScript explicites sur `training_programs`, `client_programs`, `custom_programs`, `workout_sessions`, `completed_sessions`, `personal_records`, `exercises_db` et `custom_exercises`.
+- Ajout de 12 méthodes read-only avec scope owner/client, ordres déterministes, limite catalogue bornée, résultat `not_found` et erreurs Supabase expurgées.
+- Documentation du contrat d'autorité, des limites RLS, des divergences de schéma et du report volontaire des mutations.
+
+### Tâches cochées
+
+- Phase 3 : « Créer les repositories programmes, séances et exercices » — terminée.
+- Progression Phase 3 : 4/27 → 5/27 tâches.
+
+### Décisions prises
+
+- Les repositories reçoivent exclusivement un `DatabaseClient` injecté et ne construisent aucun client browser/server/admin.
+- Les paramètres `coachUserId`, `clientUserId` et `ownerUserId` bornent les requêtes mais ne constituent jamais une preuve d'identité ; l'appelant doit les dériver d'une session vérifiée ou s'appuyer sur la RLS.
+- Les JSON `program`, `days` et `phases` restent des snapshots legacy et doivent être passés aux adaptateurs avant emploi canonique.
+- Aucune méthode de mutation n'est exposée avant schémas d'entrée et matrices RLS Training : ajouter maintenant des writes figerait les JSON libres et les policies coach non caractérisées.
+- Aucun `listSessionsForProgram` artificiel n'est créé : les séances prescrites restent imbriquées dans les JSON ; seule la complétion liée par `program_id` est interrogeable sans ambiguïté.
+- Les colonnes runtime absentes des types générés sont exclues au lieu d'être castées ou inventées.
+
+### Problèmes rencontrés
+
+- Les accès applicatifs Training restent nombreux et plusieurs utilisent encore `select('*')`.
+- `workout_sessions` et `completed_sessions` restent deux historiques sans identité canonique commune.
+- `client_programs.program_name`, `client_programs.week_start`, `workout_sessions.date` et `workout_sessions.personal_records` sont consommés par du code legacy mais absents du schéma généré.
+
+### Risques ou dette restante
+
+- Les repositories ne sont pas encore branchés dans l'application ; les accès directs existants restent inchangés.
+- Les matrices RLS Training owner/coach/client actif restent à écrire avant d'exposer des mutations.
+- Les repositories read-only ne valident pas eux-mêmes la relation coach/client active ; cette autorité reste à composer côté serveur et en RLS.
+- `workout_sets`, planification et mutations programmes/exercices nécessiteront des contrats séparés lors des extractions suivantes.
+- Les JSON libres ne possèdent toujours pas de validation Zod à la frontière repository.
+
+### Tests exécutés
+
+- Tests repositories Training ciblés : 6/6 verts.
+- Suite Vitest complète : 66 fichiers, 733 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les repositories et leur test : vert.
+- `git diff --check` vert.
+- Vérification des liens documentaires internes : verte.
+- Contrôle statique : aucun `select('*')`, constructeur Supabase, import React/Next/`app`, client admin ou `service_role` dans les repositories.
+- Contrôle de périmètre : aucun fichier `app/`, route, E2E, migration ou policy RLS modifié.
+
+### Mesures avant/après
+
+- Repositories Training : 0 → 3.
+- Méthodes de lecture centralisées : 0 → 12.
+- Tables couvertes par projections explicites : 0 → 8.
+- Tests actifs globaux : 727 → 733.
+- Tâches Phase 3 terminées : 4/27 → 5/27.
+- Progression globale : 47/138 → 48/138 tâches, soit environ 35 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire session/profil de `useClientDashboard`.
