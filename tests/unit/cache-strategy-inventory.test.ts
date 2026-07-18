@@ -32,7 +32,7 @@ describe('current cache inventory guard', () => {
         source,
         /cache:\s*['"]no-store|revalidate\s*=\s*0|dynamic\s*=|Cache-Control.*no-cache|httpEquiv=['"]Cache-Control/g,
       ),
-    ).toBe(24) // +5 : routes admin/seedance/* (dynamic = 'force-dynamic')
+    ).toBe(25) // +6 : routes admin/seedance/* (dynamic = 'force-dynamic')
   })
 
   it('keeps the client dashboard envelope symmetric and user-checked', () => {

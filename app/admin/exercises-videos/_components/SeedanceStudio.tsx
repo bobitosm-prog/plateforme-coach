@@ -32,6 +32,7 @@ export function SeedanceStudio() {
   const [aspectRatio, setAspectRatio] = useState('9:16')
   const [duration, setDuration] = useState(5)
   const [promptLoading, setPromptLoading] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
 
   useEffect(() => {
     adminFetch<{ exercises: ExerciseLite[] }>('/api/admin/seedance/exercises')
@@ -47,6 +48,22 @@ export function SeedanceStudio() {
     const ex = exercises.find((e) => e.id === id)
     setReferenceImageUrl(ex?.gif_url || '')
     setPrompt('')
+  }
+
+  async function autoImage() {
+    if (!selected) return
+    setImageLoading(true)
+    try {
+      const { imageUrl } = await adminFetch<{ imageUrl: string; imagePrompt: string }>('/api/admin/seedance/image', {
+        method: 'POST',
+        body: JSON.stringify({ exerciseName: selected.name, muscleGroup: selected.muscle_group, equipment: selected.equipment }),
+      })
+      setReferenceImageUrl(imageUrl)
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setImageLoading(false)
+    }
   }
 
   async function autoPrompt() {
@@ -92,10 +109,18 @@ export function SeedanceStudio() {
       </div>
 
       <div>
-        <label style={labelStyle}>Image de référence (URL — active image→vidéo)</label>
+        <label style={labelStyle}>Image de référence (fige le mouvement + le style)</label>
+        <button type="button" onClick={autoImage} disabled={imageLoading || !selected}
+          style={{ ...btnPrimary, marginBottom: 8, opacity: imageLoading || !selected ? 0.6 : 1 }}>
+          {imageLoading ? 'Génération de l\'image (~15s)…' : referenceImageUrl ? 'Régénérer l\'image (Gemini)' : 'Générer l\'image de référence (Gemini)'}
+        </button>
+        {referenceImageUrl && (
+          <img src={referenceImageUrl} alt="référence"
+            style={{ width: '100%', borderRadius: 8, marginBottom: 8, background: '#000' }} />
+        )}
         <input value={referenceImageUrl} onChange={(e) => setReferenceImageUrl(e.target.value)}
-          placeholder="https://… (laisser vide = texte→vidéo)" style={fieldStyle} />
-        <p style={mutedStyle}>Mode : {generationType}{selected?.gif_url ? ' — thumbnail pré-rempli' : ''}</p>
+          placeholder="…ou colle une URL https (vide = texte→vidéo)" style={fieldStyle} />
+        <p style={mutedStyle}>Mode : {generationType}</p>
       </div>
 
       <div>
@@ -139,7 +164,12 @@ export function SeedanceStudio() {
 
       {state.phase === 'preview' && state.videoUrl && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <video src={state.videoUrl} controls style={{ width: '100%', borderRadius: 8 }} />
+          <video
+            key={state.videoUrl}
+            src={state.videoUrl}
+            controls autoPlay muted loop playsInline preload="auto"
+            style={{ width: '100%', borderRadius: 8, background: '#000' }}
+          />
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={onGenerate} style={{ ...btnPrimary, background: '#333' }}>Régénérer</button>
             <button type="button" onClick={publish} style={btnPrimary}>Publier dans le bucket</button>
