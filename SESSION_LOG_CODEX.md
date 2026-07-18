@@ -7005,3 +7005,87 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Définir le modèle Nutrition canonique.
+
+---
+
+## Entrée — 2026-07-18 — Modèle Nutrition canonique
+
+### Travail effectué
+
+- Recoupement de l'inventaire Nutrition avec les migrations, types Supabase
+  générés et modèles/types applicatifs existants.
+- Création de `docs/NUTRITION_CANONICAL_MODEL.md`, sans ajout de type applicatif
+  ni schéma SQL.
+- Formalisation des aliments, snapshots, densités et montants nutritionnels,
+  portions, recettes, repas planifiés/consommés, journées, plans, affectations,
+  objectifs, préférences, ownership, traçabilité et versionnement.
+- Définition de treize frontières d'adaptation legacy et d'une stratégie de
+  migration progressive conservant les formats actuels en lecture.
+
+### Tâches cochées
+
+- Phase 4 : « Définir le modèle Nutrition canonique » — terminée.
+- Phase 4 : 1/17 → 2/17 tâches.
+
+### Invariants retenus
+
+- Une densité nutritionnelle et une quantité consommée sont deux objets
+  distincts ; toute valeur calculée connaît sa base et son unité.
+- Zéro n'est jamais utilisé pour représenter une valeur inconnue.
+- Planifié, marqué terminé et consommé restent trois faits distincts.
+- Les snapshots historiques ne sont pas réécrits par une correction catalogue.
+- Toute conversion impossible reste isolée et rend le calcul partiel ou
+  indisponible ; aucun fallback implicite à 100 g n'est autorisé.
+- Toute donnée personnelle a un owner explicite issu d'une identité serveur et
+  toute affectation coach exige une relation active.
+- Les données IA, photo ou fournisseur restent estimées/déclarées tant qu'une
+  validation explicite ne les élève pas.
+
+### Adaptations legacy prévues
+
+- Adaptateurs distincts pour plans personnels, plans coach, formats IA français,
+  format tolérant `lib/meal-plan`, templates textuels, deux journaux de
+  consommation, marqueurs de complétion, repas sauvegardés, catalogues,
+  recettes, fournisseurs et préférences FR/EN.
+- `daily_food_logs`, `meal_logs` et `meal_tracking` ne seront ni fusionnés ni
+  dédupliqués sans clé métier démontrée.
+- Les différences de colonnes entre types générés et runtime restent visibles ;
+  le document ne désigne aucun environnement comme autorité SQL.
+
+### Validations exécutées
+
+- Concepts recoupés avec `docs/NUTRITION_FORMATS_INVENTORY.md`, les migrations
+  Nutrition, `lib/supabase/database.types.ts` et les modèles existants.
+- Noms des tables et formats legacy vérifiés.
+- Liens internes du nouveau document vérifiés.
+- `git diff --check` vert.
+- Périmètre vérifié : seuls le modèle documentaire, la roadmap et ce journal
+  appartiennent à la tranche ; aucun fichier applicatif, test, E2E, migration,
+  RLS ou donnée distante n'a été modifié.
+- Les trois fichiers utilisateur protégés sont restés non ouverts, intacts et
+  hors staging.
+
+### Risques ou dette restante
+
+- Le schéma déployé n'a pas été consulté ; les divergences types/runtime devront
+  être résolues dans une tranche explicitement autorisée.
+- Les règles canoniques n'ont pas encore de types purs ni de tests exécutables.
+- La future contrainte d'unicité d'un plan actif, les transactions, l'idempotence
+  et les policies coach actives restent à concevoir.
+- Les conversions cru/cuit, masse/volume et unités textuelles restent
+  volontairement fail-closed faute de données fiables.
+
+### Mesures
+
+- Phase 4 : 1/17 → 2/17 tâches.
+- Progression globale : 71/138 → 72/138, soit environ 52 %.
+- Fichiers applicatifs, tests, E2E, migrations ou policies modifiés : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Ajouter les tests d'invariants calories/macros.

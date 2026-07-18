@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 1 tâche sur 17 ; prochaine tranche : définir le modèle Nutrition canonique**
+**Statut : Phase 4 active — 2 tâches sur 17 ; prochaine tranche : ajouter les tests d'invariants calories/macros**
 
 ### Pourquoi
 
@@ -389,7 +389,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
 | [x] Cartographier les formats repas, plans et aliments ([inventaire](docs/NUTRITION_FORMATS_INVENTORY.md)) | 1,5 j | Élevée | Faible | Élevé | Phase 2 |
-| [ ] Définir le modèle Nutrition canonique | 2 j | Élevée | Moyen | Critique | Cartographie |
+| [x] Définir le modèle Nutrition canonique ([modèle](docs/NUTRITION_CANONICAL_MODEL.md)) | 2 j | Élevée | Moyen | Critique | Cartographie |
 | [ ] Ajouter les tests d'invariants calories/macros | 2,5 j | Élevée | Faible | Critique | Modèle nutrition |
 | [ ] Créer les repositories nutrition | 3 j | Élevée | Moyen | Élevé | Phase 2 |
 | [ ] Extraire la génération de repas hors de la route HTTP | 3 j | Élevée | Élevé | Élevé | Modèle nutrition |
@@ -745,7 +745,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈51 % (71/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈52 % (72/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
