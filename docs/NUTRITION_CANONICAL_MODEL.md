@@ -138,6 +138,13 @@ Un total partiel ne doit jamais être présenté comme complet. Les calories ne
 sont pas recalculées automatiquement depuis les macros si une énergie source
 existe ; un contrôle de cohérence peut signaler l'écart sans écraser la source.
 
+Le contrôle énergétique des macronutriments utilise `4 kcal/g` pour les
+protéines, `4 kcal/g` pour les glucides et `9 kcal/g` pour les lipides. La fibre
+n'est pas incluse dans ce contrôle : son rendement énergétique dépend d'une
+règle non définie dans le dépôt et reste donc fail-closed. La tolérance entre
+énergie déclarée et énergie issue des macros est toujours fournie explicitement
+par l'appelant ; aucun écart ne constitue automatiquement une corruption.
+
 ## 5. Portions et unités
 
 ### 5.1 `Quantity`

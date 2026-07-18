@@ -7089,3 +7089,77 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Ajouter les tests d'invariants calories/macros.
+
+---
+
+## Entrée — 2026-07-18 — Invariants calories et macros
+
+### Travail effectué
+
+- Audit des calculs calories, macros, objectifs et agrégats existants ; les
+  consommateurs legacy restent inchangés dans cette tranche.
+- Création d'un noyau pur `lib/nutrition/invariants.ts` distinguant densité,
+  quantité, montant, agrégation, calcul énergétique et arrondi d'affichage.
+- Ajout de résultats discriminés `complete`, `partial`, `unavailable` et
+  `invalid`, avec valeurs inconnues conservées à `null` et erreurs structurées.
+- Ajout de tests unitaires et statiques couvrant bases 100 g/100 ml,
+  portion/unité, agrégations repas/journée, erreurs et pureté du module.
+- Clarification du modèle canonique : facteurs énergétiques 4/4/9, fibre exclue
+  faute de règle définie et tolérance énergétique toujours explicite.
+
+### Tâches cochées
+
+- Phase 4 : « Ajouter les tests d'invariants calories/macros » — terminée.
+- Phase 4 : 2/17 → 3/17 tâches.
+
+### Invariants exécutables
+
+- Zéro explicite reste calculable ; une valeur inconnue reste `null`.
+- Valeurs négatives, `NaN`, infinis et quantités invalides sont refusés sans
+  propagation dans les totaux.
+- Masse, volume, portion et unité ne sont compatibles qu'avec leur base exacte ;
+  aucune conversion masse/volume ou portion inconnue n'est inventée.
+- La précision est conservée pendant les calculs ; l'arrondi est une frontière
+  d'affichage séparée et immutable.
+- Un agrégat contenant une donnée inconnue ou non calculable est explicitement
+  partiel ; un agrégat vide n'est jamais un total zéro.
+- L'énergie issue des macros utilise 4/4/9. La fibre reste hors calcul et une
+  différence avec l'énergie déclarée n'est évaluée qu'avec une tolérance fournie.
+
+### Validations exécutées
+
+- Tests d'invariants et tests Nutrition ciblés : 44/44 verts.
+- Suite Vitest complète : 104 fichiers, 1 005 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé du noyau et des tests : vert.
+- Garde statique : aucun import React, Next, Supabase, navigateur ou `app/`.
+- `git diff --check` vert.
+- Périmètre vérifié : aucune route, migration, RLS, E2E ou donnée distante
+  consultée/modifiée.
+- Les trois fichiers utilisateur protégés sont restés non ouverts, intacts et
+  hors staging.
+
+### Risques ou dette restante
+
+- Le noyau n'est encore branché à aucun composant ; les agrégats legacy peuvent
+  toujours employer `|| 0` jusqu'à leur migration contrôlée.
+- La fibre ne contribue pas à l'énergie faute de règle métier définie.
+- Les conversions cru/cuit, densité masse/volume et unités textuelles restent
+  fail-closed.
+- Les objectifs BMR/TDEE et répartitions de macros restent plusieurs contrats
+  UI distincts, hors périmètre de cette tranche.
+
+### Mesures
+
+- Phase 4 : 2/17 → 3/17 tâches.
+- Progression globale : 72/138 → 73/138, soit environ 53 %.
+- Nouvelles frontières pures : 1 ; nouvelles suites : 2.
+- Routes, migrations, policies RLS ou E2E modifiés : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les repositories nutrition.
