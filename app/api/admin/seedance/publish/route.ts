@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   const { data: job, error: jobErr } = await supabaseAdmin
     .from('seedance_jobs')
-    .select('id, exercise_id, exercise_name, status, video_url_remote')
+    .select('id, exercise_id, exercise_name, status, video_url_remote, reference_image_url')
     .eq('id', jobId)
     .single()
 
@@ -68,11 +68,37 @@ export async function POST(req: Request) {
   const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath)
   const publishedVideoUrl = `${pub.publicUrl}?v=${Date.now()}`
 
-  // 3. Update exercises_db.video_url (si l'exo est lié)
+  // 3. Update exercises_db (si l'exo est lié) : video_url + gif_url poster.
+  // L'image de référence (image→vidéo) sert de thumbnail/poster dans l'app
+  // (WorkoutSession lit gif_url). On la fige à côté de la vidéo : {slug}/{slug}.jpg
   if (job.exercise_id) {
+    const update: { video_url: string; gif_url?: string } = { video_url: publishedVideoUrl }
+
+    if (job.reference_image_url && /^https:\/\//.test(job.reference_image_url)) {
+      try {
+        const imgRes = await fetch(job.reference_image_url)
+        if (imgRes.ok) {
+          const imgBuf = await imgRes.arrayBuffer()
+          if (imgBuf.byteLength <= MAX_VIDEO_BYTES) {
+            const posterPath = `${slug}/${slug}.jpg`
+            const { error: posterErr } = await supabaseAdmin.storage
+              .from(BUCKET)
+              .upload(posterPath, new Uint8Array(imgBuf), { contentType: 'image/jpeg', upsert: true })
+            if (!posterErr) {
+              const { data: posterPub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(posterPath)
+              update.gif_url = `${posterPub.publicUrl}?v=${Date.now()}`
+            }
+          }
+        }
+      } catch (e: any) {
+        // Le poster est un bonus : on n'échoue pas la publication si l'image manque.
+        console.error('[seedance/publish] poster copy failed:', e?.message)
+      }
+    }
+
     const { error: exErr } = await supabaseAdmin
       .from('exercises_db')
-      .update({ video_url: publishedVideoUrl })
+      .update(update)
       .eq('id', job.exercise_id)
     if (exErr) return NextResponse.json({ error: `Update exercice échoué : ${exErr.message}` }, { status: 500 })
   }
