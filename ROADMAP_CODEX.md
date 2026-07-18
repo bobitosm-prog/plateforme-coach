@@ -2,9 +2,9 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **17 juillet 2026**.
+> Dernière mise à jour : **18 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 3 — Domaine Training et exécution de séance**.
+> Phase active : **Phase 4 — Domaine Nutrition et progression**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 26 tâches sur 27 ; persistance et vues du builder extraites, prochaine tranche : réduire `ProgramBuilder` sous 500 lignes**
+**Statut : Phase 3 terminée — 27 tâches sur 27 ; façades Training sous leurs seuils et contrats caractérisés**
 
 ### Pourquoi
 
@@ -348,7 +348,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] [Écrire les tests de caractérisation de `ProgramBuilder`](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md) | 1,5 j | Élevée | Faible | Élevé | Modèle canonique |
 | [x] [Extraire modèle d'édition, DnD et validation](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md#modèle-dédition-pur-extrait) | 4 j | Élevée | Élevé | Élevé | Tests builder |
 | [x] [Extraire persistance et présentation du builder](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md#persistance-et-présentation-extraites) | 3 j | Élevée | Moyen | Élevé | Modèle d'édition |
-| [ ] Réduire `ProgramBuilder` sous 500 lignes | 1 j | Moyenne | Moyen | Moyen | Extractions builder |
+| [x] [Réduire `ProgramBuilder` sous 500 lignes](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md#façade-programbuilder-réduite) | 1 j | Moyenne | Moyen | Moyen | Extractions builder |
 
 ### Risques
 
@@ -377,6 +377,8 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
+
+**Statut : Phase 4 ouverte — 0 tâche sur 17 ; prochaine tranche : cartographier les formats repas, plans et aliments**
 
 ### Pourquoi
 
@@ -743,7 +745,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | 50 % (69/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈51 % (70/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
@@ -765,7 +767,7 @@ Mettre à jour ce tableau chaque vendredi.
 |---|---:|---:|---:|---|
 | `TrainingTab.tsx` | 1 721 lignes | <500 | 3 | ✅ — 7 lignes (façade), frontières ≤454 |
 | `WorkoutSession.tsx` | 1 639 | <600 | 3 | ✅ — 530 lignes, frontières ≤384 |
-| `ProgramBuilder.tsx` | 998 | <500 | 3 | 🟠 |
+| `ProgramBuilder.tsx` | 223 | <500 | 3 | ✅ |
 | `NutritionTab.tsx` | 1 273 | <500 | 4 | ⬜ |
 | `ProgressTab.tsx` | 1 151 | <500 | 4 | ⬜ |
 | `useClientDetail.ts` | 845 | <250 | 5 | ⬜ |

@@ -1,6 +1,6 @@
 import type { BuilderRecord, PortResult, ProgramBuilderPersistencePort } from './types'
 
-interface SupabaseClientLike {
+export interface ProgramBuilderSupabaseClient {
   from(table: string): FluentQuery
 }
 
@@ -26,7 +26,7 @@ const normalize = <T>(result: QueryResponse, fallback: T): PortResult<T> => ({
   error: result.error ?? null,
 })
 
-export function createProgramBuilderSupabasePort(client: SupabaseClientLike): ProgramBuilderPersistencePort {
+export function createProgramBuilderSupabasePort(client: ProgramBuilderSupabaseClient): ProgramBuilderPersistencePort {
   return {
     async listCatalogExercises() {
       return normalize(await client.from('exercises_db').select('id, name, muscle_group').order('name').limit(200), [])

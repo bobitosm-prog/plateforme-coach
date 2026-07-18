@@ -25,7 +25,7 @@ describe('ProgramBuilder persistence and view boundaries', () => {
   })
 
   it('delegates loading, saving, variants and overlays from the public builder', () => {
-    for (const contract of ['loadProgramBuilderData', 'createProgramBuilderCustomExercise', 'saveProgramAndSynchronizeCalendar', 'loadProgramExerciseVariants', 'ProgramBuilderDayNavigation', 'ProgramBuilderExerciseSearchOverlay', 'ProgramBuilderVariantOverlay']) expect(builder).toContain(contract)
+    for (const contract of ['loadProgramBuilderData', 'createProgramBuilderCustomExercise', 'saveProgramAndSynchronizeCalendar', 'loadProgramExerciseVariants', 'ProgramBuilderExerciseEditor', 'ProgramBuilderExerciseSearchOverlay', 'ProgramBuilderVariantOverlay']) expect(builder).toContain(contract)
     expect(builder).toContain('export default function ProgramBuilder(')
     expect(builder).toContain('export { padTo7Days }')
   })

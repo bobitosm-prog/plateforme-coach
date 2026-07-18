@@ -6842,3 +6842,83 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire `ProgramBuilder` sous 500 lignes.
+
+---
+
+## Entrée — 2026-07-18 — Façade ProgramBuilder sous 500 lignes
+
+### Travail effectué
+
+- Cartographie des responsabilités restantes de la façade : états et effets,
+  modes sélection/IA/manuel/custom, journée, exercices, prescriptions,
+  variantes, recherche et callbacks de sauvegarde.
+- Extraction des quatre modes dans `ProgramBuilderModeViews`, de l'éditeur
+  exercices/séries/tempo/techniques dans `ProgramBuilderExerciseEditor` et des
+  styles partagés dans une frontière dédiée.
+- Conservation de la navigation des jours et des overlays déjà extraits ; la
+  façade ne garde que l'orchestration, les effets, les décisions du modèle pur
+  et le câblage du service de persistance.
+- Remplacement du dernier `any` de la façade par le contrat structurel
+  `ProgramBuilderSupabaseClient`.
+- Ajout d'une garde statique imposant moins de 500 lignes, l'absence de
+  Supabase dans les vues, l'absence de nouvel `any` et la délégation des
+  responsabilités.
+
+### Tâches cochées
+
+- Phase 3 : « Réduire `ProgramBuilder` sous 500 lignes » — terminée.
+- Phase 3 : 26/27 → 27/27 tâches ; Phase 3 terminée.
+
+### Décisions prises
+
+- Les vues sont séparées selon deux axes : phase du builder et édition d'une
+  journée. Aucun fichier unique ne reçoit l'ancien composant monolithique.
+- Les mutations continuent à passer par le modèle pur et le service existant ;
+  leur ordre et leurs payloads ne changent pas.
+- La génération IA reste dans l'orchestrateur car son extraction fonctionnelle
+  n'appartient pas à cette tranche de présentation.
+
+### Problèmes rencontrés
+
+- Les tests statiques historiques vérifiaient encore la présence du JSX et des
+  algorithmes dans le fichier façade. Ils ont été adaptés pour suivre les
+  frontières extraites tout en gardant les mêmes assertions métier.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et hors staging.
+
+### Risques ou dette restante
+
+- La synchronisation programme/calendrier reste non transactionnelle et non
+  idempotente.
+- Le `select('*')` des exercices personnalisés reste un contrat legacy.
+- L'appel de génération IA reste directement orchestré par le composant.
+
+### Tests exécutés
+
+- Tests ciblés ProgramBuilder et Training : 102/102 verts.
+- Suite Vitest complète : 102 fichiers, 980 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint de la façade, des nouvelles vues, styles et frontières : vert.
+- Dette ESLint `ProgramBuilder` : 19 erreurs/7 avertissements → 0/0.
+- `git diff --check` et contrôles de périmètre : verts.
+
+### Mesures avant/après
+
+- `ProgramBuilder.tsx` : 998 → 223 lignes.
+- `ProgramBuilderModeViews.tsx` : 76 lignes.
+- `ProgramBuilderExerciseEditor.tsx` : 68 lignes.
+- `ProgramBuilderDayNavigation.tsx` : 56 lignes.
+- `ProgramBuilderOverlays.tsx` : 101 lignes.
+- `styles.ts` : 21 lignes.
+- Tests actifs globaux : 976 → 980.
+- Progression globale : 69/138 → 70/138, soit environ 51 %.
+- Routes, repositories, migrations, RLS ou E2E modifiés : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Cartographier les formats repas, plans et aliments en Phase 4.

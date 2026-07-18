@@ -13,11 +13,17 @@ const overlaysPath = resolve(root, 'app/components/tabs/training/TrainingTabOver
 const modelPath = resolve(root, 'lib/training/program-editor-model.ts')
 const persistencePath = resolve(root, 'lib/training/program-builder-persistence/supabase-port.ts')
 const persistenceServicePath = resolve(root, 'lib/training/program-builder-persistence/service.ts')
+const editorPath = resolve(root, 'app/components/training/program-builder/ProgramBuilderExerciseEditor.tsx')
+const dayNavigationPath = resolve(root, 'app/components/training/program-builder/ProgramBuilderDayNavigation.tsx')
+const modeViewsPath = resolve(root, 'app/components/training/program-builder/ProgramBuilderModeViews.tsx')
 const builder = readFileSync(builderPath, 'utf8')
 const overlays = readFileSync(overlaysPath, 'utf8')
 const model = readFileSync(modelPath, 'utf8')
 const persistence = readFileSync(persistencePath, 'utf8')
 const persistenceService = readFileSync(persistenceServicePath, 'utf8')
+const editor = readFileSync(editorPath, 'utf8')
+const dayNavigation = readFileSync(dayNavigationPath, 'utf8')
+const modeViews = readFileSync(modeViewsPath, 'utf8')
 
 describe('ProgramBuilder current program shapes', () => {
   it('pads an empty program to seven explicit rest days', () => {
@@ -67,29 +73,29 @@ describe('ProgramBuilder current program shapes', () => {
 
 describe('ProgramBuilder current editing behavior', () => {
   it('uses fixed calendar days and represents removal as a rest-day toggle', () => {
-    expect(builder).toContain("const DAY_NAMES = DAY_NAMES_FR")
+    expect(dayNavigation).toContain('DAY_NAMES_FR')
     expect(builder).toContain('setProgramDayRest(previous, editingDayIndex, !previous[editingDayIndex]?.is_rest)')
     expect(model).toContain('exercises: isRest ? [] : exerciseList(day).map(cloneExercise)')
     expect(builder).not.toMatch(/function (?:add|remove)Day/)
   })
 
   it('adds and removes exercises with the current numeric fallbacks', () => {
-    expect(builder).toContain('addProgramExercise(prev, editingDayIndex, exercise, isCustom)')
-    expect(builder).toContain('removeProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx })')
+    expect(builder).toContain('addProgramExercise(previous, editingDayIndex, exercise, custom)')
+    expect(builder).toContain('removeProgramExercise(previous, { dayIndex: deleteTarget.dayIdx, exerciseIndex: deleteTarget.exIdx })')
     expect(model).toContain('sets: exercise.sets || 3')
     expect(model).toContain('reps: exercise.reps || 10')
     expect(model).toContain('rest: exercise.rest_seconds || 90')
-    expect(builder).toContain('setShowExerciseSearch(false)')
+    expect(builder).toContain('setSearchOpen(false)')
   })
 
   it('updates exercises immutably at the edited day boundary', () => {
-    expect(builder).toContain('updateProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx }, field, value)')
+    expect(builder).toContain('updateProgramExercise(previous, { dayIndex: editingDayIndex, exerciseIndex: index }, field, value)')
     expect(model).toContain('? { ...cloneExercise(exercise), [field]: cloneValue(value) }')
   })
 
   it('supports exercise and day reordering without changing calendar weekdays', () => {
-    expect(builder).toContain('const result = moveProgramExercise(')
-    expect(builder).toContain('setProgramDays(prev => swapProgramDays(prev, swapFirst, i))')
+    expect(builder).toContain('moveProgramExercise(previous, { dayIndex: editingDayIndex, exerciseIndex: index }')
+    expect(builder).toContain('setProgramDays(previous => swapProgramDays(previous, swapFirst, index))')
     expect(model).toContain('reordered.splice(source.exerciseIndex, 1)')
     expect(model).toContain('normalized[firstIndex] = { ...second, weekday: first.weekday }')
     expect(model).toContain('normalized[secondIndex] = { ...first, weekday: second.weekday }')
@@ -97,16 +103,16 @@ describe('ProgramBuilder current editing behavior', () => {
 
   it('edits sets, repetitions, rest, tempo and techniques but not load or RIR', () => {
     for (const field of ['sets', 'reps', 'rest', 'tempo', 'technique', 'technique_details']) {
-      expect(builder).toContain(`'${field}'`)
+      expect(editor).toContain(`'${field}'`)
     }
-    expect(builder).not.toMatch(/updateExerciseField\([^\n]+,\s*'(?:weight|load|rir)'/i)
-    expect(builder).toContain("const parts = (ex.tempo || '2-0-2').split('-')")
+    expect(editor).not.toMatch(/onExercise\([^\n]+,\s*'(?:weight|load|rir)'/i)
+    expect(editor).toContain("const parts = value.split('-')")
   })
 
   it('falls back across legacy exercise names before the unknown label', () => {
-    expect(builder).toContain('ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name')
-    expect(builder).toContain("exerciseNameRaw || t('day.unknownExercise')")
-    expect(builder).toContain('ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group')
+    expect(editor).toContain('exercise.exercise_name || exercise.custom_name || exercise.name || catalog?.name')
+    expect(editor).toContain("rawName || props.t('day.unknownExercise')")
+    expect(editor).toContain('exercise.muscle_group || exercise.focus || catalog?.muscle_group')
   })
 })
 
@@ -124,7 +130,7 @@ describe('ProgramBuilder current library and variants', () => {
   })
 
   it('delegates search to the shared boundary with the builder-specific muscle rule', () => {
-    expect(builder).toContain('combineExerciseLibraries(dbExercises, customExercises)')
+    expect(builder).toContain('combineExerciseLibraries(catalog, customExercises)')
     expect(builder).toContain('searchExerciseLibrary(')
     expect(builder).toContain("muscleMatch: 'case-insensitive'")
     expect(builder).toContain("allMusclesKey: ALL_KEY")
@@ -134,13 +140,13 @@ describe('ProgramBuilder current library and variants', () => {
     expect(persistence).toContain(".from('exercises_db').select('variant_group')")
     expect(persistenceService).toContain("exerciseName.split(' ').slice(0, 2).join(' ')")
     expect(persistence).toContain(".select('name, equipment, muscle_group')")
-    expect(builder).toContain("updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'exercise_name', variant.name)")
+    expect(builder).toContain("updateProgramExercise(named, { dayIndex: variantPopup.dayIdx, exerciseIndex: variantPopup.exIdx }, 'exercise_name', variant.name)")
   })
 
   it('persists a custom exercise for the authenticated session owner', () => {
     expect(builder).toContain('createProgramBuilderCustomExercise(persistence, {')
-    expect(builder).toContain('user_id: session.user.id, name: ceName.trim()')
-    expect(builder).toContain('sets: ceSets, reps: ceReps, rest_seconds: ceRest, is_private: true')
+    expect(builder).toContain('user_id: session.user.id, name: customDraft.name.trim()')
+    expect(builder).toContain('sets: customDraft.sets, reps: customDraft.reps, rest_seconds: customDraft.rest, is_private: true')
     expect(builder).toContain("setMode('manual')")
   })
 })
@@ -168,8 +174,8 @@ describe('ProgramBuilder current save and callback contract', () => {
 
   it('refuses incomplete manual saves and leaves cancellation write-free', () => {
     expect(builder).toContain('if (!programName.trim() || !programDays.length) return')
-    expect(builder).toContain("if (!programName.trim()) { toast.error(t('config.nameRequired')); return }")
-    expect(builder).toContain('<button onClick={onClose}')
+    expect(builder).toContain("if (!programName.trim()) return void toast.error(t('config.nameRequired'))")
+    expect(modeViews).toContain('<button onClick={onClose}')
     expect(overlays).toContain('onClose={() => { setShowProgramBuilder(false); setEditingProgram(null) }}')
     expect(overlays).toContain('onSave={refreshPrograms}')
   })

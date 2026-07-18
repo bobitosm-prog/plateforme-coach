@@ -25,7 +25,7 @@ describe('Training exercise library integration inventory', () => {
 
   it('combines catalog then custom exercises and delegates ProgramBuilder filtering', () => {
     const builder = source('app/components/training/ProgramBuilder.tsx')
-    expect(builder).toContain('combineExerciseLibraries(dbExercises, customExercises)')
+    expect(builder).toContain('combineExerciseLibraries(catalog, customExercises)')
     expect(builder).toContain("muscleMatch: 'case-insensitive'")
     expect(builder).not.toContain('...customExercises.map(e => ({ ...e, _custom: true }))')
   })

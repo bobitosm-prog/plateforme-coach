@@ -184,12 +184,37 @@ La navigation des sept jours, l'état repos, le choix du type de séance, le
 rendu de recherche/bibliothèque et le sélecteur de variantes sont maintenant
 des composants de présentation typés. Ils reçoivent seulement données et
 callbacks, conservent le plein écran mobile, le scroll, les filtres et le
-backdrop, et n'importent ni Supabase ni le service. Les autres grandes sections
-visuelles restent dans le builder et constituent le périmètre explicite de la
-dernière tranche de réduction sous 500 lignes.
+backdrop, et n'importent ni Supabase ni le service.
 
 La persistance calendrier reste multi-écritures et non transactionnelle. Le
 catalogue privé conserve volontairement son `select('*')` historique. La
-génération IA et les types legacy `any` restants demeurent des dettes.
+génération IA reste une frontière HTTP directe du contrôleur.
 
-Prochaine tranche : réduire `ProgramBuilder` sous 500 lignes.
+## Façade ProgramBuilder réduite
+
+`ProgramBuilder.tsx` est passé de 998 à 223 lignes et conserve son export par
+défaut, ses props et l'export de compatibilité `padTo7Days`. Il ne compose plus
+directement les formulaires et éditeurs :
+
+- `ProgramBuilderModeViews.tsx` porte les vues sélection, configuration IA,
+  métadonnées manuelles et exercice personnalisé ;
+- `ProgramBuilderExerciseEditor.tsx` porte la liste, les prescriptions, le
+  tempo, les techniques et la confirmation de suppression ;
+- `ProgramBuilderDayNavigation.tsx` porte les sept jours, repos, types et
+  échange de jours ;
+- `ProgramBuilderOverlays.tsx` porte recherche, bibliothèque et variantes ;
+- `styles.ts` centralise uniquement les styles partagés du builder.
+
+La façade garde l'état React, le chargement initial, l'appel IA, le câblage du
+modèle pur, le service de persistance et les callbacks publics. Les composants
+de présentation n'importent ni Supabase ni stockage navigateur. Le client
+Supabase injecté possède désormais un contrat structurel explicite ; aucun
+`any` ne subsiste dans la façade ou les nouvelles vues.
+
+Les comportements caractérisés restent inchangés : semaine fixe, repos,
+réordonnancement intra-jour, payload legacy, variantes et ordre des cinq
+mutations. La transactionnalité, l'idempotence et le `select('*')` historique
+des exercices privés restent explicitement hors périmètre.
+
+Prochaine étape de la roadmap : cartographier les formats repas, plans et
+aliments en Phase 4.
