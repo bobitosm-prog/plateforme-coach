@@ -2,12 +2,13 @@ import { repositoryFailure, type RepositoryErrorKind, type RepositoryResult } fr
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 
 export const WEIGHT_HISTORY_PROJECTION = 'date,poids' as const
-export const BODY_MEASUREMENTS_PROJECTION = 'id,user_id,date,chest,waist,hips,biceps,thighs,calves,created_at' as const
+export const BODY_MEASUREMENTS_PROJECTION = 'id,user_id,date,chest,waist,hips,created_at' as const
 export const PROGRESS_PHOTOS_PROJECTION = 'id,user_id,photo_url,view_type,date,adjustments,ai_analysis,ai_analyzed_at,created_at' as const
 export const COACH_MEAL_PLAN_PROJECTION = 'plan' as const
 
 export type WeightHistoryRow = Pick<Tables<'weight_logs'>, 'date' | 'poids'>
-export type BodyMeasurementRow = Tables<'body_measurements'>
+export type BodyMeasurementRow = Pick<Tables<'body_measurements'>,
+  'id' | 'user_id' | 'date' | 'chest' | 'waist' | 'hips' | 'created_at'>
 export type ProgressPhotoRow = Tables<'progress_photos'>
 export type CoachMealPlanRow = Pick<Tables<'client_meal_plans'>, 'plan'>
 

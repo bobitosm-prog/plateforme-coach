@@ -18,7 +18,7 @@ const weights = [
 ]
 const measurements = [{
   id: 'measure-2', user_id: 'client-1', date: '2026-07-17', chest: 100, waist: 80,
-  hips: null, biceps: null, thighs: null, calves: null, created_at: '2026-07-17T10:00:00Z',
+  hips: null, created_at: '2026-07-17T10:00:00Z',
 }]
 const photos = [{
   id: 'photo-2', user_id: 'client-1', photo_url: 'client-1/photo.jpg', view_type: 'front',
@@ -123,6 +123,10 @@ describe('client nutrition and measurements dashboard loader', () => {
     expect(mock.chain.select).toHaveBeenLastCalledWith(BODY_MEASUREMENTS_PROJECTION)
     expect(mock.chain.order).toHaveBeenLastCalledWith('date', { ascending: false })
     expect(mock.chain.limit).toHaveBeenLastCalledWith(10)
+    expect(BODY_MEASUREMENTS_PROJECTION.split(',')).toEqual([
+      'id', 'user_id', 'date', 'chest', 'waist', 'hips', 'created_at',
+    ])
+    expect(BODY_MEASUREMENTS_PROJECTION).not.toMatch(/biceps|thighs|calves/)
 
     await readers.listProgressPhotos('client-1')
     expect(mock.chain.select).toHaveBeenLastCalledWith(PROGRESS_PHOTOS_PROJECTION)

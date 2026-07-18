@@ -5457,3 +5457,64 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire programme actif et navigation des jours.
+
+## Entrée — 2026-07-18 — Compatibilité du dashboard avec le schéma distant
+
+### Travail effectué
+
+- Correction bornée des deux projections de lecture responsables de l'écran « Profil indisponible ».
+- Retrait de `biceps`, `thighs` et `calves` de la projection `body_measurements` utilisée par `NutritionMeasurementsLoader`.
+- Retrait de `reminder_enabled` de `DASHBOARD_PROFILE_PROJECTION`.
+- Réduction du type `BodyMeasurementRow` aux sept colonnes réellement lues afin que l'absence des colonnes distantes soit explicite côté TypeScript.
+- Ajout de tests de non-régression vérifiant les listes exactes de colonnes compatibles.
+- Validation distante en lecture seule des deux projections corrigées, sans restitution de contenu personnel.
+- Rechargement de l'onglet Chrome existant sur localhost ; aucune donnée, migration ou configuration distante n'a été modifiée.
+
+### Tâches cochées
+
+- Aucune tâche supplémentaire de roadmap : correction de compatibilité incidente au sein de la Phase 3.
+
+### Décisions prises
+
+- Le code s'aligne temporairement sur le schéma effectivement déployé au lieu de créer des colonnes ou d'appliquer une migration pendant un incident de lecture.
+- Les autres champs, les formes de cache, les loaders et les décisions dashboard restent inchangés.
+- Aucun fallback de données synthétiques n'est ajouté ; les champs absents restent simplement indisponibles dans la projection.
+- L'E2E default-coach n'est pas exécuté : son harnais Supabase local ne valide pas le schéma distant concerné et son orchestration est incompatible avec l'interdiction de reset de cette tranche.
+
+### Problèmes rencontrés
+
+- Le schéma distant diverge des migrations et types canoniques : `body_measurements.biceps`, `body_measurements.thighs`, `body_measurements.calves` et `profiles.reminder_enabled` n'y existent pas.
+- Chrome a rechargé l'onglet, mais refuse l'inspection booléenne via AppleScript tant que « Autoriser JavaScript dans les événements AppleScript » est désactivé.
+- L'alternative via Accessibilité macOS est également refusée à `osascript`; aucune extraction visuelle automatisée du contenu du profil n'a donc été effectuée.
+
+### Risques ou dette restante
+
+- Les migrations/types locaux et le schéma distant doivent être réconciliés dans une tranche dédiée avant de réintroduire ces champs.
+- Les préférences de rappel restent modifiables ailleurs dans l'application alors que `profiles.reminder_enabled` est absent du schéma distant ; ce flux n'est pas corrigé dans cette tranche.
+- Une confirmation visuelle humaine de l'onglet localhost reste nécessaire, même si les deux requêtes qui produisaient `42703` sont désormais vertes à distance.
+
+### Tests exécutés
+
+- Tests ciblés dashboard/nutrition : 19/19 verts.
+- Suite Vitest complète : 73 fichiers, 771 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur les deux loaders/projections et leurs tests : vert.
+- `git diff --check` vert.
+- Projections distantes corrigées : `profiles` verte, `body_measurements` verte, aucun code PostgreSQL.
+- E2E default-coach non exécuté pour respecter l'interdiction de reset et parce qu'il cible Supabase local.
+
+### Mesures avant/après
+
+- Erreurs PostgreSQL `42703` sur les projections dashboard vérifiées : 2 → 0.
+- Colonnes demandées par `BODY_MEASUREMENTS_PROJECTION` : 10 → 7.
+- Colonnes demandées par `DASHBOARD_PROFILE_PROJECTION` : 68 → 67.
+- Tests actifs globaux : 770 → 771.
+- Données distantes modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Confirmer visuellement le dashboard existant, puis reprendre « Extraire programme actif et navigation des jours ».

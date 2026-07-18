@@ -25,4 +25,14 @@ describe('useClientDashboard nutrition and measurements loading boundary', () =>
     expect(fetchAll).toContain('ownerUserId: userId')
     expect(fetchAll).toContain("sessionProfile.kind === 'cache'")
   })
+
+  it('keeps remote-compatible dashboard projections free of absent columns', () => {
+    const profileProjection = dataHook.match(/DASHBOARD_PROFILE_PROJECTION = '([^']+)'/)?.[1]
+    expect(profileProjection).toBeTruthy()
+    expect(profileProjection?.split(',')).not.toContain('reminder_enabled')
+
+    const nutritionLoader = readFileSync(new URL('../../lib/client-dashboard/nutrition-measurements-loader.ts', import.meta.url), 'utf8')
+    const measurementsProjection = nutritionLoader.match(/BODY_MEASUREMENTS_PROJECTION = '([^']+)'/)?.[1]
+    expect(measurementsProjection?.split(',')).not.toEqual(expect.arrayContaining(['biceps', 'thighs', 'calves']))
+  })
 })
