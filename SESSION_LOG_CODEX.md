@@ -6336,3 +6336,94 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les composants de présentation par phase.
+
+---
+
+## Entrée — 2026-07-18 — Composants de présentation de WorkoutSession
+
+### Travail effectué
+
+- Inventaire des branches de rendu de `WorkoutSession` et association aux états
+  observables : active, reprise de brouillon, repos actif/terminé, validation de
+  série, finalisation, abandon, proposition de modèle et résumé terminé.
+- Extraction de vues typées dédiées dans
+  `app/components/training/workout-session/` pour l'en-tête/progression et la
+  barre de fin de séance active, le brouillon, les deux états de repos, les
+  confirmations, la sauvegarde de modèle et le résumé final.
+- Conservation des décisions, effets runtime, stockage, persistance, identité
+  et mutations dans `WorkoutSession` ou leurs frontières existantes.
+- Remplacement des blocs JSX dupliqués par les composants extraits, sans
+  modifier textes, styles, z-index, dimensions mobiles ni callbacks.
+- Ajout de tests de rendu React serveur et d'un inventaire statique interdisant
+  Supabase, storage et effets runtime dans les vues de présentation.
+- Documentation de l'organisation des phases et de la dette encore composée
+  dans l'éditeur détaillé exercices/séries.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire les composants de présentation par phase » — terminée.
+- Progression Phase 3 : 20/27 → 21/27 tâches.
+
+### Décisions prises
+
+- `WorkoutSession` reste l'orchestrateur et conserve l'autorité sur les états,
+  transitions et callbacks ; les vues ne reçoivent que des données et fonctions
+  typées.
+- L'état principal actif est marqué séparément de l'état terminé. Le repos et
+  les confirmations demeurent des surcouches de l'état actif, conformément au
+  rendu existant, plutôt que de devenir de nouveaux états métier artificiels.
+- L'éditeur exercices/séries, les variantes, le tempo et les popups legacy non
+  liés à une phase restent dans `WorkoutSession`; leur extraction relève de la
+  future réduction sous 600 lignes.
+- La date du résumé reste fournie par l'orchestrateur afin de préserver le rendu
+  au moment de la finalisation et de permettre des tests déterministes.
+
+### Problèmes rencontrés
+
+- La limite jsdom/Node connue a été évitée avec `renderToStaticMarkup`, sans
+  contournement ESM.
+- Des modifications utilisateur non liées sont apparues pendant la tranche dans
+  `scripts/enrich-parent-exercises.mjs` et deux médias
+  `public/videos/exercises/developpe-couche-barre.*`; elles n'ont été ni lues,
+  ni modifiées, ni incluses dans le périmètre.
+
+### Risques ou dette restante
+
+- `WorkoutSession` reste à 1 161 lignes, au-dessus de la cible finale de 600.
+- L'éditeur détaillé exercices/séries, le réordonnancement, les variantes, le
+  tempo et plusieurs popups restent fortement couplés dans l'orchestrateur.
+- Les dettes de cache sans owner, `savedAt` invalide, persistance
+  non transactionnelle et finalisation non idempotente restent inchangées.
+- Les callbacks sont prouvés statiquement et les sorties sont rendues côté
+  serveur ; les interactions DOM complètes restent limitées par l'environnement
+  jsdom actuel.
+
+### Tests exécutés
+
+- Tests ciblés des vues de phase : 14/14 verts.
+- Tests modèle, runtime, transitions et persistance représentatifs : 52/52
+  verts avant la suite complète.
+- Suite Vitest complète : 93 fichiers, 905 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouveaux composants et tests : vert.
+- Dette ESLint `WorkoutSession` : 31 erreurs/22 avertissements → 31/12 ; aucune
+  nouvelle erreur et dix imports/constantes devenus inutiles supprimés.
+- `git diff --check` vert.
+
+### Mesures avant/après
+
+- `WorkoutSession.tsx` : 1 522 → 1 161 lignes (-361, environ -24 %).
+- Vues extraites : 35, 106, 24, 82 et 79 lignes ; types partagés : 20 lignes.
+- Tâches Phase 3 : 20/27 → 21/27.
+- Progression globale : 63/138 → 64/138, soit environ 46 %.
+- Tests actifs globaux : 891 → 905.
+- Nouvelles routes, migrations, policies RLS ou spécifications E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Tester interruption, reprise et arrière-plan mobile.

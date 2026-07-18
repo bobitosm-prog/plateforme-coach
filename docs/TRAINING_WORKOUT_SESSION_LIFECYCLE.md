@@ -393,3 +393,36 @@ La future idempotence pourra être ajoutée derrière les ports sans modifier le
 composants, mais elle exige encore une identité durable d'exécution, une
 transaction/RPC et un mécanisme de réconciliation. Aucun de ces correctifs n'est
 introduit ici.
+
+## Présentation extraite par phase
+
+Les branches visuelles de `WorkoutSession` sont désormais isolées dans
+[`app/components/training/workout-session`](../app/components/training/workout-session/).
+Elles reçoivent uniquement des données typées et des callbacks ; l'identité,
+Supabase, le stockage local, le runtime audio/vibration/wake lock et les
+mutations restent dans l'orchestrateur et les frontières déjà documentées.
+
+| État observable | Vue dédiée | Autorité conservée hors vue |
+|---|---|---|
+| séance active | `WorkoutActiveSessionHeaderView` et `WorkoutActiveSessionFinishView` | horloge runtime, progression calculée, ouverture de finalisation |
+| reprise d'un brouillon | `WorkoutDraftResumeView` | lecture/suppression/restauration du stockage |
+| repos actif | `WorkoutActiveRestView` | échéance, intervalle, sons et RIR courant |
+| repos terminé | `WorkoutRestCompleteView` | arrêt/redémarrage du runtime et message suivant |
+| validation d'une série atypique | `WorkoutRepetitionsWarningView` | décision de validation et mutation de la série |
+| confirmation de fin | `WorkoutEndConfirmationView` | finalisation, sauvegarde du modèle et persistance |
+| confirmation d'abandon | `WorkoutAbandonConfirmationView` | arrêt runtime, nettoyage du brouillon et fermeture |
+| proposition de modèle | `WorkoutTemplateSaveView` | construction et écriture du modèle |
+| séance terminée | `WorkoutCompletionView` | données de résumé, fermeture et décompte de redirection |
+
+L'éditeur détaillé des exercices et séries reste composé dans
+`WorkoutSession` : il contient encore la gestuelle de réordonnancement, les
+variantes, le tempo et plusieurs popups legacy. Cette dette est volontairement
+préservée ; la tranche n'introduit ni redesign ni nouveau contrat métier. Une
+seule phase racine (`active` ou `completed`) est rendue à la fois, tandis que les
+confirmations et le repos restent des surcouches compatibles avec l'état actif.
+
+Les vues extraites conservent les styles inline, textes, dimensions mobiles,
+z-index, boutons et ordre d'information existants. Des tests de rendu serveur
+couvrent les données minimales et complètes, les champs optionnels, le repos,
+les séries complétées et le résumé ; un inventaire statique interdit Supabase,
+storage et effets runtime dans ces composants.

@@ -1,26 +1,28 @@
 'use client'
 import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
-import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
+import { Check, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
 import { normalizeExerciseName } from '../../lib/exercise-matching'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
-import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
 import { initAudio } from '../../lib/timer-audio'
-import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import { discardWorkoutDraftSnapshot, restoreWorkoutDraftSnapshot, saveWorkoutDraftSnapshot } from '../../lib/training/workout-draft-sync'
 import { useWorkoutRuntime } from '../hooks/useWorkoutRuntime'
-import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
+import { WorkoutDraftResumeView } from './training/workout-session/WorkoutDraftResumeView'
+import { WorkoutActiveRestView, WorkoutRestCompleteView } from './training/workout-session/WorkoutRestViews'
+import { WorkoutCompletionView } from './training/workout-session/WorkoutCompletionView'
+import { WorkoutAbandonConfirmationView, WorkoutEndConfirmationView, WorkoutRepetitionsWarningView, WorkoutTemplateSaveView } from './training/workout-session/WorkoutFinalizationViews'
+import { WorkoutActiveSessionFinishView, WorkoutActiveSessionHeaderView } from './training/workout-session/WorkoutActiveSessionViews'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -33,9 +35,7 @@ function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', weightRaw: '', reps: '', done: false, rir: null }))
-const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
-const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
 
@@ -589,182 +589,30 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }
 
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, exerciseId: null, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
-
   if (done) {
-    // Compute volume comparison
-    const volumeDelta = summary ? summary.currentWeekVolume - summary.lastWeekVolume : 0
-    const volumePercent = summary && summary.lastWeekVolume > 0
-      ? ((volumeDelta / summary.lastWeekVolume) * 100)
-      : null
-    const trend: 'up' | 'down' | 'neutral' =
-      volumePercent === null ? 'neutral' :
-      volumePercent > 0.5 ? 'up' :
-      volumePercent < -0.5 ? 'down' : 'neutral'
-    const trendColor = trend === 'up' ? GREEN : trend === 'down' ? RED : TEXT_DIM
-
-    // Top 3 exos by max weight
-    const performances = exos
-      .map(e => {
-        const doneSets = e.sets.filter(s => s.done)
-        if (!doneSets.length) return null
-        const best = Math.max(...doneSets.map(s => Number(s.weight) || 0))
-        return { name: e.name, muscle: e.muscle, setsCount: doneSets.length, best }
-      })
-      .filter((p): p is NonNullable<typeof p> => p !== null && p.best > 0)
-      .sort((a, b) => b.best - a.best)
-      .slice(0, 3)
-
-    // Format date contextually — locale-aware
-    const now = new Date()
-    const dateLabel = `${now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
-
-    // Mini-graph : up to 4 previous sessions, oldest first
-    const graphSessions = summary?.previousSessions
-      ? [...summary.previousSessions].reverse().slice(-4)
-      : []
-    const maxGraphVolume = graphSessions.length
-      ? Math.max(...graphSessions.map(s => s.volume), volume)
-      : volume
-
     return (
-      <>
-      <WorkoutCelebration visible={done} />
-      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
-
-        {/* Glow décoratif top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.4 }} />
-
-        {/* Contenu principal scrollable */}
-        <div className="relative z-10 flex-1 flex flex-col pt-8 pb-36 w-full" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
-
-          {/* Header : date + trend badge */}
-          <div className="flex items-center justify-between mb-6">
-            <div style={mutedStyle}>{dateLabel}</div>
-            {summaryLoading ? (
-              <div style={{ width: 64, height: 22, background: BG_CARD_2, borderRadius: 12, opacity: 0.5 }} />
-            ) : volumePercent !== null ? (
-              <div style={{ ...badgeStyle, color: trendColor, background: trend === 'up' ? 'rgba(74,222,128,0.12)' : trend === 'down' ? 'rgba(239,68,68,0.12)' : colors.goldDim, fontSize: 11, padding: '4px 10px' }}>
-                {trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} {volumePercent > 0 ? '+' : ''}{volumePercent.toFixed(1)}%
-              </div>
-            ) : null}
-          </div>
-
-          {/* Titre éditorial */}
-          <h1 className="mb-1" style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', lineHeight: 1.05 }}>
-            {t('done.title')}<span style={{ color: GOLD }}></span>
-          </h1>
-          <p className="mb-10" style={{ ...subtitleStyle, color: TEXT_MUTED, fontStyle: 'italic', textTransform: 'none' as const, letterSpacing: '0.02em', fontWeight: 400 }}>
-            {sessionName}
-          </p>
-
-          {/* CARD : Volume HERO */}
-          <div className="flex items-center gap-3 mb-2">
-            <span style={titleStyle}>{t('done.totalVolume')}</span>
-            <div style={titleLineStyle} />
-          </div>
-          <div style={{ ...cardStyle, padding: '32px 24px', marginBottom: 24, textAlign: 'center', background: `linear-gradient(135deg, ${colors.surface}, ${BG_CARD_2})` }}>
-            <div className="flex items-baseline justify-center gap-3">
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 64, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                {Math.round(volume).toLocaleString('fr-FR')}
-              </span>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.05em' }}>kg</span>
-            </div>
-          </div>
-
-          {/* CARD : Mini-graph dernières séances */}
-          {graphSessions.length > 0 && (
-            <>
-              <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>{t('done.lastSessions')}</span>
-                <div style={titleLineStyle} />
-              </div>
-              <div style={{ ...cardStyle, padding: '20px 16px', marginBottom: 24 }}>
-                <div className="flex items-end gap-3 h-24">
-                  {graphSessions.map((s, i) => {
-                    const heightPct = (s.volume / maxGraphVolume) * 100
-                    const isCurrent = i === graphSessions.length - 1
-                    return (
-                      <div key={s.id} className="flex-1 flex flex-col items-center gap-2">
-                        <div className="w-full rounded-t" style={{
-                          height: `${Math.max(heightPct, 6)}%`,
-                          background: isCurrent ? GOLD : GOLD_DIM,
-                          minHeight: 8,
-                        }} />
-                        <div style={{ ...mutedStyle, fontSize: 10 }}>
-                          {new Date(s.date).getDate()}/{new Date(s.date).getMonth() + 1}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* CARDS : Stats secondaires 2 colonnes */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.duration')}</div>
-              <div style={{ ...statStyle, fontSize: 32 }}>{dur(elapsed)}</div>
-            </div>
-            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.sets')}</div>
-              <div style={{ ...statStyle, fontSize: 32 }}>
-                {completed}<span style={{ color: TEXT_DIM, fontSize: 22 }}>/{total}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD : Liste exercices */}
-          {performances.length > 0 && (
-            <>
-              <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>{t('done.exercises')}</span>
-                <div style={titleLineStyle} />
-              </div>
-              <div style={{ ...cardStyle, padding: '8px 20px' }}>
-                {performances.map((p, i) => (
-                  <div key={i}>
-                    <div className="py-3 flex justify-between items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div style={{ fontFamily: FONT_ALT, fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
-                          {getExerciseName(p, locale)}
-                        </div>
-                        <div className="mt-0.5" style={{ ...mutedStyle, fontSize: 11 }}>
-                          {t('done.setsCount', { count: p.setsCount })} · {getMuscleLabel(p.muscle, locale, tMuscle)}
-                        </div>
-                      </div>
-                      <div style={{ ...statSmallStyle, fontSize: 18 }}>{p.best} kg</div>
-                    </div>
-                    {i < performances.length - 1 && (
-                      <div style={{ height: 1, background: BORDER, opacity: 0.5 }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-        </div>
-
-        {/* Bottom bar fixe : bouton premium + compteur */}
-        <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
-          <div className="pt-6" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto', background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
-            <button onClick={onClose} style={{ ...btnPrimary, width: '100%', padding: '16px 0', fontSize: 14 }} className="active:scale-[0.98] transition-transform">
-              {t('done.backToDashboard')}
-            </button>
-            <p className="text-center mt-3" style={{ ...mutedStyle, fontSize: 11 }}>
-              {t('done.autoRedirect', { seconds: autoRedirectCountdown })}
-            </p>
-          </div>
-        </div>
-      </div>
-      </>
+      <WorkoutCompletionView
+        sessionName={sessionName}
+        elapsedMs={elapsed}
+        completedSets={completed}
+        totalSets={total}
+        totalVolume={volume}
+        exercises={exos}
+        summary={summary}
+        summaryLoading={summaryLoading}
+        autoRedirectCountdown={autoRedirectCountdown}
+        now={new Date()}
+        locale={locale}
+        t={t}
+        tMuscle={tMuscle}
+        formatDuration={dur}
+        onClose={onClose}
+      />
     )
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
+    <div data-workout-phase="active" className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
       <style>{`
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
@@ -789,64 +637,18 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       `}</style>
       {/* DRAFT RESUME PROMPT */}
       {draftPrompt && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>{t('draft.title')}</h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
-              {t('draft.description', { name: sessionName })}
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.restart')}</button>
-              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
-            </div>
-          </div>
-        </div>
+        <WorkoutDraftResumeView sessionName={sessionName} t={t} onDiscard={discardDraft} onResume={resumeDraft} />
       )}
 
       {/* REST DONE POPUP — only shows when timer reaches 0 */}
       {restDone && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
-          <div style={{ position: 'relative', overflow: 'hidden', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: colors.goldBorder, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            </div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>{t('restDone.title')}</h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 8px' }}>{t('restDone.next')}</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1, margin: '0 0 24px' }}>{restNextInfo || motivationalMsg}</p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }} className="active:scale-95"
-                style={{ flex: 1, padding: '14px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
-              <button onClick={dismissRestDone} className="active:scale-95"
-                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('restDone.start')}</button>
-            </div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: GOLD, animation: 'rest-autoclose-progress 5s linear forwards' }} />
-            </div>
-          </div>
-        </div>
+        <WorkoutRestCompleteView message={restNextInfo || motivationalMsg} t={t}
+          onAddThirtySeconds={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }}
+          onContinue={dismissRestDone} />
       )}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
-      {/* HEADER */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, padding: '0 16px 10px', paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
-            <ArrowLeft size={22} color={TEXT_PRIMARY} />
-          </button>
-          <h1 style={{ flex: 1, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', margin: 0, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionName || t('freeSession')}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, animation: 'pulse 2s infinite' }} />
-            <span style={{ fontSize: 14, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '1px' }}>{dur(elapsed)}</span>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 10, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('progression')}</span>
-          <span style={{ fontSize: 11, color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
-        </div>
-        <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: GOLD, transition: 'width 0.5s ease' }} />
-        </div>
-      </div>
+      <WorkoutActiveSessionHeaderView sessionName={sessionName} elapsed={dur(elapsed)} completedSets={completed} totalSets={total} progressPercent={pct} t={t} onClose={onClose} />
 
       {/* EXERCICES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
@@ -1115,68 +917,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                         </div>
                       </div>
                       {/* INLINE REST TIMER — rendered below the set that triggered it */}
-                      {restOn && restExoId === exo.id && restSetId === set.id && (() => {
-                        const currentRir = exo.sets.find(s => s.id === set.id)?.rir ?? null
-                        return (
-                        <div style={{
-                          marginTop: 8, marginBottom: 4, borderRadius: 12,
-                          background: 'rgba(201,168,76,0.08)',
-                          border: `1px solid ${restSecs <= 10 ? colors.orange : GOLD_RULE}`,
-                          transition: 'border-color 200ms',
-                          overflow: 'hidden',
-                        }}>
-                          {rirTrackingEnabled && (
-                            <div style={{ padding: '12px 16px 10px', borderBottom: `1px solid ${GOLD_RULE}` }}>
-                              <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginBottom: 8 }}>{t(rirScaleAdvanced ? 'rirQuestionAdvanced' : 'rirQuestionSimple')}</div>
-                              <div style={{ display: 'flex', gap: 6 }}>
-                                {rirScaleAdvanced
-                                  ? [0, 1, 2, 3, 4].map(v => (
-                                      <button key={v} onClick={() => setRir(v)} style={{
-                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                                        background: currentRir === v ? GOLD_DIM : colors.surface2,
-                                        border: `1px solid ${currentRir === v ? GOLD : colors.divider}`,
-                                        fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: currentRir === v ? GOLD : TEXT_MUTED,
-                                      }}>{v === 4 ? '4+' : v}</button>
-                                    ))
-                                  : ([
-                                      { label: 'Facile', value: 4 },
-                                      { label: 'Moyen', value: 2 },
-                                      { label: 'Dur', value: 1 },
-                                      { label: 'Échec', value: 0 },
-                                    ] as const).map(opt => (
-                                      <button key={opt.value} onClick={() => setRir(opt.value)} style={{
-                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                                        background: currentRir === opt.value ? GOLD_DIM : colors.surface2,
-                                        border: `1px solid ${currentRir === opt.value ? GOLD : colors.divider}`,
-                                        fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: currentRir === opt.value ? GOLD : TEXT_MUTED,
-                                      }}>{opt.label}</button>
-                                    ))
-                                }
-                              </div>
-                            </div>
-                          )}
-                          <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
-                          <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
-                            <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
-                              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-                              <circle cx="40" cy="40" r="32" fill="none"
-                                stroke={restSecs <= 10 ? colors.orange : GOLD} strokeWidth="6" strokeLinecap="round"
-                                strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
-                                style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
-                            </svg>
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? colors.orange : GOLD, lineHeight: 1 }}>{restSecs}s</span>
-                              <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>{t('rest')}</span>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                            <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
-                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
-                          </div>
-                          </div>
-                        </div>
-                        )
-                      })()}
+                      {restOn && restExoId === exo.id && restSetId === set.id && (
+                        <WorkoutActiveRestView
+                          seconds={restSecs}
+                          maximumSeconds={restMax}
+                          currentRir={exo.sets.find(candidate => candidate.id === set.id)?.rir ?? null}
+                          rirTrackingEnabled={Boolean(rirTrackingEnabled)}
+                          rirScaleAdvanced={Boolean(rirScaleAdvanced)}
+                          t={t}
+                          onSetRir={setRir}
+                          onAddThirtySeconds={addRestTime}
+                          onSkip={skipRest}
+                        />
+                      )}
                       </Fragment>
                     )
                   })}
@@ -1230,161 +983,47 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       )}
 
       {/* BARRE BAS — centered TERMINER — hidden in reorder mode */}
-      {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
-            <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
-          </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
-        </div>
-      </div>}
+      {!reorderMode && <WorkoutActiveSessionFinishView elapsed={dur(elapsed)} t={t} onFinish={() => setShowEndModal(true)} />}
 
-      {/* END SESSION MODAL — slide up sheet */}
       {showEndModal && !showDeleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: BG_BASE, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTop: `1px solid ${BORDER}`, width: '100%', maxWidth: 480, padding: 24, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', animation: 'wsSlideUp 300ms ease-out' }}>
-            {/* Handle */}
-            <div style={{ width: 40, height: 4, background: 'rgba(201,168,76,0.3)', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>{t('endModal.title')}</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.question')}</p>
-            {/* Summary stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
-              {([
-                { icon: <Clock size={24} color={GOLD} />, value: dur(elapsed), label: t('endModal.duration') },
-                { icon: <CheckCircle2 size={24} color={GOLD} />, value: `${completed}/${total}`, label: 'Sets' },
-                { icon: <Dumbbell size={24} color={GOLD} />, value: `${Math.round(volume)} kg`, label: 'Volume' },
-              ]).map(stat => (
-                <div key={stat.label} style={{ padding: '10px 6px', textAlign: 'center', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>{stat.icon}</div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{stat.value}</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-            {/* Save button */}
-            <button onClick={() => { setShowEndModal(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
-              width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
-              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
-            }}>
-              <Check size={16} strokeWidth={3} />{t('endModal.save')}
-            </button>
-            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 16px' }}>{t('endModal.saveHint')}</p>
-            {/* Delete button */}
-            <button onClick={() => setShowDeleteConfirm(true)} className="active:scale-[0.98]" style={{
-              width: '100%', padding: 14, borderRadius: 14,
-              background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)',
-              color: 'rgba(239,68,68,0.8)', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
-            }}>
-              <X size={16} strokeWidth={3} />{t('endModal.delete')}
-            </button>
-            <p style={{ fontSize: 10, color: TEXT_DIM, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.deleteHint')}</p>
-            {/* Cancel */}
-            <button onClick={() => setShowEndModal(false)} className="active:scale-[0.98]" style={{
-              width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
-              border: `1px solid ${colors.divider}`, color: TEXT_MUTED,
-              fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
-            }}>{t('endModal.continue')}</button>
-          </div>
-        </div>
+        <WorkoutEndConfirmationView
+          elapsed={dur(elapsed)}
+          completedSets={completed}
+          totalSets={total}
+          volume={volume}
+          t={t}
+          onSave={() => { setShowEndModal(false); sessionModified ? setShowSavePopup(true) : finish() }}
+          onDelete={() => setShowDeleteConfirm(true)}
+          onContinue={() => setShowEndModal(false)}
+        />
       )}
 
-      {/* DELETE CONFIRMATION — double check */}
       {showDeleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: colors.surface2, border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={28} color={colors.error} strokeWidth={2} />
-            </div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>{t('deleteModal.title')}</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>
-              {completed > 0 ? t('deleteModal.withSets', { count: completed }) : t('deleteModal.noSets')}
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setShowDeleteConfirm(false)} className="active:scale-[0.98]" style={{
-                flex: 1, padding: 14, borderRadius: 12, background: 'transparent',
-                border: `1px solid ${BORDER}`, color: TEXT_MUTED,
-                fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
-              }}>{t('cancel')}</button>
-              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); runtime.stop(); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
-                flex: 1, padding: 14, borderRadius: 12,
-                background: colors.error, border: 'none', color: '#fff',
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
-              }}>{t('delete')}</button>
-            </div>
-          </div>
-        </div>
+        <WorkoutAbandonConfirmationView
+          completedSets={completed}
+          t={t}
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={() => { setShowDeleteConfirm(false); setShowEndModal(false); runtime.stop(); cleanupDraft(); onClose() }}
+        />
       )}
 
-      {/* REPS WARNING MODAL */}
       {repsWarning && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%',
-              background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
-              margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
-              </svg>
-            </div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>
-              {t('repsWarning.title')}
-            </h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
-              {t('repsWarning.description', { reps: repsWarning.reps })}
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={() => setRepsWarning(null)} className="active:scale-[0.98]" style={{
-                width: '100%', padding: 12, borderRadius: 12,
-                background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
-              }}>{t('repsWarning.edit')}</button>
-              <button onClick={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }} className="active:scale-[0.98]" style={{
-                width: '100%', padding: 12, borderRadius: 12,
-                background: GOLD, border: 'none', color: colors.onGold,
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
-              }}>{t('repsWarning.confirm')}</button>
-            </div>
-          </div>
-        </div>
+        <WorkoutRepetitionsWarningView
+          repetitions={repsWarning.reps}
+          t={t}
+          onEdit={() => setRepsWarning(null)}
+          onConfirm={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }}
+        />
       )}
 
-      {/* Save as template popup */}
       {showSaveTemplate && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>{t('saveTemplate.title')}</div>
-            <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
-              {t('saveTemplate.description')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
-              {SESSION_TYPE_OPTIONS.filter(t => t.key !== 'repos').map(t => (
-                <button key={t.key} onClick={() => setTemplateName(t.label)} style={{
-                  padding: '10px 6px', borderRadius: 10, cursor: 'pointer',
-                  background: templateName === t.label ? `${t.color}20` : colors.surface2,
-                  border: `1.5px solid ${templateName === t.label ? t.color : colors.divider}`,
-                  color: templateName === t.label ? t.color : TEXT_MUTED,
-                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                }}>
-                  <span style={{ fontSize: 14 }}>{t.emoji}</span> {t.shortLabel}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
-                {t('saveTemplate.yes')}
-              </button>
-              <button onClick={() => { setShowSaveTemplate(false); setDone(true) }} style={{ width: '100%', padding: 14, borderRadius: 14, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
-                {t('saveTemplate.no')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <WorkoutTemplateSaveView
+          templateName={templateName}
+          t={t}
+          onSelectName={setTemplateName}
+          onSave={saveAsTemplate}
+          onSkip={() => { setShowSaveTemplate(false); setDone(true) }}
+        />
       )}
 
       {/* Exercise info popup */}
