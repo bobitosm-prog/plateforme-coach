@@ -10,6 +10,7 @@ import { addXP, updateStreak } from '@/lib/gamification'
 import { PERSONAL_PROGRAM_PROJECTION } from '@/lib/repositories/training'
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { clearActiveWorkout, writeActiveWorkout } from '@/lib/training/workout-session-storage'
+import { createLegacyWorkoutLaunch } from '@/lib/training/workout-session-model'
 
 type ProfileRow = Tables<'profiles'>
 type ProgressPhotoRow = Tables<'progress_photos'>
@@ -97,7 +98,7 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
     const name = typeof record.day_name === 'string'
       ? record.day_name
       : typeof record.name === 'string' ? record.name : 'Séance'
-    const draft = { name, exercises, startedAt: new Date().toISOString(), weekdayKey }
+    const draft = createLegacyWorkoutLaunch({ name, exercises, weekdayKey }, { now: () => new Date() })
     setWorkoutSession(draft)
     try { writeActiveWorkout(localStorage, draft) } catch { /* unavailable */ }
   }

@@ -17,6 +17,7 @@ import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import { clearWorkoutDraft, readWorkoutDraft, writeWorkoutDraft } from '../../lib/training/workout-session-storage'
+import { createWorkoutRestPeriod } from '../../lib/training/workout-session-model'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
@@ -533,9 +534,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       cancelScheduledSounds(restScheduledSoundsRef.current)
       restScheduledSoundsRef.current = []
     }
-    restEndsAtRef.current = Date.now() + s * 1000
-    restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
-    setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
+    const period = createWorkoutRestPeriod({ exerciseId: exoId || '', setId: setId || '', durationSeconds: s }, { now: () => new Date() })
+    if (!period.ok) return
+    restEndsAtRef.current = new Date(period.rest.endsAt).getTime()
+    restScheduledSoundsRef.current = scheduleRestPeriodSounds(period.rest.durationSeconds)
+    setRestMax(period.rest.durationSeconds); setRestSecs(period.rest.durationSeconds); setRestOn(true); setRestDone(false)
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)

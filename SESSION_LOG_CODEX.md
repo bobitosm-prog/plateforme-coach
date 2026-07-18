@@ -6071,3 +6071,81 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire le modèle pur de session.
+
+---
+
+## Entrée — 2026-07-18 — Modèle pur de session d'entraînement
+
+### Travail effectué
+
+- Création de `lib/training/workout-session-model.ts`, sans dépendance UI,
+  navigateur, stockage ou Supabase.
+- Modélisation discriminée des phases `prepared`, `in-progress`, `resting`,
+  `rest-complete` et `abandoned`.
+- Types purs pour séance, exercice, série, repos, refus de transition et
+  snapshot de finalisation.
+- Ajout de transitions immuables pour démarrage, séries, exercices, repos,
+  abandon et préparation de la finalisation.
+- Adaptateur legacy explicite isolant les entrées inconnues ou sans nom.
+- Horloge injectée pour lancement, repos, fin de repos et abandon.
+- Migration représentative du lancement dashboard et du calcul d'échéance de
+  repos dans `WorkoutSession`, sans toucher à la chaîne SQL.
+- Documentation des frontières UI, stockage et persistance dans le cycle de vie.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire le modèle pur de session » — terminée.
+- Progression Phase 3 : 17/27 → 18/27 tâches.
+
+### Décisions prises
+
+- La réussite SQL n'est pas un état du modèle pur : elle reste inconnue tant que
+  le service de sauvegarde non transactionnel n'a pas confirmé ses écritures.
+- `done`, modales et alertes restent de l'état de présentation ; les échéances
+  de repos appartiennent au modèle métier/minuteur.
+- L'adaptateur legacy conserve une copie des champs source et refuse les formes
+  inconnues plutôt que d'inventer un exercice valide.
+- Les IDs par défaut sont déterministes et locaux au modèle ; ils ne prétendent
+  pas être des UUID persistants.
+
+### Problèmes rencontrés
+
+- Une garde statique initiale confondait `Array.from` avec un appel Supabase
+  `.from`; elle a été resserrée sur les appels de table réels.
+- L'état UI et la persistance sont encore concentrés dans `WorkoutSession` ; ils
+  ne sont pas déplacés artificiellement dans le modèle pur.
+
+### Risques ou dette restante
+
+- Finalisation SQL non transactionnelle et non idempotente, sans lien entre les
+  deux historiques.
+- Caches non owner-scoped/non versionnés et `savedAt` invalide toujours accepté.
+- Le minuteur, l'audio et le wake lock restent couplés au composant React.
+- Le modèle n'est pas encore la source unique de l'état React complet ; seuls
+  deux consommateurs représentatifs sont migrés dans cette tranche.
+
+### Tests exécutés
+
+- Tests modèle et transitions ciblés : 36/36 verts.
+- Tests Training ciblés : 101/101 verts.
+- Suite Vitest complète : 86 fichiers, 861 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint du modèle, de ses tests et de l'action dashboard : vert ;
+  `WorkoutSession.tsx` conserve 33 erreurs et 22 avertissements historiques.
+- Liens internes, `git diff --check` et contrôle de périmètre : verts.
+
+### Mesures avant/après
+
+- Tâches Phase 3 : 17/27 → 18/27.
+- Progression globale : 60/138 → 61/138, soit environ 44 %.
+- Tests actifs globaux : 847 → 861.
+- Nouvelles requêtes ou mutations Supabase : 0.
+- Routes, E2E, migrations et RLS modifiés : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire timer, audio et wake lock.

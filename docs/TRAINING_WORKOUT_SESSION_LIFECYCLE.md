@@ -256,3 +256,42 @@ Les transitions du minuteur restent gardées statiquement : les exécuter comme
 hook nécessiterait l'environnement DOM actuellement bloqué par la combinaison
 jsdom 29 / Node 24. Aucun graphe ESM fragile n'a été ajouté. La prochaine tranche
 peut désormais extraire le modèle pur de session derrière cette couverture.
+
+## Modèle pur extrait
+
+[`workout-session-model.ts`](../lib/training/workout-session-model.ts) formalise
+désormais la partie métier sans React, Next, Supabase, navigateur, stockage ni
+JSX. Son union discriminée contient uniquement :
+
+- `prepared` : prescription résolue et horodatée, pas encore commencée ;
+- `in-progress` : séries et exercices éditables ;
+- `resting` : repos actif avec début et échéance calculés par horloge injectée ;
+- `rest-complete` : repos arrivé à terme, encore rattaché à sa série ;
+- `abandoned` : état terminal local horodaté.
+
+`done`, les modales, alertes et compteurs d'affichage restent de l'état UI.
+`moovx_active_workout` et `moovx_workout_draft` restent gérés par la frontière
+de stockage. Les écritures `workout_sessions`, `workout_sets`,
+`completed_sessions` et `scheduled_sessions` restent dans l'action de
+persistance legacy. Le modèle ne présente donc pas une réussite SQL comme un
+état métier acquis.
+
+Les décisions pures couvrent création libre/programmée, démarrage, modification
+immutable d'une série, ajout/suppression d'exercice, repos, abandon et
+préparation d'un snapshot de finalisation. Toute transition retourne soit un
+nouvel état, soit un refus stable (`invalid_phase`, `exercise_not_found`,
+`set_not_found`, `invalid_duration`, `invalid_input`). Les entrées legacy
+compatibles passent par un adaptateur explicite ; une forme sans objet ou sans
+nom est isolée comme `unsupported`.
+
+Deux consommateurs représentatifs sont branchés sans changement public :
+
+- le dashboard crée son enveloppe legacy via `createLegacyWorkoutLaunch` ;
+- `WorkoutSession` calcule l'échéance de repos via
+  `createWorkoutRestPeriod`.
+
+Les risques historiques restent volontairement inchangés : chaîne SQL non
+transactionnelle, double finalisation, historiques non liés, caches sans owner,
+`savedAt` invalide accepté et divergences de schéma. La prochaine tranche doit
+extraire timer, audio et wake lock autour de cette frontière, sans les confondre
+avec l'état métier.
