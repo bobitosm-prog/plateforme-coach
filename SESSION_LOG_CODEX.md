@@ -6922,3 +6922,86 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Cartographier les formats repas, plans et aliments en Phase 4.
+
+---
+
+## Entrée — 2026-07-18 — Cartographie des formats Nutrition
+
+### Travail effectué
+
+- Activation effective de la Phase 4 et audit documentaire de l'ensemble des
+  migrations, types générés, composants, hooks, routes, tâches serveur et
+  consommateurs indirects du domaine Nutrition.
+- Création de `docs/NUTRITION_FORMATS_INVENTORY.md` avec carte des sources,
+  matrice producteurs/consommateurs, formats de plans, journaux, catalogues,
+  recettes, préférences, IA, caches, ownership et RLS.
+- Inventaire de douze adaptateurs legacy attendus et proposition d'un ordre de
+  construction du futur modèle canonique, sans migration ni refactor.
+
+### Tâches cochées
+
+- Phase 4 : « Cartographier les formats repas, plans et aliments » — terminée.
+- Phase 4 : 0/17 → 1/17 tâches.
+
+### Décisions prises
+
+- Le type tolérant de `lib/meal-plan.ts` est documenté comme adaptateur
+  existant, pas comme autorité métier définitive : il accepte des formes
+  ambiguës et remplace certains champs invalides par zéro.
+- `daily_food_logs`, `meal_logs` et `meal_tracking` restent trois contrats
+  distincts ; aucune fusion n'est proposée sans clé de rapprochement fiable.
+- Les catalogues `food_items`, `community_foods`, `custom_foods` et la base
+  statique `FITNESS_FOODS` conservent leurs provenances et bases nutritionnelles
+  distinctes jusqu'à la définition du modèle canonique.
+
+### Principales divergences relevées
+
+- Les types générés décrivent `meal_plans.plan/active`, tandis que l'application
+  utilise `plan_data/is_active` ; des écarts analogues existent pour les cibles
+  de `client_meal_plans`, la complétion de `meal_tracking`, `saved_meals`,
+  `food_items` et `custom_foods`.
+- Les plans emploient quatre représentations et plusieurs vocabulaires
+  français/anglais ; les repas sauvegardés et recettes sont des JSON sans
+  version ni validation partagée.
+- Les macros peuvent être par 100 g, par portion ou déjà multipliées ; les
+  notions cru/cuit et les unités textuelles ne sont pas conservées partout.
+- Plusieurs flux remplacent ou insèrent des lignes séquentiellement sans
+  transaction ni idempotence et peuvent laisser un état partiel.
+- Les policies coach historiques ne démontrent pas toutes une relation active ;
+  `community_foods.created_by` reste optionnel et la route de recherche utilise
+  le `service_role` pour des lectures de catalogue.
+
+### Validations exécutées
+
+- Noms des tables, colonnes, policies et formats recoupés entre migrations,
+  types générés et usages applicatifs.
+- Liens internes du nouveau document vérifiés.
+- `git diff --check` vert.
+- Périmètre vérifié : seuls le document d'inventaire, la roadmap et ce journal
+  appartiennent à la tranche ; aucune route, bibliothèque applicative, suite de
+  tests, migration, RLS ou donnée distante n'a été modifiée.
+- Les trois fichiers utilisateur protégés sont restés non ouverts, intacts et
+  hors staging.
+
+### Risques ou dette restante
+
+- Le schéma distant n'a pas été consulté : les divergences runtime/types sont
+  prouvées dans le dépôt, mais leur présence exacte par environnement reste à
+  vérifier lors d'une tranche autorisée.
+- Aucun modèle de portion, provenance, unité ou arrondi ne fait encore autorité.
+- Aucun repository Nutrition ne borne les nombreux accès Supabase directs.
+
+### Mesures
+
+- Phase 4 : 0/17 → 1/17 tâches.
+- Progression globale : 70/138 → 71/138, soit environ 51 %.
+- Fichiers applicatifs, tests, E2E, migrations ou policies modifiés : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Définir le modèle Nutrition canonique.
