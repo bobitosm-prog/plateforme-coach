@@ -1,27 +1,24 @@
 'use client'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
+import { browserVisibilityPort, createBrowserWakeLockPort } from '../../lib/training/workout-runtime-browser'
 
 export function useWakeLock(isActive: boolean) {
-  const wlRef = useRef<any>(null)
+  const portRef = useRef<ReturnType<typeof createBrowserWakeLockPort> | null>(null)
+  if (portRef.current == null) portRef.current = createBrowserWakeLockPort()
 
-  const acquire = useCallback(async () => {
-    if (!isActive || typeof navigator === 'undefined' || !('wakeLock' in navigator)) return
-    try {
-      if (wlRef.current) try { await wlRef.current.release() } catch {}
-      wlRef.current = await (navigator as any).wakeLock.request('screen')
-    } catch {}
+  useEffect(() => {
+    const port = portRef.current!
+    if (!isActive) {
+      void Promise.resolve(port.release()).catch(() => undefined)
+      return
+    }
+    void Promise.resolve(port.acquire()).catch(() => undefined)
+    const unsubscribe = browserVisibilityPort.subscribe(() => {
+      if (browserVisibilityPort.isVisible()) void Promise.resolve(port.acquire()).catch(() => undefined)
+    })
+    return () => {
+      unsubscribe()
+      void Promise.resolve(port.release()).catch(() => undefined)
+    }
   }, [isActive])
-
-  useEffect(() => {
-    if (isActive) acquire()
-    else if (wlRef.current) { wlRef.current.release().catch(() => {}); wlRef.current = null }
-  }, [isActive, acquire])
-
-  useEffect(() => {
-    const onVis = () => { if (document.visibilityState === 'visible' && isActive) acquire() }
-    document.addEventListener('visibilitychange', onVis)
-    return () => { document.removeEventListener('visibilitychange', onVis) }
-  }, [isActive, acquire])
-
-  useEffect(() => () => { if (wlRef.current) wlRef.current.release().catch(() => {}) }, [])
 }

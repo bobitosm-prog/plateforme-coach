@@ -10,14 +10,14 @@ import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
+import { initAudio } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import { clearWorkoutDraft, readWorkoutDraft, writeWorkoutDraft } from '../../lib/training/workout-session-storage'
-import { createWorkoutRestPeriod } from '../../lib/training/workout-session-model'
+import { useWorkoutRuntime } from '../hooks/useWorkoutRuntime'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
@@ -264,19 +264,11 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   }
   const discardDraft = () => { cleanupDraft(); setDraftPrompt(null) }
 
-  const [restOn, setRestOn] = useState(false)
-  const [restSecs, setRestSecs] = useState(0)
-  const [restMax, setRestMax] = useState(90)
+  const runtime = useWorkoutRuntime(startedAt)
+  const { elapsed, restOn, restSecs, restMax, restDone, motivationalMsg } = runtime
   const [restExoId, setRestExoId] = useState<string | null>(null)
   const [restSetId, setRestSetId] = useState<string | null>(null)
-  const [restDone, setRestDone] = useState(false)
   const [restNextInfo, setRestNextInfo] = useState('')
-  const restT = useRef<NodeJS.Timeout | null>(null)
-  const restEndsAtRef = useRef(0)
-  const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
-  const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
-  const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
-  const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
   const [autoRedirectCountdown, setAutoRedirectCountdown] = useState(AUTO_REDIRECT_SECONDS)
   const [summary, setSummary] = useState<{
@@ -297,7 +289,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
   const [prevSessionsByExo, setPrevSessionsByExo] = useState<Record<string, PrevSessionSet[][]>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
-  const [motivationalMsg, setMotivationalMsg] = useState('')
   const [showEndModal, setShowEndModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
@@ -400,8 +391,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     fetchPrev()
   }, [exoNamesKey])
 
-  useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
-
   useEffect(() => {
     if (!done) return
     setAutoRedirectCountdown(AUTO_REDIRECT_SECONDS)
@@ -443,42 +432,6 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     return () => { cancelled = true }
   }, [done])
 
-  const prevRemaining = useRef(Infinity)
-  useEffect(() => {
-    if (!restOn) { prevRemaining.current = Infinity; return }
-    const tick = () => {
-      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
-      setRestSecs(remaining)
-      if (remaining === 5 && prevRemaining.current > 5) { playWarningTick(); vibrateDevice() }
-      prevRemaining.current = remaining
-      if (remaining === 0) {
-        setRestOn(false); playBeep(); vibrateDevice()
-        setMotivationalMsg(getRandomMessage()); setRestDone(true)
-      }
-    }
-    tick()
-    restT.current = setInterval(tick, 200)
-    return () => { if (restT.current) clearInterval(restT.current) }
-  }, [restOn])
-  // Force recalc when app becomes visible (iOS Safari suspends setInterval)
-  useEffect(() => {
-    if (!restOn) return
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return
-      const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
-      setRestSecs(remaining)
-      if (remaining === 0) {
-        setRestOn(false); playBeep(); vibrateDevice()
-        setMotivationalMsg(getRandomMessage()); setRestDone(true)
-      }
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    window.addEventListener('focus', onVisible)
-    return () => {
-      document.removeEventListener('visibilitychange', onVisible)
-      window.removeEventListener('focus', onVisible)
-    }
-  }, [restOn])
   useEffect(() => {
     if (!restDone) return
     const t = setTimeout(() => {
@@ -486,73 +439,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }, 5000)
     return () => clearTimeout(t)
   }, [restDone])
-  useEffect(() => {
-    let wl: any = null
-    let videoEl: HTMLVideoElement | null = null
-    const tryWL = async () => {
-      try {
-        if ('wakeLock' in navigator) {
-          wl = await (navigator as any).wakeLock.request('screen')
-          console.log('[WakeLock] Screen lock acquired')
-        }
-      } catch (err) { console.warn('[WakeLock] Not supported:', err) }
-    }
-    tryWL().then(() => {
-      // Fallback iOS: invisible looping video prevents sleep
-      if (!wl) {
-        try {
-          videoEl = document.createElement('video')
-          videoEl.setAttribute('playsinline', '')
-          videoEl.setAttribute('muted', '')
-          videoEl.muted = true
-          videoEl.setAttribute('loop', '')
-          videoEl.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0.01'
-          videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhmcmVlAAAAGm1kYXQAAABhBgX//13QRNi9VAV2iu1ciRckAAACMm1vb3YAAABsbXZoZAAAAADcFAAN3BQADQAAu4AAAEAAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAABWG10cmFrAAAAXHRraGQAAAAD3BQADdwUAA0AAAABAAAAAAAAu4AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAA'
-          document.body.appendChild(videoEl)
-          videoEl.play().catch(() => {})
-          console.log('[WakeLock] Fallback video activated')
-        } catch {}
-      }
-    })
-    const onVis = () => { if (document.visibilityState === 'visible') tryWL() }
-    document.addEventListener('visibilitychange', onVis)
-    return () => {
-      document.removeEventListener('visibilitychange', onVis)
-      if (wl) { wl.release().catch(() => {}); console.log('[WakeLock] Released') }
-      if (videoEl) { videoEl.pause(); videoEl.remove(); console.log('[WakeLock] Fallback video removed') }
-    }
-  }, [])
-
   const cleanupDraft = () => { try { clearWorkoutDraft(localStorage) } catch {} }
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
-    if (restT.current) clearInterval(restT.current)
-    // Cancel any previously scheduled sounds (defensive: shouldn't happen,
-    // but if startRest is called while a previous one is still pending
-    // (e.g. fast re-validation), we don't want stale beeps to fire)
-    if (restScheduledSoundsRef.current.length > 0) {
-      cancelScheduledSounds(restScheduledSoundsRef.current)
-      restScheduledSoundsRef.current = []
-    }
-    const period = createWorkoutRestPeriod({ exerciseId: exoId || '', setId: setId || '', durationSeconds: s }, { now: () => new Date() })
-    if (!period.ok) return
-    restEndsAtRef.current = new Date(period.rest.endsAt).getTime()
-    restScheduledSoundsRef.current = scheduleRestPeriodSounds(period.rest.durationSeconds)
-    setRestMax(period.rest.durationSeconds); setRestSecs(period.rest.durationSeconds); setRestOn(true); setRestDone(false)
+    runtime.startRest(s)
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
   }
   const skipRest = () => {
-    // Cancel scheduled audio cues so they don't fire after skip
-    if (restScheduledSoundsRef.current.length > 0) {
-      cancelScheduledSounds(restScheduledSoundsRef.current)
-      restScheduledSoundsRef.current = []
-    }
-    setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+    runtime.cancelRest(); setRestExoId(null); setRestSetId(null)
   }
-  const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
-  const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
+  const addRestTime = () => runtime.addRestTime(30)
+  const dismissRestDone = () => { runtime.dismissRestDone(); setRestExoId(null); setRestSetId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
     if (f === 'weight') {
       setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, weightRaw: v }) }))
@@ -625,7 +524,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const allDone = completed === total && total > 0
 
   const finish = () => {
-    if (elT.current) clearInterval(elT.current)
+    runtime.stop()
     cleanupDraft()
     onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) })
     if (exos.length > 0) {
@@ -1419,7 +1318,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>{t('cancel')}</button>
-              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
+              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); runtime.stop(); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,

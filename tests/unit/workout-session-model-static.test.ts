@@ -11,7 +11,8 @@ describe('pure workout session model boundary', () => {
 
   it('is consumed by representative launch and rest flows', () => {
     expect(read('lib/client-dashboard/use-client-dashboard-actions.ts')).toContain('createLegacyWorkoutLaunch(')
-    expect(read('app/components/WorkoutSession.tsx')).toContain('createWorkoutRestPeriod(')
+    expect(read('app/components/WorkoutSession.tsx')).toContain('useWorkoutRuntime(')
+    expect(read('lib/training/workout-runtime.ts')).toContain('createWorkoutRestPeriod(')
   })
 
   it('does not alter the legacy SQL finalization chain', () => {

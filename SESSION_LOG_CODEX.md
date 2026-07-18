@@ -6149,3 +6149,92 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire timer, audio et wake lock.
+
+---
+
+## Entrée — 2026-07-18 — Runtime de séance et effets navigateur
+
+### Travail effectué
+
+- Inventaire des deux minuteurs Training : runtime plein écran fondé sur une
+  échéance absolue et minuteur rapide `TrainingTab` fondé sur un décompte.
+- Création de `lib/training/workout-runtime.ts`, contrôleur pur à horloge et
+  scheduler injectés pour durée écoulée, repos, avertissement et fin unique.
+- Création de ports typés pour audio, vibration, wake lock et visibilité, avec
+  adaptateurs navigateur isolés dans `workout-runtime-browser.ts`.
+- Création du hook étroit `useWorkoutRuntime` et migration de
+  `WorkoutSession` hors de ses intervalles de repos, listeners visibilité,
+  sons planifiés et gestion directe du wake lock.
+- Réutilisation des ports audio/vibration/wake lock par le minuteur rapide et
+  `useWakeLock`, sans fusionner leurs algorithmes distincts.
+- Nettoyage explicite à l'annulation, au redémarrage, à la finalisation, à
+  l'abandon et au démontage ; double setup/cleanup Strict Mode caractérisé.
+- Mise à jour du cycle de vie de séance avec frontières, comportements
+  conservés et minuteurs de présentation laissés volontairement hors runtime.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire timer, audio et wake lock » — terminée.
+- Progression Phase 3 : 18/27 → 19/27 tâches.
+
+### Décisions prises
+
+- Le runtime plein écran conserve le tick à 200 ms et l'échéance absolue ; le
+  minuteur rapide conserve son décompte à la seconde pour éviter un changement
+  fonctionnel implicite.
+- Le calcul d'échéance continue d'utiliser `createWorkoutRestPeriod` du modèle
+  pur ; le contrôleur runtime ne duplique pas cette règle.
+- Les API navigateur absentes ou refusées sont fail-soft : la séance continue,
+  mais aucun effet ou verrou n'est conservé après cleanup.
+- Redirection post-séance, alertes de présentation, célébration, debounce et
+  tempo restent hors du runtime car ils ne partagent ni audio de repos ni wake
+  lock.
+
+### Problèmes rencontrés
+
+- Le test statique du modèle pur attendait son ancien consommateur direct dans
+  `WorkoutSession`; il vérifie désormais le chemin explicite
+  `WorkoutSession` → runtime → modèle pur.
+- Le typage des ports autorise un effet synchrone ou asynchrone ; `useWakeLock`
+  normalise donc les deux formes avec `Promise.resolve` avant expurgation des
+  refus.
+
+### Risques ou dette restante
+
+- La sauvegarde SQL reste non transactionnelle et non idempotente, sans lien
+  durable entre `workout_sessions` et `completed_sessions`.
+- Les caches restent sans owner/version et un `savedAt` invalide est toujours
+  accepté, conformément au périmètre.
+- `WorkoutSession.tsx` reste volumineux et conserve 31 erreurs et 22
+  avertissements ESLint historiques ; la tranche réduit toutefois de deux les
+  erreurs historiques sans désactivation.
+- Les minuteurs strictement visuels restent locaux et devront être revus avec
+  leurs composants respectifs, pas absorbés par le runtime métier.
+
+### Tests exécutés
+
+- Tests runtime, modèle, transitions et Training ciblés : 55/55 verts lors de
+  la validation ciblée.
+- Suite Vitest complète : 88 fichiers, 872 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouveaux fichiers, ports, hooks et tests : vert.
+- Dette `WorkoutSession` avant/après : 33 erreurs/22 avertissements → 31
+  erreurs/22 avertissements.
+- `git diff --check`, recherche d'effets navigateur directs et contrôle de
+  périmètre routes/E2E/migrations/RLS : verts.
+
+### Mesures avant/après
+
+- Tâches Phase 3 : 18/27 → 19/27.
+- Progression globale : 61/138 → 62/138, soit environ 45 %.
+- Tests actifs globaux : 861 → 872.
+- Nouvelles requêtes ou mutations Supabase : 0.
+- Routes, E2E, migrations et RLS modifiés : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire sauvegarde et synchronisation.

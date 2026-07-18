@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useBeforeUnload } from '../../../hooks/useBeforeUnload'
 import { useWakeLock } from '../../../hooks/useWakeLock'
-import { getRandomMessage, initAudio, playBeep, playWarningTick, vibrateDevice } from '../../../../lib/timer-audio'
+import { getRandomMessage } from '../../../../lib/timer-audio'
+import { browserAudioPort, browserVibrationPort } from '../../../../lib/training/workout-runtime-browser'
 import type { LegacyTrainingDay } from './training-tab-types'
 
 const currentTimestamp = () => Date.now()
@@ -42,15 +43,15 @@ export function useTrainingWorkoutTimer({ coachProgram, trainingDay, todayDateKe
   }, [restRunning, restTimer])
 
   useEffect(() => {
-    if (restRunning && restTimer === 5) playWarningTick()
+    if (restRunning && restTimer === 5) void browserAudioPort.warning()
     if (!restRunning || restTimer !== 0) return
     if (restIntervalRef.current) clearInterval(restIntervalRef.current)
     const completion = setTimeout(() => {
       setRestRunning(false)
       setRestingSet(null)
       setActiveRestExName(null)
-      playBeep()
-      vibrateDevice()
+      void browserAudioPort.complete()
+      browserVibrationPort.pulse('complete')
       setMotivationalMsg(getRandomMessage())
       setShowTimerAlert(true)
       setTimeout(() => setShowTimerAlert(false), 3000)
@@ -122,7 +123,7 @@ export function useTrainingWorkoutTimer({ coachProgram, trainingDay, todayDateKe
   }
 
   function toggleSet(exerciseName: string, setIndex: number, totalSets: number, restSeconds: number) {
-    initAudio()
+    void browserAudioPort.initialize()
     const storageKey = `moovx-sets-${todayDateKey}-${exerciseName}`
     const next = [...(completedSets[storageKey] || Array.from({ length: totalSets }, () => false))]
     next[setIndex] = !next[setIndex]
@@ -135,7 +136,7 @@ export function useTrainingWorkoutTimer({ coachProgram, trainingDay, todayDateKe
       setRestMax(restSeconds)
       setRestTimer(restSeconds)
       setRestRunning(true)
-      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50)
+      browserVibrationPort.pulse('start')
     } else if (!next[setIndex] && activeRestExName === exerciseName) {
       cancelRest()
     }

@@ -295,3 +295,42 @@ transactionnelle, double finalisation, historiques non liés, caches sans owner,
 `savedAt` invalide accepté et divergences de schéma. La prochaine tranche doit
 extraire timer, audio et wake lock autour de cette frontière, sans les confondre
 avec l'état métier.
+
+## Runtime temporel et effets navigateur extraits
+
+La frontière pure [`workout-runtime.ts`](../lib/training/workout-runtime.ts)
+calcule désormais la durée écoulée et le temps de repos restant à partir d'une
+horloge injectée. `WorkoutRuntimeController` possède les intervalles, l'échéance
+absolue du repos, le franchissement de l'avertissement à cinq secondes et la fin
+unique. Il ne dépend ni de React, ni du navigateur, ni de Supabase.
+
+Les effets sont exposés par six ports typés : horloge, scheduler, audio,
+vibration, wake lock et visibilité. Leur implémentation navigateur vit dans
+[`workout-runtime-browser.ts`](../lib/training/workout-runtime-browser.ts). Le
+hook étroit [`useWorkoutRuntime.ts`](../app/hooks/useWorkoutRuntime.ts) relie ces
+ports à l'état de présentation de `WorkoutSession`. Le hook historique
+`useWakeLock` et le minuteur rapide de `TrainingTab` utilisent également les
+ports wake lock, audio et vibration ; leur algorithme de décompte reste distinct
+afin de ne pas modifier le comportement observé.
+
+Le runtime plein écran conserve les règles legacy suivantes : tick de repos
+toutes les 200 ms à partir d'une échéance absolue, avertissement à cinq secondes,
+sons planifiés existants, vibration d'avertissement et de fin, recalcul au retour
+de visibilité ou au focus, et maintien de l'écran actif pendant la séance. Une
+annulation, un redémarrage, une finalisation ou un démontage annule les
+intervalles et sons en attente puis libère le wake lock. Le setup et le nettoyage
+sont idempotents pour supporter le double cycle de React Strict Mode. Les API
+absentes ou refusées échouent silencieusement sans interrompre la séance ; le
+fallback vidéo iOS existant reste borné à l'adaptateur wake lock.
+
+Les minuteurs de présentation non liés au runtime de séance restent locaux :
+redirection post-séance, fermeture automatique d'alerte, célébration, debounce
+de recherche et exécuteur de tempo. Ils n'acquièrent ni audio de repos ni wake
+lock et ne sont donc pas fusionnés artificiellement avec le runtime métier.
+
+La persistance demeure inchangée. Le runtime ne lit ni n'écrit
+`moovx_active_workout`, `moovx_workout_draft`, `workout_sessions`,
+`workout_sets`, `completed_sessions` ou `scheduled_sessions`. Les dettes de
+finalisation non transactionnelle/non idempotente, de caches sans owner et de
+`savedAt` invalide restent à traiter séparément. La prochaine tranche est
+l'extraction de la sauvegarde et de la synchronisation.
