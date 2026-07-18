@@ -59,6 +59,7 @@ import RecentSessionsList from '../training/RecentSessionsList'
 import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
+import { completedWorkoutDateKeys, groupWorkoutSets, type LegacyWorkoutSession, type WorkoutExerciseDetail } from '../../../lib/training/session-history'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -131,7 +132,7 @@ export default function TrainingTab({
   const [showSaveChoice, setShowSaveChoice] = useState(false)
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
-  const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
+  const [workoutDetail, setWorkoutDetail] = useState<WorkoutExerciseDetail[]>([])
   const [loadingDetail, setLoadingDetail] = useState(false)
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
@@ -187,11 +188,7 @@ export default function TrainingTab({
   }, 0)
 
   // Dates with a completed workout (used by calendar + HeroSessionCard)
-  const doneDates = new Set(
-    (workoutHistory || [])
-      .filter((w: any) => w.completed && w.date)
-      .map((w: any) => w.date)
-  )
+  const doneDates = completedWorkoutDateKeys(workoutHistory)
 
   // Build week sessions from custom program (single source of truth for calendar)
   const weekSessions: any[] = (() => {
@@ -709,7 +706,7 @@ export default function TrainingTab({
     loadExerciseInfo(ex.name)
   }
 
-  async function openWorkoutDetail(workout: any) {
+  async function openWorkoutDetail(workout: LegacyWorkoutSession) {
     setSelectedWorkout(workout)
     setLoadingDetail(true)
     const { data } = await supabase
@@ -717,13 +714,7 @@ export default function TrainingTab({
       .select('exercise_name, set_number, weight, reps, completed')
       .eq('session_id', workout.id)
       .order('exercise_name').order('set_number', { ascending: true })
-    // Group by exercise
-    const grouped: Record<string, any[]> = {}
-    for (const row of (data || [])) {
-      if (!grouped[row.exercise_name]) grouped[row.exercise_name] = []
-      grouped[row.exercise_name].push(row)
-    }
-    setWorkoutDetail(Object.entries(grouped).map(([name, sets]) => ({ name, sets })))
+    setWorkoutDetail(groupWorkoutSets(data || []).detail)
     setLoadingDetail(false)
   }
 

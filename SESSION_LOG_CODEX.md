@@ -5664,3 +5664,91 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire historique et séances récentes.
+
+---
+
+## Entrée — 2026-07-18 — Historique et séances récentes Training
+
+### Travail effectué
+
+- Cartographie des sources `workout_sessions`, `workout_sets` et
+  `completed_sessions`, de leurs projections repository, du cache des séances
+  détaillées et des maps de navigation alimentées par les complétions.
+- Création de `lib/training/session-history.ts`, frontière pure chargée du tri
+  stable, des limites, des dates, du filtrage legacy, du regroupement des
+  séries et des totaux de présentation.
+- Délégation depuis `TrainingTab`, `RecentSessionsList` et
+  `WorkoutDetailList`, sans modification visuelle ni nouvelle requête.
+- Branchement du loader dashboard sur la préparation bornée des marqueurs
+  `completed_sessions`, tout en conservant les exécutions détaillées dans une
+  collection `workout_sessions` séparée.
+- Ajout de la documentation `docs/TRAINING_SESSION_HISTORY.md` et de deux
+  suites unitaires, dont un contrôle statique de pureté et d'intégration.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire historique et séances récentes » — terminée.
+- Progression Phase 3 : 12/27 → 13/27 tâches.
+
+### Décisions prises
+
+- `workout_sessions`/`workout_sets` et `completed_sessions` restent deux
+  historiques indépendants ; aucune fusion ou déduplication par date, nom ou
+  index n'est autorisée dans cette frontière.
+- Le tri est décroissant par date ; à date égale, l'ordre d'entrée reste le
+  départage déterministe afin de préserver le contrat des requêtes existantes.
+- Les limites historiques restent 3 séances en aperçu, 20 en vue étendue et
+  50 marqueurs de complétion dans le dashboard.
+- Les lignes aux dates ou formes inutilisables sont isolées avec un code
+  structuré sans faire échouer les entrées valides.
+- L'ordre des exercices et séries détaillés reste celui de la requête
+  `exercise_name`, puis `set_number`; aucune nouvelle règle de présentation
+  n'est introduite.
+
+### Problèmes rencontrés
+
+- `TrainingTab` lit encore la colonne legacy `workout_sessions.date`, absente
+  des types Supabase générés, pour les marqueurs calendrier.
+- Le lint complet de `TrainingTab` reste bloqué par sa dette historique : 71
+  erreurs et 11 avertissements, sans nouvelle infraction introduite par la
+  frontière extraite.
+
+### Risques ou dette restante
+
+- La lecture récente et la lecture des séries restent des accès Supabase
+  directs dans `TrainingTab` ; leur migration repository est hors périmètre.
+- `completed_sessions` ne possède toujours pas de référence vers
+  `workout_sessions`; la cohérence croisée n'est donc ni supposée ni réparée.
+- Les autres historiques de `HomeTab`, du détail client, des analytics et du
+  dashboard desktop conservent leurs transformations locales.
+- Les modales de `TrainingTab` restent la prochaine responsabilité à extraire.
+
+### Tests exécutés
+
+- Tests ciblés historique, loader dashboard, caractérisation `TrainingTab`,
+  adaptateurs, navigation et bibliothèque : 63/63 verts.
+- Suite Vitest complète : 78 fichiers, 809 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé de la frontière, du loader, des composants de présentation et
+  des nouvelles suites : vert.
+- ESLint informatif de `TrainingTab` : 71 erreurs historiques et 11
+  avertissements.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, spécification E2E, migration, policy
+  RLS, donnée distante, repository ou nouvelle mutation Supabase modifiée.
+
+### Mesures avant/après
+
+- Logiques d'historique inline extraites : tri/limites/filtre/date, dates
+  terminées, regroupement des séries et résumé détaillé.
+- Tests actifs globaux : 793 → 809.
+- Tâches Phase 3 terminées : 12/27 → 13/27.
+- Progression globale : 55/138 → 56/138 tâches, soit environ 41 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les modales de `TrainingTab`.

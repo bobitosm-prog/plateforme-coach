@@ -2,13 +2,14 @@
 import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
-import { resolveSessionType, HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
+import { HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
+import { formatWorkoutSessionDate, selectRecentWorkoutSessions, type LegacyWorkoutSession } from '../../../lib/training/session-history'
 import { colors, fonts } from '../../../lib/design-tokens'
 import SectionTitle from '../ui/SectionTitle'
 
 interface RecentSessionsListProps {
-  workoutHistory: any[]
-  onOpenDetail: (workout: any) => void
+  workoutHistory: readonly unknown[]
+  onOpenDetail: (workout: LegacyWorkoutSession) => void
 }
 
 export default function RecentSessionsList({ workoutHistory, onOpenDetail }: RecentSessionsListProps) {
@@ -18,21 +19,14 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('all')
 
-  const filtered = workoutHistory.filter((s: any) => {
-    if (historyFilter === 'all') return true
-    const resolved = resolveSessionType(s.name)
-    return resolved.key === historyFilter
-  })
-
-  const limit = showFullHistory ? 20 : 3
-  const visible = filtered.slice(0, limit)
+  const history = selectRecentWorkoutSessions(workoutHistory, { filter: historyFilter, expanded: showFullHistory })
 
   return (
     <div style={{ padding: '0 20px', marginBottom: 24 }}>
-      <SectionTitle noPadding title={t('lastSessions')} trailing={t('sessionsCount', { count: workoutHistory.length })} />
+      <SectionTitle noPadding title={t('lastSessions')} trailing={t('sessionsCount', { count: history.totalCount })} />
 
       {/* Filter chips */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
         {HISTORY_FILTERS.map(f => {
           const active = historyFilter === f.key
           return (
@@ -57,16 +51,15 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
       </div>
 
       {/* Session items */}
-      {visible.length === 0 ? (
+      {history.sessions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
           {t('noSessions')}
         </div>
       ) : (
         <>
-          {visible.map((s: any) => {
+          {history.sessions.map(({ session: s }) => {
             const heroImg = getHeroImage(s.name)
-            const d = new Date(s.created_at)
-            const dateStr = d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
+            const dateStr = formatWorkoutSessionDate(s.created_at, locale)
 
             return (
               <button
@@ -118,7 +111,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
           })}
 
           {/* Show more / less */}
-          {filtered.length > 3 && !showFullHistory && (
+          {history.filteredCount > 3 && !showFullHistory && (
             <button
               onClick={() => setShowFullHistory(true)}
               style={{
@@ -134,7 +127,7 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
               {t('viewAll')}
             </button>
           )}
-          {showFullHistory && filtered.length > 3 && (
+          {showFullHistory && history.filteredCount > 3 && (
             <button
               onClick={() => setShowFullHistory(false)}
               style={{

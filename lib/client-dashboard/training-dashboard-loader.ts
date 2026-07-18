@@ -11,6 +11,7 @@ import type {
   TrainingSessionRepository,
 } from '@/lib/repositories/training/session'
 import { normalizeCoachProgram } from '@/lib/normalizeCoachProgram'
+import { prepareCompletionMarkers } from '@/lib/training/session-history'
 
 type TrainingLoadSource =
   | 'assigned_programs'
@@ -82,7 +83,9 @@ export function createTrainingDashboardLoader(dependencies: {
           assignedProgram,
           coachProgram: normalizeCoachProgram(assignedProgram?.program),
           activePersonalProgram: personal.ok ? personal.data : null,
-          completions: completions.ok ? completions.data.slice(0, 50) : [],
+          completions: completions.ok
+            ? prepareCompletionMarkers(completions.data).completions as CompletionRow[]
+            : [],
           hasTrainedBefore: trained.ok ? trained.data : false,
           sessionDates: dates.ok
             ? dates.data.filter((row): row is CompletedWorkoutDateRow & { created_at: string } => typeof row.created_at === 'string')

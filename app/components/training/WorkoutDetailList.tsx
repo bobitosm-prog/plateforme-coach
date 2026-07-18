@@ -2,9 +2,10 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
+import { summarizeWorkoutDetail, type WorkoutExerciseDetail } from '../../../lib/training/session-history'
 
 interface WorkoutDetailListProps {
-  detail: { name: string; sets: any[] }[]
+  detail: WorkoutExerciseDetail[]
   loading: boolean
 }
 
@@ -35,9 +36,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
     return <div style={{ textAlign: 'center', padding: 40, color: colors.textDim, fontSize: 14, fontFamily: fonts.body }}>{t('programs.noDetails')}</div>
   }
 
-  const totalExercises = detail.length
-  const totalSets = detail.reduce((s, e) => s + e.sets.length, 0)
-  const totalVolume = detail.reduce((s, e) => s + e.sets.reduce((a, st) => a + (st.weight || 0) * (st.reps || 0), 0), 0)
+  const { totalExercises, totalSets, totalVolume } = summarizeWorkoutDetail(detail)
 
   return (
     <>
@@ -74,7 +73,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
             <span style={{ ...gridHeader, textAlign: 'right' }}>VOLUME</span>
           </div>
           {/* Set rows */}
-          {ex.sets.map((set: any, si: number) => (
+          {ex.sets.map((set, si) => (
             <div key={si} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '5px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
               <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, width: 22, height: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
