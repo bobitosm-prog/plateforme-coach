@@ -6427,3 +6427,83 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Tester interruption, reprise et arrière-plan mobile.
+
+---
+
+## Entrée — 2026-07-18 — Interruption, reprise et arrière-plan mobile
+
+### Travail effectué
+
+- Audit des frontières de stockage, modèle pur, runtime, adaptateur navigateur,
+  hook React et orchestration `WorkoutSession` liées à l'interruption mobile.
+- Ajout d'une suite déterministe couvrant stockage mémoire, horloge et scheduler
+  manuels, visibilité simulée, ports audio/vibration/wake lock et nettoyage des
+  ressources.
+- Caractérisation de la restauration de `moovx_active_workout` et
+  `moovx_workout_draft`, des caches absents/invalides/expirés et de la
+  finalisation ou de l'abandon après reprise.
+- Caractérisation des retours visibles avant/après échéance et preuve que le
+  repos utilise une échéance absolue plutôt qu'un comptage de ticks suspendus.
+- Documentation explicite des limites owner, `savedAt`, wake lock et
+  persistance sans les corriger.
+
+### Tâches cochées
+
+- Phase 3 : « Tester interruption, reprise et arrière-plan mobile » — terminée.
+- Progression Phase 3 : 21/27 → 22/27 tâches.
+
+### Décisions prises
+
+- Aucun test navigateur mobile n'est ajouté : les ports injectables couvrent
+  fidèlement la suspension du scheduler, la visibilité et les effets runtime
+  sans dépendance au navigateur réel.
+- Le passage `hidden` sans appel explicite à `wakeLock.release()` est figé comme
+  comportement actuel : la perte est laissée au navigateur, puis une nouvelle
+  acquisition est tentée au retour visible.
+- L'acceptation d'un `savedAt` invalide et l'absence d'owner dans les deux caches
+  restent des tests de dette, pas des garanties cibles.
+- Aucun correctif n'est appliqué à l'idempotence, la transactionnalité, les
+  caches ou la persistance du repos.
+
+### Problèmes rencontrés
+
+- Aucun blocage technique. Les frontières extraites permettaient de couvrir les
+  scénarios sans adaptation du code applicatif.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et non indexés.
+
+### Risques ou dette restante
+
+- Les caches restent partagés entre utilisateurs du même navigateur et sans
+  `formatVersion`.
+- Un `savedAt` invalide reste accepté ; un repos actif n'est pas persisté.
+- Le wake lock n'est pas explicitement libéré au passage en arrière-plan.
+- La finalisation reste non idempotente et multi-tables non transactionnelle.
+- Les tests simulent les événements mobiles via ports purs ; ils ne valident pas
+  les particularités d'un appareil ou navigateur physique.
+
+### Tests exécutés
+
+- Tests interruption/reprise et suites runtime, stockage, transitions, modèle
+  et phases : 66/66 verts.
+- Suite Vitest complète : 94 fichiers, 915 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé du nouveau test : vert.
+- `git diff --check` ciblé : vert.
+
+### Mesures avant/après
+
+- Nouveau fichier applicatif ou modification de comportement : 0.
+- Tests actifs globaux : 905 → 915.
+- Tâches Phase 3 : 21/27 → 22/27.
+- Progression globale : 64/138 → 65/138, soit environ 47 %.
+- Nouvelles routes, repositories, migrations, policies RLS ou E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire `WorkoutSession` sous 600 lignes.

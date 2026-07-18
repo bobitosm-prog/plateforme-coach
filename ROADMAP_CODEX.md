@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 21 tâches sur 27 ; vues de préparation, séance active, repos, finalisation, abandon et résumé extraites, prochaine tranche : tester interruption, reprise et arrière-plan mobile**
+**Statut : Phase 3 ouverte — 22 tâches sur 27 ; interruption, reprise, visibilité mobile et ressources runtime caractérisées, prochaine tranche : réduire `WorkoutSession` sous 600 lignes**
 
 ### Pourquoi
 
@@ -343,7 +343,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] Extraire timer, audio et wake lock | 2 j | Élevée | Élevé | Élevé | Modèle session |
 | [x] Extraire sauvegarde et synchronisation | 2,5 j | Élevée | Élevé | Critique | Modèle session |
 | [x] [Extraire les composants de présentation par phase](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#présentation-extraite-par-phase) | 2,5 j | Élevée | Moyen | Élevé | Modèle session |
-| [ ] Tester interruption, reprise et arrière-plan mobile | 2,5 j | Élevée | Moyen | Critique | Implémentation complète |
+| [x] [Tester interruption, reprise et arrière-plan mobile](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#interruption-reprise-et-arrière-plan-mobile) | 2,5 j | Élevée | Moyen | Critique | Implémentation complète |
 | [ ] Réduire `WorkoutSession` sous 600 lignes | 1,5 j | Élevée | Élevé | Élevé | Toutes extractions |
 | [ ] Écrire les tests de caractérisation de `ProgramBuilder` | 1,5 j | Élevée | Faible | Élevé | Modèle canonique |
 | [ ] Extraire modèle d'édition, DnD et validation | 4 j | Élevée | Élevé | Élevé | Tests builder |
@@ -743,14 +743,14 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈46 % (64/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈47 % (65/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 4 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 905 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 915 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |

@@ -426,3 +426,46 @@ z-index, boutons et ordre d'information existants. Des tests de rendu serveur
 couvrent les données minimales et complètes, les champs optionnels, le repos,
 les séries complétées et le résumé ; un inventaire statique interdit Supabase,
 storage et effets runtime dans ces composants.
+
+## Interruption, reprise et arrière-plan mobile
+
+La suite déterministe
+[`workout-mobile-interruption.test.ts`](../tests/unit/workout-mobile-interruption.test.ts)
+caractérise la continuité mobile sans navigateur système, réseau ou base. Elle
+utilise une horloge et un scheduler manuels, un stockage mémoire, une visibilité
+simulée et des ports audio, vibration et wake lock factices.
+
+Le comportement observé est le suivant :
+
+- `moovx_active_workout` restaure l'enveloppe de lancement après rechargement ;
+- `moovx_workout_draft` restaure les séries du même nom si le JSON contient un
+  tableau `exos` et si son âge calculable ne dépasse pas 24 heures ;
+- un cache absent, illisible, incomplet, d'un autre nom ou expiré est isolé et
+  renvoie `null` sans exception ;
+- un `savedAt` invalide reste actuellement accepté parce que la comparaison
+  avec `NaN` ne dépasse jamais la limite ;
+- aucun des deux caches ne contient d'owner : un changement d'utilisateur ne
+  peut donc pas être distingué par la frontière actuelle ;
+- pendant un passage `hidden`, le scheduler navigateur peut être suspendu, mais
+  le retour visible recalcule le repos depuis `restEndsAtMs` et l'horloge
+  absolue, sans soustraire un nombre supposé de ticks ;
+- un retour avant échéance émet le temps réellement restant ; un retour après
+  échéance termine le repos une seule fois et ne duplique ni son, ni vibration,
+  ni callback ;
+- le contrôleur ne libère pas explicitement le wake lock à l'événement
+  `hidden`. Il caractérise la perte comme relevant du navigateur, puis tente une
+  nouvelle acquisition au retour visible ; `stop()` et `unmount()` libèrent la
+  ressource ;
+- indisponibilité ou refus audio/wake lock sont absorbés sans interrompre la
+  séance ;
+- abandon, arrêt et démontage annulent les timers et sons, nettoient le listener
+  de visibilité et libèrent le wake lock ; le double setup/cleanup Strict Mode
+  reste idempotent ;
+- après reprise, la préparation de finalisation reste possible à partir des
+  séries complétées, puis les deux caches sont nettoyés selon le contrat legacy.
+
+Ces tests documentent, sans les corriger, les caches non owner-scoped, le
+`savedAt` invalide, l'absence de persistance du repos, la finalisation non
+idempotente et la chaîne SQL non transactionnelle. Aucun test navigateur mobile
+n'est nécessaire tant que ces frontières pures représentent fidèlement les
+événements de visibilité et la suspension du scheduler.
