@@ -5752,3 +5752,93 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les modales de `TrainingTab`.
+
+---
+
+## Entrée — 2026-07-18 — Extraction des modales de `TrainingTab`
+
+### Travail effectué
+
+- Inventaire des modales, overlays et vues assimilées pilotés par
+  `TrainingTab`, avec leurs états, données, callbacks, dépendances et contrats
+  mobile/backdrop/scroll.
+- Extraction de cinq overlays inline vers des composants typés distincts :
+  alerte minuteur, gestionnaire de programmes, aperçu d'import, variantes et
+  détail d'historique.
+- Conservation dans `TrainingTab` du parsing Excel, des mutations programme,
+  des sélections jour/exercice, des accès Supabase et des transitions entre
+  modales.
+- Ajout de tests React serveur et statiques adaptés à la limite jsdom 29/Node
+  24, sans contournement du graphe ESM.
+- Documentation de l'organisation et des limites dans
+  `docs/TRAINING_TAB_MODALS.md`.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire les modales de `TrainingTab` » — terminée.
+- Progression Phase 3 : 13/27 → 14/27 tâches.
+
+### Décisions prises
+
+- Chaque overlay extrait possède son propre composant et son propre contrat ;
+  aucun composant générique de modale Training n'est imposé.
+- Les composants déjà autonomes (`SessionDetailModal`, `ProgramBuilder`,
+  `ExerciseSearchModal`, popups d'exercice et de sauvegarde) ne sont pas
+  réécrits dans cette tranche.
+- Les transitions incompatibles existantes sont conservées : manager vers
+  builder et aperçu import vers démarrage ferment la vue source avant la vue
+  cible.
+- Aucune exclusivité globale nouvelle n'est inventée entre les états de modale
+  historiquement indépendants.
+- Le contenu métier de la séance reste dans `TrainingTab`, à l'intérieur de la
+  coque déjà dédiée `SessionDetailModal`, afin de ne pas déplacer l'autorité
+  d'exécution dans une présentation.
+
+### Problèmes rencontrés
+
+- Les tests DOM interactifs restent indisponibles avec jsdom 29 sous Node 24 ;
+  les contrats sont donc vérifiés par rendu React serveur et inventaires
+  statiques, conformément à la stratégie de caractérisation existante.
+- Les programmes et exercices legacy n'ont pas encore de types frontend
+  centraux ; les nouveaux composants utilisent des projections de vue bornées
+  et des champs optionnels explicites.
+
+### Risques ou dette restante
+
+- `TrainingTab` reste à 1 493 lignes et conserve le contenu complexe de la
+  modale de séance, les effets et les actions métier.
+- Les modales historiques déjà dédiées conservent leurs `any` et, pour
+  certaines, leurs accès Supabase directs préexistants.
+- Il n'existe toujours pas de test navigateur interactif spécifique aux
+  modales Training ; les comportements backdrop/callback sont protégés par
+  leur structure et les tests serveur/statiques.
+- La prochaine tranche doit réduire `TrainingTab` sous 500 lignes sans changer
+  ces contrats.
+
+### Tests exécutés
+
+- Tests ciblés modales et caractérisation `TrainingTab` : 15/15 verts.
+- Suite Vitest complète : 80 fichiers, 819 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des cinq composants extraits et des deux suites : vert.
+- ESLint informatif de `TrainingTab` : 71 erreurs/11 avertissements avant,
+  63 erreurs/9 avertissements après.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, repository, spécification E2E,
+  migration, policy RLS, donnée distante ou nouvelle requête/mutation Supabase.
+
+### Mesures avant/après
+
+- `TrainingTab.tsx` : 1 704 → 1 493 lignes.
+- Overlays de présentation inline extraits : 5.
+- Tests actifs globaux : 809 → 819.
+- Tâches Phase 3 terminées : 13/27 → 14/27.
+- Progression globale : 56/138 → 57/138 tâches, soit environ 41 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire `TrainingTab` sous 500 lignes.

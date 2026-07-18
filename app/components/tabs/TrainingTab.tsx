@@ -1,9 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { RailOverlay } from '../ui/RailOverlay'
 import SectionTitle from '../ui/SectionTitle'
-import WorkoutDetailList from '../training/WorkoutDetailList'
-import ModalHeader from '../ui/ModalHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { getExerciseName } from '../../../lib/i18n-exercise'
@@ -17,10 +14,10 @@ import { useWakeLock } from '../../hooks/useWakeLock'
 import { findExerciseMatch } from '../../../lib/exercise-matching'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
-  Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, X, BookOpen,
+  Dumbbell, Search, Award, ChevronRight, ChevronLeft, BookOpen,
 } from 'lucide-react'
 import {
-  fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, btnPrimary, btnSecondary,
+  fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, bodyStyle, labelStyle, cardStyle, btnPrimary, btnSecondary,
 } from '../../../lib/design-tokens'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
 import { toast } from 'sonner'
@@ -52,7 +49,6 @@ import { formatRelativeTime } from '../../../lib/formatRelativeTime'
 import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
-import AiQuotaBadge from '../ui/AiQuotaBadge'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 import RecentSessionsList from '../training/RecentSessionsList'
@@ -60,6 +56,11 @@ import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
 import { completedWorkoutDateKeys, groupWorkoutSets, type LegacyWorkoutSession, type WorkoutExerciseDetail } from '../../../lib/training/session-history'
+import TrainingTimerAlertModal from './training/modals/TrainingTimerAlertModal'
+import TrainingVariantModal, { type TrainingExerciseVariant } from './training/modals/TrainingVariantModal'
+import TrainingWorkoutHistoryModal from './training/modals/TrainingWorkoutHistoryModal'
+import TrainingImportPreviewModal from './training/modals/TrainingImportPreviewModal'
+import TrainingProgramManagerModal, { type ManagedTrainingProgram } from './training/modals/TrainingProgramManagerModal'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -131,13 +132,13 @@ export default function TrainingTab({
   // Feature: save choice popup
   const [showSaveChoice, setShowSaveChoice] = useState(false)
   // Workout detail
-  const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
+  const [selectedWorkout, setSelectedWorkout] = useState<LegacyWorkoutSession | null>(null)
   const [workoutDetail, setWorkoutDetail] = useState<WorkoutExerciseDetail[]>([])
   const [loadingDetail, setLoadingDetail] = useState(false)
   // Program edit mode
   const [editMode, setEditMode] = useState(false)
   const [editedDays, setEditedDays] = useState<any[] | null>(null)
-  const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: any[]} | null>(null)
+  const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: TrainingExerciseVariant[]} | null>(null)
   const [techniqueTooltip, setTechniqueTooltip] = useState<string | null>(null)
   const [importPreview, setImportPreview] = useState<ImportResult['program'] | null>(null)
   const [importSkipped, setImportSkipped] = useState<string[]>([])
@@ -737,43 +738,9 @@ export default function TrainingTab({
       `}</style>
 
       {/* ── TIMER COMPLETE POPUP ── */}
-      {showTimerAlert && (<RailOverlay>
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 24,
-        }}>
-          <div style={{
-            background: colors.surface2, border: `2px solid ${colors.gold}`,
-            borderRadius: 16, padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
-            animation: 'ttPopIn 0.3s ease-out', boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
-          }}>
-            <div style={{
-              width: 64, height: 64, border: `2px solid ${colors.gold}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill={colors.gold}>
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
-              </svg>
-            </div>
-            <h2 style={{ ...statStyle, fontSize: 36, color: colors.gold, letterSpacing: 3, margin: '0 0 8px' }}>
-              {t('session.restDone')}
-            </h2>
-            <p style={{ ...subtitleStyle, fontWeight: 800, fontSize: 20, color: colors.text, letterSpacing: 2, margin: '0 0 24px' }}>
-              {motivationalMsg}
-            </p>
-            <button onClick={() => setShowTimerAlert(false)} style={{
-              background: colors.gold, color: colors.onGold, border: 'none',
-              fontFamily: fonts.body, fontWeight: 800, fontSize: 16, letterSpacing: 2,
-              padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-
-            }}>
-              C&apos;EST PARTI !
-            </button>
-          </div>
-        </div>
-      </RailOverlay>)}
+      {showTimerAlert && (
+        <TrainingTimerAlertModal message={motivationalMsg} restDoneLabel={t('session.restDone')} onClose={() => setShowTimerAlert(false)} />
+      )}
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
       <WorkoutCelebration visible={workoutFinished} />
@@ -1347,13 +1314,26 @@ export default function TrainingTab({
 
       {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
       {showProgramManager && (
-        <RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <ModalHeader title={t('programs.title')} onClose={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} />
-
-          {/* Hidden file input for import */}
-          <input ref={importFileRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={async (e) => {
-            const file = e.target.files?.[0]
+        <TrainingProgramManagerModal
+          programs={customPrograms as ManagedTrainingProgram[]}
+          expandedProgramId={expandedProgram}
+          confirmDeleteId={confirmDelete}
+          locale={locale}
+          importFileRef={importFileRef}
+          labels={{
+            title: t('programs.title'), create: 'CRÉER', importXlsx: t('calendar.buttons.importXlsx'),
+            noPrograms: t('programs.noPrograms'), days: count => t('calendar.import.days', { count }),
+            ai: t('calendar.import.ai'), importSource: t('calendar.import.importSource'), manual: t('calendar.import.manual'),
+            activate: t('calendar.buttons.activate'), deactivate: t('calendar.buttons.deactivate'),
+            day: index => t('calendar.day', { num: index }), rest: t('calendar.rest'),
+            session: index => t('calendar.session', { num: index }), exercise: index => t('calendar.exerciseNum', { num: index }),
+            noExercises: t('programs.noExercises'), confirmDelete: t('calendar.buttons.confirmDelete'),
+            cancel: t('calendar.buttons.cancel'), deleteProgram: t('programs.deleteProgram'),
+          }}
+          onClose={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }}
+          onCreate={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }}
+          onImportFile={async event => {
+            const file = event.target.files?.[0]
             if (!file) return
             const result = await parseProgramFromXlsx(file)
             if (!result.success) { toast.error(result.error || t('calendar.toasts.error')); return }
@@ -1362,224 +1342,51 @@ export default function TrainingTab({
               setImportName(result.program.name)
               setImportSkipped(result.skippedSheets || [])
             }
-            e.target.value = ''
-          }} />
-
-          {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
-            <AiQuotaBadge />
-            {/* Create + Import buttons */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, flex: 1, padding: 16 }}>
-                + CRÉER
-              </button>
-              <button onClick={() => importFileRef.current?.click()} style={{ ...btnSecondary, flex: 1, padding: 16 }}>
-                {t('calendar.buttons.importXlsx')}
-              </button>
-            </div>
-
-            {/* Program list */}
-            {customPrograms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <Dumbbell size={48} color={colors.textDim} strokeWidth={1.5} />
-                <p style={{ ...bodyStyle, marginTop: 12 }}>{t('programs.noPrograms')}</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {customPrograms.map((prog: any) => {
-                  const isExpanded = expandedProgram === prog.id
-                  const days = prog.days || []
-
-                  return (
-                    <div key={prog.id} style={{ ...cardStyle, padding: 0, overflow: 'hidden', opacity: prog.is_active ? 1 : 0.7 }}>
-                      {/* Program header — always visible */}
-                      <button
-                        onClick={() => setExpandedProgram(isExpanded ? null : prog.id)}
-                        style={{ width: '100%', padding: 20, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-                      >
-                        <div>
-                          <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '0.05em' }}>{prog.name}</div>
-                          <div style={{ ...mutedStyle, marginTop: 4 }}>
-                            {t('calendar.import.days', { count: days.length })} · {prog.source === 'ai' ? t('calendar.import.ai') : prog.source === 'import' ? t('calendar.import.importSource') : t('calendar.import.manual')}
-                            {prog.total_weeks && ` · ${prog.total_weeks} sem.`}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          {prog.total_weeks && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
-                              {prog.total_weeks} SEM
-                            </span>
-                          )}
-                          {prog.is_active ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
-                          ) : prog.scheduled ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' }).toUpperCase()}</span>
-                          ) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: colors.divider, padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
-                          )}
-                          <span style={{ color: colors.textMuted, fontSize: 14, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
-                        </div>
-                      </button>
-
-                      {/* Expanded content — accordion */}
-                      {isExpanded && (
-                        <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${colors.goldBorder}` }}>
-                          {/* Action buttons */}
-                          <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 16 }}>
-                            {prog.is_active ? (
-                              <button onClick={() => deactivateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: 'rgba(74,222,128,0.08)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: colors.success, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.deactivate')}</button>
-                            ) : (
-                              <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.activate')}</button>
-                            )}
-                            <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
-                            <button onClick={() => exportProgramToXlsx(prog)} style={{ padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>⬇️</button>
-                          </div>
-
-                          {/* Days list */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {padTo7Days(days).map((day: any, di: number) => {
-                              const exList = day.exercises || []
-                              return (
-                                <div key={di} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 16 }}>
-                                  {/* Day header */}
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: day.is_rest ? 0 : 8 }}>
-                                    <div style={{ ...titleStyle, fontSize: 12 }}>
-                                      {t('calendar.day', { num: di + 1 })} : {day.is_rest ? t('calendar.rest') : (day.name || day.weekday || t('calendar.session', { num: di + 1 }))}
-                                      {!day.is_rest && day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
-                                    </div>
-                                    {day.is_rest ? (
-                                      <Moon size={14} color={colors.textDim} />
-                                    ) : (
-                                      <span style={{ ...mutedStyle, fontSize: 10 }}>{exList.length} ex.</span>
-                                    )}
-                                  </div>
-
-                                  {/* Exercise list (if not rest) */}
-                                  {!day.is_rest && exList.length > 0 && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                      {exList.map((ex: any, ei: number) => {
-                                        const exName = ex.exercise_name || ex.custom_name || ex.name || ex.exerciseName || t('calendar.exerciseNum', { num: ei + 1 })
-                                        return (
-                                          <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
-                                            <span style={{ ...bodyStyle, fontSize: 13, flex: 1, minWidth: 0 }}>{exName}</span>
-                                            <span style={{ ...mutedStyle, fontSize: 11, flexShrink: 0 }}>{ex.sets || 3}×{ex.reps || 10}</span>
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  )}
-                                  {!day.is_rest && exList.length === 0 && (
-                                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('programs.noExercises')}</span>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-
-                          {/* Delete button with confirmation */}
-                          <div style={{ marginTop: 16, borderTop: `1px solid ${colors.goldBorder}`, paddingTop: 16 }}>
-                            {confirmDelete === prog.id ? (
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => { deleteProgram(prog.id); setConfirmDelete(null); setExpandedProgram(null) }} style={{ flex: 1, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{t('calendar.buttons.confirmDelete')}</button>
-                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{t('calendar.buttons.cancel')}</button>
-                              </div>
-                            ) : (
-                              <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('programs.deleteProgram')}</button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Blank template link */}
-            <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <button onClick={downloadBlankTemplate} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textDecoration: 'underline', padding: 8 }}>
-                Télécharger le modèle vierge (.xlsx)
-              </button>
-            </div>
-          </div>
-        </div>
-        </RailOverlay>
+            event.target.value = ''
+          }}
+          onToggleExpanded={setExpandedProgram}
+          onActivate={activateProgram}
+          onDeactivate={deactivateProgram}
+          onEdit={program => { setEditingProgram(program); setShowProgramBuilder(true); setShowProgramManager(false) }}
+          onExport={program => exportProgramToXlsx(program as Parameters<typeof exportProgramToXlsx>[0])}
+          onRequestDelete={setConfirmDelete}
+          onDelete={programId => { deleteProgram(programId); setConfirmDelete(null); setExpandedProgram(null) }}
+          onDownloadTemplate={downloadBlankTemplate}
+        />
       )}
 
       {/* ═══ IMPORT PREVIEW MODAL ═══ */}
-      {importPreview && (<RailOverlay>
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <ModalHeader title="APERÇU IMPORT" badge={importPreview.total_weeks ? `${importPreview.total_weeks} SEM` : undefined} onClose={() => setImportPreview(null)} />
-            {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ ...labelStyle, marginBottom: 4 }}>{t('programs.programName')}</div>
-                <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
-              </div>
-
-              {/* Phase summary for periodized programs */}
-              {importPreview.phases && (
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {importPreview.phases.map((phase, i) => (
-                    <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
-                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{t('calendar.weekLabel', { start: phase.weeks[0], end: phase.weeks[1] })}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 16 }}>
-                {importPreview.days.map((day, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid ${colors.goldBorder}` }}>
-                    <span style={{ ...bodyStyle, fontSize: 13 }}>
-                      {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
-                    </span>
-                    <span style={{ ...mutedStyle, fontSize: 12 }}>
-                      {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex. ✓`}
-                    </span>
-                  </div>
-                ))}
-                {importSkipped.map((name, i) => (
-                  <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
-                    <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
-                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('calendar.import.skipped')}</span>
-                  </div>
-                ))}
-                {importSkipped.length > 0 && (
-                  <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
-                    {t('calendar.import.result', { imported: importPreview.days.length, total: importPreview.days.length + importSkipped.length, skipped: importSkipped.length })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer FIXE — toujours visible */}
-            <div style={{ flexShrink: 0, padding: '16px 20px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `0.5px solid ${colors.goldBorder}`, background: colors.background, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={() => {
-                const insertData: any = {
-                  name: importName.trim() || 'Programme importé',
-                  description: importPreview.description || '',
-                  days: importPreview.days,
-                  source: 'import',
-                }
-                if (importPreview.total_weeks) {
-                  insertData.total_weeks = importPreview.total_weeks
-                  insertData.current_week = importPreview.current_week || 1
-                  insertData.phases = importPreview.phases || null
-                }
-                setStartModalImportData(insertData)
-                setStartModalProgram({ name: importName.trim() || 'Programme importé' })
-                setImportPreview(null)
-              }} style={{ ...btnPrimary, padding: 14 }}>{t('calendar.buttons.import')}</button>
-              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>{t('calendar.buttons.cancel')}</button>
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
+      {importPreview && (
+        <TrainingImportPreviewModal
+          preview={importPreview}
+          name={importName}
+          skipped={importSkipped}
+          labels={{
+            programName: t('programs.programName'), importAction: t('calendar.buttons.import'),
+            cancel: t('calendar.buttons.cancel'), skipped: t('calendar.import.skipped'),
+            weekLabel: (start, end) => t('calendar.weekLabel', { start, end }),
+            result: (imported, total, skipped) => t('calendar.import.result', { imported, total, skipped }),
+          }}
+          onNameChange={setImportName}
+          onClose={() => setImportPreview(null)}
+          onConfirm={() => {
+            const insertData: Record<string, unknown> = {
+              name: importName.trim() || 'Programme importé',
+              description: importPreview.description || '',
+              days: importPreview.days,
+              source: 'import',
+            }
+            if (importPreview.total_weeks) {
+              insertData.total_weeks = importPreview.total_weeks
+              insertData.current_week = importPreview.current_week || 1
+              insertData.phases = importPreview.phases || null
+            }
+            setStartModalImportData(insertData)
+            setStartModalProgram({ name: importName.trim() || 'Programme importé' })
+            setImportPreview(null)
+          }}
+        />
+      )}
 
       {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}
 
@@ -1660,45 +1467,27 @@ export default function TrainingTab({
       )}
 
       {/* Variant popup */}
-      {variantPopup && (<RailOverlay>
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontFamily:fonts.headline,fontSize:20,letterSpacing:2,color:colors.text}}>VARIANTES</span>
-              <button aria-label={t('calendar.closeVariants')} onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
-            </div>
-            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
-              {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:colors.textMuted,fontSize:14,fontFamily:fonts.body}}>{t('programs.noVariants')}</div>
-              ):variantPopup.variants.map((v: any,i: number)=>(
-                <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius: 16,background:colors.background,border:`1px solid ${colors.goldBorder}`,cursor:'pointer',textAlign:'left'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
-                  </div>
-                  <div>
-                    <div style={{fontFamily:fonts.body,fontSize:14,color:colors.text,fontWeight:500}}>{v.name}</div>
-                    <div style={{fontFamily:fonts.body,fontSize:10,color:colors.gold,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
+      {variantPopup && (
+        <TrainingVariantModal
+          variants={variantPopup.variants}
+          closeLabel={t('calendar.closeVariants')}
+          emptyLabel={t('programs.noVariants')}
+          onClose={() => setVariantPopup(null)}
+          onSelect={selectEditVariant}
+        />
+      )}
 
       {/* Workout detail popup */}
-      {selectedWorkout && (<RailOverlay>
-        <div style={{position:'fixed',inset:0,background:colors.background,zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <ModalHeader title={selectedWorkout.name || t('calendar.exercise')} onClose={() => setSelectedWorkout(null)} />
-          <div style={{flex:1,overflowY:'auto',padding:'14px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
-            <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginBottom:14}}>
-              {new Date(selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
-              {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
-            </div>
-            <WorkoutDetailList detail={workoutDetail} loading={loadingDetail} />
-          </div>
-        </div>
-      </RailOverlay>)}
+      {selectedWorkout && (
+        <TrainingWorkoutHistoryModal
+          workout={selectedWorkout}
+          detail={workoutDetail}
+          loading={loadingDetail}
+          locale={locale}
+          fallbackTitle={t('calendar.exercise')}
+          onClose={() => setSelectedWorkout(null)}
+        />
+      )}
     </div>
   )
 }

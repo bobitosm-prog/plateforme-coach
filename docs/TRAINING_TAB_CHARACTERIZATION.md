@@ -52,3 +52,7 @@ sans modifier les comportements caractérisés ici.
 La bibliothèque, ses recherches et la résolution des sélections ont également
 été extraites dans un [contrat pur partagé](TRAINING_EXERCISE_LIBRARY.md). Les
 requêtes et le rendu des composants restent inchangés.
+
+Les overlays auparavant inline suivent désormais l'[inventaire des modales de
+`TrainingTab`](TRAINING_TAB_MODALS.md). Les tests serveur et statiques évitent
+un contournement fragile de la limite jsdom/Node connue.
