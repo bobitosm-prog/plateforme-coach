@@ -13,6 +13,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { getExerciseImage } from '../../../lib/exercise-media'
+import { resolveAddedExercise, searchExerciseLibrary } from '../../../lib/training/exercise-library'
 
 interface ExerciseSearchModalProps {
   supabase: any
@@ -51,9 +52,12 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
   }, [exSearch])
 
   const list = (() => {
-    let l = exSearch.length >= 2 ? exResults : exDbAllResults
-    if (exDbMuscleFilter !== 'Tous') l = l.filter((ex: any) => ex.muscle_group === exDbMuscleFilter)
-    return l
+    const source = exSearch.length >= 2 ? exResults : exDbAllResults
+    return searchExerciseLibrary(source, {
+      muscle: exDbMuscleFilter,
+      allMusclesKey: 'Tous',
+      muscleMatch: 'exact',
+    }).results
   })()
 
   return (<RailOverlay>
@@ -271,14 +275,13 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
               {onAdd && (
                 <button
                   onClick={() => {
-                    onAdd({
-                      name: selectedExDb.name,
-                      exercise_name: selectedExDb.name,
-                      muscle_group: selectedExDb.muscle_group || '',
-                      sets: parseInt(exDbAddSets) || 3,
-                      reps: parseInt(exDbAddReps) || 10,
-                      rest_seconds: parseInt(exDbAddRest) || 60,
+                    const selected = resolveAddedExercise(selectedExDb, {
+                      sets: exDbAddSets,
+                      reps: exDbAddReps,
+                      restSeconds: exDbAddRest,
                     })
+                    if (!selected) return
+                    onAdd(selected)
                     toast.success('Exercice ajouté ✓')
                     setSelectedExDb(null)
                     setExDbAddSets('3'); setExDbAddReps('10'); setExDbAddRest('60')

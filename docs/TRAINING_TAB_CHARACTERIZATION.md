@@ -48,3 +48,7 @@ par les extractions suivantes, avec cette suite comme filet de non-régression.
 La sélection du programme actif et la navigation des jours ont depuis été
 extraites dans une [frontière pure documentée](TRAINING_ACTIVE_PROGRAM_DAY.md),
 sans modifier les comportements caractérisés ici.
+
+La bibliothèque, ses recherches et la résolution des sélections ont également
+été extraites dans un [contrat pur partagé](TRAINING_EXERCISE_LIBRARY.md). Les
+requêtes et le rendu des composants restent inchangés.

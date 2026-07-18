@@ -5579,3 +5579,88 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire bibliothèque et recherche d'exercices.
+
+## Entrée — 2026-07-18 — Bibliothèque et recherche d'exercices Training
+
+### Travail effectué
+
+- Cartographie des trois contrats actuels de recherche : bibliothèque
+  `TrainingTab`, modale serveur et catalogue mixte de `ProgramBuilder`.
+- Création de `lib/training/exercise-library.ts`, frontière pure pour la
+  normalisation, les noms legacy, le filtrage, l'ordre, les sources et la
+  résolution des sélections.
+- Branchement de `ExerciseLibrarySection` sur le filtrage partagé, les
+  alternatives, les raccourcis du programme et le payload de séance libre.
+- Branchement de `ExerciseSearchModal` sur l'isolation des entrées, le filtre
+  musculaire exact et le payload d'ajout, sans remplacer son `ilike` serveur.
+- Branchement de `ProgramBuilder` sur la combinaison catalogue/personnalisés et
+  le filtre historique insensible à la casse.
+- Ajout d'une documentation des règles et limites et de deux suites unitaires.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire bibliothèque et recherche d'exercices » — terminée.
+- Progression Phase 3 : 11/27 → 12/27 tâches.
+
+### Décisions prises
+
+- Les résultats conservent l'ordre reçu ; aucun tri alphabétique ou score de
+  pertinence nouveau n'est ajouté.
+- La normalisation ignore la casse et unifie les formes Unicode équivalentes,
+  mais ne retire ni accents ni espaces.
+- Les alias musculaires restent propres à la bibliothèque principale ; la
+  modale garde une égalité exacte et `ProgramBuilder` une égalité sans casse.
+- Catalogue et exercice personnel homonymes restent deux choix distincts ;
+  aucune déduplication par nom n'est inventée.
+- L'équipement reste affiché mais ne devient pas un filtre, car aucun des trois
+  écrans concernés ne le filtre actuellement.
+- Les entrées dépourvues des quatre noms legacy reconnus sont isolées et ne
+  produisent aucune sélection.
+
+### Problèmes rencontrés
+
+- Les trois consommateurs possédaient des règles voisines mais non identiques ;
+  une unification naïve aurait changé le filtre musculaire ou la recherche.
+- Le lint complet des trois composants historiques reste en dette : 55 erreurs
+  et 15 avertissements après extraction, contre 62 erreurs et 15 avertissements
+  au commit de départ.
+
+### Risques ou dette restante
+
+- Les lectures Supabase du catalogue restent directes dans `TrainingTab`, la
+  modale et `ProgramBuilder`; aucun repository n'est migré dans cette tranche.
+- La bibliothèque principale n'affiche toujours pas les exercices personnels.
+- La recherche serveur de la modale dépend toujours de `ilike`, de sa collation
+  et de sa limite à dix résultats.
+- Le remplacement d'alternative reste une mutation directe de
+  `custom_programs` dans le composant.
+- `TrainingTab`, `ProgramBuilder` et la modale conservent leurs `any` et leurs
+  responsabilités historiques hors de la frontière pure.
+
+### Tests exécutés
+
+- Tests ciblés bibliothèque, intégration statique, caractérisation
+  `TrainingTab` et navigation : 27/27 verts.
+- Suite Vitest complète : 76 fichiers, 793 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint du module pur et des deux nouvelles suites : vert.
+- ESLint informatif des composants historiques : 62 → 55 erreurs, 15
+  avertissements avant/après.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, spécification E2E, migration, policy
+  RLS, donnée distante, repository ou requête/mutation Supabase nouvelle.
+
+### Mesures avant/après
+
+- Logiques de recherche/filtrage inline migrées : 3 consommateurs.
+- Tests actifs globaux : 779 → 793.
+- Tâches Phase 3 terminées : 11/27 → 12/27.
+- Progression globale : 54/138 → 55/138 tâches, soit environ 40 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire historique et séances récentes.

@@ -3,7 +3,14 @@ import { useState } from 'react'
 import { Dumbbell, Search, ChevronRight, ArrowRightLeft, X } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
-import { getMuscleLabel, matchMuscleFilter } from '../../../lib/i18n-muscle'
+import { getMuscleLabel } from '../../../lib/i18n-muscle'
+import {
+  collectProgramExerciseNames,
+  findExerciseAlternatives,
+  resolveFreeSessionExercise,
+  resolveLegacyExerciseName,
+  searchExerciseLibrary,
+} from '../../../lib/training/exercise-library'
 import { toast } from 'sonner'
 import { fonts, colors, btnPrimary, Z_MODAL } from '../../../lib/design-tokens'
 import { RailOverlay } from '../ui/RailOverlay'
@@ -65,11 +72,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
   const [altResults, setAltResults] = useState<any[]>([])
 
   const filterExercises = (search: string, muscle: string) =>
-    exercisesCache.filter((e: any) => {
-      if (muscle !== ALL_KEY && !matchMuscleFilter(e.muscle_group, muscle)) return false
-      if (search && !e.name?.toLowerCase().includes(search.toLowerCase())) return false
-      return true
-    })
+    searchExerciseLibrary(exercisesCache, { search, muscle, allMusclesKey: ALL_KEY }).results
 
   return (
     <>
@@ -134,7 +137,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
             </div>
             {libDetail.description && <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, lineHeight: 1.6, marginBottom: 16, margin: '0 0 16px' }}>{libDetail.description}</p>}
             {libDetail.execution_tips && <p style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textDim, lineHeight: 1.5, marginBottom: 16, margin: '0 0 16px' }}>{libDetail.execution_tips}</p>}
-            <button onClick={() => { onStartWorkout({ day_name: 'Séance libre' }, [{ exercise_name: libDetail.name, muscle_group: libDetail.muscle_group, sets: 3, reps: 10, rest_seconds: 90, video_url: libDetail.video_url, gif_url: libDetail.gif_url }]); setLibDetail(null) }} style={{ ...btnPrimary, width: '100%', padding: '14px 0', fontSize: 13, textAlign: 'center' }}>{t('addToSession')}</button>
+            <button onClick={() => { const selected = resolveFreeSessionExercise(libDetail); if (selected) onStartWorkout({ day_name: 'Séance libre' }, [selected]); setLibDetail(null) }} style={{ ...btnPrimary, width: '100%', padding: '14px 0', fontSize: 13, textAlign: 'center' }}>{t('addToSession')}</button>
           </div>
         </div>
       </RailOverlay>)}
@@ -186,8 +189,8 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
           </div>
           {altSearch.length >= 2 && !altSelected && (
             <div style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 8, borderRadius: 12, border: `1px solid ${colors.divider}`, background: colors.surface2 }}>
-              {exercisesCache.filter((e: any) => e.name?.toLowerCase().includes(altSearch.toLowerCase())).slice(0, 8).map((ex: any) => (
-                <button key={ex.id} onClick={async () => { setAltSelected(ex); setAltSearch(ex.name); const alts = exercisesCache.filter((a: any) => a.id !== ex.id && a.muscle_group?.toLowerCase() === ex.muscle_group?.toLowerCase() && a.name !== ex.name).slice(0, 3); setAltResults(alts) }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
+              {searchExerciseLibrary(exercisesCache, { search: altSearch, limit: 8 }).results.map((ex: any) => (
+                <button key={ex.id} onClick={async () => { setAltSelected(ex); setAltSearch(ex.name); setAltResults(findExerciseAlternatives(exercisesCache, ex)) }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{getExerciseName(ex, locale)}</div>
                   <div style={{ fontSize: 9, color: colors.textDim, fontFamily: fonts.body }}>{getMuscleLabel(ex.muscle_group, locale, tMuscle)} &middot; {ex.equipment || 'N/A'}</div>
                 </button>
@@ -197,12 +200,11 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
           {!altSelected && activeCustomProgram?.days && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
               {(() => {
-                const exNames: string[] = []
-                activeCustomProgram.days.forEach((d: any) => { (d.exercises || []).forEach((e: any) => { const n = e.exercise_name || e.name; if (n && !exNames.includes(n)) exNames.push(n) }) })
-                return exNames.slice(0, 6).map((n: string) => {
-                  const match = exercisesCache.find((e: any) => e.name === n)
+                const exNames = collectProgramExerciseNames(activeCustomProgram.days)
+                return exNames.map((n: string) => {
+                  const match = exercisesCache.find((e: any) => resolveLegacyExerciseName(e) === n)
                   return (
-                    <button key={n} onClick={() => { if (match) { setAltSelected(match); setAltSearch(match.name); const alts = exercisesCache.filter((a: any) => a.id !== match.id && a.muscle_group?.toLowerCase() === match.muscle_group?.toLowerCase() && a.name !== match.name).slice(0, 3); setAltResults(alts) } }} style={chipStyle(false)}>{match ? getExerciseName(match, locale) : n}</button>
+                    <button key={n} onClick={() => { if (match) { setAltSelected(match); setAltSearch(match.name); setAltResults(findExerciseAlternatives(exercisesCache, match)) } }} style={chipStyle(false)}>{match ? getExerciseName(match, locale) : n}</button>
                   )
                 })
               })()}

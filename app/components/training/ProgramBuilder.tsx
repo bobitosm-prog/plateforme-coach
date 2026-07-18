@@ -10,6 +10,7 @@ import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-type
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
+import { combineExerciseLibraries, searchExerciseLibrary } from '@/lib/training/exercise-library'
 import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -354,16 +355,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     })
   }
 
-  const filteredExercises = [...dbExercises, ...customExercises.map(e => ({ ...e, _custom: true }))]
-    .filter(e => {
-      if (exerciseSearchQuery && !e.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())) return false
-      if (exerciseSearchFilter && exerciseSearchFilter !== ALL_KEY) {
-        const mg = (e.muscle_group || '').toLowerCase()
-        const filter = exerciseSearchFilter.toLowerCase()
-        if (mg !== filter) return false
-      }
-      return true
-    })
+  const filteredExercises = searchExerciseLibrary(
+    combineExerciseLibraries(dbExercises, customExercises),
+    {
+      search: exerciseSearchQuery,
+      muscle: exerciseSearchFilter,
+      allMusclesKey: ALL_KEY,
+      muscleMatch: 'case-insensitive',
+    },
+  ).results
 
   const previousMode = useRef<'select' | 'manual'>('select')
   function moveExerciseInDay(exIdx: number, dir: number) {
