@@ -8,7 +8,7 @@ const joinPage = read('app/join/page.tsx')
 const callback = read('app/auth/callback/route.ts')
 const login = read('app/login/LoginPageContent.tsx')
 const registerClient = read('app/register-client/RegisterClientContent.tsx')
-const clientDashboard = read('app/hooks/useClientDashboard.ts')
+const clientDashboard = read('lib/client-dashboard/use-client-dashboard-data.ts')
 const validateRoute = read('app/api/coach/invitations/validate/route.ts')
 const consumeRoute = read('app/api/coach/invitations/consume/route.ts')
 

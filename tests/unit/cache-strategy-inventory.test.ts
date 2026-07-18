@@ -37,6 +37,8 @@ describe('current cache inventory guard', () => {
 
   it('keeps the client dashboard envelope symmetric and user-checked', () => {
     const dashboard = read('app/hooks/useClientDashboard.ts')
+    const dashboardData = read('lib/client-dashboard/use-client-dashboard-data.ts')
+    const dashboardSource = `${dashboard}\n${dashboardData}`
     const sessionProfileLoader = read('lib/client-dashboard/session-profile-loader.ts')
     for (const field of [
       'profileData',
@@ -50,12 +52,12 @@ describe('current cache inventory guard', () => {
       'sessionDatesData',
       'hasTrainedBeforeVal',
     ]) {
-      expect(dashboard).toContain(field)
+      expect(dashboardSource).toContain(field)
     }
-    expect(dashboard).toContain('ownerUserId: uid')
+    expect(dashboardData).toContain('ownerUserId: userId')
     expect(sessionProfileLoader).toContain('isDashboardCacheOwnedBy')
     expect(sessionProfileLoader).toContain('identityRepository.getCurrent()')
-    expect(dashboard).toContain('5 * 60 * 1000')
+    expect(dashboardData).toContain('5 * 60 * 1000')
   })
 
   it('records current gaps without normalizing them into the target contract', () => {

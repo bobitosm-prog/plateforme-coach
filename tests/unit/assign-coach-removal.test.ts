@@ -18,10 +18,10 @@ describe('legacy assign-coach removal', () => {
   })
 
   it('keeps default-coach assignment independent from invitations and subscriptions', () => {
-    const dashboard = read('app/hooks/useClientDashboard.ts')
+    const dashboard = read('lib/client-dashboard/use-client-dashboard-data.ts')
     const resolver = dashboard.slice(
       dashboard.indexOf('async function resolveCoachLink'),
-      dashboard.indexOf('/* ── Handlers ── */'),
+      dashboard.indexOf('async function fetchAll'),
     )
 
     expect(resolver).toContain("fetch('/api/coach/default-assignment', { method: 'POST' })")
@@ -42,7 +42,7 @@ describe('legacy assign-coach removal', () => {
   })
 
   it('contains no direct browser mutation of coach_clients', () => {
-    const dashboard = read('app/hooks/useClientDashboard.ts')
+    const dashboard = read('lib/client-dashboard/use-client-dashboard-data.ts')
     const coachSection = read('app/components/tabs/profile/CoachSection.tsx')
     expect(`${dashboard}\n${coachSection}`).not.toMatch(/from\('coach_clients'\)\.(?:insert|upsert|update|delete)/)
     expect(coachSection).toContain("fetch('/api/coach/disconnect', { method: 'POST' })")

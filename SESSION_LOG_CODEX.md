@@ -5330,3 +5330,68 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire la façade `useClientDashboard` sous 250 lignes.
+
+## Entrée — 2026-07-17 — Réduction de la façade du dashboard client
+
+### Travail effectué
+
+- Mesure puis réduction de `useClientDashboard` de 727 à 203 lignes.
+- Extraction de la coordination Auth, cache, profil, Training, nutrition/mesures, diagnostic et relation coach dans `useClientDashboardData`.
+- Extraction des actions séance, poids, mensurations, photos, checkout et préférences calendrier dans `useClientDashboardActions`.
+- Conservation dans la façade des états React, de la composition des hooks spécialisés, des valeurs calculées et du contrat public retourné aux composants.
+- Remplacement des sélections Supabase restantes par des projections explicites sans introduire de client privilégié ni de nouvel `any`.
+- Adaptation des inventaires statiques historiques afin qu'ils suivent les responsabilités déplacées sans relâcher leurs garanties de cache, invitation ou assignation coach.
+- Ajout d'un garde statique sur la limite de 250 lignes, la délégation, les imports interdits, les wildcards et les principaux champs publics.
+
+### Tâches cochées
+
+- Phase 3 : « Réduire la façade `useClientDashboard` sous 250 lignes » — terminée.
+- Progression Phase 3 : 8/27 → 9/27 tâches.
+
+### Décisions prises
+
+- La façade reste l'unique contrat consommé par l'UI ; aucun composant n'a été modifié.
+- Les deux nouvelles frontières sont des hooks internes bornés à la coordination et aux actions, plutôt qu'un nouveau contrôleur monolithique de plus de 500 lignes.
+- Le cache conserve exactement son propriétaire `ownerUserId`, le contrôle `profileData.id`, sa durée de cinq minutes et ses formes legacy.
+- L'identité provient toujours de la session vérifiée et des repositories existants ; les identifiants passés aux loaders bornent les requêtes sans devenir une autorité navigateur.
+- Les comportements session/profil, erreur récupérable, onboarding, retry, Strict Mode, Training et nutrition/mesures restent couverts par leurs tests existants.
+
+### Problèmes rencontrés
+
+- Trois tests d'inventaire lisaient encore exclusivement l'ancien fichier du hook ; ils ont été redirigés vers la nouvelle frontière propriétaire de ces responsabilités.
+- Le premier lancement E2E a été arrêté avant scénario par l'interdiction sandbox d'accéder au socket Docker ; le même harnais a été relancé avec l'autorisation locale prévue et a réussi.
+- Next.js continue d'émettre les avertissements historiques sur les qualités d'images, et Supabase avertit encore sur l'objet issu de `getSession`.
+
+### Risques ou dette restante
+
+- `useClientDashboardData` et `useClientDashboardActions` restent des orchestrateurs transitoires de 340 et 310 lignes ; leurs domaines devront être séparés progressivement sans recréer une façade cachée.
+- Diagnostic, relation coach, analytics et mutations de poids/mesures/photos restent en coexistence legacy avec des accès Supabase directs bornés par projections.
+- Les formes retournées par le hook restent volontairement legacy ; leur typage pourra être resserré seulement avec des tests de caractérisation des composants consommateurs.
+- `TrainingTab`, `WorkoutSession` et `ProgramBuilder` restent les prochaines concentrations majeures du domaine Training.
+
+### Tests exécutés
+
+- Tests ciblés client-dashboard et inventaires associés : verts.
+- Suite Vitest complète : 72 fichiers, 765 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur la façade, les deux hooks internes et les tests modifiés : vert, sans désactivation globale.
+- E2E default-coach Chromium local : 1/1 vert en 10,6 s, un worker.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, migration, policy RLS, spécification E2E ou composant consommateur modifié.
+
+### Mesures avant/après
+
+- `useClientDashboard.ts` : 727 → 203 lignes.
+- Hooks du dépôt au-dessus de 500 lignes : 3 → 2.
+- Erreurs ESLint ciblées sur la frontière dashboard modifiée : 33 historiques → 0.
+- Tests actifs globaux : 761 → 765.
+- Tâches Phase 3 terminées : 8/27 → 9/27.
+- Progression globale : 51/138 → 52/138 tâches, soit environ 38 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Écrire les tests de caractérisation de `TrainingTab`.

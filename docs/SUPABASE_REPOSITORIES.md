@@ -91,6 +91,22 @@ Les écritures de poids, mesures et photos restent dans le hook legacy. Cette
 tranche ne crée volontairement pas de repositories de mutation et ne modifie ni
 les policies RLS ni les composants Nutrition/Progression.
 
+## Façade du dashboard client
+
+`useClientDashboard` est désormais une façade React de 203 lignes. Il conserve
+les états rendus, compose les hooks spécialisés et restitue le contrat public
+legacy sans modifier ses consommateurs. La coordination Auth/cache et les
+lectures agrégées vivent dans `useClientDashboardData`; les mutations et actions
+utilisateur vivent dans `useClientDashboardActions`.
+
+Ces deux hooks internes réutilisent les loaders session/profil, Training et
+nutrition/mesures existants. Les projections Supabase restantes sont explicites,
+les erreurs exposées restent expurgées et aucun client privilégié n'est créé.
+Le cache garde son enveloppe `ownerUserId` et sa vérification croisée avec
+`profileData.id`. Ce découpage ne constitue pas encore une migration complète :
+diagnostic, coach link, analytics et mutations multi-domaines restent coordonnés
+par les hooks internes jusqu'à l'ouverture de leurs domaines respectifs.
+
 ## Premiers consommateurs serveur
 
 Les routes `POST /api/user/sync-locale` et `POST /api/user/locale` sont les premiers consommateurs server réels. Elles composent la factory session, le repository identité, puis le repository profil. La lecture retourne une locale valide ou `null` sans confondre absence et panne; l'écriture passe par `updateSafe` et ne peut typer que `preferred_locale`. Les statuts HTTP et cookies historiques restent inchangés. Le lot complet des dix sites est documenté dans [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md). La fraîcheur et l'invalidation futures de ces lectures sont cadrées séparément par la [stratégie de cache par domaine](CACHE_STRATEGY.md).
