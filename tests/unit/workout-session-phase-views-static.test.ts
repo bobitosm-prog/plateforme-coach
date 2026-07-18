@@ -16,9 +16,11 @@ describe('WorkoutSession presentation boundary', () => {
 
   it('delegates every extracted phase from WorkoutSession with callbacks kept in the orchestrator', () => {
     const source = readFileSync(resolve(root, 'app/components/WorkoutSession.tsx'), 'utf8')
-    for (const component of ['WorkoutActiveSessionHeaderView', 'WorkoutActiveSessionFinishView', 'WorkoutDraftResumeView', 'WorkoutActiveRestView', 'WorkoutRestCompleteView', 'WorkoutCompletionView', 'WorkoutEndConfirmationView', 'WorkoutAbandonConfirmationView', 'WorkoutRepetitionsWarningView', 'WorkoutTemplateSaveView']) {
+    for (const component of ['WorkoutActiveSessionHeaderView', 'WorkoutActiveSessionFinishView', 'WorkoutDraftResumeView', 'WorkoutRestCompleteView', 'WorkoutCompletionView', 'WorkoutEndConfirmationView', 'WorkoutAbandonConfirmationView', 'WorkoutRepetitionsWarningView', 'WorkoutTemplateSaveView']) {
       expect(source).toContain(`<${component}`)
     }
+    const editor = readFileSync(resolve(viewDirectory, 'WorkoutExerciseEditor.tsx'), 'utf8')
+    expect(editor).toContain('<WorkoutActiveRestView')
     expect(source).toContain('onConfirm={() => { setShowDeleteConfirm(false); setShowEndModal(false); runtime.stop(); cleanupDraft(); onClose() }}')
     expect(source).toContain('onConfirm={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }}')
   })

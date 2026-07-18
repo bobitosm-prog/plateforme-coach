@@ -469,3 +469,40 @@ Ces tests documentent, sans les corriger, les caches non owner-scoped, le
 idempotente et la chaîne SQL non transactionnelle. Aucun test navigateur mobile
 n'est nécessaire tant que ces frontières pures représentent fidèlement les
 événements de visibilité et la suspension du scheduler.
+
+## Façade `WorkoutSession` réduite
+
+`WorkoutSession.tsx` est passé de 1 161 à 530 lignes. Il conserve son export et
+ses props historiques ainsi que l'orchestration React : identité authentifiée,
+runtime, chargements Supabase existants, transitions, sauvegarde, finalisation
+et abandon. Les écritures restent dans le même ordre et aucune nouvelle requête
+n'a été introduite.
+
+Les responsabilités visuelles restantes sont réparties entre trois frontières
+bornées et typées :
+
+- `WorkoutCustomBuilder` (210 lignes) porte la construction d'une séance libre
+  et la lecture existante du catalogue ;
+- `WorkoutExerciseEditor` (384 lignes) présente exercices, séries, progression,
+  charge, répétitions, RIR, tempo, réordonnancement et repos actif ;
+- `WorkoutSessionOverlays` (160 lignes) présente informations d'exercice,
+  variantes, confirmation de sauvegarde et surcouches tempo.
+
+Les deux dernières frontières sont des composants de présentation : elles ne
+connaissent ni Supabase, ni le stockage local, ni le runtime navigateur. Elles
+reçoivent uniquement des données et callbacks typés. Le builder conserve la
+lecture catalogue qui existait déjà dans la branche `custom`; son extraction ne
+crée donc aucune nouvelle autorité ni mutation.
+
+Les règles legacy sont conservées, notamment l'acceptation des tempos contenant
+au moins trois segments numériques, les champs optionnels des exercices et le
+choix d'une variante sans changement de contrat. Des tests de rendu serveur
+couvrent l'éditeur vide et complet, le repos actif, les séries et les overlays.
+Un inventaire statique impose la limite de 600 lignes, borne chaque nouveau
+module, interdit `any` et `select('*')` dans les frontières extraites et vérifie
+le câblage des callbacks de repos, tempo, sauvegarde et finalisation.
+
+La dette historique demeure dans l'orchestrateur : accès Supabase directs,
+types `any`, dépendances d'effets incomplètes, cache non owner-scoped,
+finalisation non idempotente et chaîne multi-tables non transactionnelle. Cette
+tranche ne les masque ni ne les corrige.

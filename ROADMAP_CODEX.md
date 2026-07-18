@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 22 tâches sur 27 ; interruption, reprise, visibilité mobile et ressources runtime caractérisées, prochaine tranche : réduire `WorkoutSession` sous 600 lignes**
+**Statut : Phase 3 ouverte — 23 tâches sur 27 ; `WorkoutSession` réduit à 530 lignes, prochaine tranche : écrire les tests de caractérisation de `ProgramBuilder`**
 
 ### Pourquoi
 
@@ -344,7 +344,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] Extraire sauvegarde et synchronisation | 2,5 j | Élevée | Élevé | Critique | Modèle session |
 | [x] [Extraire les composants de présentation par phase](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#présentation-extraite-par-phase) | 2,5 j | Élevée | Moyen | Élevé | Modèle session |
 | [x] [Tester interruption, reprise et arrière-plan mobile](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#interruption-reprise-et-arrière-plan-mobile) | 2,5 j | Élevée | Moyen | Critique | Implémentation complète |
-| [ ] Réduire `WorkoutSession` sous 600 lignes | 1,5 j | Élevée | Élevé | Élevé | Toutes extractions |
+| [x] [Réduire `WorkoutSession` sous 600 lignes](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#façade-workoutsession-réduite) | 1,5 j | Élevée | Élevé | Élevé | Toutes extractions |
 | [ ] Écrire les tests de caractérisation de `ProgramBuilder` | 1,5 j | Élevée | Faible | Élevé | Modèle canonique |
 | [ ] Extraire modèle d'édition, DnD et validation | 4 j | Élevée | Élevé | Élevé | Tests builder |
 | [ ] Extraire persistance et présentation du builder | 3 j | Élevée | Moyen | Élevé | Modèle d'édition |
@@ -743,14 +743,14 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈47 % (65/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈48 % (66/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
-| Composants >1 000 lignes | 5 | 3 | 0–1 | 4 | 🔴 |
+| Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 915 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 924 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
@@ -764,7 +764,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Fichier | Baseline | Cible | Phase | Statut |
 |---|---:|---:|---:|---|
 | `TrainingTab.tsx` | 1 721 lignes | <500 | 3 | ✅ — 7 lignes (façade), frontières ≤454 |
-| `WorkoutSession.tsx` | 1 639 | <600 | 3 | ⬜ |
+| `WorkoutSession.tsx` | 1 639 | <600 | 3 | ✅ — 530 lignes, frontières ≤384 |
 | `ProgramBuilder.tsx` | 1 330 | <500 | 3 | ⬜ |
 | `NutritionTab.tsx` | 1 273 | <500 | 4 | ⬜ |
 | `ProgressTab.tsx` | 1 151 | <500 | 4 | ⬜ |

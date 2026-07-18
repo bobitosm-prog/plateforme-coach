@@ -6507,3 +6507,85 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire `WorkoutSession` sous 600 lignes.
+
+---
+
+## Entrée — 2026-07-18 — Réduction de la façade WorkoutSession
+
+### Travail effectué
+
+- Cartographie des responsabilités restantes dans `WorkoutSession` : création
+  libre, éditeur exercices/séries, variantes, tempo et overlays.
+- Extraction de `WorkoutCustomBuilder`, `WorkoutExerciseEditor` et
+  `WorkoutSessionOverlays`, avec contrats typés partagés.
+- Conservation dans la façade de l'état React, des accès Supabase existants, du
+  runtime, des mutations, de la sauvegarde et de la finalisation.
+- Ajout de tests de rendu serveur pour l'éditeur et les overlays, ainsi que d'un
+  contrat statique sur les tailles, dépendances et callbacks.
+- Adaptation du contrat statique des vues de phase : le repos actif est rendu
+  par l'éditeur, mais reste piloté par l'orchestrateur.
+
+### Tâches cochées
+
+- Phase 3 : « Réduire `WorkoutSession` sous 600 lignes » — terminée.
+- Progression Phase 3 : 22/27 → 23/27 tâches.
+
+### Décisions prises
+
+- La construction de séance libre conserve sa lecture catalogue Supabase
+  historique dans une frontière dédiée ; aucune requête nouvelle n'est créée.
+- Les éditeurs et overlays restent présentationnels et ne dépendent ni de
+  Supabase, ni du stockage, ni du runtime navigateur.
+- Le tempo legacy à trois segments minimum reste accepté ; aucune validation
+  canonique plus stricte n'est introduite.
+- Les callbacks de sauvegarde, finalisation, abandon, repos et tempo restent
+  construits dans `WorkoutSession` afin de ne déplacer aucune autorité métier.
+
+### Problèmes rencontrés
+
+- Un test statique attendait encore `WorkoutActiveRestView` directement dans la
+  façade. Il a été aligné sur la nouvelle composition sans réduire sa garantie.
+- La dette ESLint historique de la façade reste présente, mais diminue sans
+  désactivation : 31 erreurs/12 avertissements → 10 erreurs/3 avertissements.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et non indexés.
+
+### Risques ou dette restante
+
+- `WorkoutSession` conserve des accès Supabase directs et dix occurrences
+  `any` historiques.
+- Les caches restent non liés à l'utilisateur et `savedAt` invalide reste
+  accepté.
+- La finalisation demeure non idempotente et multi-tables non transactionnelle.
+- Les avertissements historiques d'effets Supabase et de balises `<img>` sont
+  conservés ; aucun redesign ni changement de chargement média n'est inclus.
+
+### Tests exécutés
+
+- Suites ciblées façade, éditeur, phases, modèle, transitions, runtime,
+  persistance et interruption : 73/73 vertes.
+- Suite Vitest complète : 96 fichiers, 924 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé : nouvelles frontières sans erreur ; façade à 10 erreurs et 3
+  avertissements historiques.
+- `git diff --check` et contrôles de périmètre : à confirmer en validation
+  finale.
+
+### Mesures avant/après
+
+- `WorkoutSession.tsx` : 1 161 → 530 lignes (-631, environ -54 %).
+- Frontières extraites : 210, 384 et 160 lignes.
+- Composants de plus de 1 000 lignes : 4 → 3.
+- Tâches Phase 3 : 22/27 → 23/27.
+- Progression globale : 65/138 → 66/138, soit environ 48 %.
+- Tests actifs globaux : 915 → 924.
+- Nouvelles routes, repositories, migrations, policies RLS ou E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Écrire les tests de caractérisation de `ProgramBuilder`.
