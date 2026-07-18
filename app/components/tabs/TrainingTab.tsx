@@ -12,7 +12,7 @@ import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import { addXP, updateStreak } from '../../../lib/gamification'
-import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
+import { getSessionForDay } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { findExerciseMatch } from '../../../lib/exercise-matching'
 import { useBeforeUnload } from '../../hooks/useBeforeUnload'
@@ -29,6 +29,12 @@ import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, buildWeekSessions } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
+import {
+  navigateTrainingWeek,
+  resolveActiveProgramDay,
+  selectActivePersonalProgram,
+  selectTrainingDay,
+} from '../../../lib/training/active-program-day'
 
 import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
@@ -152,34 +158,14 @@ export default function TrainingTab({
 
   // Keep screen awake during workout + rest timer
   useWakeLock(!!workoutStarted || restRunning)
-  // Priorité : programme custom actif > programme coach — using shared utility
-  const customDayData = (() => {
-    if (!activeCustomProgram?.days?.length) return null
-    const dayIndex = frDayToIndex(trainingDay)
-    if (dayIndex < 0) return null
-    const session = getSessionForDay(activeCustomProgram.days, dayIndex)
-    if (session.type === 'rest') return { repos: true, exercises: [] }
-    return { repos: false, exercises: session.exercises }
-  })()
-  const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
-  const baseExercises: any[] = trainingDayData?.exercises || []
-
-  // Resolve exercises for current phase (periodized programs)
-  const resolvedExercises: any[] = baseExercises.map((ex: any) => {
-    if (!ex.phases || !activeCustomProgram) return ex
-    const week = getEffectiveWeek(activeCustomProgram)
-    const phaseKey = week <= 4 ? 'p1' : week <= 8 ? 'p2' : 'p3'
-    const phaseData = ex.phases[phaseKey] || ex.phases.p1 || {}
-    return {
-      ...ex,
-      sets: phaseData.sets ?? ex.sets,
-      reps: typeof phaseData.reps === 'string' ? parseInt(phaseData.reps) || ex.reps : phaseData.reps ?? ex.reps,
-      tempo: phaseData.tempo ?? ex.tempo,
-      technique: phaseData.technique ?? ex.technique,
-      technique_details: phaseData.technique_details ?? ex.technique_details,
-      rest_seconds: phaseData.rest_seconds ?? ex.rest_seconds,
-    }
+  // Priorité legacy préservée : programme personnel actif > programme coach > aucun programme.
+  const activeDayResolution = resolveActiveProgramDay({
+    activePersonalProgram: activeCustomProgram,
+    coachProgram,
+    trainingDay,
   })
+  const trainingDayData = activeDayResolution.day
+  const resolvedExercises: any[] = activeDayResolution.exercises
 
   const trainingExercises: any[] = [...resolvedExercises, ...addedExercises].map((ex: any) => {
     const dbMatch = findExerciseMatch(exercisesCache, ex.name)
@@ -318,7 +304,7 @@ export default function TrainingTab({
           toast.success(t('programs.newProgramToast'))
         }
         setCustomPrograms(programs)
-        const active = programs.find((p: any) => p.is_active)
+        const active = selectActivePersonalProgram(programs)
         if (active) setActiveCustomProgram(active)
       })
   }, [session?.user?.id])
@@ -855,8 +841,13 @@ export default function TrainingTab({
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
               const diff = e.changedTouches[0].clientX - calTouchStart.current
-              if (diff > 60) { setWeekDir(-1); setWeekOffset(o => o - 1) }
-              else if (diff < -60) { setWeekDir(1); setWeekOffset(o => o + 1) }
+              if (diff > 60) {
+                const next = navigateTrainingWeek(weekOffset, 'previous')
+                setWeekDir(next.direction); setWeekOffset(next.offset)
+              } else if (diff < -60) {
+                const next = navigateTrainingWeek(weekOffset, 'next')
+                setWeekDir(next.direction); setWeekOffset(next.offset)
+              }
               calTouchStart.current = null
             }}
           >
@@ -865,15 +856,15 @@ export default function TrainingTab({
               <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
-                  <button onClick={() => { setWeekDir(weekOffset > 0 ? -1 : 1); setWeekOffset(0) }} aria-label={t('calendar.backToWeek')}
+                  <button onClick={() => { const next = navigateTrainingWeek(weekOffset, 'today'); setWeekDir(next.direction); setWeekOffset(next.offset) }} aria-label={t('calendar.backToWeek')}
                     style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' as const }}>
                     AUJOURD&apos;HUI
                   </button>
                 )}
-                <button onClick={() => { setWeekDir(-1); setWeekOffset(o => o - 1) }} aria-label={t('calendar.prevWeek')} style={glassBtn}>
+                <button onClick={() => { const next = navigateTrainingWeek(weekOffset, 'previous'); setWeekDir(next.direction); setWeekOffset(next.offset) }} aria-label={t('calendar.prevWeek')} style={glassBtn}>
                   <ChevronLeft size={16} color={colors.gold} />
                 </button>
-                <button onClick={() => { setWeekDir(1); setWeekOffset(o => o + 1) }} aria-label={t('calendar.nextWeek')} style={glassBtn}>
+                <button onClick={() => { const next = navigateTrainingWeek(weekOffset, 'next'); setWeekDir(next.direction); setWeekOffset(next.offset) }} aria-label={t('calendar.nextWeek')} style={glassBtn}>
                   <ChevronRight size={16} color={colors.gold} />
                 </button>
               </div>
@@ -902,7 +893,8 @@ export default function TrainingTab({
                   <button
                     key={i}
                     onClick={() => {
-                      const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
+                      const dayKey = selectTrainingDay(i)
+                      if (!dayKey) return
                       setTrainingDay(dayKey)
                       setCalendarSelectedDate(date)
                     }}

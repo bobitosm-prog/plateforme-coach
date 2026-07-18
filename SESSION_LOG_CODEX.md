@@ -5518,3 +5518,64 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Confirmer visuellement le dashboard existant, puis reprendre « Extraire programme actif et navigation des jours ».
+
+## Entrée — 2026-07-18 — Programme actif et navigation des jours Training
+
+### Travail effectué
+
+- Extraction de la priorité du programme actif dans `lib/training/active-program-day.ts`.
+- Conservation du premier programme personnel `is_active`, puis du fallback programme coach, puis de l'état sans programme.
+- Extraction de la résolution lundi-premier des jours personnels, des repos explicites ou complétés et des prescriptions périodisées `p1/p2/p3`.
+- Extraction des transitions semaine précédente, suivante et retour à aujourd'hui avec leur direction d'animation.
+- Branchement borné de `TrainingTab` sur cette frontière pure, sans modifier son rendu ni ses accès aux données.
+- Ajout d'une documentation des ambiguïtés legacy conservées et de tests unitaires dédiés.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire programme actif et navigation des jours » — terminée.
+- Progression Phase 3 : 10/27 → 11/27 tâches.
+
+### Décisions prises
+
+- Un jour personnel interprétable conserve la priorité même s'il est au repos ou provient du padding historique à sept jours.
+- Un programme personnel vide ou un nom de jour non interprétable conserve le fallback coach actuel.
+- Un jour coach absent reste une séance vide non marquée comme repos ; aucune nouvelle règle métier n'est inventée.
+- La périodisation conserve `getEffectiveWeek`, les seuils `p1/p2/p3`, le fallback `p1` et la conversion legacy des répétitions.
+- Les adaptateurs canoniques ne sont pas branchés dans cette tranche.
+
+### Problèmes rencontrés
+
+- Le lint complet de `TrainingTab.tsx` remonte sa dette historique restante : 76 erreurs `no-explicit-any` et 11 avertissements, contre 79 erreurs et 11 avertissements au commit de départ.
+- Le lint des nouveaux fichiers et du test de caractérisation est vert ; aucune désactivation ESLint n'a été ajoutée.
+
+### Risques ou dette restante
+
+- Chargement, activation et persistance des programmes personnels restent dans `TrainingTab`.
+- Les formats personnel et coach restent distincts et legacy.
+- Le padding d'un programme personnel court masque toujours une éventuelle séance coach sur les jours complétés en repos.
+- La bibliothèque, l'historique, les modales, l'édition, les minuteurs et les accès Supabase directs restent à extraire.
+
+### Tests exécutés
+
+- Tests ciblés programme actif/navigation et caractérisation `TrainingTab` : 13/13 verts.
+- Suite Vitest complète : 74 fichiers, 779 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur le module pur et les tests : vert.
+- ESLint informatif sur `TrainingTab.tsx` : dette historique réduite de 79 à 76 erreurs ; 11 avertissements avant/après.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, spécification E2E, migration, policy RLS, donnée distante, repository ou accès Supabase modifié.
+
+### Mesures avant/après
+
+- Décisions programme/jour directement dans `TrainingTab` : bloc inline → frontière pure testée.
+- Tests actifs globaux : 771 → 779.
+- Tâches Phase 3 terminées : 10/27 → 11/27.
+- Progression globale : 53/138 → 54/138 tâches, soit environ 39 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire bibliothèque et recherche d'exercices.

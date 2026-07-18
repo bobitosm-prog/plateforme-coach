@@ -44,3 +44,7 @@ capturées, pas par une interaction navigateur complète.
 Les accès Supabase directs, les formats `any`, le stockage local et les
 responsabilités multiples restent volontairement inchangés. Ils seront traités
 par les extractions suivantes, avec cette suite comme filet de non-régression.
+
+La sélection du programme actif et la navigation des jours ont depuis été
+extraites dans une [frontière pure documentée](TRAINING_ACTIVE_PROGRAM_DAY.md),
+sans modifier les comportements caractérisés ici.

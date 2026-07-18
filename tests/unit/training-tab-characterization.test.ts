@@ -189,8 +189,8 @@ describe('TrainingTab characterization', () => {
   it('locks the personal-program priority, progression and direct-start contracts statically', () => {
     const source = fs.readFileSync(path.resolve(process.cwd(), 'app/components/tabs/TrainingTab.tsx'), 'utf8')
 
-    expect(source).toContain('const trainingDayData = customDayData || (coachProgram')
-    expect(source).toContain('programs.find((p: any) => p.is_active)')
+    expect(source).toContain('resolveActiveProgramDay({')
+    expect(source).toContain('selectActivePersonalProgram(programs)')
     expect(source).toContain('<PhaseProgressBanner program={activeCustomProgram} />')
     expect(source).toContain('startProgramWorkout(trainingDayData, trainingExercises)')
     expect(source).toContain("profile?.subscription_type !== 'invited'")
