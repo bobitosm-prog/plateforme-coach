@@ -3,14 +3,14 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
-import { toDateStr } from '@/lib/schedule-utils'
 import { updateProfile } from '@/lib/profile-service'
 import { checkAndUnlockBadges, type Badge } from '@/lib/check-badges'
 import { addXP, updateStreak } from '@/lib/gamification'
 import { PERSONAL_PROGRAM_PROJECTION } from '@/lib/repositories/training'
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
-import { clearActiveWorkout, writeActiveWorkout } from '@/lib/training/workout-session-storage'
+import { writeActiveWorkout } from '@/lib/training/workout-session-storage'
 import { createLegacyWorkoutLaunch } from '@/lib/training/workout-session-model'
+import { createSupabaseWorkoutPersistencePort, createWorkoutLocalStoragePort, persistDetailedWorkout } from '@/lib/training/workout-persistence'
 
 type ProfileRow = Tables<'profiles'>
 type ProgressPhotoRow = Tables<'progress_photos'>
@@ -110,21 +110,22 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
     const newPRs: { exercise: string; value: number }[] = []
     const newBadges: Badge[] = []
     if (!session) return { newPRs, newBadges }
-    try { clearActiveWorkout(localStorage) } catch { /* unavailable */ }
-    const musclesWorked = [...new Set(data.exercises.map(exercise => exercise.muscle).filter((value): value is string => !!value))]
-    const { data: savedSession } = await supabase.from('workout_sessions').insert({
-      user_id: session.user.id,
-      name: workoutSession?.name,
-      completed: true,
-      duration_minutes: Math.round(data.duration / 60000),
-      notes: `${data.completedSets}/${data.totalSets} sets · ${Math.round(data.totalVolume)} kg volume`,
-      muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
-    }).select().single()
-
-    if (savedSession) {
-      const completedAt = new Date().toISOString()
-      await supabase.from('scheduled_sessions').update({ completed: true, completed_at: completedAt })
-        .eq('user_id', session.user.id).eq('scheduled_date', toDateStr(new Date())).eq('completed', false)
+    const persistenceResult = await persistDetailedWorkout({
+      userId: session.user.id,
+      workoutName: workoutSession?.name,
+      weekdayKey: workoutSession?.weekdayKey,
+      exercises: data.exercises,
+      durationMs: data.duration,
+      completedSets: data.completedSets,
+      totalSets: data.totalSets,
+      totalVolume: data.totalVolume,
+      assignment: getProgramAssignment(),
+    }, {
+      local: createWorkoutLocalStoragePort(localStorage),
+      persistence: createSupabaseWorkoutPersistencePort(supabase),
+      clock: { now: () => new Date() },
+      hooks: {
+        async afterSessionCreated() {
       try {
         await addXP(session.user.id, 100, supabase)
         await updateStreak(session.user.id, supabase)
@@ -144,21 +145,8 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
         }
       } catch (error) { console.error('[PR detection] fin de séance:', error) }
 
-      const setsToInsert = data.exercises.flatMap(exercise =>
-        (exercise.sets ?? []).map((set, index) => ({
-          session_id: savedSession.id,
-          user_id: session.user.id,
-          exercise_name: exercise.name,
-          exercise_id: exercise.exerciseId ?? null,
-          set_number: index + 1,
-          reps: Number(set.reps) || 0,
-          weight: Number(set.weight) || 0,
-          completed: true,
-          rir: set.rir ?? null,
-        })),
-      )
-      if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
-
+        },
+        async afterSetsAttempted(savedSessionId) {
       try {
         const { newlyUnlockedIds } = await checkAndUnlockBadges(session.user.id, supabase)
         if (newlyUnlockedIds.length > 0) {
@@ -180,28 +168,15 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
           body: JSON.stringify({
             exerciseName: exercise.name, currentWeight: weight, currentReps: reps,
             setsCompleted: sets.length, setsTarget: exercise.setsTarget || sets.length,
-            sessionId: savedSession.id,
+            sessionId: savedSessionId,
           }),
         }).catch(error => console.warn('[overload] fetch error:', errorMessage(error)))
       }
-    }
-
-    await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
-      .eq('user_id', session.user.id).eq('scheduled_date', toDateStr(new Date())).eq('completed', false)
-    await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
-    const assignment = getProgramAssignment()
-    if (assignment.clientProgramId && workoutSession?.weekdayKey) {
-      const weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-      const index = weekdays.indexOf(workoutSession.weekdayKey)
-      const { error } = await supabase.from('completed_sessions').insert({
-        client_id: session.user.id,
-        coach_id: assignment.coachOfProgramId,
-        program_id: assignment.clientProgramId,
-        session_index: index >= 0 ? index : 0,
-        session_name: workoutSession.name,
-        duration_minutes: data.duration ? Math.round(data.duration / 60000) : null,
-      })
-      if (error) console.error('Error tracking completed_sessions:', error)
+        },
+      },
+    })
+    if (!persistenceResult.ok && 'issues' in persistenceResult && persistenceResult.issues.includes('profile_sync_failed')) {
+      throw new Error('WORKOUT_PROFILE_SYNC_FAILED')
     }
     toast.success('Séance terminée ! Bien joué 💪')
     void fetchAll(true)

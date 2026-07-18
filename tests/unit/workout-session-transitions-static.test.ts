@@ -9,12 +9,12 @@ const actions = read('lib/client-dashboard/use-client-dashboard-actions.ts')
 
 describe('workout transition wiring characterization', () => {
   it('keeps draft creation, resume, abandonment and completion wired to the shared storage boundary', () => {
-    expect(workout).toContain('writeWorkoutDraft(localStorage, draft)')
-    expect(workout).toContain('readWorkoutDraft<Exo>(localStorage, name)')
+    expect(workout).toContain('saveWorkoutDraftSnapshot(localStorage')
+    expect(workout).toContain('restoreWorkoutDraftSnapshot<Exo>(localStorage')
     expect(workout).toContain('const resumeDraft = () =>')
     expect(workout).toContain('const discardDraft = () => { cleanupDraft(); setDraftPrompt(null) }')
     expect(workout).toContain('cleanupDraft(); onClose()')
-    expect(actions).toContain('clearActiveWorkout(localStorage)')
+    expect(actions).toContain('createWorkoutLocalStoragePort(localStorage)')
   })
 
   it('characterizes set mutation and rest start, finish and cancellation', () => {
@@ -29,16 +29,18 @@ describe('workout transition wiring characterization', () => {
 
   it('keeps the quick TrainingTab flow without workout_sets', () => {
     const quickFlow = controller.slice(controller.indexOf('async function finishTrainingWorkout()'), controller.indexOf('function handleExerciseInfo'))
-    expect(quickFlow).toContain("from('workout_sessions').insert")
+    expect(quickFlow).toContain('persistQuickWorkout(')
     expect(quickFlow).not.toContain("from('workout_sets')")
     expect(quickFlow).toContain("localStorage.removeItem(`moovx-sets-")
     expect(quickFlow).toContain("localStorage.removeItem(`moovx-inputs-")
   })
 
   it('keeps detailed history and program completion as unlinked writes', () => {
-    expect(actions).toContain("from('workout_sessions').insert")
-    expect(actions).toContain("from('completed_sessions').insert")
-    const completionInsert = actions.slice(actions.indexOf("from('completed_sessions').insert"), actions.indexOf("toast.success('Séance terminée"))
+    const persistence = read('lib/training/workout-persistence/supabase-port.ts')
+    const service = read('lib/training/workout-persistence/service.ts')
+    expect(persistence).toContain("from('workout_sessions').insert")
+    expect(persistence).toContain("from('completed_sessions').insert")
+    const completionInsert = service.slice(service.indexOf('createCompletionMarker({'), service.indexOf('if (issues.length === 0'))
     expect(completionInsert).not.toContain('session_id')
     expect(completionInsert).not.toContain('workout_session_id')
   })

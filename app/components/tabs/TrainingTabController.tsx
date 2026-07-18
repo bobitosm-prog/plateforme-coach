@@ -16,6 +16,7 @@ import { padTo7Days } from '../training/ProgramBuilder'
 import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 import type { ImportResult } from '../../../lib/program-excel'
 import { completedWorkoutDateKeys } from '../../../lib/training/session-history'
+import { createSupabaseWorkoutPersistencePort, persistQuickWorkout } from '../../../lib/training/workout-persistence'
 import TrainingTabView, { type TrainingTabRuntime } from './TrainingTabView'
 import { useTrainingWorkoutTimer } from './training/useTrainingWorkoutTimer'
 import { useTrainingSessionHistory } from './training/useTrainingSessionHistory'
@@ -381,13 +382,14 @@ export default function TrainingTabController({
       if (todaySession?.title) return todaySession.title
       return trainingDay
     })()
-    await supabase.from('workout_sessions').insert({
-      user_id: session.user.id,
-      name: sessionTitle,
-      completed: true,
-      duration_minutes: Math.max(duration, 1),
-      notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
-    })
+    await persistQuickWorkout({
+      userId: session.user.id,
+      workoutName: sessionTitle,
+      durationMinutes: duration,
+      completedSets: doneSetsCount,
+      totalSets: totalSetsCount,
+      exerciseCount: exs.length,
+    }, createSupabaseWorkoutPersistencePort(supabase))
 
     // Gamification: +100 XP for completing a workout
     try { await addXP(session.user.id, 100, supabase); await updateStreak(session.user.id, supabase) } catch {}

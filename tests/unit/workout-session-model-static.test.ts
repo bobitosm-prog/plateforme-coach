@@ -16,9 +16,9 @@ describe('pure workout session model boundary', () => {
   })
 
   it('does not alter the legacy SQL finalization chain', () => {
-    const actions = read('lib/client-dashboard/use-client-dashboard-actions.ts')
+    const persistence = read('lib/training/workout-persistence/supabase-port.ts')
     for (const table of ['workout_sessions', 'scheduled_sessions', 'workout_sets', 'completed_sessions']) {
-      expect(actions).toContain(`from('${table}')`)
+      expect(persistence).toContain(`from('${table}')`)
     }
     expect(read('lib/training/workout-session-model.ts')).not.toContain('workout_sessions')
   })

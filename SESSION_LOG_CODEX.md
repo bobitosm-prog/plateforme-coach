@@ -6238,3 +6238,101 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire sauvegarde et synchronisation.
+
+---
+
+## Entrée — 2026-07-18 — Sauvegarde et synchronisation des séances
+
+### Travail effectué
+
+- Cartographie de la sauvegarde locale, du flux détaillé dashboard et du flux
+  rapide `TrainingTab`, y compris nettoyages, rafraîchissements et erreurs
+  partielles.
+- Création de `lib/training/workout-persistence/` avec service pur, types de
+  résultats discriminés et adaptateur Supabase séparé.
+- Injection explicite des ports `workout_sessions`, `workout_sets`,
+  `completed_sessions`, `scheduled_sessions`, synchronisation profil, stockage
+  local et horloge.
+- Migration de `onFinishWorkout` vers le service tout en conservant l'ordre des
+  écritures, les effets gamification/records/badges et le rafraîchissement UI.
+- Migration du flux rapide vers `persistQuickWorkout`, toujours sans écriture
+  `workout_sets`.
+- Création de `workout-draft-sync.ts` pour sauvegarde, restauration et abandon
+  du brouillon avec stockage et horloge injectés ; branchement de
+  `WorkoutSession` sur cette frontière.
+- Documentation du double update planning, des nettoyages précoces et de la
+  future frontière d'idempotence/réconciliation.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire sauvegarde et synchronisation » — terminée.
+- Progression Phase 3 : 19/27 → 20/27 tâches.
+
+### Décisions prises
+
+- L'ordre legacy est conservé : cache actif, session racine, premier planning,
+  effets annexes, séries, effets annexes, second planning, profil puis marqueur
+  de complétion.
+- Le double update `scheduled_sessions` reste caractérisé comme dette ; il
+  n'est pas corrigé pendant l'extraction.
+- Les erreurs fournisseur sont converties en codes stables sans message SQL ou
+  donnée personnelle. Les états partiels indiquent explicitement qu'une future
+  réconciliation est nécessaire.
+- L'échec profil reste bloquant avant `completed_sessions`, conformément au
+  comportement précédent ; les autres erreurs non bloquantes laissent la chaîne
+  legacy continuer.
+- La suppression de `moovx_active_workout` reste best-effort avant la première
+  écriture et le brouillon reste supprimé avant l'appel de finalisation.
+- Aucun mécanisme d'idempotence n'est ajouté : un double appel produit toujours
+  deux sessions et, si applicable, deux marqueurs.
+
+### Problèmes rencontrés
+
+- Trois tests statiques recherchaient les tables directement dans le hook ; ils
+  vérifient maintenant l'adaptateur extrait sans diminuer les garanties.
+- La synchronisation profil n'utilise pas une table directement dans le service
+  afin de conserver `updateProfile` à la frontière Supabase existante.
+- Les effets gamification, records, badges et surcharge sont maintenus via deux
+  hooks ordonnés du service ; leurs erreurs restent non bloquantes comme avant.
+
+### Risques ou dette restante
+
+- Persistance multi-tables toujours non transactionnelle et sans clé
+  d'idempotence.
+- `workout_sessions` et `completed_sessions` restent sans lien durable.
+- Les nettoyages locaux précoces peuvent empêcher une reprise après panne.
+- Le flux rapide ne persiste toujours pas les séries détaillées.
+- Les caches restent sans owner/version et `savedAt` invalide reste accepté.
+- La correction cible nécessitera identité d'exécution, migration additive,
+  RPC/transaction et réconciliation ; aucun de ces changements n'est inclus.
+
+### Tests exécutés
+
+- Tests sauvegarde, synchronisation, stockage, transitions, modèle et runtime :
+  60/60 verts.
+- Suite Vitest complète : 91 fichiers, 891 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des services, adaptateurs, tests et du hook actions allégé : vert.
+- Dette `WorkoutSession` avant/après : 31 erreurs/22 avertissements → 31/22.
+- Dette `TrainingTabController` inchangée : 35 erreurs/1 avertissement et aucun
+  nouvel `any`.
+- `git diff --check`, liens internes et contrôle routes/E2E/migrations/RLS :
+  verts.
+
+### Mesures avant/après
+
+- `WorkoutSession.tsx` : 1 532 → 1 522 lignes.
+- `use-client-dashboard-actions.ts` : 314 → 289 lignes.
+- Tâches Phase 3 : 19/27 → 20/27.
+- Progression globale : 62/138 → 63/138, soit environ 46 %.
+- Tests actifs globaux : 872 → 891.
+- Nouvelles routes, migrations, policies RLS ou spécifications E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les composants de présentation par phase.

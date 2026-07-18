@@ -334,3 +334,62 @@ La persistance demeure inchangée. Le runtime ne lit ni n'écrit
 finalisation non transactionnelle/non idempotente, de caches sans owner et de
 `savedAt` invalide restent à traiter séparément. La prochaine tranche est
 l'extraction de la sauvegarde et de la synchronisation.
+
+## Sauvegarde et synchronisation extraites
+
+La frontière [`workout-persistence`](../lib/training/workout-persistence/)
+centralise désormais les écritures de fin de séance sans React, JSX ni accès
+direct au navigateur. Le service reçoit explicitement l'identité déjà issue de
+la session authentifiée, une horloge, un port de stockage local et des ports
+séparés pour `workout_sessions`, `workout_sets`, `completed_sessions`,
+`scheduled_sessions` et la projection `profiles.last_workout_at`. L'adaptateur
+Supabase est isolé dans `supabase-port.ts` et ne renvoie jamais le message brut
+du fournisseur.
+
+Le flux détaillé conserve exactement l'ordre legacy suivant :
+
+1. tentative de suppression de `moovx_active_workout` ;
+2. insertion de `workout_sessions` ;
+3. première mise à jour de `scheduled_sessions` si la session racine existe ;
+4. gamification et détection des records ;
+5. insertion de `workout_sets` si des séries existent ;
+6. badges et suggestion de surcharge ;
+7. seconde mise à jour de `scheduled_sessions`, même si la session racine a
+   échoué ;
+8. synchronisation de `profiles.last_workout_at` ;
+9. insertion éventuelle du marqueur `completed_sessions`, sans lien vers
+   `workout_sessions`.
+
+Cette duplication de planification et la poursuite après certaines erreurs ne
+sont pas des règles cibles : elles sont conservées pour éviter un changement de
+comportement dans une tranche d'extraction. Une erreur de synchronisation du
+profil reste bloquante avant le marqueur de complétion. Les erreurs de session,
+planning, séries et marqueur sont rapportées comme états partiels nécessitant
+une future réconciliation.
+
+Le résultat discriminé distingue `complete`, `before_persistence_failure`,
+`session_create_failed`, `after_session_failure`, `sets_failed`,
+`completion_marker_failed`, `schedule_failed` et
+`partial_reconciliation_required`. Il contient uniquement des codes stables,
+l'identifiant local de session lorsqu'il existe et le besoin de
+réconciliation ; aucun message SQL, token ou contenu personnel brut n'est
+propagé. Aucun jeton d'idempotence n'est encore produit : deux appels créent
+toujours deux sessions et, lorsque applicable, deux marqueurs.
+
+Le flux rapide de `TrainingTab` utilise la même frontière de création de
+session mais n'écrit toujours pas `workout_sets`. Son nettoyage des clés
+`moovx-sets-*` et `moovx-inputs-*`, ses records, son reset React et son
+`fetchAll()` restent après la tentative d'insertion, comme auparavant.
+
+[`workout-draft-sync.ts`](../lib/training/workout-draft-sync.ts) orchestre la
+sauvegarde, la restauration et la suppression de `moovx_workout_draft` avec un
+stockage et une horloge injectés. Les entrées restent non mutées. Le cache actif
+est toujours supprimé avant la première écriture distante, même si celle-ci
+échoue ; le brouillon détaillé est toujours supprimé par `WorkoutSession` avant
+l'appel de finalisation. Ces nettoyages précoces sont explicitement conservés
+malgré le risque de perte de reprise.
+
+La future idempotence pourra être ajoutée derrière les ports sans modifier les
+composants, mais elle exige encore une identité durable d'exécution, une
+transaction/RPC et un mécanisme de réconciliation. Aucun de ces correctifs n'est
+introduit ici.

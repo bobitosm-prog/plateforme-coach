@@ -16,7 +16,7 @@ import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
-import { clearWorkoutDraft, readWorkoutDraft, writeWorkoutDraft } from '../../lib/training/workout-session-storage'
+import { discardWorkoutDraftSnapshot, restoreWorkoutDraftSnapshot, saveWorkoutDraftSnapshot } from '../../lib/training/workout-draft-sync'
 import { useWorkoutRuntime } from '../hooks/useWorkoutRuntime'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
@@ -36,13 +36,6 @@ const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ 
 const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
-
-function readDraft(name: string): { exos: Exo[] } | null {
-  if (typeof window === 'undefined') return null
-  const draft = readWorkoutDraft<Exo>(localStorage, name)
-  return draft ? { exos: draft.exos } : null
-}
-
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
 
@@ -243,13 +236,10 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     if (typeof window === 'undefined' || mode !== 'session') return
     if (!draftCheckedRef.current) return
     if (draftPrompt) return
-    try {
-      const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
-      writeWorkoutDraft(localStorage, draft)
-    } catch {}
+    saveWorkoutDraftSnapshot(localStorage, { sessionName, startedAt, exos }, { now: () => new Date() })
   }, [exos, sessionName, startedAt, mode, draftPrompt])
   useEffect(() => {
-    const draft = readDraft(sessionName)
+    const draft = restoreWorkoutDraftSnapshot<Exo>(localStorage, sessionName, { now: () => new Date() })
     if (draft && draft.exos.length > 0) {
       const hasProgress = draft.exos.some(e => Array.isArray(e.sets) && e.sets.some((s: any) => s.done))
       if (hasProgress) setDraftPrompt(draft.exos)
@@ -439,7 +429,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }, 5000)
     return () => clearTimeout(t)
   }, [restDone])
-  const cleanupDraft = () => { try { clearWorkoutDraft(localStorage) } catch {} }
+  const cleanupDraft = () => { discardWorkoutDraftSnapshot(localStorage) }
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     runtime.startRest(s)
