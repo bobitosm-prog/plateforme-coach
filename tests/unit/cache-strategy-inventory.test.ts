@@ -65,9 +65,9 @@ describe('current cache inventory guard', () => {
     expect(join).toContain("const STORAGE_KEY = 'moovx_coach_invitation'")
     expect(join).toContain('sessionStorage.setItem(STORAGE_KEY, urlToken)')
 
-    const workout = read('app/components/WorkoutSession.tsx')
-    expect(workout).toContain("'moovx_workout_draft'")
-    expect(read('app/hooks/useClientDashboard.ts')).toContain("'moovx_active_workout'")
+    const workoutStorage = read('lib/training/workout-session-storage.ts')
+    expect(workoutStorage).toContain("'moovx_workout_draft'")
+    expect(workoutStorage).toContain("'moovx_active_workout'")
 
     const serviceWorker = read('public/sw.js')
     expect(serviceWorker).toContain('caches.keys()')

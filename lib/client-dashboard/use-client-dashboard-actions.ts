@@ -9,6 +9,7 @@ import { checkAndUnlockBadges, type Badge } from '@/lib/check-badges'
 import { addXP, updateStreak } from '@/lib/gamification'
 import { PERSONAL_PROGRAM_PROJECTION } from '@/lib/repositories/training'
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
+import { clearActiveWorkout, writeActiveWorkout } from '@/lib/training/workout-session-storage'
 
 type ProfileRow = Tables<'profiles'>
 type ProgressPhotoRow = Tables<'progress_photos'>
@@ -98,7 +99,7 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
       : typeof record.name === 'string' ? record.name : 'Séance'
     const draft = { name, exercises, startedAt: new Date().toISOString(), weekdayKey }
     setWorkoutSession(draft)
-    try { localStorage.setItem('moovx_active_workout', JSON.stringify(draft)) } catch { /* unavailable */ }
+    try { writeActiveWorkout(localStorage, draft) } catch { /* unavailable */ }
   }
 
   async function onFinishWorkout(data: FinishedWorkoutInput): Promise<{
@@ -108,7 +109,7 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
     const newPRs: { exercise: string; value: number }[] = []
     const newBadges: Badge[] = []
     if (!session) return { newPRs, newBadges }
-    try { localStorage.removeItem('moovx_active_workout') } catch { /* unavailable */ }
+    try { clearActiveWorkout(localStorage) } catch { /* unavailable */ }
     const musclesWorked = [...new Set(data.exercises.map(exercise => exercise.muscle).filter((value): value is string => !!value))]
     const { data: savedSession } = await supabase.from('workout_sessions').insert({
       user_id: session.user.id,

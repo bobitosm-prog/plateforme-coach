@@ -16,6 +16,7 @@ import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
+import { clearWorkoutDraft, readWorkoutDraft, writeWorkoutDraft } from '../../lib/training/workout-session-storage'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
@@ -37,18 +38,8 @@ const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
 function readDraft(name: string): { exos: Exo[] } | null {
   if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem('moovx_workout_draft')
-    if (!raw) return null
-    const draft = JSON.parse(raw)
-    if (draft.sessionName !== name) return null
-    const ageH = (Date.now() - new Date(draft.savedAt).getTime()) / 3600000
-    if (ageH > 24) return null
-    if (!Array.isArray(draft.exos)) return null
-    return { exos: draft.exos }
-  } catch {
-    return null
-  }
+  const draft = readWorkoutDraft<Exo>(localStorage, name)
+  return draft ? { exos: draft.exos } : null
 }
 
 
@@ -253,7 +244,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     if (draftPrompt) return
     try {
       const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
-      localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
+      writeWorkoutDraft(localStorage, draft)
     } catch {}
   }, [exos, sessionName, startedAt, mode, draftPrompt])
   useEffect(() => {
@@ -531,7 +522,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }
   }, [])
 
-  const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
+  const cleanupDraft = () => { try { clearWorkoutDraft(localStorage) } catch {} }
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)

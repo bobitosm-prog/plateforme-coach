@@ -227,5 +227,32 @@ statut `planned | in-progress | completed | abandoned`, instants et
    écritures legacy seulement après une période de compatibilité et un rollback
    documenté.
 
-La prochaine tranche est l'écriture des tests de transitions. Elle doit figer
-le comportement décrit ici avant toute extraction du moteur pur.
+## Couverture de caractérisation obtenue
+
+Les tests ajoutés le 18 juillet 2026 figent le comportement sans prétendre que
+les risques legacy sont des garanties cibles :
+
+- [`workout-session-storage.test.ts`](../tests/unit/workout-session-storage.test.ts)
+  couvre absence, création, restauration, nettoyage, expiration, caches
+  incomplets, immutabilité et absence actuelle d'owner ;
+- [`workout-session-transitions.test.ts`](../tests/unit/workout-session-transitions.test.ts)
+  exerce directement les actions dashboard avec horloge, stockage et Supabase
+  simulés : lancement programmé/libre, ordre complet des écritures, panne de
+  session racine, calendrier, séries ou marqueur coach, répétition non
+  idempotente et absence d'affectation ;
+- [`workout-session-transitions-static.test.ts`](../tests/unit/workout-session-transitions-static.test.ts)
+  garde le câblage des modifications de séries, du repos, de l'abandon, du flux
+  rapide sans `workout_sets` et de l'absence de lien implicite entre les deux
+  historiques.
+
+La frontière pure [`workout-session-storage.ts`](../lib/training/workout-session-storage.ts)
+centralise seulement les clés et les règles de sérialisation déjà présentes.
+Elle ne lie pas encore le cache à l'utilisateur et ne versionne pas les données.
+Les tests caractérisent aussi qu'un `savedAt` illisible est actuellement accepté
+(`Invalid Date` produit `NaN`, donc la condition d'expiration ne s'active pas) ;
+ce défaut n'est volontairement pas corrigé dans cette tranche.
+
+Les transitions du minuteur restent gardées statiquement : les exécuter comme
+hook nécessiterait l'environnement DOM actuellement bloqué par la combinaison
+jsdom 29 / Node 24. Aucun graphe ESM fragile n'a été ajouté. La prochaine tranche
+peut désormais extraire le modèle pur de session derrière cette couverture.

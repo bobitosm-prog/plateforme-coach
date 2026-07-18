@@ -23,6 +23,7 @@ import {
 import { useClientDashboardData, type DashboardFetchedData } from '../../lib/client-dashboard/use-client-dashboard-data'
 import { useClientDashboardActions, type WorkoutSessionDraft } from '../../lib/client-dashboard/use-client-dashboard-actions'
 import type { SuggestedSession } from '../../lib/suggestNextSession'
+import { readActiveWorkout } from '../../lib/training/workout-session-storage'
 import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
 import useScheduledSessions from './useScheduledSessions'
@@ -42,10 +43,7 @@ type LegacyDashboardProfile = Omit<ProfileRow, 'email' | 'rir_tracking_enabled' 
 
 function initialWorkoutSession(): WorkoutSessionDraft | null {
   if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem('moovx_active_workout')
-    return raw ? JSON.parse(raw) as WorkoutSessionDraft : null
-  } catch { return null }
+  return readActiveWorkout<WorkoutSessionDraft>(localStorage)
 }
 
 function localDate(date: Date): string {

@@ -5993,3 +5993,81 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Écrire les tests de transitions de séance.
+
+---
+
+## Entrée — 2026-07-18 — Caractérisation des transitions de séance
+
+### Travail effectué
+
+- Centralisation sans changement de contrat des deux clés de séance dans la
+  frontière pure `lib/training/workout-session-storage.ts`.
+- Ajout de tests déterministes pour l'enveloppe active, le brouillon détaillé,
+  leur restauration, expiration, nettoyage, immutabilité et absence d'owner.
+- Exercice direct de `useClientDashboardActions` avec Supabase, stockage,
+  horloge et dépendances injectés/simulés, sans navigateur, réseau ni base.
+- Vérification de l'ordre `workout_sessions` → `scheduled_sessions` →
+  `workout_sets` → `scheduled_sessions` → `completed_sessions`.
+- Caractérisation des pannes partielles et de la répétition actuellement non
+  idempotente, sans corriger ces comportements.
+- Gardes statiques sur le repos, les mutations de séries, l'abandon, le flux
+  rapide sans `workout_sets` et l'absence de lien entre les deux historiques.
+- Mise à jour de `docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md` avec la couverture
+  obtenue et ses limites.
+
+### Tâches cochées
+
+- Phase 3 : « Écrire les tests de transitions de séance » — terminée.
+- Progression Phase 3 : 16/27 → 17/27 tâches.
+
+### Décisions prises
+
+- La sérialisation locale est extraite sans ajouter owner, version ou nouvelle
+  validation afin de caractériser exactement le legacy.
+- Les actions dashboard sont testées directement : malgré son nom, cette
+  frontière n'invoque aucun hook React et accepte déjà Supabase par injection.
+- Le minuteur React reste couvert statiquement tant que jsdom 29 / Node 24 rend
+  son exécution DOM fragile ; aucun contournement ESM n'est ajouté.
+
+### Problèmes rencontrés
+
+- Un `savedAt` invalide est accepté aujourd'hui : la date produit `NaN` et la
+  comparaison d'expiration ne rejette pas le brouillon. Le test le caractérise
+  sans le corriger.
+- La première suite complète a détecté une garde d'inventaire attachée aux
+  anciens fichiers ; elle pointe désormais vers la frontière centralisée.
+
+### Risques ou dette restante
+
+- Finalisation non transactionnelle et non idempotente, caches supprimés avant
+  confirmation de l'écriture racine et erreurs partielles sans état dédié.
+- Caches locaux non owner-scoped, non versionnés et brouillon à date invalide
+  accepté.
+- Le flux rapide ne crée toujours pas de `workout_sets`.
+- Les transitions interactives du minuteur ne disposent pas encore d'un modèle
+  pur exécutable ; cette extraction est la prochaine tranche.
+
+### Tests exécutés
+
+- Tests nouveaux et transitions ciblés : 22/22 verts.
+- Tests Training ciblés : 87/87 verts.
+- Suite Vitest complète : 84 fichiers, 847 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert après validation des types de fixtures.
+- ESLint des nouveaux fichiers et tests : vert. `WorkoutSession.tsx` conserve
+  sa dette historique de 33 erreurs et 22 avertissements, sans nouvelle
+  désactivation. `git diff --check` et contrôle de périmètre : verts.
+
+### Mesures avant/après
+
+- Tests actifs globaux : 825 → 847.
+- Tâches Phase 3 : 16/27 → 17/27.
+- Progression globale : 59/138 → 60/138, soit environ 43 %.
+- Routes, E2E, migrations et RLS modifiés : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire le modèle pur de session.
