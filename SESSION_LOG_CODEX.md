@@ -5395,3 +5395,65 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Écrire les tests de caractérisation de `TrainingTab`.
+
+## Entrée — 2026-07-18 — Caractérisation de `TrainingTab`
+
+### Travail effectué
+
+- Lecture complète de `TrainingTab`, de ses composants enfants, de ses hooks, de ses formats legacy et du socle de tests React disponible.
+- Inventaire des huit effets, des accès Supabase directs et des décisions actuelles sur programme coach, programme personnel, séance du jour, repos, complétion et prescriptions.
+- Ajout d'une suite de caractérisation par rendu serveur React, avec mocks limités aux frontières Supabase et aux composants périphériques lourds.
+- Capture des props réellement produites pour la carte héro, les exercices et la progression afin de tester les décisions de `TrainingTab`, pas seulement la présence d'un rendu.
+- Documentation de la frontière couverte et des limites dans `docs/TRAINING_TAB_CHARACTERIZATION.md`.
+- Aucun changement de `TrainingTab` ou d'un autre fichier applicatif.
+
+### Tâches cochées
+
+- Phase 3 : « Écrire les tests de caractérisation de `TrainingTab` » — terminée.
+- Progression Phase 3 : 9/27 → 10/27 tâches.
+
+### Décisions prises
+
+- Les données coach assignées restent caractérisées dans leur forme legacy, y compris séries, plage de répétitions et repos.
+- Le test appelle directement la callback `onStart` produite par le composant et vérifie que les objets de programme résolus sont transmis sans réécriture.
+- Les champs optionnels manquants restent acceptés selon les valeurs par défaut actuelles : trois séries et absence de répétitions explicites.
+- La priorité programme personnel actif → programme coach, la progression périodisée et le contrat `invited` sont verrouillés statiquement, car ils dépendent d'effets non exécutés pendant le rendu serveur.
+- Aucun état artificiel de chargement ou d'erreur n'a été ajouté : `TrainingTab` n'en expose pas actuellement.
+
+### Problèmes rencontrés
+
+- Le premier harnais React Testing Library n'a exécuté aucun test : `jsdom@29` échoue au démarrage sous Node 24 à cause d'un module ESM avec top-level await chargé depuis CommonJS.
+- La tranche a été maintenue bornée en utilisant `react-dom/server`, sans modifier dépendances, Vitest ou configuration du dépôt.
+- Les effets DOM, minuteurs, stockage local et activations asynchrones ne peuvent pas être exercés avec cette frontière serveur.
+
+### Risques ou dette restante
+
+- `TrainingTab` reste à 1 721 lignes, avec huit effets, de nombreux `any`, plusieurs accès Supabase directs et plusieurs responsabilités UI/métier.
+- Les états chargement et erreur sont implicites ; leur formalisation devra être précédée d'un contrat lors des futures extractions.
+- L'activation interactive d'un programme personnel, l'édition, les minuteurs et les modales nécessiteront un environnement DOM compatible ou un E2E dédié.
+- Les programmes coach et personnels restent deux formats UI distincts malgré la priorité désormais caractérisée.
+
+### Tests exécutés
+
+- Tests ciblés `TrainingTab` : 5/5 verts.
+- Suite Vitest complète : 73 fichiers, 770 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé sur la nouvelle suite : vert.
+- `git diff --check` vert.
+- Contrôle de périmètre : aucune route, migration, policy RLS, spécification E2E, repository ou fichier applicatif modifié.
+
+### Mesures avant/après
+
+- Tests de caractérisation `TrainingTab` : 0 → 5.
+- Scénarios caractérisés : vide, coach assigné, prescriptions/démarrage, complété, repos, legacy incomplet et contrats personnel/progression.
+- Tests actifs globaux : 765 → 770.
+- Tâches Phase 3 terminées : 9/27 → 10/27.
+- Progression globale : 52/138 → 53/138 tâches, soit environ 38 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire programme actif et navigation des jours.

@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 9 tâches sur 27 ; `useClientDashboard` réduit à une façade de 203 lignes, prochaine tranche : caractériser `TrainingTab`**
+**Statut : Phase 3 ouverte — 10 tâches sur 27 ; `TrainingTab` caractérisé avant découpage, prochaine tranche : programme actif et navigation des jours**
 
 ### Pourquoi
 
@@ -331,7 +331,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] Extraire programmes et séances de `useClientDashboard` | 2 j | Élevée | Moyen | Élevé | Repositories training |
 | [x] Extraire nutrition et mesures de `useClientDashboard` | 2 j | Moyenne | Moyen | Moyen | Repositories |
 | [x] Réduire la façade `useClientDashboard` sous 250 lignes | 2 j | Élevée | Moyen | Élevé | Extractions précédentes |
-| [ ] Écrire les tests de caractérisation de `TrainingTab` | 2 j | Élevée | Faible | Élevé | E2E disponibles |
+| [x] [Écrire les tests de caractérisation de `TrainingTab`](docs/TRAINING_TAB_CHARACTERIZATION.md) | 2 j | Élevée | Faible | Élevé | E2E disponibles |
 | [ ] Extraire programme actif et navigation des jours | 2,5 j | Élevée | Moyen | Élevé | Modèle canonique |
 | [ ] Extraire bibliothèque et recherche d'exercices | 2 j | Moyenne | Moyen | Moyen | Repositories |
 | [ ] Extraire historique et séances récentes | 1,5 j | Moyenne | Faible | Moyen | Queries training |
@@ -743,14 +743,14 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈38 % (52/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈38 % (53/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 765 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 770 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
