@@ -7242,3 +7242,83 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire la génération de repas hors de la route HTTP.
+
+---
+
+## Entrée — 2026-07-18 — Service de génération de repas
+
+### Travail effectué
+
+- Réduction de `POST /api/generate-meal-plan` à une frontière HTTP conservant
+  authentification, limites/quota, garde de rôle, validation, observabilité et
+  adaptation SSE.
+- Extraction de l'orchestration séquentielle des sept jours, du prompt métier,
+  du parsing legacy, de la validation Nutrition et de la conversion `DayPlan`
+  dans `lib/nutrition/meal-generation/`.
+- Isolation du transport Anthropic derrière un port injectable ; modèle
+  `claude-opus-4-8`, limite 1 500 tokens et prompts historiques préservés.
+- Validation fail-closed des sorties inconnues ou nutritionnellement invalides,
+  tout en conservant le fallback legacy d'une journée vide et la poursuite du
+  flux.
+- Ajout d'une validation Zod bornée de l'entrée et de correlation IDs/logs
+  structurés expurgés sur la route.
+- Documentation du service, de ses ports, de ses contrats et de ses limites dans
+  `docs/NUTRITION_MEAL_GENERATION_SERVICE.md`.
+
+### Tâches cochées
+
+- Phase 4 : « Extraire la génération de repas hors de la route HTTP » — terminée.
+- Phase 4 : 4/17 → 5/17 tâches.
+
+### Contrats et autorité
+
+- L'identité utilisée par quotas, usage et garde `invited` provient uniquement
+  de `auth.getUser()` ; un `userId` additionnel du corps reste sans autorité.
+- Aucun repository n'a été ajouté au flux : la route historique ne collecte pas
+  de données Nutrition en base et les producteurs persistent eux-mêmes le plan.
+- Les sept événements `progress`, l'événement `done`, les en-têtes SSE et les
+  formes canoniques consommées restent inchangés pour les entrées valides.
+- Le fournisseur ne retourne au service que du texte ou un code borné ; aucun
+  corps Anthropic, prompt, secret ou erreur brute n'atteint réponse ou logs.
+
+### Validations exécutées
+
+- Tests service/route et Nutrition ciblés : 45/45 verts.
+- Suite Vitest complète : 107 fichiers, 1 027 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé de la route, du service, des ports et tests : vert.
+- Route mesurée à 58 lignes ; garde statique sans prompt, URL Anthropic ni accès
+  direct aux tables Nutrition.
+- `git diff --check` limité à la tranche : vert ; liens documentaires valides.
+- Aucun fichier ajouté au staging ; migrations, RLS, E2E et données distantes
+  inchangés.
+
+### Limites préservées
+
+- Un échec fournisseur ou une sortie invalide reste représenté par une journée
+  vide ; le protocole SSE public ne signale pas la cause ni le jour fautif.
+- Le quota est consommé avant le démarrage du flux, comme dans le comportement
+  historique.
+- Les écritures de plans réalisées par les producteurs, leur transactionnalité
+  et leur idempotence restent hors périmètre.
+- Les autres routes IA n'ont pas été migrées.
+
+### Mesures
+
+- Phase 4 : 4/17 → 5/17 tâches.
+- Progression globale : 74/138 → 75/138, soit environ 54 %.
+- Route concernée : 1 ; autres routes IA migrées : 0 ; migrations/RLS/E2E : 0.
+
+### Changements concurrents
+
+- Tous les changements préexistants ou apparus en parallèle restent hors
+  tranche, non modifiés par ce travail et hors staging.
+- Les trois changements concurrents connus restent protégés.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Découper hooks journal, plans, recettes et objectifs.
