@@ -11,9 +11,13 @@ const root = process.cwd()
 const builderPath = resolve(root, 'app/components/training/ProgramBuilder.tsx')
 const overlaysPath = resolve(root, 'app/components/tabs/training/TrainingTabOverlays.tsx')
 const modelPath = resolve(root, 'lib/training/program-editor-model.ts')
+const persistencePath = resolve(root, 'lib/training/program-builder-persistence/supabase-port.ts')
+const persistenceServicePath = resolve(root, 'lib/training/program-builder-persistence/service.ts')
 const builder = readFileSync(builderPath, 'utf8')
 const overlays = readFileSync(overlaysPath, 'utf8')
 const model = readFileSync(modelPath, 'utf8')
+const persistence = readFileSync(persistencePath, 'utf8')
+const persistenceService = readFileSync(persistenceServicePath, 'utf8')
 
 describe('ProgramBuilder current program shapes', () => {
   it('pads an empty program to seven explicit rest days', () => {
@@ -64,7 +68,7 @@ describe('ProgramBuilder current program shapes', () => {
 describe('ProgramBuilder current editing behavior', () => {
   it('uses fixed calendar days and represents removal as a rest-day toggle', () => {
     expect(builder).toContain("const DAY_NAMES = DAY_NAMES_FR")
-    expect(builder).toContain('setProgramDayRest(prev, editingDayIndex, !prev[editingDayIndex]?.is_rest)')
+    expect(builder).toContain('setProgramDayRest(previous, editingDayIndex, !previous[editingDayIndex]?.is_rest)')
     expect(model).toContain('exercises: isRest ? [] : exerciseList(day).map(cloneExercise)')
     expect(builder).not.toMatch(/function (?:add|remove)Day/)
   })
@@ -127,14 +131,14 @@ describe('ProgramBuilder current library and variants', () => {
   })
 
   it('resolves variants by group, then by the first two words as fallback', () => {
-    expect(builder).toContain(".from('exercises_db').select('variant_group')")
-    expect(builder).toContain("const baseName = exerciseName.split(' ').slice(0, 2).join(' ')")
-    expect(builder).toContain(".select('name, equipment, muscle_group')")
+    expect(persistence).toContain(".from('exercises_db').select('variant_group')")
+    expect(persistenceService).toContain("exerciseName.split(' ').slice(0, 2).join(' ')")
+    expect(persistence).toContain(".select('name, equipment, muscle_group')")
     expect(builder).toContain("updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'exercise_name', variant.name)")
   })
 
   it('persists a custom exercise for the authenticated session owner', () => {
-    expect(builder).toContain("supabase.from('custom_exercises').insert({")
+    expect(builder).toContain('createProgramBuilderCustomExercise(persistence, {')
     expect(builder).toContain('user_id: session.user.id, name: ceName.trim()')
     expect(builder).toContain('sets: ceSets, reps: ceReps, rest_seconds: ceRest, is_private: true')
     expect(builder).toContain("setMode('manual')")
@@ -147,18 +151,18 @@ describe('ProgramBuilder current save and callback contract', () => {
     for (const field of ['ownerUserId: session.user.id', 'name: programName', "description: aiResult?.description || ''", 'days: programDays', "source: aiResult ? 'ai' : 'manual'", 'now: () => new Date()']) {
       expect(builder).toContain(field)
     }
-    expect(builder).toContain('const payload = prepared.payload')
-    expect(builder).toContain("supabase.from('custom_programs').update(payload).eq('id', editProgram.id)")
-    expect(builder).toContain("supabase.from('custom_programs').insert({ ...payload, is_active: false })")
+    expect(builder).toContain('saveProgramAndSynchronizeCalendar(persistence, {')
+    expect(persistence).toContain("client.from('custom_programs').update(payload).eq('id', programId)")
+    expect(persistence).toContain("client.from('custom_programs').insert(payload)")
   })
 
   it('regenerates only non-rest scheduled sessions before invoking save and close', () => {
-    expect(builder).toContain("supabase.from('scheduled_sessions').delete()")
-    expect(builder).toContain(".eq('completed', false)")
-    expect(builder).toContain('if (!day || day.is_rest) continue')
-    expect(builder).toContain("session_type: 'custom'")
-    expect(builder).toContain("scheduled_time: '08:00'")
-    expect(builder).toContain('await supabase.from(\'scheduled_sessions\').insert(newSessions)')
+    expect(persistence).toContain("client.from('scheduled_sessions').delete()")
+    expect(persistence).toContain(".eq('completed', false)")
+    expect(persistenceService).toContain('if (!day || day.is_rest) continue')
+    expect(persistenceService).toContain("session_type: 'custom'")
+    expect(persistenceService).toContain("scheduled_time: '08:00'")
+    expect(persistence).toContain("client.from('scheduled_sessions').insert(payload)")
     expect(builder.indexOf('onSave()')).toBeLessThan(builder.indexOf('onClose()', builder.indexOf('onSave()')))
   })
 
@@ -170,11 +174,12 @@ describe('ProgramBuilder current save and callback contract', () => {
     expect(overlays).toContain('onSave={refreshPrograms}')
   })
 
-  it('keeps SSR explicitly empty and owns its existing Supabase accesses', () => {
+  it('keeps SSR explicitly empty and delegates its existing Supabase accesses', () => {
     expect(builder).toContain("if (typeof document === 'undefined') return null")
     for (const table of ['exercises_db', 'custom_exercises', 'profiles', 'custom_programs', 'scheduled_sessions']) {
-      expect(builder).toContain(`from('${table}')`)
+      expect(persistence).toContain(`from('${table}')`)
     }
-    expect(builder).toContain("supabase.from('custom_exercises').select('*')")
+    expect(persistence).toContain("client.from('custom_exercises').select('*')")
+    expect(builder).not.toMatch(/\.from\(/)
   })
 })

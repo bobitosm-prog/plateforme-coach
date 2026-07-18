@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 25 tâches sur 27 ; modèle d'édition, réordonnancement et validation extraits, prochaine tranche : extraire persistance et présentation du builder**
+**Statut : Phase 3 ouverte — 26 tâches sur 27 ; persistance et vues du builder extraites, prochaine tranche : réduire `ProgramBuilder` sous 500 lignes**
 
 ### Pourquoi
 
@@ -347,7 +347,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] [Réduire `WorkoutSession` sous 600 lignes](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md#façade-workoutsession-réduite) | 1,5 j | Élevée | Élevé | Élevé | Toutes extractions |
 | [x] [Écrire les tests de caractérisation de `ProgramBuilder`](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md) | 1,5 j | Élevée | Faible | Élevé | Modèle canonique |
 | [x] [Extraire modèle d'édition, DnD et validation](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md#modèle-dédition-pur-extrait) | 4 j | Élevée | Élevé | Élevé | Tests builder |
-| [ ] Extraire persistance et présentation du builder | 3 j | Élevée | Moyen | Élevé | Modèle d'édition |
+| [x] [Extraire persistance et présentation du builder](docs/TRAINING_PROGRAM_BUILDER_CHARACTERIZATION.md#persistance-et-présentation-extraites) | 3 j | Élevée | Moyen | Élevé | Modèle d'édition |
 | [ ] Réduire `ProgramBuilder` sous 500 lignes | 1 j | Moyenne | Moyen | Moyen | Extractions builder |
 
 ### Risques
@@ -743,7 +743,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈49 % (68/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | 50 % (69/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
@@ -765,7 +765,7 @@ Mettre à jour ce tableau chaque vendredi.
 |---|---:|---:|---:|---|
 | `TrainingTab.tsx` | 1 721 lignes | <500 | 3 | ✅ — 7 lignes (façade), frontières ≤454 |
 | `WorkoutSession.tsx` | 1 639 | <600 | 3 | ✅ — 530 lignes, frontières ≤384 |
-| `ProgramBuilder.tsx` | 1 330 | <500 | 3 | ⬜ |
+| `ProgramBuilder.tsx` | 998 | <500 | 3 | 🟠 |
 | `NutritionTab.tsx` | 1 273 | <500 | 4 | ⬜ |
 | `ProgressTab.tsx` | 1 151 | <500 | 4 | ⬜ |
 | `useClientDetail.ts` | 845 | <250 | 5 | ⬜ |

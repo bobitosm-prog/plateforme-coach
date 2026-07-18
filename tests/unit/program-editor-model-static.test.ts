@@ -35,10 +35,8 @@ describe('ProgramBuilder pure editor boundary', () => {
 
   it('keeps persistence and calendar synchronization outside the pure model', () => {
     expect(model).not.toMatch(/custom_programs|scheduled_sessions|\.from\(|\.insert\(|\.update\(|\.delete\(/)
-    expect(builder).toContain("supabase.from('custom_programs').update(payload)")
-    expect(builder).toContain("supabase.from('custom_programs').insert({ ...payload, is_active: false })")
-    expect(builder).toContain("supabase.from('scheduled_sessions').delete()")
-    expect(builder).toContain("supabase.from('scheduled_sessions').insert(newSessions)")
+    expect(builder).toContain('saveProgramAndSynchronizeCalendar(persistence')
+    expect(builder).not.toMatch(/custom_programs|scheduled_sessions/)
   })
 
   it('preserves the public builder export and padTo7Days compatibility export', () => {

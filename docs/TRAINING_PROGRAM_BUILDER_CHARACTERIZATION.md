@@ -155,8 +155,41 @@ L'export historique `padTo7Days` reste disponible depuis `ProgramBuilder` pour
 ses consommateurs actuels et conserve encore son ancien comportement mutable.
 Sa migration globale est hors de cette tranche.
 
-Les accès Supabase directs, la synchronisation non transactionnelle, le rendu
-monolithique et les types `any` restants demeurent des dettes explicites.
+## Persistance et présentation extraites
 
-Prochaine tranche : extraire la persistance et la présentation du builder sans
-modifier les règles caractérisées.
+Les accès sont désormais regroupés derrière un port injecté et un adaptateur
+Supabase réservé à `lib/training/program-builder-persistence/`. L'inventaire
+fonctionnel des huit familles d'accès est le suivant :
+
+| Accès | But et identité | Projection ou payload | Ordre et échec actuel |
+|---|---|---|---|
+| catalogue | charger les 200 exercices globaux | `id, name, muscle_group`, tri `name` | parallèle au montage ; repli `[]` |
+| exercices privés | charger ceux du propriétaire authentifié | `select('*')`, filtre `user_id`, tri `name` | parallèle au montage ; repli `[]` |
+| profil | lire le genre du propriétaire authentifié | `gender`, filtre `id`, `single()` | parallèle au montage ; défaut `male` dans l'UI |
+| variantes | groupe, puis variantes ou recherche sur les deux premiers mots | projections bornées du catalogue | groupe avant variante/fallback ; repli `[]` |
+| création exercice | créer pour `session.user.id` | payload legacy inchangé, puis `select().single()` | indépendante ; absence de ligne = échec expurgé |
+| sauvegarde programme | update par `editProgram.id` ou insert inactif | payload préparé par le modèle pur | première mutation |
+| nettoyage calendrier | supprimer les entrées non terminées de la semaine | owner authentifié, bornes lundi/dimanche | après sauvegarde |
+| reconstruction calendrier | insérer les jours non repos | payload et horaires legacy inchangés | dernière mutation si la liste n'est pas vide |
+
+Les cinq mutations restent donc : insertion d'exercice, update ou insert de
+programme, suppression puis insertion du calendrier. Le service conserve
+l'ordre historique, y compris la poursuite de la synchronisation lorsque
+Supabase renvoie une erreur structurée. Il ne prétend ni à une transaction ni
+à une idempotence. Ses résultats discriminent `success`, `save_failed`,
+`calendar_failed` et `partial`, avec uniquement des codes stables ; les erreurs
+SQL/Supabase ne remontent jamais.
+
+La navigation des sept jours, l'état repos, le choix du type de séance, le
+rendu de recherche/bibliothèque et le sélecteur de variantes sont maintenant
+des composants de présentation typés. Ils reçoivent seulement données et
+callbacks, conservent le plein écran mobile, le scroll, les filtres et le
+backdrop, et n'importent ni Supabase ni le service. Les autres grandes sections
+visuelles restent dans le builder et constituent le périmètre explicite de la
+dernière tranche de réduction sous 500 lignes.
+
+La persistance calendrier reste multi-écritures et non transactionnelle. Le
+catalogue privé conserve volontairement son `select('*')` historique. La
+génération IA et les types legacy `any` restants demeurent des dettes.
+
+Prochaine tranche : réduire `ProgramBuilder` sous 500 lignes.

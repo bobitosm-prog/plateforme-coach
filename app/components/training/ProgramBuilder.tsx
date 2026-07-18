@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { RailOverlay } from '../ui/RailOverlay'
-import { toDateStr } from '../../../lib/schedule-utils'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
-import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../../lib/session-types'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
@@ -25,7 +23,14 @@ import {
   type ProgramEditorDay,
   type ProgramEditorExercise,
 } from '@/lib/training/program-editor-model'
-import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucide-react'
+import {
+  createProgramBuilderCustomExercise,
+  createProgramBuilderSupabasePort,
+  loadProgramBuilderData,
+  loadProgramExerciseVariants,
+  saveProgramAndSynchronizeCalendar,
+} from '@/lib/training/program-builder-persistence'
+import { X, Plus, ChevronLeft, ChevronRight, Trash2, Check } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
   GREEN, RED, BLUE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -33,6 +38,8 @@ import {
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import { ProgramBuilderExerciseSearchOverlay, ProgramBuilderVariantOverlay } from './program-builder/ProgramBuilderOverlays'
+import { ProgramBuilderDayNavigation } from './program-builder/ProgramBuilderDayNavigation'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -157,16 +164,16 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const [ceRest, setCeRest] = useState(90)
   const [saving, setSaving] = useState(false)
   const [userGender, setUserGender] = useState('male')
+  const persistence = useMemo(() => createProgramBuilderSupabasePort(supabase), [supabase])
 
   /* ─── Load exercises + profile gender (au montage) ─── */
   useEffect(() => {
-    supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(200)
-      .then(({ data }: any) => setDbExercises(data || []))
-    supabase.from('custom_exercises').select('*').eq('user_id', session.user.id).order('name')
-      .then(({ data }: any) => setCustomExercises(data || []))
-    supabase.from('profiles').select('gender').eq('id', session.user.id).single()
-      .then(({ data }: any) => { if (data?.gender) setUserGender(data.gender) })
-  }, [])
+    void loadProgramBuilderData(persistence, session.user.id).then(result => {
+      setDbExercises(result.catalogExercises)
+      setCustomExercises(result.customExercises)
+      if (result.gender) setUserGender(result.gender)
+    })
+  }, [persistence, session.user.id])
 
   /* ─── Charger le programme à éditer (réagit à editProgram) ─── */
   useEffect(() => {
@@ -213,13 +220,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   async function saveCustomExercise() {
     if (!ceName.trim()) return
     setSaving(true)
-    const { data } = await supabase.from('custom_exercises').insert({
+    const result = await createProgramBuilderCustomExercise(persistence, {
       user_id: session.user.id, name: ceName.trim(), muscle_group: ceMuscle,
       equipment: ceEquipment, description: ceDescription,
       sets: ceSets, reps: ceReps, rest_seconds: ceRest, is_private: true,
-    }).select().single()
-    if (data) {
-      setCustomExercises(prev => [...prev, data])
+    })
+    if (result.status === 'success') {
+      setCustomExercises(prev => [...prev, result.exercise])
       toast.success(t('toast.exerciseCreated'))
       setCeName(''); setCeMuscle(''); setCeEquipment(''); setCeDescription('')
       setMode('manual')
@@ -240,52 +247,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     })
     if (!prepared.ok) return
     setSaving(true)
-    const payload = prepared.payload
-    if (editProgram?.id) {
-      // Editing: keep current is_active status (don't deactivate on save)
-      await supabase.from('custom_programs').update(payload).eq('id', editProgram.id)
-    } else {
-      // New program: start inactive, user activates explicitly
-      await supabase.from('custom_programs').insert({ ...payload, is_active: false })
-    }
-
-    // Regenerate scheduled_sessions for current week with correct day names
-    try {
-      const today = new Date()
-      const dow = today.getDay()
-      const monday = new Date(today)
-      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-      monday.setHours(0, 0, 0, 0)
-      const sunday = new Date(monday)
-      sunday.setDate(monday.getDate() + 6)
-      const mondayStr = toDateStr(monday)
-      const sundayStr = toDateStr(sunday)
-
-      await supabase.from('scheduled_sessions').delete()
-        .eq('user_id', session.user.id)
-        .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
-        .eq('completed', false)
-
-      const newSessions: any[] = []
-      for (let i = 0; i < 7; i++) {
-        const day = programDays[i]
-        if (!day || day.is_rest) continue
-        const date = new Date(monday)
-        date.setDate(monday.getDate() + i)
-        newSessions.push({
-          user_id: session.user.id,
-          title: day.name || day.weekday || DAY_NAMES[i],
-          session_type: 'custom',
-          scheduled_date: toDateStr(date),
-          scheduled_time: '08:00',
-          duration_min: 60,
-          completed: false,
-        })
-      }
-      if (newSessions.length > 0) {
-        await supabase.from('scheduled_sessions').insert(newSessions)
-      }
-    } catch (e) { console.error('[saveProgram] scheduled_sessions sync error:', e) }
+    await saveProgramAndSynchronizeCalendar(persistence, {
+      ownerUserId: session.user.id,
+      editProgramId: editProgram?.id,
+      payload: prepared.payload,
+      days: programDays,
+      now: () => new Date(),
+    })
 
     toast.success(t('toast.programSaved'))
     setSaving(false)
@@ -308,22 +276,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   }
 
   async function loadVariants(exerciseName: string, dayIdx: number, exIdx: number) {
-    const { data: current } = await supabase
-      .from('exercises_db').select('variant_group')
-      .ilike('name', exerciseName).limit(1).maybeSingle()
-    if (!current?.variant_group) {
-      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
-      const { data: similar } = await supabase
-        .from('exercises_db').select('name, equipment, muscle_group')
-        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
-      setVariantPopup({ dayIdx, exIdx, variants: similar || [] })
-      return
-    }
-    const { data: variants } = await supabase
-      .from('exercises_db').select('name, equipment, muscle_group')
-      .eq('variant_group', current.variant_group)
-      .neq('name', exerciseName).order('equipment').limit(10)
-    setVariantPopup({ dayIdx, exIdx, variants: variants || [] })
+    const result = await loadProgramExerciseVariants(persistence, exerciseName)
+    setVariantPopup({ dayIdx, exIdx, variants: result.variants })
   }
   function selectVariant(variant: any) {
     if (!variantPopup) return
@@ -764,160 +718,30 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
         )}
       </div>
 
-      {/* ──────── EXERCISE SEARCH — FULLSCREEN ──��───── */}
-      {showExerciseSearch && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: Z_MODAL, background: BG_BASE,
-          display: 'flex', flexDirection: 'column',
-          height: '100%',
-        }}>
-          {/* Header fixe avec recherche */}
-          <div style={{
-            flexShrink: 0, background: BG_BASE,
-            padding: '16px 16px 10px',
-            paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
-            borderBottom: `1px solid ${BORDER}`,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: TEXT_PRIMARY }}>{t('search.title')}</span>
-              <button onClick={() => { setShowExerciseSearch(false); setExerciseSearchQuery(''); setExerciseSearchFilter('') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={22} />
-              </button>
-            </div>
-
-            <div style={{ position: 'relative', marginBottom: 10 }}>
-              <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
-              <input
-                autoFocus
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                inputMode="search"
-                enterKeyHint="search"
-                value={exerciseSearchQuery}
-                onChange={e => setExerciseSearchQuery(e.target.value)}
-                onFocus={e => { setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300) }}
-                placeholder={t('search.placeholder')}
-                style={{
-                  width: '100%', padding: '14px 44px 14px 40px',
-                  background: BG_CARD, border: `1px solid ${BORDER}`,
-                  borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16,
-                  fontFamily: FONT_BODY, outline: 'none',
-                }}
-              />
-              {exerciseSearchQuery && (
-                <button onClick={() => setExerciseSearchQuery('')} style={{
-                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                  width: 28, height: 28, borderRadius: '50%',
-                  background: 'rgba(212,168,67,0.15)', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                }}>
-                  <X size={14} color={GOLD} />
-                </button>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
-              {muscleFilterDisplay.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setExerciseSearchFilter(f.key === ALL_KEY ? '' : f.key)}
-                  style={{
-                    ...selBtn((f.key === ALL_KEY && !exerciseSearchFilter) || exerciseSearchFilter === f.key),
-                    padding: '6px 12px', fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0,
-                  }}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Liste scrollable */}
-          <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, padding: '8px 16px 120px' }}>
-            {filteredExercises.map((ex, i) => (
-              <div
-                key={ex.id || i}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '14px 0', borderBottom: `1px solid ${BORDER}`,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: FONT_BODY, fontSize: 15, color: TEXT_PRIMARY }}>{getExerciseName(ex, locale)}</div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                    {ex.muscle_group && (
-                      <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
-                        {getMuscleLabel(ex.muscle_group, locale, tMuscle)}
-                      </span>
-                    )}
-                    {ex._custom && (
-                      <span style={{ fontFamily: FONT_ALT, fontSize: 10, textTransform: 'uppercase', padding: '2px 8px', background: GOLD_DIM, color: GOLD, letterSpacing: '0.05em' }}>
-                        {t('search.myExercise')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => addExerciseToDay(ex, !!ex._custom)}
-                  style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, cursor: 'pointer', padding: 10, borderRadius: 12, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            ))}
-            {filteredExercises.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>
-                {t('search.noResults')}
-              </div>
-            )}
-          </div>
-
-          {/* Bouton créer exercice en bas */}
-          <div style={{ padding: '12px 16px', paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', borderTop: `1px solid ${BORDER}`, flexShrink: 0, background: BG_BASE }}>
-            <button
-              onClick={() => { previousMode.current = 'manual'; setShowExerciseSearch(false); setMode('custom-exercise') }}
-              style={{
-                width: '100%', padding: '14px', background: BG_CARD_2,
-                border: `1px solid ${BORDER}`, color: GOLD, borderRadius: 12,
-                fontFamily: FONT_DISPLAY, fontSize: 16, cursor: 'pointer',
-              }}
-            >
-              {t('search.createExercise')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ──────── VARIANT POPUP ──────── */}
-      {variantPopup && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:Z_MODAL,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:BG_CARD,border:`1px solid ${GOLD_RULE}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>{t('variants.title')}</span>
-              <button aria-label={t('variants.close')} onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
-            </div>
-            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px'}}>
-              {variantPopup.variants.length === 0 ? (
-                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14,fontFamily:FONT_BODY}}>{t('variants.noVariants')}</div>
-              ) : variantPopup.variants.map((v: any,i: number)=>(
-                <button key={i} onClick={()=>selectVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:BG_BASE,border:`1px solid ${BORDER}`,cursor:'pointer',textAlign:'left',transition:'all 0.2s'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
-                  </div>
-                  <div>
-                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:500}}>{v.name}</div>
-                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${getMuscleLabel(v.muscle_group, locale, tMuscle)}`:''}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <ProgramBuilderExerciseSearchOverlay
+        open={showExerciseSearch}
+        locale={locale}
+        query={exerciseSearchQuery}
+        filter={exerciseSearchFilter}
+        filters={muscleFilterDisplay}
+        allKey={ALL_KEY}
+        exercises={filteredExercises}
+        t={t}
+        tMuscle={tMuscle}
+        onQueryChange={setExerciseSearchQuery}
+        onFilterChange={setExerciseSearchFilter}
+        onClose={() => { setShowExerciseSearch(false); setExerciseSearchQuery(''); setExerciseSearchFilter('') }}
+        onSelect={addExerciseToDay}
+        onCreateCustom={() => { previousMode.current = 'manual'; setShowExerciseSearch(false); setMode('custom-exercise') }}
+      />
+      <ProgramBuilderVariantOverlay
+        variants={variantPopup?.variants || null}
+        locale={locale}
+        t={t}
+        tMuscle={tMuscle}
+        onClose={() => setVariantPopup(null)}
+        onSelect={selectVariant}
+      />
     </div>
   )
 
@@ -941,128 +765,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   function renderDayEditor() {
     return (
       <div>
-        {/* Day grid — always 7 columns with weekday labels */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 12 }}>
-          {programDays.slice(0, 7).map((day, i) => {
-            const isActive = editingDayIndex === i
-            const isSwap = swapFirst === i
-            const isRest = day.is_rest
-            const hasEx = !isRest && (day.exercises?.length || 0) > 0
-            return (
-              <button
-                key={i}
-                onClick={() => handleDayTabClick(i)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                  padding: '10px 2px', borderRadius: 14, cursor: 'pointer',
-                  background: isSwap ? 'rgba(232,201,122,0.2)' : isActive ? GOLD : isRest ? BG_BASE : hasEx ? GOLD_DIM : BG_CARD,
-                  border: `1.5px solid ${isSwap ? '#E8C97A' : isActive ? GOLD : hasEx ? GOLD_RULE : BORDER}`,
-                  transition: 'all 0.2s',
-                }}
-              >
-                <span style={{
-                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-                  letterSpacing: 1, color: isActive ? colors.onGold : isRest ? TEXT_DIM : hasEx ? GOLD : TEXT_MUTED,
-                }}>{DAY_SHORT[i]}</span>
-                {isRest ? (
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>😴</span>
-                ) : (
-                  <span style={{
-                    fontFamily: FONT_DISPLAY, fontSize: 18,
-                    color: isActive ? colors.onGold : hasEx ? GOLD : TEXT_DIM,
-                  }}>{day.exercises?.length || 0}</span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        <ProgramBuilderDayNavigation
+          days={programDays}
+          activeIndex={editingDayIndex}
+          swapMode={swapMode}
+          swapFirst={swapFirst}
+          t={t}
+          onSelectDay={handleDayTabClick}
+          onStartSwap={() => { setSwapMode(true); setSwapFirst(null) }}
+          onCancelSwap={() => { setSwapMode(false); setSwapFirst(null) }}
+          onToggleRest={() => setProgramDays(previous => setProgramDayRest(previous, editingDayIndex, !previous[editingDayIndex]?.is_rest))}
+          onSessionNameChange={name => updateDayName(editingDayIndex, name)}
+        />
 
-        {/* Active day session name */}
-        {programDays[editingDayIndex]?.name && !programDays[editingDayIndex]?.is_rest && (
-          <div style={{
-            fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700,
-            letterSpacing: 2, color: GOLD, textTransform: 'uppercase',
-            marginBottom: 8, paddingLeft: 4,
-          }}>
-            {DAY_NAMES[editingDayIndex]} — {programDays[editingDayIndex].name}
-          </div>
-        )}
-
-        {/* Swap button — only show text when active */}
-        {!swapMode && (
-          <button
-            onClick={() => { setSwapMode(true); setSwapFirst(null) }}
-            style={{
-              width: '100%', padding: 12, borderRadius: 14, marginBottom: 10,
-              background: BG_CARD, border: `1px dashed ${BORDER}`,
-              color: TEXT_MUTED, fontFamily: FONT_ALT, fontSize: 12,
-              fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
-            }}
-          >
-            {t('day.reorderDays')}
-          </button>
-        )}
-        {swapMode && (
-          <button
-            onClick={() => { setSwapMode(false); setSwapFirst(null) }}
-            style={{
-              width: '100%', padding: 12, borderRadius: 14, marginBottom: 10,
-              background: GOLD_DIM, border: `1px solid ${GOLD}`,
-              color: GOLD, fontFamily: FONT_ALT, fontSize: 12,
-              fontWeight: 700, letterSpacing: 2, cursor: 'pointer',
-            }}
-          >
-            {swapFirst !== null ? t('day.swapSelected', { day: DAY_SHORT[swapFirst] }) : t('day.swapHint')}
-          </button>
-        )}
-
-        {/* Active day */}
         {programDays[editingDayIndex] && (
           <div>
-            {/* Rest toggle */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: 1 }}>
-                {DAY_NAMES[editingDayIndex]}
-              </span>
-              <button
-                onClick={() => {
-                  setProgramDays(prev => setProgramDayRest(prev, editingDayIndex, !prev[editingDayIndex]?.is_rest))
-                }}
-                style={{
-                  padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
-                  background: programDays[editingDayIndex]?.is_rest ? 'rgba(138,133,128,.18)' : GOLD_DIM,
-                  border: `1px solid ${programDays[editingDayIndex]?.is_rest ? BORDER : GOLD}`,
-                  color: programDays[editingDayIndex]?.is_rest ? TEXT_MUTED : GOLD,
-                  fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1,
-                }}
-              >
-                {programDays[editingDayIndex]?.is_rest ? t('day.restToggleOn') : t('day.trainingToggle')}
-              </button>
-            </div>
-
-            {!programDays[editingDayIndex]?.is_rest && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>{t('day.sessionType')}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                {SESSION_TYPE_OPTIONS.map(t => {
-                  const isSelected = programDays[editingDayIndex]?.name === t.label
-                  return (
-                    <button key={t.key} onClick={() => updateDayName(editingDayIndex, t.label)} style={{
-                      padding: '10px 6px', borderRadius: 10, cursor: 'pointer',
-                      background: isSelected ? `${t.color}20` : BG_CARD,
-                      border: `1.5px solid ${isSelected ? t.color : BORDER}`,
-                      color: isSelected ? t.color : TEXT_MUTED,
-                      fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    }}>
-                      <span style={{ fontSize: 16 }}>{t.emoji}</span> {t.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            )}
-
             {/* Exercise list — hidden for rest days */}
             {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>

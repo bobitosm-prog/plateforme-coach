@@ -6756,3 +6756,89 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire persistance et présentation du builder.
+
+---
+
+## Entrée — 2026-07-18 — Persistance et vues de ProgramBuilder
+
+### Travail effectué
+
+- Inventaire des huit familles d'accès Supabase et des cinq mutations du
+  builder, avec identité, projections, payloads, ordre et comportements
+  d'échec.
+- Extraction d'un port de persistance injecté, d'un adaptateur Supabase et de
+  services pour le chargement, la création d'exercice, les variantes, la
+  sauvegarde du programme et la synchronisation calendrier.
+- Ajout de résultats discriminés et expurgés pour les chargements complets ou
+  partiels, l'échec de sauvegarde et les échecs calendrier.
+- Extraction de la navigation des jours/repos/types de séance, des vues plein
+  écran de recherche/bibliothèque et du sélecteur de variantes dans trois
+  composants typés sans accès Supabase.
+- Migration de `ProgramBuilder` vers ces frontières, sans modifier le payload
+  legacy, l'ordre des mutations, les callbacks ni le rendu mobile concerné.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire persistance et présentation du builder » — terminée.
+- Progression Phase 3 : 25/27 → 26/27 tâches.
+
+### Décisions prises
+
+- La synchronisation conserve volontairement l'ordre historique : sauvegarde
+  programme, suppression calendrier, puis insertion des jours non repos.
+- Les erreurs structurées Supabase restent caractérisées sans transaction
+  fictive ; les opérations suivantes continuent comme dans le composant
+  historique et le résultat signale l'état partiel.
+- Le `select('*')` historique des exercices personnalisés est conservé afin de
+  ne pas changer leur forme publique dans cette tranche.
+- L'identité des lectures privées et des écritures reste exclusivement
+  `session.user.id`, transmise au service depuis la frontière existante.
+
+### Problèmes rencontrés
+
+- Les anciens tests de caractérisation affirmaient la présence physique des
+  requêtes dans le composant. Ils ont été adaptés pour vérifier les mêmes
+  contrats dans l'adaptateur et la délégation depuis le builder.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et hors staging.
+
+### Risques ou dette restante
+
+- La sauvegarde programme/calendrier reste non transactionnelle et non
+  idempotente ; les résultats partiels préparent seulement une future
+  réconciliation.
+- `ProgramBuilder` reste au-dessus de sa cible de 500 lignes ; les modes AI,
+  manuel, exercice personnalisé et l'éditeur de jour restent à extraire.
+- La génération IA reste un fetch direct du composant et les types legacy
+  `any` historiques ne sont pas tous résolus.
+
+### Tests exécutés
+
+- Tests ciblés persistance, vues, caractérisation et modèle : 52/52 verts.
+- Suite Vitest complète : 101 fichiers, 976 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouveaux services, vues et tests : vert.
+- Dette ESLint `ProgramBuilder` : 26 erreurs/8 avertissements → 19 erreurs/7
+  avertissements, sans désactivation ajoutée.
+- `git diff --check`, liens documentaires et contrôles de périmètre : verts.
+
+### Mesures avant/après
+
+- `ProgramBuilder.tsx` : 1 281 → 998 lignes.
+- Vues extraites : 157 lignes.
+- Service/port/types de persistance : 254 lignes.
+- Accès Supabase directs dans `ProgramBuilder` : 8 → 0 ; les contrats sont
+  centralisés dans l'adaptateur injecté.
+- Tests actifs globaux : 961 → 976.
+- Tâches Phase 3 : 25/27 → 26/27.
+- Progression globale : 68/138 → 69/138, soit 50 %.
+- Nouvelles routes, repositories, migrations, policies RLS ou E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire `ProgramBuilder` sous 500 lignes.
