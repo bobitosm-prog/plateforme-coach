@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, Droplets, X } from 'lucide-react'
+import { UtensilsCrossed, SlidersHorizontal, ShoppingCart, Plus, Trash2, Download, Camera, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, X } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
@@ -15,8 +15,12 @@ import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import { useNutritionJournal, useNutritionPlans } from '../../hooks/nutrition'
+import { NutritionCalendarSection } from './nutrition/NutritionCalendarSection'
+import { NutritionPlanSection } from './nutrition/NutritionPlanSection'
+import { NutritionSummarySection } from './nutrition/NutritionSummarySection'
+import { NutritionSavedMealsSection, type NutritionSavedMealView } from './nutrition/NutritionSavedMealsSection'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
+  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -607,130 +611,20 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && (() => {
-        const isViewingPast = selectedDate < today
         const consumed = getDailyLogsMacros()
         const targetKcal = profile?.calorie_goal || 2000
         const targetP = profile?.protein_goal || 140
         const targetG = profile?.carbs_goal || 200
         const targetL = profile?.fat_goal || 60
         const remaining = Math.max(0, targetKcal - consumed.kcal)
-        const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
 
-        const ringSize = 180
-        const ringStroke = 12
-        const ringRadius = (ringSize - ringStroke) / 2
-        const ringCircum = 2 * Math.PI * ringRadius
-        const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
         const waterGoal = profile?.water_goal || 3000
-        const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
-        const waterStroke = 10
-        const waterRadius = ringRadius - ringStroke - 5
-        const waterCircum = 2 * Math.PI * waterRadius
-        const waterOffset = waterCircum - (pctWater / 100) * waterCircum
-        const canAddWater = selectedDate === today
         const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
-        const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
           <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-            <style>{`@keyframes nutWaterPulse { 0%, 100% { filter: drop-shadow(0 0 4px rgba(111,183,232,0.4)); } 50% { filter: drop-shadow(0 0 9px rgba(111,183,232,0.85)); } }`}</style>
-            {/* ═══ CALENDAR STRIP ═══ */}
-            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {selectedDate !== today && (
-                    <button onClick={() => setSelectedDate(today)} style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' }}>
-                      {nt('chrome.today')}
-                    </button>
-                  )}
-                  <button onClick={() => calScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} aria-label="Précédent" style={glassBtn}>
-                    <ChevronLeft size={16} color={colors.gold} />
-                  </button>
-                  <button onClick={() => calScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} aria-label="Suivant" style={glassBtn}>
-                    <ChevronRight size={16} color={colors.gold} />
-                  </button>
-                </div>
-              </div>
-              <div ref={calScrollRef} style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
-                {calendarDays.map(dt => {
-                  const d = new Date(dt + 'T12:00:00')
-                  const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
-                  return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
-                      <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            {isViewingPast && (
-              <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CalendarDays size={16} color={colors.orange} />
-                <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-              </div>
-            )}
-            {/* Ring */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-              <div style={{ position: 'relative' }}>
-                <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-                  <defs>
-                    <linearGradient id="nutRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#E8C97A" />
-                      <stop offset="100%" stopColor="#D4A843" />
-                    </linearGradient>
-                    <linearGradient id="nutWaterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#6FB7E8" />
-                      <stop offset="100%" stopColor="#3D7EA6" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={ringStroke} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="url(#nutRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: `drop-shadow(0 0 8px ${colors.goldRule})` }} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={waterStroke} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke="url(#nutWaterGrad)" strokeWidth={waterStroke} strokeLinecap="butt" strokeDasharray={waterCircum} strokeDashoffset={waterOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', animation: 'nutWaterPulse 2.5s ease-in-out infinite' }} />
-                </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ ...statStyle, fontSize: 40, color: colors.gold, lineHeight: 1 }}>{consumed.kcal}</span>
-                  <span style={{ ...mutedStyle, fontSize: 11 }}>/ {targetKcal} kcal</span>
-                  <span style={{ ...mutedStyle, fontSize: 10, marginTop: 2 }}>{nt('chrome.remaining', { count: remaining })}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
-                <Droplets size={15} color="#6FB7E8" />
-                <span style={{ fontFamily: fonts.headline, fontSize: 15, color: '#6FB7E8' }}>
-                  {(waterToday/1000).toFixed(1)}L <span style={{ ...mutedStyle, fontSize: 11 }}>/ {(waterGoal/1000).toFixed(1)}L · {pctWater}%</span>
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater250')}</button>
-                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater500')}</button>
-              </div>
-            </div>
-
-            {/* Macros bar */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-              {[
-                { label: nt('macrosLong.prot'), current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
-                { label: nt('macrosLong.gluc'), current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
-                { label: nt('macrosLong.lip'), current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
-              ].map(({ label, current, target, color, icon: Icon }) => {
-                const pct = Math.min(100, Math.round((current / target) * 100))
-                return (
-                  <div key={label} style={{ textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
-                      <Icon size={12} color={color} />
-                      <span style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em' }}>{label}</span>
-                    </div>
-                    <div style={{ ...statSmallStyle, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: colors.textMuted }}>/{target}g</span></div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
-                      <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            <NutritionCalendarSection calendarDays={calendarDays} selectedDate={selectedDate} today={today} daysWithMeals={daysWithMeals} locale={locale} scrollRef={calScrollRef} todayLabel={nt('chrome.today')} futureDateLabel={nt('chrome.futureDate')} onSelectDate={setSelectedDate} />
+            <NutritionSummarySection consumed={consumed} targets={{ kcal: targetKcal, protein: targetP, carbs: targetG, fat: targetL }} waterMl={waterToday} waterGoalMl={waterGoal} canAddWater={selectedDate === today} remainingLabel={nt('chrome.remaining', { count: remaining })} macroLabels={{ protein: nt('macrosLong.prot'), carbs: nt('macrosLong.gluc'), fat: nt('macrosLong.lip') }} water250Label={nt('chrome.addWater250')} water500Label={nt('chrome.addWater500')} onAddWater={addWater} />
 
             {/* Meal sections — start empty, import IA optional */}
             {MEAL_ORDER.map(mealType => {
@@ -856,27 +750,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         )
       })()}
 
-      {/* Plan sub-tab (kept for backward compatibility) */}
-      {subTab === 'plan' && loadingPlan && !coachMealPlan && (
-        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
-            {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 16 }} />)}
-          </div>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 16 }} />)}
-        </div>
-      )}
-
-      {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && renderWaitingScreen()}
-
-      {/* Show AI meal plan from meal_plans table (priority) */}
-      {subTab === 'plan' && activeMealPlan && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderAiPlan(activeMealPlan)}</div>
-      )}
-
-      {/* Show old-style coach meal plan if no AI plan */}
-      {subTab === 'plan' && !activeMealPlan && coachMealPlan && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderCoachPlan()}</div>
-      )}
+      <NutritionPlanSection active={subTab === 'plan'} loading={loadingPlan} hasPersonalPlan={!!activeMealPlan} hasCoachPlan={!!coachMealPlan} emptyView={renderWaitingScreen()} personalPlanView={activeMealPlan ? renderAiPlan(activeMealPlan) : null} coachPlanView={renderCoachPlan()} />
 
       {/* Preferences sub-tab */}
       {subTab === 'prefs' && (
@@ -896,78 +770,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <SectionTitle noPadding title={nt('chrome.myMeals')} />
-          <div style={{ ...cardStyle, padding: 16 }}>
-            {/* Search */}
-            <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
-            {/* Filter pills */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-              {[{ k: 'all', l: nt('filters.all') }, { k: 'petit_dejeuner', l: nt('filters.breakfast') }, { k: 'dejeuner', l: nt('filters.lunch') }, { k: 'diner', l: nt('filters.dinner') }, { k: 'collation', l: nt('filters.snack') }].map(({ k, l }) => (
-                <button key={k} onClick={() => setMyMealsFilter(k)} style={{
-                  fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em',
-                  padding: '8px 14px', borderRadius: 10, whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.15s',
-                  background: myMealsFilter === k ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                  backdropFilter: 'blur(8px)',
-                  border: `1px solid ${myMealsFilter === k ? colors.gold : 'rgba(255,255,255,0.1)'}`,
-                  color: myMealsFilter === k ? colors.gold : colors.textDim,
-                }}>{l}</button>
-              ))}
-            </div>
-            {/* Meals list */}
-            {(() => {
-              const filtered = myMeals.filter(m => {
-                if (myMealsFilter !== 'all' && m.meal_type !== myMealsFilter) return false
-                if (myMealsSearch && !m.name?.toLowerCase().includes(myMealsSearch.toLowerCase())) return false
-                return true
-              })
-              return filtered.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {filtered.map((meal: any) => {
-                    const foods = meal.foods || []
-                    const kcal = foods.reduce((s: number, f: any) => s + (f.calories || 0), 0)
-                    const prot = foods.reduce((s: number, f: any) => s + (f.protein || 0), 0)
-                    const carbs = foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0)
-                    const fat = foods.reduce((s: number, f: any) => s + (f.fat || 0), 0)
-                    return (
-                      <div key={meal.id} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 12 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{meal.name || 'Repas sans nom'}</div>
-                            <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-                              {meal.meal_type && <span style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase' }}>{MEAL_LABELS[meal.meal_type] || meal.meal_type}</span>}
-                            </div>
-                            <div style={{ ...bodyStyle, marginTop: 4, fontSize: 11 }}>{Math.round(kcal)} kcal · {Math.round(prot)}g P · {Math.round(carbs)}g G · {Math.round(fat)}g L</div>
-                            <div style={{ ...mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString(locale) : ''}</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                            <button onClick={() => setEditingMeal(meal)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Pencil size={14} color={colors.textMuted} /></button>
-                            {confirmDeleteMeal === meal.id ? (
-                              <button onClick={async () => { await supabase.from('saved_meals').delete().eq('id', meal.id); setMyMeals(prev => prev.filter(m => m.id !== meal.id)); setConfirmDeleteMeal(null) }} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: colors.error, fontFamily: fonts.body, fontWeight: 700 }}>CONFIRMER</button>
-                            ) : (
-                              <button onClick={() => setConfirmDeleteMeal(meal.id)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Trash2 size={14} color={colors.error} /></button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div style={{ ...bodyStyle, textAlign: 'center', padding: '24px 16px', fontStyle: 'italic', lineHeight: 1.6 }}>
-                  Aucun repas sauvegardé. Ajoute un repas depuis l&apos;onglet Journal pour le retrouver ici.
-                </div>
-              )
-            })()}
-            {/* Create meal button */}
-            <button onClick={async () => {
-              const { data } = await supabase.from('saved_meals').insert({ user_id: userId, name: 'Nouveau repas', meal_type: 'dejeuner', foods: [] }).select().single()
-              if (data) { setMyMeals(prev => [data, ...prev]); setEditingMeal(data) }
-            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
-              + CRÉER UN REPAS
-            </button>
-          </div>
-        </div>
+        <NutritionSavedMealsSection meals={myMeals as NutritionSavedMealView[]} search={myMealsSearch} filter={myMealsFilter} locale={locale} labels={{ title: nt('chrome.myMeals'), search: nt('chrome.searchMeal'), all: nt('filters.all'), breakfast: nt('filters.breakfast'), lunch: nt('filters.lunch'), dinner: nt('filters.dinner'), snack: nt('filters.snack'), empty: 'Aucun repas sauvegardé. Ajoute un repas depuis l’onglet Journal pour le retrouver ici.', create: '+ CRÉER UN REPAS' }} mealLabels={MEAL_LABELS} confirmDeleteId={confirmDeleteMeal} onSearchChange={setMyMealsSearch} onFilterChange={setMyMealsFilter} onEdit={setEditingMeal} onAskDelete={setConfirmDeleteMeal} onDelete={async id => { await supabase.from('saved_meals').delete().eq('id', id); setMyMeals(previous => previous.filter(meal => meal.id !== id)); setConfirmDeleteMeal(null) }} onCreate={async () => { const { data } = await supabase.from('saved_meals').insert({ user_id: userId, name: 'Nouveau repas', meal_type: 'dejeuner', foods: [] }).select().single(); if (data) { setMyMeals(previous => [data, ...previous]); setEditingMeal(data) } }} />
       )}
 
       {/* Meal edit modal */}

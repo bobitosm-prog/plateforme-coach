@@ -7406,3 +7406,74 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les sections de `NutritionTab`.
+
+---
+
+## Entrée — 2026-07-18 — Sections de présentation de NutritionTab
+
+### Travail effectué
+
+- Extraction de quatre sections typées depuis `NutritionTab` : calendrier du
+  journal, synthèse calories/eau/macros, états des plans et repas sauvegardés.
+- Conservation dans `NutritionTab` de l'orchestration, des hooks spécialisés,
+  des accès et mutations historiques ainsi que des overlays existants.
+- Transmission aux nouvelles vues uniquement de données, états, libellés et
+  callbacks ; aucune vue ne crée de client ou n'effectue d'accès distant.
+- Ajout de tests statiques et de rendu React serveur, sans `jsdom`, couvrant le
+  câblage, les états vide/chargement, la priorité des plans, les repas
+  sauvegardés et les zéros nutritionnels explicites.
+- Documentation de l'architecture et des limites dans
+  `docs/NUTRITION_TAB_SECTIONS.md`.
+
+### Tâches cochées
+
+- Phase 4 : « Extraire les sections de `NutritionTab` » — terminée.
+- Phase 4 : 6/17 → 7/17 tâches.
+
+### Contrats préservés
+
+- Props publiques et export de `NutritionTab`, textes français, rendu mobile,
+  modales et callbacks inchangés.
+- Journal, eau, plan personnel, plan coach et repas sauvegardés conservent leurs
+  sources et formes legacy ; aucun historique Nutrition n'est fusionné.
+- Les valeurs `0` de calories, eau et macros restent distinctes d'une valeur
+  inconnue.
+- Les quatre hooks `useNutritionJournal`, `useNutritionPlans`,
+  `useNutritionRecipes` et `useNutritionGoals` restent les frontières de
+  données spécialisées.
+
+### Validations exécutées
+
+- Tests Nutrition ciblés : 5 fichiers, 46/46 tests verts.
+- Suite Vitest complète : 110 fichiers, 1 040 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des quatre nouvelles sections et des deux suites : vert.
+- `git diff --check` limité à la tranche : vert.
+- Routes, repositories, migrations, RLS, E2E et données distantes inchangés ;
+  aucun fichier ajouté au staging.
+
+### Mesures et dette restante
+
+- `NutritionTab` : 1 203 → 1 006 lignes (-197).
+- Sections : calendrier 50 lignes, plans 18, repas sauvegardés 44, synthèse 50.
+- Dette ESLint de la façade après extraction : 38 erreurs et 11 avertissements
+  historiques ; les nouveaux fichiers sont verts et aucune désactivation n'a
+  été ajoutée.
+- Les cartes détaillées du journal, les grandes compositions de plans et les
+  overlays restent dans la façade ; elle demeure au-dessus de la cible de 500
+  lignes.
+- Progression globale : 76/138 → 77/138, soit environ 56 %.
+
+### Changements concurrents
+
+- Les changements concurrents restent hors tranche, non modifiés par ce travail
+  et hors staging.
+- Les trois fichiers connus du seed et des médias d'exercices restent protégés.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire `NutritionTab` sous 500 lignes.

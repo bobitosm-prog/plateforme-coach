@@ -84,4 +84,5 @@ créée dans cette tranche.
 - [Inventaire Nutrition](NUTRITION_FORMATS_INVENTORY.md)
 - [Modèle canonique](NUTRITION_CANONICAL_MODEL.md)
 - [Repositories Nutrition](NUTRITION_REPOSITORIES.md)
+- [Sections de `NutritionTab`](NUTRITION_TAB_SECTIONS.md)
 - [Stratégie de cache](CACHE_STRATEGY.md)
