@@ -7163,3 +7163,82 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les repositories nutrition.
+
+---
+
+## Entrée — 2026-07-18 — Repositories Nutrition read-only
+
+### Travail effectué
+
+- Création de quatre repositories typés dans `lib/repositories/nutrition/` :
+  catalogues, plans/affectations, journaux et recettes/repas sauvegardés.
+- Injection exclusive de `DatabaseClient`, projections explicites, limites
+  bornées, scopes owner/client/catalogue et retours `RepositoryResult` expurgés.
+- Ajout d'une lecture spécialisée coach/client qui vérifie une relation
+  `coach_clients.status = active` avant de lire le dernier plan affecté.
+- Conservation brute des JSON legacy de plans, recettes et repas sauvegardés ;
+  aucune adaptation canonique ou mutation n'est introduite.
+- Documentation des méthodes, scopes, limites d'autorité et divergences dans
+  `docs/NUTRITION_REPOSITORIES.md`.
+
+### Tâches cochées
+
+- Phase 4 : « Créer les repositories nutrition » — terminée.
+- Phase 4 : 3/17 → 4/17 tâches.
+
+### Méthodes et scopes
+
+- Catalogue global/communautaire et aliments personnalisés owner-scoped.
+- Plans personnels owner-scoped, affectations client-scoped et lecture
+  coach/client précédée d'une vérification de relation active.
+- `daily_food_logs`, `meal_logs`, `meal_tracking` et `water_intake` lus comme
+  quatre flux distincts, ordonnés et bornés.
+- Recettes privées owner-scoped, recettes publiques globales et repas
+  sauvegardés owner-scoped.
+
+### Validations exécutées
+
+- Tests repositories Nutrition et noyau Nutrition ciblés : 42/42 verts.
+- Suite Vitest complète : 105 fichiers, 1 015 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert ; projections conformes aux types Supabase générés.
+- ESLint ciblé des repositories et tests : vert.
+- Gardes statiques : aucun `select('*')`, `createClient`, `service_role`, import
+  React/Next/`app/` ou mutation dans les repositories.
+- `git diff --check` limité à la tranche : vert.
+- Liens documentaires vérifiés.
+- Aucun composant, consommateur, route, migration, RLS, E2E ou donnée distante
+  consultée/modifiée par les repositories.
+- Aucun fichier ajouté au staging.
+
+### Divergences et limites préservées
+
+- Les colonnes runtime absentes des types générés ne sont pas projetées :
+  `plan_data/is_active`, cibles coach, complétion enrichie et compteurs legacy.
+- Les identifiants filtrent les lectures mais ne prouvent pas l'autorité ; la
+  session de la frontière appelante et la RLS du client injecté restent
+  obligatoires.
+- La vérification active ne répare pas les policies historiques des autres
+  méthodes et aucune mutation server-only n'est créée.
+- Aucun consommateur applicatif n'utilise encore ces repositories.
+
+### Mesures
+
+- Phase 4 : 3/17 → 4/17 tâches.
+- Progression globale : 73/138 → 74/138, soit environ 54 %.
+- Repositories : 4 ; méthodes read-only : 18 ; mutations : 0.
+- Routes, migrations, policies RLS ou E2E modifiés : 0.
+
+### Changements concurrents
+
+- Tous les fichiers préexistants ou apparus en parallèle restent hors tranche,
+  non modifiés par ce travail et hors staging.
+- Les trois changements concurrents connus (`scripts/enrich-parent-exercises.mjs`
+  et les deux médias `developpe-couche-barre`) restent protégés.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire la génération de repas hors de la route HTTP.

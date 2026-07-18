@@ -110,3 +110,9 @@ par les hooks internes jusqu'à l'ouverture de leurs domaines respectifs.
 ## Premiers consommateurs serveur
 
 Les routes `POST /api/user/sync-locale` et `POST /api/user/locale` sont les premiers consommateurs server réels. Elles composent la factory session, le repository identité, puis le repository profil. La lecture retourne une locale valide ou `null` sans confondre absence et panne; l'écriture passe par `updateSafe` et ne peut typer que `preferred_locale`. Les statuts HTTP et cookies historiques restent inchangés. Le lot complet des dix sites est documenté dans [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md). La fraîcheur et l'invalidation futures de ces lectures sont cadrées séparément par la [stratégie de cache par domaine](CACHE_STRATEGY.md).
+
+Les lectures Nutrition sont regroupées dans
+[`NUTRITION_REPOSITORIES.md`](NUTRITION_REPOSITORIES.md). Elles couvrent les
+catalogues, aliments personnalisés, plans, affectations coach/client actives,
+journaux, recettes et repas sauvegardés. Elles restent read-only et ne sont pas
+encore branchées aux composants.
