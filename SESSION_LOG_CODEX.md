@@ -5842,3 +5842,81 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire `TrainingTab` sous 500 lignes.
+
+---
+
+## Entrée — 2026-07-18 — Réduction de la façade `TrainingTab`
+
+### Travail effectué
+
+- Cartographie puis séparation de l'orchestration, de l'aperçu/calendrier, du
+  détail de séance, des overlays, de l'éditeur de jour, des cartes d'exercices,
+  du minuteur, de la recherche catalogue et de l'historique.
+- Conservation de l'export public `TrainingTab`, désormais limité à une façade
+  de sept lignes déléguant au contrôleur typé.
+- Extraction du contenu métier encore inline dans `SessionDetailModal` vers
+  `TrainingProgramDayEditor` et `TrainingSessionExerciseList`.
+- Adaptation des gardes de caractérisation à la nouvelle architecture et ajout
+  d'une garde statique imposant moins de 500 lignes à chaque frontière.
+- Documentation dans `docs/TRAINING_TAB_ARCHITECTURE.md`.
+
+### Tâches cochées
+
+- Phase 3 : « Réduire `TrainingTab` sous 500 lignes » — terminée.
+- Progression Phase 3 : 14/27 → 15/27 tâches.
+
+### Décisions prises
+
+- La façade publique ne possède ni état ni accès aux données ; le contrôleur
+  conserve les mutations legacy pour éviter un changement fonctionnel.
+- Les trois `select('*')` préexistants sont conservés et comptés par test ; aucun
+  nouvel accès Supabase n'est ajouté.
+- Les overlays et présentations reçoivent uniquement état et callbacks ; ils ne
+  deviennent pas une frontière d'autorité.
+- Les mises à jour du minuteur déclenchées par effets sont différées au prochain
+  tour de boucle sans attente arbitraire afin de respecter les règles React 19.
+
+### Problèmes rencontrés
+
+- Les tests statiques historiques lisaient uniquement `TrainingTab.tsx` ; ils
+  ont été adaptés pour lire les frontières responsables après extraction.
+- Le premier passage de la suite a révélé un compteur `localStorage` et un
+  inventaire historique liés au chemin de fichier ; les attentes ont été mises
+  à jour sur la structure réellement mesurée, sans changement de cache.
+
+### Risques ou dette restante
+
+- `TrainingTabController` conserve 35 erreurs et 1 avertissement ESLint
+  historiques, contre 63 erreurs et 9 avertissements avant la tranche ; toutes
+  les nouvelles frontières sont vertes individuellement.
+- Les types legacy du contrôleur restent larges et les accès `custom_programs`
+  et `exercises_db` ne passent pas encore par les repositories.
+- Aucun E2E n'a été modifié ; le comportement mobile repose sur les mêmes
+  handlers tactiles, minuteurs et callbacks qu'avant.
+
+### Tests exécutés
+
+- Tests ciblés TrainingTab/Training : 52/52 verts.
+- Suite Vitest complète : 81 fichiers, 825 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouvelles frontières : vert.
+- ESLint informatif de l'orchestrateur : 35 erreurs/1 avertissement, dette en
+  baisse par rapport à 63 erreurs/9 avertissements.
+- `git diff --check` et contrôle de périmètre exécutés en validation finale.
+
+### Mesures avant/après
+
+- `TrainingTab.tsx` : 1 493 → 7 lignes.
+- Plus grande frontière extraite : 454 lignes.
+- Composants de plus de 1 000 lignes : 5 → 4.
+- Tests actifs globaux : 819 → 825.
+- Tâches Phase 3 : 14/27 → 15/27.
+- Progression globale : 57/138 → 58/138, soit environ 42 %.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Décrire les états et transitions de `WorkoutSession`.

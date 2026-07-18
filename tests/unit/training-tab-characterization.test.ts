@@ -187,7 +187,10 @@ describe('TrainingTab characterization', () => {
   })
 
   it('locks the personal-program priority, progression and direct-start contracts statically', () => {
-    const source = fs.readFileSync(path.resolve(process.cwd(), 'app/components/tabs/TrainingTab.tsx'), 'utf8')
+    const source = [
+      'app/components/tabs/TrainingTabController.tsx',
+      'app/components/tabs/TrainingTabView.tsx',
+    ].map(file => fs.readFileSync(path.resolve(process.cwd(), file), 'utf8')).join('\n')
 
     expect(source).toContain('resolveActiveProgramDay({')
     expect(source).toContain('selectActivePersonalProgram(programs)')

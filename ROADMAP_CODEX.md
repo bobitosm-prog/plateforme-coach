@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 14 tâches sur 27 ; overlays de `TrainingTab` extraits avec contrats typés, prochaine tranche : réduire `TrainingTab` sous 500 lignes**
+**Statut : Phase 3 ouverte — 15 tâches sur 27 ; façade `TrainingTab` réduite à 7 lignes et toutes ses frontières sous 500 lignes, prochaine tranche : décrire les états et transitions de `WorkoutSession`**
 
 ### Pourquoi
 
@@ -336,7 +336,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] [Extraire bibliothèque et recherche d'exercices](docs/TRAINING_EXERCISE_LIBRARY.md) | 2 j | Moyenne | Moyen | Moyen | Repositories |
 | [x] [Extraire historique et séances récentes](docs/TRAINING_SESSION_HISTORY.md) | 1,5 j | Moyenne | Faible | Moyen | Queries training |
 | [x] [Extraire les modales de `TrainingTab`](docs/TRAINING_TAB_MODALS.md) | 1,5 j | Moyenne | Faible | Moyen | Tests caractérisation |
-| [ ] Réduire `TrainingTab` sous 500 lignes | 2 j | Élevée | Moyen | Élevé | Extractions précédentes |
+| [x] [Réduire `TrainingTab` sous 500 lignes](docs/TRAINING_TAB_ARCHITECTURE.md) | 2 j | Élevée | Moyen | Élevé | Extractions précédentes |
 | [ ] Décrire les états et transitions de `WorkoutSession` | 1,5 j | Élevée | Faible | Critique | Modèle training |
 | [ ] Écrire les tests de transitions de séance | 3 j | Élevée | Faible | Critique | Modèle de transitions |
 | [ ] Extraire le modèle pur de session | 3 j | Élevée | Élevé | Critique | Tests transitions |
@@ -743,14 +743,14 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈41 % (57/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈42 % (58/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
-| Composants >1 000 lignes | 5 | 3 | 0–1 | 5 | 🔴 |
+| Composants >1 000 lignes | 5 | 3 | 0–1 | 4 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 819 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 825 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
@@ -763,7 +763,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Fichier | Baseline | Cible | Phase | Statut |
 |---|---:|---:|---:|---|
-| `TrainingTab.tsx` | 1 721 lignes | <500 | 3 | ⬜ |
+| `TrainingTab.tsx` | 1 721 lignes | <500 | 3 | ✅ — 7 lignes (façade), frontières ≤454 |
 | `WorkoutSession.tsx` | 1 639 | <600 | 3 | ⬜ |
 | `ProgramBuilder.tsx` | 1 330 | <500 | 3 | ⬜ |
 | `NutritionTab.tsx` | 1 273 | <500 | 4 | ⬜ |

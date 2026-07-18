@@ -24,7 +24,7 @@ describe('current cache inventory guard', () => {
   it('measures the current storage and cache directive baseline', () => {
     const source = sourceInventory()
     expect(count(source, /sessionStorage/g)).toBe(12)
-    expect(count(source, /localStorage/g)).toBe(29)
+    expect(count(source, /localStorage/g)).toBe(28)
     expect(count(source, /\bcache\.(?:get|set|remove|clearAll)\(/g)).toBe(18)
     expect(count(source, /\bcaches\./g)).toBe(2)
     expect(

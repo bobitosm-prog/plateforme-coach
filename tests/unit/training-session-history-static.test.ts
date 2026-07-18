@@ -11,7 +11,8 @@ describe('Training session history integration', () => {
   })
 
   it('delegates recent filtering, dates and set grouping from presentation components', () => {
-    const tab = read('../../app/components/tabs/TrainingTab.tsx')
+    const tab = read('../../app/components/tabs/TrainingTabController.tsx')
+      + read('../../app/components/tabs/training/useTrainingSessionHistory.ts')
     const recent = read('../../app/components/training/RecentSessionsList.tsx')
     const detail = read('../../app/components/training/WorkoutDetailList.tsx')
     expect(tab).toContain('completedWorkoutDateKeys(workoutHistory)')

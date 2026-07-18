@@ -12,6 +12,10 @@ const EXTRACTED_MODAL_FILES = [
 ] as const
 
 describe('TrainingTab modal extraction inventory', () => {
+  const view = () => read('../../app/components/tabs/TrainingTabView.tsx')
+  const overlays = () => read('../../app/components/tabs/training/TrainingTabOverlays.tsx')
+  const controller = () => read('../../app/components/tabs/TrainingTabController.tsx')
+
   it('keeps every extracted modal free of Supabase and business mutations', () => {
     for (const file of EXTRACTED_MODAL_FILES) {
       const source = read(`../../app/components/tabs/training/modals/${file}`)
@@ -21,7 +25,7 @@ describe('TrainingTab modal extraction inventory', () => {
   })
 
   it('mounts extracted views only under their existing opening conditions', () => {
-    const tab = read('../../app/components/tabs/TrainingTab.tsx')
+    const tab = view() + overlays()
     expect(tab).toContain('{showTimerAlert && (')
     expect(tab).toContain('{showProgramManager && (')
     expect(tab).toContain('{importPreview && (')
@@ -33,7 +37,7 @@ describe('TrainingTab modal extraction inventory', () => {
   })
 
   it('preserves already dedicated modal contracts and optional user gates', () => {
-    const tab = read('../../app/components/tabs/TrainingTab.tsx')
+    const tab = view() + overlays()
     for (const component of [
       'ExerciseSearchModal', 'ExerciseDetailModal', 'VideoFeedbackModal', 'ProgramBuilder',
       'AddExercisePopup', 'SaveChoicePopup', 'ExerciseInfoPopup', 'TechniqueTooltip',
@@ -44,14 +48,15 @@ describe('TrainingTab modal extraction inventory', () => {
   })
 
   it('closes incompatible source modals before opening their successors', () => {
-    const tab = read('../../app/components/tabs/TrainingTab.tsx')
+    const tab = overlays()
     expect(tab).toMatch(/setShowProgramBuilder\(true\); setShowProgramManager\(false\)/)
     expect(tab).toMatch(/setStartModalProgram\([^;]+\)\s+setImportPreview\(null\)/)
     expect(tab).toContain('setStartModalImportData(null)')
   })
 
-  it('keeps context-owning state and Supabase operations in TrainingTab', () => {
-    const tab = read('../../app/components/tabs/TrainingTab.tsx')
+  it('keeps context-owning state and Supabase operations in the controller boundaries', () => {
+    const tab = controller() + read('../../app/components/tabs/training/useTrainingWorkoutTimer.ts')
+      + read('../../app/components/tabs/training/useTrainingSessionHistory.ts') + overlays()
     expect(tab).toContain('const [trainingDay, setTrainingDay]')
     expect(tab).toContain('const [workoutStarted, setWorkoutStarted]')
     expect(tab).toContain('const [activeCustomProgram, setActiveCustomProgram]')
