@@ -5920,3 +5920,76 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Décrire les états et transitions de `WorkoutSession`.
+
+---
+
+## Entrée — 2026-07-18 — Cycle de vie legacy de `WorkoutSession`
+
+### Travail effectué
+
+- Audit en lecture de `WorkoutSession`, des contrôleurs Training, des actions du
+  dashboard client, des repositories, des types générés, des migrations et des
+  tests liés aux séances.
+- Inventaire des états réellement observables, des transitions, de leurs
+  préconditions et de leurs sources d'autorité.
+- Distinction explicite entre l'enveloppe `moovx_active_workout`, le brouillon
+  détaillé `moovx_workout_draft`, l'historique `workout_sessions`/`workout_sets`,
+  le marqueur `completed_sessions` et la planification `scheduled_sessions`.
+- Formalisation du cycle de sauvegarde non transactionnel, de ses échecs
+  partiels et des divergences avec `SessionExecution` canonique.
+- Création de `docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md` avec table de
+  transitions, diagramme d'état, invariants et migration progressive.
+
+### Tâches cochées
+
+- Phase 3 : « Décrire les états et transitions de `WorkoutSession` » — terminée.
+- Progression Phase 3 : 15/27 → 16/27 tâches.
+
+### Décisions prises
+
+- Les états documentés sont des noms d'audit et non une machine persistée que le
+  code posséderait déjà.
+- Le moteur plein écran et la séance rapide de `TrainingTab` restent décrits
+  comme deux flux distincts ; aucune fusion implicite n'est proposée.
+- La cible doit introduire une identité d'exécution stable, un brouillon lié à
+  l'owner et une finalisation idempotente avant toute bascule canonique.
+
+### Problèmes rencontrés
+
+- `moovx_active_workout` ne contient que l'enveloppe de lancement ; la
+  progression détaillée est conservée séparément dans `moovx_workout_draft`.
+- `finish()` n'attend pas `onFinish`, et la chaîne de finalisation supprime les
+  caches avant de confirmer les écritures serveur.
+- La finalisation met à jour plusieurs tables et services sans transaction ni
+  clé d'idempotence commune.
+
+### Risques ou dette restante
+
+- Une panne partielle peut produire une session sans séries, une planification
+  terminée sans session détaillée, ou un marqueur coach absent.
+- Un double appel peut dupliquer `workout_sessions` et `completed_sessions`.
+- Les caches de reprise ne sont ni owner-scoped ni versionnés.
+- `workout_sessions` et `completed_sessions` n'ont aucune référence commune ;
+  le flux rapide de `TrainingTab` ne crée pas de `workout_sets`.
+
+### Tests exécutés
+
+- Aucun test applicatif : tranche documentaire et d'audit uniquement.
+- Vérification des états/transitions contre le code, des clés `localStorage`,
+  des noms de tables et de leurs colonnes générées.
+- Vérification des liens internes, du périmètre documentaire et
+  `git diff --check` : verts.
+
+### Mesures avant/après
+
+- Tâches Phase 3 : 15/27 → 16/27.
+- Progression globale : 58/138 → 59/138, soit environ 43 %.
+- Code applicatif, tests, E2E, migrations et RLS modifiés : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Écrire les tests de transitions de séance.

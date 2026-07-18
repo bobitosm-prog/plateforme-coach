@@ -312,7 +312,7 @@ Une personne ne peut découper sereinement les grands domaines sans tests reprod
 **Durée cible : 8 à 12 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 3 ouverte — 15 tâches sur 27 ; façade `TrainingTab` réduite à 7 lignes et toutes ses frontières sous 500 lignes, prochaine tranche : décrire les états et transitions de `WorkoutSession`**
+**Statut : Phase 3 ouverte — 16 tâches sur 27 ; cycle de vie legacy de `WorkoutSession` documenté, prochaine tranche : écrire les tests de transitions de séance**
 
 ### Pourquoi
 
@@ -337,7 +337,7 @@ L'entraînement est le cœur du produit et contient les composants les plus volu
 | [x] [Extraire historique et séances récentes](docs/TRAINING_SESSION_HISTORY.md) | 1,5 j | Moyenne | Faible | Moyen | Queries training |
 | [x] [Extraire les modales de `TrainingTab`](docs/TRAINING_TAB_MODALS.md) | 1,5 j | Moyenne | Faible | Moyen | Tests caractérisation |
 | [x] [Réduire `TrainingTab` sous 500 lignes](docs/TRAINING_TAB_ARCHITECTURE.md) | 2 j | Élevée | Moyen | Élevé | Extractions précédentes |
-| [ ] Décrire les états et transitions de `WorkoutSession` | 1,5 j | Élevée | Faible | Critique | Modèle training |
+| [x] [Décrire les états et transitions de `WorkoutSession`](docs/TRAINING_WORKOUT_SESSION_LIFECYCLE.md) | 1,5 j | Élevée | Faible | Critique | Modèle training |
 | [ ] Écrire les tests de transitions de séance | 3 j | Élevée | Faible | Critique | Modèle de transitions |
 | [ ] Extraire le modèle pur de session | 3 j | Élevée | Élevé | Critique | Tests transitions |
 | [ ] Extraire timer, audio et wake lock | 2 j | Élevée | Élevé | Élevé | Modèle session |
@@ -743,7 +743,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈42 % (58/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈43 % (59/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 4 | 🔴 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
