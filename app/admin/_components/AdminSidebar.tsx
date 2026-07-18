@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import {
   LayoutGrid, Users, DollarSign, ScrollText, MessageSquare, Megaphone,
-  LogOut, Menu, X, ExternalLink
+  LogOut, Menu, X, ExternalLink, Video
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 
@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
   { href: '/admin/campaigns', label: 'Campagnes', icon: Megaphone },
   { href: '/admin/logs', label: 'Logs', icon: ScrollText },
+  { href: '/admin/exercises-videos', label: 'Vidéos', icon: Video },
 ] as const
 
 interface Props {
