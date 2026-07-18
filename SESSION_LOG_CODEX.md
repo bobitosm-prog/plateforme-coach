@@ -6568,8 +6568,8 @@ Réduire `WorkoutSession` sous 600 lignes.
 - `npx tsc --noEmit` vert.
 - ESLint ciblé : nouvelles frontières sans erreur ; façade à 10 erreurs et 3
   avertissements historiques.
-- `git diff --check` et contrôles de périmètre : à confirmer en validation
-  finale.
+- `git diff --check` limité à la tranche, liens internes et contrôles de
+  périmètre : verts.
 
 ### Mesures avant/après
 
@@ -6589,3 +6589,84 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Écrire les tests de caractérisation de `ProgramBuilder`.
+
+---
+
+## Entrée — 2026-07-18 — Caractérisation de ProgramBuilder
+
+### Travail effectué
+
+- Lecture complète de `ProgramBuilder`, de ses consommateurs, des frontières de
+  recherche, des repositories Training et des formats documentés.
+- Inventaire des quatre modes, des jours fixes, de l'éditeur d'exercices, des
+  variantes, de la génération IA, des callbacks et des accès Supabase directs.
+- Ajout d'une suite de 18 tests de caractérisation combinant exécution des
+  frontières pures et inventaire statique du composant.
+- Documentation du contrat actuel, des formats legacy, du payload de
+  sauvegarde, de la synchronisation calendrier et des limites de test.
+
+### Tâches cochées
+
+- Phase 3 : « Écrire les tests de caractérisation de `ProgramBuilder` » —
+  terminée.
+- Progression Phase 3 : 23/27 → 24/27 tâches.
+
+### Décisions prises
+
+- Aucun montage jsdom fragile n'est ajouté : le composant retourne `null` en
+  rendu serveur et dépend de frontières navigateur/Framer Motion.
+- Les transformations pures `padTo7Days` et bibliothèque d'exercices sont
+  exécutées avec des fixtures synthétiques ; les callbacks et mutations sont
+  vérifiés à leur frontière source réelle.
+- L'ajout/suppression structurel de jours n'est pas inventé : le builder utilise
+  sept positions fixes et transforme un jour en repos, ce qui vide ses exercices.
+- L'absence actuelle de charge et de RIR dans l'éditeur est documentée au lieu
+  d'être présentée comme un oubli du test.
+
+### Problèmes rencontrés
+
+- `padTo7Days` clone le tableau mais ajoute `weekday` aux objets jour existants.
+  Cette mutation superficielle est caractérisée comme dette, pas corrigée.
+- `custom_exercises` est encore lu avec `select('*')`; les accès Supabase directs
+  restent hors de la frontière repository.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et non indexés.
+
+### Risques ou dette restante
+
+- `ProgramBuilder` reste un composant client de 1 330 lignes, fortement typé en
+  `any` et responsable de l'édition, de l'IA et de la persistance.
+- La sauvegarde de `custom_programs` et la régénération de
+  `scheduled_sessions` ne sont pas transactionnelles.
+- Une erreur de synchronisation du calendrier n'empêche pas les callbacks de
+  succès et fermeture.
+- Les fallbacks `||` remplacent les valeurs numériques zéro ; la validation du
+  JSON programme reste implicite.
+
+### Tests exécutés
+
+- Tests ciblés ProgramBuilder, bibliothèque, programme actif, adaptateurs et
+  repositories : 59/59 verts.
+- Suite Vitest complète : 97 fichiers, 942 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint du nouveau test : vert.
+- `git diff --check` limité à la tranche, liens internes et contrôles de
+  périmètre : verts.
+
+### Mesures avant/après
+
+- Nouveau comportement applicatif : 0.
+- Fichier applicatif modifié : 0.
+- Tests actifs globaux : 924 → 942.
+- Tâches Phase 3 : 23/27 → 24/27.
+- Progression globale : 66/138 → 67/138, soit environ 49 %.
+- Nouvelles routes, repositories, migrations, policies RLS ou E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire modèle d'édition, DnD et validation.
