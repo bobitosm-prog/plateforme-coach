@@ -35,7 +35,9 @@ import { verifyAdmin } from '@/lib/admin/auth'
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-    ok: true, arrayBuffer: async () => new ArrayBuffer(8),
+    ok: true,
+    headers: { get: () => '8' },
+    arrayBuffer: async () => new ArrayBuffer(8),
   }))
 })
 const req = (body: unknown) => new Request('http://x', { method: 'POST', body: JSON.stringify(body) })

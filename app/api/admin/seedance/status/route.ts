@@ -21,7 +21,8 @@ export async function GET(req: Request) {
   try {
     result = await getTask(taskId)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Seedance getTask failed' }, { status: 502 })
+    console.error('[seedance/status] getTask failed:', e?.message)
+    return NextResponse.json({ error: 'Échec de la récupération du statut Seedance' }, { status: 502 })
   }
 
   await supabaseAdmin

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,13 +12,19 @@ export async function POST(req: Request) {
     return handleAdminAuthError(e)
   }
 
+  const ip = req.headers.get('x-forwarded-for') || 'unknown'
+  const rl = checkRateLimit(`seedance-prompt:${ip}`, 15, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Trop de requêtes, réessaie dans une minute' }, { status: 429 })
+  }
+
   const body = await req.json().catch(() => ({}))
-  const exerciseName = typeof body.exerciseName === 'string' ? body.exerciseName.trim() : ''
+  const exerciseName = typeof body.exerciseName === 'string' ? body.exerciseName.trim().slice(0, 200) : ''
   if (!exerciseName) {
     return NextResponse.json({ error: 'exerciseName requis' }, { status: 400 })
   }
-  const muscleGroup = typeof body.muscleGroup === 'string' ? body.muscleGroup : ''
-  const equipment = typeof body.equipment === 'string' ? body.equipment : ''
+  const muscleGroup = typeof body.muscleGroup === 'string' ? body.muscleGroup.slice(0, 100) : ''
+  const equipment = typeof body.equipment === 'string' ? body.equipment.slice(0, 100) : ''
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: 'Missing ANTHROPIC_API_KEY' }, { status: 500 })
