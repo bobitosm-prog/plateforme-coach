@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { useNutritionGoals } from '../hooks/nutrition'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts } from '../../lib/design-tokens'
@@ -40,6 +41,7 @@ interface NutritionPreferencesProps {
 }
 
 export default function NutritionPreferences({ profile, supabase, userId, onSaved, onPlanRegenerated }: NutritionPreferencesProps) {
+  const persistedGoals = useNutritionGoals(profile)
   const t = useTranslations('nutritionPrefs')
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
@@ -59,9 +61,9 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
   // ─── Macros ───
   const [macroMode, setMacroMode] = useState<MacroMode>('auto')
-  const [manualProtein, setManualProtein] = useState<number>(profile?.protein_goal || 150)
-  const [manualCarbs, setManualCarbs] = useState<number>(profile?.carbs_goal || 200)
-  const [manualFat, setManualFat] = useState<number>(profile?.fat_goal || 60)
+  const [manualProtein, setManualProtein] = useState<number>(persistedGoals.values.protein ?? 150)
+  const [manualCarbs, setManualCarbs] = useState<number>(persistedGoals.values.carbs ?? 200)
+  const [manualFat, setManualFat] = useState<number>(persistedGoals.values.fat ?? 60)
   const [ratioProtein, setRatioProtein] = useState(30)
   const [ratioCarbs, setRatioCarbs] = useState(45)
   const [ratioFat, setRatioFat] = useState(25)

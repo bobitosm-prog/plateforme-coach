@@ -7322,3 +7322,87 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Découper hooks journal, plans, recettes et objectifs.
+
+---
+
+## Entrée — 2026-07-18 — Hooks Nutrition par responsabilité
+
+### Travail effectué
+
+- Création de quatre frontières distinctes sous `app/hooks/nutrition/` pour le
+  journal, les plans, les recettes/repas sauvegardés et les objectifs.
+- Migration des lectures journal/eau et plan/complétions de `NutritionTab` vers
+  leurs hooks, avec états `idle/loading/ready/empty/error`, retry et protection
+  contre les réponses obsolètes.
+- Migration de la lecture de `RecipesSection` vers les repositories Nutrition
+  owner/public, avec fusion d'affichage stable et déduplication par identifiant.
+- Introduction d'une lecture pure des objectifs dans `NutritionPreferences`, où
+  zéro reste distinct d'une valeur inconnue.
+- Conservation de `useFoodLog` comme façade historique étalée par
+  `useClientDashboard` ; aucun consommateur public n'est modifié.
+- Documentation des contrats, autorités, divergences runtime et limites dans
+  `docs/NUTRITION_DOMAIN_HOOKS.md`.
+
+### Tâches cochées
+
+- Phase 4 : « Découper hooks journal, plans, recettes et objectifs » — terminée.
+- Phase 4 : 5/17 → 6/17 tâches.
+
+### Contrats et scopes
+
+- Journal : owner/date, ordre historique ascendant et eau séparée ; aucune
+  fusion avec `meal_logs` ou `meal_tracking`.
+- Plans : plan personnel owner-scoped séparé du plan coach transmis par la
+  frontière dashboard ; absence et panne restent distinctes.
+- Recettes : lectures privées owner-scoped et publiques globales via repository,
+  fusion uniquement pour la présentation.
+- Objectifs : calories et macros nullable, zéro explicite préservé.
+- Les mutations existantes restent aux frontières fonctionnelles actuelles ;
+  aucune nouvelle mutation ou autorité n'est ajoutée.
+
+### Validations exécutées
+
+- Tests hooks et Nutrition ciblés : 72/72 verts.
+- Suite Vitest complète : 108 fichiers, 1 033 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des quatre nouveaux hooks et de leur suite : vert ; dette historique
+  des composants consommateurs laissée visible et non masquée.
+- Gardes statiques : quatre hooks présents et consommés, aucune projection `*`,
+  nouveau `any`, construction de client ou `service_role` dans ces frontières.
+- `git diff --check` limité à la tranche : vert ; liens documentaires valides.
+- Routes, repositories, migrations, RLS, E2E et données distantes inchangés ;
+  aucun fichier ajouté au staging.
+
+### Divergences et dette préservées
+
+- Le runtime `meal_plans.plan_data/is_active` diverge toujours des types générés
+  `plan/active`; le hook conserve explicitement le contrat runtime sans inventer
+  de colonne repository.
+- `useFoodLog` conserve sa recherche directe par source : le repository catalogue
+  actuel ne représente pas encore ce filtre sans changement de comportement.
+- Les mutations détaillées de journal, repas sauvegardés et recettes restent
+  dans les composants jusqu'à l'extraction de leurs sections visuelles.
+- Aucun cache nouveau ; le cache dashboard owner-scoped reste inchangé.
+
+### Mesures
+
+- Phase 4 : 5/17 → 6/17 tâches.
+- Progression globale : 75/138 → 76/138, soit environ 55 %.
+- Frontières hooks : 4 ; routes/migrations/RLS/E2E modifiés : 0.
+- `NutritionTab` : 1 273 → 1 203 lignes ; `RecipesSection` : 265 → 261 ;
+  `NutritionPreferences` : 798 → 800 ; façade `useFoodLog` : 79 → 79.
+- Nouveaux hooks : journal 63 lignes, plans 61, recettes 47, objectifs 28.
+
+### Changements concurrents
+
+- Tous les changements préexistants ou apparus en parallèle restent hors
+  tranche, non modifiés par ce travail et hors staging.
+- Les trois changements concurrents connus restent protégés.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les sections de `NutritionTab`.

@@ -14,6 +14,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
+import { useNutritionJournal, useNutritionPlans } from '../../hooks/nutrition'
 import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
@@ -47,15 +48,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const T = titleStyle
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
-  const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
-  const [loadingPlan, setLoadingPlan] = useState(true)
   const [showShoppingList, setShowShoppingList] = useState(false)
-  const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
-  const [dailyLogs, setDailyLogs] = useState<any[]>([])
   const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
   const [editQty, setEditQty] = useState('')
@@ -91,44 +88,28 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const calScrollRef = React.useRef<HTMLDivElement>(null)
   const today = new Date().toISOString().split('T')[0]
   const [selectedDate, setSelectedDate] = useState(today)
-  const [daysWithMeals, setDaysWithMeals] = useState<Set<string>>(new Set())
-  const [waterToday, setWaterToday] = useState(0)
   const calendarDays = React.useMemo(() => {
     const d: string[] = []
     for (let i = -30; i <= 7; i++) { const dt = new Date(); dt.setDate(dt.getDate() + i); d.push(dt.toISOString().split('T')[0]) }
     return d
   }, [])
 
+  const journal = useNutritionJournal({ supabase, userId, selectedDate })
+  const plans = useNutritionPlans({ supabase, userId, date: today })
+  const { dailyLogs, setDailyLogs, daysWithMeals, setDaysWithMeals, waterToday, reload: fetchDailyLogs } = journal
+  const { activePersonalPlan: activeMealPlan, completedMeals, loading: loadingPlan, reload: fetchActiveMealPlan, toggleMeal } = plans
+  const addWater = (ml: number) => journal.addWater(ml, today)
   const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>('today')
 
   useEffect(() => {
-    fetchActiveMealPlan()
-    fetchTodayTracking()
-    fetchDailyLogs()
-    // Load days with meals for calendar dots
-    const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_food_logs').select('date').eq('user_id', userId).gte('date', thirtyAgo)
-      .then(({ data }: any) => setDaysWithMeals(new Set((data || []).map((d: any) => d.date))))
     // Auto-scroll calendar to today
     setTimeout(() => { document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' }) }, 100)
   }, [userId])
 
-  // Reload meals when date changes
-  useEffect(() => { fetchDailyLogs() }, [selectedDate])
-
-  // Load water intake for selected date
   useEffect(() => {
-    if (!userId) return
-    supabase.from('water_intake').select('amount_ml').eq('user_id', userId).eq('date', selectedDate).limit(50)
-      .then(({ data }: any) => setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0)))
-  }, [userId, selectedDate])
-
-  async function addWater(ml: number) {
-    if (!userId) return
-    await supabase.from('water_intake').insert({ user_id: userId, amount_ml: ml, date: today })
-    setWaterToday(prev => prev + ml)
-  }
+    if (activeMealPlan && !coachMealPlan) setSubTab('today')
+  }, [activeMealPlan, coachMealPlan])
 
   // Fetch saved meals for "Mes Repas" tab
   useEffect(() => {
@@ -140,11 +121,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   useEffect(() => {
   }, [activeMealPlan, subTab])
-
-  async function fetchDailyLogs() {
-    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true })
-    setDailyLogs(data || [])
-  }
 
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
@@ -260,52 +236,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   function getMealConsumed(mealType: string) {
     const logs = dailyLogs.filter(l => l.meal_type === mealType)
     return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
-  }
-
-  async function fetchActiveMealPlan() {
-    setLoadingPlan(true)
-    const { data } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('today')
-    setLoadingPlan(false)
-  }
-
-  async function fetchTodayTracking() {
-    const { data } = await supabase
-      .from('meal_tracking')
-      .select('meal_type')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .eq('is_completed', true)
-      .limit(50)
-    if (data) {
-      setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
-    }
-  }
-
-
-
-  async function toggleMeal(mealType: string, planId: string | null) {
-    const isCompleted = !completedMeals.has(mealType)
-    const next = new Set(completedMeals)
-    if (isCompleted) next.add(mealType); else next.delete(mealType)
-    setCompletedMeals(next)
-
-    await supabase.from('meal_tracking').upsert({
-      user_id: userId,
-      meal_plan_id: planId,
-      date: today,
-      meal_type: mealType,
-      is_completed: isCompleted,
-      completed_at: isCompleted ? new Date().toISOString() : null,
-    }, { onConflict: 'user_id,date,meal_type' })
   }
 
   // Get today's plan data normalized to canonical DayPlan format.
@@ -847,7 +777,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     {logs.map(log => (
                       <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${colors.goldBorder}` }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{log.custom_name || log.food_name || 'Aliment'}</div>
+                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{log.custom_name || 'Aliment'}</div>
                           {editingFoodId === log.id ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                               <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />

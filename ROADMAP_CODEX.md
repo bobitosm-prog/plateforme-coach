@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 5 tâches sur 17 ; prochaine tranche : découper hooks journal, plans, recettes et objectifs**
+**Statut : Phase 4 active — 6 tâches sur 17 ; prochaine tranche : extraire les sections de `NutritionTab`**
 
 ### Pourquoi
 
@@ -393,7 +393,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Ajouter les tests d'invariants calories/macros | 2,5 j | Élevée | Faible | Critique | Modèle nutrition |
 | [x] Créer les repositories nutrition ([contrats](docs/NUTRITION_REPOSITORIES.md)) | 3 j | Élevée | Moyen | Élevé | Phase 2 |
 | [x] Extraire la génération de repas hors de la route HTTP ([contrat](docs/NUTRITION_MEAL_GENERATION_SERVICE.md)) | 3 j | Élevée | Élevé | Élevé | Modèle nutrition |
-| [ ] Découper hooks journal, plans, recettes et objectifs | 3 j | Élevée | Moyen | Élevé | Repositories |
+| [x] Découper hooks journal, plans, recettes et objectifs ([contrats](docs/NUTRITION_DOMAIN_HOOKS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [ ] Extraire les sections de `NutritionTab` | 4 j | Élevée | Élevé | Élevé | Hooks spécialisés |
 | [ ] Réduire `NutritionTab` sous 500 lignes | 1,5 j | Moyenne | Moyen | Élevé | Extractions |
 | [ ] Comparer les totaux anciens et nouveaux | 1,5 j | Élevée | Faible | Critique | Double calcul |
@@ -745,7 +745,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈54 % (75/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈55 % (76/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |

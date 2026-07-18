@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl'
 import { X, Heart, Clock, Sparkles, ChefHat } from 'lucide-react'
 import { toast } from 'sonner'
 import { colors, fonts } from '../../lib/design-tokens'
+import { mergeNutritionRecipeRows, useNutritionRecipes } from '../hooks/nutrition'
+import type { DatabaseClient } from '../../lib/supabase/types'
 
 const CATEGORY_IDS = ['all', 'petit-dejeuner', 'dejeuner', 'collation', 'diner', 'smoothie'] as const
 
@@ -27,20 +29,14 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
   const [generating, setGenerating] = useState(false)
   const [showGenerate, setShowGenerate] = useState(false)
   const [genCategory, setGenCategory] = useState('dejeuner')
+  const recipeReads = useNutritionRecipes({ client: supabase as DatabaseClient, userId })
 
-  useEffect(() => { loadRecipes() }, [])
-
-  async function loadRecipes() {
-    setLoading(true)
-    const { data } = await supabase
-      .from('recipes')
-      .select('*')
-      .or(`user_id.eq.${userId},is_public.eq.true`)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    setRecipes(data || [])
+  useEffect(() => {
+    if (recipeReads.state === 'loading' || recipeReads.state === 'idle') { setLoading(true); return }
+    if (recipeReads.state === 'error') { setLoading(false); return }
+    setRecipes(mergeNutritionRecipeRows(recipeReads.privateRecipes, recipeReads.publicRecipes))
     setLoading(false)
-  }
+  }, [recipeReads.privateRecipes, recipeReads.publicRecipes, recipeReads.state])
 
   const filtered = filter === 'all' ? recipes : recipes.filter(r => r.category === filter)
 
