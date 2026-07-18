@@ -108,5 +108,55 @@ simulent donc pas artificiellement l'interface ni Supabase. Les callbacks sont
 vérifiés à leur frontière réelle, et les transformations pures sont exécutées
 avec des fixtures synthétiques sans donnée personnelle.
 
-Prochaine tranche : extraire le modèle d'édition, le réordonnancement et la
-validation dans des frontières pures et typées, sans modifier ces contrats.
+## Modèle d'édition pur extrait
+
+[`program-editor-model.ts`](../lib/training/program-editor-model.ts) porte
+désormais les types et décisions de l'éditeur sans dépendance React, Next,
+Supabase, navigateur, Framer Motion ou DnD Kit. Il formalise un programme de
+sept jours, les jours de repos, les exercices catalogue/personnalisés et leurs
+prescriptions legacy : séries, répétitions, repos, tempo et techniques.
+
+Les opérations suivantes sont immuables et utilisées par `ProgramBuilder` :
+
+- normalisation sur sept jours et création d'une semaine selon le nombre de
+  jours d'entraînement ;
+- modification du nom ou de l'état repos d'un jour ;
+- ajout, suppression et modification d'un exercice ;
+- déplacement d'un exercice dans son jour et échange de deux jours en
+  conservant leurs positions calendaires ;
+- validation bornée et préparation du payload legacy de sauvegarde.
+
+Le déplacement utilise des positions `{ dayIndex, exerciseIndex }`. Une source
+ou destination invalide est refusée avec une raison stable ; un déplacement
+vers la même position est un succès sans changement. Le builder ne permet pas
+actuellement de déplacer un exercice entre deux jours : cette tentative est
+donc refusée par `cross_day_not_supported`, sans inventer une fonctionnalité.
+
+La validation renvoie une union discriminée. Les erreurs exposent uniquement
+un code et un chemin (`name`, `days`, `days.N.exercises.N`) et sont bornées à
+20 entrées. Aucun contenu de programme, message SQL ou contexte utilisateur
+n'est inclus.
+
+Le payload reste constitué de `user_id`, `name`, `description`, `days`,
+`source` et `updated_at`. L'horloge est injectée pour les tests. Les écritures
+`custom_programs` et la régénération `scheduled_sessions` restent dans le
+composant, dans le même ordre et avec les mêmes callbacks.
+
+### Correction d'immutabilité bornée
+
+`ProgramBuilder` n'utilise plus directement `padTo7Days` pour charger un
+programme édité ou généré. La nouvelle normalisation clone profondément les
+jours, exercices et champs JSON avant d'ajouter un `weekday`. Les props et les
+données IA ne sont donc plus enrichies en place. Les champs legacy connus sont
+conservés, y compris l'absence de clé `exercises` sur un jour incomplet, afin de
+ne pas modifier le payload sauvegardé.
+
+L'export historique `padTo7Days` reste disponible depuis `ProgramBuilder` pour
+ses consommateurs actuels et conserve encore son ancien comportement mutable.
+Sa migration globale est hors de cette tranche.
+
+Les accès Supabase directs, la synchronisation non transactionnelle, le rendu
+monolithique et les types `any` restants demeurent des dettes explicites.
+
+Prochaine tranche : extraire la persistance et la présentation du builder sans
+modifier les règles caractérisées.

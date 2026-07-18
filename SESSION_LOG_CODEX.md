@@ -6670,3 +6670,89 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire modèle d'édition, DnD et validation.
+
+---
+
+## Entrée — 2026-07-18 — Modèle d'édition, réordonnancement et validation
+
+### Travail effectué
+
+- Extraction d'un modèle d'édition Training pur et typé couvrant programme,
+  sept jours, repos, exercices, prescriptions, tempo et techniques.
+- Extraction des opérations immuables de normalisation, création de semaine,
+  modification de jour, CRUD exercice, déplacement intra-jour et échange de
+  jours.
+- Ajout d'une décision de déplacement discriminée pour source/destination
+  invalides, même position et déplacement inter-jours non supporté.
+- Ajout d'une validation bornée à codes/chemins stables et d'une préparation du
+  payload legacy avec horloge injectée.
+- Migration de `ProgramBuilder` vers ces frontières sans modifier ses lectures,
+  mutations, rendu, callbacks ou synchronisation calendrier.
+
+### Tâches cochées
+
+- Phase 3 : « Extraire modèle d'édition, DnD et validation » — terminée.
+- Progression Phase 3 : 24/27 → 25/27 tâches.
+
+### Décisions prises
+
+- Le réordonnancement actuel reste intra-jour ; un déplacement inter-jours est
+  refusé par `cross_day_not_supported` au lieu d'inventer un nouveau DnD.
+- L'échange de jours conserve leurs `weekday`, conformément au comportement
+  caractérisé.
+- La validation n'expose que `code` et `path`, avec au plus 20 erreurs ; aucun
+  contenu utilisateur ou détail de persistance n'est retourné.
+- La persistance `custom_programs` et la reconstruction de
+  `scheduled_sessions` restent dans le composant et dans le même ordre.
+
+### Problèmes rencontrés
+
+- La correction de mutation de `padTo7Days` exigeait de préserver aussi
+  l'absence de clé `exercises` dans un jour legacy incomplet. Le normaliseur pur
+  conserve désormais cette absence au lieu d'inventer un tableau vide dans le
+  payload.
+- Le composant conserve son export historique de `padTo7Days` pour les autres
+  consommateurs ; cette ancienne frontière reste mutable hors du builder.
+- Les trois changements utilisateur protégés sont restés hors périmètre, non
+  ouverts, non modifiés et non indexés.
+
+### Risques ou dette restante
+
+- `ProgramBuilder` conserve les accès Supabase directs, la génération IA et la
+  synchronisation calendrier non transactionnelle.
+- Le rendu et la persistance restent composés dans un fichier de 1 281 lignes.
+- Le déplacement d'exercice entre jours n'est pas supporté.
+- L'export `padTo7Days` utilisé par d'autres composants conserve sa mutation
+  superficielle historique.
+
+### Tests exécutés
+
+- Tests ciblés modèle, statique, caractérisation, bibliothèque, adaptateurs et
+  repositories : 70/70 verts.
+- Suite Vitest complète : 99 fichiers, 961 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouvelles frontières et tests : vert.
+- Dette ESLint `ProgramBuilder` : 28 erreurs/8 avertissements → 26 erreurs/8
+  avertissements, sans désactivation ajoutée.
+- `git diff --check` limité à la tranche, liens internes et contrôles de
+  périmètre : verts.
+- Accès Supabase directs : 8 avant/après ; mutations explicites : 5
+  avant/après.
+
+### Mesures avant/après
+
+- `ProgramBuilder.tsx` : 1 330 → 1 281 lignes.
+- Modèle pur : 333 lignes, sans import ni effet externe.
+- Tests actifs globaux : 942 → 961.
+- Tâches Phase 3 : 24/27 → 25/27.
+- Progression globale : 67/138 → 68/138, soit environ 49 %.
+- Nouvelles routes, repositories, migrations, policies RLS ou E2E : 0.
+- Données distantes consultées ou modifiées : 0.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire persistance et présentation du builder.

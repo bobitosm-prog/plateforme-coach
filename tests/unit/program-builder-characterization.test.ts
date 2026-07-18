@@ -10,8 +10,10 @@ import {
 const root = process.cwd()
 const builderPath = resolve(root, 'app/components/training/ProgramBuilder.tsx')
 const overlaysPath = resolve(root, 'app/components/tabs/training/TrainingTabOverlays.tsx')
+const modelPath = resolve(root, 'lib/training/program-editor-model.ts')
 const builder = readFileSync(builderPath, 'utf8')
 const overlays = readFileSync(overlaysPath, 'utf8')
+const model = readFileSync(modelPath, 'utf8')
 
 describe('ProgramBuilder current program shapes', () => {
   it('pads an empty program to seven explicit rest days', () => {
@@ -53,7 +55,7 @@ describe('ProgramBuilder current program shapes', () => {
 
   it('loads an edited program through the seven-day legacy adapter', () => {
     expect(builder).toContain('setProgramName(editProgram.name)')
-    expect(builder).toContain('setProgramDays(padTo7Days(editProgram.days || []))')
+    expect(builder).toContain('setProgramDays(normalizeProgramEditorDays(editProgram.days || []).days)')
     expect(builder).toContain("setMode('manual')")
     expect(builder).toContain('setManualStep(1)')
   })
@@ -62,31 +64,31 @@ describe('ProgramBuilder current program shapes', () => {
 describe('ProgramBuilder current editing behavior', () => {
   it('uses fixed calendar days and represents removal as a rest-day toggle', () => {
     expect(builder).toContain("const DAY_NAMES = DAY_NAMES_FR")
-    expect(builder).toContain("day.is_rest = !day.is_rest")
-    expect(builder).toContain("if (day.is_rest) { day.exercises = [] }")
+    expect(builder).toContain('setProgramDayRest(prev, editingDayIndex, !prev[editingDayIndex]?.is_rest)')
+    expect(model).toContain('exercises: isRest ? [] : exerciseList(day).map(cloneExercise)')
     expect(builder).not.toMatch(/function (?:add|remove)Day/)
   })
 
   it('adds and removes exercises with the current numeric fallbacks', () => {
-    expect(builder).toContain('sets: exercise.sets || 3')
-    expect(builder).toContain('reps: exercise.reps || 10')
-    expect(builder).toContain('rest: exercise.rest_seconds || 90')
-    expect(builder).toContain('day.exercises.splice(exIdx, 1)')
+    expect(builder).toContain('addProgramExercise(prev, editingDayIndex, exercise, isCustom)')
+    expect(builder).toContain('removeProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx })')
+    expect(model).toContain('sets: exercise.sets || 3')
+    expect(model).toContain('reps: exercise.reps || 10')
+    expect(model).toContain('rest: exercise.rest_seconds || 90')
     expect(builder).toContain('setShowExerciseSearch(false)')
   })
 
   it('updates exercises immutably at the edited day boundary', () => {
-    expect(builder).toContain('const updated = [...prev]')
-    expect(builder).toContain('day.exercises = [...(day.exercises || [])]')
-    expect(builder).toContain('day.exercises[exIdx] = { ...day.exercises[exIdx], [field]: value }')
+    expect(builder).toContain('updateProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx }, field, value)')
+    expect(model).toContain('? { ...cloneExercise(exercise), [field]: cloneValue(value) }')
   })
 
   it('supports exercise and day reordering without changing calendar weekdays', () => {
-    expect(builder).toContain('const temp = arr[exIdx]; arr[exIdx] = arr[ni]; arr[ni] = temp')
-    expect(builder).toContain('const weekdayA = dayA.weekday')
-    expect(builder).toContain('const weekdayB = dayB.weekday')
-    expect(builder).toContain('updated[swapFirst!] = { ...dayB, weekday: weekdayA }')
-    expect(builder).toContain('updated[i] = { ...dayA, weekday: weekdayB }')
+    expect(builder).toContain('const result = moveProgramExercise(')
+    expect(builder).toContain('setProgramDays(prev => swapProgramDays(prev, swapFirst, i))')
+    expect(model).toContain('reordered.splice(source.exerciseIndex, 1)')
+    expect(model).toContain('normalized[firstIndex] = { ...second, weekday: first.weekday }')
+    expect(model).toContain('normalized[secondIndex] = { ...first, weekday: second.weekday }')
   })
 
   it('edits sets, repetitions, rest, tempo and techniques but not load or RIR', () => {
@@ -141,9 +143,11 @@ describe('ProgramBuilder current library and variants', () => {
 
 describe('ProgramBuilder current save and callback contract', () => {
   it('keeps the exact personal-program payload and create/edit split', () => {
-    for (const field of ['user_id: session.user.id', 'name: programName.trim()', "description: aiResult?.description || ''", 'days: programDays', "source: aiResult ? 'ai' : 'manual'", 'updated_at: new Date().toISOString()']) {
+    expect(builder).toContain('const prepared = prepareLegacyProgramPayload({')
+    for (const field of ['ownerUserId: session.user.id', 'name: programName', "description: aiResult?.description || ''", 'days: programDays', "source: aiResult ? 'ai' : 'manual'", 'now: () => new Date()']) {
       expect(builder).toContain(field)
     }
+    expect(builder).toContain('const payload = prepared.payload')
     expect(builder).toContain("supabase.from('custom_programs').update(payload).eq('id', editProgram.id)")
     expect(builder).toContain("supabase.from('custom_programs').insert({ ...payload, is_active: false })")
   })

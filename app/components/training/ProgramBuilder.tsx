@@ -11,6 +11,20 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { combineExerciseLibraries, searchExerciseLibrary } from '@/lib/training/exercise-library'
+import {
+  addProgramExercise,
+  createProgramEditorWeek,
+  moveProgramExercise,
+  normalizeProgramEditorDays,
+  prepareLegacyProgramPayload,
+  removeProgramExercise,
+  setProgramDayRest,
+  swapProgramDays,
+  updateProgramDay,
+  updateProgramExercise,
+  type ProgramEditorDay,
+  type ProgramEditorExercise,
+} from '@/lib/training/program-editor-model'
 import { X, Plus, ChevronLeft, ChevronRight, Search, Trash2, Check } from 'lucide-react'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -122,7 +136,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
   // Manual mode
   const [programName, setProgramName] = useState('')
-  const [programDays, setProgramDays] = useState<any[]>([])
+  const [programDays, setProgramDays] = useState<ProgramEditorDay[]>([])
   const [manualStep, setManualStep] = useState(0)
   const [showExerciseSearch, setShowExerciseSearch] = useState(false)
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
@@ -158,7 +172,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   useEffect(() => {
     if (editProgram) {
       setProgramName(editProgram.name)
-      setProgramDays(padTo7Days(editProgram.days || []))
+      setProgramDays(normalizeProgramEditorDays(editProgram.days || []).days)
       setMode('manual')
       setManualStep(1)
     }
@@ -182,7 +196,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       if (program) {
         setAiResult(program)
         setProgramName(program.program_name || 'Programme IA') // DB value, do not translate
-        setProgramDays(padTo7Days(program.days || []))
+        setProgramDays(normalizeProgramEditorDays(program.days || []).days)
         toast.success(t('toast.generated'))
       } else {
         toast.error(t('toast.generationError'))
@@ -216,15 +230,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   /* ─── Save program ─── */
   async function saveProgram() {
     if (!programName.trim() || !programDays.length) return
-    setSaving(true)
-    const payload = {
-      user_id: session.user.id,
-      name: programName.trim(),
+    const prepared = prepareLegacyProgramPayload({
+      ownerUserId: session.user.id,
+      name: programName,
       description: aiResult?.description || '',
       days: programDays,
       source: aiResult ? 'ai' : 'manual',
-      updated_at: new Date().toISOString(),
-    }
+      now: () => new Date(),
+    })
+    if (!prepared.ok) return
+    setSaving(true)
+    const payload = prepared.payload
     if (editProgram?.id) {
       // Editing: keep current is_active status (don't deactivate on save)
       await supabase.from('custom_programs').update(payload).eq('id', editProgram.id)
@@ -278,48 +294,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   }
 
   /* ─── Helpers ─── */
-  function addExerciseToDay(exercise: any, isCustom: boolean) {
-    setProgramDays(prev => {
-      const updated = [...prev]
-      const day = { ...updated[editingDayIndex] }
-      day.exercises = [
-        ...(day.exercises || []),
-        {
-          id: exercise.id,
-          name: exercise.name,
-          muscle_group: exercise.muscle_group,
-          sets: exercise.sets || 3,
-          reps: exercise.reps || 10,
-          rest: exercise.rest_seconds || 90,
-          isCustom,
-        },
-      ]
-      updated[editingDayIndex] = day
-      return updated
-    })
+  function addExerciseToDay(exercise: ProgramEditorExercise, isCustom: boolean) {
+    setProgramDays(prev => addProgramExercise(prev, editingDayIndex, exercise, isCustom))
     setShowExerciseSearch(false)
   }
 
   function removeExerciseFromDay(dayIdx: number, exIdx: number) {
-    setProgramDays(prev => {
-      const updated = [...prev]
-      const day = { ...updated[dayIdx] }
-      day.exercises = [...(day.exercises || [])]
-      day.exercises.splice(exIdx, 1)
-      updated[dayIdx] = day
-      return updated
-    })
+    setProgramDays(prev => removeProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx }))
   }
 
   function updateExerciseField(dayIdx: number, exIdx: number, field: string, value: any) {
-    setProgramDays(prev => {
-      const updated = [...prev]
-      const day = { ...updated[dayIdx] }
-      day.exercises = [...(day.exercises || [])]
-      day.exercises[exIdx] = { ...day.exercises[exIdx], [field]: value }
-      updated[dayIdx] = day
-      return updated
-    })
+    setProgramDays(prev => updateProgramExercise(prev, { dayIndex: dayIdx, exerciseIndex: exIdx }, field, value))
   }
 
   async function loadVariants(exerciseName: string, dayIdx: number, exIdx: number) {
@@ -348,11 +333,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   }
 
   function updateDayName(dayIdx: number, name: string) {
-    setProgramDays(prev => {
-      const updated = [...prev]
-      updated[dayIdx] = { ...updated[dayIdx], name }
-      return updated
-    })
+    setProgramDays(prev => updateProgramDay(prev, dayIdx, { name }))
   }
 
   const filteredExercises = searchExerciseLibrary(
@@ -368,16 +349,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const previousMode = useRef<'select' | 'manual'>('select')
   function moveExerciseInDay(exIdx: number, dir: number) {
     const ni = exIdx + dir
-    const exs = programDays[editingDayIndex]?.exercises || []
-    if (ni < 0 || ni >= exs.length) return
+    const exercises = programDays[editingDayIndex]?.exercises || []
+    if (ni < 0 || ni >= exercises.length) return
     setProgramDays(prev => {
-      const updated = [...prev]
-      const day = { ...updated[editingDayIndex] }
-      const arr = [...(day.exercises || [])]
-      const temp = arr[exIdx]; arr[exIdx] = arr[ni]; arr[ni] = temp
-      day.exercises = arr
-      updated[editingDayIndex] = day
-      return updated
+      const result = moveProgramExercise(
+        prev,
+        { dayIndex: editingDayIndex, exerciseIndex: exIdx },
+        { dayIndex: editingDayIndex, exerciseIndex: ni },
+      )
+      return result.days
     })
   }
 
@@ -649,15 +629,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                       value={programDays.filter(d => !d.is_rest).length || 3}
                       onChange={e => {
                         const n = parseInt(e.target.value)
-                        setProgramDays(DAY_NAMES.map((wd, i) => {
-                          const existing = programDays[i]
-                          if (i < n) {
-                            return existing && !existing.is_rest
-                              ? { ...existing, weekday: wd }
-                              : { name: existing?.name || '', weekday: wd, is_rest: false, exercises: existing?.exercises || [] }
-                          }
-                          return { name: '', weekday: wd, is_rest: true, exercises: [] }
-                        }))
+                        setProgramDays(createProgramEditorWeek(n, programDays))
                       }}
                       style={{ flex: 1, accentColor: GOLD }}
                     />
@@ -672,12 +644,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                     if (!programName.trim()) { toast.error(t('config.nameRequired')); return }
                     if (!programDays.length || programDays.length < 7) {
                       const trainingCount = programDays.filter(d => !d.is_rest).length || 4
-                      setProgramDays(DAY_NAMES.map((wd, i) => {
-                        const existing = programDays[i]
-                        if (i < trainingCount && existing && !existing.is_rest) return { ...existing, weekday: wd }
-                        if (i < trainingCount) return { name: '', weekday: wd, is_rest: false, exercises: [] }
-                        return { name: '', weekday: wd, is_rest: true, exercises: [] }
-                      }))
+                      setProgramDays(createProgramEditorWeek(trainingCount, programDays))
                     }
                     setManualStep(1)
                   }}
@@ -965,16 +932,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       return
     }
     // Swap everything EXCEPT weekday (which stays fixed to the calendar position)
-    setProgramDays(prev => {
-      const updated = [...prev]
-      const dayA = { ...updated[swapFirst!] }
-      const dayB = { ...updated[i] }
-      const weekdayA = dayA.weekday
-      const weekdayB = dayB.weekday
-      updated[swapFirst!] = { ...dayB, weekday: weekdayA }
-      updated[i] = { ...dayA, weekday: weekdayB }
-      return updated
-    })
+    setProgramDays(prev => swapProgramDays(prev, swapFirst, i))
     setSwapFirst(null)
     setSwapMode(false)
     setEditingDayIndex(i)
@@ -1068,14 +1026,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               </span>
               <button
                 onClick={() => {
-                  setProgramDays(prev => {
-                    const updated = [...prev]
-                    const day = { ...updated[editingDayIndex] }
-                    day.is_rest = !day.is_rest
-                    if (day.is_rest) { day.exercises = [] }
-                    updated[editingDayIndex] = day
-                    return updated
-                  })
+                  setProgramDays(prev => setProgramDayRest(prev, editingDayIndex, !prev[editingDayIndex]?.is_rest))
                 }}
                 style={{
                   padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
