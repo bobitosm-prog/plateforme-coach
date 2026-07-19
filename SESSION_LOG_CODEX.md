@@ -8530,3 +8530,31 @@ Réduire `useClientDetail` sous 250 lignes.
 ### Prochaine action unique
 
 Découper `coach/page.tsx` en sections chargées à la demande.
+## Entrée — 2026-07-19 — Sections différées de la page coach
+
+- Page réduite de 803 à 76 lignes; compositions desktop (289) et mobile (381),
+  wheel picker (38), fallback (5) et contrat (27) extraits, tous sous 500.
+- Huit sections réelles conservées. Clients, calendrier, messages, analytics,
+  programmes, aliments, profil et détail de séance sont chargés via
+  `next/dynamic` avec fallback stable et sans `ssr: false`.
+- `accueil` reste dans chaque layout car section initiale; `CoachStyles` et
+  `BugReport` restent statiques car globaux/toujours montés.
+- Imports statiques de présentation de la page : 12 → 2 légers. Aucun import
+  statique ne duplique une section dynamique.
+- Contrat `useCoachDashboard`, navigation, modales, responsive, lifecycle
+  messaging/calendrier, requêtes et mutations inchangés.
+- Dette ESLint de la page : 17 erreurs/12 avertissements → 0 erreur/1
+  avertissement historique `no-img-element`; nouvelles vues sans erreur.
+- Tests ciblés page/dashboard/calendrier/messaging : 7 fichiers, 27 tests verts;
+  suite Vitest complète : 151 fichiers, 1 275 tests verts et 3 `todo`.
+- TypeScript vert; E2E coach/client 4/4 verts. Mailpit vide et pile locale
+  arrêtée après validation.
+- Build local lancé mais bloqué uniquement par le téléchargement réseau des
+  cinq polices Google historiques; aucun gain en kilo-octets n'est revendiqué.
+- `git diff --check`, liens documentaires, tailles et gardes d'imports verts;
+  staging resté vide.
+- Changements concurrents du seed et des deux médias protégés et hors staging.
+
+### Prochaine action unique
+
+Découper `client/[id]/page.tsx` en orchestrateur mince.
