@@ -7550,3 +7550,70 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Comparer les totaux anciens et nouveaux.
+
+---
+
+## Entrée — 2026-07-19 — Comparaison des totaux Nutrition legacy/canoniques
+
+### Travail effectué
+
+- Inventaire des calculateurs actifs du journal, des aliments par 100 g, des
+  plans coach/IA, des repas sauvegardés et des totaux déclarés.
+- Ajout d'un comparateur pur et typé fondé sur les invariants Nutrition, sans
+  branchement aux consommateurs ni changement des valeurs affichées.
+- Adaptateurs explicites pour `daily_food_logs`, aliments de plan, aliments de
+  repas sauvegardé et champs `total_*` ; zéro legacy et valeur inconnue restent
+  distingués dans les issues.
+- Tolérances documentées (1 kcal, 0,1 g, 0,5 %) et détails par nutriment avec
+  écarts absolus/relatifs, sans arrondi intermédiaire.
+- Matrice synthétique de 12 cas : 4 équivalents, 2 tolérés, 2 divergents,
+  2 partiels, 1 indisponible et 1 invalide.
+
+### Tâches cochées
+
+- Phase 4 : « Comparer les totaux anciens et nouveaux » — terminée.
+- Phase 4 : 8/17 → 9/17 tâches.
+
+### Garanties préservées
+
+- Aucun consommateur, affichage, historique ou comportement Nutrition modifié.
+- Aucun accès Supabase, réseau, navigateur, React ou Next dans le comparateur.
+- Aucune fusion des historiques legacy ; aucune valeur absente corrigée ou
+  normalisée silencieusement.
+- Erreurs bornées à des codes et chemins stables, sans payload brut.
+
+### Divergences et limites
+
+- Les calculateurs legacy remplacent fréquemment les absences par zéro et
+  arrondissent avant l'agrégation ; le canonique conserve l'inconnu et la
+  précision jusqu'à la frontière.
+- Les fibres ne sont généralement pas persistées dans les journaux/plans.
+- Les alias pluriels `proteins/fats` des repas sauvegardés peuvent être ignorés
+  par l'affichage fondé sur les champs singuliers.
+- Aucun échantillon distant n'a été consulté ; la matrice utilise uniquement
+  des fixtures synthétiques représentatives.
+
+### Validations exécutées
+
+- Tests Nutrition ciblés : 4 fichiers, 45/45 tests verts.
+- Suite Vitest complète : 114 fichiers, 1 066 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint du comparateur, des fixtures et des deux suites : vert.
+- Garde statique : aucune dépendance React, Next, Supabase, navigateur ou
+  réseau ; aucun `any` ni arrondi intermédiaire.
+- `git diff --check`, liens documentaires et staging vide vérifiés.
+- Routes, repositories, migrations, RLS, E2E et données distantes inchangés.
+- Progression globale : 78/138 → 79/138, soit environ 57 %.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Documenter les métriques de progression.

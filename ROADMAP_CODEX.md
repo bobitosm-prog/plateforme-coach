@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 8 tâches sur 17 ; prochaine tranche : comparer les totaux anciens et nouveaux**
+**Statut : Phase 4 active — 9 tâches sur 17 ; prochaine tranche : documenter les métriques de progression**
 
 ### Pourquoi
 
@@ -396,7 +396,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Découper hooks journal, plans, recettes et objectifs ([contrats](docs/NUTRITION_DOMAIN_HOOKS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [x] Extraire les sections de `NutritionTab` ([architecture](docs/NUTRITION_TAB_SECTIONS.md)) | 4 j | Élevée | Élevé | Élevé | Hooks spécialisés |
 | [x] Réduire `NutritionTab` sous 500 lignes ([architecture](docs/NUTRITION_TAB_SECTIONS.md)) | 1,5 j | Moyenne | Moyen | Élevé | Extractions |
-| [ ] Comparer les totaux anciens et nouveaux | 1,5 j | Élevée | Faible | Critique | Double calcul |
+| [x] Comparer les totaux anciens et nouveaux ([méthode](docs/NUTRITION_TOTAL_COMPARISON.md)) | 1,5 j | Élevée | Faible | Critique | Double calcul |
 | [ ] Documenter les métriques de progression | 1,5 j | Moyenne | Faible | Élevé | — |
 | [ ] Extraire les fonctions d'agrégation pures | 2,5 j | Élevée | Moyen | Élevé | Catalogue métriques |
 | [ ] Créer les read models progression/analytics | 3 j | Élevée | Moyen | Élevé | Repositories |
