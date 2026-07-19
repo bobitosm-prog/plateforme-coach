@@ -6,6 +6,7 @@ import { useExerciseInfo } from '../../../hooks/useExerciseInfo'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import type { DatabaseClient } from '@/lib/supabase/types'
 import { createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
+import { appendClientDetailWeight, loadClientDetailNutrition, loadClientDetailProfile, loadClientDetailProgression, loadClientDetailTraining, loadClientDetailWeeklyTracking, saveClientDetailMealPlan, saveClientDetailProgram, updateClientDetailProfile } from '@/lib/coaching/client-detail'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -184,6 +185,7 @@ export default function useClientDetail() {
   const [coachMessages, setCoachMessages] = useState<Message[]>([])
   const [coachMsgInput, setCoachMsgInput] = useState('')
   const coachMessageLoadGenerationRef = useRef(0)
+  const detailLoadGenerationRef = useRef(0)
 
   // AI Meal Plan Generator
   const [aiMealGenerating, setAiMealGenerating] = useState(false)
@@ -410,58 +412,29 @@ export default function useClientDetail() {
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
 
-  /* ── Auth ───────────────────────────────────────────────────── */
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.replace('/fr/landing'); return }
-      setCoachId(session.user.id)
-    })
-  }, [router])
-
   /* ── Fetch all data ─────────────────────────────────────────── */
   const fetchData = useCallback(async () => {
-    if (!coachId) return
+    const generation = ++detailLoadGenerationRef.current
     setLoading(true); setError(null)
-
-    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
-      supabase.from('active_related_profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
-      supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
-      supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
-      supabase.from('weight_logs').select('id,poids,date').eq('user_id', id).order('date', { ascending: false }).limit(1),
-      supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
-      supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('meal_plans').select('*').eq('user_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('custom_programs').select('id, name, days, is_active, created_at, source').eq('user_id', id).order('created_at', { ascending: false }).limit(10),
+    const profileResult = await loadClientDetailProfile(supabase as DatabaseClient, id)
+    if (generation !== detailLoadGenerationRef.current) return
+    if (profileResult.status !== 'success') {
+      if (profileResult.status === 'anonymous') router.replace('/fr/landing')
+      else setError(profileResult.status === 'unavailable' ? 'Profil indisponible' : 'Client introuvable')
+      setLoading(false)
+      return
+    }
+    const { scope, notes: loadedNotes } = profileResult.data
+    setCoachId(scope.coachUserId)
+    const progressionPromise = loadClientDetailProgression(supabase as DatabaseClient, scope)
+    const [trainingResult, nutritionResult] = await Promise.all([
+      loadClientDetailTraining(supabase as DatabaseClient, scope),
+      loadClientDetailNutrition(supabase as DatabaseClient, scope, currentMonday()),
     ])
-
-    // Fetch progression data in parallel (non-blocking for main render)
-    Promise.all([
-      supabase.from('weight_logs').select('date, poids').eq('user_id', id).order('date', { ascending: true }).limit(90),
-      supabase.from('body_measurements').select('*').eq('user_id', id).order('date', { ascending: false }).limit(10),
-      supabase.from('progress_photos').select('*').eq('user_id', id).order('created_at', { ascending: false }).limit(20),
-      supabase.from('completed_sessions').select('id, session_index, session_name, completed_at, duration_minutes').eq('client_id', id).eq('coach_id', coachId).order('completed_at', { ascending: false }).limit(50),
-    ]).then(async ([wlRes, bmRes, ppRes, csRes]) => {
-      setWeightLogsFull(wlRes.data || [])
-      setBodyMeasurements(bmRes.data || [])
-      setClientCompletedSessions(csRes.data || [])
-
-      // Sign photo URLs for display
-      const photos = ppRes.data || []
-      const signedPhotos = await Promise.all(
-        photos.map(async (p: any) => {
-          if (!p.photo_url) return p
-          const { data } = await supabase.storage.from('progress-photos').createSignedUrl(p.photo_url, 3600)
-          return { ...p, signedUrl: data?.signedUrl || null }
-        })
-      )
-      setClientProgressPhotos(signedPhotos)
-    }).catch(err => {
-      console.warn('[useClientDetail] progression fetch failed:', err)
-    })
-
-    if (profileRes.error) { setError(profileRes.error.message); setLoading(false); return }
-    const p = profileRes.data as Profile
+    if (generation !== detailLoadGenerationRef.current) return
+    const trainingData = trainingResult.status === 'success' ? trainingResult.data : null
+    const nutritionData = nutritionResult.status === 'success' ? nutritionResult.data : null
+    const p = profileResult.data.profile as Profile
     setProfile(p)
     const pLiked = Array.isArray(p.liked_foods) ? p.liked_foods : []
     if (pLiked.length) {
@@ -469,57 +442,53 @@ export default function useClientDetail() {
         .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods.map((f: any) => ({ id: f.id, name: f.name, emoji: null }))) })
     }
     setEditName(p.full_name ?? ''); setEditEmail(p.email ?? ''); setEditPhone(p.phone ?? ''); setEditBirth(p.birth_date ?? ''); setEditGender(p.gender ?? '')
-    const latestW = (weightRes.data as WeightLog[] | null)?.[0]
-    setEditWeight(latestW != null ? String(latestW.poids) : (p.current_weight != null ? String(p.current_weight) : ''))
+    setEditWeight(p.current_weight != null ? String(p.current_weight) : '')
     setEditHeight(p.height != null ? String(p.height) : ''); setEditTargetW(p.target_weight != null ? String(p.target_weight) : '')
     setEditBodyFat(p.body_fat_pct != null ? String(p.body_fat_pct) : ''); setEditStatus(p.status ?? 'active'); setEditObj(p.objective ?? '')
     setCalGoalInput(p.calorie_goal != null ? String(p.calorie_goal) : '')
-    setSessions((sessionsRes.data ?? []) as WorkoutSession[]); setTotalSessionsCount(sessionsCountRes.count ?? 0)
-    setWeightLogs((weightRes.data ?? []) as WeightLog[]); setNotes(notesRes.data?.content ?? '')
+    setSessions((trainingData?.sessions ?? []) as WorkoutSession[]); setTotalSessionsCount(trainingData?.totalSessionsCount ?? 0)
+    setWeightLogs([]); setNotes(loadedNotes)
 
-    if (programRes.data) {
-      setProgramId(programRes.data.id)
-      setProgram(normalizeAndSanitize(programRes.data.program))
+    if (trainingData?.assignedProgram) {
+      setProgramId(trainingData.assignedProgram.id)
+      setProgram(normalizeAndSanitize(trainingData.assignedProgram.program))
     }
-    // Filter out empty programs (no days or no exercises)
-    const validProgs = (customProgsRes.data || []).filter((p: any) => {
-      if (!Array.isArray(p.days) || p.days.length === 0) return false
-      return p.days.some((d: any) => d.exercises?.length > 0)
-    })
-    console.log('[ClientDetail] custom_programs:', customProgsRes.data?.length || 0, 'valid:', validProgs.length)
-    setClientCustomPrograms(validProgs)
+    setClientCustomPrograms([...(trainingData?.customPrograms ?? [])])
+    setCoachTemplates([...(trainingData?.coachTemplates ?? [])])
 
-    // Fetch coach's training templates for resync feature
-    supabase.from('training_programs').select('id, name, program')
-      .eq('coach_id', coachId).eq('is_template', true)
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => { if (!error && data) setCoachTemplates(data) })
-
-    if (mealPlanRes.data) {
-      const mp = mealPlanRes.data; setMealPlanId(mp.id)
+    if (nutritionData?.assignedPlan) {
+      const mp = nutritionData.assignedPlan; setMealPlanId(mp.id)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
       const merged = defaultMealPlan(); const saved = mp.plan as WeekMealPlan
       DAYS.forEach(d => { if (saved[d]) { merged[d] = { meals: MEAL_TYPES.map(type => { const existing = saved[d].meals?.find(m => m.type === type); return existing ?? { type, foods: [] } }) } } })
       setMealPlan(merged)
     }
-    if (activePlanRes.data) setClientActivePlan(activePlanRes.data)
-    await fetchWeeklyTracking()
+    setClientActivePlan(nutritionData?.activePlan ?? null)
+    setWeeklyTracking(nutritionData?.weeklyTracking as Record<string, Set<string>> ?? {})
     setLoading(false)
-  }, [coachId, id])
+
+    const progressionResult = await progressionPromise
+    if (generation !== detailLoadGenerationRef.current || progressionResult.status !== 'success') return
+    const progressionData = progressionResult.data
+    const latestW = progressionData.weights.at(-1)
+    setEditWeight(latestW != null ? String(latestW.poids) : (p.current_weight != null ? String(p.current_weight) : ''))
+    setWeightLogs(latestW ? [latestW] : [])
+    setWeightLogsFull([...progressionData.weights])
+    setBodyMeasurements([...progressionData.measurements])
+    setClientProgressPhotos([...progressionData.photos])
+    setClientCompletedSessions([...progressionData.completions])
+  }, [id, router])
 
   const fetchWeeklyTracking = useCallback(async () => {
     const d = new Date(); const day = d.getDay()
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
     const mondayDate = d.toISOString().split('T')[0]
-    const { data: trackingData } = await supabase.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', id).gte('date', mondayDate).eq('is_completed', true).limit(200)
-    if (trackingData) {
-      const map: Record<string, Set<string>> = {}
-      for (const r of trackingData) { if (!map[r.date]) map[r.date] = new Set(); map[r.date].add(r.meal_type) }
-      setWeeklyTracking(map)
-    }
+    const result = await loadClientDetailWeeklyTracking(supabase as DatabaseClient, id, mondayDate)
+    if (result.status === 'success') setWeeklyTracking(result.data as Record<string, Set<string>>)
   }, [id])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => () => { detailLoadGenerationRef.current += 1 }, [id])
   useEffect(() => { const interval = setInterval(fetchWeeklyTracking, 30000); return () => clearInterval(interval) }, [fetchWeeklyTracking])
 
   // Coach messaging
@@ -603,12 +572,8 @@ export default function useClientDetail() {
       toSave[day] = { ...d, exercises: (d.exercises || []).map(ex => ({ ...ex, sets: ex.sets || 3, reps: ex.reps || 10, rest: ex.rest || '60s' })) }
     }
     setProgramSaving(true)
-    if (programId) {
-      await supabase.from('client_programs').update({ program: toSave, updated_at: new Date().toISOString() }).eq('id', programId)
-    } else {
-      const { data } = await supabase.from('client_programs').insert({ coach_id: coachId, client_id: id, week_start: currentMonday(), program: toSave }).select('id').single()
-      if (data?.id) setProgramId(data.id)
-    }
+    const result = await saveClientDetailProgram(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, { programId, program: toSave, weekStart: currentMonday(), updatedAt: new Date().toISOString() })
+    if (result.status === 'success' && result.data) setProgramId(result.data)
     setProgramSaving(false); setProgramSaved(true); showToast('Programme sauvegardé'); setTimeout(() => setProgramSaved(false), 2000)
   }
 
@@ -704,12 +669,8 @@ export default function useClientDetail() {
     if (!coachId) return
     setMealPlanSaving(true)
     const payload = { coach_id: coachId, client_id: id, week_start: currentMonday(), calorie_target: Math.round(calorieTarget), protein_target: Math.round(protTarget), carb_target: Math.round(carbTarget), fat_target: Math.round(fatTarget), plan: mealPlan, updated_at: new Date().toISOString() }
-    await Promise.all([
-      mealPlanId
-        ? supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
-        : supabase.from('client_meal_plans').insert(payload).select('id').single().then(({ data }) => { if (data?.id) setMealPlanId(data.id) }),
-      supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { calorie_goal: calorieTarget } }),
-    ])
+    const result = await saveClientDetailMealPlan(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, { planId: mealPlanId, payload, calorieGoal: calorieTarget })
+    if (result.status === 'success' && result.data) setMealPlanId(result.data)
     setProfile(p => p ? { ...p, calorie_goal: calorieTarget } : p)
     setMealPlanSaving(false); setMealPlanSaved(true); showToast('Plan alimentaire sauvegardé'); setTimeout(() => setMealPlanSaved(false), 2000)
   }
@@ -730,12 +691,13 @@ export default function useClientDetail() {
       target_weight: editTargetW ? parseFloat(editTargetW) : null, body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
       objective: editObj || null,
     }
-    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: updates })
-    if (error) { console.error('[saveProfile] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
+    if (!coachId) return
+    const result = await updateClientDetailProfile(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, updates)
+    if (result.status === 'failure') { showToast('Erreur lors de la mise à jour'); return }
     if (editWeight) {
       const newWeight = parseFloat(editWeight)
       if (!isNaN(newWeight) && newWeight !== weightLogs[0]?.poids) {
-        await supabase.from('weight_logs').insert({ user_id: id, poids: newWeight, date: new Date().toISOString().split('T')[0] })
+        await appendClientDetailWeight(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, newWeight, new Date().toISOString().split('T')[0])
         setWeightLogs([{ id: 'local', poids: newWeight, date: new Date().toISOString().split('T')[0] }])
       }
     }
@@ -745,27 +707,28 @@ export default function useClientDetail() {
 
   /* ── Save calorie goal ──────────────────────────────────────── */
   async function saveCalorieGoal() {
+    if (!coachId) return
     const val = parseInt(calGoalInput)
     if (!val || val <= 0) return
-    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { calorie_goal: val } })
-    if (error) { console.error('[saveCalorieGoal] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
+    const result = await updateClientDetailProfile(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, { calorie_goal: val })
+    if (result.status === 'failure') { showToast('Erreur lors de la mise à jour'); return }
     setProfile(p => p ? { ...p, calorie_goal: val } : p)
     setEditingCalGoal(false); showToast('Objectif calorique mis à jour')
   }
 
   /* ── Save target weight ─────────────────────────────────────── */
   async function saveTargetWeight(val: number) {
-    if (!profile || isNaN(val) || val < 20) return
-    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { target_weight: val } })
-    if (error) { console.error('[saveTargetWeight] error:', error); return }
+    if (!profile || !coachId || isNaN(val) || val < 20) return
+    const result = await updateClientDetailProfile(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, { target_weight: val })
+    if (result.status === 'failure') return
     setProfile(p => p ? { ...p, target_weight: val } : p)
   }
 
   /* ── Save objective text ──────────────────────────────────────── */
   async function saveObjective(val: string | null) {
-    if (!profile) return
-    const { error } = await supabase.rpc('update_active_client_profile', { target_client_id: id, changes: { objective: val } })
-    if (error) { console.error('[saveObjective] error:', error); return }
+    if (!profile || !coachId) return
+    const result = await updateClientDetailProfile(supabase as DatabaseClient, { coachUserId: coachId, clientUserId: id }, { objective: val })
+    if (result.status === 'failure') return
     setProfile(p => p ? { ...p, objective: val } : p)
   }
 

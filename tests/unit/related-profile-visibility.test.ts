@@ -5,6 +5,7 @@ const migration = readFileSync('supabase/migrations/20260715001000_secure_relate
 const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboardController.ts', 'utf8')
 const coachAnalytics = readFileSync('app/coach/hooks/useCoachAnalytics.ts', 'utf8')
 const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
+const clientDetailProfile = readFileSync('lib/coaching/client-detail/profile.ts', 'utf8')
 const coachSection = readFileSync('app/components/tabs/profile/CoachSection.tsx', 'utf8')
 const relationRepository = readFileSync('lib/repositories/coach-client-relations/index.ts', 'utf8')
 
@@ -35,8 +36,8 @@ describe('related profile visibility contract', () => {
     expect(coachDashboard).toContain('createCoachClientRelationRepository')
     expect(coachAnalytics).toContain('createCoachClientRelationRepository')
     expect(relationRepository).toContain("from('active_related_profiles')")
-    expect(clientDetail).toContain(".from('active_related_profiles')")
-    expect(clientDetail).toContain(".rpc('update_active_client_profile'")
+    expect(clientDetailProfile).toContain(".from('active_related_profiles')")
+    expect(clientDetailProfile).toContain(".rpc('update_active_client_profile'")
     expect(clientDetail).not.toContain(".from('profiles').update")
     expect(coachSection).toContain(".from('active_related_profiles')")
   })

@@ -160,3 +160,13 @@ SQL sécurisée avant de laisser la RLS faire autorité.
 Les trois hooks humains n'accèdent plus directement à la table. Le service
 compose persistance et notification non transactionnelle; l'adaptateur realtime
 reste séparé du repository et valide chaque payload avant exposition.
+
+## Détail client coach
+
+Les quatre frontières de [`useClientDetail`](CLIENT_DETAIL_DOMAIN_EXTRACTIONS.md)
+composent désormais identité, relation active, repositories Training et read
+models Progression avant d'exposer le profil tiers. Les formats Nutrition dont
+les colonnes runtime divergent des types restent isolés dans leur adaptateur
+legacy explicite. Le hook conserve ses mutations non migrées et son contrat UI,
+mais ne lit plus directement profil, séances, programmes, mensurations, photos
+ou complétions lors du chargement initial.

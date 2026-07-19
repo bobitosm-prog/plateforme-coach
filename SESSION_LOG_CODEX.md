@@ -8476,3 +8476,31 @@ Réduire `useCoachDashboard` sous 250 lignes.
 ### Prochaine action unique
 
 Extraire profil, programme, nutrition et progression de `useClientDetail`.
+## Entrée — 2026-07-19 — Domaines du détail client extraits
+
+- Frontières Profil, Training, Nutrition et Progression créées sous
+  `lib/coaching/client-detail`; contrat public de `useClientDetail` préservé.
+- Identité coach dérivée par `auth.getUser()`, relation active vérifiée avant la
+  projection `active_related_profiles`; cible URL jamais utilisée comme
+  autorité et erreurs expurgées.
+- Repositories Training et read models Progression réutilisés; formats
+  Nutrition distants divergents isolés explicitement sans fusion legacy.
+- Chargements concurrents coordonnés et réponses obsolètes invalidées au
+  changement de client ou au démontage.
+- Mesures : hook 847 → 810 lignes, accès directs 35 → 11, dette ESLint
+  33 erreurs/3 avertissements → 30 erreurs/2 avertissements historiques.
+- Compatibilité vérifiée : programmes personnels triés par `created_at DESC`
+  avec limite 10 et progression chargée sans bloquer la fin du chargement
+  profil/Training/Nutrition.
+- Tests ciblés : 9 fichiers, 81 tests verts; suite Vitest complète : 149
+  fichiers, 1 268 tests verts et 3 `todo`; TypeScript et types Supabase verts.
+- Matrice RLS/PostgREST locale et E2E coach/client (4/4) verts; Mailpit vide et
+  pile locale arrêtée après validation.
+- ESLint des nouvelles frontières/tests vert; seule la dette historique du hook
+  demeure. `git diff --check` et liens documentaires verts.
+- Aucun changement de route, page, composant métier, migration, RLS ou E2E;
+  changements concurrents protégés et hors staging.
+
+### Prochaine action unique
+
+Réduire `useClientDetail` sous 250 lignes.
