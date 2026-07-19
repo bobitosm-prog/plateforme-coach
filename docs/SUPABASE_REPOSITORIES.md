@@ -47,6 +47,15 @@ coach activement lié au client ; aucun client privilégié n'est créé.
 `scheduled_sessions` reste un domaine Training séparé. Aucun de ses cinq
 consommateurs applicatifs/ports n'a été migré ou modifié par cette extraction.
 
+## Messaging Coaching
+
+L'audit [`COACHING_MESSAGING_REALTIME.md`](COACHING_MESSAGING_REALTIME.md)
+documente pourquoi aucun repository `messages` n'est encore branché. Le champ
+UI `image_url` est absent du schéma et des types canoniques, et les policies
+historiques ne limitent pas les échanges à une relation coach/client active.
+Une migration de schéma/RLS explicitement autorisée est donc un préalable à une
+projection typée fidèle et à des mutations sûres.
+
 ## Profil
 
 `createProfileRepository(client)` expose `findById`, `findCurrent`, `findActiveRelatedById` et `updateSafe`.

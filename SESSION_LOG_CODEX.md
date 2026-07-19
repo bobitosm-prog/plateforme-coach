@@ -8269,3 +8269,57 @@ Extraire le module calendrier/appointments.
 ### Prochaine action unique
 
 Extraire le module messaging et realtime.
+
+---
+
+## Entrée — 2026-07-19 — Audit messaging/realtime bloqué par schéma et RLS
+
+### Travail effectué
+
+- Inventaire de la table `messages`, de ses types, migrations, policies, trois
+  hooks consommateurs, notifications, polling et cinq channels realtime.
+- Ajout d'un test de caractérisation exécutable couvrant forme canonique,
+  divergence `image_url`, compteurs lifecycle et absence de scope relationnel
+  dans les policies.
+- Documentation du premier blocage et de la correction préalable minimale dans
+  `docs/COACHING_MESSAGING_REALTIME.md`.
+
+### Tâche laissée ouverte
+
+- Phase 5 : « Extraire le module messaging et realtime » — non terminée.
+- Aucune frontière de production ni aucun consommateur n'a été migré : le
+  faire aurait imposé un changement de comportement ou un contournement de
+  schéma/RLS interdit.
+
+### Blocages confirmés
+
+- `messages.image_url` est produit et rendu par les trois interfaces mais est
+  absent des 139 migrations, du schéma local et des types générés.
+- Les sept policies effectives ne vérifient pas `coach_clients.status = active`;
+  un utilisateur authentifié peut cibler n'importe quel profil avec son propre
+  `sender_id`.
+- La policy `messages_coach_rw FOR ALL` et les grants historiques exposent une
+  autorité DELETE navigateur non utilisée par l'UI.
+
+### Mesures avant/après
+
+- Accès directs `messages` : 12 → 12.
+- Channels : 5 → 5 ; subscriptions : 5 → 5 ; nettoyages `removeChannel` :
+  5 → 5 ; handlers `postgres_changes` : 7 → 7.
+- Compteurs volontairement inchangés puisque la migration sûre est bloquée.
+
+### Validations exécutées
+
+- Caractérisation messaging et contrat notification : 2 fichiers, 43 tests
+  verts.
+- Suite Vitest complète : 138 fichiers, 1 218 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit`, ESLint ciblé et types Supabase canoniques verts.
+- Inspection PostgreSQL locale read-only : six colonnes `messages`, aucune
+  `image_url`, sept policies sans relation active et grants navigateur larges.
+- Matrice RLS/PostgREST existante verte ; elle ne couvre pas encore `messages`.
+- E2E coach/client : 4 tests verts en 42,0 s ; aucune notification externe.
+
+### Prochaine action unique
+
+Autoriser une tranche séparée de correction du schéma `messages` et de
+durcissement RLS, puis reprendre l'extraction messaging/realtime.
