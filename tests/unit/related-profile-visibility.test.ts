@@ -6,6 +6,7 @@ const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf
 const coachAnalytics = readFileSync('app/coach/hooks/useCoachAnalytics.ts', 'utf8')
 const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
 const coachSection = readFileSync('app/components/tabs/profile/CoachSection.tsx', 'utf8')
+const relationRepository = readFileSync('lib/repositories/coach-client-relations/index.ts', 'utf8')
 
 describe('related profile visibility contract', () => {
   it('requires an active symmetric relation and excludes authority fields from the projection', () => {
@@ -31,8 +32,9 @@ describe('related profile visibility contract', () => {
   })
 
   it('routes coach dashboard, analytics, detail and client coach display through the projection', () => {
-    expect(coachDashboard).toContain(".from('active_related_profiles')")
-    expect(coachAnalytics).toContain(".from('active_related_profiles')")
+    expect(coachDashboard).toContain('createCoachClientRelationRepository')
+    expect(coachAnalytics).toContain('createCoachClientRelationRepository')
+    expect(relationRepository).toContain("from('active_related_profiles')")
     expect(clientDetail).toContain(".from('active_related_profiles')")
     expect(clientDetail).toContain(".rpc('update_active_client_profile'")
     expect(clientDetail).not.toContain(".from('profiles').update")

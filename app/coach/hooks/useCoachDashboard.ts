@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getRole } from '../../../lib/getRole'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -256,9 +257,8 @@ export default function useCoachDashboard(initialSession?: any) {
           })
         }
       })
-      supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).limit(100).then(({ data: links }) => {
-        setActiveSubscribers(links?.length || 0)
-      })
+      createCoachClientRelationRepository(supabase).listActiveClientsForCoach(session.user.id, { limit: 100 })
+        .then(result => setActiveSubscribers(result.ok ? result.data.length : 0))
     }
 
     // If initialSession was provided, role already confirmed by page.tsx — skip getRole
@@ -444,26 +444,18 @@ export default function useCoachDashboard(initialSession?: any) {
 
   async function fetchClients(coachId: string) {
     setLoading(true)
-    const { data: links, error: linksError } = await supabase
-      .from('coach_clients')
-      .select('id, client_id, created_at, invited_by_coach')
-      .eq('coach_id', coachId)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(100)
-
-    if (linksError || !links?.length) { setClients([]); setLoading(false); return }
+    const relationRepository = createCoachClientRelationRepository(supabase)
+    const linksResult = await relationRepository.listActiveClientsForCoach(coachId, { limit: 100 })
+    if (!linksResult.ok || !linksResult.data.length) { setClients([]); setLoading(false); return }
+    const links = linksResult.data
 
     const clientIds = links.map(l => l.client_id)
-    const { data: profiles } = await supabase
-      .from('active_related_profiles')
-      .select('id, full_name, email, avatar_url, current_weight, calorie_goal')
-      .in('id', clientIds)
-      .limit(100)
+    const profilesResult = await relationRepository.listActiveRelatedProfiles(clientIds, { limit: 100 })
+    const profiles = profilesResult.ok ? profilesResult.data : []
 
-    const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+    const profileMap = Object.fromEntries(profiles.filter(p => p.id !== null).map(p => [p.id, p]))
     const rows: ClientRow[] = links.map(l => ({
-      id: l.id, client_id: l.client_id, created_at: l.created_at,
+      id: l.id, client_id: l.client_id, created_at: l.created_at ?? '',
       invited_by_coach: l.invited_by_coach ?? false,
       profiles: profileMap[l.client_id] ?? null,
     }))

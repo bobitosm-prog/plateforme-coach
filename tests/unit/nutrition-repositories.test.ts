@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseClient } from '../../lib/supabase/types'
 import {
-  ACTIVE_COACH_CLIENT_PROJECTION,
   ASSIGNED_MEAL_PLAN_PROJECTION,
   COMMUNITY_FOOD_PROJECTION,
   CUSTOM_FOOD_PROJECTION,
@@ -109,20 +108,20 @@ describe('Nutrition repositories', () => {
   it('checks the active coach/client relation before reading an assignment', async () => {
     const relation = { id: 'relation-id', coach_id: 'coach-id', client_id: 'client-id', status: 'active' }
     const assignment = { id: 'assignment-id', plan: { legacy: true } }
-    const mock = clientWithResults({ data: relation, error: null }, { data: assignment, error: null })
+    const mock = clientWithResults({ data: [relation], error: null }, { data: assignment, error: null })
     const result = await createNutritionPlanRepository(mock.client)
       .findLatestAssignmentForActiveCoachClient('coach-id', 'client-id')
 
     expect(result).toEqual({ ok: true, data: assignment })
     expect(callsFor(mock, 'select')).toEqual([
-      { table: 'coach_clients', args: [ACTIVE_COACH_CLIENT_PROJECTION] },
+      { table: 'coach_clients', args: ['id,coach_id,client_id,status,created_at,invited_by_coach'] },
       { table: 'client_meal_plans', args: [ASSIGNED_MEAL_PLAN_PROJECTION] },
     ])
     expect(mock.from.mock.calls.map(call => call[0])).toEqual(['coach_clients', 'client_meal_plans'])
   })
 
   it('stops before assignment lookup when no active relation exists', async () => {
-    const mock = clientWithResults({ data: null, error: null })
+    const mock = clientWithResults({ data: [], error: null })
     const result = await createNutritionPlanRepository(mock.client)
       .findLatestAssignmentForActiveCoachClient('coach-id', 'client-id')
     expect(result).toEqual({ ok: false, kind: 'not_found' })

@@ -10,6 +10,7 @@ import type { ProfileLoadStatus } from '@/lib/client-dashboard/profile-load-stat
 import type { SessionProfileLoader } from '@/lib/client-dashboard/session-profile-loader'
 import type { TrainingDashboardLoader } from '@/lib/client-dashboard/training-dashboard-loader'
 import type { NutritionMeasurementsLoader } from '@/lib/client-dashboard/nutrition-measurements-loader'
+import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 
 type ProfileRow = Tables<'profiles'>
 type WeeklyDiagnosticRow = Tables<'weekly_diagnostics'>
@@ -89,13 +90,13 @@ export function useClientDashboardData(options: UseClientDashboardDataOptions) {
   const coachOfProgramId = useRef<string | null>(null)
 
   async function resolveCoachLink(userId: string) {
-    const { data: coachLink } = await supabase.from('coach_clients').select('coach_id')
-      .eq('client_id', userId).eq('status', 'active').maybeSingle()
+    const coachLink = await createCoachClientRelationRepository(supabase).findActiveCoachForClient(userId)
     if (!mounted.current || activeUser.current !== userId) return
-    if (coachLink?.coach_id) {
-      setCoachId(coachLink.coach_id)
+    if (coachLink.ok) {
+      setCoachId(coachLink.data.coach_id)
       return
     }
+    if (coachLink.kind === 'failure') return
     const response = await fetch('/api/coach/default-assignment', { method: 'POST' })
     if (!mounted.current || activeUser.current !== userId) return
     if (!response.ok) return

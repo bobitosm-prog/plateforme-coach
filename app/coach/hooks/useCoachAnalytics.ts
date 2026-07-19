@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { computeStreak } from '../../../lib/streak'
+import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -61,36 +62,32 @@ export default function useCoachAnalytics(coachId: string | null) {
     setLoading(true)
 
     // 1. Fetch active relationships, then the explicit cross-profile projection.
-    const { data: coachClientsRaw, error: ccError } = await supabase
-      .from('coach_clients')
-      .select('client_id')
-      .eq('coach_id', coachId)
-      .eq('status', 'active')
-
-    if (ccError) {
-      console.warn('[useCoachAnalytics] coach_clients query error:', ccError.message)
+    const relationRepository = createCoachClientRelationRepository(supabase)
+    const relations = await relationRepository.listActiveClientsForCoach(coachId, { limit: 100 })
+    if (!relations.ok) {
+      console.warn('[useCoachAnalytics] active relations unavailable')
       setLoading(false)
       return
     }
-    if (!coachClientsRaw || coachClientsRaw.length === 0) {
+    if (relations.data.length === 0) {
       setClients([])
       setKpi({ totalClients: 0, totalActive: 0, totalDeclining: 0, totalInactive: 0, sessionsThisWeekTotal: 0 })
       setLoading(false)
       return
     }
 
-    const relatedClientIds = coachClientsRaw.map(cc => cc.client_id)
-    const { data: rawProfiles, error: profilesError } = await supabase
-      .from('active_related_profiles')
-      .select('id, full_name, email, avatar_url, subscription_type, created_at')
-      .in('id', relatedClientIds)
-
-    if (profilesError) {
-      console.warn('[useCoachAnalytics] related profiles query error:', profilesError.message)
+    const relatedClientIds = relations.data.map(relation => relation.client_id)
+    const profilesResult = await relationRepository.listActiveRelatedProfiles(relatedClientIds, { limit: 100 })
+    if (!profilesResult.ok) {
+      console.warn('[useCoachAnalytics] related profiles unavailable')
       setLoading(false)
       return
     }
-    const clientIds = (rawProfiles || []).map(profile => profile.id)
+    const rawProfiles = profilesResult.data.filter(
+      (profile): profile is typeof profile & { id: string; created_at: string } =>
+        typeof profile.id === 'string' && typeof profile.created_at === 'string',
+    )
+    const clientIds = rawProfiles.map(profile => profile.id)
 
     // 2-4. Fetch en parallèle : sessions 30j, weight 7j, meal tracking 7j
     const [sessionsRes, weightsRes, mealsRes] = await Promise.all([

@@ -8138,3 +8138,61 @@ Phase 5 — Écrire les E2E coach/client de caractérisation.
 ### Prochaine action unique
 
 Extraire le repository des relations coach/client.
+
+---
+
+## Entrée — 2026-07-19 — Repository des relations coach/client
+
+### Travail effectué
+
+- Création d'un repository read-only injecté pour les relations par paire, le
+  coach actif d'un client, les clients actifs d'un coach et la projection
+  `active_related_profiles`.
+- Ajout d'une détection fail-closed de relations actives multiples, malgré
+  l'index SQL qui impose déjà l'unicité, et d'un mapping d'erreurs expurgé via
+  `RepositoryResult`.
+- Migration des lectures représentatives des dashboards coach/client, des
+  analytics coach et du contrôle de relation Nutrition.
+- Réduction de l'inventaire direct hors repository de 11 fichiers/12 appels à
+  7 fichiers/7 appels, dont la mutation de déconnexion et six lecteurs legacy
+  explicitement documentés.
+
+### Tâche cochée
+
+- Phase 5 : « Extraire le repository des relations coach/client » — terminée.
+
+### Garanties préservées
+
+- L'identité provient toujours de la session ; un ID de paramètre borne la
+  requête mais n'accorde aucun droit.
+- La RLS conserve l'anti-énumération : relation absente et étrangère restent
+  indistinguables par `not_found`.
+- Aucun `createClient`, `service_role`, `select('*')`, import React/Next ou
+  mutation n'existe dans le repository.
+- Invitation, affectation par défaut, déconnexion, RPC et policies sont
+  inchangées. Les lecteurs Billing spécialisés restent inchangés.
+
+### Validations exécutées
+
+- Tests ciblés repository, consommateurs et gardes statiques : 7 fichiers,
+  45 tests verts et 3 `todo`; sous-ensemble repository : 7 tests verts.
+- Suite Vitest complète : 132 fichiers, 1 188 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` et vérification des types Supabase canoniques verts.
+- ESLint des nouveaux fichiers vert. Dette historique inchangée pour
+  `useCoachDashboard` : 21 erreurs et 6 avertissements avant/après; les deux
+  autres consommateurs migrés restent verts.
+- Reset local : 139/139 migrations, empreinte
+  `96e08867f266a1a36fa8f2b94ef78fc6`; matrice RLS et PostgREST vertes.
+- E2E coach/client : 4 tests verts en 41,1 s. E2E affectation du coach par
+  défaut : 1 test vert en 11,6 s.
+- Reset final local propre, liens documentaires et `git diff --check` verts;
+  staging vide.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés et
+  hors staging.
+
+### Prochaine action unique
+
+Extraire le module calendrier/appointments.

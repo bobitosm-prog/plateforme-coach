@@ -23,6 +23,16 @@ type RepositoryResult<T> =
 | Admin après autorisation serveur | profil/abonnement | webhook, cron ou administration contrôlée |
 | Admin | abonnement authority | mutation des quatre champs canoniques uniquement |
 
+## Relations coach/client
+
+Le contrat read-only est documenté dans
+[`COACH_CLIENT_RELATION_REPOSITORY.md`](COACH_CLIENT_RELATION_REPOSITORY.md).
+Il centralise les relations actives, la détection de conflit et la projection
+`active_related_profiles` pour les dashboards. L'identité reste établie par la
+session et la RLS ; les identifiants passés servent uniquement à borner la
+requête. Invitations, affectation par défaut et déconnexion restent dans leurs
+frontières d'autorité existantes.
+
 Injecter un client admin ne prouve aucune autorisation. L'appelant doit établir l'identité et le droit avant l'appel.
 
 ## Profil

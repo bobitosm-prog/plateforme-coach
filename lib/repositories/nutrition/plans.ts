@@ -1,15 +1,14 @@
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
+import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 
 export const PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,name,plan,active,created_at' as const
 export const ASSIGNED_MEAL_PLAN_PROJECTION = 'id,client_id,coach_id,plan,created_at,updated_at' as const
-export const ACTIVE_COACH_CLIENT_PROJECTION = 'id,coach_id,client_id,status' as const
 
 export type PersonalMealPlanRow = Pick<Tables<'meal_plans'>,
   'id' | 'user_id' | 'created_by' | 'name' | 'plan' | 'active' | 'created_at'>
 export type AssignedMealPlanRow = Pick<Tables<'client_meal_plans'>,
   'id' | 'client_id' | 'coach_id' | 'plan' | 'created_at' | 'updated_at'>
-export type ActiveCoachClientRow = Pick<Tables<'coach_clients'>, 'id' | 'coach_id' | 'client_id' | 'status'>
 
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 100
@@ -44,10 +43,8 @@ export function createNutritionPlanRepository(client: DatabaseClient) {
       coachUserId: string,
       clientUserId: string,
     ): Promise<RepositoryResult<AssignedMealPlanRow>> {
-      const { data: relation, error: relationError } = await client.from('coach_clients').select(ACTIVE_COACH_CLIENT_PROJECTION)
-        .eq('coach_id', coachUserId).eq('client_id', clientUserId).eq('status', 'active').maybeSingle()
-      if (relationError) return repositoryFailure(relationError)
-      if (!relation) return { ok: false, kind: 'not_found' }
+      const relation = await createCoachClientRelationRepository(client).findActiveBetween(coachUserId, clientUserId)
+      if (!relation.ok) return relation
 
       const { data, error } = await client.from('client_meal_plans').select(ASSIGNED_MEAL_PLAN_PROJECTION)
         .eq('coach_id', coachUserId).eq('client_id', clientUserId)
