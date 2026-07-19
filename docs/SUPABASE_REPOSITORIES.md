@@ -147,3 +147,16 @@ Les lectures Nutrition sont regroupées dans
 catalogues, aliments personnalisés, plans, affectations coach/client actives,
 journaux, recettes et repas sauvegardés. Elles restent read-only et ne sont pas
 encore branchées aux composants.
+
+## Messaging humain
+
+Le repository typé `lib/coaching/messaging/repository.ts` centralise les six
+accès nécessaires à `public.messages` : conversation bornée, delta polling,
+envoi, marquage lu, compteurs non lus et dernier message par contact. Le client
+Supabase est injecté, les projections sont explicites et l'auteur est toujours
+dérivé de `auth.getUser()`. L'envoi vérifie en plus la paire active via la RPC
+SQL sécurisée avant de laisser la RLS faire autorité.
+
+Les trois hooks humains n'accèdent plus directement à la table. Le service
+compose persistance et notification non transactionnelle; l'adaptateur realtime
+reste séparé du repository et valide chaque payload avant exposition.

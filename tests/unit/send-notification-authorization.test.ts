@@ -266,13 +266,15 @@ describe('POST /api/send-notification — internal URL policy and producer compa
       'app/client/[id]/hooks/useClientDetail.ts',
       'app/hooks/useMessages.ts',
       'app/coach/hooks/useCoachDashboard.ts',
+      'lib/coaching/messaging/service.ts',
       'lib/coaching/calendar/client-adapter.ts',
     ].map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
     expect(sources.match(/(?:fetch|fetcher)\('\/api\/send-notification'/g)).toHaveLength(4)
-    expect(sources).toContain('JSON.stringify({ userId: id,')
-    expect(sources).toContain('JSON.stringify({ userId: coachId,')
+    expect(sources).toContain("receiverId: id, content, imageUrl: imageUrl || null, title: 'Nouveau message'")
+    expect(sources).toContain("receiverId: coachId, content, imageUrl: imageUrl || null, title: 'Nouveau message client'")
     expect(sources).toContain('userId: input.clientUserId,')
-    expect(sources).toContain('JSON.stringify({ userId: selectedClient.client_id,')
+    expect(sources).toContain("receiverId: selectedClient.client_id, content, imageUrl: imageUrl || null, title: 'Nouveau message'")
+    expect(sources).toContain('userId: valid.data.receiverId')
   })
 
   it('keeps the weekly diagnostic and streak reminder on validated internal destinations', () => {

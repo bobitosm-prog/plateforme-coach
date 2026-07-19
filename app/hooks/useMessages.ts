@@ -1,6 +1,8 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { DatabaseClient } from '@/lib/supabase/types'
+import { createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
 
 interface UseMessagesParams {
   supabase: SupabaseClient
@@ -10,11 +12,30 @@ interface UseMessagesParams {
 }
 
 export default function useMessages({ supabase, userId, coachId, activeTab }: UseMessagesParams) {
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [msgInput, setMsgInput] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
   const msgEndRef = useRef<HTMLDivElement>(null)
   const lastMsgTimestampRef = useRef<string | null>(null)
+  const messaging = useMemo(() => createMessagingRepository(supabase as DatabaseClient), [supabase])
+  const realtime = useMemo(() => createSupabaseMessagingRealtime(supabase as DatabaseClient), [supabase])
+  const service = useMemo(() => createMessagingService(messaging, async input => {
+    await fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+  }), [messaging])
+  const activeTabRef = useRef(activeTab)
+  useEffect(() => { activeTabRef.current = activeTab }, [activeTab])
+  const loadMessages = useCallback(async (cId: string) => {
+    if (!userId || !cId) return
+    const result = await messaging.listConversation(cId, 50)
+    const data = result.ok ? result.data : []
+    setMessages(data)
+    setUnreadCount(data.filter(m => m.sender_id === cId && !m.read).length)
+  }, [messaging, userId])
+  const markMessagesRead = useCallback(async () => {
+    if (!userId || !coachId) return
+    await messaging.markRead(coachId)
+    setUnreadCount(0)
+  }, [coachId, messaging, userId])
 
   // Track latest real message timestamp
   useEffect(() => {
@@ -25,27 +46,23 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
   // Realtime + polling
   useEffect(() => {
     if (!userId || !coachId) return
-    loadMessages(coachId)
+    void Promise.resolve().then(() => loadMessages(coachId))
 
-    const channel = supabase
-      .channel(`messages-${userId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}` }, (payload: any) => {
-        setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), payload.new])
-        if (activeTab !== 'messages') setUnreadCount(prev => prev + 1)
-      })
-      .subscribe()
+    const stop = realtime.subscribeIncoming(userId, `messages-${userId}`, (message, event) => {
+      if (message.sender_id !== coachId) return
+      setMessages(prev => mergeMessages(prev, [message], event === 'INSERT'))
+      if (event === 'INSERT' && activeTabRef.current !== 'messages') setUnreadCount(prev => prev + 1)
+    })
 
     const pollId = setInterval(async () => {
       const since = lastMsgTimestampRef.current
       if (!since) return
-      const { data } = await supabase.from('messages').select('*')
-        .or(`and(sender_id.eq.${userId},receiver_id.eq.${coachId}),and(sender_id.eq.${coachId},receiver_id.eq.${userId})`)
-        .gt('created_at', since).order('created_at', { ascending: true }).limit(50)
-      if (data?.length) setMessages(prev => [...prev.filter(m => !String(m.id).startsWith('opt-')), ...data])
+      const result = await messaging.listSince(coachId, since, 50)
+      if (result.ok && result.data.length) setMessages(prev => mergeMessages(prev, result.data, true))
     }, 30000)
 
-    return () => { supabase.removeChannel(channel); clearInterval(pollId) }
-  }, [userId, coachId])
+    return () => { stop(); clearInterval(pollId) }
+  }, [userId, coachId, loadMessages, messaging, realtime])
 
   // Auto-scroll when messages change or tab switches to messages
   useEffect(() => {
@@ -54,34 +71,16 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
 
   // Mark messages read when viewing messages tab
   useEffect(() => {
-    if (activeTab === 'messages' && coachId) markMessagesRead()
-  }, [activeTab, coachId])
-
-  async function loadMessages(cId: string) {
-    if (!userId || !cId) return
-    const { data } = await supabase.from('messages').select('*')
-      .or(`and(sender_id.eq.${userId},receiver_id.eq.${cId}),and(sender_id.eq.${cId},receiver_id.eq.${userId})`)
-      .order('created_at', { ascending: true }).limit(50)
-    setMessages(data || [])
-    setUnreadCount((data || []).filter((m: any) => m.sender_id === cId && !m.read).length)
-  }
+    if (activeTab === 'messages' && coachId) void Promise.resolve().then(markMessagesRead)
+  }, [activeTab, coachId, markMessagesRead])
 
   async function sendMessage(imageUrl?: string | null) {
     if ((!msgInput.trim() && !imageUrl) || !coachId || !userId) return
     const content = msgInput.trim(); setMsgInput('')
     const optimistic = { id: `opt-${Date.now()}`, sender_id: userId, receiver_id: coachId, content, image_url: imageUrl || null, read: false, created_at: new Date().toISOString() }
     setMessages(prev => [...prev, optimistic])
-    const row: Record<string, unknown> = { sender_id: userId, receiver_id: coachId, content }
-    if (imageUrl) row.image_url = imageUrl
-    await supabase.from('messages').insert(row)
-    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: coachId, title: 'Nouveau message client', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/coach' }) }).catch(() => {})
+    await service.send({ receiverId: coachId, content, imageUrl: imageUrl || null, title: 'Nouveau message client', url: '/coach' })
     loadMessages(coachId)
-  }
-
-  async function markMessagesRead() {
-    if (!userId || !coachId) return
-    await supabase.from('messages').update({ read: true }).eq('receiver_id', userId).eq('sender_id', coachId).eq('read', false)
-    setUnreadCount(0)
   }
 
   return {

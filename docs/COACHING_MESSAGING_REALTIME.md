@@ -2,8 +2,9 @@
 
 ## Statut
 
-Le prérequis schéma/RLS est sécurisé. L'extraction reste ouverte : aucun
-consommateur n'a encore été migré et les compteurs realtime restent inchangés.
+Le module humain est extrait et les trois consommateurs sont migrés. Le chat
+Athena reste séparé. La tâche suivante sur reconnexion et nettoyage realtime
+approfondi demeure ouverte.
 
 ## Sources d'autorité et formats observés
 
@@ -47,9 +48,9 @@ casserait les chemins historiques. Son accès hérite de l'ownership du message.
 - polling client toutes les 30 secondes et coach toutes les 120 secondes ;
 - aucun typing, presence, conversation ID, curseur ou suppression UI observé.
 
-Les formes UI sont non typées (`any[]`) et la déduplication n'est pas uniforme :
-le dashboard coach déduplique les inserts realtime par `id`, tandis que
-`useMessages` et `useClientDetail` peuvent ajouter un événement déjà relu.
+Les états messages sont désormais typés. La frontière pure valide, déduplique
+par `id` et ordonne par `created_at`, puis `id`; les événements malformés ou
+étrangers sont ignorés avant mutation de l'état.
 
 ## Inventaire des accès avant extraction
 
@@ -61,9 +62,12 @@ le dashboard coach déduplique les inserts realtime par `id`, tandis que
 | nettoyages `removeChannel` | 5 | 3 hooks |
 | handlers `postgres_changes` | 7 | 3 hooks |
 
-La tranche n'ayant migré aucun consommateur, les compteurs après audit restent
-identiques. Ce choix évite de modifier le contrat visible avant résolution des
-blocages.
+Après extraction, ces compteurs sont tous à zéro dans les consommateurs. Les
+six accès directs nécessaires vivent dans le repository; les cinq instances de
+channel historiques sont créées par deux méthodes de l'adaptateur realtime.
+Les cinq subscriptions et nettoyages sont donc conservés au runtime, tandis que
+les trois handlers déclaratifs de l'adaptateur couvrent les sept handlers
+instanciés historiques.
 
 ## Channels et filtres actuels
 
@@ -119,13 +123,32 @@ Le contrat appliqué est :
 5. la matrice SQL dédiée et la preuve PostgREST JWT locale couvrent relations,
    rôles, colonnes immuables et grants.
 
-Le module `lib/coaching/messaging` peut maintenant centraliser
-modèle, schéma Zod, repository, service, port realtime et hook React sans
-inventer de contrat ni affaiblir la sécurité.
+## Architecture extraite
+
+- `types.ts`, `schema.ts` et `model.ts` portent le message canonique, la
+  validation stricte, l'appartenance à une paire, le tri et la déduplication ;
+- `repository.ts` injecte le client typé, dérive l'auteur via `auth.getUser()`,
+  emploie des projections explicites, borne les lectures et expurge les erreurs ;
+- `service.ts` valide contenu/image, insère avant notification et conserve le
+  message si la notification échoue ;
+- `realtime-port.ts` et `supabase-realtime.ts` isolent channels, filtres,
+  validation des payloads et arrêt idempotent ;
+- `controller.ts` formalise un setup/cleanup idempotent compatible Strict Mode.
+
+Les consommateurs migrés sont `useMessages`, `useCoachDashboard` et
+`useClientDetail`. Polling 30 s/120 s, optimistic UI, images, scroll, compteurs,
+read receipts, titres/corps/URLs de notification et contrats publics sont
+préservés.
+
+## Limites reportées
+
+La prochaine tranche doit tester les reconnexions réseau, cycles répétés,
+changements rapides d'identité/relation et absence de channels orphelins. Aucun
+protocole de retry, typing, presence ou conversation n'est introduit ici.
 
 ## Périmètre préservé
 
-- aucune route, donnée distante ou E2E modifiée ;
+- aucune route, migration, RLS, donnée distante ou E2E modifiée ;
 - aucun appel réseau externe ;
 - calendrier Coaching et chat Athena inchangés ;
 - notifications push inchangées ;

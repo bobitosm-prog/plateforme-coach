@@ -8362,3 +8362,45 @@ durcissement RLS, puis reprendre l'extraction messaging/realtime.
 - « Extraire le module messaging et realtime » reste volontairement ouverte;
   son prérequis schéma/RLS est maintenant levé.
 - Prochaine action : reprendre l'extraction du module messaging et realtime.
+
+---
+
+## Entrée — 2026-07-19 — Module messaging/realtime extrait
+
+### Travail effectué
+
+- Création de `lib/coaching/messaging` : types, Zod, modèle pur, repository
+  injecté, service, port/adaptateur realtime Supabase et contrôleur de cycle de
+  vie idempotent.
+- Migration bornée de `useMessages`, `useCoachDashboard` et `useClientDetail`.
+  Aucun accès direct à `public.messages` ni lifecycle de channel ne subsiste
+  dans ces consommateurs.
+- Auteur dérivé de `auth.getUser()`, paire active vérifiée avant insert, RLS
+  conservée comme autorité, projections explicites et erreurs expurgées.
+- Validation fail-closed des payloads realtime, filtrage de paire,
+  déduplication par ID et ordre `created_at + id`.
+
+### Mesures et comportements préservés
+
+- Accès directs consommateurs : 12 → 0.
+- Channels/subscriptions/removeChannel au runtime : 5/5/5 → 5/5/5 via
+  l'adaptateur; handlers instanciés : 7 → 7 via trois déclarations centrales.
+- Polling 30 s et 120 s, optimistic UI, `image_url`, scroll, compteurs non lus,
+  read receipts et contrats de notification sont préservés.
+- `chat_ai_messages`, calendrier, routes, migrations, RLS et E2E specs restent
+  inchangés.
+
+### Validations
+
+- Tests ciblés messaging/notifications : 6 fichiers, 56 tests verts.
+- Suite Vitest : 142 fichiers, 1 231 tests verts et 3 `todo`.
+- TypeScript, types Supabase et ESLint du module/`useMessages` verts.
+- Matrice SQL/RLS et preuves PostgREST messages vertes.
+- E2E coach/client : 4 scénarios verts; E2E push : 1 scénario vert.
+
+### Dette et prochaine action unique
+
+- Les gros hooks conservent leur dette ESLint historique hors messaging.
+- Les cycles approfondis de reconnexion, changements rapides et détection de
+  channels orphelins restent volontairement ouverts.
+- Prochaine tâche : « Tester abonnement, reconnexion et nettoyage realtime ».

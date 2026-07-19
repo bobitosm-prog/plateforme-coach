@@ -4,11 +4,18 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useExerciseInfo } from '../../../hooks/useExerciseInfo'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
+import type { DatabaseClient } from '@/lib/supabase/types'
+import { createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+const messaging = createMessagingRepository(supabase as DatabaseClient)
+const messagingRealtime = createSupabaseMessagingRealtime(supabase as DatabaseClient)
+const messagingService = createMessagingService(messaging, async input => {
+  await fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+})
 
 /* ══════════════════════════════════════════════════════════════
    TYPES
@@ -174,7 +181,7 @@ export default function useClientDetail() {
   const [activeTab,      setActiveTab]      = useState<'apercu'|'programme'|'progression'|'nutrition'|'notes'|'messages'>('apercu')
 
   // Coach messaging
-  const [coachMessages, setCoachMessages] = useState<any[]>([])
+  const [coachMessages, setCoachMessages] = useState<Message[]>([])
   const [coachMsgInput, setCoachMsgInput] = useState('')
 
   // AI Meal Plan Generator
@@ -517,29 +524,23 @@ export default function useClientDetail() {
   // Coach messaging
   const loadCoachMessages = useCallback(async () => {
     if (!coachId || !id) return
-    const { data } = await supabase.from('messages').select('*')
-      .or(`and(sender_id.eq.${coachId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${coachId})`)
-      .order('created_at', { ascending: true })
-      .limit(100)
-    setCoachMessages(data || [])
+    const result = await messaging.listConversation(id, 100)
+    setCoachMessages(result.ok ? result.data : [])
   }, [coachId, id])
 
   useEffect(() => {
     if (activeTab === 'messages') {
       loadCoachMessages()
-      supabase.from('messages').update({ read: true }).eq('sender_id', id).eq('receiver_id', coachId).eq('read', false)
+      void messaging.markRead(id)
     }
   }, [activeTab, loadCoachMessages])
 
   // Realtime for coach
   useEffect(() => {
     if (!coachId || !id) return
-    const channel = supabase.channel(`coach-msg-${id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${coachId}` }, (payload: any) => {
-        if (payload.new.sender_id === id) setCoachMessages(prev => [...prev, payload.new])
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return messagingRealtime.subscribeIncoming(coachId, `coach-msg-${id}`, (message, event) => {
+      if (message.sender_id === id) setCoachMessages(prev => mergeMessages(prev, [message], event === 'INSERT'))
+    })
   }, [coachId, id])
 
   async function sendCoachMessage(imageUrl?: string | null) {
@@ -547,10 +548,7 @@ export default function useClientDetail() {
     const content = coachMsgInput.trim(); setCoachMsgInput('')
     const optimistic = { id: `opt-${Date.now()}`, sender_id: coachId, receiver_id: id, content, image_url: imageUrl || null, read: false, created_at: new Date().toISOString() }
     setCoachMessages(prev => [...prev, optimistic])
-    const row: Record<string, unknown> = { sender_id: coachId, receiver_id: id, content }
-    if (imageUrl) row.image_url = imageUrl
-    await supabase.from('messages').insert(row)
-    fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, title: 'Nouveau message', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/' }) }).catch(() => {})
+    await messagingService.send({ receiverId: id, content, imageUrl: imageUrl || null, title: 'Nouveau message', url: '/' })
     loadCoachMessages()
   }
 

@@ -7,11 +7,18 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 import { createCalendarClientAdapter, type CoachAppointment } from '@/lib/coaching/calendar'
+import type { DatabaseClient } from '@/lib/supabase/types'
+import { belongsToPair, createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
+const messaging = createMessagingRepository(supabase as DatabaseClient)
+const messagingRealtime = createSupabaseMessagingRealtime(supabase as DatabaseClient)
+const messagingService = createMessagingService(messaging, async input => {
+  await fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+})
 
 /* ── Types ─────────────────────────────────────────────────── */
 
@@ -134,7 +141,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
   // Messaging state
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null)
-  const [chatMessages, setChatMessages]     = useState<any[]>([])
+  const [chatMessages, setChatMessages]     = useState<Message[]>([])
   const [msgInput, setMsgInput]             = useState('')
   const [unreadCounts, setUnreadCounts]     = useState<Record<string, number>>({})
   const [lastMessages, setLastMessages]   = useState<Map<string, { content: string; image_url: string | null; created_at: string }>>(new Map())
@@ -283,50 +290,20 @@ export default function useCoachDashboard(initialSession?: any) {
     const coachId = session.user.id
     const clientId = selectedClient.client_id
 
-    const handleMessage = (payload: any, type: 'INSERT' | 'UPDATE') => {
-      const m = payload.new
-      const isThisConv =
-        (m.sender_id === coachId && m.receiver_id === clientId) ||
-        (m.sender_id === clientId && m.receiver_id === coachId)
-      if (!isThisConv) return
-
-      if (type === 'INSERT') {
-        setChatMessages(prev => {
-          if (prev.some((x: any) => x.id === m.id)) return prev
-          return [...prev.filter((x: any) => !String(x.id).startsWith('opt-')), m]
-        })
-      } else {
-        setChatMessages(prev =>
-          prev.map((x: any) => x.id === m.id ? { ...x, ...m } : x)
-        )
-      }
+    const handleMessage = (message: Message, type: 'INSERT' | 'UPDATE') => {
+      if (!belongsToPair(message, coachId, clientId)) return
+      setChatMessages(prev => mergeMessages(prev, [message], type === 'INSERT'))
     }
 
     // Channel A : messages reçus par le coach (INSERT du client + UPDATE)
-    const channelIn = supabase
-      .channel(`coach-chat-in-${coachId}-${clientId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'INSERT'))
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'UPDATE'))
-      .subscribe()
+    const stopIn = messagingRealtime.subscribeIncoming(coachId, `coach-chat-in-${coachId}-${clientId}`, handleMessage)
 
     // Channel B : read receipts sur les messages envoyés par le coach
-    const channelOut = supabase
-      .channel(`coach-chat-out-${coachId}-${clientId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `sender_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'UPDATE'))
-      .subscribe()
+    const stopOut = messagingRealtime.subscribeOutgoingUpdates(coachId, `coach-chat-out-${coachId}-${clientId}`, (message) => handleMessage(message, 'UPDATE'))
 
     return () => {
-      supabase.removeChannel(channelIn)
-      supabase.removeChannel(channelOut)
+      stopIn()
+      stopOut()
     }
   }, [session?.user?.id, selectedClient?.client_id])
 
@@ -335,13 +312,8 @@ export default function useCoachDashboard(initialSession?: any) {
     if (!session?.user?.id) return
     const coachId = session.user.id
 
-    const channel = supabase
-      .channel(`coach-global-${coachId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (payload: any) => {
-        const m = payload.new
+    const stop = messagingRealtime.subscribeIncoming(coachId, `coach-global-${coachId}`, (m, event) => {
+      if (event === 'INSERT') {
         setLastMessages(prev => {
           const next = new Map(prev)
           next.set(m.sender_id, {
@@ -358,12 +330,7 @@ export default function useCoachDashboard(initialSession?: any) {
             [m.sender_id]: (prev[m.sender_id] || 0) + 1,
           }))
         }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (payload: any) => {
-        const m = payload.new
+      } else {
         if (m.read === true) {
           setUnreadCounts(prev => {
             const cur = prev[m.sender_id] || 0
@@ -371,19 +338,18 @@ export default function useCoachDashboard(initialSession?: any) {
             return { ...prev, [m.sender_id]: Math.max(0, cur - 1) }
           })
         }
-      })
-      .subscribe()
+      }
+    })
 
-    return () => { supabase.removeChannel(channel) }
+    return () => { stop() }
   }, [session?.user?.id])
 
   // Poll every 2min — fallback resync for unread counts + last messages
   useEffect(() => {
     if (!session?.user?.id) return
-    const coachId = session.user.id
     const id = setInterval(async () => {
       const clientIds = clientsRef.current.map(c => c.client_id)
-      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId) }
+      if (clientIds.length) { fetchUnreadCounts(clientIds); fetchLastMessages() }
     }, 120000)
     return () => clearInterval(id)
   }, [session?.user?.id])
@@ -451,8 +417,8 @@ export default function useCoachDashboard(initialSession?: any) {
     }))
     setClients(rows)
     setLoading(false)
-    fetchUnreadCounts(coachId, clientIds)
-    fetchLastMessages(coachId)
+    fetchUnreadCounts(clientIds)
+    fetchLastMessages()
     fetchAtRiskClients(rows)
 
     // Fetch completed sessions for all clients of this coach
@@ -507,36 +473,15 @@ export default function useCoachDashboard(initialSession?: any) {
     setAtRiskClients(results)
   }
 
-  async function fetchUnreadCounts(coachId: string, clientIds: string[]) {
+  async function fetchUnreadCounts(clientIds: string[]) {
     if (!clientIds.length) return
-    const { data } = await supabase
-      .from('messages')
-      .select('sender_id')
-      .eq('receiver_id', coachId)
-      .eq('read', false)
-      .in('sender_id', clientIds)
-      .limit(100)
-    const counts: Record<string, number> = {}
-    for (const msg of data || []) {
-      counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1
-    }
-    setUnreadCounts(counts)
+    const result = await messaging.listUnread(clientIds, 100)
+    if (result.ok) setUnreadCounts(result.data)
   }
 
-  async function fetchLastMessages(coachId: string) {
-    const { data } = await supabase
-      .from('messages')
-      .select('sender_id, receiver_id, content, image_url, created_at')
-      .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
-      .order('created_at', { ascending: false })
-      .limit(200)
-    const map = new Map<string, { content: string; image_url: string | null; created_at: string }>()
-    for (const msg of (data || [])) {
-      const other = msg.sender_id === coachId ? msg.receiver_id : msg.sender_id
-      if (!other || map.has(other)) continue
-      map.set(other, { content: msg.content || '', image_url: msg.image_url || null, created_at: msg.created_at })
-    }
-    setLastMessages(map)
+  async function fetchLastMessages() {
+    const result = await messaging.listLastByContact(200)
+    if (result.ok) setLastMessages(result.data)
   }
 
   async function fetchScheduledSessions(coachId: string, weekOffset = 0) {
@@ -593,27 +538,16 @@ export default function useCoachDashboard(initialSession?: any) {
     setSelectedSession(null)
   }
 
-  async function loadChat(clientId: string, coachId: string) {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`sender_id.eq.${coachId},receiver_id.eq.${coachId}`)
-      .or(`sender_id.eq.${clientId},receiver_id.eq.${clientId}`)
-      .order('created_at', { ascending: true })
-      .limit(100)
-    setChatMessages(data || [])
+  async function loadChat(clientId: string) {
+    const result = await messaging.listConversation(clientId, 100)
+    setChatMessages(result.ok ? result.data : [])
   }
 
   async function openChat(client: ClientRow) {
     setSelectedClient(client)
-    await loadChat(client.client_id, session.user.id)
+    await loadChat(client.client_id)
     // Mark messages from this client as read
-    await supabase
-      .from('messages')
-      .update({ read: true })
-      .eq('receiver_id', session.user.id)
-      .eq('sender_id', client.client_id)
-      .eq('read', false)
+    await messaging.markRead(client.client_id)
     setUnreadCounts(prev => ({ ...prev, [client.client_id]: 0 }))
   }
 
@@ -631,16 +565,9 @@ export default function useCoachDashboard(initialSession?: any) {
       created_at: new Date().toISOString(),
     }
     setChatMessages(prev => [...prev, optimistic])
-    const row: Record<string, unknown> = { sender_id: session.user.id, receiver_id: selectedClient.client_id, content }
-    if (imageUrl) row.image_url = imageUrl
-    await supabase.from('messages').insert(row)
-    fetch('/api/send-notification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: selectedClient.client_id, title: 'Nouveau message', body: imageUrl ? '📷 Photo' : content.slice(0, 80), url: '/' }),
-    }).catch(() => {})
+    await messagingService.send({ receiverId: selectedClient.client_id, content, imageUrl: imageUrl || null, title: 'Nouveau message', url: '/' })
     // Replace optimistic with real server row
-    loadChat(selectedClient.client_id, session.user.id)
+    loadChat(selectedClient.client_id)
   }
 
   // Food management functions
