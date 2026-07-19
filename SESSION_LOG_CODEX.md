@@ -8063,3 +8063,78 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Phase 5 — Écrire les E2E coach/client de caractérisation.
+
+---
+
+## Entrée — 2026-07-19 — E2E coach/client de caractérisation
+
+### Travail effectué
+
+- Ajout de deux parcours Playwright locaux : coach desktop et client mobile.
+- Ajout de fixtures uniques et déterministes couvrant coach, client actif,
+  second coach/client étrangers, client inactif et persona invité, avec un
+  programme, un poids, une complétion, un repas, une séance planifiée et un
+  message synthétiques.
+- Traversée réelle de Supabase Auth, PostgREST, RLS, `coach_clients`,
+  `active_related_profiles`, des dashboards et de `/client/[id]`, sans
+  interception Playwright ni fournisseur externe.
+- Ajout des commandes `test:e2e:coach-journey`,
+  `test:e2e:client-journey` et `test:e2e:coach-client`.
+- Documentation des frontières, refus, fixtures, nettoyages et limites dans
+  `docs/E2E_COACH_CLIENT_HARNESS.md`.
+
+### Tâche cochée
+
+- Phase 5 : « Écrire les E2E coach/client de caractérisation » — terminée.
+- Prochaine tâche ouverte : extraire le repository des relations coach/client.
+
+### Parcours et autorisations caractérisés
+
+- Coach lié : client visible, détail ouvert, six onglets représentatifs
+  navigables, données étrangères absentes et champs d'autorité non rendus.
+- Coach anonyme ou sans relation : accès direct protégé ou profil non visible.
+- Client lié : dashboard, Training, Nutrition, Compte, Profil, relation active
+  et rechargement de session.
+- Client inactif, client d'un autre coach et invité : aucune attribution du
+  coach fixture.
+- L'unicité de la relation active est imposée par
+  `coach_clients_one_active_per_client_idx`; aucune fixture invalide n'est
+  fabriquée pour contourner cet invariant.
+
+### Validations exécutées
+
+- Garde locale démontrée : URL distante et projet lié refusés avant reset.
+- Reset local : 139/139 migrations ; empreinte
+  `96e08867f266a1a36fa8f2b94ef78fc6` ; contrat vérifié.
+- Coach individuel : 2 tests verts en 20,3 s.
+- Client individuel : test principal vert en 12,0 s ; suite complète 2 tests
+  verte en 28,2 s.
+- Harnais combiné deux fois consécutivement : 4 tests verts en 42,5 s puis
+  38,8 s.
+- Vitest complet : 130 fichiers, 1 178 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit`, ESLint ciblé et `git diff --check` verts.
+- Reset final et audit : zéro compte, profil, relation, message, séance
+  planifiée ou donnée métier synthétique ; Mailpit vide ; ports temporaires
+  fermés ; staging vide.
+
+### Limites et dettes observées
+
+- Pour un profil non visible, `/client/[id]` affiche le message technique
+  legacy `Cannot coerce the result to a single JSON object` au lieu d'un
+  libellé produit ; le refus reste fail-closed.
+- Le profil client affiche le nom de coach fallback `Coach` malgré une relation
+  active ; le statut actif est correct.
+- Les lectures historiques de feedback renvoient localement 500 et
+  `default-assignment` 503 lorsque le coach par défaut global n'est pas seedé ;
+  ces erreurs préexistantes ne bloquent pas les parcours caractérisés.
+- Le harnais n'a pas été ajouté à la suite critique globale dans cette tranche
+  afin de ne pas élargir sa durée et son contrat sans décision dédiée.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus sont restés protégés,
+  intacts par cette tranche et hors staging.
+
+### Prochaine action unique
+
+Extraire le repository des relations coach/client.

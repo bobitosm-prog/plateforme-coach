@@ -103,7 +103,7 @@ git diff --check
 
 Le build peut nécessiter un environnement réseau approprié car `app/layout.tsx` utilise `next/font/google`. Une panne de téléchargement de police doit être déclarée comme blocage d'environnement, jamais présentée comme un build vert. La cible Phase 8 est d'auto-héberger les polices nécessaires.
 
-## 3. Les cinq parcours E2E actuels
+## 3. Les sept parcours E2E actuels
 
 | Parcours | Frontières réelles | Frontière simulée | Documentation |
 |---|---|---|---|
@@ -112,6 +112,8 @@ Le build peut nécessiter un environnement réseau approprié car `app/layout.ts
 | Checkout coach | Chromium, relation coach/client, route, persistance client Stripe et SDK Stripe | même frontière Stripe locale, y compris Connect/destination | [Checkouts](./E2E_CHECKOUT_HARNESS.md) |
 | Notification push | producteur coach, route, Auth/PostgREST/PostgreSQL, `web-push` et vrai service worker Chromium | terminaison Web Push HTTPS locale `55328`, contrôle `55329` | [Push](./E2E_PUSH_HARNESS.md) |
 | Chat Athena | Chromium mobile, `ChatAI`, route, Auth/PostgREST/PostgreSQL, profil, historique et persistance | endpoint Anthropic local strict `127.0.0.1:55330/v1/messages` | [Chat](./E2E_CHAT_HARNESS.md) |
+| Parcours coach | Chromium desktop, dashboard coach, relation active, détail client, Auth/PostgREST/RLS | aucune frontière externe | [Coach/client](./E2E_COACH_CLIENT_HARNESS.md) |
+| Parcours client | Chromium mobile, dashboard client, relation, navigation et rechargement | aucune frontière externe | [Coach/client](./E2E_COACH_CLIENT_HARNESS.md) |
 
 Un test n'est appelé **E2E MoovX** que si ses frontières principales — navigateur, interface, route, identité et persistance — sont réellement traversées. Intercepter `/api/*`, simuler Supabase Auth/PostgREST ou remplacer la persistance principale par un mock transforme le test en test de composant ou de route, même s'il utilise Playwright.
 
@@ -271,6 +273,7 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - [Harnais checkouts](./E2E_CHECKOUT_HARNESS.md)
 - [Harnais push](./E2E_PUSH_HARNESS.md)
 - [Harnais chat](./E2E_CHAT_HARNESS.md)
+- [Harnais coach/client](./E2E_COACH_CLIENT_HARNESS.md)
 - [Roadmap Codex](../ROADMAP_CODEX.md)
 - [Fixtures de personas](./TEST_FIXTURES.md)
 - [Mocks de fournisseurs Vitest](./TEST_PROVIDER_MOCKS.md)
