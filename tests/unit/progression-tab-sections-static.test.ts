@@ -24,10 +24,10 @@ describe('ProgressTab section architecture', () => {
 
   it('wires the current callbacks without data mutations in views', () => {
     expect(tab).toContain('onNavigate={scrollToSection}')
-    expect(tab).toContain('onPeriodChange={setWeightPeriod}')
-    expect(tab).toContain('onAddWeight={() => setShowWeight(true)}')
-    expect(tab).toContain('onLimitChange={setRecordsLimit}')
-    expect(tab).toContain('onAddMeasurement={() => setShowMeasure(true)}')
-    expect(sources).not.toMatch(/\.from\(|\.insert\(|\.update\(|\.delete\(/)
+    expect(tab).toContain('onPeriodChange={controller.setWeightPeriod}')
+    expect(tab).toContain('onAddWeight={() => controller.setShowWeight(true)}')
+    expect(tab).toContain('onLimitChange={controller.setRecordsLimit}')
+    expect(tab).toContain('onAddMeasurement={() => controller.setShowMeasure(true)}')
+    expect(sources).not.toMatch(/\.from\('|\.insert\(|\.update\(|\.delete\(/)
   })
 })

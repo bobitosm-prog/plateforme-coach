@@ -17,9 +17,10 @@ describe('progression read model architecture', () => {
   it('keeps public consumers delegated without changing their structure', () => {
     const hook = fs.readFileSync(path.join(process.cwd(), 'app/hooks/useAnalytics.ts'), 'utf8')
     const tab = fs.readFileSync(path.join(process.cwd(), 'app/components/tabs/ProgressTab.tsx'), 'utf8')
+    const controller = fs.readFileSync(path.join(process.cwd(), 'app/components/tabs/progression/useProgressTabController.ts'), 'utf8')
     expect(hook).toContain('createAnalyticsReadModel(createAnalyticsPort(supabase))')
     expect(hook).not.toContain("select('*')")
-    expect(tab).toContain('buildProgressionSummaryReadModel')
-    expect(tab).not.toContain('weeklyVolume.reduce((s, w) => s + w.volume, 0)')
+    expect(controller).toContain('buildProgressionSummaryReadModel')
+    expect(tab + controller).not.toContain('weeklyVolume.reduce((s, w) => s + w.volume, 0)')
   })
 })

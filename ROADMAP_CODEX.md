@@ -402,7 +402,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Créer les read models progression/analytics ([contrats](docs/PROGRESSION_READ_MODELS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [x] Découper `ProgressTab` par section ([architecture](docs/PROGRESSION_TAB_SECTIONS.md)) | 3 j | Élevée | Moyen | Élevé | Read models |
 | [x] Extraire les calculs d'`AnalyticsSection` ([contrats](docs/PROGRESSION_ANALYTICS_CALCULATIONS.md)) | 2 j | Moyenne | Moyen | Moyen | Agrégations pures |
-| [ ] Réduire `ProgressTab` sous 500 lignes | 1 j | Moyenne | Faible | Moyen | Extractions |
+| [x] Réduire `ProgressTab` sous 500 lignes ([architecture](docs/PROGRESSION_TAB_SECTIONS.md)) | 1 j | Moyenne | Faible | Moyen | Extractions |
 | [ ] Tester fuseaux horaires, semaines et unités | 2 j | Élevée | Faible | Élevé | Fonctions pures |
 
 ### Travaux parallélisables

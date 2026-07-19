@@ -7927,3 +7927,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire `ProgressTab` sous 500 lignes.
+
+---
+
+## Entrée — 2026-07-19 — Façade ProgressTab sous 500 lignes
+
+### Travail effectué
+
+- Réduction de `ProgressTab.tsx` de 998 à 72 lignes en conservant son export,
+  son contrat public et son rôle de façade.
+- Extraction des vues photos, analyse corporelle, bien-être, export, saisies
+  poids/mensurations et comparaison photo.
+- Extraction de la coordination historique dans `useProgressTabController` :
+  états, effets, transformations locales, export et mutations existantes.
+- Conservation dans la façade des refs de navigation et de composition des
+  sections, afin de ne pas exposer les refs pendant le rendu.
+- Ajout de gardes statiques de taille, d'imports interdits et d'accès aux
+  données, ainsi que de caractérisations par rendu serveur.
+
+### Tâche cochée
+
+- Phase 4 : « Réduire `ProgressTab` sous 500 lignes » — terminée.
+- Phase 4 : 14/17 → 15/17 tâches.
+
+### Mesures et dette
+
+- `ProgressTab.tsx` : 998 → 72 lignes.
+- Nouvelles frontières : photos 32, analyse corporelle 30, bien-être 42,
+  saisies 20, comparaison 24, export 8, contrôleur 85 et types 42 lignes.
+- Dette ESLint de la façade : 35 erreurs / 23 avertissements → 0 / 0.
+- Ensemble des nouvelles frontières : 0 erreur et 4 avertissements
+  `no-img-element`, hérités des images photo déjà rendues auparavant.
+
+### Garanties et limites
+
+- Aucun changement volontaire de contrat public, d'ordre des sections,
+  d'arrondi visible, de texte, de callback ou d'ordre d'écriture.
+- Aucun nouvel accès ou mutation Supabase ; les deux lectures wildcard
+  historiques de `body_analyses` et `daily_checkins` restent cantonnées au
+  contrôleur.
+- Les vues n'importent ni Supabase, ni repository, ni read model et ne mutent
+  aucune donnée.
+- Les statuts `partial`, `unavailable` et `failure` restent absents du contrat
+  public legacy ; cette dette n'est pas masquée par la présentation.
+- Aucun route, repository, migration, RLS, E2E, reset ou service distant n'a
+  été touché.
+
+### Validations exécutées
+
+- Tests ciblés Progression : 7 fichiers, 30 tests verts avant validation
+  complète.
+- Suite Vitest complète : 127 fichiers, 1 130 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint ciblé : 0 erreur ; 4 avertissements historiques `no-img-element`.
+- Gardes statiques : façade et frontières sous 500 lignes, vues sans accès
+  données, aucun nouvel `any`, `createClient`, `service_role` ou wildcard.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Tester fuseaux horaires, semaines et unités.
