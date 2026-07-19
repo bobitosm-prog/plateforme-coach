@@ -8196,3 +8196,76 @@ Extraire le repository des relations coach/client.
 ### Prochaine action unique
 
 Extraire le module calendrier/appointments.
+
+---
+
+## Entrée — 2026-07-19 — Module calendrier/appointments
+
+### Travail effectué
+
+- Création du module `lib/coaching/calendar` : types, validation Zod, modèle
+  temporel pur, repository injecté, service d'autorisation, port de
+  notification et adaptateur navigateur.
+- Migration des seuls consommateurs équivalents de `coach_appointments` :
+  semaine/création/suppression dans `useCoachDashboard` et prochains
+  rendez-vous dans `HomeTab`.
+- Conservation explicite de `scheduled_sessions` comme domaine Training
+  séparé ; ses cinq fichiers consommateurs et quatorze appels directs restent
+  inchangés.
+- Documentation des contrats, scopes, états réellement observés, fuseaux,
+  notification, limites et frontière Training dans
+  `docs/COACHING_CALENDAR_MODULE.md`.
+
+### Tâche cochée
+
+- Phase 5 : « Extraire le module calendrier/appointments » — terminée.
+
+### Garanties et mesures
+
+- Accès applicatifs directs à `coach_appointments` : 2 fichiers/4 appels avant,
+  0 fichier/0 appel après. Les cinq opérations Supabase sont centralisées dans
+  le repository avec projection explicite.
+- Identité coach/client issue de la session ; création et suppression coach
+  soumises à la relation active et à la RLS du client injecté.
+- Notification legacy préservée exactement (`/api/send-notification`, titre,
+  corps et URL) et toujours non bloquante après une insertion réussie.
+- États inconnus, fuseaux invalides et heures DST ambiguës/inexistantes sont
+  refusés ; périodes et listes sont bornées et triées de façon déterministe.
+- Aucun `createClient`, `service_role`, `select('*')`, import React/Next ou
+  message SQL brut dans le module.
+
+### Validations exécutées
+
+- Tests calendrier et consommateurs ciblés : 10 fichiers, 78 tests verts ;
+  noyau calendrier seul : 5 fichiers, 25 tests verts.
+- Suite Vitest complète : 137 fichiers, 1 213 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` et types Supabase canoniques verts.
+- ESLint du module et de ses tests vert. Dette combinée des deux consommateurs
+  migrés : 64 erreurs/49 avertissements avant, 62/49 après ; aucune nouvelle
+  dette, deux erreurs historiques supprimées par le typage du rendez-vous.
+- Reset Supabase local : 139/139 migrations, empreinte
+  `96e08867f266a1a36fa8f2b94ef78fc6`; matrice RLS/PostgREST existante verte.
+- E2E coach/client : 4 tests verts en 42,0 s.
+- Reset et vérification finaux verts ; Mailpit vide ; `git diff --check` et
+  liens documentaires verts ; staging vide.
+
+### Limites et dettes observées
+
+- La matrice RLS générique ne possède pas encore d'assertions dédiées à
+  `coach_appointments`; les deux policies historiques sont inchangées et les
+  tests repository/service couvrent leurs scopes attendus.
+- Pas de chevauchement, update, annulation logique, complétion, transaction
+  notification/insertion ou pagination au-delà des bornes actuelles.
+- La lecture client est maintenant bornée à 366 jours ; un rendez-vous au-delà
+  d'un an n'apparaîtrait pas dans la carte des prochains rendez-vous.
+- Les alertes E2E historiques sur feedback, affectation par défaut et
+  `getSession()` restent hors périmètre.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus sont restés protégés,
+  intacts par cette tranche et hors staging.
+
+### Prochaine action unique
+
+Extraire le module messaging et realtime.

@@ -266,11 +266,12 @@ describe('POST /api/send-notification — internal URL policy and producer compa
       'app/client/[id]/hooks/useClientDetail.ts',
       'app/hooks/useMessages.ts',
       'app/coach/hooks/useCoachDashboard.ts',
+      'lib/coaching/calendar/client-adapter.ts',
     ].map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
-    expect(sources.match(/fetch\('\/api\/send-notification'/g)).toHaveLength(4)
+    expect(sources.match(/(?:fetch|fetcher)\('\/api\/send-notification'/g)).toHaveLength(4)
     expect(sources).toContain('JSON.stringify({ userId: id,')
     expect(sources).toContain('JSON.stringify({ userId: coachId,')
-    expect(sources).toContain('JSON.stringify({ userId: nsClientId,')
+    expect(sources).toContain('userId: input.clientUserId,')
     expect(sources).toContain('JSON.stringify({ userId: selectedClient.client_id,')
   })
 

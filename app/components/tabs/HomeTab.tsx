@@ -36,6 +36,7 @@ import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
 import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
+import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
 
 /**
  * Get daily quote index — deterministic per day of year.
@@ -107,7 +108,7 @@ export default function HomeTab({
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
-  const [nextAppt, setNextAppt] = useState<any>(null)
+  const [nextAppt, setNextAppt] = useState<CoachAppointment | null>(null)
   const [apptCount, setApptCount] = useState(0)
   const [apptCoachName, setApptCoachName] = useState('votre coach')
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
@@ -412,19 +413,23 @@ export default function HomeTab({
   useEffect(() => {
     const uid = session?.user?.id
     if (!uid || !supabase) return
-    supabase.from('coach_appointments')
-      .select('*')
-      .eq('client_id', uid)
-      .gte('scheduled_at', new Date().toISOString())
-      .order('scheduled_at', { ascending: true })
-      .limit(10)
-      .then(async ({ data }: any) => {
-        if (data && data.length > 0) {
-          setNextAppt(data[0]); setApptCount(data.length)
-          const { data: coach } = await supabase.from('active_related_profiles').select('full_name').eq('id', data[0].coach_id).maybeSingle()
+    let active = true
+    const calendar = createCalendarClientAdapter(supabase, {
+      fetcher: fetch,
+      clock: { now: () => new Date() },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich',
+    })
+    void calendar.listUpcomingForActor({ userId: uid, role: 'client' }, { days: 366, limit: 10 })
+      .then(async result => {
+        if (!active) return
+        if (result.ok && result.data.length > 0) {
+          setNextAppt(result.data[0]); setApptCount(result.data.length)
+          const { data: coach } = await supabase.from('active_related_profiles').select('full_name').eq('id', result.data[0].coach_id).maybeSingle()
+          if (!active) return
           if (coach?.full_name) setApptCoachName(coach.full_name)
         } else { setNextAppt(null); setApptCount(0) }
       })
+    return () => { active = false }
   }, [session?.user?.id, supabase, homeRefreshKey])
 
   // Card title style from centralized design system

@@ -6,6 +6,7 @@ import { getRole } from '../../../lib/getRole'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
+import { createCalendarClientAdapter, type CoachAppointment } from '@/lib/coaching/calendar'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -29,18 +30,7 @@ export interface ClientRow {
   } | null
 }
 
-export interface ScheduledSession {
-  id: string
-  coach_id: string
-  client_id: string
-  scheduled_at: string
-  duration_minutes: number
-  session_type: string
-  notes: string | null
-  status: string
-  location: string | null
-  created_at: string
-}
+export type ScheduledSession = CoachAppointment
 
 /* ── Constants ─────────────────────────────────────────────── */
 
@@ -550,46 +540,37 @@ export default function useCoachDashboard(initialSession?: any) {
   }
 
   async function fetchScheduledSessions(coachId: string, weekOffset = 0) {
-    const days = getWeekDays(weekOffset)
-    const from = days[0]; from.setHours(0, 0, 0, 0)
-    const to   = days[6]; to.setHours(23, 59, 59, 999)
-    const { data, error } = await supabase
-      .from('coach_appointments')
-      .select('*')
-      .eq('coach_id', coachId)
-      .gte('scheduled_at', from.toISOString())
-      .lte('scheduled_at', to.toISOString())
-      .order('scheduled_at', { ascending: true })
-      .limit(100)
-    if (error) console.warn('[fetchScheduledSessions]', error.message)
-    setScheduledSessions(data ?? [])
+    const calendar = createCalendarClientAdapter(supabase, {
+      fetcher: fetch,
+      clock: { now: () => new Date() },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich',
+    })
+    const result = await calendar.listWeekForActor({ userId: coachId, role: 'coach' }, weekOffset, { limit: 100 })
+    if (!result.ok) console.warn('[fetchScheduledSessions] unavailable')
+    setScheduledSessions(result.ok ? result.data : [])
   }
 
   /* ── Handlers ──────────────────────────────────────────── */
 
   async function saveNewSession() {
     if (!session?.user?.id || !nsClientId || !nsDate) return
-    const start = new Date(`${nsDate}T${nsStartTime}:00`)
-    const end   = new Date(`${nsDate}T${nsEndTime}:00`)
-    const duration = Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000))
     setNsSaving('saving')
-    const { error } = await supabase.from('coach_appointments').insert({
-      client_id: nsClientId,
-      coach_id: session.user.id,
-      scheduled_at: start.toISOString(),
-      session_type: nsType,
-      duration_minutes: duration,
+    const calendar = createCalendarClientAdapter(supabase, {
+      fetcher: fetch,
+      clock: { now: () => new Date() },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich',
+    })
+    const result = await calendar.create({ userId: session.user.id, role: 'coach' }, {
+      clientUserId: nsClientId,
+      localDate: nsDate,
+      startTime: nsStartTime,
+      endTime: nsEndTime,
+      sessionType: nsType,
       location: nsLocation || null,
       notes: nsNotes || null,
-      status: 'scheduled',
     })
-    if (error) { console.error('[saveNewSession]', error); setNsSaving(''); return }
+    if (!result.ok) { console.error('[saveNewSession] unavailable'); setNsSaving(''); return }
     setNsSaving('done')
-    fetch('/api/send-notification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: nsClientId, title: 'Nouvelle séance planifiée', body: `${nsType} · ${nsDate} à ${nsStartTime}`, url: '/' }),
-    }).catch(() => {})
     await fetchScheduledSessions(session.user.id, calWeekOffset)
     setTimeout(() => {
       setShowNewSession(false)
@@ -600,8 +581,14 @@ export default function useCoachDashboard(initialSession?: any) {
   }
 
   async function deleteSession(id: string) {
-    const { error } = await supabase.from('coach_appointments').delete().eq('id', id)
-    if (error) { console.error('[deleteSession]', error); return }
+    if (!session?.user?.id) return
+    const calendar = createCalendarClientAdapter(supabase, {
+      fetcher: fetch,
+      clock: { now: () => new Date() },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich',
+    })
+    const result = await calendar.delete({ userId: session.user.id, role: 'coach' }, id)
+    if (!result.ok) { console.error('[deleteSession] unavailable'); return }
     if (session?.user?.id) await fetchScheduledSessions(session.user.id, calWeekOffset)
     setSelectedSession(null)
   }

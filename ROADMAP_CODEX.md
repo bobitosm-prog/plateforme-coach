@@ -433,7 +433,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 |---|---:|---|---|---|---|
 | [x] [Écrire les E2E coach/client de caractérisation](docs/E2E_COACH_CLIENT_HARNESS.md) | 2,5 j | Élevée | Faible | Critique | Phase 2 |
 | [x] [Extraire le repository des relations coach/client](docs/COACH_CLIENT_RELATION_REPOSITORY.md) | 2 j | Élevée | Moyen | Critique | Identité centralisée |
-| [ ] Extraire le module calendrier/appointments | 2,5 j | Élevée | Moyen | Élevé | Repository relations |
+| [x] [Extraire le module calendrier/appointments](docs/COACHING_CALENDAR_MODULE.md) | 2,5 j | Élevée | Moyen | Élevé | Repository relations |
 | [ ] Extraire le module messaging et realtime | 3 j | Élevée | Élevé | Critique | Contrats notifications |
 | [ ] Tester abonnement, reconnexion et nettoyage realtime | 2 j | Élevée | Faible | Élevé | Module messaging |
 | [ ] Extraire clients, programmes, revenus et analytics de `useCoachDashboard` | 5 j | Élevée | Élevé | Élevé | Domaines précédents |

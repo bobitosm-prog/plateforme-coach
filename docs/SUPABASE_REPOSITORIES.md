@@ -35,6 +35,18 @@ frontières d'autorité existantes.
 
 Injecter un client admin ne prouve aucune autorisation. L'appelant doit établir l'identité et le droit avant l'appel.
 
+## Calendrier Coaching
+
+Le module [`COACHING_CALENDAR_MODULE.md`](COACHING_CALENDAR_MODULE.md) compose
+un repository `coach_appointments`, le repository de relations actives, un
+service métier et un adaptateur navigateur étroit. Les projections, scopes
+coach/client, bornes, tri et erreurs expurgées sont centralisés. Les mutations
+création/suppression restent exécutées avec le client de session et exigent un
+coach activement lié au client ; aucun client privilégié n'est créé.
+
+`scheduled_sessions` reste un domaine Training séparé. Aucun de ses cinq
+consommateurs applicatifs/ports n'a été migré ou modifié par cette extraction.
+
 ## Profil
 
 `createProfileRepository(client)` expose `findById`, `findCurrent`, `findActiveRelatedById` et `updateSafe`.
