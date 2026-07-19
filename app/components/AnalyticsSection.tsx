@@ -15,6 +15,7 @@ import { colors, fonts } from '../../lib/design-tokens'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
 import { useHasSize, SizedContainer } from './ui/SizedChart'
+import { estimatedOneRepMax, percentageChangeLegacy } from '../../lib/progression'
 
 const LIGHT_BLUE = '#7DD3FC'
 
@@ -92,7 +93,9 @@ export default function AnalyticsSection({
         if (!name) continue
         const date = (s.created_at || sess.created_at || '').slice(0, 10)
         if (!date) continue
-        const e1rm = Math.round(s.weight * (1 + s.reps / 30) * 10) / 10
+        const estimate = estimatedOneRepMax(s.weight, s.reps)
+        if (estimate.status !== 'complete') continue
+        const e1rm = estimate.value
         if (!map[name]) map[name] = new Map()
         const prev = map[name].get(date)
         if (!prev || e1rm > prev.e1rm) map[name].set(date, { e1rm, weight: s.weight, reps: s.reps })
@@ -227,11 +230,8 @@ export default function AnalyticsSection({
   }, [weightHistoryFull])
 
   const volumeChange = useMemo(() => {
-    if (weeklyVolume.length < 2) return null
-    const last = weeklyVolume[weeklyVolume.length - 1].volume
-    const prev = weeklyVolume[weeklyVolume.length - 2].volume
-    if (prev === 0) return null
-    return Math.round(((last - prev) / prev) * 100)
+    const result = percentageChangeLegacy(weeklyVolume.map(item => item.volume))
+    return result.status === 'complete' ? result.value : null
   }, [weeklyVolume])
 
   const monthPRs = useMemo(() => {

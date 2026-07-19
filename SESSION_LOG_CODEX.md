@@ -7687,3 +7687,61 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les fonctions d'agrégation pures.
+
+---
+
+## Entrée — 2026-07-19 — Agrégations pures de progression
+
+### Travail effectué
+
+- Création de `lib/progression/`, noyau pur couvrant périodes calendaires,
+  séries/tonnage/durée, regroupement par exercice, poids/mensurations, records,
+  régularité, Nutrition et eau.
+- Résultats `complete`, `partial`, `unavailable` et `invalid`, collections
+  immuables, ordre déterministe, timezone et horloge explicites.
+- Conservation séparée des stratégies legacy de tonnage, variation et streak
+  coach ; aucune fusion de `workout_sessions`, `completed_sessions` ou
+  `scheduled_sessions`.
+- Migration représentative et équivalente des calculs e1RM et variation de
+  volume d'`AnalyticsSection`, sans modifier ses lectures ni son contrat.
+- Ajout de fixtures fixes, de tests par domaine, de gardes de pureté et d'une
+  documentation reliant le noyau au catalogue des 39 métriques.
+
+### Tâche cochée
+
+- Phase 4 : « Extraire les fonctions d'agrégation pures » — terminée.
+- Phase 4 : 10/17 → 11/17 tâches.
+
+### Garanties et limites
+
+- Aucun nouvel accès Supabase, repository, read model, route, schéma, RLS ou
+  E2E ; aucune donnée distante consultée ou modifiée.
+- Inconnu et zéro restent distincts ; aucune conversion d'unité implicite.
+- Les métriques IA/non reproductibles et les divergences de sources, fenêtres
+  et plafonds restent documentées, sans normalisation silencieuse.
+- La dette ESLint historique d'`AnalyticsSection` demeure inchangée : 8 erreurs
+  et 9 avertissements ; les nouveaux modules et tests sont propres.
+
+### Validations exécutées
+
+- Tests progression ciblés : 5 fichiers, 29 tests verts.
+- Tests ciblés progression/Training/Nutrition : 8 fichiers, 113 tests verts.
+- Suite Vitest complète : 119 fichiers, 1 095 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert après extraction.
+- ESLint du noyau, fixtures et tests : vert ; dette historique du consommateur
+  mesurée séparément.
+- Garde statique : aucun import React, Next, Supabase, navigateur, stockage ou
+  réseau ; aucun `any`, `select('*')` ou `Date.now()` caché.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Créer les read models progression/analytics.
