@@ -2,11 +2,8 @@
 
 ## Statut
 
-L'extraction est **bloquée avant migration des consommateurs**. Le contrat UI
-et le schéma Supabase canonique divergent, tandis que les policies ne bornent
-pas les conversations à une relation coach/client active. Aucun contournement
-applicatif, cast de type ou projection fictive n'est introduit dans cette
-tranche.
+Le prérequis schéma/RLS est sécurisé. L'extraction reste ouverte : aucun
+consommateur n'a encore été migré et les compteurs realtime restent inchangés.
 
 ## Sources d'autorité et formats observés
 
@@ -23,6 +20,7 @@ Le schéma canonique local et `lib/supabase/database.types.ts` exposent :
 | `content` | texte non nul | corps du message |
 | `read` | booléen non nul | accusé de lecture |
 | `created_at` | timestamptz non nul | ordre temporel |
+| `image_url` | texte nullable | chemin d'objet storage historique |
 
 Les trois consommateurs UI utilisent en plus `image_url` :
 
@@ -32,8 +30,9 @@ Les trois consommateurs UI utilisent en plus `image_url` :
 
 Ils ajoutent `image_url` aux inserts, le lisent depuis `select('*')`, construisent
 des messages optimistes avec ce champ et affichent une image de message. Cette
-colonne n'existe dans aucune des 139 migrations et n'apparaît pas dans le type
-`messages`. Une projection typée fidèle est donc impossible sans migration.
+colonne est désormais canonisée par la migration additive
+`20260719160000_secure_messages.sql`, sans réécriture ni validation d'URL qui
+casserait les chemins historiques. Son accès hérite de l'ownership du message.
 
 ## Contrats UI actuels
 
@@ -88,7 +87,7 @@ Chaque effet appelle `removeChannel` au nettoyage. L'idempotence Strict Mode,
 la reconnexion et les channels orphelins doivent être testés dans la tâche
 roadmap suivante, après extraction effective.
 
-## Autorisation et blocage RLS
+## Autorisation historique avant durcissement
 
 Les migrations installent sept policies effectives, dont plusieurs doublons.
 Elles vérifient uniquement que `auth.uid()` est auteur ou destinataire. Elles ne
@@ -106,27 +105,27 @@ service client améliorerait les producteurs migrés, mais ne supprimerait pas
 l'autorité directe existante ni ne satisferait la défense en profondeur
 attendue.
 
-## Correction préalable minimale proposée
+## Correction préalable appliquée
 
-Une tranche SQL/RLS séparée, explicitement autorisée, doit :
+Le contrat appliqué est :
 
-1. décider si les images de messages sont un contrat produit supporté ;
-2. si oui, ajouter et typer `messages.image_url` avec validation de chemin ;
-   sinon retirer ce contrat UI dans une migration produit dédiée ;
-3. remplacer les policies doublonnées par des policies SELECT/INSERT/UPDATE
-   fondées sur une relation `coach_clients` active et les rôles compatibles ;
-4. révoquer DELETE/TRUNCATE et les grants inutiles aux rôles navigateur ;
-5. ajouter une matrice RLS/PostgREST dédiée : actif, inactif, étranger,
-   client→client, coach→coach, invited et anonyme ;
-6. régénérer puis vérifier les types Supabase.
+1. trois policies séparées SELECT/INSERT/UPDATE, sans `FOR ALL`, exigent une
+   paire coach/client activement liée ;
+2. INSERT impose l'auteur authentifié et refuse les rôles incompatibles et les
+   clients `invited` ;
+3. UPDATE est limité au destinataire, à `read` et au passage `false → true` ;
+4. `anon` n'a aucun grant, `authenticated` aucun DELETE, et `service_role`
+   conserve ses opérations serveur ;
+5. la matrice SQL dédiée et la preuve PostgREST JWT locale couvrent relations,
+   rôles, colonnes immuables et grants.
 
-Après cette correction, le module `lib/coaching/messaging` pourra centraliser
+Le module `lib/coaching/messaging` peut maintenant centraliser
 modèle, schéma Zod, repository, service, port realtime et hook React sans
 inventer de contrat ni affaiblir la sécurité.
 
 ## Périmètre préservé
 
-- aucune migration, policy, route, donnée distante ou E2E modifiée ;
+- aucune route, donnée distante ou E2E modifiée ;
 - aucun appel réseau externe ;
 - calendrier Coaching et chat Athena inchangés ;
 - notifications push inchangées ;

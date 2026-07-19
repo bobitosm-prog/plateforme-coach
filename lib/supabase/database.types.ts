@@ -1351,6 +1351,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           read: boolean
           receiver_id: string
           sender_id: string
@@ -1359,6 +1360,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           read?: boolean
           receiver_id: string
           sender_id: string
@@ -1367,6 +1369,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           read?: boolean
           receiver_id?: string
           sender_id?: string
@@ -2514,6 +2517,10 @@ export type Database = {
       get_workout_session_summary: {
         Args: { exclude_session_id?: string; target_user_id: string }
         Returns: Json
+      }
+      is_active_messaging_pair: {
+        Args: { p_receiver_id: string; p_sender_id: string }
+        Returns: boolean
       }
       set_initial_trial: { Args: { p_days?: number }; Returns: Json }
       set_role: { Args: { p_role: string }; Returns: Json }

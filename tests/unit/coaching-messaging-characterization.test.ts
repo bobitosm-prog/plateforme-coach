@@ -8,6 +8,7 @@ const consumers = [clientHook, coachDashboard, clientDetail].join('\n')
 const generatedTypes = readFileSync('lib/supabase/database.types.ts', 'utf8')
 const initialMigration = readFileSync('supabase/migrations/20260318_messages.sql', 'utf8')
 const coachPolicyMigration = readFileSync('supabase/migrations/20260419_messages_coach_rls.sql', 'utf8')
+const secureMigration = readFileSync('supabase/migrations/20260719160000_secure_messages.sql', 'utf8')
 
 function messageTypeBlock(): string {
   const start = generatedTypes.indexOf('      messages: {')
@@ -21,8 +22,9 @@ describe('coaching messaging extraction blockers', () => {
     for (const field of ['id:', 'sender_id:', 'receiver_id:', 'content:', 'read:', 'created_at:']) {
       expect(block).toContain(field)
     }
-    expect(block).not.toContain('image_url:')
+    expect(block).toContain('image_url:')
     expect(initialMigration).not.toContain('image_url')
+    expect(secureMigration).toContain('ADD COLUMN IF NOT EXISTS image_url text')
   })
 
   it('proves that the current UI nevertheless treats image_url as persisted', () => {
@@ -40,13 +42,19 @@ describe('coaching messaging extraction blockers', () => {
     expect(consumers.match(/postgres_changes/g)).toHaveLength(7)
   })
 
-  it('characterizes policies as actor-scoped but not active-relation-scoped', () => {
+  it('replaces actor-only policies with three active-relation-scoped operations', () => {
     const policies = `${initialMigration}\n${coachPolicyMigration}`
     expect(policies).toContain('sender_id = auth.uid()')
     expect(policies).toContain('receiver_id = auth.uid()')
     expect(policies).not.toContain('coach_clients')
     expect(policies).not.toContain("status = 'active'")
     expect(coachPolicyMigration).toContain('FOR ALL')
+    expect(secureMigration).toContain('DROP POLICY IF EXISTS "messages_coach_rw"')
+    expect(secureMigration.match(/CREATE POLICY messages_/g)).toHaveLength(3)
+    expect(secureMigration).toContain("relation.status = 'active'")
+    expect(secureMigration).not.toContain('\nFOR ALL\n')
+    expect(secureMigration).toContain('GRANT UPDATE (read)')
+    expect(secureMigration).toContain('REVOKE ALL ON TABLE public.messages FROM anon, authenticated')
   })
 
   it('preserves bounded ordering, read receipts and notification-after-insert', () => {

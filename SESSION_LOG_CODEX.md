@@ -8323,3 +8323,42 @@ Extraire le module messaging et realtime.
 
 Autoriser une tranche séparée de correction du schéma `messages` et de
 durcissement RLS, puis reprendre l'extraction messaging/realtime.
+
+---
+
+## Entrée — 2026-07-19 — Schéma et RLS `messages` sécurisés
+
+### Travail effectué
+
+- Ajout additif de `messages.image_url text NULL`, conforme aux chemins storage
+  déjà produits par les trois interfaces, sans réécriture de données.
+- Suppression des sept policies historiques et création de trois policies
+  SELECT/INSERT/UPDATE exigeant une relation `coach_clients` active, une paire
+  coach/client compatible et un participant authentifié.
+- Grants navigateur réduits à SELECT, INSERT et UPDATE de la seule colonne
+  `read`; DELETE et mutation des colonnes de contenu/identité refusés.
+- Ajout d'une matrice SQL dédiée et d'une preuve PostgREST avec JWT locaux;
+  types Supabase régénérés depuis 140 migrations.
+
+### Contrat et validations
+
+- Le destinataire actif peut uniquement passer `read` de faux à vrai. Le helper
+  SECURITY DEFINER est booléen, à `search_path` vide et inaccessible à anon.
+- Reset local vert : 140/140 migrations; empreinte
+  `07fd93ad1995b031822be222179c83bc`.
+- Matrice RLS existante, 30 assertions SQL messages et sept preuves PostgREST
+  messages vertes. Aucune fixture persistante après rollback/finally.
+- Tests ciblés : 46 verts; suite Vitest : 138 fichiers, 1 218 tests verts et
+  3 `todo`; TypeScript, ESLint ciblé et types Supabase verts.
+- E2E coach/client : 4 scénarios verts; E2E push : 1 scénario vert. Les alertes
+  historiques feedback/assignment et `getSession()` restent hors périmètre.
+- Vérification locale finale verte; Auth, profiles, relations et messages à
+  zéro, Mailpit vide, liens documentaires et `git diff --check` verts.
+- Les consommateurs, channels realtime, notifications, `chat_ai_messages`,
+  routes, migrations historiques et données distantes restent inchangés.
+
+### État roadmap et prochaine action unique
+
+- « Extraire le module messaging et realtime » reste volontairement ouverte;
+  son prérequis schéma/RLS est maintenant levé.
+- Prochaine action : reprendre l'extraction du module messaging et realtime.

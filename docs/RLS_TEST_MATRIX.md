@@ -1,6 +1,6 @@
 # Matrices RLS automatisées — Phase 2
 
-> État observé sur les 139 migrations locales au 14 juillet 2026. Les matrices utilisent uniquement Supabase local. Quatre migrations additives corrigent désormais les accès critiques révélés par la matrice : `payments`, `coach_clients`, le garde des colonnes sensibles et la visibilité relationnelle de `profiles`.
+> État observé sur les 140 migrations locales au 19 juillet 2026. Les matrices utilisent uniquement Supabase local et couvrent désormais aussi la messagerie coach/client.
 
 ## Exécution et frontières
 
@@ -28,6 +28,12 @@ Le service-role sert à préparer et nettoyer la preuve PostgREST, et trois asse
 | `coach_invitations` | activée et forcée | coach propriétaire SELECT/INSERT/revoke UPDATE | grants par colonnes; aucun grant anon; consommation uniquement via RPC SECURITY DEFINER authentifiée |
 | `push_subscriptions` | activée, non forcée | propriétaire ALL, policy historique dupliquée | `user_id = auth.uid()` en USING et WITH CHECK |
 | `payments` | activée, non forcée | client propriétaire SELECT; coach SELECT avec relation active | aucune policy de mutation; aucun grant de mutation à `authenticated`; écritures service-role/RPC serveur uniquement |
+| `messages` | activée, non forcée | SELECT, INSERT et UPDATE séparées | paire active obligatoire; UPDATE limité à `read`; aucun DELETE navigateur |
+
+`tests/integration/messages-rls.sql` ajoute 30 assertions SQL sur le catalogue,
+les rôles, les relations, les colonnes immuables et le service-role. Le runner
+ajoute sept preuves PostgREST avec JWT locaux et nettoie ses fixtures en
+`finally`.
 
 Les tables historiques possèdent encore des grants larges hérités du bootstrap; la RLS reste donc la barrière effective. `coach_invitations` est l'exception : grants par colonnes et RLS forcée.
 

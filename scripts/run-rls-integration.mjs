@@ -17,6 +17,7 @@ const url = new URL(apiUrl)
 if (!['127.0.0.1', 'localhost'].includes(url.hostname) || !anonKey || !serviceKey) throw new Error('RLS integration requires canonical local Supabase credentials')
 
 run('psql', ['postgresql://postgres:postgres@127.0.0.1:55322/postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-f', 'tests/integration/rls-matrix.sql'])
+run('psql', ['postgresql://postgres:postgres@127.0.0.1:55322/postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-f', 'tests/integration/messages-rls.sql'])
 
 const admin = createClient(apiUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 const clientEmail = `rls-postgrest-client-${process.pid}@moovx.example.test`
@@ -56,6 +57,10 @@ try {
   if (!clientWrite.error) throw new Error('PostgREST authenticated payment insert unexpectedly succeeded')
   const clientRelationWrite = await clientBrowser.from('coach_clients').insert({ client_id: clientId, coach_id: coachId, status: 'active' })
   if (!clientRelationWrite.error) throw new Error('PostgREST client relationship insert unexpectedly succeeded')
+  const clientMessage = await clientBrowser.from('messages').insert({ sender_id: clientId, receiver_id: coachId, content: 'PostgREST client message', image_url: 'messages/postgrest.jpg' }).select('id').single()
+  if (clientMessage.error || !clientMessage.data?.id) throw clientMessage.error || new Error('PostgREST active client message insert failed')
+  const arbitraryMessage = await clientBrowser.from('messages').insert({ sender_id: clientId, receiver_id: userIds[0], content: 'invalid self message' })
+  if (!arbitraryMessage.error) throw new Error('PostgREST arbitrary message receiver unexpectedly succeeded')
 
   const coachBrowser = createClient(apiUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const coachSigned = await coachBrowser.auth.signInWithPassword({ email: coachEmail, password })
@@ -70,6 +75,16 @@ try {
   if (coachClientUpdate.error || coachClientUpdate.data?.calorie_goal !== 2460) throw coachClientUpdate.error || new Error('PostgREST active coach safe client update failed')
   const coachRelationWrite = await coachBrowser.from('coach_clients').insert({ client_id: clientId, coach_id: coachId, status: 'active' })
   if (!coachRelationWrite.error) throw new Error('PostgREST coach relationship insert unexpectedly succeeded')
+  const coachMessages = await coachBrowser.from('messages').select('id,sender_id,receiver_id,content,image_url').eq('id', clientMessage.data.id).single()
+  if (coachMessages.error || coachMessages.data?.sender_id !== clientId) throw coachMessages.error || new Error('PostgREST active coach message read failed')
+  const coachMessage = await coachBrowser.from('messages').insert({ sender_id: coachId, receiver_id: clientId, content: 'PostgREST coach message' }).select('id').single()
+  if (coachMessage.error || !coachMessage.data?.id) throw coachMessage.error || new Error('PostgREST active coach message insert failed')
+  const markedRead = await clientBrowser.from('messages').update({ read: true }).eq('id', coachMessage.data.id).select('id,read').single()
+  if (markedRead.error || markedRead.data?.read !== true) throw markedRead.error || new Error('PostgREST recipient mark-read failed')
+  const contentMutation = await clientBrowser.from('messages').update({ content: 'forged' }).eq('id', coachMessage.data.id)
+  if (!contentMutation.error) throw new Error('PostgREST immutable message content update unexpectedly succeeded')
+  const clientDelete = await clientBrowser.from('messages').delete().eq('id', coachMessage.data.id)
+  if (!clientDelete.error) throw new Error('PostgREST authenticated message delete unexpectedly succeeded')
   const deactivated = await admin.from('coach_clients').update({ status: 'inactive' }).eq('client_id', clientId).eq('coach_id', coachId)
   if (deactivated.error) throw deactivated.error
   const inactiveRead = await coachBrowser.from('payments').select('id')
@@ -80,9 +95,10 @@ try {
   if (inactiveClientProfile.error || inactiveClientProfile.data?.length !== 0) throw inactiveClientProfile.error || new Error('PostgREST inactive coach retained projected client access')
   const inactiveClientUpdate = await coachBrowser.rpc('update_active_client_profile', { target_client_id: clientId, changes: { calorie_goal: 2470 } })
   if (!inactiveClientUpdate.error) throw new Error('PostgREST inactive coach retained client update access')
-  console.log('RLS_POSTGREST_OK [profiles/own-safe-update/sensitive-denied/related-projection/authority-excluded/active-symmetric/inactive-denied; payments/client-read/auth-write-denied; coach-clients/auth-write-denied]')
+  console.log('RLS_POSTGREST_OK [profiles/own-safe-update/sensitive-denied/related-projection/authority-excluded/active-symmetric/inactive-denied; payments/client-read/auth-write-denied; coach-clients/auth-write-denied; messages/active-read-bidirectional-insert/mark-read/foreign-update-delete-denied]')
 } finally {
   if (userIds.length) {
+    await admin.from('messages').delete().or(`sender_id.in.(${userIds.join(',')}),receiver_id.in.(${userIds.join(',')})`)
     await admin.from('payments').delete().in('client_id', userIds)
     await admin.from('coach_clients').delete().or(`client_id.in.(${userIds.join(',')}),coach_id.in.(${userIds.join(',')})`)
     await admin.from('profiles').delete().in('id', userIds)

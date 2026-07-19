@@ -16,6 +16,7 @@ type CoachClientRow = Tables<'coach_clients'>
 type InvitationRow = Tables<'coach_invitations'>
 type PaymentRow = Tables<'payments'>
 type PushSubscriptionRow = Tables<'push_subscriptions'>
+type MessageRow = Tables<'messages'>
 
 const profileInsert: TablesInsert<'profiles'> = { id: 'profile-id' }
 const coachClientInsert: TablesInsert<'coach_clients'> = { client_id: 'client-id', coach_id: 'coach-id' }
@@ -28,6 +29,8 @@ const invitationInsert: TablesInsert<'coach_invitations'> = {
 const paymentInsert: TablesInsert<'payments'> = { amount: 10 }
 const pushInsert: TablesInsert<'push_subscriptions'> = { subscription: { endpoint: 'local-fixture' } }
 const profileUpdate: TablesUpdate<'profiles'> = { full_name: 'Synthetic Profile' }
+const messageInsert: TablesInsert<'messages'> = { sender_id: 'sender-id', receiver_id: 'receiver-id', content: '', image_url: 'messages/image.jpg' }
+const messageUpdate: TablesUpdate<'messages'> = { image_url: null }
 const relatedProjection = {} as ActiveRelatedProfileRow
 // @ts-expect-error the projected view deliberately excludes Stripe authority.
 const forbiddenProjectedStripeField = relatedProjection.stripe_account_id
@@ -46,8 +49,9 @@ describe('generated Supabase database types', () => {
     expectTypeOf<InvitationRow['token_hash']>().toEqualTypeOf<string>()
     expectTypeOf<PaymentRow['amount']>().toEqualTypeOf<number>()
     expectTypeOf<PushSubscriptionRow['subscription']>().toEqualTypeOf<Database['public']['Tables']['push_subscriptions']['Row']['subscription']>()
+    expectTypeOf<MessageRow['image_url']>().toEqualTypeOf<string | null>()
     expectTypeOf<Views<'active_related_profiles'>>().toEqualTypeOf<ActiveRelatedProfileRow>()
-    expect([profileInsert, coachClientInsert, invitationInsert, paymentInsert, pushInsert, profileUpdate]).toHaveLength(6)
+    expect([profileInsert, coachClientInsert, invitationInsert, paymentInsert, pushInsert, profileUpdate, messageInsert, messageUpdate]).toHaveLength(8)
     expect(paymentWithoutAmount).toEqual({})
     expect(profileWithHistoricalColumn).toEqual({ subscription_price: 10 })
     expect(paymentWithMissingColumn).toEqual({ amount: 10, stripe_checkout_session_id: 'local' })

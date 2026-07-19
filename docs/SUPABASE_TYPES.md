@@ -42,7 +42,7 @@ Le fichier généré est exclu d'ESLint car son style appartient à la CLI. Le s
 
 ## Contrats couverts
 
-Le test `tests/unit/supabase-database-types.test.ts` vérifie les contrats `Row`, `Insert` et `Update` de `profiles`, `coach_clients`, `coach_invitations`, `payments` et `push_subscriptions`, ainsi que la vue `active_related_profiles`.
+Le test `tests/unit/supabase-database-types.test.ts` vérifie les contrats `Row`, `Insert` et `Update` de `profiles`, `coach_clients`, `coach_invitations`, `payments`, `push_subscriptions` et `messages` (dont `image_url` nullable), ainsi que la vue `active_related_profiles`.
 
 Il vérifie aussi les arguments et retours des RPC :
 
