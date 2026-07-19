@@ -7995,3 +7995,71 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Tester fuseaux horaires, semaines et unités.
+
+---
+
+## Entrée — 2026-07-19 — Fuseaux, semaines et unités
+
+### Travail effectué
+
+- Ajout d'une matrice table-driven de 48 cas couvrant les frontières
+  temporelles et unités de Progression, Training et Nutrition.
+- Caractérisation d'UTC, Europe/Zurich et America/New_York, des deux bascules
+  DST 2026, des jours locaux différents du jour UTC, des semaines lundi, mois,
+  années, année bissextile et fenêtres 7/28/30 jours.
+- Caractérisation séparée de la semaine locale canonique et du fallback legacy
+  « lundi local puis troncature UTC ».
+- Vérification des unités kg/lb opaques, cm, durées, séries/répétitions, bases
+  100 g/100 ml, portions et unités Nutrition.
+- Vérification fail-closed des conversions ambiguës, nombres invalides et
+  valeurs inconnues, sans confondre zéro et absence.
+- Ajout d'une garde statique de pureté sur les noyaux testés.
+
+### Tâche cochée et phase
+
+- Phase 4 : « Tester fuseaux horaires, semaines et unités » — terminée.
+- La checklist réelle contient 16 tâches : Phase 4 corrigée de 15/17 à 16/16
+  et clôturée ; activation de la Phase 5.
+
+### Résultats
+
+- 48 nouveaux cas : 25 temporels, 22 unités/précision et 1 garde statique.
+- Divergence confirmée à `2026-03-29T22:30:00Z` à Zurich : semaine canonique
+  `2026-03-30`, semaine legacy mixte `2026-03-29`.
+- Aucun bug de fonction pure révélé ; aucun code de production corrigé.
+- Les kg/lb restent des séries séparées ; aucune conversion pounds/kg,
+  pouces/cm ou masse/volume n'est inventée.
+
+### Garanties et limites
+
+- Aucun changement d'interface, de données, de formule legacy ou d'historique.
+- Les heures civiles inexistantes/répétées ne sont pas des entrées du contrat :
+  les fonctions projettent des instants absolus dans un timezone IANA.
+- Les kg et litres Nutrition sont exprimés par facteurs explicites 1000 g et
+  1000 ml ; le noyau ne définit pas d'unité kg/l native.
+- `workout_sessions`, `completed_sessions` et `scheduled_sessions` restent
+  indépendants.
+- Aucun accès distant, route, repository, migration, RLS, E2E ou reset.
+
+### Validations exécutées
+
+- Matrice ciblée : 3 fichiers, 48 tests verts.
+- Tests ciblés Progression/Training/Nutrition : 8 fichiers, 99 tests verts
+  avant validation complète.
+- Matrice exécutée sous `TZ=UTC` et `TZ=America/Los_Angeles` : 47 tests verts
+  dans chaque environnement système.
+- Suite Vitest complète : 130 fichiers, 1 178 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit`, ESLint ciblé et `git diff --check` verts.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Phase 5 — Écrire les E2E coach/client de caractérisation.

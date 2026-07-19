@@ -2,9 +2,9 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **18 juillet 2026**.
+> Dernière mise à jour : **19 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 4 — Domaine Nutrition et progression**.
+> Phase active : **Phase 5 — Coaching et messagerie**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 14 tâches sur 17 ; prochaine tranche : réduire `ProgressTab` sous 500 lignes**
+**Statut : Phase 4 terminée — 16 tâches sur 16 ; modèles, calculs, read models, façades et matrices de frontières stabilisés**
 
 ### Pourquoi
 
@@ -403,7 +403,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Découper `ProgressTab` par section ([architecture](docs/PROGRESSION_TAB_SECTIONS.md)) | 3 j | Élevée | Moyen | Élevé | Read models |
 | [x] Extraire les calculs d'`AnalyticsSection` ([contrats](docs/PROGRESSION_ANALYTICS_CALCULATIONS.md)) | 2 j | Moyenne | Moyen | Moyen | Agrégations pures |
 | [x] Réduire `ProgressTab` sous 500 lignes ([architecture](docs/PROGRESSION_TAB_SECTIONS.md)) | 1 j | Moyenne | Faible | Moyen | Extractions |
-| [ ] Tester fuseaux horaires, semaines et unités | 2 j | Élevée | Faible | Élevé | Fonctions pures |
+| [x] Tester fuseaux horaires, semaines et unités ([matrice](docs/PROGRESSION_TIMEZONE_UNITS_TESTING.md)) | 2 j | Élevée | Faible | Élevé | Fonctions pures |
 
 ### Travaux parallélisables
 
