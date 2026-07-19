@@ -7617,3 +7617,73 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Documenter les métriques de progression.
+
+---
+
+## Entrée — 2026-07-19 — Catalogue des métriques de progression
+
+### Travail effectué
+
+- Inventaire documentaire de 39 métriques réellement calculées, persistées ou
+  affichées dans les domaines Training, records, corps, régularité, Nutrition,
+  profil et gamification.
+- Recoupement des formules de `ProgressTab`, `AnalyticsSection`, dashboards
+  client/coach/desktop, loaders, diagnostic hebdomadaire, migrations et types
+  Supabase générés.
+- Documentation des sources, unités, périodes, timezones implicites, arrondis,
+  comportements d'absence et consommateurs.
+- Classement explicite des métriques canoniques, legacy, divergentes, ambiguës
+  ou non vérifiables, sans relier `completed_sessions` et `workout_sessions`.
+- Ordre proposé pour extraire ensuite les fonctions pures et critères des
+  futures fixtures déterministes.
+
+### Tâches cochées
+
+- Phase 4 : « Documenter les métriques de progression » — terminée.
+- Phase 4 : 9/17 → 10/17 tâches.
+
+### Répartition et risques principaux
+
+- Training 13, records 3, corps 10, régularité/activité 5, Nutrition 6,
+  profil/gamification 2.
+- Semaines glissantes et semaines lundi, dates UTC tronquées et dates locales,
+  limites de requêtes et arrondis produisent des valeurs concurrentes.
+- Trois streaks, plusieurs variations de poids et plusieurs tonnages coexistent.
+- Scores IA (`score_semaine`, symétrie, analyses photo) et `fitness_score` ne
+  sont pas reproductibles localement.
+- Les champs runtime de mensurations divergent des types générés et le schéma
+  distant demeure plus étroit que les migrations canoniques.
+- Le diagnostic hebdomadaire projette `workout_sessions.date`, absent des types
+  et migrations canoniques qui exposent `created_at`.
+
+### Garanties préservées
+
+- Documentation uniquement : aucun calcul, composant, loader, repository,
+  schéma, test ou comportement applicatif modifié.
+- Aucun accès distant, reset, migration, policy ou E2E.
+- Aucun historique fusionné et aucune donnée absente transformée en zéro.
+
+### Validations exécutées
+
+- Tables, colonnes, projections, formules et clés temporelles recoupées contre
+  le code, les migrations et `lib/supabase/database.types.ts`.
+- Liens internes du nouveau document vérifiés.
+- `git diff --check` vert.
+- Contrôle de périmètre : seuls le catalogue, la roadmap et le journal sont
+  modifiés par la tranche ; staging vide.
+- `app/`, `lib/`, `tests/`, `e2e/`, `supabase/`, routes, repositories, migrations
+  et RLS inchangés.
+- Progression globale : 79/138 → 80/138, soit environ 58 %.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les fonctions d'agrégation pures.
