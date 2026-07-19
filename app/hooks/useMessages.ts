@@ -17,6 +17,11 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
   const [unreadCount, setUnreadCount] = useState(0)
   const msgEndRef = useRef<HTMLDivElement>(null)
   const lastMsgTimestampRef = useRef<string | null>(null)
+  const loadGenerationRef = useRef(0)
+  const realtimeMessageIdsRef = useRef(new Set<string>())
+  const identityScopeRef = useRef('')
+  const identityScope = `${userId ?? ''}:${coachId ?? ''}`
+  useEffect(() => { identityScopeRef.current = identityScope }, [identityScope])
   const messaging = useMemo(() => createMessagingRepository(supabase as DatabaseClient), [supabase])
   const realtime = useMemo(() => createSupabaseMessagingRealtime(supabase as DatabaseClient), [supabase])
   const service = useMemo(() => createMessagingService(messaging, async input => {
@@ -26,7 +31,10 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
   useEffect(() => { activeTabRef.current = activeTab }, [activeTab])
   const loadMessages = useCallback(async (cId: string) => {
     if (!userId || !cId) return
+    const scope = identityScopeRef.current
+    const generation = ++loadGenerationRef.current
     const result = await messaging.listConversation(cId, 50)
+    if (generation !== loadGenerationRef.current || scope !== identityScopeRef.current) return
     const data = result.ok ? result.data : []
     setMessages(data)
     setUnreadCount(data.filter(m => m.sender_id === cId && !m.read).length)
@@ -46,12 +54,17 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
   // Realtime + polling
   useEffect(() => {
     if (!userId || !coachId) return
+    const realtimeMessageIds = realtimeMessageIdsRef.current
+    realtimeMessageIds.clear()
     void Promise.resolve().then(() => loadMessages(coachId))
 
     const stop = realtime.subscribeIncoming(userId, `messages-${userId}`, (message, event) => {
       if (message.sender_id !== coachId) return
       setMessages(prev => mergeMessages(prev, [message], event === 'INSERT'))
-      if (event === 'INSERT' && activeTabRef.current !== 'messages') setUnreadCount(prev => prev + 1)
+      if (event === 'INSERT' && activeTabRef.current !== 'messages' && !realtimeMessageIds.has(message.id)) {
+        realtimeMessageIds.add(message.id)
+        setUnreadCount(prev => prev + 1)
+      }
     })
 
     const pollId = setInterval(async () => {
@@ -61,7 +74,7 @@ export default function useMessages({ supabase, userId, coachId, activeTab }: Us
       if (result.ok && result.data.length) setMessages(prev => mergeMessages(prev, result.data, true))
     }, 30000)
 
-    return () => { stop(); clearInterval(pollId) }
+    return () => { loadGenerationRef.current += 1; realtimeMessageIds.clear(); stop(); clearInterval(pollId) }
   }, [userId, coachId, loadMessages, messaging, realtime])
 
   // Auto-scroll when messages change or tab switches to messages

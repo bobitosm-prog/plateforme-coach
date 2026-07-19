@@ -40,7 +40,7 @@ describe('coaching messaging extraction blockers', () => {
     expect(consumers.match(/\.channel\(/g)).toBeNull()
     expect(repository.match(/from\('messages'\)/g)).toHaveLength(6)
     expect(realtime.match(/\.channel\(/g)).toHaveLength(2)
-    expect(realtime.match(/\.subscribe\(\)/g)).toHaveLength(2)
+    expect(realtime.match(/\.subscribe\(/g)).toHaveLength(2)
     expect(realtime.match(/removeChannel\(/g)).toHaveLength(2)
     expect(realtime.match(/postgres_changes/g)).toHaveLength(3)
   })

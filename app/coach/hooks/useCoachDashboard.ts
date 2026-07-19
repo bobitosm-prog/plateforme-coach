@@ -151,6 +151,8 @@ export default function useCoachDashboard(initialSession?: any) {
   const selectedClientRef    = useRef<ClientRow | null>(null)
   const clientsRef           = useRef<ClientRow[]>([])
   const lastChatTimestampRef = useRef<string | null>(null)
+  const chatLoadGenerationRef = useRef(0)
+  const globalRealtimeMessageIdsRef = useRef(new Set<string>())
 
   /* ── Derived values ────────────────────────────────────── */
 
@@ -302,6 +304,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const stopOut = messagingRealtime.subscribeOutgoingUpdates(coachId, `coach-chat-out-${coachId}-${clientId}`, (message) => handleMessage(message, 'UPDATE'))
 
     return () => {
+      chatLoadGenerationRef.current += 1
       stopIn()
       stopOut()
     }
@@ -311,6 +314,7 @@ export default function useCoachDashboard(initialSession?: any) {
   useEffect(() => {
     if (!session?.user?.id) return
     const coachId = session.user.id
+    globalRealtimeMessageIdsRef.current.clear()
 
     const stop = messagingRealtime.subscribeIncoming(coachId, `coach-global-${coachId}`, (m, event) => {
       if (event === 'INSERT') {
@@ -324,7 +328,8 @@ export default function useCoachDashboard(initialSession?: any) {
           return next
         })
         const isOpenConv = selectedClientRef.current?.client_id === m.sender_id
-        if (!isOpenConv) {
+        if (!isOpenConv && !globalRealtimeMessageIdsRef.current.has(m.id)) {
+          globalRealtimeMessageIdsRef.current.add(m.id)
           setUnreadCounts(prev => ({
             ...prev,
             [m.sender_id]: (prev[m.sender_id] || 0) + 1,
@@ -341,7 +346,7 @@ export default function useCoachDashboard(initialSession?: any) {
       }
     })
 
-    return () => { stop() }
+    return () => { globalRealtimeMessageIdsRef.current.clear(); stop() }
   }, [session?.user?.id])
 
   // Poll every 2min — fallback resync for unread counts + last messages
@@ -539,11 +544,14 @@ export default function useCoachDashboard(initialSession?: any) {
   }
 
   async function loadChat(clientId: string) {
+    const generation = ++chatLoadGenerationRef.current
     const result = await messaging.listConversation(clientId, 100)
+    if (generation !== chatLoadGenerationRef.current || selectedClientRef.current?.client_id !== clientId) return
     setChatMessages(result.ok ? result.data : [])
   }
 
   async function openChat(client: ClientRow) {
+    selectedClientRef.current = client
     setSelectedClient(client)
     await loadChat(client.client_id)
     // Mark messages from this client as read

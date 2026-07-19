@@ -3,8 +3,8 @@
 ## Statut
 
 Le module humain est extrait et les trois consommateurs sont migrés. Le chat
-Athena reste séparé. La tâche suivante sur reconnexion et nettoyage realtime
-approfondi demeure ouverte.
+Athena reste séparé. Les cycles d'abonnement, reconnexion, changement de portée
+et nettoyage sont maintenant caractérisés par une matrice déterministe.
 
 ## Sources d'autorité et formats observés
 
@@ -87,9 +87,9 @@ l'auteur dans le callback.
 - `coach-chat-out-${coachId}-${clientId}` : update des messages envoyés ;
 - `coach-global-${coachId}` : insert et update reçus pour compteurs et aperçu.
 
-Chaque effet appelle `removeChannel` au nettoyage. L'idempotence Strict Mode,
-la reconnexion et les channels orphelins doivent être testés dans la tâche
-roadmap suivante, après extraction effective.
+Chaque effet appelle `removeChannel` au nettoyage. L'adaptateur désactive son
+callback avant de demander la suppression du channel : un payload ou statut
+tardif ne peut donc plus atteindre le consommateur après cleanup.
 
 ## Autorisation historique avant durcissement
 
@@ -140,11 +140,42 @@ Les consommateurs migrés sont `useMessages`, `useCoachDashboard` et
 read receipts, titres/corps/URLs de notification et contrats publics sont
 préservés.
 
+## Matrice de cycle de vie validée
+
+Les suites `coaching-messaging-lifecycle`, `coaching-messaging-realtime` et
+`coaching-messaging-consumer-lifecycle-static` couvrent :
+
+- stop avant start, start/stop idempotents, cycles répétés et séquence Strict
+  Mode setup/cleanup/setup/cleanup ;
+- générations invalidées lors des changements rapides A → B → A ;
+- un seul channel par appel actif, une seule destruction par channel et aucun
+  callback message/statut après stop ;
+- statuts `SUBSCRIBED`, `CLOSED`, `CHANNEL_ERROR`, `TIMED_OUT`, puis retour à
+  `SUBSCRIBED`, sans recréer de channel dans l'adaptateur ;
+- payloads absents, malformés, étrangers, dates invalides et images de type
+  incompatible refusés sans throw ;
+- déduplication par ID entre chargement, polling et realtime, update remplaçant
+  insert, égalité de date ordonnée par ID et conservation de `image_url` ;
+- invalidation des chargements obsolètes dans les trois consommateurs,
+  nettoyage des pollings 30 s/120 s et déduplication des compteurs non lus.
+
+Deux défauts démontrés ont reçu une correction minimale : l'adaptateur pouvait
+encore livrer un callback capturé après `removeChannel`, et les chargements
+asynchrones pouvaient appliquer une réponse d'une ancienne identité/relation.
+Le compteur global pouvait aussi être incrémenté deux fois pour le même INSERT
+rejoué ; les IDs realtime déjà comptés sont désormais bornés au cycle actif.
+
+La reconnexion reste celle du client Supabase : le module observe les statuts
+mais n'ajoute aucun scheduler ou protocole de retry parallèle. Cela évite les
+channels multiples tout en laissant Supabase réabonner son channel existant.
+
 ## Limites reportées
 
-La prochaine tranche doit tester les reconnexions réseau, cycles répétés,
-changements rapides d'identité/relation et absence de channels orphelins. Aucun
-protocole de retry, typing, presence ou conversation n'est introduit ici.
+Aucun protocole de retry applicatif, typing, presence ou conversation n'est
+introduit. La validité d'une relation active demeure garantie par repository et
+RLS ; le callback ne transporte pas à lui seul un snapshot de relation. Les
+tests unitaires simulent les statuts Realtime ; l'E2E local vérifie le parcours
+coach/client mais ne force pas une coupure WebSocket réseau reproductible.
 
 ## Périmètre préservé
 

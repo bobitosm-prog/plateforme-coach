@@ -183,6 +183,7 @@ export default function useClientDetail() {
   // Coach messaging
   const [coachMessages, setCoachMessages] = useState<Message[]>([])
   const [coachMsgInput, setCoachMsgInput] = useState('')
+  const coachMessageLoadGenerationRef = useRef(0)
 
   // AI Meal Plan Generator
   const [aiMealGenerating, setAiMealGenerating] = useState(false)
@@ -524,7 +525,9 @@ export default function useClientDetail() {
   // Coach messaging
   const loadCoachMessages = useCallback(async () => {
     if (!coachId || !id) return
+    const generation = ++coachMessageLoadGenerationRef.current
     const result = await messaging.listConversation(id, 100)
+    if (generation !== coachMessageLoadGenerationRef.current) return
     setCoachMessages(result.ok ? result.data : [])
   }, [coachId, id])
 
@@ -538,9 +541,10 @@ export default function useClientDetail() {
   // Realtime for coach
   useEffect(() => {
     if (!coachId || !id) return
-    return messagingRealtime.subscribeIncoming(coachId, `coach-msg-${id}`, (message, event) => {
+    const stop = messagingRealtime.subscribeIncoming(coachId, `coach-msg-${id}`, (message, event) => {
       if (message.sender_id === id) setCoachMessages(prev => mergeMessages(prev, [message], event === 'INSERT'))
     })
+    return () => { coachMessageLoadGenerationRef.current += 1; stop() }
   }, [coachId, id])
 
   async function sendCoachMessage(imageUrl?: string | null) {

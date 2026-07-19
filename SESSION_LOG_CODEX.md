@@ -8404,3 +8404,37 @@ durcissement RLS, puis reprendre l'extraction messaging/realtime.
 - Les cycles approfondis de reconnexion, changements rapides et détection de
   channels orphelins restent volontairement ouverts.
 - Prochaine tâche : « Tester abonnement, reconnexion et nettoyage realtime ».
+## Entrée — 2026-07-19 — Lifecycle realtime messaging couvert
+
+### Travail effectué
+
+- Caractérisation des cycles start/stop, Strict Mode, changements rapides
+  d'identité/relation, statuts Realtime, payloads hostiles et déduplication.
+- L'adaptateur expose les statuts `SUBSCRIBED`, `CLOSED`, `CHANNEL_ERROR` et
+  `TIMED_OUT`, neutralise messages/statuts tardifs après stop et conserve une
+  destruction idempotente par channel.
+- Les trois consommateurs invalident leurs chargements obsolètes ; les deux
+  compteurs realtime ignorent désormais un INSERT déjà compté pendant le cycle.
+- Aucun contrat UI, accès repository, notification, migration ou policy changé.
+
+### Validation et limites
+
+- Nouvelle matrice lifecycle : 20 scénarios déterministes ; tests ciblés
+  messaging/notification : 8 fichiers, 74 tests verts.
+- Suite Vitest : 144 fichiers, 1 249 tests verts et 3 `todo`; TypeScript et
+  ESLint ciblé verts, sans erreur ni avertissement.
+- Types Supabase, matrice RLS/PostgREST messages et E2E coach/client (4/4)
+  verts. Pile finale vérifiée à 140 migrations et empreinte
+  `07fd93ad1995b031822be222179c83bc`; Mailpit vide.
+- `git diff --check` et liens documentaires verts; staging vide.
+- La reconnexion réseau reste pilotée par Supabase sur le channel existant :
+  aucun retry concurrent n'a été ajouté.
+- La relation active reste vérifiée par le repository et la RLS. L'E2E local ne
+  simule pas une coupure WebSocket physique ; les statuts le sont de manière
+  déterministe au niveau du port.
+- Les changements concurrents du seed et des deux médias restent protégés et
+  hors staging.
+
+### Prochaine action unique
+
+Extraire clients, programmes, revenus et analytics de `useCoachDashboard`.

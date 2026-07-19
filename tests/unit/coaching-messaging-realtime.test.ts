@@ -8,9 +8,10 @@ const message = { id: '75000000-0000-4000-8000-000000000001', sender_id: other, 
 
 function realtimeClient() {
   const handlers: Array<(payload: { new: unknown }) => void> = []
-  const channel = { on: vi.fn((_type, _filter, handler) => { handlers.push(handler); return channel }), subscribe: vi.fn(() => channel) }
+  let statusHandler: ((status: 'SUBSCRIBED' | 'CLOSED' | 'CHANNEL_ERROR' | 'TIMED_OUT') => void) | undefined
+  const channel = { on: vi.fn((_type, _filter, handler) => { handlers.push(handler); return channel }), subscribe: vi.fn((handler?: typeof statusHandler) => { statusHandler = handler; return channel }) }
   const removeChannel = vi.fn(async () => 'ok')
-  return { client: { channel: vi.fn(() => channel), removeChannel } as unknown as DatabaseClient, channel, handlers, removeChannel }
+  return { client: { channel: vi.fn(() => channel), removeChannel } as unknown as DatabaseClient, channel, handlers, removeChannel, emitStatus: (status: 'SUBSCRIBED' | 'CLOSED' | 'CHANNEL_ERROR' | 'TIMED_OUT') => statusHandler?.(status) }
 }
 
 describe('Supabase messaging realtime adapter', () => {
@@ -22,7 +23,8 @@ describe('Supabase messaging realtime adapter', () => {
     mock.handlers[0]({ new: { malformed: true } })
     expect(listener).toHaveBeenCalledOnce()
     expect(listener).toHaveBeenCalledWith(message, 'INSERT')
-    stop(); stop(); expect(mock.removeChannel).toHaveBeenCalledOnce()
+    stop(); stop(); mock.handlers[0]({ new: message }); expect(listener).toHaveBeenCalledOnce()
+    expect(mock.removeChannel).toHaveBeenCalledOnce()
   })
 
   it('filters outgoing updates by the authenticated actor', () => {
@@ -32,5 +34,15 @@ describe('Supabase messaging realtime adapter', () => {
     mock.handlers[0]({ new: message })
     expect(listener).toHaveBeenCalledOnce()
     stop()
+  })
+
+  it('reports channel lifecycle while active and ignores late statuses after stop', () => {
+    const mock = realtimeClient(); const status = vi.fn()
+    const stop = createSupabaseMessagingRealtime(mock.client).subscribeIncoming(actor, 'status', vi.fn(), status)
+    for (const value of ['SUBSCRIBED', 'CLOSED', 'CHANNEL_ERROR', 'TIMED_OUT', 'SUBSCRIBED'] as const) mock.emitStatus(value)
+    expect(status.mock.calls.map(([value]) => value)).toEqual(['SUBSCRIBED', 'CLOSED', 'CHANNEL_ERROR', 'TIMED_OUT', 'SUBSCRIBED'])
+    expect(mock.client.channel).toHaveBeenCalledOnce()
+    stop(); mock.emitStatus('SUBSCRIBED')
+    expect(status).toHaveBeenCalledTimes(5)
   })
 })

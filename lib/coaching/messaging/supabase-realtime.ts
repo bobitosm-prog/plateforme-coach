@@ -4,16 +4,18 @@ import type { MessagingRealtimePort } from './realtime-port'
 
 export function createSupabaseMessagingRealtime(client: DatabaseClient): MessagingRealtimePort {
   return {
-    subscribeIncoming(actorId, key, listener) {
+    subscribeIncoming(actorId, key, listener, onStatus) {
+      let active = true
       const channel = client.channel(key)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (message && message.receiver_id === actorId) listener(message, 'INSERT') })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (message && message.receiver_id === actorId) listener(message, 'UPDATE') })
-        .subscribe()
-      let stopped = false; return () => { if (!stopped) { stopped = true; void client.removeChannel(channel) } }
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (active && message?.receiver_id === actorId) listener(message, 'INSERT') })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (active && message?.receiver_id === actorId) listener(message, 'UPDATE') })
+        .subscribe(status => { if (active && (status === 'SUBSCRIBED' || status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) onStatus?.(status) })
+      return () => { if (active) { active = false; void client.removeChannel(channel) } }
     },
-    subscribeOutgoingUpdates(actorId, key, listener) {
-      const channel = client.channel(key).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `sender_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (message && message.sender_id === actorId) listener(message, 'UPDATE') }).subscribe()
-      let stopped = false; return () => { if (!stopped) { stopped = true; void client.removeChannel(channel) } }
+    subscribeOutgoingUpdates(actorId, key, listener, onStatus) {
+      let active = true
+      const channel = client.channel(key).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `sender_id=eq.${actorId}` }, payload => { const message = parseMessage(payload.new); if (active && message?.sender_id === actorId) listener(message, 'UPDATE') }).subscribe(status => { if (active && (status === 'SUBSCRIBED' || status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) onStatus?.(status) })
+      return () => { if (active) { active = false; void client.removeChannel(channel) } }
     },
   }
 }
