@@ -441,7 +441,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 | [x] [Extraire profil, programme, nutrition et progression de `useClientDetail`](docs/CLIENT_DETAIL_DOMAIN_EXTRACTIONS.md) | 5 j | Élevée | Élevé | Élevé | Phases Training/Nutrition |
 | [x] [Réduire `useClientDetail` sous 250 lignes](docs/CLIENT_DETAIL_DOMAIN_EXTRACTIONS.md#architecture-finale-de-la-façade) | 1,5 j | Élevée | Moyen | Élevé | Extractions |
 | [x] [Découper `coach/page.tsx` en sections chargées à la demande](docs/COACH_PAGE_LAZY_SECTIONS.md) | 3 j | Élevée | Moyen | Élevé | Hooks spécialisés |
-| [ ] Découper `client/[id]/page.tsx` en orchestrateur mince | 2,5 j | Élevée | Moyen | Élevé | Hooks spécialisés |
+| [x] [Découper `client/[id]/page.tsx` en orchestrateur mince](docs/CLIENT_DETAIL_PAGE_ARCHITECTURE.md) | 2,5 j | Élevée | Moyen | Élevé | Hooks spécialisés |
 | [ ] Ajouter pagination aux listes coach importantes | 2 j | Moyenne | Moyen | Moyen | Repositories |
 
 ### Définition de terminé

@@ -81,5 +81,6 @@ divergentes restent bornés aux frontières existantes. Les notes sont toujours
 autosauvegardées après trois secondes et le suivi hebdomadaire reste interrogé
 toutes les trente secondes. Ces comportements n'ont pas été modifiés.
 
-La prochaine tâche peut découper `coach/page.tsx` en sections chargées à la
-demande; aucune modification de `client/[id]/page.tsx` n'a été nécessaire.
+La page consommatrice est désormais une façade mince documentée dans
+[l'architecture de la page détail client](CLIENT_DETAIL_PAGE_ARCHITECTURE.md).
+Cette extraction ne change aucun contrat du hook ni aucune frontière métier.

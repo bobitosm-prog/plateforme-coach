@@ -8558,3 +8558,32 @@ Découper `coach/page.tsx` en sections chargées à la demande.
 ### Prochaine action unique
 
 Découper `client/[id]/page.tsx` en orchestrateur mince.
+
+## Entrée — 2026-07-19 — Page détail client réduite en orchestrateur mince
+
+- `client/[id]/page.tsx` réduit de 660 à 31 lignes sans modifier son export,
+  son URL ni le contrat public de `useClientDetail`.
+- Composition des six onglets extraite dans `ClientDetailPageView` (314
+  lignes); overlays profil, catalogue, IA et confirmation template isolés dans
+  `ClientDetailPageOverlays` (315 lignes); états globaux dans une vue de 15
+  lignes et contrat partagé de 8 lignes.
+- Priorité et ordre aperçu/programme/progression/nutrition/messages/notes,
+  textes français, responsive, animations, callbacks, notifications,
+  chargements et erreurs conservés.
+- Autorité relationnelle, requêtes, mutations, ordres d'écriture et lifecycle
+  Messaging restent exclusivement dans les frontières existantes; aucune
+  lecture Supabase ou dépendance repository ajoutée aux vues.
+- Dette ESLint de la page : 4 erreurs/3 avertissements → 0/0; aucune nouvelle
+  frontière ne dépasse 500 lignes.
+- Tests statiques et rendu serveur ajoutés pour tailles, architecture, ordre,
+  overlays, callbacks de fallback et imports interdits.
+- Tests ciblés : 3 fichiers, 9 tests verts; suite Vitest complète : 152
+  fichiers, 1 279 tests verts et 3 `todo`; TypeScript, types Supabase et ESLint
+  ciblé verts.
+- E2E coach/client : 4/4 verts; Mailpit vide et pile Supabase locale arrêtée
+  après validation. `git diff --check` et liens documentaires verts; staging
+  resté vide.
+
+### Prochaine action unique
+
+Ajouter la pagination aux listes coach importantes.
