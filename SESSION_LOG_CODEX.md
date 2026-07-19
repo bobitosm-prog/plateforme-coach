@@ -7867,3 +7867,63 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Extraire les calculs d'`AnalyticsSection`.
+
+---
+
+## Entrée — 2026-07-19 — Calculs d'AnalyticsSection
+
+### Travail effectué
+
+- Extraction des calculs e1RM, volume/RIR musculaire, séries poids,
+  calories/macros/eau, synthèse 30 jours et export CSV vers deux modules purs.
+- Réutilisation de `estimatedOneRepMax` et `percentageChangeLegacy`.
+- Extraction du regroupement hebdomadaire mixte local/UTC de `useAnalytics`
+  sans modifier la limite de 500 sets ni la fenêtre de 28 jours.
+- Horloge et timezone rendues explicites ; calculs invalides isolés sans `NaN`.
+- Conservation dans la vue des labels, traductions, couleurs, tooltips et
+  transformations strictement visuelles.
+
+### Tâche cochée
+
+- Phase 4 : « Extraire les calculs d'`AnalyticsSection` » — terminée.
+- Phase 4 : 13/17 → 14/17 tâches.
+
+### Mesures et dette
+
+- `AnalyticsSection.tsx` : 553 → 448 lignes.
+- Dette ESLint : 8 erreurs / 9 avertissements → 0 erreur / 2 avertissements.
+- Les avertissements restants concernent deux props publiques historiques non
+  consommées : `weightHistory30` et `currentWeight`.
+
+### Garanties et limites
+
+- Aucun changement visuel, de formule, de période, d'arrondi ou de contrat
+  public.
+- La divergence DST/semaine du fallback local/UTC est testée et documentée ;
+  elle n'est pas remplacée par la semaine locale canonique.
+- Aucun nouvel accès ou mutation Supabase, route, repository, migration, RLS,
+  E2E, reset ou donnée distante.
+- Le chargement du mapping muscles et la mutation PR restent hors du noyau pur.
+
+### Validations exécutées
+
+- Tests ciblés calculs/read models/dates : 5 fichiers, 33 tests verts avant
+  validation complète.
+- Suite Vitest complète : 125 fichiers, 1 123 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des modules purs et de leurs tests : vert.
+- Gardes statiques : aucun React, Next, Supabase, navigateur, stockage, réseau,
+  `Date.now()` ou `any` dans les nouveaux modules.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Réduire `ProgressTab` sous 500 lignes.

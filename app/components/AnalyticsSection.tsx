@@ -7,7 +7,7 @@ import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, ReferenceLine, Cell,
+  Tooltip, ReferenceLine, Cell,
 } from 'recharts'
 import { Trophy, TrendingUp, Flame, Dumbbell, Download, Droplets, BarChart3, Activity } from 'lucide-react'
 import { downloadCsv } from '../../lib/exportCsv'
@@ -15,18 +15,32 @@ import { colors, fonts } from '../../lib/design-tokens'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
 import { useHasSize, SizedContainer } from './ui/SizedChart'
-import { estimatedOneRepMax, percentageChangeLegacy } from '../../lib/progression'
+import {
+  aggregateLegacyMuscleRir28d,
+  aggregateLegacyMuscleVolume28d,
+  buildLegacyAnalyticsCsvRows,
+  buildLegacyAnalyticsSummary,
+  buildLegacyCalorieSeries,
+  buildLegacyExerciseProgression,
+  buildLegacyMacroSeries,
+  buildLegacyWaterSeries,
+  buildLegacyWeightSeries,
+  percentageChangeLegacy,
+  type AnalyticsPersonalRecord,
+  type AnalyticsWeightPeriod,
+  type AnalyticsWorkoutSession,
+} from '../../lib/progression'
 
 const LIGHT_BLUE = '#7DD3FC'
 
 interface AnalyticsSectionProps {
-  personalRecords: any[]
+  personalRecords: AnalyticsPersonalRecord[]
   weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
   weeklyWater: { date: string; ml: number }[]
   weeklyVolume: { week: string; volume: number }[]
   weightHistoryFull: { date: string; poids: number }[]
   weightHistory30: { date: string; poids: number }[]
-  wSessions: any[]
+  wSessions: AnalyticsWorkoutSession[]
   calorieGoal: number
   goalWeight: number | null
   waterGoal: number
@@ -34,16 +48,21 @@ interface AnalyticsSectionProps {
   currentWeight: number | undefined
 }
 
-type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
+interface TooltipEntry {
+  readonly color?: string
+  readonly name?: string
+  readonly value?: unknown
+  readonly unit?: string
+}
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { readonly active?: boolean; readonly payload?: readonly TooltipEntry[]; readonly label?: string | number }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '8px 12px', fontSize: '0.72rem', fontFamily: fonts.body }}>
       <div style={{ color: colors.textMuted, marginBottom: 4 }}>{label}</div>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || colors.text, fontWeight: 600 }}>
-          {p.name}: {typeof p.value === 'number' ? p.value.toLocaleString() : p.value} {p.unit || ''}
+          {p.name}: {typeof p.value === 'number' ? p.value.toLocaleString() : String(p.value ?? '')} {p.unit || ''}
         </div>
       ))}
     </div>
@@ -60,8 +79,10 @@ export default function AnalyticsSection({
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
-  const PERIOD_LABELS: Record<WeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
-  const [weightPeriod, setWeightPeriod] = useState<WeightPeriod>('30j')
+  const PERIOD_LABELS: Record<AnalyticsWeightPeriod, string> = { '30j': t('period30'), '60j': t('period60'), '90j': t('period90'), 'tout': t('periodAll') }
+  const [weightPeriod, setWeightPeriod] = useState<AnalyticsWeightPeriod>('30j')
+  const [analyticsNow] = useState(() => new Date())
+  const analyticsClock = useMemo(() => ({ now: () => new Date(analyticsNow) }), [analyticsNow])
   const [selectedExercise, setSelectedExercise] = useState('')
   const [muscleMap, setMuscleMap] = useState<Map<string, string>>(new Map())
   const tMuscle = useTranslations('muscles')
@@ -84,133 +105,37 @@ export default function AnalyticsSection({
   }, [])
 
   // -- Exercise progression (e1RM Epley) --
-  const { exerciseList, byExercise } = useMemo(() => {
-    const map: Record<string, Map<string, { e1rm: number; weight: number; reps: number }>> = {}
-    for (const sess of wSessions) {
-      for (const s of (sess.workout_sets || [])) {
-        if (!s.completed || !s.weight || s.weight <= 0 || !s.reps || s.reps <= 0) continue
-        const name = s.exercise_name
-        if (!name) continue
-        const date = (s.created_at || sess.created_at || '').slice(0, 10)
-        if (!date) continue
-        const estimate = estimatedOneRepMax(s.weight, s.reps)
-        if (estimate.status !== 'complete') continue
-        const e1rm = estimate.value
-        if (!map[name]) map[name] = new Map()
-        const prev = map[name].get(date)
-        if (!prev || e1rm > prev.e1rm) map[name].set(date, { e1rm, weight: s.weight, reps: s.reps })
-      }
-    }
-    const list = Object.keys(map).sort((a, b) => (map[b].size) - (map[a].size))
-    const byEx: Record<string, { date: string; e1rm: number; weight: number; reps: number }[]> = {}
-    for (const name of list) {
-      byEx[name] = Array.from(map[name].entries())
-        .map(([date, v]) => ({ date, ...v }))
-        .sort((a, b) => a.date.localeCompare(b.date))
-    }
-    return { exerciseList: list, byExercise: byEx }
-  }, [wSessions])
+  const { exerciseList, byExercise } = useMemo(() => buildLegacyExerciseProgression(wSessions), [wSessions])
 
-  useEffect(() => {
-    if (exerciseList.length > 0 && !exerciseList.includes(selectedExercise)) {
-      setSelectedExercise(exerciseList[0])
-    }
-  }, [exerciseList])
+  const activeExercise = exerciseList.includes(selectedExercise) ? selectedExercise : (exerciseList[0] ?? '')
 
   // -- Volume by muscle (28 days) --
   const volumeByMuscle = useMemo(() => {
-    if (muscleMap.size === 0) return []
-    const cutoff = Date.now() - 28 * 86400000
-    const agg: Record<string, { sets: number; tonnage: number }> = {}
-    for (const sess of wSessions) {
-      for (const s of (sess.workout_sets || [])) {
-        if (!s.completed || !s.exercise_id) continue
-        const date = new Date(s.created_at || sess.created_at || '').getTime()
-        if (!date || date < cutoff) continue
-        const muscle = muscleMap.get(s.exercise_id)
-        if (!muscle) continue
-        if (!agg[muscle]) agg[muscle] = { sets: 0, tonnage: 0 }
-        agg[muscle].sets += 1
-        agg[muscle].tonnage += (s.weight || 0) * (s.reps || 0)
-      }
-    }
-    return Object.entries(agg)
-      .map(([muscle, v]) => ({ muscle, sets: v.sets, tonnage: Math.round(v.tonnage) }))
-      .sort((a, b) => b.sets - a.sets)
-  }, [wSessions, muscleMap])
+    const result = aggregateLegacyMuscleVolume28d({ sessions: wSessions, muscleByExerciseId: muscleMap, clock: analyticsClock })
+    return result.value ?? []
+  }, [wSessions, muscleMap, analyticsClock])
 
   // -- RIR by muscle (28 days) --
-  const RIR_MIN_SETS_FOR_AVG = 5 // Moyenne non significative sous 5 sets notés — muscle masqué
   const rirByMuscle = useMemo(() => {
-    if (muscleMap.size === 0) return []
-    const cutoff = Date.now() - 28 * 86400000
-    const agg: Record<string, { sum: number; count: number }> = {}
-    for (const sess of wSessions) {
-      for (const s of (sess.workout_sets || [])) {
-        if (!s.completed || !s.exercise_id || s.rir == null) continue
-        const date = new Date(s.created_at || sess.created_at || '').getTime()
-        if (!date || date < cutoff) continue
-        const muscle = muscleMap.get(s.exercise_id)
-        if (!muscle) continue
-        if (!agg[muscle]) agg[muscle] = { sum: 0, count: 0 }
-        agg[muscle].sum += s.rir
-        agg[muscle].count += 1
-      }
-    }
-    return Object.entries(agg)
-      .filter(([, v]) => v.count >= RIR_MIN_SETS_FOR_AVG)
-      .map(([muscle, v]) => ({ muscle, avgRir: Math.round(v.sum / v.count * 10) / 10, count: v.count }))
-      .sort((a, b) => a.avgRir - b.avgRir)
-  }, [wSessions, muscleMap])
+    const result = aggregateLegacyMuscleRir28d({ sessions: wSessions, muscleByExerciseId: muscleMap, clock: analyticsClock })
+    return result.value ?? []
+  }, [wSessions, muscleMap, analyticsClock])
 
   // -- Weight chart data --
-  const weightData = useMemo(() => {
-    const source = weightPeriod === 'tout' ? weightHistoryFull : weightHistoryFull
-    const now = Date.now()
-    const days = weightPeriod === '30j' ? 30 : weightPeriod === '60j' ? 60 : weightPeriod === '90j' ? 90 : 9999
-    const cutoff = now - days * 86400000
-    const filtered = source.filter(w => new Date(w.date).getTime() >= cutoff)
-    // 7-day moving average
-    return filtered.map((w, i) => {
-      const window = filtered.slice(Math.max(0, i - 6), i + 1)
-      const avg = window.reduce((s, v) => s + v.poids, 0) / window.length
-      return {
-        date: format(new Date(w.date), 'd MMM', { locale: dateLocale }),
-        poids: w.poids,
-        tendance: Math.round(avg * 10) / 10,
-      }
-    })
-  }, [weightHistoryFull, weightPeriod])
+  const weightData = useMemo(() => buildLegacyWeightSeries({ weights: weightHistoryFull.map(value => ({ date: value.date, weight: value.poids })), period: weightPeriod, clock: analyticsClock })
+    .map(value => ({ date: format(new Date(value.date), 'd MMM', { locale: dateLocale }), poids: value.weight, tendance: value.trend })), [weightHistoryFull, weightPeriod, analyticsClock, dateLocale])
 
   // -- Calories chart data --
-  const calData = useMemo(() =>
-    weeklyCalories.map(c => ({
-      date: format(new Date(c.date), 'EEE', { locale: dateLocale }),
-      calories: Math.round(c.calories),
-      inTarget: Math.abs(c.calories - calorieGoal) <= 100,
-    })),
-    [weeklyCalories, calorieGoal]
-  )
+  const calData = useMemo(() => buildLegacyCalorieSeries(weeklyCalories, calorieGoal)
+    .map(value => ({ ...value, date: format(new Date(value.date), 'EEE', { locale: dateLocale }) })), [weeklyCalories, calorieGoal, dateLocale])
 
   // -- Macros chart data --
-  const macroData = useMemo(() =>
-    weeklyCalories.map(c => ({
-      date: format(new Date(c.date), 'EEE', { locale: dateLocale }),
-      protein: Math.round(c.protein),
-      carbs: Math.round(c.carbs),
-      fat: Math.round(c.fat),
-    })),
-    [weeklyCalories]
-  )
+  const macroData = useMemo(() => buildLegacyMacroSeries(weeklyCalories)
+    .map(value => ({ ...value, date: format(new Date(value.date), 'EEE', { locale: dateLocale }) })), [weeklyCalories, dateLocale])
 
   // -- Water chart data --
-  const waterData = useMemo(() =>
-    weeklyWater.map(w => ({
-      date: format(new Date(w.date), 'EEE', { locale: dateLocale }),
-      litres: Math.round(w.ml) / 1000,
-    })),
-    [weeklyWater]
-  )
+  const waterData = useMemo(() => buildLegacyWaterSeries(weeklyWater)
+    .map(value => ({ ...value, date: format(new Date(value.date), 'EEE', { locale: dateLocale }) })), [weeklyWater, dateLocale])
 
   // -- Volume chart data --
   const volumeData = useMemo(() =>
@@ -218,59 +143,29 @@ export default function AnalyticsSection({
       week: `S${format(new Date(v.week), 'w', { locale: dateLocale })}`,
       volume: v.volume,
     })),
-    [weeklyVolume]
+    [weeklyVolume, dateLocale]
   )
 
   // -- Stats summary --
-  const monthWeightDiff = useMemo(() => {
-    const thirtyDaysAgo = Date.now() - 30 * 86400000
-    const recent = weightHistoryFull.filter(w => new Date(w.date).getTime() >= thirtyDaysAgo)
-    if (recent.length < 2) return null
-    return Math.round((recent[recent.length - 1].poids - recent[0].poids) * 10) / 10
-  }, [weightHistoryFull])
+  const analyticsSummary = useMemo(() => buildLegacyAnalyticsSummary({ weights: weightHistoryFull.map(value => ({ date: value.date, weight: value.poids })), records: personalRecords, clock: analyticsClock }), [weightHistoryFull, personalRecords, analyticsClock])
+  const monthWeightDiff = analyticsSummary.monthWeightDiff
 
   const volumeChange = useMemo(() => {
     const result = percentageChangeLegacy(weeklyVolume.map(item => item.volume))
     return result.status === 'complete' ? result.value : null
   }, [weeklyVolume])
 
-  const monthPRs = useMemo(() => {
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const cutoff = thirtyDaysAgo.toISOString().split('T')[0]
-    return personalRecords.filter(pr => pr.achieved_at >= cutoff).length
-  }, [personalRecords])
+  const monthPRs = analyticsSummary.monthRecordCount
 
   // -- PR records grouped: show 1rm only, prioritize compound lifts --
   // -- CSV export --
   function exportAnalytics() {
-    const rows: (string | number | null)[][] = []
-    const allDates = new Set<string>()
-    weightHistoryFull.forEach(w => allDates.add(w.date))
-    weeklyCalories.forEach(c => allDates.add(c.date))
-    weeklyWater.forEach(w => allDates.add(w.date))
-
-    const sorted = [...allDates].sort()
-    const weightMap = Object.fromEntries(weightHistoryFull.map(w => [w.date, w.poids]))
-    const calMap = Object.fromEntries(weeklyCalories.map(c => [c.date, c]))
-    const waterMap = Object.fromEntries(weeklyWater.map(w => [w.date, w.ml]))
-
-    for (const date of sorted) {
-      rows.push([
-        date,
-        weightMap[date] ?? null,
-        calMap[date]?.calories ?? null,
-        calMap[date]?.protein ?? null,
-        calMap[date]?.carbs ?? null,
-        calMap[date]?.fat ?? null,
-        waterMap[date] ? Math.round(waterMap[date] / 1000 * 10) / 10 : null,
-      ])
-    }
+    const rows = buildLegacyAnalyticsCsvRows({ weights: weightHistoryFull.map(value => ({ date: value.date, weight: value.poids })), calories: weeklyCalories, water: weeklyWater })
 
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     downloadCsv(`moovx_analytics_${today}.csv`,
       [t('csvDate'), t('csvWeight'), t('csvCalories'), t('csvProtein'), t('csvCarbs'), t('csvFat'), t('csvWater')],
-      rows
+      rows.map(row => [...row])
     )
   }
 
@@ -307,7 +202,7 @@ export default function AnalyticsSection({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('weight')}</span>
             <div style={{ display: 'flex', gap: 4 }}>
-              {(['30j', '60j', '90j', 'tout'] as WeightPeriod[]).map(p => (
+              {(['30j', '60j', '90j', 'tout'] as AnalyticsWeightPeriod[]).map(p => (
                 <button key={p} onClick={() => setWeightPeriod(p)} style={{
                   padding: '6px 10px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
                   fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, fontFamily: fonts.alt, letterSpacing: '0.15em',
@@ -430,7 +325,7 @@ export default function AnalyticsSection({
             <span style={{ fontFamily: fonts.alt, fontSize: '0.6rem', fontWeight: 700, letterSpacing: '1.5px', color: colors.textMuted, textTransform: 'uppercase' }}>{t('exerciseProgressTrailing')}</span>
           </div>
           <select
-            value={selectedExercise}
+            value={activeExercise}
             onChange={e => setSelectedExercise(e.target.value)}
             style={{
               width: '100%', padding: '10px 14px', marginBottom: 12, borderRadius: 12,
@@ -443,10 +338,10 @@ export default function AnalyticsSection({
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
-          {selectedExercise && (byExercise[selectedExercise]?.length ?? 0) >= 2 ? (
+          {activeExercise && (byExercise[activeExercise]?.length ?? 0) >= 2 ? (
             <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '16px 8px 8px' }}>
               <SizedContainer hasSize={hasSize} height={220}>
-                <LineChart data={byExercise[selectedExercise].map(d => ({ ...d, label: format(new Date(d.date + 'T12:00:00'), 'd MMM', { locale: dateLocale }) }))}>
+                <LineChart data={byExercise[activeExercise].map(d => ({ ...d, label: format(new Date(d.date + 'T12:00:00'), 'd MMM', { locale: dateLocale }) }))}>
                   <CartesianGrid stroke={`${colors.divider}`} strokeDasharray="3 3" />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} />
                   <YAxis tick={{ fontSize: 10, fill: colors.textMuted, fontFamily: fonts.body }} unit="kg" />

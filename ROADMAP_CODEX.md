@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 13 tâches sur 17 ; prochaine tranche : extraire les calculs d'`AnalyticsSection`**
+**Statut : Phase 4 active — 14 tâches sur 17 ; prochaine tranche : réduire `ProgressTab` sous 500 lignes**
 
 ### Pourquoi
 
@@ -401,7 +401,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Extraire les fonctions d'agrégation pures ([contrats](docs/PROGRESSION_AGGREGATIONS.md)) | 2,5 j | Élevée | Moyen | Élevé | Catalogue métriques |
 | [x] Créer les read models progression/analytics ([contrats](docs/PROGRESSION_READ_MODELS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [x] Découper `ProgressTab` par section ([architecture](docs/PROGRESSION_TAB_SECTIONS.md)) | 3 j | Élevée | Moyen | Élevé | Read models |
-| [ ] Extraire les calculs d'`AnalyticsSection` | 2 j | Moyenne | Moyen | Moyen | Agrégations pures |
+| [x] Extraire les calculs d'`AnalyticsSection` ([contrats](docs/PROGRESSION_ANALYTICS_CALCULATIONS.md)) | 2 j | Moyenne | Moyen | Moyen | Agrégations pures |
 | [ ] Réduire `ProgressTab` sous 500 lignes | 1 j | Moyenne | Faible | Moyen | Extractions |
 | [ ] Tester fuseaux horaires, semaines et unités | 2 j | Élevée | Faible | Élevé | Fonctions pures |
 

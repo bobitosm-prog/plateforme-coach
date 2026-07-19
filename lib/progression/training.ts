@@ -1,4 +1,4 @@
-import { calendarDateAt, mondayWeekBounds } from './dates'
+import { calendarDateAt, legacyMixedLocalUtcMondayKey, mondayWeekBounds } from './dates'
 import { propagateAggregationFailure, type AggregationIssue, type AggregationResult } from './types'
 
 export interface TrainingSetInput {
@@ -103,4 +103,18 @@ export function percentageChangeLegacy(values: readonly number[]): AggregationRe
 
 export function sumLegacyWeeklyVolume(values: readonly { readonly volume: number }[]): number {
   return values.reduce((sum, item) => sum + item.volume, 0)
+}
+
+export function groupMixedLocalUtcLegacyWeeklyTonnage(input: {
+  readonly sets: readonly DatedTrainingSet[]
+  readonly timeZone: string
+}): AggregationResult<readonly { week: string; volume: number }[]> {
+  if (input.sets.length === 0) return { status: 'unavailable', value: null, issues: [{ code: 'empty_input', path: 'sets' }] }
+  const totals = new Map<string, number>()
+  for (const [index, set] of input.sets.entries()) {
+    const week = legacyMixedLocalUtcMondayKey(set.createdAt, input.timeZone)
+    if (week.status !== 'complete') return { status: 'invalid', value: null, issues: [{ code: 'invalid_date', path: `sets.${index}.createdAt` }] }
+    totals.set(week.value, (totals.get(week.value) ?? 0) + legacyTonnage([set]))
+  }
+  return { status: 'complete', value: [...totals].map(([week, volume]) => ({ week, volume: Math.round(volume) })).sort((a, b) => a.week.localeCompare(b.week)), issues: [] }
 }

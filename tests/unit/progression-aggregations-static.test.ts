@@ -15,7 +15,8 @@ describe('progression aggregation purity', () => {
   })
   it('keeps representative analytics consumers on the shared formulas', () => {
     const analytics = fs.readFileSync(path.join(process.cwd(), 'app/components/AnalyticsSection.tsx'), 'utf8')
-    expect(analytics).toContain('estimatedOneRepMax(s.weight, s.reps)')
+    expect(analytics).toContain('buildLegacyExerciseProgression(wSessions)')
+    expect(sources).toContain('estimatedOneRepMax(set.weight, set.reps)')
     expect(analytics).toContain('percentageChangeLegacy(weeklyVolume.map(item => item.volume))')
     expect(analytics).not.toContain('s.weight * (1 + s.reps / 30)')
   })

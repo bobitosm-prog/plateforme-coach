@@ -66,3 +66,42 @@ export function rollingCalendarWindow(input: {
 export function inCalendarWindow(date: string, bounds: { readonly startInclusive: CalendarDate; readonly endExclusive: CalendarDate }): boolean {
   return isCalendarDate(date) && date >= bounds.startInclusive && date < bounds.endExclusive
 }
+
+interface ZonedParts { year: number; month: number; day: number; hour: number; minute: number; second: number }
+
+function zonedParts(instant: Date, timeZone: string): ZonedParts | null {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    }).formatToParts(instant)
+    const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find(part => part.type === type)?.value)
+    const result = { year: value('year'), month: value('month'), day: value('day'), hour: value('hour'), minute: value('minute'), second: value('second') }
+    return Object.values(result).every(Number.isFinite) ? result : null
+  } catch { return null }
+}
+
+function instantForZonedParts(parts: ZonedParts, milliseconds: number, timeZone: string): Date | null {
+  const desired = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second, milliseconds)
+  let candidate = desired
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const observed = zonedParts(new Date(candidate), timeZone)
+    if (!observed) return null
+    const observedAsUtc = Date.UTC(observed.year, observed.month - 1, observed.day, observed.hour, observed.minute, observed.second, milliseconds)
+    candidate += desired - observedAsUtc
+  }
+  return new Date(candidate)
+}
+
+/** Reproduces the historical local-weekday shift followed by UTC truncation. */
+export function legacyMixedLocalUtcMondayKey(instantValue: string, timeZone: string): AggregationResult<CalendarDate> {
+  const instant = new Date(instantValue)
+  if (!Number.isFinite(instant.getTime())) return { status: 'invalid', value: null, issues: [{ code: 'invalid_date', path: 'instant' }] }
+  const local = zonedParts(instant, timeZone)
+  if (!local) return { status: 'invalid', value: null, issues: [{ code: 'invalid_date', path: 'timeZone' }] }
+  const localDate = new Date(Date.UTC(local.year, local.month - 1, local.day))
+  const weekday = localDate.getUTCDay()
+  localDate.setUTCDate(localDate.getUTCDate() - (weekday === 0 ? 6 : weekday - 1))
+  const mondayInstant = instantForZonedParts({ ...local, year: localDate.getUTCFullYear(), month: localDate.getUTCMonth() + 1, day: localDate.getUTCDate() }, instant.getUTCMilliseconds(), timeZone)
+  if (!mondayInstant) return { status: 'invalid', value: null, issues: [{ code: 'invalid_date', path: 'timeZone' }] }
+  return { status: 'complete', value: mondayInstant.toISOString().slice(0, 10) as CalendarDate, issues: [] }
+}

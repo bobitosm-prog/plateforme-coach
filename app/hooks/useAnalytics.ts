@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createAnalyticsReadModel, LatestAnalyticsReadCoordinator, type AnalyticsReadPort } from '../../lib/progression'
+import { createAnalyticsReadModel, groupMixedLocalUtcLegacyWeeklyTonnage, LatestAnalyticsReadCoordinator, type AnalyticsPersonalRecord, type AnalyticsReadPort } from '../../lib/progression'
 import { createNutritionJournalRepository } from '../../lib/repositories/nutrition'
 import type { DatabaseClient } from '../../lib/supabase/types'
 
@@ -10,7 +10,7 @@ interface UseAnalyticsParams {
 }
 
 export default function useAnalytics({ supabase }: UseAnalyticsParams) {
-  const [personalRecords, setPersonalRecords] = useState<any[]>([])
+  const [personalRecords, setPersonalRecords] = useState<AnalyticsPersonalRecord[]>([])
   const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([])
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
   const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
@@ -26,7 +26,7 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
         clock: { now: () => now },
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
-      loadLegacyWeeklyVolume(supabase, uid, now),
+      loadLegacyWeeklyVolume(supabase, uid, now, Intl.DateTimeFormat().resolvedOptions().timeZone),
     ])
     if (!requestCoordinator.current.isCurrent(request)) return
     if (!result.data) {
@@ -39,7 +39,7 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
     setPersonalRecords([...result.data.personalRecords])
     setWeeklyCalories([...result.data.weeklyCalories])
     setWeeklyWater([...result.data.weeklyWater])
-    if (legacyWeeklyVolume) setWeeklyVolume(legacyWeeklyVolume)
+    if (legacyWeeklyVolume) setWeeklyVolume([...legacyWeeklyVolume])
     setWeightHistoryFull(result.data.weightHistoryFull.map(item => ({ date: item.date, poids: item.weight })))
   }
 
@@ -120,19 +120,12 @@ function createAnalyticsPort(supabase: SupabaseClient): AnalyticsReadPort {
   }
 }
 
-async function loadLegacyWeeklyVolume(supabase: SupabaseClient, ownerUserId: string, now: Date) {
+async function loadLegacyWeeklyVolume(supabase: SupabaseClient, ownerUserId: string, now: Date, timeZone: string) {
   const fourWeeksAgo = new Date(now)
   fourWeeksAgo.setDate(now.getDate() - 28)
   const { data, error } = await supabase.from('workout_sets').select('weight,reps,created_at')
     .eq('user_id', ownerUserId).gte('created_at', fourWeeksAgo.toISOString()).eq('completed', true).limit(500)
   if (error || !data?.length) return null
-  const totals = new Map<string, number>()
-  for (const set of data) {
-    const weekStart = new Date(set.created_at)
-    const day = weekStart.getDay()
-    weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-    const key = weekStart.toISOString().split('T')[0]
-    totals.set(key, (totals.get(key) ?? 0) + (set.weight || 0) * (set.reps || 0))
-  }
-  return [...totals].map(([week, volume]) => ({ week, volume: Math.round(volume) })).sort((a, b) => a.week.localeCompare(b.week))
+  const result = groupMixedLocalUtcLegacyWeeklyTonnage({ sets: data.map(set => ({ createdAt: set.created_at, weight: set.weight, reps: set.reps, completed: true })), timeZone })
+  return result.status === 'complete' ? result.value : null
 }
