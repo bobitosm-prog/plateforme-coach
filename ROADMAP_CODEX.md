@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 7 tâches sur 17 ; prochaine tranche : réduire `NutritionTab` sous 500 lignes**
+**Statut : Phase 4 active — 8 tâches sur 17 ; prochaine tranche : comparer les totaux anciens et nouveaux**
 
 ### Pourquoi
 
@@ -395,7 +395,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Extraire la génération de repas hors de la route HTTP ([contrat](docs/NUTRITION_MEAL_GENERATION_SERVICE.md)) | 3 j | Élevée | Élevé | Élevé | Modèle nutrition |
 | [x] Découper hooks journal, plans, recettes et objectifs ([contrats](docs/NUTRITION_DOMAIN_HOOKS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [x] Extraire les sections de `NutritionTab` ([architecture](docs/NUTRITION_TAB_SECTIONS.md)) | 4 j | Élevée | Élevé | Élevé | Hooks spécialisés |
-| [ ] Réduire `NutritionTab` sous 500 lignes | 1,5 j | Moyenne | Moyen | Élevé | Extractions |
+| [x] Réduire `NutritionTab` sous 500 lignes ([architecture](docs/NUTRITION_TAB_SECTIONS.md)) | 1,5 j | Moyenne | Moyen | Élevé | Extractions |
 | [ ] Comparer les totaux anciens et nouveaux | 1,5 j | Élevée | Faible | Critique | Double calcul |
 | [ ] Documenter les métriques de progression | 1,5 j | Moyenne | Faible | Élevé | — |
 | [ ] Extraire les fonctions d'agrégation pures | 2,5 j | Élevée | Moyen | Élevé | Catalogue métriques |
@@ -745,7 +745,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈56 % (77/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈57 % (78/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |

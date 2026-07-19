@@ -1,8 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { UtensilsCrossed, SlidersHorizontal, ShoppingCart, Plus, Trash2, Download, Camera, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, X } from 'lucide-react'
-import { downloadCsv } from '../../../lib/exportCsv'
+import { UtensilsCrossed, SlidersHorizontal, ShoppingCart, Sun, Moon, Cookie } from 'lucide-react'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
@@ -10,8 +9,6 @@ import { normalizeFoodItem } from '../../../lib/utils/food'
 import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
-import { RailOverlay } from '../ui/RailOverlay'
-import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import { useNutritionJournal, useNutritionPlans } from '../../hooks/nutrition'
@@ -19,18 +16,16 @@ import { NutritionCalendarSection } from './nutrition/NutritionCalendarSection'
 import { NutritionPlanSection } from './nutrition/NutritionPlanSection'
 import { NutritionSummarySection } from './nutrition/NutritionSummarySection'
 import { NutritionSavedMealsSection, type NutritionSavedMealView } from './nutrition/NutritionSavedMealsSection'
+import { NutritionJournalMealsSection, type NutritionJournalLog } from './nutrition/NutritionJournalMealsSection'
+import { NutritionPlanContent } from './nutrition/NutritionPlanContent'
+import { NutritionTabOverlays, type EditableMeal, type FoodSearchResult, type OverlayFood, type ReusableMeal } from './nutrition/NutritionTabOverlays'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
+  fonts, colors, todayNutritionKey, subtitleStyle, bodyStyle,
 } from '../../../lib/design-tokens'
-import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
+import { parseMealPlan, getMealByKey, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
-const MEAL_TIMES: Record<string, string> = {
-  petit_dejeuner: '7h00',
-  dejeuner: '12h30',
-  collation: '16h00',
-  diner: '19h30',
-}
 const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+const addDays = (date: string, days: number) => { const value = new Date(`${date}T00:00:00`); value.setDate(value.getDate() + days); return value.toISOString().split('T')[0] }
 
 type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
 
@@ -50,9 +45,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
-  const T = titleStyle
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
-  const [showShoppingList, setShowShoppingList] = useState(false)
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
@@ -88,7 +81,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [editMealSaved, setEditMealSaved] = useState(false)
   const [editAddFoodQuery, setEditAddFoodQuery] = useState('')
   const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
-  const photoInputRef = React.useRef<HTMLInputElement>(null)
   const calScrollRef = React.useRef<HTMLDivElement>(null)
   const today = new Date().toISOString().split('T')[0]
   const [selectedDate, setSelectedDate] = useState(today)
@@ -101,9 +93,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const journal = useNutritionJournal({ supabase, userId, selectedDate })
   const plans = useNutritionPlans({ supabase, userId, date: today })
   const { dailyLogs, setDailyLogs, daysWithMeals, setDaysWithMeals, waterToday, reload: fetchDailyLogs } = journal
-  const { activePersonalPlan: activeMealPlan, completedMeals, loading: loadingPlan, reload: fetchActiveMealPlan, toggleMeal } = plans
+  const { activePersonalPlan: activeMealPlan, loading: loadingPlan, reload: fetchActiveMealPlan } = plans
   const addWater = (ml: number) => journal.addWater(ml, today)
-  const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>('today')
 
   useEffect(() => {
@@ -237,11 +228,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     )
   }
 
-  function getMealConsumed(mealType: string) {
-    const logs = dailyLogs.filter(l => l.meal_type === mealType)
-    return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
-  }
-
   // Get today's plan data normalized to canonical DayPlan format.
   // Prefers activeMealPlan (AI), falls back to coachMealPlan.
   function getTodayPlanData(): { day: DayPlan; planId: string | null } | null {
@@ -257,22 +243,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       if (day) return { day, planId: coachMealPlan.id ?? null }
     }
     return null
-  }
-
-  // Calculate consumed macros from completed meals (canonical DayPlan)
-  function getConsumedMacros(day: DayPlan): { kcal: number; protein: number; carbs: number; fat: number } {
-    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const key of MEAL_KEYS) {
-      if (!completedMeals.has(key)) continue
-      const foods = getMealByKey(day, key)
-      for (const f of foods) {
-        result.kcal += f.kcal
-        result.protein += f.prot
-        result.carbs += f.carb
-        result.fat += f.fat
-      }
-    }
-    return result
   }
 
   const isInvited = profile?.subscription_type === 'invited'
@@ -301,240 +271,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           {nt('prefs.configureCta')}
         </button>
       </div>
-    )
-  }
-
-  // Generate shopping list from plan_data (client-side, no API)
-  function generateShoppingList(planData: any): { name: string; totalG: number }[] {
-    const map = new Map<string, number>()
-    for (const day of Object.values(planData) as any[]) {
-      if (!day?.repas) continue
-      for (const foods of Object.values(day.repas) as any[]) {
-        if (!Array.isArray(foods)) continue
-        for (const f of foods) {
-          const name = (f.aliment || '').trim()
-          if (!name) continue
-          map.set(name, (map.get(name) || 0) + (f.quantite_g || 0))
-        }
-      }
-    }
-    return Array.from(map.entries())
-      .map(([name, totalG]) => ({ name, totalG }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-  }
-
-  // Render the AI-generated meal plan (from meal_plans table)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function renderAiPlan(plan: any) {
-    if (!plan.plan_data) return null
-    const parsed = parseMealPlan(plan.plan_data)
-    const dayData = parsed[nutritionDay as Day]
-    if (!dayData) {
-      return (
-        <div style={{ padding: 20, textAlign: 'center' }}>
-          <p style={{ ...bodyStyle, fontSize: '0.85rem', marginBottom: 12 }}>{nt('chrome.noPlanForDay', { day: nutritionDay })}</p>
-        </div>
-      )
-    }
-    const totals = dayData.totals ?? computeDayTotals(dayData)
-
-    return (
-      <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
-          {[
-            { label: nt('macros.kcal'), value: String(totals.kcal || plan.total_calories || '—') },
-            { label: nt('macros.protein'), value: `${totals.prot || plan.protein_g || '—'}g` },
-            { label: nt('macros.carbs'), value: `${totals.carb || plan.carbs_g || '—'}g` },
-            { label: nt('macros.fat'), value: `${totals.fat || plan.fat_g || '—'}g` },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-              <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
-              <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: '2px', marginTop: 4 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key }) => {
-            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
-            const isActive = nutritionDay === key
-            const isToday = key === todayKey
-            const dp = parsed[key as Day]
-            const dayKcal = dp ? (dp.totals?.kcal ?? computeDayTotals(dp).kcal) : 0
-            return (
-              <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                background: isActive ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(8px)',
-                border: `1px solid ${isActive ? colors.gold : isToday ? colors.goldRule : 'rgba(255,255,255,0.1)'}`,
-                color: isActive ? colors.gold : isToday ? colors.gold : colors.textDim,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              }}>
-                {label}
-                {dayKcal > 0 && <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        <button onClick={() => setShowShoppingModal(true)} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-          padding: '12px 16px', borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
-          background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)',
-          fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-          color: colors.gold, marginBottom: 12,
-        }}>
-          <ShoppingCart size={16} color={colors.gold} />
-          {nt('chrome.shoppingList')}
-        </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {MEAL_KEYS.map(mealKey => {
-            const foodList = getMealByKey(dayData, mealKey)
-            if (foodList.length === 0) return null
-            const mealKcal = foodList.reduce((s, f) => s + f.kcal, 0)
-            return (
-              <div key={mealKey} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {React.createElement(({ petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon } as Record<string, any>)[mealKey] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                  <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase', flex: 1 }}>{MEAL_KEY_TO_TYPE[mealKey]}</span>
-                  <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
-                </div>
-                <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
-                  {[
-                    { l: 'P', v: foodList.reduce((s, f) => s + f.prot, 0), color: colors.gold },
-                    { l: 'G', v: foodList.reduce((s, f) => s + f.carb, 0), color: colors.blue },
-                    { l: 'L', v: foodList.reduce((s, f) => s + f.fat, 0), color: colors.orange },
-                  ].map(({ l, v, color }) => (
-                    <span key={l} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
-                      <span style={{ color }}>{l}</span> {Math.round(v)}g
-                    </span>
-                  ))}
-                </div>
-                <div>
-                  {foodList.map((food, fi) => (
-                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
-                        {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </>
-    )
-  }
-
-  // Render the coach meal plan (from client_meal_plans)
-  function renderCoachPlan() {
-    const parsed = parseMealPlan(coachMealPlan)
-    const dayPlanData = parsed[nutritionDay as Day]
-    const dayTotals = dayPlanData ? computeDayTotals(dayPlanData) : { kcal: 0, prot: 0, carb: 0, fat: 0 }
-
-    return (
-      <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
-          {[
-            { label: nt('macros.kcal'), value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
-            { label: nt('macros.protein'), value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
-            { label: nt('macros.carbs'), value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
-            { label: nt('macros.fat'), value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-              <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
-              <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: '2px', marginTop: 4 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key }) => {
-            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
-            const isActive = nutritionDay === key
-            const isToday = key === todayKey
-            const dp = parsed[key as Day]
-            const dayKcal = dp ? computeDayTotals(dp).kcal : 0
-            return (
-              <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                background: isActive ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(8px)',
-                border: `1px solid ${isActive ? colors.gold : isToday ? colors.goldRule : 'rgba(255,255,255,0.1)'}`,
-                color: isActive ? colors.gold : isToday ? colors.gold : colors.textDim,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              }}>
-                {label}
-                {dayKcal > 0 && <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        {(() => {
-          if (!dayPlanData || dayPlanData.meals.length === 0) return (
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <UtensilsCrossed size={28} color={colors.textMuted} style={{ marginBottom: 8 }} />
-              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>{nt('chrome.noMealsForDay')}</p>
-            </div>
-          )
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dayPlanData.meals.map((meal, mi) => {
-                const mealKcal = meal.foods.reduce((s, f) => s + f.kcal, 0)
-                const mealProt = meal.foods.reduce((s, f) => s + f.prot, 0)
-                const mealCarb = meal.foods.reduce((s, f) => s + f.carb, 0)
-                const mealFat = meal.foods.reduce((s, f) => s + f.fat, 0)
-                return (
-                  <div key={mi} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {React.createElement(({ 'Petit-déjeuner': Sun, 'Déjeuner': UtensilsCrossed, 'Collation': Cookie, 'Dîner': Moon } as Record<string, any>)[meal.type] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase', flex: 1 }}>{({'Petit-déjeuner': nt('meals.breakfast'), 'Déjeuner': nt('meals.lunch'), 'Collation': nt('meals.snack'), 'Dîner': nt('meals.dinner')} as Record<string, string>)[meal.type] || meal.type}</span>
-                      <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
-                    </div>
-                    <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
-                      {[
-                        { label: nt('macrosShort.p'), value: `${Math.round(mealProt)}g`, color: colors.gold },
-                        { label: nt('macrosShort.g'), value: `${Math.round(mealCarb)}g`, color: colors.blue },
-                        { label: nt('macrosShort.l'), value: `${Math.round(mealFat)}g`, color: colors.orange },
-                      ].map(({ label, value, color }) => (
-                        <span key={label} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
-                          <span style={{ color }}>{label}</span> {value}
-                        </span>
-                      ))}
-                    </div>
-                    <div>
-                      {meal.foods.map((food, fi) => (
-                        <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
-                            {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
-                            {(food.prot || food.carb || food.fat) ? (
-                              <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })()}
-      </>
     )
   }
 
@@ -626,106 +362,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <NutritionCalendarSection calendarDays={calendarDays} selectedDate={selectedDate} today={today} daysWithMeals={daysWithMeals} locale={locale} scrollRef={calScrollRef} todayLabel={nt('chrome.today')} futureDateLabel={nt('chrome.futureDate')} onSelectDate={setSelectedDate} />
             <NutritionSummarySection consumed={consumed} targets={{ kcal: targetKcal, protein: targetP, carbs: targetG, fat: targetL }} waterMl={waterToday} waterGoalMl={waterGoal} canAddWater={selectedDate === today} remainingLabel={nt('chrome.remaining', { count: remaining })} macroLabels={{ protein: nt('macrosLong.prot'), carbs: nt('macrosLong.gluc'), fat: nt('macrosLong.lip') }} water250Label={nt('chrome.addWater250')} water500Label={nt('chrome.addWater500')} onAddWater={addWater} />
 
-            {/* Meal sections — start empty, import IA optional */}
-            {MEAL_ORDER.map(mealType => {
-              const rec = getMealRecommendation(mealType)
-              const con = getMealConsumed(mealType)
-              const logs = dailyLogs.filter(l => l.meal_type === mealType)
-              const hasPlanFoods = !!rec
-
-              return (
-                <div key={mealType} style={{ ...cardStyle, marginBottom: 12, overflow: 'hidden' }}>
-                  {/* Meal header */}
-                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      {React.createElement(MEAL_ICONS[mealType] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: colors.text }}>{MEAL_LABELS[mealType]}</span>
-                      <span style={{ ...T, marginLeft: 'auto' }}>{con.kcal} kcal</span>
-                      {logs.length > 0 && (
-                        <div style={{ position: 'relative' }}>
-                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
-                          {mealMenuOpen === mealType && (
-                            <div style={{ position: 'absolute', top: 36, right: 0, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.saveMeal')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.copyToDay')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>{nt('mealMenu.clearMeal')}</span></button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {rec && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, fontStyle: 'italic' }}>
-                        {nt('chrome.recommended', { kcal: rec.kcal, p: Math.round(rec.protein), c: Math.round(rec.carbs), f: Math.round(rec.fat) })}
-                      </div>
-                    )}
-                    {logs.length > 0 && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? colors.error : colors.gold, marginTop: 2 }}>
-                        Consommé : {con.kcal} kcal · P:{Math.round(con.protein)}g · G:{Math.round(con.carbs)}g · L:{Math.round(con.fat)}g
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Daily food logs for this meal */}
-                  <div style={{ padding: '0 16px' }}>
-                    {logs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{log.custom_name || 'Aliment'}</div>
-                          {editingFoodId === log.id ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-                              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>g</span>
-                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: colors.onGold, padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
-                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><X size={14} color={colors.textMuted} /></button>
-                            </div>
-                          ) : (
-                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>{log.quantity_g}g</span>
-                              <Pencil size={10} color={colors.textDim} />
-                              <span style={{ fontSize: 10, color: colors.textDim }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
-                            </div>
-                          )}
-                        </div>
-                        <span style={{ ...T, flexShrink: 0 }}>{Math.round(log.calories)}</span>
-                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.replace')}><RefreshCw size={14} color={colors.textMuted} /></button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.delete')}><Trash2 size={14} color={colors.textMuted} /></button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {logs.length === 0 && (
-                      <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                        <span style={mutedStyle}>{nt('chrome.noFoodAdded')}</span>
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px', flexWrap: 'wrap' }}>
-                      {hasPlanFoods && logs.length === 0 && (() => {
-                        const isViewingToday = nutritionDay === todayKey
-                        return (
-                          <button
-                            onClick={() => isViewingToday && setImportingMeal(mealType)}
-                            disabled={!isViewingToday}
-                            title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
-                          >
-                            <Download size={14} /> {isInvited ? nt('actions.import') : nt('actions.importAI')}
-                          </button>
-                        )
-                      })()}
-                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
-                        <Plus size={14} strokeWidth={2.5} /> {nt('chrome.add')}
-                      </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            <NutritionJournalMealsSection mealOrder={MEAL_ORDER} mealLabels={MEAL_LABELS} mealIcons={MEAL_ICONS} logs={dailyLogs as NutritionJournalLog[]} recommendations={Object.fromEntries(MEAL_ORDER.map(meal => [meal, getMealRecommendation(meal)]))} selectedPlanDay={nutritionDay} todayPlanDay={todayKey} isInvited={isInvited} openMenu={mealMenuOpen} editingFoodId={editingFoodId} editQuantity={editQty} labels={{ noFood: nt('chrome.noFoodAdded'), recommended: value => nt('chrome.recommended', { kcal: value.kcal, p: Math.round(value.protein), c: Math.round(value.carbs), f: Math.round(value.fat) }), consumed: value => `Consommé : ${value.kcal} kcal · P:${Math.round(value.protein)}g · G:${Math.round(value.carbs)}g · L:${Math.round(value.fat)}g`, save: nt('mealMenu.saveMeal'), copy: nt('mealMenu.copyToDay'), clear: nt('mealMenu.clearMeal'), replace: nt('mealMenu.replace'), remove: nt('mealMenu.delete'), import: nt('actions.import'), add: nt('chrome.add'), todayOnly: 'Disponible uniquement pour aujourd\'hui' }} onOpenMenu={setMealMenuOpen} onStartSave={(meal, logs) => { setMealMenuOpen(null); setSaveMealData({ mealType: meal, foods: logs.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) }); setSaveMealName(''); setSaveMealType(meal); setShowSaveMealPopup(true) }} onStartCopy={(meal, logs) => { setMealMenuOpen(null); setCopyMealData({ mealType: meal, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(meal); setShowCopyMealPopup(true) }} onClear={clearMeal} onStartEditQuantity={log => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} onEditQuantity={setEditQty} onSaveQuantity={updateFoodQuantity} onCancelQuantity={() => setEditingFoodId(null)} onReplace={log => { setSwappingFoodId(log.id); setShowFoodSearch(log.meal_type) }} onDelete={deleteDailyLog} onImport={setImportingMeal} onAdd={setShowFoodSearch} onPhoto={meal => { setPhotoMealTarget(meal); setShowPhotoCapture(true) }} onSavedMeals={meal => { setUseSavedMealTarget(meal); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} />
 
             {/* Import confirmation modal */}
             {importingMeal && (() => {
@@ -750,7 +387,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         )
       })()}
 
-      <NutritionPlanSection active={subTab === 'plan'} loading={loadingPlan} hasPersonalPlan={!!activeMealPlan} hasCoachPlan={!!coachMealPlan} emptyView={renderWaitingScreen()} personalPlanView={activeMealPlan ? renderAiPlan(activeMealPlan) : null} coachPlanView={renderCoachPlan()} />
+      <NutritionPlanSection active={subTab === 'plan'} loading={loadingPlan} hasPersonalPlan={!!activeMealPlan} hasCoachPlan={!!coachMealPlan} emptyView={renderWaitingScreen()} personalPlanView={activeMealPlan ? <NutritionPlanContent mode="personal" plan={activeMealPlan} planData={activeMealPlan.plan_data} selectedDay={nutritionDay} todayKey={todayKey} locale={locale} labels={{ kcal: nt('macros.kcal'), protein: nt('macros.protein'), carbs: nt('macros.carbs'), fat: nt('macros.fat'), noDay: nt('chrome.noPlanForDay', { day: nutritionDay }), noMeals: nt('chrome.noMealsForDay'), shopping: nt('chrome.shoppingList'), breakfast: nt('meals.breakfast'), lunch: nt('meals.lunch'), snack: nt('meals.snack'), dinner: nt('meals.dinner') }} onSelectDay={setNutritionDay} onShopping={() => setShowShoppingModal(true)} /> : null} coachPlanView={coachMealPlan ? <NutritionPlanContent mode="coach" plan={coachMealPlan} planData={coachMealPlan} selectedDay={nutritionDay} todayKey={todayKey} locale={locale} labels={{ kcal: nt('macros.kcal'), protein: nt('macros.protein'), carbs: nt('macros.carbs'), fat: nt('macros.fat'), noDay: nt('chrome.noPlanForDay', { day: nutritionDay }), noMeals: nt('chrome.noMealsForDay'), shopping: nt('chrome.shoppingList'), breakfast: nt('meals.breakfast'), lunch: nt('meals.lunch'), snack: nt('meals.snack'), dinner: nt('meals.dinner') }} onSelectDay={setNutritionDay} onShopping={() => setShowShoppingModal(true)} /> : null} />
 
       {/* Preferences sub-tab */}
       {subTab === 'prefs' && (
@@ -773,234 +410,8 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <NutritionSavedMealsSection meals={myMeals as NutritionSavedMealView[]} search={myMealsSearch} filter={myMealsFilter} locale={locale} labels={{ title: nt('chrome.myMeals'), search: nt('chrome.searchMeal'), all: nt('filters.all'), breakfast: nt('filters.breakfast'), lunch: nt('filters.lunch'), dinner: nt('filters.dinner'), snack: nt('filters.snack'), empty: 'Aucun repas sauvegardé. Ajoute un repas depuis l’onglet Journal pour le retrouver ici.', create: '+ CRÉER UN REPAS' }} mealLabels={MEAL_LABELS} confirmDeleteId={confirmDeleteMeal} onSearchChange={setMyMealsSearch} onFilterChange={setMyMealsFilter} onEdit={setEditingMeal} onAskDelete={setConfirmDeleteMeal} onDelete={async id => { await supabase.from('saved_meals').delete().eq('id', id); setMyMeals(previous => previous.filter(meal => meal.id !== id)); setConfirmDeleteMeal(null) }} onCreate={async () => { const { data } = await supabase.from('saved_meals').insert({ user_id: userId, name: 'Nouveau repas', meal_type: 'dejeuner', foods: [] }).select().single(); if (data) { setMyMeals(previous => [data, ...previous]); setEditingMeal(data) } }} />
       )}
 
-      {/* Meal edit modal */}
-      {editingMeal && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85vh', overflow: 'auto' }}>
-            <ModalHeader title={editingMeal.name || 'Modifier le repas'} onClose={() => setEditingMeal(null)} />
-            <div style={{ padding: '0 24px 24px' }}>
-            {/* Food items list */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-              {(editingMeal.foods || []).map((food: any, idx: number) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.surfaceHigh, borderRadius: 10, padding: '8px 10px', border: `1px solid ${colors.goldDim}` }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{food.name}</div>
-                    <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body }}>{food.calories || 0} kcal · {food.protein || 0}g P</div>
-                  </div>
-                  <input type="number" value={food.quantity || 100} onChange={e => {
-                    const newFoods = [...editingMeal.foods]
-                    const ratio = (parseFloat(e.target.value) || 100) / (food.quantity || 100)
-                    newFoods[idx] = { ...food, quantity: parseFloat(e.target.value) || 0, calories: Math.round((food.calories || 0) * ratio), protein: Math.round((food.protein || 0) * ratio), carbs: Math.round((food.carbs || 0) * ratio), fat: Math.round((food.fat || 0) * ratio) }
-                    setEditingMeal({ ...editingMeal, foods: newFoods })
-                  }} style={{ width: 50, textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
-                  <span style={{ fontSize: 10, color: colors.textDim }}>g</span>
-                  <button onClick={() => {
-                    const newFoods = editingMeal.foods.filter((_: any, i: number) => i !== idx)
-                    setEditingMeal({ ...editingMeal, foods: newFoods })
-                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><Trash2 size={14} color={colors.error} /></button>
-                </div>
-              ))}
-            </div>
-            {/* Inline food search — adds directly to editingMeal.foods */}
-            <div style={{ marginBottom: 12 }}>
-              <input value={editAddFoodQuery} onChange={async (e) => {
-                setEditAddFoodQuery(e.target.value)
-                if (e.target.value.length >= 2) {
-                  const q = `%${e.target.value}%`
-                  const [fitRes, ansesRes] = await Promise.all([
-                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', q).limit(8),
-                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', q).limit(6),
-                  ])
-                  const results = [
-                    ...(fitRes.data || []).map((f: any) => normalizeFoodItem(f)),
-                    ...(ansesRes.data || []).map((f: any) => normalizeFoodItem(f)),
-                  ]
-                  setEditAddFoodResults(results)
-                } else { setEditAddFoodResults([]) }
-              }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none' }} />
-              {editAddFoodResults.length > 0 && (
-                <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: colors.surface, marginTop: 4 }}>
-                  {editAddFoodResults.map((f: any) => (
-                    <button key={f.id} onClick={() => {
-                      const newFood = { name: f.nom, calories: f.calories, protein: f.proteines, carbs: f.glucides, fat: f.lipides, quantity: 100 }
-                      setEditingMeal({ ...editingMeal, foods: [...(editingMeal.foods || []), newFood] })
-                      setEditAddFoodQuery('')
-                      setEditAddFoodResults([])
-                    }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>CIQUAL</span>}</div>
-                      <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <button onClick={async () => {
-              setEditMealSaving(true)
-              const foods = editingMeal.foods || []
-              const totals = {
-                total_calories: foods.reduce((s: number, f: any) => s + (f.calories || 0), 0),
-                total_proteins: foods.reduce((s: number, f: any) => s + (f.protein || f.proteins || 0), 0),
-                total_carbs: foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0),
-                total_fats: foods.reduce((s: number, f: any) => s + (f.fat || f.fats || 0), 0),
-              }
-              await supabase.from('saved_meals').update({ foods, ...totals }).eq('id', editingMeal.id)
-              setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods, ...totals } : m))
-              setEditMealSaving(false)
-              setEditMealSaved(true)
-              setTimeout(() => setEditMealSaved(false), 2000)
-            }} disabled={editMealSaving} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
-              {editMealSaving ? nt('actions.saving') : editMealSaved ? nt('actions.saved') : nt('actions.save')}
-            </button>
-            <button onClick={async () => {
-              if (confirm(nt('actions.deleteConfirm'))) {
-                await supabase.from('saved_meals').delete().eq('id', editingMeal.id)
-                setMyMeals(prev => prev.filter(m => m.id !== editingMeal.id))
-                setEditingMeal(null)
-              }
-            }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>SUPPRIMER LE REPAS</button>
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
-
-      {/* Shopping list modal */}
-      {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && (
-        <ShoppingList
-          planData={activeMealPlan?.plan_data || coachMealPlan}
-          onClose={() => setShowShoppingModal(false)}
-        />
-      )}
-
-      {/* ═══ PHOTO MEAL SCAN ═══ */}
-      {showPhotoCapture && (<RailOverlay>
-        <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null) }} />
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-              <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
-              {!photoResults && !analyzingPhoto && (
-                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <Camera size={48} color={colors.gold} />
-                  <span style={{ ...statSmallStyle, letterSpacing: 2 }}>{nt('chrome.takePhoto')}</span>
-                  <span style={mutedStyle}>{nt('chrome.orGallery')}</span>
-                </button>
-              )}
-              {analyzingPhoto && (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${colors.goldDim}`, borderTopColor: colors.gold, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                  <div style={{ ...statSmallStyle, letterSpacing: 2 }}>ANALYSE EN COURS...</div>
-                </div>
-              )}
-              {photoResults?.foods && (
-                <>
-                  <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 3, marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
-                  {photoResults.foods.map((f: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
-                      <div>
-                        <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{f.name}</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
-                      </div>
-                      <span style={{ ...statSmallStyle, fontSize: 16 }}>{f.calories}</span>
-                    </div>
-                  ))}
-                  <div style={{ background: colors.goldDim, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
-                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.total_calories} KCAL</span>
-                  </div>
-                </>
-              )}
-            </div>
-            {photoResults?.foods && (
-              <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
-                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: colors.onGold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
-              </div>
-            )}
-          </div>
-        </>
-      </RailOverlay>)}
-
-      {/* ═══ SAVE MEAL POPUP ═══ */}
-      {showSaveMealPopup && saveMealData && (<RailOverlay>
-        <>
-          <div onClick={() => setShowSaveMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: Z_MODAL, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 3, height: 18, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-              <h3 style={{ fontFamily: fonts.alt, fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold, textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>{nt('saveMealPopup.title')}</h3>
-            </div>
-            <input type="text" placeholder={nt('saveMealPopup.placeholder')} value={saveMealName} onChange={e => setSaveMealName(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
-            <div style={{ background: colors.background, borderRadius: 10, padding: 12, marginBottom: 16, border: `1px solid ${colors.goldDim}` }}>
-              <div style={{ ...subtitleStyle, fontSize: 9, letterSpacing: 2, marginBottom: 8 }}>{nt('saveMealPopup.foodCount', { count: saveMealData.foods.length })}</div>
-              {saveMealData.foods.map((f: any, i: number) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontFamily: fonts.body, fontSize: 12 }}>
-                  <span style={{ color: colors.text }}>{f.name}</span>
-                  <span style={{ color: colors.gold }}>{f.calories} kcal</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.cancel')}</button>
-              <button disabled={!saveMealName.trim()} onClick={async () => {
-                await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
-                setShowSaveMealPopup(false); setSaveMealName('')
-              }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
-            </div>
-          </div>
-        </>
-      </RailOverlay>)}
-
-      {/* ═══ COPY MEAL POPUP ═══ */}
-      {showCopyMealPopup && copyMealData && (<RailOverlay>
-        <>
-          <div onClick={() => setShowCopyMealPopup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 24, zIndex: Z_MODAL, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 3, height: 18, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-              <h3 style={{ fontFamily: fonts.alt, fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold, textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>{nt('copyMealPopup.title')}</h3>
-            </div>
-            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>{nt('copyMealPopup.date')}</div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              {[{ l: nt('copy.tomorrow'), d: 1 }, { l: nt('copy.plus2d'), d: 2 }, { l: nt('copy.plus3d'), d: 3 }, { l: nt('copy.plus1w'), d: 7 }].map(s => {
-                const dt = new Date(Date.now() + s.d * 86400000).toISOString().split('T')[0]
-                return <button key={s.l} onClick={() => setCopyTargetDate(dt)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetDate === dt ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: copyTargetDate === dt ? colors.goldDim : 'transparent', color: copyTargetDate === dt ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{s.l}</button>
-              })}
-            </div>
-            <input type="date" value={copyTargetDate} onChange={e => setCopyTargetDate(e.target.value)} min={today} style={{ width: '100%', padding: '10px 14px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none', marginBottom: 12, colorScheme: 'dark' }} />
-            <div style={{ ...subtitleStyle, fontSize: 10, letterSpacing: 2, marginBottom: 6 }}>{nt('copyMealPopup.meal')}</div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-              {MEAL_ORDER.map(t => <button key={t} onClick={() => setCopyTargetMealType(t)} style={{ padding: '6px 12px', borderRadius: 20, border: copyTargetMealType === t ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: copyTargetMealType === t ? colors.goldDim : 'transparent', color: copyTargetMealType === t ? colors.gold : colors.textMuted, fontFamily: fonts.body, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{MEAL_LABELS[t]}</button>)}
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCopyMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.cancel')}</button>
-              <button disabled={!copyTargetDate || !copyTargetMealType} onClick={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} style={{ flex: 1, padding: 14, background: (copyTargetDate && copyTargetMealType) ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: (copyTargetDate && copyTargetMealType) ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('copyMealPopup.copy')}</button>
-            </div>
-          </div>
-        </>
-      </RailOverlay>)}
-
-      {/* ═══ SAVED MEALS POPUP ═══ */}
-      {showSavedMeals && (<RailOverlay>
-        <>
-          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)} />
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
-              {savedMeals.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
-              ) : savedMeals.map((meal: any) => (
-                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                  <div>
-                    <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}{meal.use_count > 0 && ` · ${nt('savedMeals.usedCount', { count: meal.use_count })}`}</div>
-                  </div>
-                  <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      </RailOverlay>)}
+      {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && <ShoppingList planData={activeMealPlan?.plan_data || coachMealPlan} onClose={() => setShowShoppingModal(false)} />}
+      <NutritionTabOverlays editingMeal={editingMeal as EditableMeal | null} editQuery={editAddFoodQuery} editResults={editAddFoodResults as FoodSearchResult[]} editSaving={editMealSaving} editSaved={editMealSaved} photoOpen={showPhotoCapture} analyzingPhoto={analyzingPhoto} photoResult={photoResults} saveOpen={showSaveMealPopup && !!saveMealData} saveFoods={(saveMealData?.foods || []) as OverlayFood[]} saveName={saveMealName} copyOpen={showCopyMealPopup && !!copyMealData} copyDate={copyTargetDate} copyMealType={copyTargetMealType} today={today} mealOrder={MEAL_ORDER} mealLabels={MEAL_LABELS} savedOpen={showSavedMeals} savedMeals={savedMeals as ReusableMeal[]} labels={{ editFallback: 'Modifier le repas', save: nt('actions.save'), saving: nt('actions.saving'), saved: nt('actions.saved'), deleteMeal: 'SUPPRIMER LE REPAS', scan: nt('chrome.scanMeal'), takePhoto: nt('chrome.takePhoto'), gallery: nt('chrome.orGallery'), retake: nt('chrome.retake'), addAll: nt('chrome.addAll'), saveTitle: nt('saveMealPopup.title'), savePlaceholder: nt('saveMealPopup.placeholder'), saveCount: count => nt('saveMealPopup.foodCount', { count }), cancel: nt('saveMealPopup.cancel'), copyTitle: nt('copyMealPopup.title'), copyDate: nt('copyMealPopup.date'), copyMeal: nt('copyMealPopup.meal'), copy: nt('copyMealPopup.copy'), savedTitle: nt('savedMeals.title'), savedEmpty: nt('savedMeals.empty'), savedCount: count => nt('savedMeals.foodCount', { count }), usedCount: count => nt('savedMeals.usedCount', { count }), shortcuts: [{ label: nt('copy.tomorrow'), date: addDays(today, 1) }, { label: nt('copy.plus2d'), date: addDays(today, 2) }, { label: nt('copy.plus3d'), date: addDays(today, 3) }, { label: nt('copy.plus1w'), date: addDays(today, 7) }] }} onCloseEdit={() => setEditingMeal(null)} onEditFood={(index, quantity) => { const foods = [...(editingMeal.foods || [])]; const food = foods[index]; const ratio = (quantity || 100) / (food.quantity || 100); foods[index] = { ...food, quantity: quantity || 0, calories: Math.round((food.calories || 0) * ratio), protein: Math.round((food.protein || 0) * ratio), carbs: Math.round((food.carbs || 0) * ratio), fat: Math.round((food.fat || 0) * ratio) }; setEditingMeal({ ...editingMeal, foods }) }} onRemoveFood={index => setEditingMeal({ ...editingMeal, foods: (editingMeal.foods || []).filter((_: unknown, itemIndex: number) => itemIndex !== index) })} onEditQuery={async value => { setEditAddFoodQuery(value); if (value.length < 2) { setEditAddFoodResults([]); return } const query = `%${value}%`; const [fitness, anses] = await Promise.all([supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', query).limit(8), supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', query).limit(6)]); setEditAddFoodResults([...(fitness.data || []).map((food: any) => normalizeFoodItem(food)), ...(anses.data || []).map((food: any) => normalizeFoodItem(food))]) }} onAddFood={food => { setEditingMeal({ ...editingMeal, foods: [...(editingMeal.foods || []), { name: food.nom, calories: food.calories, protein: food.proteines, carbs: food.glucides, fat: food.lipides, quantity: 100 }] }); setEditAddFoodQuery(''); setEditAddFoodResults([]) }} onSaveEdit={async () => { setEditMealSaving(true); const foods = editingMeal.foods || []; const totals = { total_calories: foods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0), total_proteins: foods.reduce((sum: number, food: any) => sum + (food.protein || food.proteins || 0), 0), total_carbs: foods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0), total_fats: foods.reduce((sum: number, food: any) => sum + (food.fat || food.fats || 0), 0) }; await supabase.from('saved_meals').update({ foods, ...totals }).eq('id', editingMeal.id); setMyMeals(previous => previous.map(meal => meal.id === editingMeal.id ? { ...meal, foods, ...totals } : meal)); setEditMealSaving(false); setEditMealSaved(true); setTimeout(() => setEditMealSaved(false), 2000) }} onDeleteEdit={async () => { if (confirm(nt('actions.deleteConfirm'))) { await supabase.from('saved_meals').delete().eq('id', editingMeal.id); setMyMeals(previous => previous.filter(meal => meal.id !== editingMeal.id)); setEditingMeal(null) } }} onPhotoChange={handlePhotoCapture} onClosePhoto={() => { setShowPhotoCapture(false); setPhotoResults(null) }} onRetake={() => setPhotoResults(null)} onAddPhoto={addPhotoFoods} onSaveName={setSaveMealName} onCloseSave={() => setShowSaveMealPopup(false)} onSaveMeal={async () => { const foods = saveMealData.foods; await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods, total_calories: foods.reduce((sum: number, food: any) => sum + (food.calories || 0), 0), total_proteins: foods.reduce((sum: number, food: any) => sum + (food.proteins || 0), 0), total_carbs: foods.reduce((sum: number, food: any) => sum + (food.carbs || 0), 0), total_fats: foods.reduce((sum: number, food: any) => sum + (food.fats || 0), 0) }); setShowSaveMealPopup(false); setSaveMealName('') }} onCopyDate={setCopyTargetDate} onCopyMealType={setCopyTargetMealType} onCloseCopy={() => setShowCopyMealPopup(false)} onCopy={async () => { await copyMealToDate(copyMealData.foods, copyTargetDate, copyTargetMealType); setShowCopyMealPopup(false) }} onCloseSaved={() => setShowSavedMeals(false)} onApplySaved={async meal => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} />
     </div>
   )
 }

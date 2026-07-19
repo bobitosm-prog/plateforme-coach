@@ -54,10 +54,20 @@ n'effectue aucun accès Supabase.
 
 ## Limites et suite
 
-`NutritionTab` reste au-dessus de la cible de 500 lignes. Les cartes détaillées
-du journal, les compositions de plans et les overlays conservent encore une
-part importante de rendu et de coordination. Leur réduction est une tranche
-séparée afin de ne pas mêler extraction visuelle et évolution métier.
+La façade est désormais sous 500 lignes. Trois frontières complètent les quatre
+sections initiales :
+
+- `NutritionJournalMealsSection` rend les cartes de repas, quantités, menus et
+  actions à partir de données et callbacks typés ;
+- `NutritionPlanContent` partage la composition des plans personnels et coach
+  tout en conservant leurs sources et leur priorité distinctes ;
+- `NutritionTabOverlays` regroupe les overlays d'édition, photo, sauvegarde,
+  copie et réutilisation sans accès Supabase direct.
+
+`NutritionTab` conserve l'état React, les hooks, l'ordre historique des accès
+et mutations et la préparation des callbacks. La dette restante porte surtout
+sur le typage des formats legacy et les mutations inline ; leur évolution doit
+rester séparée de cette extraction visuelle.
 
 ## Références
 

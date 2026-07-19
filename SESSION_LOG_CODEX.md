@@ -7477,3 +7477,76 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Réduire `NutritionTab` sous 500 lignes.
+
+---
+
+## Entrée — 2026-07-18 — Façade NutritionTab sous 500 lignes
+
+### Travail effectué
+
+- Réduction de `NutritionTab` à une façade de 417 lignes conservant état React,
+  hooks spécialisés, ordre des accès legacy et préparation des callbacks.
+- Extraction des cartes du journal dans `NutritionJournalMealsSection`, des
+  compositions plan personnel/coach dans `NutritionPlanContent` et des modales
+  dans `NutritionTabOverlays`.
+- Réutilisation des quatre sections et des hooks Nutrition déjà extraits ;
+  aucune lecture, mutation, autorité ou source de données supplémentaire.
+- Ajout de gardes statiques et de rendus React serveur pour le contrat public,
+  les états vides, les formats de plan legacy et les overlays server-safe.
+- Mise à jour de `docs/NUTRITION_TAB_SECTIONS.md` avec la façade finale et les
+  responsabilités des nouvelles frontières.
+
+### Tâches cochées
+
+- Phase 4 : « Réduire `NutritionTab` sous 500 lignes » — terminée.
+- Phase 4 : 7/17 → 8/17 tâches.
+
+### Garanties préservées
+
+- Export et props publics, navigation, journal, eau, macros, plans personnels
+  et coach, repas sauvegardés, modales et callbacks conservés.
+- Zéro explicite et valeur inconnue restent distincts ; les historiques legacy
+  ne sont ni fusionnés ni dédupliqués.
+- Les nouvelles vues reçoivent uniquement données, états et callbacks et ne
+  contiennent ni client Supabase, repository, `service_role`, `select('*')` ou
+  mutation distante.
+- Les accès et écritures historiques restent dans la façade et dans leur ordre
+  actuel, y compris les comportements partiels connus.
+
+### Validations exécutées
+
+- Tests Nutrition ciblés : 7 fichiers, 52/52 tests verts.
+- Suite Vitest complète : 112 fichiers, 1 046 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des trois nouvelles frontières et des nouvelles suites : vert.
+- Gardes statiques : façade et frontières sous 500 lignes, contrat public et
+  délégations présents, aucun import ou accès interdit.
+- `git diff --check` limité à la tranche et liens documentaires vérifiés.
+- Routes, repositories, migrations, RLS, E2E et données distantes inchangés ;
+  staging vide.
+
+### Mesures et dette restante
+
+- `NutritionTab` : 1 006 → 417 lignes (-589, -58,5 %).
+- `NutritionJournalMealsSection` : 81 lignes ; `NutritionPlanContent` : 45 ;
+  `NutritionTabOverlays` : 40. Aucune nouvelle frontière ne dépasse 500 lignes.
+- Dette ESLint de la façade : 38 erreurs/11 avertissements → 26 erreurs/3
+  avertissements, tous historiques ; aucune désactivation ajoutée.
+- Les types legacy des props, plans, journaux et payloads de mutation conservent
+  encore des `any` dans la façade. Les mutations multi-étapes restent non
+  transactionnelles et ne sont pas corrigées dans cette tranche.
+- Progression globale : 77/138 → 78/138, soit environ 57 %.
+
+### Changements concurrents
+
+- Les changements concurrents restent hors tranche, non modifiés par ce travail
+  et hors staging.
+- Le script de seed et les deux médias d'exercice connus restent protégés.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Comparer les totaux anciens et nouveaux.
