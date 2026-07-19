@@ -25,3 +25,29 @@ complétées quitte le hook. La projection legacy `payments.paid_at` reste à sa
 frontière actuelle car cette colonne est absente des types canoniques; inventer
 un repository typé aurait masqué cette divergence. Calendrier, messaging,
 alimentation, profil, Stripe et feedback sont inchangés.
+
+## Architecture finale de la façade
+
+- `useCoachDashboard.ts` (11 lignes) conserve l'export et délègue une fois ;
+- `coach-dashboard-contract.ts` (29 lignes) porte types, constantes et helpers
+  publics historiques ;
+- `useCoachDashboardController.ts` (432 lignes) coordonne identité, données,
+  calendrier, actions legacy et composition du résultat public ;
+- `useCoachDashboardMessaging.ts` (84 lignes) possède état de conversation,
+  repository/service injectés, realtime, polling, scroll et cleanups.
+
+Le contrôleur n'instancie plus de channel et ne possède plus de timer. Le hook
+Messaging réutilise l'adaptateur central, neutralise les réponses obsolètes par
+génération, nettoie deux channels de conversation, le channel global, le
+polling et les listeners d'images. La façade retourne exactement les clés
+historiques; `refreshCounters` reste interne.
+
+La dette ESLint historique passe de 11 erreurs/7 avertissements à 9 erreurs/3
+avertissements, tous localisés dans le contrôleur legacy. La façade, le contrat
+et le hook Messaging n'ajoutent aucune erreur ni aucun avertissement.
+
+Les accès directs existants ne sont pas multipliés : les lectures et mutations
+legacy profil, feedback, alimentation et Stripe restent dans le contrôleur,
+tandis que messaging demeure centralisé dans son repository/service et que le
+calendrier continue d'utiliser son adaptateur. Aucun nouveau `select('*')`,
+`createClient`, `service_role`, abonnement realtime ou polling n'est introduit.

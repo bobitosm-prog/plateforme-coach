@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const dashboard = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf8')
+const dashboard = readFileSync('app/coach/hooks/useCoachDashboardController.ts', 'utf8')
 const home = readFileSync('app/components/tabs/HomeTab.tsx', 'utf8')
 const repository = readFileSync('lib/coaching/calendar/repository.ts', 'utf8')
 const service = readFileSync('lib/coaching/calendar/service.ts', 'utf8')

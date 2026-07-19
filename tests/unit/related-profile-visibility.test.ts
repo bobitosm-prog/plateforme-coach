@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync('supabase/migrations/20260715001000_secure_related_profile_visibility.sql', 'utf8')
-const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf8')
+const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboardController.ts', 'utf8')
 const coachAnalytics = readFileSync('app/coach/hooks/useCoachAnalytics.ts', 'utf8')
 const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
 const coachSection = readFileSync('app/components/tabs/profile/CoachSection.tsx', 'utf8')

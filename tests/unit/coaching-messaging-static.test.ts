@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const moduleFiles = ['types.ts','schema.ts','model.ts','repository.ts','service.ts','realtime-port.ts','supabase-realtime.ts','controller.ts','index.ts']
 const moduleSource = moduleFiles.map(file => readFileSync(`lib/coaching/messaging/${file}`, 'utf8')).join('\n')
-const consumers = ['app/hooks/useMessages.ts','app/coach/hooks/useCoachDashboard.ts','app/client/[id]/hooks/useClientDetail.ts'].map(file => readFileSync(file, 'utf8')).join('\n')
+const consumers = ['app/hooks/useMessages.ts','app/coach/hooks/useCoachDashboardMessaging.ts','app/client/[id]/hooks/useClientDetail.ts'].map(file => readFileSync(file, 'utf8')).join('\n')
 
 describe('messaging module architecture', () => {
   it('leaves no direct messages access or channel lifecycle in human consumers', () => {

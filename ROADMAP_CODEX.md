@@ -437,7 +437,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 | [x] [Extraire le module messaging et realtime](docs/COACHING_MESSAGING_REALTIME.md) | 3 j | Élevée | Élevé | Critique | Contrats notifications |
 | [x] [Tester abonnement, reconnexion et nettoyage realtime](docs/COACHING_MESSAGING_REALTIME.md#matrice-de-cycle-de-vie-validée) | 2 j | Élevée | Faible | Élevé | Module messaging |
 | [x] [Extraire clients, programmes, revenus et analytics de `useCoachDashboard`](docs/COACH_DASHBOARD_DOMAIN_EXTRACTIONS.md) | 5 j | Élevée | Élevé | Élevé | Domaines précédents |
-| [ ] Réduire `useCoachDashboard` sous 250 lignes | 1,5 j | Élevée | Moyen | Élevé | Extractions |
+| [x] [Réduire `useCoachDashboard` sous 250 lignes](docs/COACH_DASHBOARD_DOMAIN_EXTRACTIONS.md#architecture-finale-de-la-façade) | 1,5 j | Élevée | Moyen | Élevé | Extractions |
 | [ ] Extraire profil, programme, nutrition et progression de `useClientDetail` | 5 j | Élevée | Élevé | Élevé | Phases Training/Nutrition |
 | [ ] Réduire `useClientDetail` sous 250 lignes | 1,5 j | Élevée | Moyen | Élevé | Extractions |
 | [ ] Découper `coach/page.tsx` en sections chargées à la demande | 3 j | Élevée | Moyen | Élevé | Hooks spécialisés |

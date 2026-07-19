@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const clientHook = readFileSync('app/hooks/useMessages.ts', 'utf8')
-const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf8')
+const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboardMessaging.ts', 'utf8')
 const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
 const consumers = [clientHook, coachDashboard, clientDetail].join('\n')
 const generatedTypes = readFileSync('lib/supabase/database.types.ts', 'utf8')
@@ -65,7 +65,7 @@ describe('coaching messaging extraction blockers', () => {
     expect(repository).toContain("update({ read: true }).eq('receiver_id', actor.data).eq('sender_id', senderId)")
     expect(service.indexOf('repository.send')).toBeLessThan(service.indexOf('await notify'))
     expect(clientHook).toContain('messaging.listSince(coachId, since, 50)')
-    expect(coachDashboard).toContain('messaging.listConversation(clientId, 100)')
+    expect(coachDashboard).toContain('repository.listConversation(clientId, 100)')
     expect(clientDetail).toContain('messaging.listConversation(id, 100)')
   })
 })

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const consumers = [
-  'app/coach/hooks/useCoachDashboard.ts',
+  'app/coach/hooks/useCoachDashboardController.ts',
   'app/coach/hooks/useCoachAnalytics.ts',
   'lib/client-dashboard/use-client-dashboard-data.ts',
   'lib/repositories/nutrition/plans.ts',

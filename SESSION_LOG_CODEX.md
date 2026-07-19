@@ -8456,3 +8456,23 @@ Extraire clients, programmes, revenus et analytics de `useCoachDashboard`.
 ### Prochaine action unique
 
 Réduire `useCoachDashboard` sous 250 lignes.
+## Entrée — 2026-07-19 — Façade `useCoachDashboard` réduite
+
+- Façade publique réduite de 683 à 11 lignes, contrat/constants séparés et
+  contrôleur ramené sous 500 lignes.
+- Lifecycle messaging extrait dans un hook de 84 lignes réutilisant repository,
+  service et adaptateur realtime existants; polling et ressources nettoyés.
+- Tailles finales : façade 11, contrat 29, contrôleur 432, messaging 84;
+  aucune frontière ne dépasse 500 lignes.
+- Dette ESLint passée de 11 erreurs/7 avertissements à 9 erreurs/3
+  avertissements historiques dans le seul contrôleur; les nouvelles frontières
+  sont propres.
+- Tests ciblés : 70 verts; suite complète : 147 fichiers, 1 259 tests verts et
+  3 `todo`; TypeScript et types Supabase verts; E2E coach/client : 4/4 verts.
+- `git diff --check` et liens documentaires verts; aucune requête/mutation,
+  autorité, route, migration, RLS ou spécification E2E ajoutée.
+- Changements concurrents du seed et des deux médias protégés et hors staging.
+
+### Prochaine action unique
+
+Extraire profil, programme, nutrition et progression de `useClientDetail`.

@@ -265,7 +265,7 @@ describe('POST /api/send-notification — internal URL policy and producer compa
     const sources = [
       'app/client/[id]/hooks/useClientDetail.ts',
       'app/hooks/useMessages.ts',
-      'app/coach/hooks/useCoachDashboard.ts',
+      'app/coach/hooks/useCoachDashboardMessaging.ts',
       'lib/coaching/messaging/service.ts',
       'lib/coaching/calendar/client-adapter.ts',
     ].map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
