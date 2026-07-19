@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const client = readFileSync('app/hooks/useMessages.ts', 'utf8')
 const coach = readFileSync('app/coach/hooks/useCoachDashboardMessaging.ts', 'utf8')
-const detail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
+const detail = readFileSync('app/client/[id]/hooks/useClientDetailResources.ts', 'utf8')
 const consumers = `${client}\n${coach}\n${detail}`
 
 describe('messaging consumer lifecycle guards', () => {
@@ -21,7 +21,7 @@ describe('messaging consumer lifecycle guards', () => {
     expect(client).toContain('loadGenerationRef.current += 1')
     expect(client).toContain('scope !== identityScopeRef.current')
     expect(coach).toContain('loadGenerationRef.current += 1')
-    expect(detail).toContain('coachMessageLoadGenerationRef.current += 1')
+    expect(detail).toContain('messageGeneration.current += 1')
   })
 
   it('deduplicates realtime unread increments by persisted message ID', () => {

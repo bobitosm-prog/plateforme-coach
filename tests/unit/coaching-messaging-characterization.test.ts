@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const clientHook = readFileSync('app/hooks/useMessages.ts', 'utf8')
 const coachDashboard = readFileSync('app/coach/hooks/useCoachDashboardMessaging.ts', 'utf8')
-const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetail.ts', 'utf8')
+const clientDetail = readFileSync('app/client/[id]/hooks/useClientDetailResources.ts', 'utf8')
 const consumers = [clientHook, coachDashboard, clientDetail].join('\n')
 const generatedTypes = readFileSync('lib/supabase/database.types.ts', 'utf8')
 const initialMigration = readFileSync('supabase/migrations/20260318_messages.sql', 'utf8')

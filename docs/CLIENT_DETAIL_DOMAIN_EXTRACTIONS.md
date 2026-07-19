@@ -36,18 +36,33 @@ rapide de client ou démontage.
   signées et 50 marqueurs de complétion du coach actif. Le read model
   Progression assure le tri sans transformer absence ou panne en zéro.
 
-Messaging continue d'utiliser le repository, le service et l'adaptateur
-Realtime existants. Les accès exercices, génération IA, notes autosauvegardées
-et certaines mutations de présentation restent dans le hook pour la prochaine
-réduction de façade.
+## Architecture finale de la façade
+
+- `useClientDetail.ts` (5 lignes) conserve uniquement l'export par défaut et
+  les réexports publics historiques.
+- `client-detail-contract.ts` (69 lignes) porte types, constantes, valeurs
+  initiales et normalisation legacy sans effet React ou accès aux données.
+- `useClientDetailController.ts` (456 lignes) coordonne les quatre domaines,
+  les états UI, les mutations existantes et compose strictement l'objet public.
+- `useClientDetailAi.ts` (129 lignes) isole les deux flux IA, leurs états et les
+  accès alimentaires legacy. Le transport, les routes, prompts, paramètres et
+  textes d'erreur restent inchangés.
+- `useClientDetailResources.ts` (88 lignes) orchestre messaging/realtime et la
+  bibliothèque d'exercices. Les projections catalogue sont désormais
+  explicites; le repository et l'adaptateur realtime existants sont réutilisés.
+
+Le changement rapide de cible invalide toujours les quatre chargements. Le
+lifecycle messaging invalide les conversations obsolètes, détruit le channel
+au changement de relation ou démontage et annule le debounce de recherche.
+La progression reste non bloquante.
 
 ## Mesures et compatibilité
 
 | Mesure | Avant | Après |
 |---|---:|---:|
-| lignes `useClientDetail.ts` | 847 | 810 |
-| accès directs Supabase/RPC/storage dans le hook | 35 | 11 |
-| dette ESLint du hook | 33 erreurs / 3 avertissements | 30 erreurs / 2 avertissements |
+| lignes `useClientDetail.ts` | 810 | 5 |
+| plus grande frontière interne | 810 | 456 |
+| dette ESLint de la façade/orchestration | 30 erreurs / 2 avertissements | 13 erreurs / 0 avertissement |
 
 Les limites, tris et formes visibles restent : 100 séances, 10 programmes
 personnels, 90 poids, 10 mensurations, 20 photos, 50 complétions et 200 lignes
@@ -58,8 +73,13 @@ normalisés ou fusionnés.
 
 ## Dette reportée
 
-La façade reste volontairement au-dessus de 250 lignes. La génération IA,
-l'éditeur d'exercices/variantes, les états React, les mutations restantes et le
-client navigateur partagé seront découpés par la tâche suivante. Les
-divergences Nutrition distantes ne doivent pas être masquées par une migration
-de types ou une hypothèse de colonne.
+Le contrôleur conserve les actions profil/programme/nutrition, les éditeurs
+temporaires, 12 occurrences historiques de `any` sur les formes distantes
+legacy et une erreur historique `set-state-in-effect`. Le client navigateur
+partagé et les lectures IA de colonnes Nutrition
+divergentes restent bornés aux frontières existantes. Les notes sont toujours
+autosauvegardées après trois secondes et le suivi hebdomadaire reste interrogé
+toutes les trente secondes. Ces comportements n'ont pas été modifiés.
+
+La prochaine tâche peut découper `coach/page.tsx` en sections chargées à la
+demande; aucune modification de `client/[id]/page.tsx` n'a été nécessaire.

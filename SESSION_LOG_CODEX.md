@@ -8504,3 +8504,29 @@ Extraire profil, programme, nutrition et progression de `useClientDetail`.
 ### Prochaine action unique
 
 Réduire `useClientDetail` sous 250 lignes.
+## Entrée — 2026-07-19 — Façade `useClientDetail` réduite
+
+- Façade publique réduite de 810 à 5 lignes sans modifier son consommateur;
+  types/constants, coordination, IA et ressources ont des responsabilités
+  distinctes.
+- Tailles finales : contrat 69, contrôleur 456, IA 129, ressources 88; aucune
+  frontière ne dépasse 500 lignes.
+- Les quatre domaines, la progression non bloquante, les programmes personnels
+  `created_at DESC` limités à 10 et les formats Nutrition legacy restent
+  inchangés.
+- Messaging réutilise repository/service/realtime existants avec invalidation
+  des réponses obsolètes, cleanup du channel et debounce nettoyé.
+- Dette ESLint passée de 30 erreurs/2 avertissements à 13 erreurs historiques
+  dans le contrôleur; les nouvelles frontières sont propres.
+- Tests ciblés useClientDetail/domaines/messaging : 9 fichiers, 78 tests verts;
+  suite Vitest complète : 150 fichiers, 1 271 tests verts et 3 `todo`.
+- TypeScript, types Supabase, matrice RLS/PostgREST et E2E coach/client (4/4)
+  verts. Mailpit vide et pile Supabase locale arrêtée après validation.
+- `git diff --check`, liens documentaires, gardes de tailles et d'architecture
+  verts; staging resté vide.
+- Page consommatrice, routes, migrations, RLS et E2E inchangés; changements
+  concurrents protégés et hors staging.
+
+### Prochaine action unique
+
+Découper `coach/page.tsx` en sections chargées à la demande.

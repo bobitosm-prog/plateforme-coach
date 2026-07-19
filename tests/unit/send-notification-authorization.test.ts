@@ -263,7 +263,7 @@ describe('POST /api/send-notification — internal URL policy and producer compa
 
   it('keeps all four browser producers compatible with the secured request contract', () => {
     const sources = [
-      'app/client/[id]/hooks/useClientDetail.ts',
+      'app/client/[id]/hooks/useClientDetailResources.ts',
       'app/hooks/useMessages.ts',
       'app/coach/hooks/useCoachDashboardMessaging.ts',
       'lib/coaching/messaging/service.ts',
