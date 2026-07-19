@@ -100,3 +100,7 @@ export function percentageChangeLegacy(values: readonly number[]): AggregationRe
   const latest = values.at(-1) as number
   return { status: 'complete', value: Math.round(((latest - previous) / previous) * 100), issues: [] }
 }
+
+export function sumLegacyWeeklyVolume(values: readonly { readonly volume: number }[]): number {
+  return values.reduce((sum, item) => sum + item.volume, 0)
+}

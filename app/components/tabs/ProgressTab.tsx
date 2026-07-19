@@ -19,6 +19,7 @@ import {
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts'
 import { useHasSize, SizedContainer } from '../ui/SizedChart'
 import AnalyticsSection from '../AnalyticsSection'
+import { buildProgressionSummaryReadModel } from '../../../lib/progression'
 import AbsCalculator from '../progress/AbsCalculator'
 import BodyAssessment from '../progress/BodyAssessment'
 import AnalysisDisplay from './progress/AnalysisDisplay'
@@ -411,7 +412,14 @@ export default function ProgressTab({
   const pMax = periodWeights.length > 0 ? Math.max(...periodWeights.map(p => p.poids)) + 1 : cMax
 
   // Total volume in tonnes
-  const totalVolume = useMemo(() => weeklyVolume.reduce((s, w) => s + w.volume, 0), [weeklyVolume])
+  const progressionSummary = useMemo(() => buildProgressionSummaryReadModel({
+    detailedSessionCount: wSessions.length,
+    personalRecordCount: personalRecords.length,
+    streak,
+    weeklyVolume,
+    weights: displayWeights.map(item => ({ date: item.date, weight: item.poids })),
+  }), [displayWeights, personalRecords.length, streak, wSessions.length, weeklyVolume])
+  const totalVolume = progressionSummary.totalWeeklyVolume
 
   const groupedRecords = useMemo(() => {
     const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
@@ -440,7 +448,7 @@ export default function ProgressTab({
   }
 
   // Weight variation
-  const weightDelta = displayWeights.length >= 2 ? Math.round((displayWeights[displayWeights.length - 1].poids - displayWeights[0].poids) * 10) / 10 : 0
+  const weightDelta = progressionSummary.weightDelta ?? 0
   const isBulking = profile?.objective === 'prise_masse' || profile?.objective === 'gain'
   const deltaPositive = isBulking ? weightDelta > 0 : weightDelta < 0
 

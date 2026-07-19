@@ -7745,3 +7745,61 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Créer les read models progression/analytics.
+
+---
+
+## Entrée — 2026-07-19 — Read models progression et analytics
+
+### Travail effectué
+
+- Création de read models typés pour l'analytics, la synthèse progression et
+  les historiques, avec ports injectables et résultats `success`, `partial`,
+  `unavailable` ou `failure`.
+- Centralisation des limites historiques : 50 records, 100 logs Nutrition,
+  30 entrées d'eau, 100 poids et contrat optionnel de 500 sets.
+- Migration de `useAnalytics` pour les lectures records, Nutrition, eau et
+  poids, avec projections explicites et erreurs expurgées.
+- Migration de `ProgressTab` pour le volume total et le delta de poids, sans
+  modification de sa structure visuelle ni de ses props.
+- Conservation documentée du regroupement hebdomadaire `Date` local/UTC comme
+  fallback legacy borné, car son équivalence avec la semaine locale explicite
+  n'est pas garantie aux frontières de timezone et DST.
+- Ajout de tests des ports, limites, scopes owner, données complètes, partielles,
+  absentes et en panne, ainsi que de gardes statiques d'architecture.
+
+### Tâche cochée
+
+- Phase 4 : « Créer les read models progression/analytics » — terminée.
+- Phase 4 : 11/17 → 12/17 tâches.
+
+### Garanties et limites
+
+- `workout_sessions`, `completed_sessions` et `scheduled_sessions` restent des
+  collections distinctes ; aucune jointure ou déduplication implicite.
+- Aucun nouveau repository, accès distant, client Supabase dans les read models,
+  route, migration, RLS ou E2E.
+- La mutation PR historique et son autorité authentifiée restent dans
+  `useAnalytics`; seule sa relecture abandonne `select('*')`.
+- Les métriques IA et champs runtime non typés ne sont ni inventés ni recalculés.
+
+### Validations exécutées
+
+- Tests ciblés read models/progression/repositories/loaders : 10 fichiers,
+  64 tests verts.
+- Suite Vitest complète : 121 fichiers, 1 105 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- Gardes statiques : aucun React, Next, Supabase, `app/`, `createClient`,
+  `service_role`, `select('*')` ou `any` dans les read models.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Découper `ProgressTab` par section.

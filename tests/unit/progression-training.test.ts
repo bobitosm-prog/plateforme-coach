@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aggregateCompletedSets, durationMinutes, groupCompletedSetsByExercise, groupLegacyWeeklyTonnage, legacyTonnage, percentageChangeLegacy } from '../../lib/progression'
+import { aggregateCompletedSets, durationMinutes, groupCompletedSetsByExercise, groupLegacyWeeklyTonnage, legacyTonnage, percentageChangeLegacy, sumLegacyWeeklyVolume } from '../../lib/progression'
 import { trainingSets } from '../fixtures/progression-aggregations'
 
 describe('training aggregations', () => {
@@ -18,6 +18,9 @@ describe('training aggregations', () => {
   it('characterizes legacy percentage change', () => {
     expect(percentageChangeLegacy([1000, 1250])).toEqual({ status: 'complete', value: 25, issues: [] })
     expect(percentageChangeLegacy([0, 100])).toMatchObject({ status: 'unavailable' })
+  })
+  it('sums displayed weekly volumes without changing their buckets', () => {
+    expect(sumLegacyWeeklyVolume([{ volume: 100.4 }, { volume: 200.6 }])).toBe(301)
   })
   it('computes duration and groups completed sets by stable exercise key', () => {
     expect(durationMinutes({ startedAt: new Date('2026-01-01T10:00:00Z'), endedAt: new Date('2026-01-01T10:45:00Z') })).toEqual({ status: 'complete', value: 45, issues: [] })

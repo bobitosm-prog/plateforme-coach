@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 active — 11 tâches sur 17 ; prochaine tranche : créer les read models progression/analytics**
+**Statut : Phase 4 active — 12 tâches sur 17 ; prochaine tranche : découper `ProgressTab` par section**
 
 ### Pourquoi
 
@@ -399,7 +399,7 @@ Nutrition et progression contiennent des calculs sensibles, plusieurs représent
 | [x] Comparer les totaux anciens et nouveaux ([méthode](docs/NUTRITION_TOTAL_COMPARISON.md)) | 1,5 j | Élevée | Faible | Critique | Double calcul |
 | [x] Documenter les métriques de progression ([catalogue](docs/PROGRESSION_METRICS_CATALOG.md)) | 1,5 j | Moyenne | Faible | Élevé | — |
 | [x] Extraire les fonctions d'agrégation pures ([contrats](docs/PROGRESSION_AGGREGATIONS.md)) | 2,5 j | Élevée | Moyen | Élevé | Catalogue métriques |
-| [ ] Créer les read models progression/analytics | 3 j | Élevée | Moyen | Élevé | Repositories |
+| [x] Créer les read models progression/analytics ([contrats](docs/PROGRESSION_READ_MODELS.md)) | 3 j | Élevée | Moyen | Élevé | Repositories |
 | [ ] Découper `ProgressTab` par section | 3 j | Élevée | Moyen | Élevé | Read models |
 | [ ] Extraire les calculs d'`AnalyticsSection` | 2 j | Moyenne | Moyen | Moyen | Agrégations pures |
 | [ ] Réduire `ProgressTab` sous 500 lignes | 1 j | Moyenne | Faible | Moyen | Extractions |

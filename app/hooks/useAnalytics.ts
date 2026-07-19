@@ -1,6 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { createAnalyticsReadModel, LatestAnalyticsReadCoordinator, type AnalyticsReadPort } from '../../lib/progression'
+import { createNutritionJournalRepository } from '../../lib/repositories/nutrition'
+import type { DatabaseClient } from '../../lib/supabase/types'
 
 interface UseAnalyticsParams {
   supabase: SupabaseClient
@@ -12,70 +15,32 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
   const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
   const [weightHistoryFull, setWeightHistoryFull] = useState<{ date: string; poids: number }[]>([])
+  const requestCoordinator = useRef(new LatestAnalyticsReadCoordinator())
 
   async function fetchAnalyticsData(uid: string) {
-    const today = new Date()
-    const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(today.getDate() - 7)
-    const ninetyDaysAgo = new Date(today)
-    ninetyDaysAgo.setDate(today.getDate() - 90)
-
-    const [prRes, calsRes, waterRes, weightsFullRes] = await Promise.all([
-      supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
-      supabase.from('daily_food_logs').select('date, calories, protein, carbs, fat').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
-      supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }).limit(100),
+    const request = requestCoordinator.current.begin(uid)
+    const now = new Date()
+    const [result, legacyWeeklyVolume] = await Promise.all([
+      createAnalyticsReadModel(createAnalyticsPort(supabase)).load({
+        ownerUserId: uid,
+        clock: { now: () => now },
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
+      loadLegacyWeeklyVolume(supabase, uid, now),
     ])
-
-    setPersonalRecords(prRes.data || [])
-    setWeightHistoryFull(weightsFullRes.data || [])
-
-    // Aggregate calories by day
-    const calsByDay: Record<string, { calories: number; protein: number; carbs: number; fat: number }> = {}
-    for (const m of (calsRes.data || [])) {
-      if (!calsByDay[m.date]) calsByDay[m.date] = { calories: 0, protein: 0, carbs: 0, fat: 0 }
-      calsByDay[m.date].calories += m.calories || 0
-      calsByDay[m.date].protein += m.protein || 0
-      calsByDay[m.date].carbs += m.carbs || 0
-      calsByDay[m.date].fat += m.fat || 0
+    if (!requestCoordinator.current.isCurrent(request)) return
+    if (!result.data) {
+      setPersonalRecords([])
+      setWeeklyCalories([])
+      setWeeklyWater([])
+      setWeightHistoryFull([])
+      return
     }
-    const calArr = Object.entries(calsByDay).map(([date, v]) => ({ date, ...v })).sort((a, b) => a.date.localeCompare(b.date))
-    setWeeklyCalories(calArr)
-
-    // Aggregate water by day
-    const waterByDay: Record<string, number> = {}
-    for (const w of (waterRes.data || [])) {
-      waterByDay[w.date] = (waterByDay[w.date] || 0) + (w.amount_ml || 0)
-    }
-    setWeeklyWater(Object.entries(waterByDay).map(([date, ml]) => ({ date, ml })).sort((a, b) => a.date.localeCompare(b.date)))
-
-    // Weekly training volume from workout_sets (last 4 weeks)
-    const fourWeeksAgo = new Date(today)
-    fourWeeksAgo.setDate(today.getDate() - 28)
-    const { data: setsData } = await supabase
-      .from('workout_sets')
-      .select('weight, reps, created_at')
-      .eq('user_id', uid)
-      .gte('created_at', fourWeeksAgo.toISOString())
-      .eq('completed', true)
-      .limit(500)
-
-    if (setsData && setsData.length > 0) {
-      const volByWeek: Record<string, number> = {}
-      for (const s of setsData) {
-        const d = new Date(s.created_at)
-        const weekStart = new Date(d)
-        const day = weekStart.getDay()
-        weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-        const weekKey = weekStart.toISOString().split('T')[0]
-        volByWeek[weekKey] = (volByWeek[weekKey] || 0) + (s.weight || 0) * (s.reps || 0)
-      }
-      setWeeklyVolume(
-        Object.entries(volByWeek)
-          .map(([week, volume]) => ({ week, volume: Math.round(volume) }))
-          .sort((a, b) => a.week.localeCompare(b.week))
-      )
-    }
+    setPersonalRecords([...result.data.personalRecords])
+    setWeeklyCalories([...result.data.weeklyCalories])
+    setWeeklyWater([...result.data.weeklyWater])
+    if (legacyWeeklyVolume) setWeeklyVolume(legacyWeeklyVolume)
+    setWeightHistoryFull(result.data.weightHistoryFull.map(item => ({ date: item.date, poids: item.weight })))
   }
 
   // PR detection -- called after finishing a workout set
@@ -111,7 +76,9 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
         achieved_at: new Date().toISOString().split('T')[0],
       }, { onConflict: 'user_id, exercise_name, record_type' })
 
-      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50)
+      const { data: prs } = await supabase.from('personal_records')
+        .select('id,user_id,exercise_name,record_type,value,previous_value,unit,achieved_at,created_at')
+        .eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50)
       setPersonalRecords(prs || [])
 
       return { newPR: true, exercise: exerciseName, value: Math.round(estimated1RM * 10) / 10, previous: currentRecord?.value }
@@ -123,4 +90,49 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
     personalRecords, weeklyCalories, weeklyWater, weeklyVolume, weightHistoryFull,
     fetchAnalyticsData, checkForPR,
   }
+}
+
+function createAnalyticsPort(supabase: SupabaseClient): AnalyticsReadPort {
+  const failed = () => ({ ok: false as const, kind: 'failure' as const })
+  const journal = createNutritionJournalRepository(supabase as DatabaseClient)
+  return {
+    async listPersonalRecords(ownerUserId, limit) {
+      const { data, error } = await supabase.from('personal_records')
+        .select('id,user_id,exercise_name,record_type,value,previous_value,unit,achieved_at,created_at')
+        .eq('user_id', ownerUserId).order('achieved_at', { ascending: false }).limit(limit)
+      return error ? failed() : { ok: true, data: data ?? [] }
+    },
+    async listNutrition(ownerUserId, fromDate, limit) {
+      const result = await journal.listDailyFoodLogsForOwner(ownerUserId, { fromDate, limit })
+      return result.ok ? { ok: true, data: result.data } : failed()
+    },
+    async listWater(ownerUserId, fromDate, limit) {
+      const result = await journal.listWaterIntakeForOwner(ownerUserId, { fromDate, limit })
+      return result.ok
+        ? { ok: true, data: result.data.map(item => ({ date: item.date, milliliters: item.amount_ml })) }
+        : failed()
+    },
+    async listWeights(ownerUserId, fromDate, limit) {
+      const { data, error } = await supabase.from('weight_logs').select('date,poids')
+        .eq('user_id', ownerUserId).gte('date', fromDate).order('date', { ascending: true }).limit(limit)
+      return error ? failed() : { ok: true, data: (data ?? []).map(item => ({ date: item.date, weight: item.poids })) }
+    },
+  }
+}
+
+async function loadLegacyWeeklyVolume(supabase: SupabaseClient, ownerUserId: string, now: Date) {
+  const fourWeeksAgo = new Date(now)
+  fourWeeksAgo.setDate(now.getDate() - 28)
+  const { data, error } = await supabase.from('workout_sets').select('weight,reps,created_at')
+    .eq('user_id', ownerUserId).gte('created_at', fourWeeksAgo.toISOString()).eq('completed', true).limit(500)
+  if (error || !data?.length) return null
+  const totals = new Map<string, number>()
+  for (const set of data) {
+    const weekStart = new Date(set.created_at)
+    const day = weekStart.getDay()
+    weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
+    const key = weekStart.toISOString().split('T')[0]
+    totals.set(key, (totals.get(key) ?? 0) + (set.weight || 0) * (set.reps || 0))
+  }
+  return [...totals].map(([week, volume]) => ({ week, volume: Math.round(volume) })).sort((a, b) => a.week.localeCompare(b.week))
 }

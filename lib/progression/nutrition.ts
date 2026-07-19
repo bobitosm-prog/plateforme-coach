@@ -6,6 +6,36 @@ export interface DatedNutritionAmount {
   readonly values: NutritionValues
 }
 
+export interface LegacyNutritionRow {
+  readonly date: string
+  readonly calories: number | null
+  readonly protein: number | null
+  readonly carbs: number | null
+  readonly fat: number | null
+}
+
+export function aggregateLegacyNutritionByDate(entries: readonly LegacyNutritionRow[]): readonly {
+  date: string; calories: number; protein: number; carbs: number; fat: number
+}[] {
+  const totals = new Map<string, { calories: number; protein: number; carbs: number; fat: number }>()
+  for (const entry of entries) {
+    const current = totals.get(entry.date) ?? { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    totals.set(entry.date, {
+      calories: current.calories + (entry.calories || 0),
+      protein: current.protein + (entry.protein || 0),
+      carbs: current.carbs + (entry.carbs || 0),
+      fat: current.fat + (entry.fat || 0),
+    })
+  }
+  return [...totals].map(([date, values]) => ({ date, ...values })).sort((a, b) => a.date.localeCompare(b.date))
+}
+
+export function aggregateLegacyWaterByDate(entries: readonly { readonly date: string; readonly milliliters: number | null }[]): readonly { date: string; ml: number }[] {
+  const totals = new Map<string, number>()
+  for (const entry of entries) totals.set(entry.date, (totals.get(entry.date) ?? 0) + (entry.milliliters || 0))
+  return [...totals].map(([date, ml]) => ({ date, ml })).sort((a, b) => a.date.localeCompare(b.date))
+}
+
 export function aggregateNutritionByDate(entries: readonly DatedNutritionAmount[]): AggregationResult<Readonly<Record<string, NutritionCalculationResult>>> {
   if (entries.length === 0) return { status: 'unavailable', value: null, issues: [{ code: 'empty_input', path: 'entries' }] }
   const groups = new Map<string, DatedNutritionAmount[]>()
