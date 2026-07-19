@@ -7,7 +7,7 @@ import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Trophy, Info, Clock, User } from 'lucide-react'
+import { Camera, X, ChevronUp, ChevronDown, Download, Sparkles, Send, ChevronRight, Info, Clock, User } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
@@ -26,7 +26,11 @@ import AnalysisDisplay from './progress/AnalysisDisplay'
 import ActionBtn from './progress/ActionBtn'
 import { computeAlignment, type Alignment } from '../../../lib/photo-align'
 import SectionTitle from '../ui/SectionTitle'
-import { getExerciseName } from '../../../lib/i18n-exercise'
+import { ProgressOverviewSection } from './progression/ProgressOverviewSection'
+import { ProgressWeightSection } from './progression/ProgressWeightSection'
+import { ProgressRecordsSection } from './progression/ProgressRecordsSection'
+import { ProgressMeasurementsSection } from './progression/ProgressMeasurementsSection'
+import type { ProgressSectionId } from './progression/types'
 
 const MEASURE_FIELDS_KEYS = [
   { key: 'waist', labelKey: 'waist', unit: 'cm', dbKey: 'waist' },
@@ -44,8 +48,6 @@ const EVOLUTION_METRICS_KEYS = [
   { key: 'left_arm', labelKey: 'arms', unit: 'cm', source: 'measure' },
   { key: 'body_fat', labelKey: 'body_fat', unit: '%', source: 'measure' },
 ]
-
-type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre' | 'graphiques'
 
 interface ProgressTabProps {
   supabase: any
@@ -91,7 +93,7 @@ export default function ProgressTab({
   const locale = useLocale()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
-  const [activePill, setActivePill] = useState<PillSection>('poids')
+  const [activePill, setActivePill] = useState<ProgressSectionId>('poids')
   const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null), graphiques: React.useRef<HTMLDivElement>(null) }
   const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
   const [recordsLimit, setRecordsLimit] = useState(10)
@@ -442,7 +444,7 @@ export default function ProgressTab({
   }, [personalRecords])
 
   // Scroll to section on pill tap
-  function scrollToSection(section: PillSection) {
+  function scrollToSection(section: ProgressSectionId) {
     setActivePill(section)
     sectionRefs[section]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -455,145 +457,13 @@ export default function ProgressTab({
   return (
     <div ref={rootRef} style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
 
-      {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-          ANALYTICS
-        </div>
-        <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
-          {t('headerSubtitle', { sessions: wSessions.length, records: personalRecords.length })}
-        </div>
-      </div>
-
-      {/* ═══ SECTION 2 — 3 STATS RÉSUMÉ ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: t('tab.sessions'), value: wSessions.length },
-          { label: t('stats.volume'), value: totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}T` : `${Math.round(totalVolume)}kg` },
-          { label: t('tab.streak'), value: streak },
-        ].map(s => (
-          <div key={s.label} style={{ ...cardStyle, padding: 14, textAlign: 'center' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>{s.value}</div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ═══ SECTION 3 — PILLS NAVIGATION ═══ */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16, marginBottom: 8 }}>
-        {([
-          { id: 'poids' as PillSection, label: t('pills.poids') },
-          { id: 'records' as PillSection, label: t('pills.records') },
-          { id: 'photos' as PillSection, label: t('pills.photos') },
-          { id: 'mensurations' as PillSection, label: t('pills.mensurations') },
-          { id: 'bienetre' as PillSection, label: t('pills.bienetre') },
-          { id: 'graphiques' as PillSection, label: t('pills.graphiques') },
-        ]).map(({ id, label }) => {
-          const active = activePill === id
-          return (
-            <button key={id} onClick={() => scrollToSection(id)} style={{
-              flexShrink: 0, padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
-              fontFamily: fonts.headline, fontSize: 9, fontWeight: 700,
-              letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-              background: active ? colors.goldBorder : 'transparent',
-              border: `1px solid ${active ? `${colors.gold}66` : colors.goldBorder}`,
-              color: active ? colors.gold : 'rgba(255,255,255,0.4)', transition: 'all 150ms',
-            }}>
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      <ProgressOverviewSection sessions={wSessions.length} records={personalRecords.length} totalVolume={totalVolume} streak={streak} activeSection={activePill} onNavigate={scrollToSection} />
 
 
-      {/* ═══ SECTION 4 — ÉVOLUTION DU POIDS ═══ */}
-      <div ref={sectionRefs.poids} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('weight.title')} trailing={weightPeriod === 'all' ? 'TOUT' : `${weightPeriod}J`} />
-        <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-            <div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 32, fontWeight: 800, color: colors.text, lineHeight: 1 }}>
-                {currentWeight || displayWeights[displayWeights.length - 1]?.poids || '—'}<span style={{ ...mutedStyle, fontSize: 14, marginLeft: 4 }}>KG</span>
-              </div>
-              {goalWeight && <div style={{ ...mutedStyle, fontSize: 10, marginTop: 4 }}>{t('tab.goal', { weight: goalWeight })}</div>}
-            </div>
-            {weightDelta !== 0 && (
-              <div style={{ padding: '4px 10px', borderRadius: 999, background: deltaPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${deltaPositive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}` }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: deltaPositive ? colors.success : colors.error }}>
-                  {weightDelta > 0 ? '+' : ''}{weightDelta} kg
-                </span>
-              </div>
-            )}
-          </div>
-          {periodWeights.length > 1 && (
-            <svg viewBox="0 0 300 90" style={{ width: '100%', height: 90, overflow: 'visible' }} preserveAspectRatio="none">
-              <polyline points={periodWeights.map((p, i) => { const x = (i / (periodWeights.length - 1)) * 300; const y = 90 - ((p.poids - pMin) / ((pMax - pMin) || 1)) * 86; return `${x.toFixed(1)},${y.toFixed(1)}` }).join(' ')} fill="none" stroke={colors.gold} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-              <circle cx={300} cy={90 - ((periodWeights[periodWeights.length - 1]?.poids - pMin) / ((pMax - pMin) || 1)) * 86} r="5" fill={colors.gold} />
-            </svg>
-          )}
-          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-            {(['7', '30', '90', 'all'] as const).map(p => {
-              const active = weightPeriod === p
-              return (
-                <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 10px', borderRadius: 999, border: active ? `1px solid ${colors.gold}4d` : '1px solid transparent',
-                  background: active ? `${colors.gold}33` : `${colors.gold}1a`,
-                  color: colors.gold, fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, cursor: 'pointer',
-                  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                }}>
-                  {p === 'all' ? 'TOUT' : `${p}J`}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-        <button onClick={() => setShowWeight(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Scale size={20} color={colors.gold} />
-          </div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('tab.logWeight')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.addMeasure')}</div>
-          </div>
-          <ChevronRight size={16} color={colors.textDim} />
-        </button>
-      </div>
+      <div ref={sectionRefs.poids} style={{ scrollMarginTop: 20 }}><ProgressWeightSection period={weightPeriod} points={periodWeights} min={pMin} max={pMax} currentWeight={currentWeight} goalWeight={goalWeight} delta={weightDelta} deltaPositive={deltaPositive} onPeriodChange={setWeightPeriod} onAddWeight={() => setShowWeight(true)} /></div>
 
       {/* ═══ SECTION 5 — RECORDS PERSONNELS ═══ */}
-      <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('tab.personalRecords')} trailing={t('weight.prCount', { count: groupedRecords.length })} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-            {[10, 50, 100].map(n => (
-              <button key={n} onClick={() => setRecordsLimit(n)} style={{ padding: '5px 14px', borderRadius: 20, border: recordsLimit === n ? `1px solid ${colors.gold}` : `1px solid ${colors.goldDim}`, background: recordsLimit === n ? colors.goldDim : 'transparent', color: recordsLimit === n ? colors.gold : colors.textMuted, fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{n}</button>
-            ))}
-          </div>
-          {groupedRecords.length > 0 ? groupedRecords.slice(0, recordsLimit).map((r, i) => {
-            const principal = r.maxWeight ?? r.oneRm
-            return (
-              <div key={r.name + i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < Math.min(groupedRecords.length, recordsLimit) - 1 ? `0.5px solid ${colors.goldDim}` : 'none' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Trophy size={14} color={colors.gold} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getExerciseName({ name: r.name }, locale as 'fr' | 'en' | 'de')}</div>
-                  <div style={{ ...mutedStyle, fontSize: 9 }}>{r.date ? format(new Date(r.date), 'd MMM yyyy', { locale: dateLocale }) : ''}</div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: colors.gold }}>{principal}</span>
-                  <span style={{ ...mutedStyle, fontSize: 9, marginLeft: 2 }}>{r.unit}</span>
-                  {r.oneRm && r.maxWeight ? <div style={{ ...mutedStyle, fontSize: 9, marginTop: 1 }}>{t('analytics.estimated1rmValue', { value: r.oneRm, unit: r.unit })}</div> : null}
-                </div>
-              </div>
-            )
-          }) : (
-            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <Star size={28} color={colors.textDim} style={{ marginBottom: 6 }} />
-              <p style={{ ...mutedStyle, fontSize: 12, margin: 0 }}>{t('tab.firstRecord')}</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}><ProgressRecordsSection records={groupedRecords} limit={recordsLimit} dateLocale={dateLocale} onLimitChange={setRecordsLimit} /></div>
 
       {/* ═══ SECTION 6 — TRANSFORMATION (Photos) ═══ */}
       {showAssessment && (
@@ -823,38 +693,7 @@ export default function ProgressTab({
         </div>
       </div>
 
-      {/* ═══ SECTION 7 — MENSURATIONS ═══ */}
-      <div ref={sectionRefs.mensurations} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('tab.measurementsSection')} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              { l: 'TAILLE', v: latestMeasure?.waist, u: 'cm' },
-              { l: 'POITRINE', v: latestMeasure?.chest, u: 'cm' },
-              { l: 'BRAS', v: latestMeasure?.left_arm, u: 'cm' },
-              { l: 'CUISSES', v: latestMeasure?.left_thigh, u: 'cm' },
-            ].map(({ l, v, u }) => (
-              <div key={l} style={{ background: `${colors.gold}0a`, borderRadius: 10, padding: 12 }}>
-                <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{l}</div>
-                <div>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 800, color: colors.text }}>{v ?? '—'}</span>
-                  <span style={{ ...mutedStyle, fontSize: 10, marginLeft: 2 }}>{v ? u : ''}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <button onClick={() => setShowMeasure(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Ruler size={20} color={colors.gold} />
-          </div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('measurements.title')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('tab.measureDesc')}</div>
-          </div>
-          <ChevronRight size={16} color={colors.textDim} />
-        </button>
-      </div>
+      <div ref={sectionRefs.mensurations} style={{ scrollMarginTop: 20 }}><ProgressMeasurementsSection measurement={latestMeasure} onAddMeasurement={() => setShowMeasure(true)} /></div>
 
       {/* ═══ SECTION 7.5 — MON BIEN-ÊTRE ═══ */}
       <div ref={sectionRefs.bienetre} style={{ scrollMarginTop: 20, marginTop: 24 }}>

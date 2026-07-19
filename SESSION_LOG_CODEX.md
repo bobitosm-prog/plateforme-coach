@@ -7803,3 +7803,67 @@ Non fourni par l'utilisateur.
 ### Prochaine action unique
 
 Découper `ProgressTab` par section.
+
+---
+
+## Entrée — 2026-07-19 — Sections de ProgressTab
+
+### Travail effectué
+
+- Extraction de quatre frontières de présentation sous
+  `app/components/tabs/progression/` : synthèse/navigation, poids, records et
+  mensurations.
+- Conservation dans `ProgressTab` de l'orchestration, des refs, des read models,
+  des effets, des mutations, des photos, du bien-être, d'`AnalyticsSection` et
+  des overlays.
+- Contrats typés sans nouveau `any`, Supabase, repository, read model,
+  `createClient`, `service_role`, `select('*')` ou mutation dans les vues.
+- Ajout de rendus serveur pour les états vide/rempli, zéro explicite, valeurs
+  visibles et de gardes statiques pour l'ordre et les callbacks.
+
+### Tâche cochée
+
+- Phase 4 : « Découper `ProgressTab` par section » — terminée.
+- Phase 4 : 12/17 → 13/17 tâches.
+
+### Mesures et dette
+
+- `ProgressTab.tsx` : 1 159 → 998 lignes.
+- Nouvelles frontières : 49, 53, 40 et 30 lignes ; types partagés : 23 lignes.
+- Dette ESLint de `ProgressTab` : 35 erreurs / 28 avertissements → 35 erreurs /
+  23 avertissements. Les nouvelles vues et leurs tests sont propres.
+- Le contrat legacy ne transporte pas les statuts read-model `partial`,
+  `unavailable` et `failure`; ils restent indistinguables dans l'UI plutôt que
+  d'être simulés par un nouveau rendu.
+
+### Garanties
+
+- Aucun redesign, changement de formule, de valeur visible, de texte, de prop
+  publique ou de callback.
+- `AnalyticsSection` et ses calculs ne sont pas modifiés.
+- Aucun nouvel accès ou mutation Supabase, repository, route, migration, RLS,
+  E2E, reset ou donnée distante.
+- Les historiques Training restent séparés.
+
+### Validations exécutées
+
+- Tests Progression ciblés : 9 fichiers, 46 tests verts avant validation
+  complète.
+- Suite Vitest complète : 123 fichiers, 1 112 tests actifs verts et 3 `todo`.
+- `npx tsc --noEmit` vert.
+- ESLint des nouvelles sections et tests : vert.
+- Gardes statiques : frontières sous 250 lignes, imports et accès interdits
+  absents, ordre et callbacks conservés.
+
+### Changements concurrents
+
+- Le script de seed et les deux médias d'exercice connus restent protégés,
+  intacts par cette tranche et hors staging.
+
+### Temps passé
+
+Non fourni par l'utilisateur.
+
+### Prochaine action unique
+
+Extraire les calculs d'`AnalyticsSection`.
