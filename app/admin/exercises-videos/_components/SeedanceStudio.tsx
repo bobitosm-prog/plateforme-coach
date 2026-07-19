@@ -33,6 +33,7 @@ export function SeedanceStudio() {
   const [duration, setDuration] = useState(5)
   const [promptLoading, setPromptLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
+  const [imagePrompt, setImagePrompt] = useState('')
 
   useEffect(() => {
     adminFetch<{ exercises: ExerciseLite[] }>('/api/admin/seedance/exercises')
@@ -48,17 +49,25 @@ export function SeedanceStudio() {
     const ex = exercises.find((e) => e.id === id)
     setReferenceImageUrl(ex?.gif_url || '')
     setPrompt('')
+    setImagePrompt('')
   }
 
   async function autoImage() {
     if (!selected) return
     setImageLoading(true)
     try {
-      const { imageUrl } = await adminFetch<{ imageUrl: string; imagePrompt: string }>('/api/admin/seedance/image', {
+      // Si le prompt image a été édité, on l'envoie tel quel ; sinon Claude le génère.
+      const { imageUrl, imagePrompt: usedPrompt } = await adminFetch<{ imageUrl: string; imagePrompt: string }>('/api/admin/seedance/image', {
         method: 'POST',
-        body: JSON.stringify({ exerciseName: selected.name, muscleGroup: selected.muscle_group, equipment: selected.equipment }),
+        body: JSON.stringify({
+          exerciseName: selected.name,
+          muscleGroup: selected.muscle_group,
+          equipment: selected.equipment,
+          imagePrompt: imagePrompt.trim() || undefined,
+        }),
       })
       setReferenceImageUrl(imageUrl)
+      setImagePrompt(usedPrompt) // affiche le prompt réellement utilisé (éditable pour régénérer)
     } catch (e: any) {
       alert(e.message)
     } finally {
@@ -114,6 +123,11 @@ export function SeedanceStudio() {
           style={{ ...btnPrimary, marginBottom: 8, opacity: imageLoading || !selected ? 0.6 : 1 }}>
           {imageLoading ? 'Génération de l\'image (~15s)…' : referenceImageUrl ? 'Régénérer l\'image (Gemini)' : 'Générer l\'image de référence (Gemini)'}
         </button>
+        {imagePrompt && (
+          <textarea value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)} rows={4}
+            placeholder="Prompt de l'image (éditable) — corrige puis Régénérer"
+            style={{ ...fieldStyle, marginBottom: 8, fontSize: 12 }} />
+        )}
         {referenceImageUrl && (
           <img src={referenceImageUrl} alt="référence"
             style={{ width: '100%', borderRadius: 8, marginBottom: 8, background: '#000' }} />
