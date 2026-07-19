@@ -8438,3 +8438,21 @@ durcissement RLS, puis reprendre l'extraction messaging/realtime.
 ### Prochaine action unique
 
 Extraire clients, programmes, revenus et analytics de `useCoachDashboard`.
+## Entrée — 2026-07-19 — Domaines du dashboard coach extraits
+
+- Frontières typées Clients, Programmes, Revenus et Analytics créées sous
+  `lib/coaching/dashboard`; contrat public du hook préservé.
+- Relations actives/projections autorisées centralisées, calculs revenus et
+  résumés de séances extraits avec bornes et projections explicites.
+- Programmes caractérisé comme handoff des clients actifs : aucune requête
+  programme n'existait dans le hook et `CoachPrograms` reste inchangé.
+- Tests ciblés : 53 verts; suite complète : 146 fichiers, 1 255 tests verts et
+  3 `todo`; TypeScript, types Supabase et ESLint des nouvelles frontières verts.
+- E2E coach/client : 4/4 verts; `git diff --check` vert.
+- Dette préservée : lecture séquentielle `workout_sessions`, domaines profil,
+  food, Stripe et feedback encore dans la façade.
+- Changements concurrents du seed et des deux médias protégés, hors staging.
+
+### Prochaine action unique
+
+Réduire `useCoachDashboard` sous 250 lignes.

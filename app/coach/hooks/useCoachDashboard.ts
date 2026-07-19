@@ -9,6 +9,7 @@ import { createCoachClientRelationRepository } from '@/lib/repositories/coach-cl
 import { createCalendarClientAdapter, type CoachAppointment } from '@/lib/coaching/calendar'
 import type { DatabaseClient } from '@/lib/supabase/types'
 import { belongsToPair, createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
+import { aggregateCoachRevenue, loadCoachClients, loadCoachSessionSummary, programEligibleClients, type CoachClientRow } from '@/lib/coaching/dashboard'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -22,20 +23,7 @@ const messagingService = createMessagingService(messaging, async input => {
 
 /* ── Types ─────────────────────────────────────────────────── */
 
-export interface ClientRow {
-  id: string
-  client_id: string
-  created_at: string
-  invited_by_coach?: boolean
-  profiles: {
-    id: string
-    full_name: string | null
-    email: string | null
-    avatar_url: string | null
-    current_weight: number | null
-    calorie_goal: number | null
-  } | null
-}
+export type ClientRow = CoachClientRow
 
 export type ScheduledSession = CoachAppointment
 
@@ -238,21 +226,11 @@ export default function useCoachDashboard(initialSession?: any) {
         if (data) {
           if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
           setCoachProfile(data)
-          const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
-          const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
           supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
             if (!allPayments) return
             setAllPayments(allPayments as { amount: number; paid_at: string }[])
-            const monthStart = startOfMonth.toISOString()
-            const yearStart = startOfYear.toISOString()
-            let mRev = 0, yRev = 0, tRev = 0, mCount = 0
-            for (const p of allPayments) {
-              const amt = p.amount || 0
-              tRev += amt
-              if (p.paid_at && p.paid_at >= yearStart) yRev += amt
-              if (p.paid_at && p.paid_at >= monthStart) { mRev += amt; mCount++ }
-            }
-            setMonthRevenue(mRev); setYearRevenue(yRev); setTotalRevenue(tRev); setMonthPaymentsCount(mCount)
+            const totals = aggregateCoachRevenue(allPayments as { amount: number; paid_at: string }[], new Date())
+            setMonthRevenue(totals.monthRevenue); setYearRevenue(totals.yearRevenue); setTotalRevenue(totals.totalRevenue); setMonthPaymentsCount(totals.monthPaymentsCount)
           })
         }
       })
@@ -406,20 +384,10 @@ export default function useCoachDashboard(initialSession?: any) {
   async function fetchClients(coachId: string) {
     setLoading(true)
     const relationRepository = createCoachClientRelationRepository(supabase)
-    const linksResult = await relationRepository.listActiveClientsForCoach(coachId, { limit: 100 })
-    if (!linksResult.ok || !linksResult.data.length) { setClients([]); setLoading(false); return }
-    const links = linksResult.data
-
-    const clientIds = links.map(l => l.client_id)
-    const profilesResult = await relationRepository.listActiveRelatedProfiles(clientIds, { limit: 100 })
-    const profiles = profilesResult.ok ? profilesResult.data : []
-
-    const profileMap = Object.fromEntries(profiles.filter(p => p.id !== null).map(p => [p.id, p]))
-    const rows: ClientRow[] = links.map(l => ({
-      id: l.id, client_id: l.client_id, created_at: l.created_at ?? '',
-      invited_by_coach: l.invited_by_coach ?? false,
-      profiles: profileMap[l.client_id] ?? null,
-    }))
+    const clientsResult = await loadCoachClients(relationRepository, coachId)
+    if (!clientsResult.ok) { setClients([]); setLoading(false); return }
+    const rows = clientsResult.data
+    const clientIds = rows.map(row => row.client_id)
     setClients(rows)
     setLoading(false)
     fetchUnreadCounts(clientIds)
@@ -427,28 +395,11 @@ export default function useCoachDashboard(initialSession?: any) {
     fetchAtRiskClients(rows)
 
     // Fetch completed sessions for all clients of this coach
-    supabase.from('completed_sessions')
-      .select('client_id, session_name, completed_at')
-      .eq('coach_id', coachId)
-      .order('completed_at', { ascending: false })
-      .limit(200)
-      .then(({ data: completedRows }) => {
-        const lsMap = new Map<string, { name: string; completedAt: string }>()
-        const swMap = new Map<string, number>()
-        const startOfWeek = new Date()
-        const dow = startOfWeek.getDay() || 7
-        startOfWeek.setDate(startOfWeek.getDate() - (dow - 1))
-        startOfWeek.setHours(0, 0, 0, 0)
-        for (const row of (completedRows || [])) {
-          if (!lsMap.has(row.client_id)) {
-            lsMap.set(row.client_id, { name: row.session_name, completedAt: row.completed_at })
-          }
-          if (new Date(row.completed_at) >= startOfWeek) {
-            swMap.set(row.client_id, (swMap.get(row.client_id) || 0) + 1)
-          }
-        }
-        setLastSessionByClient(lsMap)
-        setSessionsThisWeekByClient(swMap)
+    loadCoachSessionSummary(supabase as DatabaseClient, coachId, new Date())
+      .then(result => {
+        if (!result.ok) return
+        setLastSessionByClient(result.data.lastSessionByClient)
+        setSessionsThisWeekByClient(result.data.sessionsThisWeekByClient)
       })
   }
 
@@ -654,6 +605,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
     // Clients
     clients,
+    programClients: programEligibleClients(clients),
     filtered,
     search, setSearch,
     lastSessionByClient,
