@@ -1,18 +1,21 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Plus, Copy, Trash2, ChevronDown, X, Save, RefreshCw, Files, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE,
+  RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { toast } from 'sonner'
+import type { DatabaseClient } from '@/lib/supabase/types'
+import type { CoachProgramRow } from '@/lib/repositories/training'
+import { useCoachProgramPagination } from '../hooks/useCoachProgramPagination'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -49,10 +52,28 @@ function SortableExercise({ id, children }: { id: string; children: React.ReactN
 }
 interface Program { id?: string; name: string; split: string; duration: string; days: ProgramDay[]; coach_id?: string; created_at?: string; tags?: string[] }
 
+function toProgram(row: CoachProgramRow): Program {
+  const payload = row.program && typeof row.program === 'object' && !Array.isArray(row.program) ? row.program : {}
+  const days = Reflect.get(payload, 'days')
+  const split = Reflect.get(payload, 'split')
+  const duration = Reflect.get(payload, 'duration')
+  return {
+    id: row.id,
+    name: row.name,
+    coach_id: row.coach_id ?? undefined,
+    created_at: row.created_at ?? undefined,
+    tags: row.tags ?? [],
+    days: Array.isArray(days) ? days as unknown as ProgramDay[] : [],
+    split: typeof split === 'string' ? split : '',
+    duration: typeof duration === 'string' ? duration : '',
+  }
+}
+
 export default function CoachPrograms({ session, clients }: { session: any; clients: any[] }) {
   const isMobile = useIsMobile()
-  const [programs, setPrograms] = useState<Program[]>([])
-  const [loading, setLoading] = useState(true)
+  const programPages = useCoachProgramPagination(supabase as DatabaseClient, session?.user?.id)
+  const programs = useMemo(() => programPages.items.map(toProgram), [programPages.items])
+  const loading = programPages.loading
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Program | null>(null)
   const [assignModal, setAssignModal] = useState<Program | null>(null)
@@ -81,7 +102,6 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
   const [exerciseDb, setExerciseDb] = useState<any[]>([])
 
   useEffect(() => {
-    loadPrograms()
     supabase.from('exercises_db').select('name').order('name').limit(200).then(({ data }) => setExerciseDb(data || []))
   }, [])
 
@@ -101,18 +121,16 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
     })()
   }, [assignModal])
 
-  async function loadPrograms() {
-    setLoading(true)
-    const { data } = await supabase
-      .from('training_programs')
-      .select('*')
-      .eq('coach_id', session.user.id)
-      .eq('is_template', true)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    setPrograms(data?.map((p: any) => ({ ...p, days: p.program?.days || [] })) || [])
-    setLoading(false)
-  }
+  const activeTagFilterKey = activeTagFilters.join('|')
+  const reloadPrograms = programPages.reload
+  const filterKey = `${search}\u0000${activeTagFilterKey}`
+  const previousFilterKey = useRef(filterKey)
+  useEffect(() => {
+    if (previousFilterKey.current === filterKey) return
+    previousFilterKey.current = filterKey
+    const timer = setTimeout(() => { void reloadPrograms(Boolean(search.trim() || activeTagFilters.length)) }, 250)
+    return () => clearTimeout(timer)
+  }, [filterKey, search, activeTagFilters.length, reloadPrograms])
 
   function resetForm() {
     setPName(''); setPSplit(SPLITS[0]); setPDuration(DURATIONS[1])
@@ -215,12 +233,12 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         return
       }
     }
-    setSaving(false); resetForm(); loadPrograms()
+    setSaving(false); resetForm(); void programPages.reload()
   }
 
   async function deleteProgram(id: string) {
     await supabase.from('training_programs').delete().eq('id', id)
-    loadPrograms()
+    void programPages.reload()
     setProgramToDelete(null)
   }
 
@@ -252,7 +270,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
         return
       }
 
-      await loadPrograms()
+      await programPages.reload()
       setSaving(false)
       if (data) {
         const cloned: Program = {
@@ -389,6 +407,11 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
       {loading ? (
         <p style={{ color: TEXT_DIM, textAlign: 'center', fontFamily: FONT_BODY }}>Chargement...</p>
+      ) : programPages.initialError ? (
+        <div style={{ ...cardStyle, textAlign: 'center', padding: 32 }}>
+          <p style={{ color: RED, fontFamily: FONT_BODY }}>Impossible de charger les programmes.</p>
+          <button type="button" onClick={programPages.retry} className="btn-secondary">Réessayer</button>
+        </div>
       ) : programs.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
           <p style={{ color: TEXT_MUTED, margin: '0 0 16px', fontFamily: FONT_BODY }}>Aucun programme template créé</p>
@@ -528,6 +551,16 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
             </div>
           ))}
           </div>
+          {(programPages.hasMore || programPages.nextPageError) && !search.trim() && activeTagFilters.length === 0 && (
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginTop:16}}>
+              {programPages.nextPageError && <span role="alert" style={{fontFamily:FONT_BODY,fontSize:12,color:RED}}>La page suivante n&apos;a pas pu être chargée. Les programmes affichés sont conservés.</span>}
+              <button type="button" onClick={programPages.nextPageError ? programPages.retry : programPages.loadMore} disabled={programPages.loadingMore}
+                aria-label={programPages.nextPageError ? 'Réessayer de charger la page suivante' : 'Charger plus de programmes'}
+                style={{padding:'10px 18px',borderRadius:12,border:`1px solid ${GOLD_RULE}`,background:BG_CARD_2,color:GOLD,fontFamily:FONT_ALT,fontWeight:700,cursor:programPages.loadingMore?'wait':'pointer'}}>
+                {programPages.loadingMore ? 'Chargement…' : programPages.nextPageError ? 'Réessayer' : 'Charger plus'}
+              </button>
+            </div>
+          )}
         </>
         )
       })()}

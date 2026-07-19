@@ -51,3 +51,12 @@ legacy profil, feedback, alimentation et Stripe restent dans le contrôleur,
 tandis que messaging demeure centralisé dans son repository/service et que le
 calendrier continue d'utiliser son adaptateur. Aucun nouveau `select('*')`,
 `createClient`, `service_role`, abonnement realtime ou polling n'est introduit.
+
+## Pagination des listes
+
+L'[inventaire des listes coach](COACH_LIST_PAGINATION.md) sélectionne les
+templates Training comme seule liste visible sans borne métier. Leur première
+page passe de 50 à 20 lignes avec curseur stable `created_at + id`, accumulation
+dédupliquée et retry incrémental. L'annuaire client reste complet et borné à
+100, car il alimente messaging, calendrier et affectations; les rendez-vous
+restent bornés par semaine et les revenus/sessions restent des agrégats.

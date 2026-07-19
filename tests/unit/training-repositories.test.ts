@@ -22,7 +22,7 @@ type QueryResult = { data: unknown; error: unknown }
 function clientWith(result: QueryResult) {
   const calls: Array<{ method: string; args: unknown[] }> = []
   const chain: Record<string, unknown> = {}
-  for (const method of ['select', 'eq', 'order', 'limit', 'ilike']) {
+  for (const method of ['select', 'eq', 'order', 'limit', 'ilike', 'or', 'is', 'gt']) {
     chain[method] = vi.fn((...args: unknown[]) => {
       calls.push({ method, args })
       return chain
@@ -58,6 +58,50 @@ describe('Training repositories', () => {
     await repository.findActivePersonalProgramForClient('client-session-id')
     expect(mock.chain.select).toHaveBeenLastCalledWith(PERSONAL_PROGRAM_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('is_active', true)
+  })
+
+  it('paginates coach templates with a stable timestamp/id cursor and strict bounds', async () => {
+    const rows = Array.from({ length: 21 }, (_, index) => ({
+      id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`,
+      created_at: '2026-07-19T10:00:00.000Z',
+    }))
+    const first = clientWith({ data: rows, error: null })
+    const firstResult = await createTrainingProgramRepository(first.client).listCoachProgramPage('coach-id', { limit: 20 })
+    expect(firstResult.ok && firstResult.data.items).toHaveLength(20)
+    expect(firstResult.ok && firstResult.data.hasMore).toBe(true)
+    expect(first.chain.eq).toHaveBeenCalledWith('is_template', true)
+    expect(first.chain.order).toHaveBeenNthCalledWith(1, 'created_at', { ascending: false, nullsFirst: false })
+    expect(first.chain.order).toHaveBeenNthCalledWith(2, 'id', { ascending: true })
+    expect(first.chain.limit).toHaveBeenCalledWith(21)
+
+    if (!firstResult.ok || !firstResult.data.nextCursor) throw new Error('cursor expected')
+    const next = clientWith({ data: [], error: null })
+    await createTrainingProgramRepository(next.client).listCoachProgramPage('coach-id', { cursor: firstResult.data.nextCursor, limit: 999 })
+    expect(next.chain.or).toHaveBeenCalledWith(expect.stringContaining('created_at.lt.2026-07-19T10:00:00.000Z'))
+    expect(next.chain.or).toHaveBeenCalledWith(expect.stringContaining('id.gt.00000000-0000-0000-0000-000000000019'))
+    expect(next.chain.limit).toHaveBeenCalledWith(51)
+  })
+
+  it('rejects invalid program cursors without querying Supabase', async () => {
+    const mock = clientWith({ data: [], error: null })
+    const result = await createTrainingProgramRepository(mock.client).listCoachProgramPage('coach-id', { cursor: 'invalid' })
+    expect(result).toEqual({ ok: false, kind: 'failure', error: { kind: 'unexpected', contextCode: 'INVALID_CURSOR' } })
+    expect(mock.from).not.toHaveBeenCalled()
+  })
+
+  it('marks an exactly full or empty final template page as complete', async () => {
+    const rows = Array.from({ length: 20 }, (_, index) => ({
+      id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`,
+      created_at: null,
+    }))
+    const full = await createTrainingProgramRepository(clientWith({ data: rows, error: null }).client)
+      .listCoachProgramPage('coach-id', { limit: 20 })
+    expect(full.ok && full.data).toMatchObject({ hasMore: false, nextCursor: null })
+    expect(full.ok && full.data.items).toHaveLength(20)
+
+    const empty = await createTrainingProgramRepository(clientWith({ data: [], error: null }).client)
+      .listCoachProgramPage('coach-id')
+    expect(empty).toEqual({ ok: true, data: { items: [], hasMore: false, nextCursor: null } })
   })
 
   it('finds a coach program by both id and owner, and distinguishes absence', async () => {

@@ -101,6 +101,13 @@ projections explicites. `useClientDashboard` compose désormais les repositories
 programmes et séances par `createTrainingDashboardLoader`; les mutations et les
 autres consommateurs Training restent en coexistence legacy.
 
+`listCoachProgramPage` applique désormais le contrat commun
+`PaginatedResult<T>` documenté dans
+[`COACH_LIST_PAGINATION.md`](COACH_LIST_PAGINATION.md). Il utilise une
+projection explicite, le scope coach, `is_template = true`, une page 20/max 50
+et le couple `created_at DESC NULLS LAST, id ASC`. Le curseur invalide échoue
+avant accès Supabase; le repository ne crée toujours aucun client.
+
 Les tests unitaires mockent le client injecté. Le test SQL local utilise les [personas partagés](TEST_FIXTURES.md), vérifie profil propre, profil absent, isolation RLS, invited et lifetime, puis annule toute la transaction.
 
 ## Nutrition et mesures du dashboard client

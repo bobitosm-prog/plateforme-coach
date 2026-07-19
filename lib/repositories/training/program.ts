@@ -1,5 +1,6 @@
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
+import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type PageRequest, type PaginatedResult } from '@/lib/repositories/pagination'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
 export const ASSIGNED_PROGRAM_PROJECTION = 'id,client_id,coach_id,training_program_id,program,created_at,updated_at' as const
@@ -15,6 +16,35 @@ export type PersonalProgramRow = Pick<Tables<'custom_programs'>,
 
 export function createTrainingProgramRepository(client: DatabaseClient) {
   return {
+    async listCoachProgramPage(
+      coachUserId: string,
+      options: PageRequest = {},
+    ): Promise<RepositoryResult<PaginatedResult<CoachProgramRow>>> {
+      const pageSize = boundedPageSize(options.limit)
+      const cursor = options.cursor ? decodeTimestampCursor(options.cursor) : null
+      if (options.cursor && !cursor) {
+        return { ok: false, kind: 'failure', error: { kind: 'unexpected', contextCode: 'INVALID_CURSOR' } }
+      }
+      let query = client.from('training_programs').select(COACH_PROGRAM_PROJECTION)
+        .eq('coach_id', coachUserId).eq('is_template', true)
+        .order('created_at', { ascending: false, nullsFirst: false }).order('id', { ascending: true })
+      if (cursor) {
+        query = cursor.timestamp === null
+          ? query.is('created_at', null).gt('id', cursor.id)
+          : query.or(`created_at.lt.${cursor.timestamp},and(created_at.eq.${cursor.timestamp},id.gt.${cursor.id}),created_at.is.null`)
+      }
+      const { data, error } = await query.limit(pageSize + 1)
+      if (error) return repositoryFailure(error)
+      const rows = data ?? []
+      const hasMore = rows.length > pageSize
+      const items = rows.slice(0, pageSize)
+      const last = items.at(-1)
+      const nextCursor = hasMore && last
+        ? encodeTimestampCursor({ timestamp: last.created_at, id: last.id })
+        : null
+      return { ok: true, data: { items, hasMore, nextCursor } }
+    },
+
     async listCoachPrograms(coachUserId: string): Promise<RepositoryResult<CoachProgramRow[]>> {
       const { data, error } = await client.from('training_programs').select(COACH_PROGRAM_PROJECTION)
         .eq('coach_id', coachUserId).order('created_at', { ascending: false })

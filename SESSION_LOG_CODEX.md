@@ -8587,3 +8587,42 @@ Découper `client/[id]/page.tsx` en orchestrateur mince.
 ### Prochaine action unique
 
 Ajouter la pagination aux listes coach importantes.
+
+## Entrée — 2026-07-19 — Pagination des listes coach importantes
+
+- Inventaire des clients, templates, affectations, paiements, rendez-vous,
+  sessions, aliments, exercices et feedbacks réalisé; Messaging realtime exclu
+  conformément à son contrat séparé.
+- Templates Training sélectionnés comme seule liste visible extensible : page
+  20, maximum 50, ordre `created_at DESC NULLS LAST, id ASC`, curseur opaque et
+  rejet fail-closed des curseurs invalides.
+- Repository paginé injecté, accumulation dédupliquée, verrou anti-double clic,
+  invalidation des réponses obsolètes, retry initial/incrémental et conservation
+  des pages déjà chargées ajoutés.
+- Recherche et filtres locaux préservés en épuisant les pages après changement;
+  UI mobile/desktop commune enrichie d'un bouton accessible « Charger plus ».
+- Section Programmes : 2 requêtes initiales avant/après; maximum de lignes
+  initiales 250 → 220 (templates 50 → 20, catalogue exercices 200 inchangé).
+- Clients laissés complets et bornés à 100 car transversaux à messaging,
+  calendrier et affectations; rendez-vous bornés par semaine, paiements et
+  sessions conservés comme agrégats bornés, sans changement Stripe/Billing.
+- Tests ciblés : 5 fichiers, 23 tests verts; suite Vitest complète : 154
+  fichiers, 1 287 tests verts et 3 `todo`; TypeScript, types Supabase et
+  nouvelles frontières ESLint verts.
+- Dette ESLint historique de `CoachPrograms` : 14 erreurs/4 avertissements →
+  12 erreurs/1 avertissement; aucun nouvel `any`, `select('*')`, client ou accès
+  privilégié introduit.
+- Matrice RLS/PostgREST verte et E2E coach/client 4/4 verts; Mailpit vide et
+  pile locale arrêtée. `git diff --check` et liens documentaires verts;
+  staging resté vide et changements concurrents hors périmètre.
+- Checklist Phase 5 : 12/12. La phase reste formellement active car sa
+  définition de terminé exige encore de démontrer une baisse globale d'au
+  moins 20 % des requêtes initiales du dashboard; cette pagination à la demande
+  réduit les lignes de la section Programmes mais pas les requêtes initiales du
+  dashboard.
+
+### Prochaine action unique
+
+Valider puis atteindre la baisse de 20 % des requêtes initiales exigée par la
+définition de terminé de Phase 5; la checklist est complète mais la phase reste
+active tant que cette mesure globale n'est pas démontrée.
