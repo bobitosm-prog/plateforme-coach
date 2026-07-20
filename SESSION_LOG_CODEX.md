@@ -8664,3 +8664,31 @@ active tant que cette mesure globale n'est pas démontrée.
 ### Prochaine action unique
 
 Inventorier prompts, modèles et contrats de sortie.
+
+## Entrée — 2026-07-20 — Inventaire des prompts, modèles et sorties IA
+
+- Inventaire exhaustif de 15 points d'entrée IA runtime, 14 expressions
+  d'appel fournisseur runtime et un appel SDK opérationnel hors runtime.
+- Trois modèles runtime confirmés : `claude-haiku-4-5-20251001`,
+  `claude-sonnet-4-6` et `claude-opus-4-8`; le backfill hors runtime conserve
+  un `claude-opus-4-7` divergent.
+- Contrats classés sur deux axes : 3 frontières à outil forcé, 8 endpoints à
+  JSON extrait du texte, 2 endpoints à texte libre et 2 transports SSE MoovX;
+  aucun streaming SDK Anthropic n'est utilisé.
+- Pour chaque flux, route, consommateur, prompts, données envoyées, modèle,
+  parseur, validation, autorité, quota, résilience, logs et couverture de test
+  ont été recoupés avec le code réel.
+- Les risques principaux sont l'absence de provider/registre communs, les
+  sorties insuffisamment validées, les timeouts et erreurs hétérogènes, les
+  journaux potentiellement sensibles et plusieurs décisions d'autorité ou
+  usages service role à isoler.
+- Les frontières locales existantes restent limitées au port Nutrition, au
+  transport Athena, au mock Vitest partagé et au faux serveur E2E du chat;
+  aucun appel fournisseur ou donnée distante n'a été utilisé.
+- Documentation uniquement : aucune route, prompt, modèle, application, test,
+  migration, policy ou tâche Phase 8 modifié; staging resté vide et fichiers
+  concurrents protégés hors périmètre.
+
+### Prochaine action unique
+
+Définir l'interface commune du provider IA.
