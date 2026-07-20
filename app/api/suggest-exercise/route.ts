@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
-import { EXERCISE_SWAP_PROMPT } from '../../../lib/coach-knowledge'
+import { buildExerciseSwapInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -42,34 +42,12 @@ export async function POST(req: NextRequest) {
     }
     if (!exerciseName) return NextResponse.json({ error: 'exerciseName requis' }, { status: 400 })
 
-    const typeHint = isIsolation === true ? `IMPORTANT : "${exerciseName}" est un exercice d'ISOLATION. Propose UNIQUEMENT d'autres exercices d'isolation pour le meme groupe musculaire.`
-      : isIsolation === false ? `IMPORTANT : "${exerciseName}" est un exercice COMPOSE. Propose UNIQUEMENT d'autres exercices composes.`
-      : ''
+    const invocation = buildExerciseSwapInvocation({ exerciseName, reason, muscleGroup, availableEquipment, isIsolation })
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        system: EXERCISE_SWAP_PROMPT,
-        messages: [{
-          role: 'user',
-          content: `L'utilisateur veut remplacer l'exercice "${exerciseName}" (muscle: ${muscleGroup || 'non specifie'}).
-Raison : ${reason || 'non specifiee'}
-${availableEquipment ? `Materiel disponible : ${availableEquipment}` : ''}
-${typeHint}
-
-Propose exactement 3 alternatives en francais. Pour chaque alternative, donne :
-- nom de l'exercice
-- muscles cibles
-- pourquoi c'est un bon remplacement
-- niveau de difficulte (debutant/intermediaire/avance)
-
-Reponds UNIQUEMENT en JSON valide :
-[{"name": "...", "muscles": "...", "reason": "...", "difficulty": "..."}]`
-        }]
-      })
+      body: JSON.stringify(invocation)
     })
 
     const data = await res.json()

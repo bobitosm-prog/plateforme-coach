@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { buildExerciseInstructionsInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -46,18 +47,11 @@ export async function POST(req: NextRequest) {
   let processed = 0
   for (const ex of exercises) {
     try {
+      const invocation = buildExerciseInstructionsInvocation({ name: ex.name, muscleGroup: ex.muscle_group, equipment: ex.equipment })
       const res = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: `Tu es un coach musculation expert. Pour l'exercice "${ex.name}" (groupe: ${ex.muscle_group || '?'}, équipement: ${ex.equipment || '?'}), donne en français :
-1. EXÉCUTION : 3-4 phrases décrivant comment faire le mouvement correctement (position de départ, mouvement, retour)
-2. CONSEILS : 2-3 conseils clés pour une bonne exécution (erreurs à éviter, respiration, tempo)
-
-Réponds UNIQUEMENT en JSON :
-{"instructions": "...", "tips": "..."}`,
-        }],
+        model: invocation.model,
+        max_tokens: invocation.max_tokens,
+        messages: invocation.messages.map(message => ({ role: message.role, content: message.content as string })),
       })
 
       const text = res.content[0].type === 'text' ? res.content[0].text : ''

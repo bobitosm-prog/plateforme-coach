@@ -8786,3 +8786,36 @@ Créer le registre des modèles et coûts.
 ### Prochaine action unique
 
 Séparer les prompts du transport HTTP.
+
+## Entrée — 2026-07-20 — Frontières de prompts IA
+
+- Les 15 points d'entrée IA délèguent désormais la construction exacte de
+  leurs prompts, messages, blocs multimodaux, outils et paramètres à
+  `lib/ai/prompts`, sans migration vers `AiProvider` ni registre logique.
+- Builders par domaine créés pour Athena, recettes et plan Nutrition
+  séquentiel, analyse de repas, programmes Training legacy/moderne,
+  suggestions/instructions/surcharge, analyses corporelles/photos et
+  diagnostic hebdomadaire.
+- Les paires programme Training route/cron et diagnostic manuel/cron partagent
+  chacune le même builder parce qu'elles appellent réellement le même service;
+  les branches photo bilan, simple et comparaison restent explicitement
+  distinctes.
+- Modèles, `max_tokens`, température, outil forcé, schémas, ordre des messages,
+  media types, encodage, SSE, parsing, quotas, écritures et contrats HTTP sont
+  préservés. Aucun retry, timeout, fallback ou fournisseur commun ajouté.
+- Le builder Nutrition reçoit explicitement le jour et les protéines déjà
+  utilisées; les sept journées, sorties vides et comportements partiels restent
+  gérés par le service historique.
+- Contrats profondément immuables, entrées non mutées, erreurs sans contenu
+  brut et gardes interdisant fetch, SDK Anthropic, React, Next.js, Supabase,
+  navigateur, environnement et `app/` dans le domaine pur.
+- Tests ciblés : 4 fichiers, 27 tests verts; suite Vitest complète : 164
+  fichiers, 1 356 tests verts et 3 `todo`. TypeScript et ESLint du noyau/tests
+  verts.
+- Liens documentaires et `git diff --check` vérifiés; aucune migration, RLS,
+  E2E, modèle, quota ou service externe modifié/appelé. Staging vide, Phase 8
+  décochée et changements concurrents protégés hors périmètre.
+
+### Prochaine action unique
+
+Définir les schémas Zod de sortie.

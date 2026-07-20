@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
+import { buildMealPhotoInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -42,26 +43,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } },
-            { type: 'text', text: `Analyse cette photo de repas. Identifie chaque aliment visible avec une estimation des quantites.
-
-Reponds UNIQUEMENT en JSON valide, sans markdown :
-{
-  "foods": [
-    { "name": "Nom en francais", "quantity_g": estimation, "calories": kcal, "proteins": g, "carbs": g, "fats": g }
-  ],
-  "total_calories": total,
-  "confidence": "high" ou "medium" ou "low"
-}` }
-          ]
-        }],
-      }),
+      body: JSON.stringify(buildMealPhotoInvocation(base64Data)),
     })
 
     if (!res.ok) {

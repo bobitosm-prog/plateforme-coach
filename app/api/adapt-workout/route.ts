@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
+import { buildAdaptWorkoutInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -27,27 +27,11 @@ export async function POST(req: NextRequest) {
 
     const { exercises, availableMinutes, sessionType } = await req.json()
 
+    const invocation = buildAdaptWorkoutInvocation({ exercises, availableMinutes, sessionType })
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 800,
-        system: PROGRAM_GENERATION_PROMPT,
-        messages: [{
-          role: 'user',
-          content: `Le client a seulement ${availableMinutes} minutes pour sa seance de ${sessionType || 'musculation'}.
-Programme complet prévu : ${JSON.stringify(exercises.map((e: any) => ({ name: e.name || e.exercise_name, sets: e.sets, reps: e.reps })))}
-
-Adapte le programme pour ${availableMinutes} minutes :
-- Garde les exercices composés en priorité
-- Réduis le nombre de séries si nécessaire
-- Supprime les exercices d'isolation moins importants
-
-Réponds UNIQUEMENT en JSON valide :
-[{"name": "...", "sets": N, "reps": "...", "rest_seconds": N, "priority": "haute/moyenne", "kept": true/false}]`
-        }]
-      })
+      body: JSON.stringify(invocation)
     })
 
     const data = await res.json()

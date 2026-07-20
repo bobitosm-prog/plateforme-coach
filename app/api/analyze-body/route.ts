@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, checkAiQuota, aiRateLimitResponse, aiQuotaResponse, logAiUsage } from '../../../lib/rate-limit'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
+import { buildBodyAnalysisInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -52,8 +53,7 @@ export async function POST(req: NextRequest) {
       fetchImage(photoSideUrl),
     ])
 
-    // System prompt unique (structure définie par le tool schema, pas dans le texte)
-    const systemPrompt = `Tu es un expert en analyse corporelle fitness. Tu analyses 3 photos (face, dos, profil) pour estimer la composition corporelle visuellement. Tes estimations sont visuelles et non médicales.`
+    const invocation = buildBodyAnalysisInvocation({ front, back, side, weight, height })
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -62,37 +62,7 @@ export async function POST(req: NextRequest) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 1024,
-        system: systemPrompt,
-        tool_choice: { type: 'tool', name: 'body_analysis_output' },
-        tools: [{
-          name: 'body_analysis_output',
-          description: 'Structure l\'analyse corporelle en JSON exploitable',
-          input_schema: {
-            type: 'object',
-            required: ['body_fat_estimate', 'lean_mass_estimate', 'strengths', 'improvements', 'symmetry_score', 'summary'],
-            properties: {
-              body_fat_estimate: { type: 'number', description: 'Taux de masse grasse estimé en pourcentage (ex: 18.5 pour 18.5%)' },
-              lean_mass_estimate: { type: 'number', description: 'Masse maigre estimée en kg (ex: 65.2 pour 65.2 kg)' },
-              strengths: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3, description: 'Points forts visibles (musculature développée, posture, etc.)' },
-              improvements: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3, description: 'Axes d\'amélioration recommandés' },
-              symmetry_score: { type: 'integer', minimum: 0, maximum: 100, description: 'Score de symétrie gauche/droite et haut/bas, 0=très asymétrique, 100=parfaitement symétrique' },
-              summary: { type: 'string', description: 'Synthèse en 2-3 phrases du physique global et des recommandations principales' },
-            },
-          },
-        }],
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: front.mediaType, data: front.base64 } },
-            { type: 'image', source: { type: 'base64', media_type: back.mediaType, data: back.base64 } },
-            { type: 'image', source: { type: 'base64', media_type: side.mediaType, data: side.base64 } },
-            { type: 'text', text: `Données utilisateur : poids ${weight || '?'} kg, taille ${height || '?'} cm. Analyse les 3 photos (face, dos, profil) et appelle le tool body_analysis_output avec ton analyse.` },
-          ],
-        }],
-      }),
+      body: JSON.stringify(invocation),
     })
 
     if (!response.ok) {

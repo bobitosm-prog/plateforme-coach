@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { guardInvitedClient } from '../../../lib/api-guard'
+import { buildOverloadInvocation } from '../../../lib/ai/prompts'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -95,6 +96,7 @@ export async function POST(req: NextRequest) {
       })
       .join('\n')
 
+    const invocation = buildOverloadInvocation({ exerciseName, currentWeight, currentReps, setsCompleted, historyLines })
     // ── Call Claude API ──
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -103,31 +105,7 @@ export async function POST(req: NextRequest) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        temperature: 0.3,
-        system: `Tu es un coach fitness expert en progressive overload.
-Tu réponds UNIQUEMENT en JSON valide, aucun texte avant ou après.
-Format strict : {"weight": number, "reps": number, "reasoning": string}`,
-        messages: [{
-          role: 'user',
-          content: `Le client vient de finir ${setsCompleted}x${currentReps}@${currentWeight}kg sur l'exercice '${exerciseName}', toutes séries réussies.
-
-Historique des dernières séances (récent → ancien) :
-${historyLines || 'Aucun historique disponible (première séance)'}
-
-Règles de progression :
-- Exos composés lourds (squat, bench press, deadlift, overhead press, row) : +2.5 à +5kg
-- Exos isolation moyens (leg curl, leg extension, lat pulldown) : +2.5kg
-- Exos petits muscles isolation (curl biceps, lateral raise, tricep extension, face pull) : +1.25 à +2.5kg
-- Si l'historique montre une stagnation (3+ séances même poids réussies) : pousser plus haut (+5kg composé, +2.5kg isolation)
-- Si la progression est récente (1 séance réussie seulement) : prudent (+2.5kg max composé, +1.25kg isolation)
-- Garder le même nombre de reps cibles
-
-Suggère la prochaine charge. Reasoning concis (max 100 chars), français, ton motivant.`,
-        }],
-      }),
+      body: JSON.stringify(invocation),
     })
 
     if (!res.ok) {

@@ -507,7 +507,7 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 | [x] Définir l'interface commune du provider IA | 2 j | Élevée | Moyen | Élevé | Inventaire |
 | [x] Centraliser timeouts, retries et erreurs | 2 j | Élevée | Moyen | Élevé | Provider |
 | [x] [Créer le registre des modèles et coûts](docs/AI_MODEL_COST_REGISTRY.md) | 1,5 j | Moyenne | Faible | Élevé | Provider |
-| [ ] Séparer les prompts du transport HTTP | 2 j | Moyenne | Moyen | Élevé | Inventaire |
+| [x] [Séparer les prompts du transport HTTP](docs/AI_PROMPT_BOUNDARIES.md) | 2 j | Moyenne | Moyen | Élevé | Inventaire |
 | [ ] Définir les schémas Zod de sortie | 3 j | Élevée | Moyen | Critique | Contrats métier |
 | [ ] Centraliser parsing et validation structurée | 2 j | Élevée | Moyen | Élevé | Schémas |
 | [ ] Unifier quotas et journalisation d'usage | 2,5 j | Élevée | Moyen | Élevé | Provider |

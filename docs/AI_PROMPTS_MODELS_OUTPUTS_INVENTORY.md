@@ -12,6 +12,11 @@ les trois identifiants runtime et le modèle opérationnel legacy à des
 identifiants logiques, capacités, limites et tarifs vérifiés. Il ne remplace
 aucun littéral runtime et ne constitue ni un fallback ni une migration.
 
+L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
+les quinze points d'entrée délèguent désormais leur contrat exact à des
+builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
+restent inchangés; aucun flux n'utilise encore `AiProvider`.
+
 ## Périmètre et méthode
 
 L'inventaire recoupe les routes `app/api`, les services `lib`, leurs

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { buildProgressPhotoAssessmentInvocation, buildProgressPhotoInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -70,65 +71,7 @@ export async function POST(req: NextRequest) {
         fetchImage(photoSideUrl),
       ])
 
-      const p = profileData || {}
-      const currentWeight = parseFloat(p.current_weight) || 0
-      const height = parseFloat(p.height) || 0
-      const bmi = height > 0 ? currentWeight / ((height / 100) ** 2) : 0
-
-      const assessmentSystem = `Tu es un coach physique professionnel avec 20 ans d'expérience en musculation, powerlifting et transformation physique.
-Tu analyses des photos de progression comme un vrai coach lors d'un bilan physique complet.
-Tu es expert en détection de déséquilibres musculaires, en morphologie et en programmation corrective.
-Tu réponds en français, de manière professionnelle et bienveillante.
-Tu es direct et précis — une analyse vague est inutile pour le client.`
-
-      const assessmentPrompt = `Voici 3 photos du client ${p.full_name || 'le client'} :
-- Photo 1 : vue de face
-- Photo 2 : vue de dos
-- Photo 3 : vue latérale
-
-Profil : ${p.gender || '?'}, ${currentWeight || '?'}kg, ${height || '?'}cm
-IMC : ${bmi > 0 ? bmi.toFixed(1) : '?'}
-Objectif : ${p.objective || 'non défini'}
-Score de forme : ${p.fitness_score || '?'}/100
-
-Effectue un BILAN CORPOREL COMPLET comme un coach professionnel.
-
-Structure ta réponse en 6 parties exactes :
-
-1. VUE D'ENSEMBLE
-Morphologie dominante (ectomorphe/mésomorphe/endomorphe ou mixte).
-Estime visuellement le taux de graisse (X-Y%).
-Impression générale en 2-3 phrases.
-
-2. GROUPES MUSCULAIRES DÉVELOPPÉS
-Liste précise des groupes musculaires bien développés que tu observes sur les 3 photos.
-Pour chaque groupe : niveau estimé (correct/bien développé/très développé)
-
-3. ZONES EN RETARD
-Liste précise des groupes musculaires sous-développés.
-Pour chaque zone : ce que tu observes, l'impact esthétique, l'impact fonctionnel si pertinent.
-
-4. DÉSÉQUILIBRES DÉTECTÉS
-Compare les vues face/dos/latéral pour identifier :
-- Déséquilibres gauche/droite
-- Déséquilibres avant/arrière (push vs pull)
-- Problèmes posturaux visibles
-
-5. PROGRAMME CORRECTIF PRIORITAIRE
-4-5 exercices prioritaires avec : nom, sets × reps, fréquence hebdomadaire, pourquoi cet exercice.
-
-6. OBJECTIF 12 SEMAINES
-Projection réaliste si le client suit le programme correctif. Sois concret.
-
-Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
-
-      const content = [
-        { type: 'image', source: { type: 'base64', media_type: frontImg.mediaType, data: frontImg.base64 } },
-        { type: 'image', source: { type: 'base64', media_type: backImg.mediaType, data: backImg.base64 } },
-        { type: 'image', source: { type: 'base64', media_type: sideImg.mediaType, data: sideImg.base64 } },
-        { type: 'text', text: assessmentPrompt },
-      ]
-
+      const invocation = buildProgressPhotoAssessmentInvocation({ profileData, frontImg, backImg, sideImg })
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -136,12 +79,7 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
           'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
-        body: JSON.stringify({
-          model: 'claude-opus-4-8',
-          max_tokens: 2048,
-          system: assessmentSystem,
-          messages: [{ role: 'user', content }],
-        }),
+        body: JSON.stringify(invocation),
       })
 
       if (!res.ok) {
@@ -156,8 +94,6 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
 
     if (!photoUrl) return NextResponse.json({ error: 'Photo URL manquante' }, { status: 400 })
 
-    const p = profileData || {}
-
     let mainImage: { base64: string; mediaType: string }
     try {
       mainImage = await fetchImage(photoUrl)
@@ -165,160 +101,15 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
       return NextResponse.json({ error: imgErr.message }, { status: 500 })
     }
 
-    // ── System prompt ──
-    const systemPrompt = `Tu es un coach fitness expert en analyse visuelle de composition corporelle,
-avec 20 ans d'expérience en musculation, powerlifting et transformation physique.
-
-Tu as la capacité d'estimer visuellement :
-- Le taux de graisse corporelle approximatif (±3-5%)
-- La masse musculaire visible et les groupes musculaires développés
-- La morphologie (ectomorphe, mésomorphe, endomorphe)
-- Les déséquilibres musculaires visibles
-
-RÈGLES ABSOLUES :
-1. La PHOTO est ta source de vérité principale — ce que tu vois prime sur tout
-2. L'IMC est un indicateur secondaire BIAISÉ — un athlète musclé peut avoir un IMC de 30+ tout en ayant 12% de graisse. Tu DOIS croiser l'IMC avec ce que tu vois.
-3. Si body_fat n'est pas fourni → ESTIME-LE visuellement depuis la photo
-4. Ne jamais conclure à l'obésité sur la seule base de l'IMC
-5. Sois direct et précis — une analyse vague est inutile
-6. Toujours croiser : photo + IMC + objectif + bilan calorique + tendance poids
-7. Si tu détectes une incohérence entre l'objectif et la réalité → dis-le clairement
-8. Tu ne fais jamais de commentaires blessants mais tu es honnête
-9. Réponds UNIQUEMENT en français`
-
-    // ── Compute derived values ──
-    const currentWeight = parseFloat(p.current_weight) || 0
-    const height = parseFloat(p.height) || 0
-    const bmi = height > 0 ? currentWeight / ((height / 100) ** 2) : 0
-    const tdee = parseFloat(p.tdee) || 0
-    const calorieGoal = parseFloat(p.calorie_goal) || 0
-    const surplusDeficit = tdee > 0 && calorieGoal > 0 ? calorieGoal - tdee : null
-    const proteinGoal = parseFloat(p.protein_goal) || 0
-
-    // Coherence flags
-    const coherenceFlags: string[] = []
-    if (p.objective === 'mass' && surplusDeficit !== null && surplusDeficit < -100) {
-      coherenceFlags.push(`⚠️ Objectif prise de masse MAIS déficit calorique de ${surplusDeficit} kcal — incohérent`)
-    }
-    if (p.objective === 'cut' && surplusDeficit !== null && surplusDeficit > 200) {
-      coherenceFlags.push(`⚠️ Objectif perte de poids MAIS surplus calorique de +${surplusDeficit} kcal — incohérent`)
-    }
-    if (currentWeight > 0 && proteinGoal > 0 && proteinGoal / currentWeight < 1.4) {
-      coherenceFlags.push(`⚠️ Protéines faibles : ${proteinGoal}g/jour = ${(proteinGoal / currentWeight).toFixed(1)}g/kg (recommandé : ≥1.6g/kg)`)
-    }
-    if (p.weight_trend === 'gaining' && p.objective === 'cut') {
-      coherenceFlags.push(`⚠️ Objectif perte de poids MAIS tendance +${p.weight_delta_30d}kg sur 30j`)
-    }
-
-    // Surplus/deficit label
-    let surplusLabel = ''
-    if (surplusDeficit !== null) {
-      if (surplusDeficit > 200) surplusLabel = 'surplus — favorise la prise de masse/graisse'
-      else if (surplusDeficit < -200) surplusLabel = 'déficit — favorise la perte de poids'
-      else surplusLabel = 'maintenance — poids stable'
-    }
-
-    // Weight trend label
-    let weightTrendLabel = 'Poids stable'
-    if (p.weight_trend === 'gaining') weightTrendLabel = `Prise de poids (+${p.weight_delta_30d}kg)`
-    else if (p.weight_trend === 'losing') weightTrendLabel = `Perte de poids (${p.weight_delta_30d}kg)`
-
-    // ── Build user prompt ──
-    const userPrompt = `Analyse cette photo de progression fitness pour ${p.full_name || 'le client'}.
-
-=== CE QUE TU VOIS ===
-Regarde attentivement la photo et estime :
-- Taux de graisse approximatif (visuellement)
-- Groupes musculaires les plus développés
-- Zones à améliorer
-- Morphologie dominante
-${p.body_fat ? `(Taux de graisse mesuré déclaré : ${p.body_fat}% — à confirmer visuellement)` : '(Aucun taux de graisse déclaré — base-toi uniquement sur la photo)'}
-
-=== DONNÉES BIOMÉTRIQUES ===
-Genre: ${p.gender || '?'}
-Poids: ${currentWeight || '?'}kg | Taille: ${height || '?'}cm
-IMC: ${bmi > 0 ? bmi.toFixed(1) : '?'} — IMPORTANT: cet IMC peut être normal pour un athlète musclé, croise-le OBLIGATOIREMENT avec ce que tu vois dans la photo
-${p.waist ? `Tour de taille: ${p.waist}cm` : ''}
-
-=== PROGRAMME ACTUEL ===
-Objectif déclaré: ${p.objective || 'non défini'}
-Calories: ${calorieGoal || '?'} kcal/jour (TDEE estimé: ${tdee || '?'} kcal)
-${surplusDeficit !== null ? `Bilan calorique: ${surplusDeficit > 0 ? '+' : ''}${surplusDeficit} kcal (${surplusLabel})` : ''}
-Macros: P${proteinGoal || '?'}g / G${p.carbs_goal || '?'}g / L${p.fat_goal || '?'}g
-Activité: ${p.activity_level || '?'}
-
-=== PROGRESSION 30 JOURS ===
-Tendance: ${weightTrendLabel}
-Score de forme: ${p.fitness_score || '?'}/100 (niveau: ${p.fitness_level || '?'})
-
-${coherenceFlags.length > 0 ? `=== ALERTES DÉTECTÉES ===\n${coherenceFlags.join('\n')}\n` : ''}
-${p.last_analysis ? `=== ANALYSE PRÉCÉDENTE (pour cohérence) ===\n${p.last_analysis.substring(0, 300)}...\n` : ''}
-Donne une analyse structurée en 5 parties :
-
-1. 👁 ANALYSE VISUELLE
-   - Estime le taux de graisse corporelle en % (ex: "environ 18-22%")
-   - Décris la morphologie dominante
-   - Identifie les 2-3 groupes musculaires les plus développés
-   - Identifie les 1-2 zones les plus à développer
-   Sois précis et concret — pas de généralités.
-
-2. ⚖️ COHÉRENCE PROGRAMME
-   Croise TOUT : ce que tu vois + IMC (${bmi > 0 ? bmi.toFixed(1) : '?'}) + objectif (${p.objective || '?'}) + bilan calorique + tendance poids.
-
-   Exemples de raisonnement attendu :
-   - "Tu vises la prise de masse mais je vois ~22% de graisse et tu es en déficit calorique de 300 kcal → impossible de prendre du muscle ainsi. Recommandation : passe en léger surplus de +200 kcal."
-   - "Ton IMC de 28 n'est pas problématique — je vois une musculature dorsale et pectorale bien développée. Continue la prise de masse."
-   - "Tu vises la perte de poids, ton poids baisse de 0.8kg/mois, et je vois une réduction visible au niveau abdominal. Programme cohérent !"
-
-   Si tout est cohérent → dis-le et explique pourquoi.
-   Si incohérence → sois direct et propose l'ajustement précis.
-
-3. ✅ POINTS POSITIFS
-   2-3 éléments encourageants observables dans la photo (pas de généralités — cite des zones musculaires ou des métriques réelles)
-
-4. 🎯 AXES DE PROGRESSION
-   2 conseils hyper-concrets basés sur l'analyse visuelle ET les données :
-   - Ex: "Tes épaules sont peu développées par rapport à ta poitrine → ajoute 2 séries de raises latéraux 3x/semaine"
-   - Ex: "Avec 20% de graisse estimé et objectif prise de masse → vise une recomposition corporelle : +150 kcal au-dessus du TDEE avec 2.2g de protéines/kg"
-
-5. 🚀 RECOMMANDATION PRIORITAIRE
-   1 action immédiate, chiffrée et spécifique.
-   Pas "mange mieux" → "Augmente tes protéines de ${proteinGoal || '?'}g à ${currentWeight > 0 ? Math.round(currentWeight * 2.2) : '?'}g/jour (2.2g/kg)"
-   Pas "fais plus de sport" → "Ajoute une séance de [groupe musculaire] par semaine en priorité"
-
-Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
-
-    // ── Build content array ──
-    let content: any[]
-
+    let previousImage: { base64: string; mediaType: string } | null = null
     if (previousPhotoUrl) {
-      let prevImage: { base64: string; mediaType: string }
       try {
-        prevImage = await fetchImage(previousPhotoUrl)
-      } catch (imgErr: any) {
+        previousImage = await fetchImage(previousPhotoUrl)
+      } catch {
         console.error('[analyze-progress-photo] Previous photo fetch failed, continuing without comparison')
-        prevImage = null as any
       }
-
-      if (prevImage) {
-        content = [
-          { type: 'image', source: { type: 'base64', media_type: prevImage.mediaType, data: prevImage.base64 } },
-          { type: 'image', source: { type: 'base64', media_type: mainImage.mediaType, data: mainImage.base64 } },
-          { type: 'text', text: userPrompt.replace('Analyse cette photo', 'Compare ces deux photos de progression (avant → après)') },
-        ]
-      } else {
-        content = [
-          { type: 'image', source: { type: 'base64', media_type: mainImage.mediaType, data: mainImage.base64 } },
-          { type: 'text', text: userPrompt },
-        ]
-      }
-    } else {
-      content = [
-        { type: 'image', source: { type: 'base64', media_type: mainImage.mediaType, data: mainImage.base64 } },
-        { type: 'text', text: userPrompt },
-      ]
     }
-
+    const invocation = buildProgressPhotoInvocation({ profileData, mainImage, previousImage })
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -326,12 +117,7 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content }],
-      }),
+      body: JSON.stringify(invocation),
     })
 
     if (!res.ok) {

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
-import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
 import { getChatAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
+import { buildAthenaInvocation } from '../../../lib/ai/prompts'
 
 type ChatProfile = {
   full_name?: string | null; current_weight?: number | null; target_weight?: number | null; height?: number | null
@@ -53,29 +53,6 @@ export async function POST(req: NextRequest) {
     }
 
     const p: ChatProfile = profile || {}
-    const onboarding = p && 'onboarding_answers' in p && p.onboarding_answers && typeof p.onboarding_answers === 'object'
-      ? p.onboarding_answers as Record<string, unknown>
-      : {}
-    const systemPrompt = `${COACH_SYSTEM_PROMPT}
-
-PROFIL DU CLIENT :
-- Nom : ${p.full_name || 'Client'}
-- Poids : ${p.current_weight || '?'}kg → Objectif : ${p.target_weight || '?'}kg
-- Taille : ${p.height || '?'}cm | Genre : ${p.gender || '?'}
-- TDEE : ${p.tdee || '?'} kcal | Objectif calorique : ${p.calorie_goal || '?'} kcal/jour
-- Macros : P${p.protein_goal || '?'}g / G${p.carbs_goal || '?'}g / L${p.fat_goal || '?'}g
-- Niveau : ${p.fitness_level || '?'} (score ${p.fitness_score || '?'}/100)
-- Objectif : ${p.objective || 'non defini'}
-- Activite : ${p.activity_level || 'non defini'}
-- Regime : ${p.dietary_type || 'omnivore'}
-- Experience : ${onboarding.experience || 'non renseigne'}
-
-REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max, ne mentionne JAMAIS l'IA. Signe 'Ton coach MoovX'.
-12. Tu connais le score de forme du client (0-100) — adapte l'intensité de tes conseils en conséquence
-13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
-14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
-15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement
-16. Termine chaque réponse par une question de suivi pour maintenir l'engagement`
 
     // Fetch last 10 messages from DB for Anthropic context
     const { data: dbHistory } = await supabase
@@ -102,10 +79,7 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
     }
 
     // Build messages for Anthropic
-    const messages = [
-      ...historyMessages,
-      { role: 'user' as const, content: trimmedMessage },
-    ]
+    const invocation = buildAthenaInvocation(p, historyMessages, trimmedMessage)
 
     const res = await fetch(getChatAnthropicMessagesUrl(), {
       method: 'POST',
@@ -114,12 +88,7 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages,
-      }),
+      body: JSON.stringify(invocation),
     })
 
     if (!res.ok) {
