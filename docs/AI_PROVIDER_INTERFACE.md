@@ -205,12 +205,13 @@ dans les futurs adaptateurs et services applicatifs.
 - Aucun des 15 points d'entrée n'est migré.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
-- Les schémas métier Zod et golden fixtures restent à créer.
+- Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) existent désormais, mais ne
+  sont branchés sur aucun flux; les golden fixtures par endpoint restent à créer.
 - Le registre des modèles/coûts est disponible séparément; l'observabilité
   détaillée reste hors de cette tranche. La politique de retry est définie,
   mais aucune politique par flux n'est encore branchée.
 
-La prochaine étape de la roadmap est de créer le registre des modèles et coûts.
+La prochaine étape de la roadmap est de centraliser parsing et validation structurée.
 
 ## Références
 
@@ -218,6 +219,7 @@ La prochaine étape de la roadmap est de créer le registre des modèles et coû
 - [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md)
 - [Harnais E2E Athena](E2E_CHAT_HARNESS.md)
 - [Service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md)
+- [Schémas de sortie IA](AI_OUTPUT_SCHEMAS.md)
 - [Taxonomie des erreurs API](API_ERROR_TAXONOMY.md)
 - [Politique commune de résilience](AI_RESILIENCE_POLICY.md)
 - [Registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md)

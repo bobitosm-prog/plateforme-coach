@@ -240,4 +240,5 @@ comme une trace technique fiable.
 - [Taxonomie d'erreurs API](API_ERROR_TAXONOMY.md)
 - [Validation API](API_VALIDATION.md)
 - [Observabilité API](API_OBSERVABILITY.md)
+- [Schémas de sortie IA](AI_OUTPUT_SCHEMAS.md)
 - [Stratégie de test](TESTING_STRATEGY.md)

@@ -8819,3 +8819,28 @@ Séparer les prompts du transport HTTP.
 ### Prochaine action unique
 
 Définir les schémas Zod de sortie.
+
+## Entrée — 2026-07-20 — Schémas Zod de sortie IA
+
+- Frontière pure `lib/ai/schemas` créée par domaines Chat, Nutrition,
+  Training, Progression et diagnostic, sans modifier les 15 points d'entrée.
+- Contrats typés avec `z.infer` pour texte Athena et métadonnées, recette,
+  journée Nutrition, photo repas, six sorties Training, analyse corporelle,
+  trois variantes photo textuelles et diagnostic hebdomadaire.
+- Objets structurés stricts, chaînes/tableaux bornés, nombres finis et plages
+  métier; JSON tronqué, clés inconnues, valeurs négatives et non finies sont
+  refusés sans coercition ni réparation silencieuse.
+- Validation discriminée et expurgée ajoutée : seulement code, nombre d'issues
+  et chemins bornés; aucun message Zod, prompt, payload ou contenu brut.
+- Adaptateur vers `AiOutputValidator<T>` du provider commun et enveloppe outil
+  exacte avec compatibilité du double `input` legacy caractérisé.
+- Les divergences des parseurs actuels sont documentées; aucun parsing runtime,
+  prompt, modèle, quota, route, consommateur, migration, RLS ou E2E modifié.
+- Tests ciblés : 2 fichiers, 10 tests verts; contrat provider élargi : 4
+  fichiers, 23 tests verts; suite complète : 166 fichiers, 1 366 tests verts
+  et 3 `todo`. TypeScript et ESLint ciblé verts. Staging vide et changements
+  concurrents protégés hors périmètre.
+
+### Prochaine action unique
+
+Centraliser parsing et validation structurée.
