@@ -3,6 +3,10 @@
 > État constaté dans le dépôt au 20 juillet 2026. Ce document décrit le code
 > existant sans modifier les prompts, les modèles, les quotas ni les contrats.
 
+L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
+définie comme cible de migration. Aucun des 15 points d'entrée inventoriés
+n'utilise encore cette interface.
+
 ## Périmètre et méthode
 
 L'inventaire recoupe les routes `app/api`, les services `lib`, leurs
@@ -225,4 +229,3 @@ comme une trace technique fiable.
 - [Validation API](API_VALIDATION.md)
 - [Observabilité API](API_OBSERVABILITY.md)
 - [Stratégie de test](TESTING_STRATEGY.md)
-

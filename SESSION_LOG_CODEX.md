@@ -8692,3 +8692,34 @@ Inventorier prompts, modèles et contrats de sortie.
 ### Prochaine action unique
 
 Définir l'interface commune du provider IA.
+
+## Entrée — 2026-07-20 — Interface commune du provider IA
+
+- Noyau `lib/ai/provider` créé sans dépendance React, Next.js, Supabase,
+  Anthropic, navigateur, réseau ou `app/`; aucun des 15 flux runtime n'a été
+  migré.
+- API discriminée définie pour texte, JSON, outil et streaming, avec modèle
+  demandé/réel, raison d'arrêt, usage tokens optionnel et correlation ID
+  technique borné.
+- Erreurs normalisées en sept codes expurgés : refus, quota, timeout, réseau,
+  sortie invalide, inattendue et annulation; aucun contenu brut ne peut entrer
+  dans le résultat public.
+- Entrées bornées, validateur structuré injectable et fail-closed, scheduler et
+  signal d'annulation injectés, aucun retry implicite ni fallback silencieux de
+  modèle.
+- Cycle de flux pur ajouté : sortie partielle suivie d'un unique terminal,
+  annulation et nettoyage idempotents; le câblage réseau annulable reste la
+  responsabilité du futur adaptateur.
+- 13 tests ciblés verts pour variantes, bornes, validation, métadonnées,
+  timeout, annulation, nettoyage et streaming; gardes statiques d'imports,
+  confidentialité et absence de retry vertes.
+- Suite Vitest complète : 158 fichiers, 1 307 tests verts et 3 `todo`;
+  TypeScript et ESLint ciblé verts. Liens documentaires et `git diff --check`
+  vérifiés; staging resté vide.
+- Aucune route, consommateur, prompt, modèle, quota, migration, RLS, E2E ou
+  donnée distante modifié; tâche Phase 8 restée décochée et changements
+  concurrents protégés hors périmètre.
+
+### Prochaine action unique
+
+Centraliser timeouts, retries et erreurs.

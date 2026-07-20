@@ -504,7 +504,7 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
 | [x] Inventorier prompts, modèles et contrats de sortie | 1,5 j | Moyenne | Faible | Élevé | Phase 2 |
-| [ ] Définir l'interface commune du provider IA | 2 j | Élevée | Moyen | Élevé | Inventaire |
+| [x] Définir l'interface commune du provider IA | 2 j | Élevée | Moyen | Élevé | Inventaire |
 | [ ] Centraliser timeouts, retries et erreurs | 2 j | Élevée | Moyen | Élevé | Provider |
 | [ ] Créer le registre des modèles et coûts | 1,5 j | Moyenne | Faible | Élevé | Provider |
 | [ ] Séparer les prompts du transport HTTP | 2 j | Moyenne | Moyen | Élevé | Inventaire |
