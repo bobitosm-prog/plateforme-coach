@@ -1,7 +1,8 @@
 # Schémas de sortie IA
 
-> Contrats ajoutés le 20 juillet 2026. Ils caractérisent les sorties attendues
-> des flux existants, mais ne sont pas encore branchés dans les routes runtime.
+> Contrats ajoutés le 20 juillet 2026. Ils sont désormais consommés par la
+> [frontière commune de parsing](AI_STRUCTURED_PARSING.md) pour tous les flux
+> structurés inventoriés, sans migration vers `AiProvider`.
 
 ## Frontière
 
@@ -69,8 +70,8 @@ déjà.
 | Corps/diagnostic | les tool schemas fournisseur bornent partiellement les valeurs, sans validateur métier local commun |
 | Photos de progression | la sortie reste volontairement du texte libre, distingué par `kind` |
 
-Ces divergences sont des entrées pour la prochaine tranche. Aucun parseur,
-prompt, modèle, quota, statut HTTP ou consommateur n'a été modifié ici.
+Ces divergences ont guidé la migration fail-closed du parsing. Aucun prompt,
+modèle, quota ou transport n'a été modifié.
 
 ## Validation structurée et sécurité
 
@@ -84,7 +85,8 @@ devient donc jamais un succès par défaut.
 
 ## Limites
 
-- Les schémas ne sont branchés sur aucun des 15 points d'entrée.
+- Les schémas sont branchés sur les sorties structurées; Athena et les trois
+  variantes photo de progression restent volontairement du texte libre.
 - Les fixtures sont synthétiques; les golden fixtures par endpoint restent à
   ajouter après migration.
 - Le programme Training legacy reste volontairement plus permissif à
@@ -94,13 +96,13 @@ devient donc jamais un succès par défaut.
 - La journée Nutrition modélise les clés anglaises réellement consommées par
   le service; les clés françaises appartiennent à une autre frontière legacy.
 
-La prochaine étape unique est de centraliser le parsing et la validation
-structurée autour de ces schémas, sans changer les contrats HTTP.
+La prochaine étape unique est d'unifier quotas et journalisation d'usage.
 
 ## Références
 
 - [Inventaire des prompts, modèles et sorties](AI_PROMPTS_MODELS_OUTPUTS_INVENTORY.md)
 - [Frontières de prompts](AI_PROMPT_BOUNDARIES.md)
 - [Interface commune du provider](AI_PROVIDER_INTERFACE.md)
+- [Parsing et validation structurée](AI_STRUCTURED_PARSING.md)
 - [Modèle Nutrition canonique](NUTRITION_CANONICAL_MODEL.md)
 - [Modèle Training canonique](TRAINING_CANONICAL_MODEL.md)

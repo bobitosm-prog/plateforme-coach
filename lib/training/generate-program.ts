@@ -2,9 +2,10 @@
  * Core program generation logic — pure function, no auth/request dependency.
  * Used by the API endpoint (generate-custom-program) and the cron (F6.B.6).
  */
-import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { findExerciseMatch } from '../exercise-matching'
 import { buildTrainingProgramInvocation } from '../ai/prompts'
+import { parseAndValidateToolUse } from '../ai/parsing'
+import { modernTrainingProgramOutputSchema } from '../ai/schemas'
 
 export interface GenerateProgramInput {
   objective: string
@@ -42,28 +43,26 @@ export async function generateProgram(input: GenerateProgramInput, apiKey: strin
   }
 
   const json = await res.json()
-  const toolUseBlock = json.content?.find((c: any) => c.type === 'tool_use')
-  if (!toolUseBlock) {
-    console.error('[generateProgram] No tool_use in response:', JSON.stringify(json).slice(0, 500))
+  const parsed = parseAndValidateToolUse(json, 'generate_program', modernTrainingProgramOutputSchema)
+  if (!parsed.ok) {
+    console.error('[generateProgram] Invalid structured response')
     throw new Error('Format IA invalide')
   }
+  if (catalog.length === 0) return parsed.value
 
-  const program = unwrapToolInput(toolUseBlock.input)
-
-  // Post-process: resolve exercise names against catalog + set exercise_id
-  if (catalog.length > 0 && program?.days) {
-    for (const day of program.days) {
-      for (const ex of (day.exercises || [])) {
-        const match = findExerciseMatch(catalog, ex.custom_name)
-        if (match) {
-          ex.custom_name = match.name
-          ex.exercise_id = match.id
-        } else {
-          ex.exercise_id = null
+  // Post-process immutably: resolve exercise names against catalog + set exercise_id
+  return {
+    ...parsed.value,
+    days: parsed.value.days.map(day => ({
+      ...day,
+      exercises: day.exercises.map(exercise => {
+        const match = findExerciseMatch(catalog, exercise.custom_name)
+        return {
+          ...exercise,
+          custom_name: match?.name ?? exercise.custom_name,
+          exercise_id: match?.id ?? null,
         }
-      }
-    }
+      }),
+    })),
   }
-
-  return program
 }

@@ -509,7 +509,7 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 | [x] [Créer le registre des modèles et coûts](docs/AI_MODEL_COST_REGISTRY.md) | 1,5 j | Moyenne | Faible | Élevé | Provider |
 | [x] [Séparer les prompts du transport HTTP](docs/AI_PROMPT_BOUNDARIES.md) | 2 j | Moyenne | Moyen | Élevé | Inventaire |
 | [x] [Définir les schémas Zod de sortie](docs/AI_OUTPUT_SCHEMAS.md) | 3 j | Élevée | Moyen | Critique | Contrats métier |
-| [ ] Centraliser parsing et validation structurée | 2 j | Élevée | Moyen | Élevé | Schémas |
+| [x] [Centraliser parsing et validation structurée](docs/AI_STRUCTURED_PARSING.md) | 2 j | Élevée | Moyen | Élevé | Schémas |
 | [ ] Unifier quotas et journalisation d'usage | 2,5 j | Élevée | Moyen | Élevé | Provider |
 | [ ] Migrer Chat, Recipes et Suggest Exercise | 3 j | Moyenne | Moyen | Élevé | Provider complet |
 | [ ] Migrer génération Training | 2,5 j | Élevée | Élevé | Critique | Phase Training |

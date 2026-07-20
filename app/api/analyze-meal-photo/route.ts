@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { buildMealPhotoInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { mealPhotoOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -54,11 +56,9 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json()
     const text = data.content?.[0]?.text || ''
-    const cleaned = text.replace(/```json|```/g, '').trim()
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Reponse IA invalide' }, { status: 500 })
-
-    return NextResponse.json(JSON.parse(jsonMatch[0]))
+    const parsed = parseAndValidateAiOutput(text, mealPhotoOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) return NextResponse.json({ error: 'Reponse IA invalide' }, { status: 500 })
+    return NextResponse.json(parsed.value)
   } catch (e: any) {
     console.error('[analyze-meal-photo] Error:', e.message)
     return NextResponse.json({ error: e.message }, { status: 500 })

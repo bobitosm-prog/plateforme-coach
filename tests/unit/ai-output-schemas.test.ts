@@ -51,11 +51,13 @@ describe('AI output schemas', () => {
   })
 
   it('validates the observed Training JSON contracts', () => {
-    expect(exerciseSuggestionsOutputSchema.safeParse([{ name: 'Presse', muscles: 'Quadriceps', reason: 'Même chaîne', difficulty: 'intermediaire' }]).success).toBe(true)
+    const suggestion = { name: 'Presse', muscles: 'Quadriceps', reason: 'Même chaîne', difficulty: 'intermediaire' }
+    expect(exerciseSuggestionsOutputSchema.safeParse([suggestion, { ...suggestion, name: 'Hack squat' }, { ...suggestion, name: 'Fentes' }]).success).toBe(true)
     expect(exerciseInstructionsOutputSchema.safeParse({ instructions: 'Position stable.', tips: 'Respirer.' }).success).toBe(true)
     expect(adaptedWorkoutOutputSchema.safeParse([{ name: 'Squat', sets: 3, reps: '8-10', rest_seconds: 90, priority: 'haute', kept: true }]).success).toBe(true)
     expect(overloadSuggestionOutputSchema.safeParse({ weight: 82.5, reps: 8, reasoning: 'Progression prudente' }).success).toBe(true)
     expect(legacyTrainingProgramOutputSchema.safeParse({ lundi: { isRest: false, day_name: 'Push', exercises: [{ name: 'Développé', sets: 4, reps: 8, rest_seconds: 90 }] } }).success).toBe(true)
+    expect(legacyTrainingProgramOutputSchema.safeParse({}).success).toBe(false)
     expect(modernTrainingProgramOutputSchema.parse(validModernProgramOutput).days).toHaveLength(1)
   })
 

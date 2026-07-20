@@ -7,8 +7,9 @@
  * @see lib/anthropic/unwrap-tool-input.ts for the double-wrap 'input' fix
  */
 import webpush from 'web-push'
-import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { buildWeeklyDiagnosticInvocation } from '../ai/prompts'
+import { parseAndValidateToolUse } from '../ai/parsing'
+import { weeklyDiagnosticOutputSchema } from '../ai/schemas'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -199,13 +200,12 @@ export async function generateWeeklyDiagnostic(
 
     const aiData = await res.json()
 
-    const toolUseBlock = aiData.content?.find((c: any) => c.type === 'tool_use')
-    if (!toolUseBlock) {
-      console.error('[generateWeeklyDiagnostic] No tool_use in response:', JSON.stringify(aiData).slice(0, 500))
+    const parsed = parseAndValidateToolUse(aiData, 'weekly_diagnostic_output', weeklyDiagnosticOutputSchema)
+    if (!parsed.ok) {
+      console.error('[generateWeeklyDiagnostic] Invalid structured response')
       return { error: 'Format IA invalide' }
     }
-
-    const aiOutput = unwrapToolInput(toolUseBlock.input)
+    const aiOutput = parsed.value
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 
     // 9. PERSIST

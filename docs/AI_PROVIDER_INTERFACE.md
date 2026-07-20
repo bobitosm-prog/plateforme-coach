@@ -205,8 +205,10 @@ dans les futurs adaptateurs et services applicatifs.
 - Aucun des 15 points d'entrée n'est migré.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
-- Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) existent désormais, mais ne
-  sont branchés sur aucun flux; les golden fixtures par endpoint restent à créer.
+- Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) et la
+  [frontière de parsing](AI_STRUCTURED_PARSING.md) valident désormais les flux
+  structurés historiques, sans les migrer vers ce provider; les golden fixtures
+  par endpoint restent à créer.
 - Le registre des modèles/coûts est disponible séparément; l'observabilité
   détaillée reste hors de cette tranche. La politique de retry est définie,
   mais aucune politique par flux n'est encore branchée.

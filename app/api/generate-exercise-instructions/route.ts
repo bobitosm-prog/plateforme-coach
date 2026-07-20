@@ -5,6 +5,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { buildExerciseInstructionsInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { exerciseInstructionsOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -55,11 +57,11 @@ export async function POST(req: NextRequest) {
       })
 
       const text = res.content[0].type === 'text' ? res.content[0].text : ''
-      const clean = text.replace(/```json|```/g, '').trim()
-      const parsed = JSON.parse(clean)
+      const parsed = parseAndValidateAiOutput(text, exerciseInstructionsOutputSchema, { allowMarkdownFence: true })
+      if (!parsed.ok) continue
       await supabase.from('exercises_db').update({
-        instructions: parsed.instructions,
-        tips: parsed.tips,
+        instructions: parsed.value.instructions,
+        tips: parsed.value.tips,
       }).eq('id', ex.id)
       processed++
     } catch (e: any) {

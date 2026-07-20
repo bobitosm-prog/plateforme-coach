@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { buildExerciseSwapInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { exerciseSuggestionsOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -52,10 +54,9 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json()
     const text = data.content?.[0]?.text || ''
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
-    const suggestions = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ suggestions })
+    const parsed = parseAndValidateAiOutput(text, exerciseSuggestionsOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
+    return NextResponse.json({ suggestions: parsed.value })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

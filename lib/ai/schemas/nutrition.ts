@@ -35,6 +35,29 @@ export const nutritionFoodItemSchema = z.object({
   lipides: nutrient,
 }).strict()
 
+export const legacyNutritionFoodItemSchema = z.object({
+  aliment: z.string().trim().min(1).max(300),
+  quantite_g: z.number().finite().positive(),
+  kcal: nutrient,
+  proteines: nutrient,
+  glucides: nutrient,
+  lipides: nutrient,
+}).strict()
+
+const legacyNutritionMealSchema = z.array(legacyNutritionFoodItemSchema).max(100)
+export const legacyNutritionDayOutputSchema = z.object({
+  repas: z.object({
+    petit_dejeuner: legacyNutritionMealSchema,
+    dejeuner: legacyNutritionMealSchema,
+    collation: legacyNutritionMealSchema,
+    diner: legacyNutritionMealSchema,
+  }).strict(),
+  total_kcal: nutrient.optional(),
+  total_protein: nutrient.optional(),
+  total_carbs: nutrient.optional(),
+  total_fat: nutrient.optional(),
+}).strict()
+
 const nutritionMealSchema = z.array(nutritionFoodItemSchema).max(100)
 export const nutritionDayOutputSchema = z.object({
   breakfast: nutritionMealSchema,
@@ -62,5 +85,7 @@ export const mealPhotoOutputSchema = z.object({
 
 export type RecipeOutput = z.infer<typeof recipeOutputSchema>
 export type NutritionFoodItem = z.infer<typeof nutritionFoodItemSchema>
+export type LegacyNutritionFoodItem = z.infer<typeof legacyNutritionFoodItemSchema>
+export type LegacyNutritionDayOutput = z.infer<typeof legacyNutritionDayOutputSchema>
 export type NutritionDayOutput = z.infer<typeof nutritionDayOutputSchema>
 export type MealPhotoOutput = z.infer<typeof mealPhotoOutputSchema>

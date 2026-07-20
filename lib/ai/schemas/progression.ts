@@ -5,8 +5,8 @@ import { aiFreeTextSchema } from './chat'
 export const bodyAnalysisOutputSchema = z.object({
   body_fat_estimate: z.number().finite().min(0).max(100),
   lean_mass_estimate: z.number().finite().nonnegative(),
-  strengths: z.array(z.string().trim().min(1).max(2_000)).min(1).max(20),
-  improvements: z.array(z.string().trim().min(1).max(2_000)).min(1).max(20),
+  strengths: z.array(z.string().trim().min(1).max(2_000)).min(2).max(3),
+  improvements: z.array(z.string().trim().min(1).max(2_000)).min(2).max(3),
   symmetry_score: z.number().finite().min(0).max(100),
   summary: z.string().trim().min(1).max(10_000),
 }).strict()

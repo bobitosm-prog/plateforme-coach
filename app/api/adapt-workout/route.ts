@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { buildAdaptWorkoutInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { adaptedWorkoutOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -36,10 +38,9 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json()
     const text = data.content?.[0]?.text || ''
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
-    const adapted = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ exercises: adapted })
+    const parsed = parseAndValidateAiOutput(text, adaptedWorkoutOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
+    return NextResponse.json({ exercises: parsed.value })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

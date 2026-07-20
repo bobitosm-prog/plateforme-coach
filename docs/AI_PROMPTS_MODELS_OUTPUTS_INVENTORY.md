@@ -221,6 +221,18 @@ comme une trace technique fiable.
 10. Les tests contractuels restent concentrés sur Athena et Nutrition; les
     sorties Training, Progression et diagnostic manquent de golden fixtures.
 
+## État du parsing structuré au 20 juillet 2026
+
+Les onze parseurs structurés distincts recensés utilisent désormais la
+[frontière commune de parsing et validation](AI_STRUCTURED_PARSING.md). Les
+paires route/cron Training et diagnostic partagent chacune leur parseur de
+service. Athena et les trois analyses photo restent du texte libre; le parsing
+SSE applicatif reste une responsabilité de transport distincte.
+
+Les formes HTTP/SSE, prompts, modèles et écritures sont conservés. Les sorties
+malformées, ambiguës, hors bornes ou incompatibles avec les schémas sont
+désormais refusées fail-closed, sans log de leur contenu brut.
+
 ## Ordre de migration recommandé
 
 1. Définir une interface provider commune sans changer prompts ni modèles.
@@ -241,4 +253,5 @@ comme une trace technique fiable.
 - [Validation API](API_VALIDATION.md)
 - [Observabilité API](API_OBSERVABILITY.md)
 - [Schémas de sortie IA](AI_OUTPUT_SCHEMAS.md)
+- [Parsing et validation structurée](AI_STRUCTURED_PARSING.md)
 - [Stratégie de test](TESTING_STRATEGY.md)

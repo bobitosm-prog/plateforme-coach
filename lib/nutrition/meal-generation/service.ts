@@ -1,4 +1,6 @@
 import { buildSequentialMealDayInvocation } from '@/lib/ai/prompts'
+import { parseAndValidateAiOutput } from '@/lib/ai/parsing'
+import { legacyNutritionDayOutputSchema } from '@/lib/ai/schemas'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '@/lib/meal-plan'
 
 import type { MealGenerationParams, MealGenerationProvider, MealGenerationResult } from './types'
@@ -223,44 +225,13 @@ async function generateOneDay(
   const generated = await provider.generate(buildSequentialMealDayInvocation(day, params, proteinsUsed))
   if (!generated.ok) throw new MealGenerationDayError(generated.reason)
   const rawText = generated.text
-  const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error(`No JSON for ${day}`)
-  const parsed = parseLegacyDay(JSON.parse(jsonMatch[0]))
-  if (!parsed) throw new MealGenerationDayError('INVALID_NUTRITION_OUTPUT')
-  return verifyDayPlan(parsed, params)
+  const parsed = parseAndValidateAiOutput(rawText, legacyNutritionDayOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+  if (!parsed.ok) throw new MealGenerationDayError('INVALID_NUTRITION_OUTPUT')
+  return verifyDayPlan(parsed.value, params)
 }
 
 type LegacyFood = { aliment: string; quantite_g: number; kcal: number; proteines: number; glucides: number; lipides: number }
 type LegacyDay = { repas: Record<MealKey, LegacyFood[]>; total_kcal?: number; total_protein?: number; total_carbs?: number; total_fat?: number }
-
-function finiteNonNegative(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0
-}
-
-function parseLegacyDay(input: unknown): LegacyDay | null {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) return null
-  const source = input as Record<string, unknown>
-  if (!source.repas || typeof source.repas !== 'object' || Array.isArray(source.repas)) return null
-  const rawMeals = source.repas as Record<string, unknown>
-  const repas = {} as Record<MealKey, LegacyFood[]>
-  for (const key of Object.keys(MEAL_KEY_TO_TYPE) as MealKey[]) {
-    const foods = rawMeals[key]
-    if (!Array.isArray(foods)) return null
-    const parsed: LegacyFood[] = []
-    for (const item of foods) {
-      if (!item || typeof item !== 'object' || Array.isArray(item)) return null
-      const food = item as Record<string, unknown>
-      if (typeof food.aliment !== 'string' || !food.aliment.trim() ||
-          !finiteNonNegative(food.quantite_g) || food.quantite_g === 0 ||
-          !finiteNonNegative(food.kcal) || !finiteNonNegative(food.proteines) ||
-          !finiteNonNegative(food.glucides) || !finiteNonNegative(food.lipides)) return null
-      parsed.push(food as LegacyFood)
-    }
-    repas[key] = parsed
-  }
-  return { repas }
-}
 
 class MealGenerationDayError extends Error {
   constructor(readonly reason: string) { super('Meal generation day failed') }

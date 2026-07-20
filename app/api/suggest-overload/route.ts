@@ -5,6 +5,8 @@ import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { guardInvitedClient } from '../../../lib/api-guard'
 import { buildOverloadInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { overloadSuggestionOutputSchema } from '../../../lib/ai/schemas'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -116,24 +118,14 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
     const text = data.content?.[0]?.text || ''
 
-    // ── Parse JSON response ──
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error('[suggest-overload] Invalid JSON from Claude:', text)
-      return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
+    const parsed = parseAndValidateAiOutput(text, overloadSuggestionOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) {
+      const error = parsed.error.reason === 'invalid_json' ? 'JSON parse échoué'
+        : parsed.error.reason === 'invalid_shape' ? 'Suggestion invalide'
+          : 'Format IA invalide'
+      return NextResponse.json({ error }, { status: 500 })
     }
-
-    let suggestion: { weight: number; reps: number; reasoning: string }
-    try {
-      suggestion = JSON.parse(jsonMatch[0])
-    } catch {
-      console.error('[suggest-overload] JSON parse failed:', jsonMatch[0])
-      return NextResponse.json({ error: 'JSON parse échoué' }, { status: 500 })
-    }
-
-    if (!suggestion.weight || suggestion.weight <= 0) {
-      return NextResponse.json({ error: 'Suggestion invalide' }, { status: 500 })
-    }
+    const suggestion = parsed.value
 
     // ── Insert suggestion in DB ──
     const { error: insertError } = await supabase

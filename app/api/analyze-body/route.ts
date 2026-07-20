@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, checkAiQuota, aiRateLimitResponse, aiQuotaResponse, logAiUsage } from '../../../lib/rate-limit'
-import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 import { buildBodyAnalysisInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateToolUse } from '../../../lib/ai/parsing'
+import { bodyAnalysisOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -72,13 +73,12 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json()
-    const toolUseBlock = data.content?.find((c: any) => c.type === 'tool_use')
-    if (!toolUseBlock) {
-      console.error('[analyze-body] No tool_use in response:', JSON.stringify(data).slice(0, 500))
+    const parsed = parseAndValidateToolUse(data, 'body_analysis_output', bodyAnalysisOutputSchema)
+    if (!parsed.ok) {
+      console.error('[analyze-body] Invalid structured response')
       return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
     }
-
-    const result = unwrapToolInput(toolUseBlock.input)
+    const result = parsed.value
     return NextResponse.json(result)
   } catch (e: any) {
     console.error('[analyze-body] Error:', e.message)

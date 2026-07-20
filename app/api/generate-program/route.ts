@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { buildLegacyCoachProgramInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { legacyTrainingProgramOutputSchema } from '../../../lib/ai/schemas'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -88,17 +90,9 @@ export async function POST(req: NextRequest) {
     const data = await anthropicRes.json()
     const rawText = data.content[0].text
 
-    // Strip markdown code blocks if present
-    const cleaned = rawText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim()
-
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON found')
-    const parsed = JSON.parse(jsonMatch[0])
-    const aiProgram: Record<string, { isRest: boolean; day_name?: string; exercises: unknown[] }> = parsed
+    const parsed = parseAndValidateAiOutput(rawText, legacyTrainingProgramOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) throw new Error('No JSON found')
+    const aiProgram: Partial<Record<string, { isRest: boolean; day_name?: string; exercises: unknown[] }>> = parsed.value
 
     // Normalise: ensure all 7 days are present
     for (const d of DAYS) {

@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { buildRecipeInvocation } from '../../../lib/ai/prompts'
+import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
+import { recipeOutputSchema } from '../../../lib/ai/schemas'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -44,11 +46,9 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json()
     const raw = data.content?.[0]?.text || ''
-    const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
-    const match = cleaned.match(/\{[\s\S]*\}/)
-    if (!match) return NextResponse.json({ error: 'Pas de JSON dans la réponse' }, { status: 500 })
-
-    const recipe = JSON.parse(match[0])
+    const parsed = parseAndValidateAiOutput(raw, recipeOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    if (!parsed.ok) return NextResponse.json({ error: 'Pas de JSON dans la réponse' }, { status: 500 })
+    const recipe = parsed.value
     // Round numeric values
     recipe.calories_per_serving = Math.round(recipe.calories_per_serving || 0)
     recipe.proteins_per_serving = Math.round((recipe.proteins_per_serving || 0) * 10) / 10

@@ -4,8 +4,8 @@ const text = z.string().trim().min(1).max(5_000)
 
 export const weeklyDiagnosticOutputSchema = z.object({
   score_semaine: z.number().finite().min(0).max(100),
-  points_forts: z.array(text).max(30),
-  points_alerte: z.array(text).max(30),
+  points_forts: z.array(text).min(1).max(3),
+  points_alerte: z.array(text).max(2),
   ajustements: z.object({
     calorie_goal_new: z.number().int().nonnegative().optional(),
     protein_goal_new: z.number().int().nonnegative().optional(),

@@ -9,7 +9,7 @@ export const exerciseSuggestionSchema = z.object({
   reason: z.string().trim().min(1).max(5_000),
   difficulty: shortText,
 }).strict()
-export const exerciseSuggestionsOutputSchema = z.array(exerciseSuggestionSchema).max(30)
+export const exerciseSuggestionsOutputSchema = z.array(exerciseSuggestionSchema).length(3)
 
 export const exerciseInstructionsOutputSchema = z.object({
   instructions: z.string().trim().min(1).max(10_000),
@@ -45,7 +45,9 @@ const legacyProgramDaySchema = z.object({
   day_name: z.string().max(300).optional(),
   exercises: z.array(legacyProgramExerciseSchema).max(100),
 }).strict()
-export const legacyTrainingProgramOutputSchema = z.record(z.string().min(1).max(50), legacyProgramDaySchema)
+const legacyWeekdaySchema = z.enum(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
+export const legacyTrainingProgramOutputSchema = z.partialRecord(legacyWeekdaySchema, legacyProgramDaySchema)
+  .refine(program => Object.keys(program).length > 0)
 
 const modernProgramExerciseSchema = z.object({
   custom_name: shortText,

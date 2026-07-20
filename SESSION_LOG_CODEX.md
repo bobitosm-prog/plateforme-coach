@@ -8844,3 +8844,33 @@ Définir les schémas Zod de sortie.
 ### Prochaine action unique
 
 Centraliser parsing et validation structurée.
+
+## Entrée — 2026-07-20 — Parsing et validation structurée IA
+
+- Onze parseurs structurés inventoriés : sept JSON texte en routes, un JSON
+  Nutrition séquentiel et trois outils partagés par routes/cron; Athena,
+  photos de progression et framing SSE confirmés hors périmètre structuré.
+- Noyau pur `lib/ai/parsing` créé avec décodage borné à 200 000 caractères,
+  scanner JSON équilibré, fences optionnelles, validation Zod et résultats
+  discriminés expurgés.
+- Extraction outil stricte : nom exact, un seul bloc, absence/ambiguïté
+  refusées; un wrapper `input` legacy accepté et double wrapper refusé.
+- Recette, plan Nutrition, photo repas, suggestions/instructions, programmes
+  legacy/moderne, adaptation, surcharge, corps et diagnostic migrés; les
+  services modernes couvrent aussi leurs routes et cron respectifs.
+- Contrats HTTP/SSE, plan Nutrition partiel, arrondis recette, jours de repos,
+  résolution catalogue, ordre des écritures et notifications préservés.
+- Durcissements documentés : clés/types/nombres invalides, JSON tronqué,
+  sorties outil ambiguës ou partielles sont refusés sans fallback silencieux
+  ni contenu brut dans les nouvelles erreurs ou logs.
+- Tests ciblés parsing/schémas/services : 9 fichiers, 49 tests verts; suite
+  complète : 169 fichiers, 1 378 tests verts et 3 `todo`; TypeScript, ESLint
+  du noyau/tests et gardes d'architecture verts. Les consommateurs touchés
+  conservent 17 erreurs `no-explicit-any` historiques, sans nouveau `any`.
+- Aucun prompt, modèle, température, tokens, quota, timeout, retry, transport,
+  migration, RLS ou E2E modifié; staging vide et changements concurrents
+  protégés hors périmètre.
+
+### Prochaine action unique
+
+Unifier quotas et journalisation d'usage.
