@@ -7,6 +7,11 @@ L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Aucun des 15 points d'entrée inventoriés
 n'utilise encore cette interface.
 
+Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) relie désormais
+les trois identifiants runtime et le modèle opérationnel legacy à des
+identifiants logiques, capacités, limites et tarifs vérifiés. Il ne remplace
+aucun littéral runtime et ne constitue ni un fallback ni une migration.
+
 ## Périmètre et méthode
 
 L'inventaire recoupe les routes `app/api`, les services `lib`, leurs
@@ -49,13 +54,15 @@ semi-structurées.
 
 | Modèle exact | Frontières runtime | Transport |
 |---|---|---|
-| `claude-haiku-4-5-20251001` | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | HTTP direct, sauf instructions via SDK |
-| `claude-sonnet-4-6` | chat Athena, adaptation de séance, analyse de repas photographié | HTTP direct; seul le chat possède une URL locale injectée et bornée |
-| `claude-opus-4-8` | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | HTTP direct ou port HTTP injecté pour Nutrition |
-| `claude-opus-4-7` | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
+| `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | HTTP direct, sauf instructions via SDK |
+| `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | HTTP direct; seul le chat possède une URL locale injectée et bornée |
+| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | HTTP direct ou port HTTP injecté pour Nutrition |
+| `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les modèles sont des littéraux répartis dans les routes et services. Il
-n'existe ni registre commun, ni métadonnées centrales de coût, durée ou tokens.
+Les modèles restent des littéraux répartis dans les routes et services. Le
+registre centralise désormais leurs métadonnées et l'estimation interne des
+coûts, mais aucun appel ne le consomme encore et la durée/télémétrie runtime
+reste propre à chaque flux.
 
 ## Matrice exhaustive des flux
 

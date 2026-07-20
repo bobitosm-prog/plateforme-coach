@@ -8754,3 +8754,35 @@ Centraliser timeouts, retries et erreurs.
 ### Prochaine action unique
 
 Créer le registre des modèles et coûts.
+
+## Entrée — 2026-07-20 — Registre des modèles et coûts IA
+
+- Registre pur `lib/ai/models` créé pour les trois modèles runtime actifs
+  (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`, `claude-opus-4-8`) et le
+  modèle Opus 4.7 legacy du script opérationnel hors runtime.
+- Identifiants logiques stables, identifiants fournisseur exacts, statuts,
+  capacités, limites connues, usages observés et absence de remplacement
+  décidé sont désormais centralisés sans modifier les 15 flux IA.
+- Tarifs Anthropic officiels vérifiés le 20 juillet 2026 pour entrée, sortie,
+  cache et batch; date d'effet, tarifs séparés outil/image et sortie maximale
+  Opus 4.7 conservés explicitement à `null` faute de preuve suffisante.
+- API publique ajoutée pour lister, obtenir et résoudre un modèle sans
+  fallback, valider les usages, contrôler la fraîcheur des prix et estimer un
+  coût `complete`, `partial`, `unavailable` ou `invalid`.
+- Calcul monétaire déterministe en micros USD et `bigint`, avec reliquat exact
+  sous le micro; zéro reste valide et les volumes négatifs, fractionnaires,
+  non finis ou non sûrs sont refusés.
+- Registre profondément immuable, doublons logique/fournisseur refusés,
+  catégories cache/batch/outil/image séparées et erreurs sans prompt, secret
+  ou contenu utilisateur.
+- 14 tests ciblés verts, dont inventaire statique des trois identifiants
+  runtime; suite Vitest complète : 162 fichiers, 1 341 tests verts et 3
+  `todo`. TypeScript et ESLint ciblé verts.
+- Liens documentaires, pureté, architecture et `git diff --check` vérifiés;
+  aucune route, consommateur, prompt, modèle runtime, quota, migration, RLS ou
+  E2E modifié. Staging vide, Phase 8 décochée et changements concurrents
+  protégés hors périmètre.
+
+### Prochaine action unique
+
+Séparer les prompts du transport HTTP.

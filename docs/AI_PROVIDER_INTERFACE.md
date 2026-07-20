@@ -15,6 +15,11 @@ La [politique commune de résilience](AI_RESILIENCE_POLICY.md) complète cette
 interface par un orchestrateur explicite. `AiProvider` conserve la sémantique
 d'une tentative unique : aucun retry n'y est caché.
 
+Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) fournit
+séparément la résolution explicite des identifiants et l'estimation interne.
+Le provider ne choisit toujours aucun modèle et aucun flux runtime n'est encore
+migré vers l'une ou l'autre frontière.
+
 Le contrat vise quatre usages distincts :
 
 - texte libre avec `AiTextRequest` ;
@@ -201,9 +206,9 @@ dans les futurs adaptateurs et services applicatifs.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
 - Les schémas métier Zod et golden fixtures restent à créer.
-- Le registre des modèles/coûts et l'observabilité détaillée restent hors de
-  cette tranche. La politique de retry est définie, mais aucune politique par
-  flux n'est encore branchée.
+- Le registre des modèles/coûts est disponible séparément; l'observabilité
+  détaillée reste hors de cette tranche. La politique de retry est définie,
+  mais aucune politique par flux n'est encore branchée.
 
 La prochaine étape de la roadmap est de créer le registre des modèles et coûts.
 
@@ -215,3 +220,4 @@ La prochaine étape de la roadmap est de créer le registre des modèles et coû
 - [Service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md)
 - [Taxonomie des erreurs API](API_ERROR_TAXONOMY.md)
 - [Politique commune de résilience](AI_RESILIENCE_POLICY.md)
+- [Registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md)
