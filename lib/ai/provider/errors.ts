@@ -17,6 +17,13 @@ export function normalizeAiProviderError(input: AiProviderFailureInput): AiSafeE
   return { code: 'unexpected_error', retryable: false }
 }
 
+export function sanitizeAiSafeError(input: AiSafeError): AiSafeError {
+  const codes: AiErrorCode[] = ['provider_refused', 'quota_exceeded', 'timeout', 'network_error', 'invalid_output', 'unexpected_error', 'cancelled']
+  return codes.includes(input.code)
+    ? { code: input.code, retryable: input.retryable === true }
+    : { code: 'unexpected_error', retryable: false }
+}
+
 export function aiFailure<T>(options: {
   code: AiErrorCode
   retryable: boolean

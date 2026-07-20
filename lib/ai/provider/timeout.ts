@@ -8,6 +8,7 @@ export async function runAiOperation<T>(options: {
   correlationId: string
   requestedModel: string
   cancellation?: AiCancellationSignal
+  onTimeout?: () => void
 }): Promise<AiResult<T>> {
   if (options.cancellation?.aborted) return aiFailure({ code: 'cancelled', retryable: false, correlationId: options.correlationId, requestedModel: options.requestedModel })
 
@@ -21,7 +22,10 @@ export async function runAiOperation<T>(options: {
       settled = true
       resolve(result)
     }
-    timeoutHandle = options.scheduler.schedule(() => finish(aiFailure({ code: 'timeout', retryable: true, correlationId: options.correlationId, requestedModel: options.requestedModel })), options.timeoutMs)
+    timeoutHandle = options.scheduler.schedule(() => {
+      options.onTimeout?.()
+      finish(aiFailure({ code: 'timeout', retryable: true, correlationId: options.correlationId, requestedModel: options.requestedModel }))
+    }, options.timeoutMs)
     unsubscribe = options.cancellation?.subscribe(() => finish(aiFailure({ code: 'cancelled', retryable: false, correlationId: options.correlationId, requestedModel: options.requestedModel }))) ?? unsubscribe
     options.operation().then(finish, () => finish(aiFailure({ code: 'unexpected_error', retryable: false, correlationId: options.correlationId, requestedModel: options.requestedModel })))
   })

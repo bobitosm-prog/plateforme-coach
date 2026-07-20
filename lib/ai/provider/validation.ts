@@ -1,4 +1,4 @@
-import { AI_PROVIDER_LIMITS, type AiGenerateRequest, type AiResultMetadata, type AiTokenUsage, type AiValidationResult } from './types'
+import { AI_PROVIDER_LIMITS, type AiGenerateRequest, type AiResultMetadata, type AiStopReason, type AiTokenUsage, type AiValidationResult } from './types'
 
 const CORRELATION_ID = /^[A-Za-z0-9._:-]+$/
 const MODEL_ID = /^[A-Za-z0-9._:/-]+$/
@@ -58,7 +58,7 @@ export function normalizeMetadata(input: AiResultMetadata): AiResultMetadata {
     correlationId: normalizeCorrelationId(input.correlationId),
     requestedModel: normalizeModelId(input.requestedModel),
     actualModel: normalizeModelId(input.actualModel),
-    stopReason: input.stopReason,
+    stopReason: normalizeStopReason(input.stopReason),
     usage: normalizeTokenUsage(input.usage),
   }
 }
@@ -69,4 +69,8 @@ export function normalizeCorrelationId(input: string): string {
 
 export function normalizeModelId(input: string): string {
   return input.length <= 256 && MODEL_ID.test(input) ? input : 'unknown-model'
+}
+
+export function normalizeStopReason(input: AiStopReason): AiStopReason {
+  return ['end_turn', 'max_tokens', 'tool_use', 'refusal', 'unknown'].includes(input) ? input : 'unknown'
 }

@@ -13,10 +13,11 @@ describe('AI provider architecture', () => {
     expect(source).not.toMatch(/\b(?:fetch|window|document|localStorage|sessionStorage|createClient|service_role)\b/)
   })
 
-  it('does not carry raw error messages, prompts or implicit retry logic', () => {
+  it('does not carry raw error messages, prompts or provider-level retry logic', () => {
     expect(errorsSource).not.toMatch(/\bmessage\s*:/)
     expect(source).not.toMatch(/raw(?:Response|Body|Prompt)|apiKey|email|token\s*:/i)
-    expect(source).not.toMatch(/retry\s*\(|for\s*\([^)]*attempt/i)
+    const providerContract = readFileSync(join(root, 'types.ts'), 'utf8')
+    expect(providerContract).not.toMatch(/retry\s*\(|for\s*\([^)]*attempt/i)
   })
 
   it('exports the complete provider surface', () => {

@@ -11,6 +11,10 @@ leurs résultats, la validation structurée, les délais et le cycle de vie d'un
 flux. Il ne connaît ni Anthropic, ni HTTP, ni React, Next.js, Supabase ou le
 navigateur.
 
+La [politique commune de résilience](AI_RESILIENCE_POLICY.md) complète cette
+interface par un orchestrateur explicite. `AiProvider` conserve la sémantique
+d'une tentative unique : aucun retry n'y est caché.
+
 Le contrat vise quatre usages distincts :
 
 - texte libre avec `AiTextRequest` ;
@@ -197,12 +201,11 @@ dans les futurs adaptateurs et services applicatifs.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
 - Les schémas métier Zod et golden fixtures restent à créer.
-- Le registre des modèles/coûts, la politique de retry et l'observabilité
-  détaillée restent hors de cette tranche.
+- Le registre des modèles/coûts et l'observabilité détaillée restent hors de
+  cette tranche. La politique de retry est définie, mais aucune politique par
+  flux n'est encore branchée.
 
-La prochaine étape de la roadmap est de centraliser timeouts, retries et
-erreurs sur cette interface, sans modifier silencieusement les politiques des
-flux existants.
+La prochaine étape de la roadmap est de créer le registre des modèles et coûts.
 
 ## Références
 
@@ -211,3 +214,4 @@ flux existants.
 - [Harnais E2E Athena](E2E_CHAT_HARNESS.md)
 - [Service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md)
 - [Taxonomie des erreurs API](API_ERROR_TAXONOMY.md)
+- [Politique commune de résilience](AI_RESILIENCE_POLICY.md)

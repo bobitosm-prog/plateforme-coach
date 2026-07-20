@@ -8723,3 +8723,34 @@ Définir l'interface commune du provider IA.
 ### Prochaine action unique
 
 Centraliser timeouts, retries et erreurs.
+
+## Entrée — 2026-07-20 — Politique commune de résilience IA
+
+- Audit des 15 flux confirmé : aucun timeout/retry fournisseur serveur commun;
+  seule l'analyse corporelle possède un retry 429 côté consommateur, et le port
+  Nutrition ne fait que classifier un éventuel `AbortError`.
+- Politique injectable créée avec budgets distincts par tentative/global,
+  maximum 1 à 10 tentatives, backoff exponentiel plafonné, jitter déterministe
+  et Retry-After en secondes ou date HTTP avec horloge injectée.
+- Matrice fail-closed : refus, sortie invalide, inattendu et annulation jamais
+  rejoués; quota uniquement avec Retry-After valide et autorisé; timeout/réseau
+  uniquement pour une opération idempotente.
+- JSON et outils exigent une clé d'idempotence pour tout retry; stream ayant
+  émis un delta, opération non idempotente ou changement de modèle arrêtent la
+  chaîne sans replay.
+- Orchestrateur explicite `executeAiWithResilience`, contrôleur d'annulation,
+  métadonnées primitives par tentative et sept terminaisons bornées ajoutés;
+  `AiProvider` reste strictement mono-tentative.
+- Timeout et annulation interrompent tentative ou backoff via ports injectés;
+  timers/listeners sont nettoyés à terminaison unique et toute erreur inconnue
+  devient `unexpected_error` sans contenu brut.
+- Tests ciblés : 4 fichiers, 33 tests verts; suite Vitest complète : 160
+  fichiers, 1 327 tests verts et 3 `todo`; TypeScript, ESLint ciblé, gardes
+  d'architecture, liens et `git diff --check` verts.
+- Aucun des 15 flux, route, consommateur, prompt, modèle, quota, mock, faux
+  serveur, migration, RLS ou E2E modifié; staging vide, Phase 8 décochée et
+  changements concurrents protégés hors périmètre.
+
+### Prochaine action unique
+
+Créer le registre des modèles et coûts.

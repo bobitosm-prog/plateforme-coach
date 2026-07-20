@@ -1,4 +1,7 @@
+export * from './cancellation'
 export * from './errors'
+export * from './resilience'
+export * from './resilience-types'
 export * from './stream'
 export * from './timeout'
 export * from './types'
