@@ -252,7 +252,14 @@ export default function CoachDesktopLayout({ h, ct, revMonth, setRevMonth, revYe
             <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} lastSessionByClient={h.lastSessionByClient} sessionsThisWeekByClient={h.sessionsThisWeekByClient} />
           )}
           {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
-          {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} lastMessages={h.lastMessages} supabase={h.supabase} session={h.session} msgEndRef={h.msgEndRef} />}
+          {h.section === 'messages' && (h.messageListState.status === 'idle' || h.messageListState.status === 'loading') && <CoachSectionFallback />}
+          {h.section === 'messages' && h.messageListState.status === 'error' && (
+            <div style={{ padding: 24, color: TEXT_MUTED }}>
+              <p>Messages indisponibles.</p>
+              <button onClick={h.retryLastMessages} style={{ background: GOLD, color: BG_BASE, border: 0, borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>Réessayer</button>
+            </div>
+          )}
+          {h.section === 'messages' && (h.messageListState.status === 'success' || h.messageListState.status === 'empty') && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} lastMessages={h.lastMessages} supabase={h.supabase} session={h.session} msgEndRef={h.msgEndRef} />}
           {h.section === 'suivi' && <CoachAnalytics coachId={h.session?.user?.id || null} />}
           {h.section === 'programs' && <CoachPrograms session={h.session} clients={h.clients} />}
           {h.section === 'aliments' && <CoachAliments foodList={h.foodList} foodFilter={h.foodFilter} setFoodFilter={h.setFoodFilter} foodSearchQ={h.foodSearchQ} setFoodSearchQ={h.setFoodSearchQ} foodLoading={h.foodLoading} loadFoods={h.loadFoods} showAddFood={h.showAddFood} setShowAddFood={h.setShowAddFood} newFood={h.newFood} setNewFood={h.setNewFood} saveNewFood={h.saveNewFood} deleteFood={h.deleteFood} />}

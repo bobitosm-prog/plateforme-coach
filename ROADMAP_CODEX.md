@@ -2,9 +2,9 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **19 juillet 2026**.
+> Dernière mise à jour : **20 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 5 — Coaching et messagerie**.
+> Phase active : **Phase 7 — Plateforme IA**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -423,6 +423,8 @@ Les fonctions de progression peuvent avancer pendant la stabilisation des reposi
 **Durée cible : 6 à 8 semaines**  
 **Priorité : P2**
 
+**Statut : Phase 5 terminée — 12 tâches sur 12 et requêtes initiales coach réduites d'au moins 44,118 %**
+
 ### Pourquoi
 
 Les dashboards coach et client detail concentrent données, calendrier, messages, programmes, nutrition et analytics.
@@ -449,7 +451,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 - Les deux hooks principaux sont sous 250 lignes.
 - Chaque section coach peut être testée indépendamment.
 - Aucun abonnement Realtime orphelin n'est observé.
-- Les requêtes initiales du dashboard coach diminuent d'au moins 20 %.
+- [Les requêtes initiales du dashboard coach diminuent d'au moins 44,118 %](docs/COACH_DASHBOARD_INITIAL_REQUESTS.md) (33/33/34 → 18/18/19, seuil requis : 20 %).
 
 ---
 

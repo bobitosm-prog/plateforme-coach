@@ -170,7 +170,14 @@ return (
     )}
 
     {/* ══ MESSAGES SECTION (client list when section=messages, chat overlay always when selectedClient) ══ */}
-    {(h.section === 'messages' || h.selectedClient) && (
+    {h.section === 'messages' && !h.selectedClient && (h.messageListState.status === 'idle' || h.messageListState.status === 'loading') && <CoachSectionFallback />}
+    {h.section === 'messages' && !h.selectedClient && h.messageListState.status === 'error' && (
+      <div className="section-pad" style={{ padding: 24, color: TEXT_MUTED }}>
+        <p>Messages indisponibles.</p>
+        <button onClick={h.retryLastMessages} style={{ background: GOLD, color: BG_BASE, border: 0, borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>Réessayer</button>
+      </div>
+    )}
+    {(h.selectedClient || (h.section === 'messages' && (h.messageListState.status === 'success' || h.messageListState.status === 'empty'))) && (
       <CoachMessages
         clients={h.clients} selectedClient={h.selectedClient}
         setSelectedClient={h.setSelectedClient} openChat={h.openChat}

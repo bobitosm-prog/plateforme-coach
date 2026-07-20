@@ -60,3 +60,14 @@ page passe de 50 à 20 lignes avec curseur stable `created_at + id`, accumulatio
 dédupliquée et retry incrémental. L'annuaire client reste complet et borné à
 100, car il alimente messaging, calendrier et affectations; les rendez-vous
 restent bornés par semaine et les revenus/sessions restent des agrégats.
+
+## Chargement initial mesuré
+
+Le [protocole des requêtes initiales](COACH_DASHBOARD_INITIAL_REQUESTS.md)
+mesure désormais trois connexions locales réelles. La coordination initiale
+est idempotente par coach, le compteur d'abonnés réutilise les relations déjà
+chargées et le détail des derniers messages possède une frontière différée
+réessayable. Le compteur non lu, le channel global et le planning visible sur
+Home restent eager. Le résultat HTTP stable passe de 31 à 16 requêtes; WebSocket
+inclus, les trois comparaisons passent de 33/33/34 à 18/18/19, soit au moins
+**44,118 %** de réduction.

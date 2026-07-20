@@ -8626,3 +8626,41 @@ Ajouter la pagination aux listes coach importantes.
 Valider puis atteindre la baisse de 20 % des requêtes initiales exigée par la
 définition de terminé de Phase 5; la checklist est complète mais la phase reste
 active tant que cette mesure globale n'est pas démontrée.
+
+## Entrée — 2026-07-19 — Requêtes initiales du dashboard coach réduites
+
+- Protocole Playwright local ajouté : connexion synthétique vers `/coach`,
+  attente de Home stable, assets exclus, Auth/PostgREST/Realtime/routes Next
+  classés séparément et trois fenêtres indépendantes.
+- Baseline HTTP stable : 31/31/31; avec 2/2/3 ouvertures Realtime inchangées,
+  total complet 33/33/34. PostgREST représentait 22 requêtes,
+  dont des doubles lancements Strict Mode, une lecture relations redondante et
+  le détail messaging non requis par Home.
+- Coordination initiale rendue idempotente par coach avec génération; le
+  compteur d'abonnés réutilise les relations actives et les réponses obsolètes
+  sont ignorées.
+- Compteurs non lus, polling et channel global restent eager. Le dernier
+  message par contact passe par une frontière `idle/loading/success/empty/error`
+  idempotente, réessayable et invalidée au changement de coach.
+- Le calendrier reste chargé pour le planning Home mais n'est plus relu à
+  chaque navigation de section; mutations et changement de semaine gardent
+  leur refresh explicite.
+- Mesure finale : 18/18/19 requêtes, dont 10 PostgREST, 2 Auth, 2/2/3
+  Realtime, 3 routes Next et 1 navigation locale. Réduction par run :
+  **45,455 % / 45,455 % / 44,118 %**, supérieure au seuil de 20 %.
+- Tests ciblés : 13 fichiers, 64 tests verts; suite complète : 156 fichiers,
+  1 294 tests verts et 3 `todo`; TypeScript, types Supabase, nouvelles
+  frontières ESLint et matrice RLS/PostgREST verts.
+- Rapport E2E de mesure vert avec première ouverture Messages = une lecture et
+  retour = zéro lecture; E2E coach/client : 4/4 verts.
+- Dette ESLint historique du contrôleur : 9 erreurs/3 avertissements avant,
+  7 erreurs/4 avertissements après; avertissement `img` desktop historique.
+- Liens et `git diff --check` verts; Mailpit vide, pile Supabase locale saine
+  puis arrêtée sans reset, aucun serveur E2E sur le port 3210 et staging resté
+  vide.
+- Aucun changement d'autorité, route, migration, RLS ou donnée distante;
+  fichiers concurrents du seed et médias protégés hors périmètre et staging.
+
+### Prochaine action unique
+
+Inventorier prompts, modèles et contrats de sortie.

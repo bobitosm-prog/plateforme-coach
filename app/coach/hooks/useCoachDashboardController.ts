@@ -1,6 +1,6 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRole } from '../../../lib/getRole'
 import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
@@ -63,7 +63,10 @@ export default function useCoachDashboardController(initialSession?: any) {
   const [nsSaving,         setNsSaving]         = useState('')
 
   const messagingState = useCoachDashboardMessaging(supabase as DatabaseClient, session?.user?.id, clients)
-  const { refreshCounters, ...messagingPublic } = messagingState
+  const { refreshCounters, ensureLastMessages, ...messagingPublic } = messagingState
+  const initialLoadKeyRef = useRef<string | null>(null)
+  const initialLoadGenerationRef = useRef(0)
+  const calendarGenerationRef = useRef(0)
 
   /* ── Derived values ────────────────────────────────────── */
 
@@ -138,25 +141,40 @@ export default function useCoachDashboardController(initialSession?: any) {
   }, [coachProfile?.stripe_account_id])
 
   useEffect(() => {
-    if (!session) return
+    if (!session?.user?.id) {
+      if (initialLoadKeyRef.current !== null) {
+        initialLoadKeyRef.current = null
+        initialLoadGenerationRef.current += 1
+        setClients([]); setCoachProfile(null); setAllPayments([]); setScheduledSessions([])
+      }
+      return
+    }
+    const coachId = session.user.id
+    if (initialLoadKeyRef.current === coachId) return
+    if (initialLoadKeyRef.current !== null) {
+      setClients([]); setCoachProfile(null); setAllPayments([]); setScheduledSessions([])
+      setActiveSubscribers(0); setPendingVideoCount(0)
+      setLastSessionByClient(new Map()); setSessionsThisWeekByClient(new Map())
+    }
+    initialLoadKeyRef.current = coachId
+    const generation = ++initialLoadGenerationRef.current
+    const isCurrent = () => initialLoadGenerationRef.current === generation && initialLoadKeyRef.current === coachId
 
     function loadCoachData() {
-      fetchClients(session.user.id)
-      supabase.from('exercise_feedback').select('id', { count: 'exact', head: true }).eq('coach_id', session.user.id).eq('status', 'pending').then(({ count }: { count: number | null }) => setPendingVideoCount(count || 0))
-      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years,coach_monthly_rate').eq('id', session.user.id).maybeSingle().then(({ data }) => {
-        if (data) {
+      fetchClients(coachId, generation)
+      supabase.from('exercise_feedback').select('id', { count: 'exact', head: true }).eq('coach_id', coachId).eq('status', 'pending').then(({ count }: { count: number | null }) => { if (isCurrent()) setPendingVideoCount(count || 0) })
+      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years,coach_monthly_rate').eq('id', coachId).maybeSingle().then(({ data }) => {
+        if (data && isCurrent()) {
           if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
           setCoachProfile(data)
           supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
-            if (!allPayments) return
+            if (!allPayments || !isCurrent()) return
             setAllPayments(allPayments as { amount: number; paid_at: string }[])
             const totals = aggregateCoachRevenue(allPayments as { amount: number; paid_at: string }[], new Date())
             setMonthRevenue(totals.monthRevenue); setYearRevenue(totals.yearRevenue); setTotalRevenue(totals.totalRevenue); setMonthPaymentsCount(totals.monthPaymentsCount)
           })
         }
       })
-      createCoachClientRelationRepository(supabase).listActiveClientsForCoach(session.user.id, { limit: 100 })
-        .then(result => setActiveSubscribers(result.ok ? result.data.length : 0))
     }
 
     // If initialSession was provided, role already confirmed by page.tsx — skip getRole
@@ -175,39 +193,45 @@ export default function useCoachDashboardController(initialSession?: any) {
         loadCoachData()
       }
     })
-  }, [session])
+  }, [session?.user?.id])
+
+  useEffect(() => {
+    if (section === 'messages') void ensureLastMessages()
+  }, [section, ensureLastMessages])
 
   // Fetch scheduled sessions when in calendar section or week offset changes
   useEffect(() => {
     if (!session?.user?.id) return
     fetchScheduledSessions(session.user.id, calWeekOffset)
-  }, [session?.user?.id, calWeekOffset, section])
+  }, [session?.user?.id, calWeekOffset])
 
   /* ── Data fetching ─────────────────────────────────────── */
 
-  async function fetchClients(coachId: string) {
+  async function fetchClients(coachId: string, generation = initialLoadGenerationRef.current) {
     setLoading(true)
     const relationRepository = createCoachClientRelationRepository(supabase)
     const clientsResult = await loadCoachClients(relationRepository, coachId)
+    if (generation !== initialLoadGenerationRef.current || initialLoadKeyRef.current !== coachId) return
     if (!clientsResult.ok) { setClients([]); setLoading(false); return }
     const rows = clientsResult.data
     const clientIds = rows.map(row => row.client_id)
     setClients(rows)
+    setActiveSubscribers(rows.length)
     setLoading(false)
     void refreshCounters(clientIds)
-    fetchAtRiskClients(rows)
+    fetchAtRiskClients(rows, generation)
 
     // Fetch completed sessions for all clients of this coach
     loadCoachSessionSummary(supabase as DatabaseClient, coachId, new Date())
       .then(result => {
-        if (!result.ok) return
+        if (!result.ok || generation !== initialLoadGenerationRef.current || initialLoadKeyRef.current !== coachId) return
         setLastSessionByClient(result.data.lastSessionByClient)
         setSessionsThisWeekByClient(result.data.sessionsThisWeekByClient)
       })
   }
 
-  async function fetchAtRiskClients(clientRows: ClientRow[]) {
-    if (!clientRows.length) { setAtRiskClients([]); return }
+  async function fetchAtRiskClients(clientRows: ClientRow[], generation: number) {
+    if (!clientRows.length) { if (generation === initialLoadGenerationRef.current) setAtRiskClients([]); return }
     const results: any[] = []
     for (const c of clientRows) {
       const { data } = await supabase
@@ -228,17 +252,20 @@ export default function useCoachDashboardController(initialSession?: any) {
         })
       }
     }
+    if (generation !== initialLoadGenerationRef.current) return
     results.sort((a, b) => b.daysSince - a.daysSince)
     setAtRiskClients(results)
   }
 
   async function fetchScheduledSessions(coachId: string, weekOffset = 0) {
+    const generation = ++calendarGenerationRef.current
     const calendar = createCalendarClientAdapter(supabase, {
       fetcher: fetch,
       clock: { now: () => new Date() },
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich',
     })
     const result = await calendar.listWeekForActor({ userId: coachId, role: 'coach' }, weekOffset, { limit: 100 })
+    if (generation !== calendarGenerationRef.current || initialLoadKeyRef.current !== coachId) return
     if (!result.ok) console.warn('[fetchScheduledSessions] unavailable')
     setScheduledSessions(result.ok ? result.data : [])
   }

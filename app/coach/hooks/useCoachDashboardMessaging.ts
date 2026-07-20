@@ -3,13 +3,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DatabaseClient } from '@/lib/supabase/types'
 import { belongsToPair, createMessagingRepository, createMessagingService, createSupabaseMessagingRealtime, mergeMessages, type Message } from '@/lib/coaching/messaging'
 import type { ClientRow } from './coach-dashboard-contract'
+import { createDeferredDomainLoader, type DeferredDomainState } from '@/lib/coaching/dashboard/deferred-domain'
 
 export function useCoachDashboardMessaging(client: DatabaseClient, actorId: string | undefined, clients: readonly ClientRow[]) {
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null)
   const [chatMessages, setChatMessages] = useState<Message[]>([])
   const [msgInput, setMsgInput] = useState('')
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
-  const [lastMessages, setLastMessages] = useState<Map<string, { content: string; image_url: string | null; created_at: string }>>(new Map())
+  type LastMessageMap = Map<string, { content: string; image_url: string | null; created_at: string }>
+  const [lastMessagesState, setLastMessagesState] = useState<{ actorId: string | undefined; data: LastMessageMap }>({ actorId, data: new Map() })
+  const lastMessages = lastMessagesState.actorId === actorId ? lastMessagesState.data : new Map<string, { content: string; image_url: string | null; created_at: string }>()
+  const [messageListState, setMessageListState] = useState<DeferredDomainState<Map<string, { content: string; image_url: string | null; created_at: string }>>>({ status: 'idle', data: null })
   const msgEndRef = useRef<HTMLDivElement>(null)
   const selectedClientRef = useRef<ClientRow | null>(null)
   const clientsRef = useRef<readonly ClientRow[]>(clients)
@@ -22,11 +26,27 @@ export function useCoachDashboardMessaging(client: DatabaseClient, actorId: stri
   const service = useMemo(() => createMessagingService(repository, async input => {
     await fetch('/api/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
   }), [repository])
+  const messageListLoader = useMemo(() => createDeferredDomainLoader({
+    isEmpty: (data: Map<string, unknown>) => data.size === 0,
+    onState: setMessageListState,
+  }), [])
 
   const refreshCounters = useCallback(async (clientIds: string[]) => {
     if (clientIds.length) { const result = await repository.listUnread(clientIds, 100); if (result.ok) setUnreadCounts(result.data) }
-    const last = await repository.listLastByContact(200); if (last.ok) setLastMessages(last.data)
   }, [repository])
+  const loadLastMessages = useCallback(async () => {
+    const result = await repository.listLastByContact(200)
+    if (result.ok) setLastMessagesState({ actorId, data: result.data })
+    return result
+  }, [actorId, repository])
+  const ensureLastMessages = useCallback(async () => {
+    if (!actorId) return
+    await messageListLoader.ensure(actorId, loadLastMessages)
+  }, [actorId, loadLastMessages, messageListLoader])
+  const retryLastMessages = useCallback(async () => {
+    if (!actorId) return
+    await messageListLoader.retry(actorId, loadLastMessages)
+  }, [actorId, loadLastMessages, messageListLoader])
   async function loadChat(clientId: string) {
     const generation = ++loadGenerationRef.current
     const result = await repository.listConversation(clientId, 100)
@@ -45,6 +65,11 @@ export function useCoachDashboardMessaging(client: DatabaseClient, actorId: stri
   }
 
   useEffect(() => { selectedClientRef.current = selectedClient; initialScrollRef.current = true }, [selectedClient])
+  useEffect(() => {
+    messageListLoader.activate()
+    messageListLoader.invalidate()
+    return () => messageListLoader.dispose()
+  }, [actorId, messageListLoader])
   useEffect(() => { clientsRef.current = clients }, [clients])
   useEffect(() => { const real = chatMessages.filter(message => !message.id.startsWith('opt-')); if (real.length) lastChatTimestampRef.current = real.at(-1)?.created_at ?? null }, [chatMessages])
   useEffect(() => {
@@ -60,7 +85,7 @@ export function useCoachDashboardMessaging(client: DatabaseClient, actorId: stri
     const seen = seenRef.current; seen.clear()
     const stop = realtime.subscribeIncoming(actorId, `coach-global-${actorId}`, (message, event) => {
       if (event === 'INSERT') {
-        setLastMessages(previous => new Map(previous).set(message.sender_id, { content: message.content, image_url: message.image_url, created_at: message.created_at }))
+        setLastMessagesState(previous => ({ actorId, data: new Map(previous.actorId === actorId ? previous.data : []).set(message.sender_id, { content: message.content, image_url: message.image_url, created_at: message.created_at }) }))
         if (selectedClientRef.current?.client_id !== message.sender_id && !seen.has(message.id)) { seen.add(message.id); setUnreadCounts(previous => ({ ...previous, [message.sender_id]: (previous[message.sender_id] || 0) + 1 })) }
       } else if (message.read) setUnreadCounts(previous => ({ ...previous, [message.sender_id]: Math.max(0, (previous[message.sender_id] || 0) - 1) }))
     })
@@ -80,5 +105,5 @@ export function useCoachDashboardMessaging(client: DatabaseClient, actorId: stri
     return () => cleanups.forEach(cleanup => cleanup())
   }, [chatMessages.length, selectedClient?.client_id])
 
-  return { selectedClient, setSelectedClient, chatMessages, msgInput, setMsgInput, unreadCounts, lastMessages, totalUnread: Object.values(unreadCounts).reduce((sum, count) => sum + count, 0), msgEndRef, openChat, sendMessage, refreshCounters }
+  return { selectedClient, setSelectedClient, chatMessages, msgInput, setMsgInput, unreadCounts, lastMessages, messageListState, ensureLastMessages, retryLastMessages, totalUnread: Object.values(unreadCounts).reduce((sum, count) => sum + count, 0), msgEndRef, openChat, sendMessage, refreshCounters }
 }
