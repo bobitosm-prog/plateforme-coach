@@ -3,7 +3,13 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const root = process.cwd()
-const routes = ['app/api/chat-ai/route.ts', 'app/api/generate-recipe/route.ts', 'app/api/suggest-exercise/route.ts']
+const routes = [
+  'app/api/chat-ai/route.ts',
+  'app/api/generate-recipe/route.ts',
+  'app/api/suggest-exercise/route.ts',
+  'app/api/generate-program/route.ts',
+  'app/api/generate-custom-program/route.ts',
+]
 
 describe('Anthropic provider migration boundaries', () => {
   it('keeps direct Anthropic transport and provider model literals out of migrated routes', () => {
@@ -25,7 +31,7 @@ describe('Anthropic provider migration boundaries', () => {
     }
   })
 
-  it('migrates exactly the three requested routes', () => {
+  it('tracks the migrated top-level routes', () => {
     const migrated = fs.readdirSync(path.join(root, 'app/api'), { withFileTypes: true })
       .filter(entry => entry.isDirectory())
       .map(entry => `app/api/${entry.name}/route.ts`)

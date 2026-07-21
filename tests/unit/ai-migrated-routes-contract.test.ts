@@ -25,6 +25,7 @@ vi.mock('@/lib/ai/providers/anthropic', async importOriginal => ({
 import { POST as chatPost } from '@/app/api/chat-ai/route'
 import { POST as recipePost } from '@/app/api/generate-recipe/route'
 import { POST as suggestionPost } from '@/app/api/suggest-exercise/route'
+import { POST as legacyProgramPost } from '@/app/api/generate-program/route'
 
 function request(path: string, body: unknown): NextRequest {
   return new Request(`http://localhost${path}`, {
@@ -39,6 +40,8 @@ function successful<T>(value: T, model: string) {
 beforeEach(() => {
   vi.clearAllMocks()
   process.env.ANTHROPIC_API_KEY = 'local-test-key'
+  delete process.env.MOOVX_E2E
+  delete process.env.ANTHROPIC_E2E_MESSAGES_URL
   delete process.env.SUPABASE_SERVICE_ROLE_KEY
   mocks.getUser.mockResolvedValue({ data: { user: { id: 'session-user' } } })
   mocks.checkRateLimit.mockReturnValue({ allowed: true })
@@ -84,6 +87,24 @@ describe('migrated AI route contracts', () => {
     expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ output: 'json', model: 'claude-haiku-4-5-20251001', maxTokens: 500 }), expect.anything())
     mocks.generate.mockResolvedValue({ ok: false, error: { code: 'invalid_output', retryable: false }, metadata: { correlationId: 'correlation-route-1', requestedModel: 'claude-haiku-4-5-20251001' } })
     expect((await suggestionPost(request('/api/suggest-exercise', { exerciseName: 'Squat' }))).status).toBe(500)
+  })
+
+  it('preserves the legacy coach program request and seven-day normalization', async () => {
+    mocks.generate.mockResolvedValue(successful({
+      lundi: { isRest: false, day_name: 'Push', exercises: [] },
+    }, 'claude-haiku-4-5-20251001'))
+    const response = await legacyProgramPost(request('/api/generate-program', {
+      objective: 'force', level: 'intermediaire', trainingDays: 3, weight: 80,
+      targetWeight: 82, equipment: ['salle'],
+    }))
+    expect(mocks.generate).toHaveBeenCalledTimes(1)
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(Object.keys(body.program)).toEqual(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
+    expect(body.program.lundi).toEqual({ isRest: false, day_name: 'Push', exercises: [] })
+    expect(body.program.mardi).toEqual({ isRest: true, day_name: 'Repos', exercises: [] })
+    expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ output: 'json', model: 'claude-haiku-4-5-20251001', maxTokens: 3000 }), expect.objectContaining({ correlationId: 'correlation-route-1' }))
+    expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'generate-program', logicalModel: 'anthropic-haiku-4.5', principal: { kind: 'user', id: 'session-user' } }))
   })
 
   it('preserves quota denial before provider and maps provider quota/network errors safely', async () => {

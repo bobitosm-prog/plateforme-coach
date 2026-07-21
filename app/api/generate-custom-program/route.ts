@@ -3,7 +3,10 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
 import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
-import { generateProgram } from '../../../lib/training/generate-program'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider } from '../../../lib/ai/providers/anthropic'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
+import { generateProgram, TrainingProgramGenerationError } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 
 export const maxDuration = 300
@@ -26,7 +29,10 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   // DB-backed hourly rate limit (Sprint 3)
-  const usage = await startAiUsage({ client: supabaseAuth, feature: 'generate-custom-program', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-opus-4-8' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabaseAuth, feature: 'generate-custom-program', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status === 'denied') return usage.reason === 'monthly_exhausted'
     ? aiQuotaResponse(6, Math.ceil(usage.retryAfterMs / 1000))
     : aiRateLimitResponse(5, Math.ceil(usage.retryAfterMs / 1000))
@@ -48,8 +54,10 @@ export async function POST(req: NextRequest) {
 
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
+      await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'configuration_error' })
       return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
     }
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
 
     const days = parseInt(daysPerWeek) || 4
     const encoder = new TextEncoder()
@@ -68,16 +76,17 @@ export async function POST(req: NextRequest) {
           const catalog = await loadExerciseCatalog(supabaseAuth)
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
-          }, apiKey, catalog, metadata => { ({ providerModel, tokens } = metadata) })
+          }, { provider, correlationId, cancellation: abortSignalToAiCancellation(req.signal) }, catalog, metadata => { ({ providerModel, tokens } = metadata) })
           clearInterval(heartbeat)
           await usage.tracker.finalize({ outcome: 'succeeded', reasonCode: 'completed', providerModel, tokens })
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', program })}\n\n`))
           controller.close()
-        } catch (e: any) {
+        } catch (error: unknown) {
           clearInterval(heartbeat)
-          await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'provider_error', providerModel, tokens })
-          console.error('[generate-custom-program] ERROR:', e.message)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`))
+          const cancelled = error instanceof TrainingProgramGenerationError && error.code === 'cancelled'
+          await usage.tracker.finalize({ outcome: cancelled ? 'cancelled' : 'failed', reasonCode: cancelled ? 'request_cancelled' : 'provider_error', providerModel, tokens })
+          const message = error instanceof TrainingProgramGenerationError ? error.message : 'Génération IA impossible'
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: message })}\n\n`))
           controller.close()
         }
       },
@@ -86,9 +95,8 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     })
 
-  } catch (e: any) {
+  } catch {
     await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'request_failed' })
-    console.error('[generate-custom-program] ERROR:', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Génération IA impossible' }, { status: 500 })
   }
 }

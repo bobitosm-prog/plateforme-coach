@@ -19,7 +19,7 @@ describe('structured parser migrations', () => {
   it('routes every structured output through the common parsing boundary', () => {
     for (const file of migrated) {
       const source = fs.readFileSync(file, 'utf8')
-      expect(source, file).toMatch(/parseAndValidate(?:AiOutput|ToolUse)|promptInvocationToJsonRequest/)
+      expect(source, file).toMatch(/parseAndValidate(?:AiOutput|ToolUse)|promptInvocationTo(?:Json|Tool)Request/)
       expect(source, file).not.toMatch(/JSON\.parse|jsonMatch|unwrapToolInput/)
       expect(source, file).not.toContain('match(/\\{[\\s\\S]*\\}/)')
       expect(source, file).not.toContain('match(/\\[[\\s\\S]*\\]/)')

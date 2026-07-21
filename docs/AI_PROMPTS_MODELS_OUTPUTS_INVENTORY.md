@@ -4,8 +4,9 @@
 > existant sans modifier les prompts, les modèles, les quotas ni les contrats.
 
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
-définie comme cible de migration. Chat Athena, Recipes et Suggest Exercise
-l'utilisent désormais via l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md).
+définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
+les trois points d'entrée de génération Training l'utilisent désormais via
+l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md).
 
 Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) relie désormais
 les trois identifiants runtime et le modèle opérationnel legacy à des
@@ -15,7 +16,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; trois flux utilisent désormais `AiProvider`.
+restent inchangés; six points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -41,7 +42,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 12 sites | 1 adaptateur HTTP partagé par 3 flux, 10 autres transports HTTP, 1 appel SDK |
+| Invocations Anthropic runtime | 10 sites | 1 adaptateur HTTP partagé par 6 points d'entrée, 8 autres transports HTTP, 1 appel SDK |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -64,8 +65,8 @@ semi-structurées.
 | `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | HTTP direct ou port HTTP injecté pour Nutrition |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les trois routes migrées utilisent des identifiants logiques résolus par le
-registre. Les douze autres flux conservent leurs littéraux historiques.
+Les six points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les neuf autres flux conservent leurs littéraux historiques.
 
 ## Matrice exhaustive des flux
 
@@ -96,9 +97,9 @@ transport. Voir [service de génération Nutrition](NUTRITION_MEAL_GENERATION_SE
 |---|---|---|---|---|
 | Suggestion d'alternative | `POST /api/suggest-exercise`; aucun consommateur actif trouvé | Système `EXERCISE_SWAP_PROMPT`; exercice, motif, muscles, équipement et type reçus | JSON texte via `AiProvider`, parsing central et schéma exact de trois suggestions | Session, limites IP/IA et usage inchangés; route orpheline, adaptateur injecté et erreurs expurgées |
 | Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON `{ instructions, tips }` par exercice; parse brut; résultat batch partiel | Session, e-mail admin exact, limite IP, service role; SDK Anthropic; erreurs par exercice journalisant nom et message; pas de test dédié |
-| Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | Objet programme JSON extrait du texte et remappé vers les jours legacy; pas de schéma | Session et limite IP seulement; corps fournisseur et détails d'exception exposés/journalisés; pas de mock de route dédié |
-| Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program`, JSON Schema Anthropic, puis SSE `progress`/`done`; absence de validation Zod après l'outil | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; erreur SSE peut contenir `e.message` |
-| Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil; écritures par client, agrégat succès/erreur partiel | `CRON_SECRET` et service role; concurrence bornée à trois; erreurs individuelles conservées dans le résultat/log; pas de retry fournisseur |
+| Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | JSON texte via `AiProvider`, validé par `legacyTrainingProgramOutputSchema`, puis sept jours legacy normalisés | Session, limite IP et usage inchangés; erreurs fournisseur expurgées, annulation reliée au signal HTTP |
+| Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program` via `AiProvider`, validé par `modernTrainingProgramOutputSchema`, puis SSE `progress`/`done` inchangé | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; annulation finalisée séparément |
+| Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil validé; écritures par client et agrégat succès/erreur partiel conservés | `CRON_SECRET` et service role; concurrence bornée à trois; ordre désactivation/insertion/prochaine date inchangé; pas de retry fournisseur |
 | Adaptation de séance | `POST /api/adapt-workout`; aucun consommateur actif trouvé | Système `PROGRAM_GENERATION_PROMPT`; exercices, durée et type de séance reçus | Tableau JSON d'exercices adaptés extrait par regex; aucune validation de forme | Session et limite IP; route orpheline, pas de quota IA ni test dédié, message d'exception brut |
 | Surcharge progressive | `POST /api/suggest-overload`; action dashboard client | Système inline; exercice, charge, répétitions et quatre historiques lus côté serveur | JSON `{ weight, reps, reasoning }`; regex, parse et contrôle de poids positif; insertion d'une suggestion | Session, limite IP, garde invité; service role pour historique/écriture; pas de quota IA; logs de texte/JSON fournisseur et détails SQL possibles |
 

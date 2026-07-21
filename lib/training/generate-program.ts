@@ -4,9 +4,10 @@
  */
 import { findExerciseMatch } from '../exercise-matching'
 import { buildTrainingProgramInvocation } from '../ai/prompts'
-import { parseAndValidateToolUse } from '../ai/parsing'
-import { modernTrainingProgramOutputSchema } from '../ai/schemas'
-import { readAnthropicMetadata } from '../ai/usage/provider-metadata'
+import { resolveAiModel } from '../ai/models'
+import type { AiCancellationSignal, AiErrorCode, AiProvider } from '../ai/provider'
+import { promptInvocationToToolRequest } from '../ai/providers/anthropic'
+import { createAiOutputValidator, modernTrainingProgramOutputSchema } from '../ai/schemas'
 import type { AiRecordedTokens } from '../ai/usage/types'
 
 export interface GenerateProgramInput {
@@ -20,6 +21,19 @@ export interface GenerateProgramInput {
   gender: string
 }
 
+export interface GenerateProgramRuntime {
+  provider: AiProvider
+  correlationId: string
+  cancellation?: AiCancellationSignal
+}
+
+export class TrainingProgramGenerationError extends Error {
+  constructor(readonly code: AiErrorCode | 'model_unavailable') {
+    super(code === 'invalid_output' ? 'Format IA invalide' : code === 'model_unavailable' ? 'Modèle IA indisponible' : `Génération IA impossible (${code})`)
+    this.name = 'TrainingProgramGenerationError'
+  }
+}
+
 // ─── Program structures by days × gender ───
 
 /**
@@ -28,39 +42,25 @@ export interface GenerateProgramInput {
  */
 export async function generateProgram(
   input: GenerateProgramInput,
-  apiKey: string,
+  runtime: GenerateProgramRuntime,
   catalog: { id: string; name: string }[] = [],
   onProviderMetadata?: (metadata: { providerModel?: string; tokens?: AiRecordedTokens }) => void,
 ): Promise<any> {
   const invocation = buildTrainingProgramInvocation(input, catalog)
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(invocation),
-  })
-
-  if (!res.ok) {
-    console.error('[generateProgram] Anthropic error:', res.status)
-    throw new Error(`Anthropic ${res.status}`)
-  }
-
-  const json = await res.json()
-  onProviderMetadata?.(readAnthropicMetadata(json))
-  const parsed = parseAndValidateToolUse(json, 'generate_program', modernTrainingProgramOutputSchema)
-  if (!parsed.ok) {
-    console.error('[generateProgram] Invalid structured response')
-    throw new Error('Format IA invalide')
-  }
-  if (catalog.length === 0) return parsed.value
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') throw new TrainingProgramGenerationError('model_unavailable')
+  const generated = await runtime.provider.generate(
+    promptInvocationToToolRequest(invocation, model.model.providerModelId, createAiOutputValidator(modernTrainingProgramOutputSchema)),
+    { correlationId: runtime.correlationId, timeoutMs: 300_000, cancellation: runtime.cancellation },
+  )
+  if (!generated.ok) throw new TrainingProgramGenerationError(generated.error.code)
+  onProviderMetadata?.({ providerModel: generated.metadata.actualModel, tokens: generated.metadata.usage })
+  if (catalog.length === 0) return generated.value
 
   // Post-process immutably: resolve exercise names against catalog + set exercise_id
   return {
-    ...parsed.value,
-    days: parsed.value.days.map(day => ({
+    ...generated.value,
+    days: generated.value.days.map(day => ({
       ...day,
       exercises: day.exercises.map(exercise => {
         const match = findExerciseMatch(catalog, exercise.custom_name)

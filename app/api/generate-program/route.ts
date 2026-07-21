@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { buildLegacyCoachProgramInvocation } from '../../../lib/ai/prompts'
-import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
-import { legacyTrainingProgramOutputSchema } from '../../../lib/ai/schemas'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToJsonRequest } from '../../../lib/ai/providers/anthropic'
+import { createAiOutputValidator, legacyTrainingProgramOutputSchema } from '../../../lib/ai/schemas'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -59,9 +61,12 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`program:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
-  const usage = await startAiUsage({ client: supabase, feature: 'generate-program', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-haiku-4-5-20251001' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-haiku-4.5')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabase, feature: 'generate-program', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
@@ -78,28 +83,19 @@ export async function POST(req: NextRequest) {
 
     const invocation = buildLegacyCoachProgramInvocation({ objective, weight, targetWeight, level, equipment, days, splitGuide, prefatigueInstructions: getPrefatigueInstructions() })
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(invocation),
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(promptInvocationToJsonRequest(invocation, model.model.providerModelId, createAiOutputValidator(legacyTrainingProgramOutputSchema)), {
+      correlationId, timeoutMs: 300_000, cancellation: abortSignalToAiCancellation(req.signal),
     })
-
-    if (!anthropicRes.ok) {
-      console.error('[generate-program] Anthropic API error:', anthropicRes.status)
-      return NextResponse.json({ error: `Erreur API Anthropic (${anthropicRes.status})` }, { status: anthropicRes.status })
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') outcome = 'cancelled'
+      if (generated.error.code === 'invalid_output') return NextResponse.json({ error: 'Erreur inattendue', detail: 'No JSON found' }, { status: 500 })
+      const status = generated.error.code === 'quota_exceeded' ? 429 : 500
+      return NextResponse.json({ error: `Erreur API Anthropic (${status})` }, { status })
     }
-
-    const data = await anthropicRes.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const rawText = data.content[0].text
-
-    const parsed = parseAndValidateAiOutput(rawText, legacyTrainingProgramOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
-    if (!parsed.ok) throw new Error('No JSON found')
-    const aiProgram: Partial<Record<string, { isRest: boolean; day_name?: string; exercises: unknown[] }>> = parsed.value
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
+    const aiProgram: Partial<Record<string, { isRest: boolean; day_name?: string; exercises: unknown[] }>> = generated.value
 
     // Normalise: ensure all 7 days are present
     for (const d of DAYS) {
@@ -108,11 +104,9 @@ export async function POST(req: NextRequest) {
 
     outcome = 'succeeded'
     return NextResponse.json({ program: aiProgram })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e)
-    console.error('[generate-program] Unhandled error:', message)
-    return NextResponse.json({ error: 'Erreur inattendue', detail: message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
   } finally {
-    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : outcome === 'cancelled' ? 'request_cancelled' : 'request_failed', providerModel, tokens })
   }
 }

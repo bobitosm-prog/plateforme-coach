@@ -1,4 +1,4 @@
-import type { AiImageBlock, AiInputBlock, AiJsonRequest, AiMessage, AiOutputValidator, AiTextRequest } from '@/lib/ai/provider'
+import type { AiImageBlock, AiInputBlock, AiJsonRequest, AiMessage, AiOutputValidator, AiTextRequest, AiToolRequest } from '@/lib/ai/provider'
 import type { AiPromptInvocation } from '@/lib/ai/prompts/types'
 
 function mapBlock(block: unknown): AiInputBlock | null {
@@ -37,5 +37,25 @@ export function promptInvocationToJsonRequest<T>(
   return {
     output: 'json', model: providerModel, maxTokens: invocation.max_tokens,
     system: invocation.system, messages: invocation.messages.map(mapMessage), temperature: invocation.temperature, validate,
+  }
+}
+
+export function promptInvocationToToolRequest<T>(
+  invocation: AiPromptInvocation,
+  providerModel: string,
+  validate: AiOutputValidator<T>,
+): AiToolRequest<T> {
+  const tools = (invocation.tools ?? []).map(tool => ({
+    name: String(tool.name ?? ''),
+    description: typeof tool.description === 'string' ? tool.description : undefined,
+    inputSchema: tool.input_schema && typeof tool.input_schema === 'object'
+      ? tool.input_schema as Readonly<Record<string, unknown>> : {},
+  }))
+  const choice = invocation.tool_choice
+  const forcedTool = choice && choice.type === 'tool' && typeof choice.name === 'string' ? choice.name : undefined
+  return {
+    output: 'tool', model: providerModel, maxTokens: invocation.max_tokens,
+    system: invocation.system, messages: invocation.messages.map(mapMessage), temperature: invocation.temperature,
+    tools, forcedTool, validate,
   }
 }

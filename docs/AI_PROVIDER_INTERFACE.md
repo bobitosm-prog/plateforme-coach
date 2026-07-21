@@ -184,8 +184,9 @@ reçoit désormais :
 - le faux serveur `/v1/messages` utilisé par le harnais E2E ;
 - le `fetchImpl` déjà injecté par la génération Nutrition.
 
-Chat, recette et suggestion d'exercice sont migrés. Les douze autres points
-d'entrée continuent d'utiliser leur transport historique.
+Chat, recette, suggestion d'exercice et les trois points d'entrée de génération
+Training sont migrés. Les neuf autres points d'entrée continuent d'utiliser
+leur transport historique.
 
 ## Garanties d'architecture
 
@@ -201,7 +202,7 @@ dans les futurs adaptateurs et services applicatifs.
 
 - L'adaptateur Anthropic commun couvre `generate()` texte, JSON et outil;
   `stream()` reste volontairement non migré.
-- Trois des 15 points d'entrée sont migrés.
+- Six des 15 points d'entrée sont migrés.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
 - Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) et la

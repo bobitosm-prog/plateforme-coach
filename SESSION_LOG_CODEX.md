@@ -9006,3 +9006,59 @@ Migrer Chat, Recipes et Suggest Exercise.
 ### Prochaine action unique
 
 Migrer génération Training.
+
+## Entrée — 2026-07-21 — Génération Training migrée vers AiProvider
+
+- Trois points d'entrée migrés sans fusion de contrats : programme coach
+  legacy `POST /api/generate-program`, programme moderne SSE
+  `POST /api/generate-custom-program` et régénération serveur
+  `POST /api/training-regen/cron`. `adapt-workout`, instructions d'exercice,
+  surcharge progressive et analyse corporelle restent hors périmètre.
+- Le contrat legacy conserve son message unique sans système séparé,
+  `max_tokens=3000`, son objet par jours français et la normalisation finale
+  vers sept jours. Il résout désormais `anthropic-haiku-4.5` vers
+  `claude-haiku-4-5-20251001` et valide fail-closed avec le schéma legacy.
+- Route moderne et cron conservent le builder partagé, le catalogue, l'outil
+  forcé `generate_program`, `max_tokens=8000` et le modèle logique
+  `anthropic-opus-4.8` résolu vers `claude-opus-4-8`. La sortie outil passe
+  désormais par le schéma moderne avant la résolution immuable du catalogue.
+- L'adaptateur Anthropic sait convertir génériquement une invocation prompt en
+  `AiToolRequest`. Aucun transport, modèle fournisseur, `JSON.parse`, regex ou
+  parseur structuré ad hoc ne subsiste dans les quatre fichiers migrés.
+- La route moderne conserve son heartbeat SSE de cinq secondes et ses événements
+  `progress`, `done` et `error`; `Request.signal` annule le transport. Le cron
+  n'invente aucun signal navigateur, garde sa concurrence à trois et l'ordre
+  désactivation des anciens programmes, insertion du nouveau, puis date +14 j.
+- Identités et quotas restent distincts : utilisateurs session pour les deux
+  routes, principal serveur `cron.training-regen` avec sujet client pour le
+  cron; limites IP 5/min et 3/min, quota horaire/lourd moderne et politique
+  cron inchangés. Une réservation par opération; modèle réel et tokens sont
+  transmis à la finalisation, y compris l'annulation séparée.
+- Les erreurs fournisseur sont désormais typées et expurgées. Les sorties
+  invalides sont refusées sans programme vide; aucun prompt, payload, réponse
+  brute, clé ou contenu utilisateur n'est propagé par le service partagé.
+- Tests ciblés provider, prompts, schémas, parsing, modèles, usage, routes et
+  Training : 13 fichiers, 99 tests verts. Suite complète : 177 fichiers,
+  1 433 tests verts et 3 `todo`; TypeScript vert.
+  ESLint des nouveaux fichiers est vert; l'audit des consommateurs retrouve
+  trois `any` historiques (`Promise<any>` et deux occurrences cron), sans
+  nouvelle occurrence introduite.
+- Compteurs actualisés : six des quinze points d'entrée utilisent le provider
+  commun; dix sites d'invocation runtime subsistent au total, dont l'adaptateur
+  partagé, huit autres transports HTTP et un appel SDK.
+- Aucune migration, RLS, type Supabase, route hors périmètre, E2E ou tâche de
+  Phase 8 modifiée. Staging vide; changements concurrents protégés intacts et
+  hors périmètre.
+
+### Dettes préservées
+
+- le SSE applicatif enveloppe toujours une génération Anthropic non streamée;
+- aucun timeout réseau, retry ou fallback nouveau n'est activé;
+- la persistance cron reste multi-étapes et non transactionnelle;
+- les trois occurrences `any` historiques et les erreurs SQL partielles du
+  cron restent à traiter dans une tranche dédiée;
+- neuf points d'entrée IA utilisent encore leur transport historique.
+
+### Prochaine action unique
+
+Migrer génération Nutrition.

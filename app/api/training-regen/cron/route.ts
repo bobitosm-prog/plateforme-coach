@@ -4,6 +4,9 @@ import { buildProgramParams } from '@/lib/training/build-program-params'
 import { generateProgram } from '@/lib/training/generate-program'
 import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
 import { aiUsageCorrelationId, startAiUsage } from '@/lib/ai/usage'
+import { resolveAiModel } from '@/lib/ai/models'
+import { createAnthropicProvider } from '@/lib/ai/providers/anthropic'
+import { getAnthropicMessagesUrl } from '@/lib/anthropic/chat-transport'
 
 // Vercel : Hobby clamp 60s, Pro 300s. La génération programme ~50s/user.
 // Capacité réelle : ~1 user/run sur Hobby (60s), ~5-6 users/run sur Pro (300s).
@@ -35,6 +38,9 @@ export async function POST(req: NextRequest) {
   if (!apiKey) {
     return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
   }
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
 
   // 4. FETCH USERS DUE (next_program_regen_at <= NOW, role client, onboarded)
   const nowIso = new Date().toISOString()
@@ -70,7 +76,8 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
     const batch = allUsers.slice(i, i + CONCURRENCY)
     await Promise.all(batch.map(async (profile: any) => {
-      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'training-regen', principal: { kind: 'server', id: 'cron.training-regen', subjectUserId: profile.id }, correlationId: `${operationId.slice(0, 80)}:${profile.id}`, logicalModel: 'claude-opus-4-8' })
+      const correlationId = `${operationId.slice(0, 80)}:${profile.id}`
+      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'training-regen', principal: { kind: 'server', id: 'cron.training-regen', subjectUserId: profile.id }, correlationId, logicalModel: model.model.logicalId })
       if (usage.status !== 'started') {
         results.errors++
         results.details.push({ user_id: profile.id, status: 'error', error: 'Usage store unavailable' })
@@ -82,7 +89,7 @@ export async function POST(req: NextRequest) {
         const params = buildProgramParams(profile, {
           notes: 'Varie les exercices et la structure par rapport au programme precedent pour eviter la stagnation, tout en respectant le meme objectif et niveau.',
         })
-        const program = await generateProgram(params, apiKey, catalog, metadata => { ({ providerModel, tokens } = metadata) })
+        const program = await generateProgram(params, { provider, correlationId }, catalog, metadata => { ({ providerModel, tokens } = metadata) })
         if (!program) throw new Error('No program generated')
 
         // Deactivate old + insert new
