@@ -182,10 +182,10 @@ reçoit désormais :
 - le `fetch` du mock partagé Vitest ;
 - l'URL validée par le transport local Athena ;
 - le faux serveur `/v1/messages` utilisé par le harnais E2E ;
-- le `fetchImpl` déjà injecté par la génération Nutrition.
+- le service de génération Nutrition désormais raccordé directement à ce port.
 
 Chat, recette, suggestion d'exercice et les trois points d'entrée de génération
-Training sont migrés. Les neuf autres points d'entrée continuent d'utiliser
+Training ainsi que le plan Nutrition sont migrés. Les huit autres points d'entrée continuent d'utiliser
 leur transport historique.
 
 ## Garanties d'architecture
@@ -202,7 +202,7 @@ dans les futurs adaptateurs et services applicatifs.
 
 - L'adaptateur Anthropic commun couvre `generate()` texte, JSON et outil;
   `stream()` reste volontairement non migré.
-- Six des 15 points d'entrée sont migrés.
+- Sept des 15 points d'entrée sont migrés.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
 - Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) et la

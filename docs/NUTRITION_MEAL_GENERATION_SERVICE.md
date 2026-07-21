@@ -11,11 +11,14 @@ contenant le même plan canonique toléré par `lib/meal-plan.ts`.
 
 - La route conserve l'authentification Supabase, les limites IP et IA, le quota,
   la garde `invited`, la validation HTTP, le correlation ID et le mapping SSE.
-- `lib/nutrition/meal-generation/service.ts` construit les prompts métier,
-  orchestre les sept jours, parse et valide chaque réponse, puis convertit le
-  format français historique vers `DayPlan`.
-- `provider.ts` est le seul transport Anthropic. Il reçoit le prompt par un port
-  injecté et ne retourne que du texte validable ou un code de raison borné.
+  Aucun contrôle d'abonnement indépendant n'existait dans cette route; aucun
+  n'est inventé pendant cette migration.
+- `lib/nutrition/meal-generation/service.ts` orchestre les sept jours, transmet
+  les prompts métier au `AiProvider`, valide chaque réponse par le schéma Zod,
+  puis convertit le format français historique vers `DayPlan`.
+- L'adaptateur Anthropic commun est l'unique transport. L'ancien `provider.ts`
+  Nutrition a été supprimé; aucune abstraction fournisseur concurrente ne
+  subsiste dans le domaine.
 - Aucun repository n'est appelé : la route historique reçoit les préférences
   dans son corps et n'effectue aucune lecture Nutrition. Ajouter une lecture
   aurait modifié son contrat et son autorité. L'identité utilisée pour quota et
@@ -23,8 +26,8 @@ contenant le même plan canonique toléré par `lib/meal-plan.ts`.
 
 ## Contrats préservés
 
-- modèle `claude-opus-4-8`, `max_tokens: 1500`, prompt métier et ordre lundi à
-  dimanche ;
+- modèle logique `anthropic-opus-4.8` résolu vers `claude-opus-4-8`,
+  `max_tokens: 1500`, sans température, prompt métier et ordre lundi à dimanche ;
 - statuts et corps legacy pour authentification, limites, quota, garde de rôle
   et configuration fournisseur ;
 - en-têtes SSE et événements `progress`/`done` ;
@@ -44,11 +47,30 @@ aliments nommés avec quantité strictement positive et macros finies,
 non négatives. JSON malformé, structure inconnue, valeur négative, `NaN` ou
 infini sont fail-closed pour la journée concernée.
 
-Le transport n'expose jamais corps fournisseur, prompt, clé, e-mail ou erreur
-brute. Les seuls diagnostics qui franchissent le port sont
-`PROVIDER_RATE_LIMITED`, `PROVIDER_TIMEOUT`, `PROVIDER_UNAVAILABLE` et
-`PROVIDER_INVALID_RESPONSE`. Les logs HTTP structurés ne contiennent que le
-résultat borné et le correlation ID.
+Le provider n'expose jamais corps fournisseur, prompt, clé, e-mail ou erreur
+brute. Ses erreurs normalisées restent internes au service; le navigateur ne
+reçoit aucun contenu fournisseur. Les logs HTTP structurés ne contiennent que
+le résultat borné et le correlation ID.
+
+Une journée dont les quatre listes de repas sont légitimement vides reste une
+journée validée avec quatre repas vides. Une sortie invalide ou une panne
+fournisseur devient le `DayPlan` vide legacy et positionne `partial=true` en
+interne. Ce marqueur n'est toujours pas ajouté à l'événement public `done`.
+
+## SSE, annulation et usage
+
+- Le SSE reste applicatif, non natif fournisseur : un `progress` avant chaque
+  appel, dans l'ordre lundi–dimanche, puis exactement un `done` après sept
+  tentatives lorsque le traitement arrive à son terme.
+- Les sept appels partagent le même correlation ID et une seule réservation.
+  `Request.signal` est propagé; une annulation arrête les jours suivants,
+  finalise `cancelled` avec le nombre réel de tentatives et ferme une seule fois.
+- Tokens input/output et modèle réel sont agrégés. Tous les compteurs présents
+  donnent `complete`; certains présents donnent `partial`; aucun compteur donne
+  `unavailable`. Le coût est calculé en entiers micros par la frontière usage.
+- Le code observé impose **3/min par IP**, et non 5/min. Cette valeur est
+  conservée pour éviter une modification de quota pendant la migration. Les
+  limites 10/h et 6 opérations lourdes sur 30 jours restent inchangées.
 
 ## Limites
 
@@ -61,6 +83,8 @@ résultat borné et le correlation ID.
   périmètre.
 - Préférences et analyses déjà envoyées par les producteurs entrent dans le
   prompt, mais ne sont jamais journalisées.
+- `AiProvider.stream()` reste inutilisé; il ne faut pas présenter le SSE
+  applicatif comme du streaming Anthropic natif.
 
 ## Références
 

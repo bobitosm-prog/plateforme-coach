@@ -4,8 +4,11 @@ import { type NextRequest } from 'next/server'
 
 import { createApiRouteObservability } from '@/lib/api/route-observability'
 import { validateJsonBody } from '@/lib/api/validation'
-import { createAnthropicMealGenerationProvider, generateMealPlan, mealGenerationParamsSchema } from '@/lib/nutrition/meal-generation'
+import { MealGenerationError, generateMealPlan, mealGenerationParamsSchema } from '@/lib/nutrition/meal-generation'
+import { resolveAiModel } from '@/lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider } from '@/lib/ai/providers/anthropic'
 import { aiUsageCorrelationId, startAiUsage } from '@/lib/ai/usage'
+import { getAnthropicMessagesUrl } from '@/lib/anthropic/chat-transport'
 import { aiQuotaResponse, aiRateLimitResponse, checkRateLimit } from '@/lib/rate-limit'
 
 export const maxDuration = 300
@@ -28,7 +31,10 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rateLimit = checkRateLimit(`meal-plan:${ip}`, 3, 60_000)
   if (!rateLimit.allowed) return finish(jsonError(`Trop de requetes. Reessayez dans ${rateLimit.retryAfter}s.`, 429), 'rejected', 'RATE_LIMITED')
-  const usage = await startAiUsage({ client: supabaseAuth, feature: 'generate-meal-plan', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-opus-4-8' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') return finish(jsonError('Service temporairement indisponible', 503), 'failed', 'MODEL_UNAVAILABLE')
+  const usage = await startAiUsage({ client: supabaseAuth, feature: 'generate-meal-plan', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status === 'denied') return finish(usage.reason === 'monthly_exhausted'
     ? aiQuotaResponse(6, Math.ceil(usage.retryAfterMs / 1000))
     : aiRateLimitResponse(10, Math.ceil(usage.retryAfterMs / 1000)), 'rejected', usage.reason === 'monthly_exhausted' ? 'AI_QUOTA_EXCEEDED' : 'AI_RATE_LIMITED')
@@ -54,19 +60,41 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder()
-  const provider = createAnthropicMealGenerationProvider({ apiKey })
+  const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let closed = false
+      let finalized = false
+      const close = () => { if (!closed) { closed = true; controller.close() } }
+      const finalize = async (input: Parameters<typeof usage.tracker.finalize>[0]) => {
+        if (finalized) return
+        finalized = true
+        await usage.tracker.finalize(input)
+      }
       try {
-        const result = await generateMealPlan(validated.data, provider, (event) => {
+        const result = await generateMealPlan(validated.data, { provider, correlationId, cancellation: abortSignalToAiCancellation(req.signal) }, (event) => {
+          if (closed) throw new Error('stream_closed')
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
         })
-        await usage.tracker.finalize({ outcome: 'succeeded', reasonCode: result.partial ? 'partial_completed' : 'completed', attemptCount: 7 })
+        await finalize({
+          outcome: 'succeeded', reasonCode: result.partial ? 'partial_completed' : 'completed',
+          attemptCount: result.usage.attemptCount, providerModel: result.usage.providerModel,
+          tokens: result.usage.tokens, tokenCompleteness: result.usage.tokenCompleteness,
+        })
+        if (closed) return
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', plan: result.plan })}\n\n`))
-        controller.close()
-      } catch {
-        await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'provider_error', attemptCount: 7 })
-        controller.error(new Error('Meal generation failed'))
+        close()
+      } catch (error) {
+        const generationError = error instanceof MealGenerationError ? error : undefined
+        const cancelled = generationError?.code === 'cancelled' || req.signal.aborted
+        await finalize({
+          outcome: cancelled ? 'cancelled' : 'failed', reasonCode: cancelled ? 'request_cancelled' : generationError?.code ?? 'provider_error',
+          attemptCount: generationError?.usage.attemptCount ?? 1,
+          providerModel: generationError?.usage.providerModel, tokens: generationError?.usage.tokens,
+          tokenCompleteness: generationError?.usage.tokenCompleteness,
+        })
+        if (cancelled) close()
+        else if (!closed) { closed = true; controller.error(new Error('Meal generation failed')) }
       }
     },
   })

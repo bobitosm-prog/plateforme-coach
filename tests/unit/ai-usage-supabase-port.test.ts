@@ -55,7 +55,7 @@ describe('Supabase AI usage adapter', () => {
     const rpc = vi.fn()
       .mockResolvedValueOnce({ data: { status: 'allowed', reservationId: '71000000-0000-4000-8000-000000000099', remaining: 4 }, error: null })
       .mockResolvedValueOnce({ data: { status: 'finalized' }, error: null })
-    let now = 1_000
+    let now = Date.parse('2026-07-21T12:00:00.000Z')
     const started = await startAiUsage({
       client: clientWithRpc(rpc), feature: 'generate-custom-program',
       principal: { kind: 'user', id: 'user-1' }, correlationId: 'request-1',
@@ -63,11 +63,11 @@ describe('Supabase AI usage adapter', () => {
     })
     expect(started).toMatchObject({ status: 'started', remaining: 4 })
     if (started.status !== 'started') throw new Error('tracker expected')
-    now = 1_125
-    await started.tracker.finalize({ outcome: 'failed', reasonCode: 'provider_error', attemptCount: 1 })
+    now += 125
+    await started.tracker.finalize({ outcome: 'failed', reasonCode: 'provider_error', attemptCount: 7, tokens: { inputTokens: 100 }, tokenCompleteness: 'partial' })
     expect(rpc).toHaveBeenLastCalledWith('finalize_ai_usage', expect.objectContaining({
       p_feature: 'generate-custom-program', p_policy_id: 'ai.generate-custom-program.v1',
-      p_status: 'failed', p_duration_ms: 125,
+      p_status: 'failed', p_duration_ms: 125, p_attempt_count: 7, p_input_tokens: 100, p_estimated_cost_micros: 500, p_cost_status: 'partial',
     }))
   })
 

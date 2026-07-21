@@ -1,6 +1,6 @@
 import { NUTRITION_GENERATION_PROMPT } from '../../coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../fitness-food-database'
-import type { MealGenerationParams, MealGenerationProviderRequest } from '../../nutrition/meal-generation/types'
+import type { MealGenerationDayInvocation, MealGenerationParams } from '../../nutrition/meal-generation/types'
 
 export function buildMealGenerationSystemPrompt(params: MealGenerationParams) {
   const kcal = params.calorie_goal || 2500
@@ -176,7 +176,7 @@ Si l'analyse détecte une morphologie athlétique → maintiens les apports prot
 }`
 }
 
-export function buildSequentialMealDayInvocation(day: string, params: MealGenerationParams, proteinsUsed: readonly string[]): MealGenerationProviderRequest {
+export function buildSequentialMealDayInvocation(day: string, params: MealGenerationParams, proteinsUsed: readonly string[]): MealGenerationDayInvocation {
   const kcal = params.calorie_goal || 2500
   const proteinHint = proteinsUsed.length > 0 ? `\nProtéines déjà utilisées les jours précédents (VARIE !) : ${proteinsUsed.join(', ')}` : ''
   const foodListStr = (params.available_foods || []).map(f => `${f.nom} (${f.kcal}kcal, P${f.p} G${f.g} L${f.l} /100g)`).join('\n')
@@ -210,5 +210,5 @@ Déjeuner et dîner : protéine animale/principale OBLIGATOIRE (quantité ajust�
 ${params.scanned_foods?.length ? `\nAliments prioritaires du client : ${params.scanned_foods.slice(0, 10).map(f => f.name).join(', ')}` : ''}
 Aliments féculents (riz, pâtes, légumineuses) : TOUJOURS pesés et calculés CUITS (~130 kcal/100g pour riz/pâtes), jamais crus.
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
-  return Object.freeze({ model: 'claude-opus-4-8', maxTokens: 1500, system: buildMealGenerationSystemPrompt(params), user })
+  return Object.freeze({ maxTokens: 1500, system: buildMealGenerationSystemPrompt(params), user })
 }

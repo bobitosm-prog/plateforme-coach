@@ -9062,3 +9062,57 @@ Migrer génération Training.
 ### Prochaine action unique
 
 Migrer génération Nutrition.
+
+## Entrée — 2026-07-21 — Génération Nutrition migrée vers AiProvider
+
+- Périmètre limité à `POST /api/generate-meal-plan` et au service séquentiel
+  `lib/nutrition/meal-generation`. `analyze-meal-photo` est confirmé comme un
+  flux d'analyse distinct et reste inchangé.
+- L'ancien port HTTP Anthropic propre à Nutrition a été supprimé. La route crée
+  l'adaptateur commun et le service dépend directement de `AiProvider`, sans
+  client Anthropic, URL, modèle fournisseur ou parsing JSON ad hoc dans le
+  domaine.
+- Le modèle logique `anthropic-opus-4.8` est résolu sans fallback vers le même
+  `claude-opus-4-8`. Les sept appels conservent `max_tokens=1500`, aucune
+  température, les prompts exacts, l'ordre lundi–dimanche et le contexte
+  cumulatif des protéines de déjeuner/dîner.
+- Le SSE reste applicatif : un événement `progress` avant chaque journée puis
+  un unique `done` contenant le plan. Il ne s'agit pas de streaming fournisseur.
+  Une annulation issue de `Request.signal` arrête les appels suivants, ferme le
+  flux une seule fois et finalise l'usage en `cancelled`; aucun événement brut
+  fournisseur n'est envoyé.
+- Journée légitimement vide et journée invalide restent distinguées en interne.
+  Une panne, un JSON invalide ou une structure invalide isole la journée dans
+  le `DayPlan` vide historique, positionne le plan `partial` et laisse les jours
+  suivants s'exécuter. Aucun aliment, calorie ou macro n'est inventé.
+- Une seule réservation couvre toute l'opération. Les sept appels partagent le
+  même correlation ID. Le modèle réel, le nombre réel de tentatives et les
+  tokens input/output connus sont agrégés; leur complétude reste `complete`,
+  `partial` ou `unavailable`. L'estimation conserve les entiers micros et le
+  statut partiel est propagé à la finalisation atomique.
+- Auth session, garde `invited`, validation, quota 10/h et quota lourd 6/30
+  jours restent identiques. L'audit a confirmé une limite IP existante de
+  **3/min**, contrairement aux 5/min supposés dans la consigne; la valeur réelle
+  a été conservée pour ne pas changer une politique dans cette migration.
+- Tests ciblés provider, route/SSE, service, prompts, schémas, parsing, modèle
+  et usage : 14 fichiers, 99 tests verts. Suite complète : 178 fichiers,
+  1 445 tests verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- Sept des quinze points d'entrée utilisent désormais le provider commun. Neuf
+  sites d'invocation runtime subsistent : l'adaptateur partagé, sept transports
+  HTTP historiques et un appel SDK.
+- Aucune persistance ajoutée, migration, RLS, type Supabase, E2E, route hors
+  périmètre ou tâche Phase 8 modifiée. Aucun fournisseur ni service externe
+  contacté; staging vide et changements concurrents protégés hors périmètre.
+
+### Dettes préservées
+
+- le plan partiel n'expose toujours pas publiquement la liste de ses journées
+  invalides afin de préserver le contrat SSE legacy;
+- le SSE enveloppe sept appels non streamés et ne reprend pas après interruption;
+- aucun timeout réseau, retry ou fallback nouveau n'est activé;
+- la limite IP réelle 3/min diverge de la valeur 5/min attendue dans la consigne;
+- huit points d'entrée IA utilisent encore leur transport historique.
+
+### Prochaine action unique
+
+Ajouter golden fixtures et tests de contrat.

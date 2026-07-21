@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { aiFailure, normalizeAiProviderError, normalizeMetadata, validateAiRequest, validateStructuredOutput } from '@/lib/ai/provider'
-import type { AiGenerateRequest, AiProvider, AiRequestContext, AiResult, AiStopReason, AiStreamEvent, AiTokenUsage } from '@/lib/ai/provider'
+import type { AiGenerateRequest, AiProvider, AiRequestContext, AiResult, AiResultMetadata, AiStopReason, AiStreamEvent, AiTokenUsage } from '@/lib/ai/provider'
 import { parseAiJson, parseAiToolUse, unwrapLegacyToolInput } from '@/lib/ai/parsing'
 
 import type { AnthropicFetch, AnthropicProviderOptions } from './types'
@@ -67,6 +67,10 @@ function providerFailure<T>(context: AiRequestContext, request: AiGenerateReques
   return aiFailure<T>({ ...error, correlationId: context.correlationId, requestedModel: request.model })
 }
 
+function invalidOutputFailure<T>(metadata: AiResultMetadata): AiResult<T> & { ok: false } {
+  return { ok: false, error: { code: 'invalid_output', retryable: false }, metadata }
+}
+
 export function createAnthropicProvider(options: AnthropicProviderOptions): AiProvider {
   const fetchImpl: AnthropicFetch = options.fetchImpl ?? (fetch as unknown as AnthropicFetch)
   const messagesUrl = options.messagesUrl ?? DEFAULT_MESSAGES_URL
@@ -102,18 +106,18 @@ export function createAnthropicProvider(options: AnthropicProviderOptions): AiPr
       }
       if (request.output === 'json') {
         const text = firstText(raw)
-        if (text === null) return providerFailure(context, request, undefined, 'invalid_output')
+        if (text === null) return invalidOutputFailure(metadata)
         const parsed = parseAiJson(text, { allowMarkdownFence: true, allowLegacySurroundingText: true })
-        if (!parsed.ok) return providerFailure(context, request, undefined, 'invalid_output')
+        if (!parsed.ok) return invalidOutputFailure(metadata)
         const validated = validateStructuredOutput(parsed.value, request.validate)
-        return validated.ok ? { ok: true, output: 'json', value: validated.value, metadata } : providerFailure(context, request, undefined, 'invalid_output')
+        return validated.ok ? { ok: true, output: 'json', value: validated.value, metadata } : invalidOutputFailure(metadata)
       }
       const parsedTool = parseAiToolUse(raw, request.forcedTool ?? request.tools[0]?.name ?? '')
-      if (!parsedTool.ok) return providerFailure(context, request, undefined, 'invalid_output')
+      if (!parsedTool.ok) return invalidOutputFailure(metadata)
       const unwrapped = unwrapLegacyToolInput(parsedTool.value.input)
-      if (!unwrapped.ok) return providerFailure(context, request, undefined, 'invalid_output')
+      if (!unwrapped.ok) return invalidOutputFailure(metadata)
       const validated = validateStructuredOutput(unwrapped.value, request.validate)
-      return validated.ok ? { ok: true, output: 'tool', value: validated.value, metadata } : providerFailure(context, request, undefined, 'invalid_output')
+      return validated.ok ? { ok: true, output: 'tool', value: validated.value, metadata } : invalidOutputFailure(metadata)
     } catch (error) {
       if (controller.signal.aborted || context.cancellation?.aborted || (error instanceof Error && error.name === 'AbortError')) {
         return providerFailure(context, request, undefined, 'cancelled')

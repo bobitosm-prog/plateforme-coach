@@ -7,8 +7,8 @@
 
 L'[inventaire IA](AI_PROMPTS_MODELS_OUTPUTS_INVENTORY.md) montre des mappings
 429/5xx et des erreurs différents selon les routes. Aucun appel Anthropic
-serveur ne possède un timeout ou retry commun. Le port Nutrition sait
-classifier un `AbortError`, sans créer lui-même l'échéance. L'analyse
+serveur ne possède un timeout ou retry commun. L'adaptateur Anthropic sait
+classifier annulation et timeout injecté sans créer lui-même d'échéance. L'analyse
 corporelle est le seul flux avec un retry observé, effectué côté consommateur
 sur 429. Les SSE MoovX ne rejouent pas le transport fournisseur.
 

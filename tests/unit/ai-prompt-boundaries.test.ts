@@ -97,7 +97,8 @@ describe('AI prompt boundaries', () => {
   it('preserves sequential Nutrition day context and provider contract', () => {
     const params = { calorie_goal: 2400, protein_goal: 160, carbs_goal: 260, fat_goal: 70, objective_mode: 'bulk', caloric_adjustment: 250, allergies: ['œuf'], available_foods: [{ nom: 'Riz cuit', kcal: 130, p: 3, g: 28, l: 0 }], meal_food_names: { morning: ['Skyr'] }, scanned_foods: [{ name: 'Banane' }] }
     const invocation = buildSequentialMealDayInvocation('mardi', params, ['Poulet'])
-    expect(invocation).toMatchObject({ model: 'claude-opus-4-8', maxTokens: 1500 })
+    expect(invocation).toMatchObject({ maxTokens: 1500 })
+    expect(invocation).not.toHaveProperty('model')
     expect(invocation.user).toContain('Génère le plan pour MARDI.\n\nRappel objectif : BULK')
     expect(invocation.user).toContain('Protéines déjà utilisées les jours précédents (VARIE !) : Poulet')
     expect(invocation.user).toContain('Aliments prioritaires du client : Banane')

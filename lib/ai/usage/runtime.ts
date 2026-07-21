@@ -4,7 +4,7 @@ import { estimateRecordedAiCost } from './cost'
 import { getAiQuotaPolicy } from './policies'
 import { createAiUsageService } from './service'
 import { createSupabaseAiUsageRepository } from './supabase-port'
-import type { AiFeature, AiRecordedTokens, AiUsageOutcome, AiUsagePrincipal } from './types'
+import type { AiFeature, AiRecordedTokens, AiUsageCostStatus, AiUsageOutcome, AiUsagePrincipal } from './types'
 
 const CORRELATION_ID = /^[A-Za-z0-9._:-]{1,128}$/
 const MAX_PRICE_AGE_MS = 366 * 24 * 60 * 60 * 1_000
@@ -23,6 +23,7 @@ export interface AiUsageTracker {
     providerModel?: string
     tokens?: AiRecordedTokens
     attemptCount?: number
+    tokenCompleteness?: Extract<AiUsageCostStatus, 'complete' | 'partial' | 'unavailable'>
   }): Promise<void>
 }
 
@@ -66,12 +67,17 @@ export async function startAiUsage(input: {
       async finalize(finalization) {
         if (finalized) return
         finalized = true
-        const cost = estimateRecordedAiCost({
+        const estimatedCost = estimateRecordedAiCost({
           model: finalization.providerModel ?? input.logicalModel,
           tokens: finalization.tokens,
           clock,
           maxPriceAgeMs: MAX_PRICE_AGE_MS,
         })
+        const cost = finalization.tokenCompleteness === 'unavailable'
+          ? { status: 'unavailable' as const }
+          : finalization.tokenCompleteness === 'partial' && estimatedCost.status === 'complete'
+            ? { ...estimatedCost, status: 'partial' as const }
+            : estimatedCost
         await service.finalizeAiUsage({
           reservationId: result.reservation.id,
           correlationId: input.correlationId,

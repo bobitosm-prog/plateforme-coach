@@ -1,8 +1,8 @@
 # Adaptateur Anthropic commun
 
 > État vérifié le 21 juillet 2026. Chat Athena, génération de recette,
-> suggestion d'exercice et les trois points d'entrée de génération Training
-> utilisent cette frontière; neuf points d'entrée IA conservent leur transport
+> suggestion d'exercice, les trois points d'entrée de génération Training et
+> la génération de plan Nutrition utilisent cette frontière; huit points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -33,6 +33,7 @@ persiste rien.
 | Suggestion | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON texte validé par `exerciseSuggestionsOutputSchema` | `max_tokens=500`, système, filtres et message historiques |
 | Programme coach legacy | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON texte validé par `legacyTrainingProgramOutputSchema`, puis sept jours normalisés | `max_tokens=3000`, message unique historique sans champ système |
 | Programme Training et cron | `anthropic-opus-4.8` → `claude-opus-4-8` | outil forcé `generate_program`, validé par `modernTrainingProgramOutputSchema` | `max_tokens=8000`, système, message, catalogue et paramètres historiques |
+| Plan Nutrition | `anthropic-opus-4.8` → `claude-opus-4-8` | sept JSON texte validés par `legacyNutritionDayOutputSchema` | sept appels séquentiels, `max_tokens=1500`, sans température, contexte cumulatif et SSE applicatif inchangés |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -62,7 +63,9 @@ timeout produit n'est pas décidé.
 `stream()` reste non implémenté pour Anthropic et renvoie un échec sûr. Le SSE
 Training reste une enveloppe applicative inchangée autour d'un unique
 `generate()` non streamé : heartbeat `progress`, puis `done` ou `error`. Le SSE
-Nutrition reste hors de cette tranche.
+Nutrition reste elle aussi une enveloppe SSE applicative autour de sept appels
+`generate()` non streamés. Une annulation ferme le flux et interdit les appels
+suivants; aucune migration vers `AiProvider.stream()` n'est revendiquée.
 
 ## Usages, tokens et coûts
 
@@ -71,6 +74,8 @@ correlation ID relie route, provider et finalisation. `input_tokens` et
 `output_tokens`, ainsi que les tokens cache présents, sont normalisés; une
 absence reste inconnue. Le modèle réellement retourné alimente la finalisation
 et l'estimation en micros USD. Succès, échec et annulation sont distincts.
+Pour Nutrition, les compteurs des appels réellement effectués sont additionnés
+sans flottant et leur complétude reste `complete`, `partial` ou `unavailable`.
 
 ## Tests et limites
 
@@ -79,7 +84,7 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les neuf autres flux utilisent encore leur transport
+Limites restantes : les huit autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
 les golden fixtures exhaustives restent une tâche séparée.
 

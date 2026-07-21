@@ -1,4 +1,6 @@
 import type { DayPlan } from '@/lib/meal-plan'
+import type { AiCancellationSignal, AiProvider } from '@/lib/ai/provider'
+import type { AiRecordedTokens } from '@/lib/ai/usage'
 
 export interface MealGenerationParams {
   calorie_goal: number
@@ -18,19 +20,23 @@ export interface MealGenerationParams {
   meal_food_names?: Partial<Record<'morning' | 'lunch' | 'snack' | 'dinner', string[]>>
 }
 
-export interface MealGenerationProviderRequest {
-  model: 'claude-opus-4-8'
+export interface MealGenerationDayInvocation {
   maxTokens: 1500
   system: string
   user: string
 }
 
-export type MealGenerationProviderResult =
-  | { ok: true; text: string }
-  | { ok: false; reason: 'PROVIDER_RATE_LIMITED' | 'PROVIDER_TIMEOUT' | 'PROVIDER_UNAVAILABLE' | 'PROVIDER_INVALID_RESPONSE' }
+export interface MealGenerationRuntime {
+  provider: AiProvider
+  correlationId: string
+  cancellation?: AiCancellationSignal
+}
 
-export interface MealGenerationProvider {
-  generate(request: MealGenerationProviderRequest): Promise<MealGenerationProviderResult>
+export interface MealGenerationUsage {
+  attemptCount: number
+  providerModel?: string
+  tokens?: AiRecordedTokens
+  tokenCompleteness: 'complete' | 'partial' | 'unavailable'
 }
 
 export interface MealGenerationResult {
@@ -38,4 +44,5 @@ export interface MealGenerationResult {
   plan: Record<string, DayPlan>
   partial: boolean
   failedDays: number
+  usage: MealGenerationUsage
 }

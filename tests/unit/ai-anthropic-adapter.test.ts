@@ -47,9 +47,10 @@ describe('Anthropic AiProvider adapter', () => {
     const provider = createAnthropicProvider({ apiKey: 'key', fetchImpl })
     const request = { ...textRequest, output: 'json' as const, model: 'claude-haiku-4-5-20251001', validate: (input: unknown) => typeof input === 'object' && input !== null && (input as { value?: unknown }).value === 2 ? { ok: true as const, value: input as { value: number } } : { ok: false as const } }
     await expect(provider.generate(request, context)).resolves.toMatchObject({ ok: true, output: 'json', value: { value: 2 } })
-    response.body = { content: [{ type: 'text', text: '{"secret":"raw"}' }] }
+    response.body = { model: 'claude-haiku-4-5-20251001', stop_reason: 'end_turn', usage: { input_tokens: 8, output_tokens: 3 }, content: [{ type: 'text', text: '{"secret":"raw"}' }] }
     const invalid = await provider.generate(request, context)
-    expect(invalid).toEqual({ ok: false, error: { code: 'invalid_output', retryable: false }, metadata: { correlationId: 'correlation-1', requestedModel: 'claude-haiku-4-5-20251001' } })
+    expect(invalid).toMatchObject({ ok: false, error: { code: 'invalid_output', retryable: false }, metadata: { correlationId: 'correlation-1', requestedModel: 'claude-haiku-4-5-20251001' } })
+    expect(invalid.metadata).toMatchObject({ actualModel: 'claude-haiku-4-5-20251001', usage: { inputTokens: 8, outputTokens: 3 } })
     expect(JSON.stringify(invalid)).not.toContain('secret')
   })
 

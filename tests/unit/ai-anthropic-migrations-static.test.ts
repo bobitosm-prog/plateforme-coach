@@ -9,6 +9,7 @@ const routes = [
   'app/api/suggest-exercise/route.ts',
   'app/api/generate-program/route.ts',
   'app/api/generate-custom-program/route.ts',
+  'app/api/generate-meal-plan/route.ts',
 ]
 
 describe('Anthropic provider migration boundaries', () => {

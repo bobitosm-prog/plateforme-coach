@@ -5,7 +5,7 @@
 
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
-les trois points d'entrée de génération Training l'utilisent désormais via
+les trois points d'entrée de génération Training et le plan Nutrition l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md).
 
 Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) relie désormais
@@ -16,7 +16,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; six points d'entrée utilisent désormais `AiProvider`.
+restent inchangés; sept points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -42,7 +42,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 10 sites | 1 adaptateur HTTP partagé par 6 points d'entrée, 8 autres transports HTTP, 1 appel SDK |
+| Invocations Anthropic runtime | 9 sites | 1 adaptateur HTTP partagé par 7 points d'entrée, 7 autres transports HTTP, 1 appel SDK |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -62,11 +62,11 @@ semi-structurées.
 |---|---|---|
 | `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | HTTP direct, sauf instructions via SDK |
 | `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | HTTP direct; seul le chat possède une URL locale injectée et bornée |
-| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | HTTP direct ou port HTTP injecté pour Nutrition |
+| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training/Nutrition; HTTP direct ailleurs |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les six points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les neuf autres flux conservent leurs littéraux historiques.
+Les sept points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les huit autres flux conservent leurs littéraux historiques.
 
 ## Matrice exhaustive des flux
 
@@ -85,11 +85,12 @@ Références : [harnais E2E Athena](E2E_CHAT_HARNESS.md),
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
 | Génération de recette | `POST /api/generate-recipe`; `RecipesSection` | Système avec exemple JSON; profil, objectifs, régime, aliments inclus/exclus fournis par le navigateur | JSON texte via `AiProvider`, parsing central et `recipeOutputSchema`; arrondis conservés | Session et limite IP; garde `invited` navigateur historique préservée; adaptateur injecté et tests de route, erreurs expurgées |
-| Génération de plan | `POST /api/generate-meal-plan`; six producteurs actuels dont onboarding, préférences et détail client | Système et prompt quotidien construits dans le service; objectifs, préférences, allergies, régime et contexte fournis par le producteur | Sept appels séquentiels; journée JSON validée manuellement puis adaptée; SSE `progress`, puis `done`; une journée invalide devient vide sans marqueur public de partialité | Session serveur, limites IP/IA et quota global, invité refusé; port fournisseur injecté, erreurs bornées et tests route/service. Aucun timeout n'est configuré par la route, même si le port reconnaît `AbortError` |
+| Génération de plan | `POST /api/generate-meal-plan`; six producteurs actuels dont onboarding, préférences et détail client | Système et prompt quotidien construits dans le service; objectifs, préférences, allergies, régime et contexte cumulatif fournis au provider | Sept appels JSON séquentiels via `AiProvider`, schéma Zod puis adaptation; SSE `progress`, puis `done`; une journée invalide devient vide sans marqueur public de partialité | Session serveur, limite réelle 3/min IP, 10/h et 6/30 jours lourds, invité refusé; une réservation, tokens/coûts agrégés, annulation propagée, aucun timeout/retry ajouté |
 | Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON attendu avec aliments, quantités, macros, total et confiance; regex et `JSON.parse`, sans schéma | Session, limite IP et quota IA; image 5 MB max, média forcé JPEG; aucun test dédié; exceptions brutes et extrait fournisseur journalisé |
 
-La génération de plan est la seule frontière IA Nutrition déjà séparée du
-transport. Voir [service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md).
+La génération de plan utilise désormais l'adaptateur commun. L'analyse de repas
+photographié reste un flux distinct non migré. Voir le
+[service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md).
 
 ### Training
 
@@ -159,7 +160,7 @@ selon le flux.
 | Limite IP | Présente sur les 12 routes utilisateur |
 | Limite IA horaire | Présente sur chat, alternatives, programme custom, plan Nutrition, analyses photo/corps; absente ou non uniforme ailleurs |
 | Quota global | Programme custom, plan Nutrition, analyse corporelle et analyse de progression |
-| Timeout fournisseur | Aucun timeout commun; seul le port Nutrition sait classifier un `AbortError`, sans signal créé par la route |
+| Timeout fournisseur | Aucun timer réseau commun activé; l'adaptateur commun classe annulation et `TimeoutError`, et les routes migrées propagent leur signal sans inventer d'échéance |
 | Retry fournisseur | Aucun retry serveur commun; analyse corporelle possède un retry 429 côté client |
 | Fallback | Fallback texte dans Athena; journée vide dans le plan Nutrition; push/bases en best effort sur certains flux; aucun contrat commun |
 
@@ -168,8 +169,8 @@ L'usage est souvent enregistré avant la réussite fournisseur. Les statuts 429,
 
 ## Journalisation et confidentialité
 
-Les frontières les plus prudentes sont le service Nutrition et le transport
-local Athena. Ailleurs, plusieurs routes journalisent des corps fournisseur,
+Les frontières les plus prudentes sont le service Nutrition et l'adaptateur
+commun. Ailleurs, plusieurs routes journalisent des corps fournisseur,
 des textes invalides, des URL de photos, des noms d'exercice, des messages
 d'exception ou des détails SQL. Certaines réponses HTTP/SSE retransmettent un
 message brut. Aucun token ou clé n'est volontairement loggé, mais les contenus
@@ -191,9 +192,8 @@ comme une trace technique fiable.
   Les autres flux apparaissent surtout dans des inventaires statiques ou tests
   d'autorisation génériques; ils n'ont pas de golden fixtures de sortie.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant en possède treize expressions HTTP runtime
-  (dont les deux branches photo et le port Nutrition). Ce compteur documentaire
-  est obsolète.
+  chemins `fetch`; le code courant possède huit expressions HTTP runtime et un
+  appel SDK runtime. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
   commune.

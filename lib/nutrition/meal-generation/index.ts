@@ -1,5 +1,5 @@
 export { generateMealPlan } from './service'
 export { buildMealGenerationSystemPrompt } from '../../ai/prompts'
-export { createAnthropicMealGenerationProvider } from './provider'
 export { mealGenerationParamsSchema } from './schema'
-export type { MealGenerationParams, MealGenerationProvider, MealGenerationProviderResult, MealGenerationResult } from './types'
+export { MealGenerationError } from './service'
+export type { MealGenerationDayInvocation, MealGenerationParams, MealGenerationResult, MealGenerationRuntime, MealGenerationUsage } from './types'

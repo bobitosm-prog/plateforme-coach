@@ -1,9 +1,10 @@
 import { buildSequentialMealDayInvocation } from '@/lib/ai/prompts'
-import { parseAndValidateAiOutput } from '@/lib/ai/parsing'
-import { legacyNutritionDayOutputSchema } from '@/lib/ai/schemas'
+import { resolveAiModel } from '@/lib/ai/models'
+import type { AiResultMetadata } from '@/lib/ai/provider'
+import { createAiOutputValidator, legacyNutritionDayOutputSchema } from '@/lib/ai/schemas'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '@/lib/meal-plan'
 
-import type { MealGenerationParams, MealGenerationProvider, MealGenerationResult } from './types'
+import type { MealGenerationParams, MealGenerationResult, MealGenerationRuntime, MealGenerationUsage } from './types'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -217,45 +218,110 @@ function verifyDayPlan(day: LegacyDay, params: MealGenerationParams): LegacyDay 
 }
 
 async function generateOneDay(
-  provider: MealGenerationProvider,
+  runtime: MealGenerationRuntime,
+  providerModel: string,
   day: string,
   params: MealGenerationParams,
   proteinsUsed: string[],
-): Promise<LegacyDay> {
-  const generated = await provider.generate(buildSequentialMealDayInvocation(day, params, proteinsUsed))
-  if (!generated.ok) throw new MealGenerationDayError(generated.reason)
-  const rawText = generated.text
-  const parsed = parseAndValidateAiOutput(rawText, legacyNutritionDayOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
-  if (!parsed.ok) throw new MealGenerationDayError('INVALID_NUTRITION_OUTPUT')
-  return verifyDayPlan(parsed.value, params)
+): Promise<{ day: LegacyDay; metadata: AiResultMetadata }> {
+  const invocation = buildSequentialMealDayInvocation(day, params, proteinsUsed)
+  const generated = await runtime.provider.generate({
+    output: 'json', model: providerModel, maxTokens: invocation.maxTokens,
+    system: invocation.system, messages: [{ role: 'user', content: [{ type: 'text', text: invocation.user }] }],
+    validate: createAiOutputValidator(legacyNutritionDayOutputSchema),
+  }, { correlationId: runtime.correlationId, timeoutMs: 300_000, cancellation: runtime.cancellation })
+  if (!generated.ok) {
+    if (generated.error.code === 'cancelled') throw new MealGenerationCancelledError(generated.metadata)
+    throw new MealGenerationDayError(generated.error.code, generated.metadata)
+  }
+  return { day: verifyDayPlan(generated.value, params), metadata: generated.metadata }
 }
 
 type LegacyFood = { aliment: string; quantite_g: number; kcal: number; proteines: number; glucides: number; lipides: number }
 type LegacyDay = { repas: Record<MealKey, LegacyFood[]>; total_kcal?: number; total_protein?: number; total_carbs?: number; total_fat?: number }
 
 class MealGenerationDayError extends Error {
-  constructor(readonly reason: string) { super('Meal generation day failed') }
+  constructor(readonly reason: string, readonly metadata: Partial<AiResultMetadata>) { super('Meal generation day failed') }
+}
+
+class MealGenerationCancelledError extends Error {
+  constructor(readonly metadata: Partial<AiResultMetadata>) { super('Meal generation cancelled') }
+}
+
+export class MealGenerationError extends Error {
+  constructor(readonly code: 'cancelled' | 'model_unavailable' | 'stream_failure', readonly usage: MealGenerationUsage) {
+    super(code === 'cancelled' ? 'Génération annulée' : code === 'model_unavailable' ? 'Modèle IA indisponible' : 'Flux de réponse indisponible')
+    this.name = 'MealGenerationError'
+  }
+}
+
+interface UsageState {
+  attempts: number
+  providerModels: Set<string>
+  inputTokens: number
+  outputTokens: number
+  inputKnown: number
+  outputKnown: number
+}
+
+function recordUsage(state: UsageState, metadata: Partial<AiResultMetadata>): void {
+  state.attempts += 1
+  if (metadata.actualModel) state.providerModels.add(metadata.actualModel)
+  if (metadata.usage?.inputTokens !== undefined) {
+    state.inputTokens += metadata.usage.inputTokens
+    state.inputKnown += 1
+  }
+  if (metadata.usage?.outputTokens !== undefined) {
+    state.outputTokens += metadata.usage.outputTokens
+    state.outputKnown += 1
+  }
+}
+
+function usageResult(state: UsageState): MealGenerationUsage {
+  const known = state.inputKnown > 0 || state.outputKnown > 0
+  const complete = state.attempts > 0 && state.inputKnown === state.attempts && state.outputKnown === state.attempts
+  return {
+    attemptCount: state.attempts,
+    ...(state.providerModels.size === 1 ? { providerModel: [...state.providerModels][0] } : {}),
+    ...(known ? { tokens: { ...(state.inputKnown > 0 ? { inputTokens: state.inputTokens } : {}), ...(state.outputKnown > 0 ? { outputTokens: state.outputTokens } : {}) } } : {}),
+    tokenCompleteness: complete ? 'complete' : known ? 'partial' : 'unavailable',
+  }
 }
 
 export async function generateMealPlan(
   params: MealGenerationParams,
-  provider: MealGenerationProvider,
+  runtime: MealGenerationRuntime,
   onProgress?: (event: { type: 'progress'; day: string; index: number; total: 7 }) => void,
 ): Promise<MealGenerationResult> {
+  const model = resolveAiModel('anthropic-opus-4.8')
+  const usageState: UsageState = { attempts: 0, providerModels: new Set(), inputTokens: 0, outputTokens: 0, inputKnown: 0, outputKnown: 0 }
+  if (!model.ok || model.model.status !== 'active') throw new MealGenerationError('model_unavailable', usageResult(usageState))
   const plan: Record<string, DayPlan> = {}
   const proteinsUsed: string[] = []
   const failures: string[] = []
   for (let index = 0; index < DAYS.length; index += 1) {
+    if (runtime.cancellation?.aborted) throw new MealGenerationError('cancelled', usageResult(usageState))
     const day = DAYS[index]
-    onProgress?.({ type: 'progress', day, index: index + 1, total: 7 })
     try {
-      const legacyDay = await generateOneDay(provider, day, params, proteinsUsed)
+      onProgress?.({ type: 'progress', day, index: index + 1, total: 7 })
+    } catch {
+      throw new MealGenerationError('stream_failure', usageResult(usageState))
+    }
+    try {
+      const generated = await generateOneDay(runtime, model.model.providerModelId, day, params, proteinsUsed)
+      recordUsage(usageState, generated.metadata)
+      const legacyDay = generated.day
       proteinsUsed.push(...extractProteins(legacyDay))
       plan[day] = convertLegacyDayToCanonical(legacyDay)
     } catch (error) {
-      failures.push(error instanceof MealGenerationDayError ? error.reason : 'PROVIDER_UNAVAILABLE')
+      if (error instanceof MealGenerationCancelledError) {
+        recordUsage(usageState, error.metadata)
+        throw new MealGenerationError('cancelled', usageResult(usageState))
+      }
+      if (error instanceof MealGenerationDayError) recordUsage(usageState, error.metadata)
+      failures.push(error instanceof MealGenerationDayError ? error.reason : 'unexpected_error')
       plan[day] = { meals: [], totals: { kcal: 0, prot: 0, carb: 0, fat: 0 } }
     }
   }
-  return { ok: true, plan, partial: failures.length > 0, failedDays: failures.length }
+  return { ok: true, plan, partial: failures.length > 0, failedDays: failures.length, usage: usageResult(usageState) }
 }

@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   startAiUsage: vi.fn(), finalizeUsage: vi.fn(),
 }))
 
+vi.mock('server-only', () => ({}))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.getUser } }) }))
 vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ getAll: () => [] })) }))
 vi.mock('@/lib/rate-limit', () => ({
@@ -19,12 +20,17 @@ vi.mock('@/lib/ai/usage', () => ({
   aiUsageCorrelationId: () => 'request-test',
   startAiUsage: mocks.startAiUsage,
 }))
+vi.mock('@/lib/ai/providers/anthropic', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/lib/ai/providers/anthropic')>()),
+  createAnthropicProvider: () => mocks.provider,
+}))
 vi.mock('@/lib/nutrition/meal-generation', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/nutrition/meal-generation')>()
-  return { ...actual, generateMealPlan: mocks.generateMealPlan, createAnthropicMealGenerationProvider: () => mocks.provider }
+  return { ...actual, generateMealPlan: mocks.generateMealPlan }
 })
 
 import { POST } from '../../app/api/generate-meal-plan/route'
+import { MealGenerationError } from '@/lib/nutrition/meal-generation'
 
 const validBody = { calorie_goal: 2000, protein_goal: 140, carbs_goal: 220, fat_goal: 60, userId: 'forged-browser-id' }
 const request = (body: unknown, headers: Record<string, string> = {}) => new Request('http://localhost/api/generate-meal-plan', {
@@ -35,12 +41,13 @@ beforeEach(() => {
   vi.clearAllMocks()
   delete process.env.SUPABASE_SERVICE_ROLE_KEY
   process.env.ANTHROPIC_API_KEY = 'local-only-test-key'
+  delete process.env.MOOVX_E2E
   mocks.getUser.mockResolvedValue({ data: { user: { id: 'session-user' } } })
   mocks.checkRateLimit.mockReturnValue({ allowed: true })
   mocks.startAiUsage.mockResolvedValue({ status: 'started', tracker: { finalize: mocks.finalizeUsage }, remaining: 9 })
   mocks.generateMealPlan.mockImplementation(async (_params, _provider, progress) => {
     progress({ type: 'progress', day: 'lundi', index: 1, total: 7 })
-    return { ok: true, partial: false, failedDays: 0, plan: { lundi: { meals: [] } } }
+    return { ok: true, partial: false, failedDays: 0, plan: { lundi: { meals: [] } }, usage: { attemptCount: 7, providerModel: 'claude-opus-4-8', tokens: { inputTokens: 70, outputTokens: 35 }, tokenCompleteness: 'complete' } }
   })
 })
 
@@ -72,10 +79,50 @@ describe('POST /api/generate-meal-plan adapter', () => {
     const response = await POST(request(validBody))
     expect(response.status).toBe(200)
     expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'generate-meal-plan', principal: { kind: 'user', id: 'session-user' } }))
+    expect(mocks.checkRateLimit).toHaveBeenCalledWith('meal-plan:unknown', 3, 60_000)
     expect(mocks.guardInvitedClient).toHaveBeenCalledWith('session-user')
-    expect(mocks.generateMealPlan).toHaveBeenCalledWith(expect.objectContaining({ calorie_goal: 2000 }), mocks.provider, expect.any(Function))
-    expect(await response.text()).toContain('"type":"done"')
-    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded' }))
+    expect(mocks.generateMealPlan).toHaveBeenCalledWith(expect.objectContaining({ calorie_goal: 2000 }), expect.objectContaining({ provider: mocks.provider, correlationId: 'request-test', cancellation: expect.any(Object) }), expect.any(Function))
+    expect(mocks.startAiUsage).toHaveBeenCalledTimes(1)
+    expect(await response.text()).toBe('data: {"type":"progress","day":"lundi","index":1,"total":7}\n\ndata: {"type":"done","plan":{"lundi":{"meals":[]}}}\n\n')
+    expect(mocks.finalizeUsage).toHaveBeenCalledTimes(1)
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded', attemptCount: 7, providerModel: 'claude-opus-4-8', tokens: { inputTokens: 70, outputTokens: 35 }, tokenCompleteness: 'complete' }))
+  })
+
+  it.each([
+    [{ status: 'denied', reason: 'hourly_exhausted', retryAfterMs: 1_000 }, 'hourly'],
+    [{ status: 'denied', reason: 'monthly_exhausted', retryAfterMs: 1_000 }, 'monthly'],
+  ] as const)('rejects %s quota before creating a generation', async (decision, _label) => {
+    void _label
+    mocks.startAiUsage.mockResolvedValue(decision)
+    expect((await POST(request(validBody))).status).toBe(429)
+    expect(mocks.generateMealPlan).not.toHaveBeenCalled()
+  })
+
+  it('finalizes a partial plan exactly once with actual attempts and partial tokens', async () => {
+    mocks.generateMealPlan.mockResolvedValue({
+      ok: true, partial: true, failedDays: 2, plan: {},
+      usage: { attemptCount: 7, providerModel: 'claude-opus-4-8', tokens: { inputTokens: 30 }, tokenCompleteness: 'partial' },
+    })
+    const response = await POST(request(validBody))
+    await response.text()
+    expect(mocks.finalizeUsage).toHaveBeenCalledTimes(1)
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded', reasonCode: 'partial_completed', attemptCount: 7, tokens: { inputTokens: 30 }, tokenCompleteness: 'partial' }))
+  })
+
+  it('closes cleanly and finalizes cancellation once without an error event', async () => {
+    mocks.generateMealPlan.mockRejectedValue(new MealGenerationError('cancelled', { attemptCount: 3, providerModel: 'claude-opus-4-8', tokens: { inputTokens: 20 }, tokenCompleteness: 'partial' }))
+    const response = await POST(request(validBody))
+    expect(await response.text()).toBe('')
+    expect(mocks.finalizeUsage).toHaveBeenCalledTimes(1)
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'cancelled', reasonCode: 'request_cancelled', attemptCount: 3 }))
+  })
+
+  it('keeps absent token metadata unavailable at finalization', async () => {
+    mocks.generateMealPlan.mockResolvedValue({ ok: true, partial: false, failedDays: 0, plan: {}, usage: { attemptCount: 7, providerModel: 'claude-opus-4-8', tokenCompleteness: 'unavailable' } })
+    const response = await POST(request(validBody))
+    await response.text()
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ tokenCompleteness: 'unavailable', attemptCount: 7 }))
+    expect(mocks.finalizeUsage.mock.calls[0]?.[0]?.tokens).toBeUndefined()
   })
 
   it('preserves the invited-role rejection and performs no generation', async () => {
@@ -84,5 +131,15 @@ describe('POST /api/generate-meal-plan adapter', () => {
     const response = await POST(request(validBody))
     expect(response.status).toBe(403)
     expect(mocks.generateMealPlan).not.toHaveBeenCalled()
+  })
+
+  it('fails safely before SSE when the provider is not configured', async () => {
+    delete process.env.ANTHROPIC_API_KEY
+    const response = await POST(request(validBody))
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: 'API key manquante' })
+    expect(mocks.generateMealPlan).not.toHaveBeenCalled()
+    expect(mocks.finalizeUsage).toHaveBeenCalledTimes(1)
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith({ outcome: 'failed', reasonCode: 'provider_not_configured' })
   })
 })
