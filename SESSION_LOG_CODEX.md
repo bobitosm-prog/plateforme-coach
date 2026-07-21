@@ -9171,3 +9171,30 @@ Définir et tester les fallbacks.
 
 Auditer la définition de terminé de la Phase 7 et les huit transports
 historiques avant d'activer la Phase 8.
+
+## Entrée — 2026-07-21 — Audit de clôture Phase 7
+
+- Verdict : Phase 7 incomplète. Les 13 tâches de checklist sont cochées, mais
+  la définition globale exige tous les appels Anthropic via le provider commun;
+  le code vérifié n'en compte que 7 sur 15.
+- Les 8 historiques sont analyse repas, adaptation, instructions, surcharge,
+  analyse corporelle, analyse de progression photo et diagnostic manuel/cron.
+  Ils représentent 7 expressions HTTP directes dans 6 modules et un client
+  SDK; les deux diagnostics partagent le même transport.
+- Compteurs recalculés : 15 features usage, 15 goldens, 15 policies fallback,
+  9 sites d'invocation runtime et 9 littéraux fournisseur historiques hors
+  builders.
+- Bloquants : provider commun et erreurs expurgées `unmet`; annulation/timeout
+  communs `unmet`; modèles, texte libre, logs et tests route/cron `partial`.
+  Prompts, validation structurée, parsing, usage, goldens et fallbacks sont
+  `met`.
+- Aucun transport, fichier applicatif, test, E2E, migration, RLS ou service
+  externe n'a été modifié/appelé. Phase 8 reste inactive et décochée.
+- Contrôles reproductibles verts : 7 routes provider, 7 appels HTTP directs,
+  1 client SDK, 9 littéraux fournisseur, 15 goldens, 15 fallbacks et 15
+  features usage; liens documentaires et `git diff --check` verts, staging vide.
+
+### Prochaine action unique
+
+Migrer `adapt-workout` vers `AiProvider` avec tests de contrat, sans changer le
+prompt ni la réponse publique.

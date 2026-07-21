@@ -91,7 +91,7 @@ Références : [harnais E2E Athena](E2E_CHAT_HARNESS.md),
 |---|---|---|---|---|
 | Génération de recette | `POST /api/generate-recipe`; `RecipesSection` | Système avec exemple JSON; profil, objectifs, régime, aliments inclus/exclus fournis par le navigateur | JSON texte via `AiProvider`, parsing central et `recipeOutputSchema`; arrondis conservés | Session et limite IP; garde `invited` navigateur historique préservée; adaptateur injecté et tests de route, erreurs expurgées |
 | Génération de plan | `POST /api/generate-meal-plan`; six producteurs actuels dont onboarding, préférences et détail client | Système et prompt quotidien construits dans le service; objectifs, préférences, allergies, régime et contexte cumulatif fournis au provider | Sept appels JSON séquentiels via `AiProvider`, schéma Zod puis adaptation; SSE `progress`, puis `done`; une journée invalide devient vide sans marqueur public de partialité | Session serveur, limite réelle 3/min IP, 10/h et 6/30 jours lourds, invité refusé; une réservation, tokens/coûts agrégés, annulation propagée, aucun timeout/retry ajouté |
-| Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON attendu avec aliments, quantités, macros, total et confiance; regex et `JSON.parse`, sans schéma | Session, limite IP et quota IA; image 5 MB max, média forcé JPEG; aucun test dédié; exceptions brutes et extrait fournisseur journalisé |
+| Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON validé par parsing commun et `mealPhotoOutputSchema` | Session, limite IP et quota IA; image 5 MB max, média forcé JPEG; transport direct et message d'exception brut |
 
 La génération de plan utilise désormais l'adaptateur commun. L'analyse de repas
 photographié reste un flux distinct non migré. Voir le
@@ -102,12 +102,12 @@ photographié reste un flux distinct non migré. Voir le
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
 | Suggestion d'alternative | `POST /api/suggest-exercise`; aucun consommateur actif trouvé | Système `EXERCISE_SWAP_PROMPT`; exercice, motif, muscles, équipement et type reçus | JSON texte via `AiProvider`, parsing central et schéma exact de trois suggestions | Session, limites IP/IA et usage inchangés; route orpheline, adaptateur injecté et erreurs expurgées |
-| Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON `{ instructions, tips }` par exercice; parse brut; résultat batch partiel | Session, e-mail admin exact, limite IP, service role; SDK Anthropic; erreurs par exercice journalisant nom et message; pas de test dédié |
+| Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON validé par parsing commun et `exerciseInstructionsOutputSchema`; résultat batch partiel | Session, e-mail admin exact, limite IP, service role; SDK Anthropic; erreurs par exercice journalisant nom et message; pas de test de route dédié |
 | Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | JSON texte via `AiProvider`, validé par `legacyTrainingProgramOutputSchema`, puis sept jours legacy normalisés | Session, limite IP et usage inchangés; erreurs fournisseur expurgées, annulation reliée au signal HTTP |
 | Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program` via `AiProvider`, validé par `modernTrainingProgramOutputSchema`, puis SSE `progress`/`done` inchangé | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; annulation finalisée séparément |
 | Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil validé; écritures par client et agrégat succès/erreur partiel conservés | `CRON_SECRET` et service role; concurrence bornée à trois; ordre désactivation/insertion/prochaine date inchangé; pas de retry fournisseur |
-| Adaptation de séance | `POST /api/adapt-workout`; aucun consommateur actif trouvé | Système `PROGRAM_GENERATION_PROMPT`; exercices, durée et type de séance reçus | Tableau JSON d'exercices adaptés extrait par regex; aucune validation de forme | Session et limite IP; route orpheline, pas de quota IA ni test dédié, message d'exception brut |
-| Surcharge progressive | `POST /api/suggest-overload`; action dashboard client | Système inline; exercice, charge, répétitions et quatre historiques lus côté serveur | JSON `{ weight, reps, reasoning }`; regex, parse et contrôle de poids positif; insertion d'une suggestion | Session, limite IP, garde invité; service role pour historique/écriture; pas de quota IA; logs de texte/JSON fournisseur et détails SQL possibles |
+| Adaptation de séance | `POST /api/adapt-workout`; aucun consommateur actif trouvé | Système `PROGRAM_GENERATION_PROMPT`; exercices, durée et type de séance reçus | Tableau validé par parsing commun et `adaptedWorkoutOutputSchema` | Session et limite IP; route orpheline, transport direct et message d'exception brut |
+| Surcharge progressive | `POST /api/suggest-overload`; action dashboard client | Système extrait; exercice, charge, répétitions et quatre historiques lus côté serveur | JSON validé par parsing commun et `overloadSuggestionOutputSchema`; insertion d'une suggestion | Session, limite IP, garde invité; service role, transport direct et détails SQL possibles |
 
 ### Progression, photos et diagnostic
 
@@ -135,17 +135,11 @@ photographié reste un flux distinct non migré. Voir le
 
 ### Sorties structurées
 
-Les trois frontières à outil forcé utilisent un JSON Schema transmis à
-Anthropic. Elles vérifient la présence du bloc `tool_use`, mais ne disposent pas
-d'un schéma Zod commun validant l'objet reçu. Le helper
-[`unwrap-tool-input.ts`](../lib/anthropic/unwrap-tool-input.ts) ne constitue pas
-une validation métier.
-
-Huit endpoints extraient un objet ou tableau du texte avec une regex puis
-`JSON.parse`. La génération Nutrition ajoute une validation manuelle stricte;
-les sept autres ont des contrôles partiels ou inexistants. Une sortie inconnue
-peut donc être refusée, partiellement acceptée ou provoquer une erreur 500
-selon le flux.
+Les trois frontières à outil forcé transmettent un JSON Schema puis valident la
+sortie avec les schémas Zod communs. Les huit sorties JSON-dans-texte passent
+par le parsing et les schémas communs. Les deux flux texte libre restent
+distincts; la progression photo ne borne pas encore son texte dans sa route
+historique.
 
 ### Texte libre et SSE
 
@@ -167,7 +161,7 @@ selon le flux.
 | Quota global | Programme custom, plan Nutrition, analyse corporelle et analyse de progression |
 | Timeout fournisseur | Aucun timer réseau commun activé; l'adaptateur commun classe annulation et `TimeoutError`, et les routes migrées propagent leur signal sans inventer d'échéance |
 | Retry fournisseur | Aucun retry serveur commun; analyse corporelle possède un retry 429 côté client |
-| Fallback | Fallback texte dans Athena; journée vide dans le plan Nutrition; push/bases en best effort sur certains flux; aucun contrat commun |
+| Fallback | Registre commun 15/15; quatre partials historiques. La progression photo conserve encore deux textes génériques silencieux dans son runtime historique |
 
 L'usage est souvent enregistré avant la réussite fournisseur. Les statuts 429,
 500 et les sorties invalides ne sont pas mappés uniformément.
@@ -193,9 +187,9 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent la génération de plan Nutrition et le harnais chat.
-  Les autres flux apparaissent surtout dans des inventaires statiques ou tests
-  d'autorisation génériques; ils n'ont pas de golden fixtures de sortie.
+- Les tests dédiés couvrent surtout les sept flux migrés, la génération de plan
+  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les huit
+  transports historiques manquent encore de contrats de route complets.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
   chemins `fetch`; le code courant possède huit expressions HTTP runtime et un
   appel SDK runtime. Ce compteur documentaire historique est obsolète.
@@ -205,11 +199,11 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Douze flux restent hors du provider commun : HTTP direct, port injecté et SDK coexistent encore.
-2. Modèles, tokens et coûts sont dispersés; le script opérationnel a déjà
+1. Huit flux restent hors du provider commun : HTTP direct et SDK coexistent encore.
+2. Neuf littéraux fournisseur subsistent dans ces flux; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
-3. Sept des huit contrats JSON-dans-texte n'ont pas de validation métier
-   complète; les outils forcés n'ont pas de validation Zod après réception.
+3. Les sorties structurées utilisent les schémas communs, mais le texte libre
+   de progression photo accepte encore un contenu absent comme succès générique.
 4. Timeout, retry, quota, usage et mapping d'erreur ne sont pas uniformes.
 5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent
    entrer dans les logs ou réponses.

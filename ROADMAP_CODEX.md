@@ -495,6 +495,10 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 **Durée cible : 5 à 8 semaines**  
 **Priorité : P2**
 
+**Statut : Phase 7 incomplète malgré 13 tâches de checklist sur 13 — 8 points
+d'entrée utilisent encore un transport Anthropic historique. Voir
+[`docs/AI_PHASE_7_COMPLETION_AUDIT.md`](docs/AI_PHASE_7_COMPLETION_AUDIT.md).**
+
 ### Pourquoi
 
 L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, quotas et erreurs sont encore hétérogènes.
