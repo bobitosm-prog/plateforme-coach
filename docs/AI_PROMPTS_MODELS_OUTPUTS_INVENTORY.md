@@ -1,11 +1,11 @@
 # Inventaire des prompts, modèles et contrats de sortie IA
 
-> État constaté dans le dépôt au 20 juillet 2026. Ce document décrit le code
+> État constaté dans le dépôt au 21 juillet 2026. Ce document décrit le code
 > existant sans modifier les prompts, les modèles, les quotas ni les contrats.
 
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
-définie comme cible de migration. Aucun des 15 points d'entrée inventoriés
-n'utilise encore cette interface.
+définie comme cible de migration. Chat Athena, Recipes et Suggest Exercise
+l'utilisent désormais via l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md).
 
 Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) relie désormais
 les trois identifiants runtime et le modèle opérationnel legacy à des
@@ -15,7 +15,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; aucun flux n'utilise encore `AiProvider`.
+restent inchangés; trois flux utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -41,14 +41,14 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 14 | 13 transports HTTP, 1 appel SDK |
+| Invocations Anthropic runtime | 12 sites | 1 adaptateur HTTP partagé par 3 flux, 10 autres transports HTTP, 1 appel SDK |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
 | Flux SSE applicatifs | 2 | programme Training et plan Nutrition |
 | Appels SDK streaming | 0 | les SSE enveloppent des réponses Anthropic non streamées |
 | Sorties à outil forcé | 3 frontières | Training, analyse corporelle, diagnostic hebdomadaire |
-| Endpoints à JSON dans du texte | 8 | parsing regex/`JSON.parse`, validation variable |
+| Endpoints à JSON dans du texte | 8 | parsing centralisé; recette et suggestion passent aussi par `AiProvider` |
 | Endpoints principalement texte libre | 2 | chat Athena, analyse de photos de progression |
 
 Les classes de sortie se chevauchent avec le transport : les deux endpoints
@@ -64,10 +64,8 @@ semi-structurées.
 | `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | HTTP direct ou port HTTP injecté pour Nutrition |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les modèles restent des littéraux répartis dans les routes et services. Le
-registre centralise désormais leurs métadonnées et l'estimation interne des
-coûts, mais aucun appel ne le consomme encore et la durée/télémétrie runtime
-reste propre à chaque flux.
+Les trois routes migrées utilisent des identifiants logiques résolus par le
+registre. Les douze autres flux conservent leurs littéraux historiques.
 
 ## Matrice exhaustive des flux
 
@@ -75,7 +73,7 @@ reste propre à chaque flux.
 
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
-| Chat Athena | `POST /api/chat-ai`; `useChatAI` puis `ChatAI` | `COACH_SYSTEM_PROMPT` enrichi côté serveur par le profil et les dix derniers messages; message utilisateur borné à 500 caractères | Texte libre du premier bloc, réponse JSON `{ message }`; absence de schéma; persistance user avant l'appel et assistant en best effort | Session serveur, invité refusé, limite IP et quota horaire; faux serveur E2E local et mock partagé. Le corps d'erreur Anthropic est journalisé, et le prompt contient des données de profil sensibles |
+| Chat Athena | `POST /api/chat-ai`; `useChatAI` puis `ChatAI` | `COACH_SYSTEM_PROMPT` enrichi côté serveur par le profil et les dix derniers messages; message utilisateur borné à 500 caractères | Texte libre via `AiProvider`, réponse JSON `{ message }`; persistance user avant l'appel et assistant en best effort | Session serveur, invité refusé, limite IP et quota horaire; adaptateur commun, faux serveur E2E local, erreurs expurgées et tokens disponibles journalisés |
 
 Références : [harnais E2E Athena](E2E_CHAT_HARNESS.md),
 [`lib/coach-knowledge.ts`](../lib/coach-knowledge.ts) et
@@ -85,7 +83,7 @@ Références : [harnais E2E Athena](E2E_CHAT_HARNESS.md),
 
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
-| Génération de recette | `POST /api/generate-recipe`; `RecipesSection` | Système avec exemple JSON; profil, objectifs, régime, aliments inclus/exclus fournis par le navigateur | Objet JSON extrait par regex puis `JSON.parse`; totaux arrondis; aucune validation de forme | Session et limite IP, mais garde `invited` fondée sur le profil reçu du navigateur; pas de test de route dédié; message d'exception brut possible |
+| Génération de recette | `POST /api/generate-recipe`; `RecipesSection` | Système avec exemple JSON; profil, objectifs, régime, aliments inclus/exclus fournis par le navigateur | JSON texte via `AiProvider`, parsing central et `recipeOutputSchema`; arrondis conservés | Session et limite IP; garde `invited` navigateur historique préservée; adaptateur injecté et tests de route, erreurs expurgées |
 | Génération de plan | `POST /api/generate-meal-plan`; six producteurs actuels dont onboarding, préférences et détail client | Système et prompt quotidien construits dans le service; objectifs, préférences, allergies, régime et contexte fournis par le producteur | Sept appels séquentiels; journée JSON validée manuellement puis adaptée; SSE `progress`, puis `done`; une journée invalide devient vide sans marqueur public de partialité | Session serveur, limites IP/IA et quota global, invité refusé; port fournisseur injecté, erreurs bornées et tests route/service. Aucun timeout n'est configuré par la route, même si le port reconnaît `AbortError` |
 | Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON attendu avec aliments, quantités, macros, total et confiance; regex et `JSON.parse`, sans schéma | Session, limite IP et quota IA; image 5 MB max, média forcé JPEG; aucun test dédié; exceptions brutes et extrait fournisseur journalisé |
 
@@ -96,7 +94,7 @@ transport. Voir [service de génération Nutrition](NUTRITION_MEAL_GENERATION_SE
 
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
-| Suggestion d'alternative | `POST /api/suggest-exercise`; aucun consommateur actif trouvé | Système `EXERCISE_SWAP_PROMPT`; exercice, motif, muscles, équipement et type reçus | Tableau JSON de trois suggestions extrait par regex; aucune validation structurelle | Session, limites IP/IA, usage enregistré; route orpheline et absence de test métier; ne vérifie pas explicitement `res.ok` avant parsing |
+| Suggestion d'alternative | `POST /api/suggest-exercise`; aucun consommateur actif trouvé | Système `EXERCISE_SWAP_PROMPT`; exercice, motif, muscles, équipement et type reçus | JSON texte via `AiProvider`, parsing central et schéma exact de trois suggestions | Session, limites IP/IA et usage inchangés; route orpheline, adaptateur injecté et erreurs expurgées |
 | Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON `{ instructions, tips }` par exercice; parse brut; résultat batch partiel | Session, e-mail admin exact, limite IP, service role; SDK Anthropic; erreurs par exercice journalisant nom et message; pas de test dédié |
 | Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | Objet programme JSON extrait du texte et remappé vers les jours legacy; pas de schéma | Session et limite IP seulement; corps fournisseur et détails d'exception exposés/journalisés; pas de mock de route dédié |
 | Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program`, JSON Schema Anthropic, puis SSE `progress`/`done`; absence de validation Zod après l'outil | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; erreur SSE peut contenir `e.message` |
@@ -201,7 +199,7 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Aucun provider commun : HTTP direct, port injecté et SDK coexistent.
+1. Douze flux restent hors du provider commun : HTTP direct, port injecté et SDK coexistent encore.
 2. Modèles, tokens et coûts sont dispersés; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
 3. Sept des huit contrats JSON-dans-texte n'ont pas de validation métier

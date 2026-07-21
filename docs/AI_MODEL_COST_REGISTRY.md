@@ -12,7 +12,8 @@ des quotas, ni de la facturation client, et ne choisit jamais un modèle de
 remplacement.
 
 Le registre ne dépend pas de React, Next.js, Supabase, du SDK Anthropic, du
-navigateur ou de `app/`. Aucun flux runtime n'est encore migré vers lui.
+navigateur ou de `app/`. Athena, recette et suggestion d'exercice résolvent
+désormais leur identifiant logique via cette frontière.
 
 ## Modèles enregistrés
 
@@ -146,10 +147,11 @@ erreurs ne contiennent aucun prompt, secret ou contenu utilisateur.
 
 ## Limites et migration future
 
-- Les 15 flux conservent leurs littéraux, paramètres `max_tokens` et transports
-  historiques; le registre n'est encore qu'une frontière commune disponible.
-- Seul le diagnostic hebdomadaire exploite actuellement les compteurs de
-  tokens fournisseur; aucune estimation de coût runtime n'est branchée.
+- Douze flux conservent leurs transports historiques. Les trois flux migrés
+  n'ont plus de littéral fournisseur dans leur route et conservent leurs
+  paramètres `max_tokens` historiques.
+- Les trois flux migrés transmettent les compteurs fournisseur disponibles à
+  la journalisation commune; absence et zéro restent distincts.
 - Les tarifs doivent être revérifiés avant expiration de la durée choisie par
   l'appelant; le registre n'effectue aucun accès réseau.
 - Les tarifs séparés outil/image et la sortie maximale Opus 4.7 restent
@@ -160,8 +162,7 @@ La [frontière d'usage IA](AI_USAGE_QUOTAS.md) réutilise `estimateAiCost()` pou
 produire et persister un coût technique en micros USD lorsque modèle et tokens
 sont connus. Une absence de tokens reste `unavailable`, jamais zéro inventé.
 
-La prochaine étape de la roadmap est de migrer Chat, Recipes et Suggest
-Exercise vers l'interface provider commune.
+La prochaine étape de la roadmap est de migrer la génération Training.
 
 ## Références
 

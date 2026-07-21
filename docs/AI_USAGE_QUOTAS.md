@@ -126,7 +126,8 @@ zéro correlation synthétique résiduelle.
 - `/api/ai-quota` reste un lecteur de compatibilité du compteur lourd finalisé;
 - les flux qui ne reçoivent pas de compteurs fournisseur conservent des tokens
   inconnus, jamais zéro inventé ;
-- la migration vers l'interface provider commune reste une tâche distincte ;
+- trois flux utilisent l'interface provider commune; les douze autres restent
+  à migrer sans modifier leurs quotas ;
 - les réponses métier ne sont pas mises en cache par correlation ID : une
   reprise ne consomme pas une seconde place, mais le transport doit encore
   gérer sa propre idempotence métier.

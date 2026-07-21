@@ -12,3 +12,5 @@ export function getChatAnthropicMessagesUrl(): string {
   }
   return url.toString()
 }
+
+export const getAnthropicMessagesUrl = getChatAnthropicMessagesUrl

@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **20 juillet 2026**.
+> Dernière mise à jour : **21 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 7 — Plateforme IA**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -511,7 +511,7 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 | [x] [Définir les schémas Zod de sortie](docs/AI_OUTPUT_SCHEMAS.md) | 3 j | Élevée | Moyen | Critique | Contrats métier |
 | [x] [Centraliser parsing et validation structurée](docs/AI_STRUCTURED_PARSING.md) | 2 j | Élevée | Moyen | Élevé | Schémas |
 | [x] [Unifier quotas et journalisation d'usage](docs/AI_USAGE_QUOTAS.md) | 2,5 j | Élevée | Moyen | Élevé | Provider |
-| [ ] Migrer Chat, Recipes et Suggest Exercise | 3 j | Moyenne | Moyen | Élevé | Provider complet |
+| [x] [Migrer Chat, Recipes et Suggest Exercise](docs/AI_ANTHROPIC_ADAPTER.md) | 3 j | Moyenne | Moyen | Élevé | Provider complet |
 | [ ] Migrer génération Training | 2,5 j | Élevée | Élevé | Critique | Phase Training |
 | [ ] Migrer génération Nutrition | 2,5 j | Élevée | Élevé | Critique | Phase Nutrition |
 | [ ] Ajouter golden fixtures et tests de contrat | 3 j | Élevée | Faible | Critique | Endpoints migrés |
@@ -747,14 +747,14 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈57 % (78/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈57 % (79/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
 | Modules `use client` | 218 | ≤200 | ≤165 | 218 | 🟠 |
 | Créations de clients Supabase | 122 | ≤85 | ≤45 | 122 | 🔴 |
 | Routes avec validation structurée | ≈4/47 | ≥20/47 | ≥35/47 | ≈4/47 | 🔴 |
-| Tests unitaires | 93 | ≥160 | ≥250 | 961 actifs + 3 contractuels `todo` | 🟢 |
+| Tests unitaires | 93 | ≥160 | ≥250 | 1 413 actifs + 3 contractuels `todo` | 🟢 |
 | Tests d'intégration | 0 identifié | ≥20 | ≥50 | 114 attentes RLS SQL + 1 scénario de concurrence | 🟢 |
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |

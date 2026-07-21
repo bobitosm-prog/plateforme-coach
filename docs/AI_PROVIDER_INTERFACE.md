@@ -1,8 +1,7 @@
 # Interface commune du provider IA
 
-> Contrat défini le 20 juillet 2026. Aucune route IA ne l'utilise encore : il
-> s'agit d'une frontière indépendante du fournisseur, prête pour les migrations
-> progressives de Phase 7.
+> Contrat défini le 20 juillet 2026. Depuis le 21 juillet 2026, Chat Athena,
+> Recipes et Suggest Exercise l'utilisent via l'adaptateur Anthropic commun.
 
 ## Objectifs
 
@@ -17,8 +16,8 @@ d'une tentative unique : aucun retry n'y est caché.
 
 Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) fournit
 séparément la résolution explicite des identifiants et l'estimation interne.
-Le provider ne choisit toujours aucun modèle et aucun flux runtime n'est encore
-migré vers l'une ou l'autre frontière.
+Le provider ne choisit toujours aucun modèle. Les trois premiers flux résolvent
+désormais leur identifiant logique via le registre, sans fallback.
 
 Le contrat vise quatre usages distincts :
 
@@ -175,19 +174,18 @@ l'adaptateur SSE doit en plus :
 3. n'émettre qu'une traduction SSE du terminal accepté ;
 4. ne jamais convertir une sortie partielle en succès silencieux.
 
-## Compatibilité avec les frontières locales
+## Adaptateur Anthropic et frontières locales
 
-Le contrat n'impose aucune URL ou SDK. Un futur adaptateur Anthropic pourra
-donc recevoir :
+Le contrat n'impose aucune URL ou SDK. L'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md)
+reçoit désormais :
 
 - le `fetch` du mock partagé Vitest ;
 - l'URL validée par le transport local Athena ;
 - le faux serveur `/v1/messages` utilisé par le harnais E2E ;
 - le `fetchImpl` déjà injecté par la génération Nutrition.
 
-Cette compatibilité ne signifie pas que ces frontières ont été migrées. Les 15
-points d'entrée recensés continuent d'utiliser exactement leur implémentation
-historique.
+Chat, recette et suggestion d'exercice sont migrés. Les douze autres points
+d'entrée continuent d'utiliser leur transport historique.
 
 ## Garanties d'architecture
 
@@ -201,8 +199,9 @@ dans les futurs adaptateurs et services applicatifs.
 
 ## Limites et suite
 
-- Aucun adaptateur Anthropic commun n'existe encore.
-- Aucun des 15 points d'entrée n'est migré.
+- L'adaptateur Anthropic commun couvre `generate()` texte, JSON et outil;
+  `stream()` reste volontairement non migré.
+- Trois des 15 points d'entrée sont migrés.
 - Les timeouts ne seront effectifs sur le réseau qu'après câblage d'un
   transport annulable.
 - Les [schémas métier Zod](AI_OUTPUT_SCHEMAS.md) et la

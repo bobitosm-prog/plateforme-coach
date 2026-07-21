@@ -19,11 +19,17 @@ describe('structured parser migrations', () => {
   it('routes every structured output through the common parsing boundary', () => {
     for (const file of migrated) {
       const source = fs.readFileSync(file, 'utf8')
-      expect(source, file).toMatch(/parseAndValidate(?:AiOutput|ToolUse)/)
+      expect(source, file).toMatch(/parseAndValidate(?:AiOutput|ToolUse)|promptInvocationToJsonRequest/)
       expect(source, file).not.toMatch(/JSON\.parse|jsonMatch|unwrapToolInput/)
       expect(source, file).not.toContain('match(/\\{[\\s\\S]*\\}/)')
       expect(source, file).not.toContain('match(/\\[[\\s\\S]*\\]/)')
     }
+  })
+
+  it('keeps provider-owned JSON parsing on the common parsing boundary', () => {
+    const adapter = fs.readFileSync('lib/ai/providers/anthropic/provider.ts', 'utf8')
+    expect(adapter).toContain('parseAiJson')
+    expect(adapter).toContain('validateStructuredOutput')
   })
 
   it('leaves free-text Progression and Athena outputs outside structured parsing', () => {

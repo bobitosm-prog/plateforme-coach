@@ -8955,3 +8955,54 @@ consommateurs sans modifier leurs limites.
 ### Prochaine action unique
 
 Migrer Chat, Recipes et Suggest Exercise.
+
+## Entrée — 2026-07-21 — Chat, Recipes et Suggest Exercise migrés vers AiProvider
+
+- Contrats historiques caractérisés avant bascule : Athena Sonnet 4.6 texte
+  libre (`max_tokens=1024`), recette Haiku 4.5 JSON texte
+  (`max_tokens=1500`) et suggestion Haiku 4.5 JSON texte
+  (`max_tokens=500`), sans température, timeout serveur ou retry explicite.
+- Adaptateur server-only `lib/ai/providers/anthropic` ajouté avec transport
+  injecté, mapping texte/JSON/outil, messages et images, stop reasons, tokens,
+  modèle réel, erreurs expurgées et annulation reliée à `AbortSignal`.
+- Aucun streaming n'est revendiqué : `stream()` échoue proprement et les SSE
+  Training/Nutrition restent hors périmètre. Aucun timeout ou retry arbitraire
+  n'a été ajouté aux trois flux historiquement sans politique correspondante.
+- Athena, recette et suggestion résolvent respectivement
+  `anthropic-sonnet-4.6` et `anthropic-haiku-4.5` via le registre, puis envoient
+  exactement les mêmes identifiants fournisseur, prompts, messages et
+  `max_tokens`; aucun fallback ni littéral fournisseur ne subsiste en route.
+- Athena conserve profil/session, dix messages inversés, insertion utilisateur
+  avant transport, assistant en best effort et Markdown libre. Recette conserve
+  son JSON texte réel et ses arrondis; suggestion conserve ses trois
+  alternatives. La mention `tool_use` de la consigne ne correspondait pas au
+  code recette observé et n'a pas été inventée.
+- Parsing JSON et validation passent par `parseAiJson`,
+  `validateStructuredOutput` et les schémas Zod existants dans l'adaptateur;
+  aucun `JSON.parse` ad hoc n'est réintroduit dans les routes.
+- Une seule réservation d'usage par opération est conservée. Correlation ID,
+  modèle réel, tokens complets ou absents et coût estimé restent reliés à la
+  finalisation; une annulation est finalisée comme `cancelled`.
+- Tests ciblés provider/routes/prompts/parsing/modèles/usages : 13 fichiers,
+  109 tests verts; gardes complémentaires provider/routes : 3 fichiers,
+  16 tests verts. Suite complète : 175 fichiers, 1 413 tests verts et 3
+  `todo`; TypeScript et ESLint ciblé verts.
+- E2E Athena local vert : 2 scénarios couvrant session, invité, profil serveur,
+  historique, persistance, requête exacte, Markdown hostile, quota et erreurs
+  429/500/malformées contre le faux serveur Anthropic local.
+- Aucune migration, RLS, type Supabase, autre route IA ou tâche Phase 8
+  modifiée. Staging vide et trois changements concurrents protégés hors
+  périmètre.
+
+### Dettes préservées
+
+- douze points d'entrée IA utilisent encore leur transport historique;
+- aucun timeout produit n'est décidé pour ces trois flux;
+- l'autorité `invited` de la recette reste fondée sur le profil navigateur
+  historique et n'a pas été corrigée dans cette migration technique;
+- suggestion d'exercice reste sans consommateur actif identifié;
+- les golden fixtures exhaustives restent une tâche séparée.
+
+### Prochaine action unique
+
+Migrer génération Training.

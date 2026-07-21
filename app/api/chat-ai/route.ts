@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, aiRateLimitResponse } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
-import { getChatAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToTextRequest } from '../../../lib/ai/providers/anthropic'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 import { buildAthenaInvocation } from '../../../lib/ai/prompts'
 
 type ChatProfile = {
@@ -31,10 +33,13 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   // DB-backed hourly rate limit per user
-  const usage = await startAiUsage({ client: supabase, feature: 'chat-ai', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-sonnet-4-6' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-sonnet-4.6')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabase, feature: 'chat-ai', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status === 'denied') return aiRateLimitResponse(20, Math.ceil(usage.retryAfterMs / 1000))
   if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
@@ -86,24 +91,18 @@ export async function POST(req: NextRequest) {
     // Build messages for Anthropic
     const invocation = buildAthenaInvocation(p, historyMessages, trimmedMessage)
 
-    const res = await fetch(getChatAnthropicMessagesUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(invocation),
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(promptInvocationToTextRequest(invocation, model.model.providerModelId), {
+      correlationId, timeoutMs: 300_000, cancellation: abortSignalToAiCancellation(req.signal),
     })
-
-    if (!res.ok) {
-      console.error('[chat-ai] Anthropic error:', res.status)
-      return NextResponse.json({ error: `Erreur serveur (${res.status})` }, { status: res.status })
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') outcome = 'cancelled'
+      const status = generated.error.code === 'quota_exceeded' ? 429 : 500
+      return NextResponse.json({ error: `Erreur serveur (${status})` }, { status })
     }
-
-    const data = await res.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const aiMessage = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.'
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
+    const aiMessage = generated.value || 'Désolé, je n\'ai pas pu répondre.'
 
     // INSERT assistant response AFTER reception (best effort)
     const { error: insertAiErr } = await supabase
@@ -117,8 +116,7 @@ export async function POST(req: NextRequest) {
 
     outcome = 'succeeded'
     return NextResponse.json({ message: aiMessage })
-  } catch (e: unknown) {
-    console.error('[chat-ai] unexpected error:', e)
+  } catch {
     return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
   } finally {
     await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
