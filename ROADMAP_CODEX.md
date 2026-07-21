@@ -514,7 +514,7 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 | [x] [Migrer Chat, Recipes et Suggest Exercise](docs/AI_ANTHROPIC_ADAPTER.md) | 3 j | Moyenne | Moyen | Élevé | Provider complet |
 | [x] [Migrer génération Training](docs/AI_ANTHROPIC_ADAPTER.md) | 2,5 j | Élevée | Élevé | Critique | Phase Training |
 | [x] [Migrer génération Nutrition](docs/NUTRITION_MEAL_GENERATION_SERVICE.md) | 2,5 j | Élevée | Élevé | Critique | Phase Nutrition |
-| [ ] Ajouter golden fixtures et tests de contrat | 3 j | Élevée | Faible | Critique | Endpoints migrés |
+| [x] [Ajouter golden fixtures et tests de contrat](docs/AI_GOLDEN_FIXTURES.md) | 3 j | Élevée | Faible | Critique | Endpoints migrés |
 | [ ] Définir et tester les fallbacks | 2 j | Élevée | Moyen | Élevé | Provider |
 
 ### Définition de terminé

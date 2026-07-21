@@ -9116,3 +9116,30 @@ Migrer génération Nutrition.
 ### Prochaine action unique
 
 Ajouter golden fixtures et tests de contrat.
+
+## Entrée — 2026-07-21 — Golden fixtures et contrats IA ajoutés
+
+- Un manifeste typé couvre séparément les 15 points d'entrée IA inventoriés :
+  1 Chat, 3 Nutrition, 7 Training, 2 Progression et 2 diagnostics.
+- Treize invocations distinctes sont figées. Programme Training route/cron et
+  diagnostic manuel/cron restent byte-identiques tout en conservant leurs
+  surfaces, quotas et réponses publiques propres.
+- Chaque golden décrit chemin, domaine, HTTP/SSE/cron, modèles logique et
+  fournisseur, quota, mode de sortie, entrée synthétique et cas publics
+  succès/panne/invalide; les cas partiel Nutrition et legacy Training sont
+  explicites.
+- La sérialisation canonique trie les seules clés d'objet, conserve tableaux,
+  chaînes et retours à la ligne, encode les bigint explicitement et refuse
+  undefined, fonctions, symboles, NaN et infinis sans normalisation silencieuse.
+- Les invocations complètes sont comparées par empreinte SHA-256 exacte. Aucun
+  snapshot ou test normal ne peut réécrire les fixtures; la procédure de mise
+  à jour impose patch, double exécution, revue du contrat et contrôle secrets.
+- Aucun prompt, modèle, quota, route, consommateur, transport, migration, RLS
+  ou E2E n'a été modifié. Aucun fournisseur ni service externe n'a été appelé.
+- Tests ciblés : 5 fichiers et 52 tests verts, puis 2 fichiers et 28 tests
+  verts deux fois, dont `TZ=America/Los_Angeles`. Suite complète : 180 fichiers, 1 473
+  tests verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+
+### Prochaine action unique
+
+Définir et tester les fallbacks.

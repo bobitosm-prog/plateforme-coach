@@ -222,6 +222,8 @@ La reproductibilité attendue est : état arrêté ou actif → même empreinte;
 
 ## 9. Conventions de fichiers et de nommage
 
+Les contrats IA utilisent en complément [`tests/fixtures/ai-golden`](../tests/fixtures/ai-golden) : manifeste typé, données synthétiques lisibles et empreintes exactes des invocations. La suite normale ne réécrit jamais ces goldens. Toute mise à jour suit la revue explicite décrite dans [la politique des golden fixtures IA](./AI_GOLDEN_FIXTURES.md).
+
 - `tests/unit/<domaine>-<comportement>.test.ts` : Vitest; nommer le comportement ou contrat observé.
 - `tests/integration/<domaine>-<sujet>.sql` : assertions PostgreSQL/RPC/RLS avec `ON_ERROR_STOP`.
 - `tests/integration/<domaine>-<sujet>.sh` : orchestration locale, concurrence ou reconstruction.

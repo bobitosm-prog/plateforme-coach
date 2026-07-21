@@ -218,7 +218,9 @@ comme une trace technique fiable.
 9. Les images sont téléchargées depuis des URL fournies au serveur sans
    allowlist de stockage explicite visible dans ces routes.
 10. Les tests contractuels restent concentrés sur Athena et Nutrition; les
-    sorties Training, Progression et diagnostic manquent de golden fixtures.
+    sorties Training, Progression et diagnostic disposent désormais de goldens
+    synthétiques communs avec les autres points d'entrée ; voir
+    [Golden fixtures IA](./AI_GOLDEN_FIXTURES.md).
 
 ## État du parsing structuré au 20 juillet 2026
 
