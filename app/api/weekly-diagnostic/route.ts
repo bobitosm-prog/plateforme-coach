@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createApiRouteObservability } from '@/lib/api/route-observability'
+import { aiUsageCorrelationId } from '@/lib/ai/usage'
 import { aiRateLimitResponse } from '../../../lib/rate-limit'
 import { createWeeklyDiagnostic } from './service'
 
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
     event: 'WEEKLY_DIAGNOSTIC_REQUEST', domain: 'weekly_diagnostic', operation: 'POST /api/weekly-diagnostic',
   })
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const result = await createWeeklyDiagnostic({ ip })
+  const result = await createWeeklyDiagnostic({ ip, correlationId: aiUsageCorrelationId(req) })
   if (result.ok) {
     return observe.complete(NextResponse.json(result.data), {
       outcome: result.data.already_exists ? 'skipped' : 'success',

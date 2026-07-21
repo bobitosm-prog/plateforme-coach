@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
 import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { buildLegacyCoachProgramInvocation } from '../../../lib/ai/prompts'
 import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
@@ -58,6 +59,12 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`program:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
+  const usage = await startAiUsage({ client: supabase, feature: 'generate-program', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-haiku-4-5-20251001' })
+  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  let outcome: 'succeeded' | 'failed' = 'failed'
+  let providerModel: string | undefined
+  let tokens: { inputTokens?: number; outputTokens?: number } | undefined
+
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
 
@@ -82,12 +89,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!anthropicRes.ok) {
-      const err = await anthropicRes.text()
-      console.error(`[generate-program] Anthropic API error — status: ${anthropicRes.status}, body: ${err}`)
-      return NextResponse.json({ error: `Erreur API Anthropic (${anthropicRes.status})`, detail: err }, { status: anthropicRes.status })
+      console.error('[generate-program] Anthropic API error:', anthropicRes.status)
+      return NextResponse.json({ error: `Erreur API Anthropic (${anthropicRes.status})` }, { status: anthropicRes.status })
     }
 
     const data = await anthropicRes.json()
+    ;({ providerModel, tokens } = readAnthropicMetadata(data))
     const rawText = data.content[0].text
 
     const parsed = parseAndValidateAiOutput(rawText, legacyTrainingProgramOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
@@ -99,10 +106,13 @@ export async function POST(req: NextRequest) {
       if (!aiProgram[d]) aiProgram[d] = { isRest: true, day_name: 'Repos', exercises: [] }
     }
 
+    outcome = 'succeeded'
     return NextResponse.json({ program: aiProgram })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     console.error('[generate-program] Unhandled error:', message)
     return NextResponse.json({ error: 'Erreur inattendue', detail: message }, { status: 500 })
+  } finally {
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
   }
 }

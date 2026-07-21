@@ -44,6 +44,12 @@ Le fichier généré est exclu d'ESLint car son style appartient à la CLI. Le s
 
 Le test `tests/unit/supabase-database-types.test.ts` vérifie les contrats `Row`, `Insert` et `Update` de `profiles`, `coach_clients`, `coach_invitations`, `payments`, `push_subscriptions` et `messages` (dont `image_url` nullable), ainsi que la vue `active_related_profiles`.
 
+La migration d'usage IA ajoute au type généré les métadonnées techniques
+bornées de `ai_usage_logs` et les RPC `reserve_ai_usage`,
+`finalize_ai_usage` ainsi que leurs variantes serveur. Leurs retours JSON sont
+validés par l'adaptateur métier; le type généré ne prétend pas décrire seul les
+unions discriminées.
+
 Il vérifie aussi les arguments et retours des RPC :
 
 - `assign_default_coach`;

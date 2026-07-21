@@ -18,6 +18,9 @@ if (!['127.0.0.1', 'localhost'].includes(url.hostname) || !anonKey || !serviceKe
 
 run('psql', ['postgresql://postgres:postgres@127.0.0.1:55322/postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-f', 'tests/integration/rls-matrix.sql'])
 run('psql', ['postgresql://postgres:postgres@127.0.0.1:55322/postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-f', 'tests/integration/messages-rls.sql'])
+run('psql', ['postgresql://postgres:postgres@127.0.0.1:55322/postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-f', 'tests/integration/ai-usage-rpc.sql'])
+process.env.MOOVX_TEST_DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:55322/postgres'
+run('bash', ['tests/integration/ai-usage-concurrency.sh'])
 
 const admin = createClient(apiUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
 const clientEmail = `rls-postgrest-client-${process.pid}@moovx.example.test`

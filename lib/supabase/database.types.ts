@@ -81,30 +81,81 @@ export type Database = {
       }
       ai_usage_logs: {
         Row: {
+          attempt_count: number | null
+          correlation_id: string | null
+          cost_status: string | null
           created_at: string
+          duration_ms: number | null
           endpoint: string
+          estimated_cost_micros: number | null
+          expires_at: string | null
+          feature: string | null
+          finalized_at: string | null
           id: string
+          logical_model: string | null
+          policy_id: string | null
+          principal_id: string | null
+          principal_kind: string | null
+          provider_model: string | null
+          reason_code: string | null
+          reserved_at: string | null
           success: boolean | null
           tokens_in: number | null
           tokens_out: number | null
+          total_tokens: number | null
+          usage_status: string | null
           user_id: string
         }
         Insert: {
+          attempt_count?: number | null
+          correlation_id?: string | null
+          cost_status?: string | null
           created_at?: string
+          duration_ms?: number | null
           endpoint: string
+          estimated_cost_micros?: number | null
+          expires_at?: string | null
+          feature?: string | null
+          finalized_at?: string | null
           id?: string
+          logical_model?: string | null
+          policy_id?: string | null
+          principal_id?: string | null
+          principal_kind?: string | null
+          provider_model?: string | null
+          reason_code?: string | null
+          reserved_at?: string | null
           success?: boolean | null
           tokens_in?: number | null
           tokens_out?: number | null
+          total_tokens?: number | null
+          usage_status?: string | null
           user_id: string
         }
         Update: {
+          attempt_count?: number | null
+          correlation_id?: string | null
+          cost_status?: string | null
           created_at?: string
+          duration_ms?: number | null
           endpoint?: string
+          estimated_cost_micros?: number | null
+          expires_at?: string | null
+          feature?: string | null
+          finalized_at?: string | null
           id?: string
+          logical_model?: string | null
+          policy_id?: string | null
+          principal_id?: string | null
+          principal_kind?: string | null
+          provider_model?: string | null
+          reason_code?: string | null
+          reserved_at?: string | null
           success?: boolean | null
           tokens_in?: number | null
           tokens_out?: number | null
+          total_tokens?: number | null
+          usage_status?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2496,6 +2547,8 @@ export type Database = {
       }
     }
     Functions: {
+      ai_usage_hourly_limit: { Args: { p_feature: string }; Returns: number }
+      ai_usage_is_heavy: { Args: { p_feature: string }; Returns: boolean }
       assign_default_coach: {
         Args: { p_client_id: string; p_coach_id: string }
         Returns: Json
@@ -2510,6 +2563,68 @@ export type Database = {
         Returns: Json
       }
       delete_user_account: { Args: { target_user_id: string }; Returns: Json }
+      finalize_ai_usage: {
+        Args: {
+          p_attempt_count?: number
+          p_correlation_id: string
+          p_cost_status?: string
+          p_duration_ms?: number
+          p_estimated_cost_micros?: number
+          p_feature: string
+          p_input_tokens?: number
+          p_logical_model: string
+          p_output_tokens?: number
+          p_policy_id: string
+          p_provider_model?: string
+          p_reason_code: string
+          p_reservation_id: string
+          p_status: string
+        }
+        Returns: Json
+      }
+      finalize_ai_usage_internal: {
+        Args: {
+          p_attempt_count?: number
+          p_correlation_id: string
+          p_cost_status?: string
+          p_duration_ms?: number
+          p_estimated_cost_micros?: number
+          p_feature: string
+          p_input_tokens?: number
+          p_logical_model: string
+          p_output_tokens?: number
+          p_policy_id: string
+          p_principal_id: string
+          p_principal_kind: string
+          p_provider_model?: string
+          p_reason_code: string
+          p_reservation_id: string
+          p_status: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      finalize_ai_usage_server: {
+        Args: {
+          p_attempt_count?: number
+          p_correlation_id: string
+          p_cost_status?: string
+          p_duration_ms?: number
+          p_estimated_cost_micros?: number
+          p_feature: string
+          p_input_tokens?: number
+          p_logical_model: string
+          p_output_tokens?: number
+          p_policy_id: string
+          p_principal_id: string
+          p_provider_model?: string
+          p_reason_code: string
+          p_reservation_id: string
+          p_status: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       finalize_stripe_webhook_event: {
         Args: { p_error_message?: string; p_event_id: string; p_status: string }
         Returns: boolean
@@ -2521,6 +2636,35 @@ export type Database = {
       is_active_messaging_pair: {
         Args: { p_receiver_id: string; p_sender_id: string }
         Returns: boolean
+      }
+      reserve_ai_usage: {
+        Args: {
+          p_correlation_id: string
+          p_feature: string
+          p_logical_model?: string
+        }
+        Returns: Json
+      }
+      reserve_ai_usage_internal: {
+        Args: {
+          p_correlation_id: string
+          p_feature: string
+          p_logical_model?: string
+          p_principal_id: string
+          p_principal_kind: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      reserve_ai_usage_server: {
+        Args: {
+          p_correlation_id: string
+          p_feature: string
+          p_logical_model?: string
+          p_principal_id: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       set_initial_trial: { Args: { p_days?: number }; Returns: Json }
       set_role: { Args: { p_role: string }; Returns: Json }

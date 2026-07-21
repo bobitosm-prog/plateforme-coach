@@ -6,6 +6,8 @@ import { findExerciseMatch } from '../exercise-matching'
 import { buildTrainingProgramInvocation } from '../ai/prompts'
 import { parseAndValidateToolUse } from '../ai/parsing'
 import { modernTrainingProgramOutputSchema } from '../ai/schemas'
+import { readAnthropicMetadata } from '../ai/usage/provider-metadata'
+import type { AiRecordedTokens } from '../ai/usage/types'
 
 export interface GenerateProgramInput {
   objective: string
@@ -24,7 +26,12 @@ export interface GenerateProgramInput {
  * Generate a training program via Anthropic tool_use.
  * Used by the API endpoint and the cron with the same prompt contract.
  */
-export async function generateProgram(input: GenerateProgramInput, apiKey: string, catalog: { id: string; name: string }[] = []): Promise<any> {
+export async function generateProgram(
+  input: GenerateProgramInput,
+  apiKey: string,
+  catalog: { id: string; name: string }[] = [],
+  onProviderMetadata?: (metadata: { providerModel?: string; tokens?: AiRecordedTokens }) => void,
+): Promise<any> {
   const invocation = buildTrainingProgramInvocation(input, catalog)
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -37,12 +44,12 @@ export async function generateProgram(input: GenerateProgramInput, apiKey: strin
   })
 
   if (!res.ok) {
-    const err = await res.text()
-    console.error('[generateProgram] Anthropic error:', res.status, err.slice(0, 200))
+    console.error('[generateProgram] Anthropic error:', res.status)
     throw new Error(`Anthropic ${res.status}`)
   }
 
   const json = await res.json()
+  onProviderMetadata?.(readAnthropicMetadata(json))
   const parsed = parseAndValidateToolUse(json, 'generate_program', modernTrainingProgramOutputSchema)
   if (!parsed.ok) {
     console.error('[generateProgram] Invalid structured response')

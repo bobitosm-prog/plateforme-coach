@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { generateProgram } from '@/lib/training/generate-program'
 import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
+import { aiUsageCorrelationId, startAiUsage } from '@/lib/ai/usage'
 
 // Vercel : Hobby clamp 60s, Pro 300s. La génération programme ~50s/user.
 // Capacité réelle : ~1 user/run sur Hobby (60s), ~5-6 users/run sur Pro (300s).
@@ -11,6 +12,7 @@ import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
+  const operationId = aiUsageCorrelationId(req)
   // 1. AUTH via CRON_SECRET
   const auth = req.headers.get('authorization') || ''
   const expectedSecret = process.env.CRON_SECRET || ''
@@ -68,11 +70,19 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
     const batch = allUsers.slice(i, i + CONCURRENCY)
     await Promise.all(batch.map(async (profile: any) => {
+      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'training-regen', principal: { kind: 'server', id: 'cron.training-regen', subjectUserId: profile.id }, correlationId: `${operationId.slice(0, 80)}:${profile.id}`, logicalModel: 'claude-opus-4-8' })
+      if (usage.status !== 'started') {
+        results.errors++
+        results.details.push({ user_id: profile.id, status: 'error', error: 'Usage store unavailable' })
+        return
+      }
       try {
+        let providerModel: string | undefined
+        let tokens: { inputTokens?: number; outputTokens?: number } | undefined
         const params = buildProgramParams(profile, {
           notes: 'Varie les exercices et la structure par rapport au programme precedent pour eviter la stagnation, tout en respectant le meme objectif et niveau.',
         })
-        const program = await generateProgram(params, apiKey, catalog)
+        const program = await generateProgram(params, apiKey, catalog, metadata => { ({ providerModel, tokens } = metadata) })
         if (!program) throw new Error('No program generated')
 
         // Deactivate old + insert new
@@ -100,8 +110,10 @@ export async function POST(req: NextRequest) {
           .eq('id', profile.id)
 
         results.success++
+        await usage.tracker.finalize({ outcome: 'succeeded', reasonCode: 'completed', providerModel, tokens })
         results.details.push({ user_id: profile.id, status: 'success' })
       } catch (e: any) {
+        await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'generation_failed' })
         results.errors++
         results.details.push({ user_id: profile.id, status: 'error', error: e.message })
       }

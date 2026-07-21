@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
+import { aiUsageCorrelationId, startAiUsage } from '@/lib/ai/usage'
 
 // Vercel : Hobby clamp à 60s, Pro à 300s. La valeur 300 est posée
 // en prévision de l'upgrade Pro (clampée silencieusement sur Hobby).
@@ -9,6 +10,7 @@ import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
+  const operationId = aiUsageCorrelationId(req)
   // 1. AUTH via CRON_SECRET
   const auth = req.headers.get('authorization') || ''
   const expectedSecret = process.env.CRON_SECRET || ''
@@ -62,20 +64,30 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
     const batch = allUsers.slice(i, i + CONCURRENCY)
     await Promise.all(batch.map(async (u) => {
+      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'weekly-diagnostic-cron', principal: { kind: 'server', id: 'cron.weekly-diagnostic', subjectUserId: u.id }, correlationId: `${operationId.slice(0, 80)}:${u.id}`, logicalModel: 'claude-opus-4-8' })
+      if (usage.status !== 'started') {
+        results.errors++
+        results.details.push({ user_id: u.id, status: 'error', error: 'Usage store unavailable' })
+        return
+      }
       try {
         const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin)
 
         if (result.already_exists) {
+          await usage.tracker.finalize({ outcome: 'cancelled', reasonCode: 'already_exists' })
           results.skipped++
           results.details.push({ user_id: u.id, status: 'skipped' })
         } else if (result.error) {
+          await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'generation_failed' })
           results.errors++
           results.details.push({ user_id: u.id, status: 'error', error: result.error })
         } else {
+          await usage.tracker.finalize({ outcome: 'succeeded', reasonCode: 'completed', providerModel: result.providerModel, tokens: result.tokens })
           results.success++
           results.details.push({ user_id: u.id, status: 'success', diagnostic_id: result.diagnostic_id })
         }
       } catch (e: any) {
+        await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'unexpected_error' })
         results.errors++
         results.details.push({ user_id: u.id, status: 'error', error: e.message })
       }

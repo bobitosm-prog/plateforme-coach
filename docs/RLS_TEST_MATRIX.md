@@ -1,6 +1,6 @@
 # Matrices RLS automatisées — Phase 2
 
-> État observé sur les 140 migrations locales au 19 juillet 2026. Les matrices utilisent uniquement Supabase local et couvrent désormais aussi la messagerie coach/client.
+> État observé sur les 141 migrations locales au 20 juillet 2026. Les matrices utilisent uniquement Supabase local et couvrent aussi la messagerie coach/client et les usages IA.
 
 ## Exécution et frontières
 
@@ -13,9 +13,10 @@ La commande `test:integration:rls` réutilise le contrat `ensure` du reset canon
 
 1. prépare les sept [personas partagés](./TEST_FIXTURES.md) avec le propriétaire PostgreSQL local ;
 2. exécute `tests/integration/rls-matrix.sql` sous les vrais rôles `anon` et `authenticated`, avec `request.jwt.claim.sub` contrôlé ;
-3. annule toutes les données SQL par `ROLLBACK` ;
-4. crée un compte Auth synthétique local, obtient un JWT utilisateur et vérifie `profiles SELECT own` via PostgREST ;
-5. supprime le compte et le profil de vérification en `finally`.
+3. exécute la matrice `ai_usage_logs` puis une vraie course PostgreSQL pour la dernière place de quota ;
+4. annule ou supprime toutes les données SQL synthétiques ;
+5. crée un compte Auth synthétique local, obtient un JWT utilisateur et vérifie les contrats via PostgREST ;
+6. supprime le compte et le profil de vérification en `finally`.
 
 Le service-role sert à préparer et nettoyer la preuve PostgREST, et trois assertions SQL vérifient séparément que les écritures serveur légitimes restent possibles. Aucune assertion d'autorisation utilisateur ne l'utilise. Toute attente sécurisée échoue avec `RLS_MATRIX_FAILED [table/persona/opération]` et un code non nul.
 
@@ -29,11 +30,18 @@ Le service-role sert à préparer et nettoyer la preuve PostgREST, et trois asse
 | `push_subscriptions` | activée, non forcée | propriétaire ALL, policy historique dupliquée | `user_id = auth.uid()` en USING et WITH CHECK |
 | `payments` | activée, non forcée | client propriétaire SELECT; coach SELECT avec relation active | aucune policy de mutation; aucun grant de mutation à `authenticated`; écritures service-role/RPC serveur uniquement |
 | `messages` | activée, non forcée | SELECT, INSERT et UPDATE séparées | paire active obligatoire; UPDATE limité à `read`; aucun DELETE navigateur |
+| `ai_usage_logs` | activée, non forcée | SELECT propriétaire uniquement | aucune mutation directe navigateur; réservation/finalisation RPC; variantes serveur service-role |
 
 `tests/integration/messages-rls.sql` ajoute 30 assertions SQL sur le catalogue,
 les rôles, les relations, les colonnes immuables et le service-role. Le runner
 ajoute sept preuves PostgREST avec JWT locaux et nettoie ses fixtures en
 `finally`.
+
+`tests/integration/ai-usage-rpc.sql` vérifie grants, ownership, RPC utilisateur
+et serveur, finalisations, expiration, contraintes et compatibilité legacy.
+`tests/integration/ai-usage-concurrency.sh` remplit 19 places sur 20 puis lance
+deux transactions simultanées : une seule obtient la dernière place. Les
+correlations synthétiques sont supprimées après la preuve.
 
 Les tables historiques possèdent encore des grants larges hérités du bootstrap; la RLS reste donc la barrière effective. `coach_invitations` est l'exception : grants par colonnes et RLS forcée.
 

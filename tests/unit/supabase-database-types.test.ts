@@ -17,6 +17,7 @@ type InvitationRow = Tables<'coach_invitations'>
 type PaymentRow = Tables<'payments'>
 type PushSubscriptionRow = Tables<'push_subscriptions'>
 type MessageRow = Tables<'messages'>
+type AiUsageRow = Tables<'ai_usage_logs'>
 
 const profileInsert: TablesInsert<'profiles'> = { id: 'profile-id' }
 const coachClientInsert: TablesInsert<'coach_clients'> = { client_id: 'client-id', coach_id: 'coach-id' }
@@ -50,6 +51,8 @@ describe('generated Supabase database types', () => {
     expectTypeOf<PaymentRow['amount']>().toEqualTypeOf<number>()
     expectTypeOf<PushSubscriptionRow['subscription']>().toEqualTypeOf<Database['public']['Tables']['push_subscriptions']['Row']['subscription']>()
     expectTypeOf<MessageRow['image_url']>().toEqualTypeOf<string | null>()
+    expectTypeOf<AiUsageRow['estimated_cost_micros']>().toEqualTypeOf<number | null>()
+    expectTypeOf<AiUsageRow['usage_status']>().toEqualTypeOf<string | null>()
     expectTypeOf<Views<'active_related_profiles'>>().toEqualTypeOf<ActiveRelatedProfileRow>()
     expect([profileInsert, coachClientInsert, invitationInsert, paymentInsert, pushInsert, profileUpdate, messageInsert, messageUpdate]).toHaveLength(8)
     expect(paymentWithoutAmount).toEqual({})
@@ -64,6 +67,8 @@ describe('generated Supabase database types', () => {
     expectTypeOf<FunctionArgs<'claim_stripe_webhook_event'>>().toEqualTypeOf<{ p_event_id: string; p_event_type: string; p_payload: Database['public']['Tables']['coach_invitations']['Row']['metadata'] }>()
     expectTypeOf<FunctionArgs<'finalize_stripe_webhook_event'>>().toEqualTypeOf<{ p_error_message?: string; p_event_id: string; p_status: string }>()
     expectTypeOf<FunctionReturns<'claim_stripe_webhook_event'>>().toEqualTypeOf<string>()
+    expectTypeOf<FunctionArgs<'reserve_ai_usage'>>().toEqualTypeOf<{ p_correlation_id: string; p_feature: string; p_logical_model?: string }>()
+    expectTypeOf<FunctionReturns<'finalize_ai_usage'>>().toEqualTypeOf<Database['public']['Tables']['coach_invitations']['Row']['metadata']>()
   })
 
   it('contains schema structure only and no environment or credential material', () => {

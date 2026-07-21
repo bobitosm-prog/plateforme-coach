@@ -3,17 +3,22 @@ import type { NextRequest } from 'next/server'
 import { readFileSync } from 'node:fs'
 
 const mocks = vi.hoisted(() => ({
-  getUser: vi.fn(), checkRateLimit: vi.fn(), checkAiRateLimit: vi.fn(), checkAiQuota: vi.fn(), logAiUsage: vi.fn(),
+  getUser: vi.fn(), checkRateLimit: vi.fn(),
   generateMealPlan: vi.fn(), provider: { generate: vi.fn() }, guardInvitedClient: vi.fn(),
+  startAiUsage: vi.fn(), finalizeUsage: vi.fn(),
 }))
 
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.getUser } }) }))
 vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ getAll: () => [] })) }))
 vi.mock('@/lib/rate-limit', () => ({
-  checkRateLimit: mocks.checkRateLimit, checkAiRateLimit: mocks.checkAiRateLimit, checkAiQuota: mocks.checkAiQuota, logAiUsage: mocks.logAiUsage,
+  checkRateLimit: mocks.checkRateLimit,
   aiRateLimitResponse: () => new Response('{}', { status: 429 }), aiQuotaResponse: () => new Response('{}', { status: 429 }),
 }))
 vi.mock('@/lib/api-guard', () => ({ guardInvitedClient: mocks.guardInvitedClient }))
+vi.mock('@/lib/ai/usage', () => ({
+  aiUsageCorrelationId: () => 'request-test',
+  startAiUsage: mocks.startAiUsage,
+}))
 vi.mock('@/lib/nutrition/meal-generation', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/nutrition/meal-generation')>()
   return { ...actual, generateMealPlan: mocks.generateMealPlan, createAnthropicMealGenerationProvider: () => mocks.provider }
@@ -32,8 +37,7 @@ beforeEach(() => {
   process.env.ANTHROPIC_API_KEY = 'local-only-test-key'
   mocks.getUser.mockResolvedValue({ data: { user: { id: 'session-user' } } })
   mocks.checkRateLimit.mockReturnValue({ allowed: true })
-  mocks.checkAiRateLimit.mockResolvedValue({ allowed: true })
-  mocks.checkAiQuota.mockResolvedValue({ allowed: true })
+  mocks.startAiUsage.mockResolvedValue({ status: 'started', tracker: { finalize: mocks.finalizeUsage }, remaining: 9 })
   mocks.generateMealPlan.mockImplementation(async (_params, _provider, progress) => {
     progress({ type: 'progress', day: 'lundi', index: 1, total: 7 })
     return { ok: true, partial: false, failedDays: 0, plan: { lundi: { meals: [] } } }
@@ -52,7 +56,7 @@ describe('POST /api/generate-meal-plan adapter', () => {
     const response = await POST(request(validBody, { 'x-request-id': 'request-valid-123' }))
     expect(response.status).toBe(401)
     expect(response.headers.get('x-request-id')).toBe('request-valid-123')
-    expect(mocks.checkAiQuota).not.toHaveBeenCalled()
+    expect(mocks.startAiUsage).not.toHaveBeenCalled()
     expect(mocks.generateMealPlan).not.toHaveBeenCalled()
   })
 
@@ -67,11 +71,11 @@ describe('POST /api/generate-meal-plan adapter', () => {
     mocks.guardInvitedClient.mockResolvedValue(null)
     const response = await POST(request(validBody))
     expect(response.status).toBe(200)
-    expect(mocks.checkAiQuota).toHaveBeenCalledWith(expect.anything(), 'session-user')
-    expect(mocks.logAiUsage).toHaveBeenCalledWith(expect.anything(), 'session-user', 'generate-meal-plan')
+    expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'generate-meal-plan', principal: { kind: 'user', id: 'session-user' } }))
     expect(mocks.guardInvitedClient).toHaveBeenCalledWith('session-user')
     expect(mocks.generateMealPlan).toHaveBeenCalledWith(expect.objectContaining({ calorie_goal: 2000 }), mocks.provider, expect.any(Function))
     expect(await response.text()).toContain('"type":"done"')
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded' }))
   })
 
   it('preserves the invited-role rejection and performs no generation', async () => {

@@ -233,6 +233,14 @@ Les formes HTTP/SSE, prompts, modèles et écritures sont conservés. Les sortie
 malformées, ambiguës, hors bornes ou incompatibles avec les schémas sont
 désormais refusées fail-closed, sans log de leur contenu brut.
 
+## État des quotas et usages au 20 juillet 2026
+
+La [matrice détaillée des quinze flux](AI_USAGE_QUOTAS.md) conserve sept
+policies horaires DB, quatre quotas lourds globaux et huit flux sans quota DB
+effectif. Les quinze points d'entrée passent désormais par la réservation et
+la finalisation communes; la migration additive conserve les lignes legacy et
+remplace le mécanisme non atomique `COUNT` puis `INSERT`.
+
 ## Ordre de migration recommandé
 
 1. Définir une interface provider commune sans changer prompts ni modèles.
@@ -254,4 +262,5 @@ désormais refusées fail-closed, sans log de leur contenu brut.
 - [Observabilité API](API_OBSERVABILITY.md)
 - [Schémas de sortie IA](AI_OUTPUT_SCHEMAS.md)
 - [Parsing et validation structurée](AI_STRUCTURED_PARSING.md)
+- [Quotas et journalisation d'usage](AI_USAGE_QUOTAS.md)
 - [Stratégie de test](TESTING_STRATEGY.md)

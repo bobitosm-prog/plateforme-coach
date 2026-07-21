@@ -10,12 +10,16 @@ import webpush from 'web-push'
 import { buildWeeklyDiagnosticInvocation } from '../ai/prompts'
 import { parseAndValidateToolUse } from '../ai/parsing'
 import { weeklyDiagnosticOutputSchema } from '../ai/schemas'
+import { readAnthropicMetadata } from '../ai/usage/provider-metadata'
+import type { AiRecordedTokens } from '../ai/usage/types'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
   diagnostic?: any
   already_exists?: boolean
   error?: string
+  providerModel?: string
+  tokens?: AiRecordedTokens
 }
 
 export async function generateWeeklyDiagnostic(
@@ -193,12 +197,12 @@ export async function generateWeeklyDiagnostic(
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error('[generateWeeklyDiagnostic] Claude API error:', res.status, err.slice(0, 300))
+      console.error('[generateWeeklyDiagnostic] Claude API error:', res.status)
       return { error: `Erreur IA (${res.status})` }
     }
 
     const aiData = await res.json()
+    const providerMetadata = readAnthropicMetadata(aiData)
 
     const parsed = parseAndValidateToolUse(aiData, 'weekly_diagnostic_output', weeklyDiagnosticOutputSchema)
     if (!parsed.ok) {
@@ -253,7 +257,7 @@ export async function generateWeeklyDiagnostic(
     sendDiagnosticPush(userId, saved.id, saved.score_semaine, supabase)
       .catch(err => console.error('[generator] push failed:', err.message))
 
-    return { diagnostic_id: saved.id, diagnostic: saved }
+    return { diagnostic_id: saved.id, diagnostic: saved, ...providerMetadata }
 
   } catch (e: any) {
     console.error('[generateWeeklyDiagnostic] Error:', e.message)

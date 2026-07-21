@@ -4,10 +4,10 @@ const mocks = vi.hoisted(() => ({
   identity: vi.fn(),
   from: vi.fn(),
   checkRateLimit: vi.fn(),
-  checkAiRateLimit: vi.fn(),
-  logAiUsage: vi.fn(),
   checkAiQuota: vi.fn(),
   generateWeeklyDiagnostic: vi.fn(),
+  startAiUsage: vi.fn(),
+  finalizeUsage: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
@@ -20,8 +20,6 @@ vi.mock('@/lib/repositories/identity', () => ({
 }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: mocks.checkRateLimit,
-  checkAiRateLimit: mocks.checkAiRateLimit,
-  logAiUsage: mocks.logAiUsage,
   checkAiQuota: mocks.checkAiQuota,
   aiRateLimitResponse: (limit: number, resetIn: number) => Response.json(
     { error: 'Limite IA atteinte', limit, resetIn },
@@ -30,6 +28,10 @@ vi.mock('@/lib/rate-limit', () => ({
 }))
 vi.mock('@/lib/weekly-diagnostic/generator', () => ({
   generateWeeklyDiagnostic: mocks.generateWeeklyDiagnostic,
+}))
+vi.mock('@/lib/ai/usage', () => ({
+  aiUsageCorrelationId: () => 'request-test',
+  startAiUsage: mocks.startAiUsage,
 }))
 
 import { GET as readFeedback } from '../../app/api/feedback/mine/route'
@@ -50,8 +52,7 @@ beforeEach(() => {
     data: { id: 'session-user', email: 'person@example.test' },
   })
   mocks.checkRateLimit.mockReturnValue({ allowed: true })
-  mocks.checkAiRateLimit.mockResolvedValue({ allowed: true })
-  mocks.logAiUsage.mockResolvedValue(undefined)
+  mocks.startAiUsage.mockResolvedValue({ status: 'started', tracker: { finalize: mocks.finalizeUsage }, remaining: null })
 })
 
 describe('simple API schemas', () => {
@@ -149,15 +150,16 @@ describe('weekly diagnostic route', () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ diagnostic_id: 'diag-one', diagnostic: { score: 8 } })
     expect(mocks.generateWeeklyDiagnostic).toHaveBeenCalledWith('session-user', expect.anything())
-    expect(mocks.logAiUsage).toHaveBeenCalledWith(expect.anything(), 'session-user', 'weekly-diagnostic')
+    expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'weekly-diagnostic', principal: { kind: 'user', id: 'session-user' } }))
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded' }))
   })
 
   it('preserves route and AI rate-limit statuses', async () => {
     mocks.checkRateLimit.mockReturnValueOnce({ allowed: false })
     expect((await weeklyDiagnostic(new Request('http://localhost') as never)).status).toBe(429)
-    mocks.checkAiRateLimit.mockResolvedValueOnce({ allowed: false, limit: 4, resetIn: 60 })
+    mocks.startAiUsage.mockResolvedValueOnce({ status: 'unavailable' })
     const response = await weeklyDiagnostic(new Request('http://localhost') as never)
-    expect(response.status).toBe(429)
-    expect(await response.json()).toMatchObject({ limit: 4, resetIn: 60 })
+    expect(response.status).toBe(500)
+    expect(await response.json()).toMatchObject({ error: 'Service temporairement indisponible' })
   })
 })

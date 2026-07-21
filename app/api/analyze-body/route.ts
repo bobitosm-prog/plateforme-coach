@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, aiRateLimitResponse, aiQuotaResponse, logAiUsage } from '../../../lib/rate-limit'
+import { checkRateLimit, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
 import { buildBodyAnalysisInvocation } from '../../../lib/ai/prompts'
 import { parseAndValidateToolUse } from '../../../lib/ai/parsing'
 import { bodyAnalysisOutputSchema } from '../../../lib/ai/schemas'
@@ -24,11 +25,14 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
 
   // DB-backed hourly rate limit
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-body')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  const aiQ = await checkAiQuota(supabase, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabase, user.id, 'analyze-body')
+  const usage = await startAiUsage({ client: supabase, feature: 'analyze-body', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-opus-4-8' })
+  if (usage.status === 'denied') return usage.reason === 'monthly_exhausted'
+    ? aiQuotaResponse(6, Math.ceil(usage.retryAfterMs / 1000))
+    : aiRateLimitResponse(5, Math.ceil(usage.retryAfterMs / 1000))
+  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  let outcome: 'succeeded' | 'failed' = 'failed'
+  let providerModel: string | undefined
+  let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -67,21 +71,24 @@ export async function POST(req: NextRequest) {
     })
 
     if (!response.ok) {
-      const err = await response.text()
-      console.error('[analyze-body] Claude API error:', response.status, err)
-      return NextResponse.json({ error: `Erreur IA (${response.status}): ${err.slice(0, 200)}` }, { status: response.status })
+      console.error('[analyze-body] Claude API error:', response.status)
+      return NextResponse.json({ error: `Erreur IA (${response.status})` }, { status: response.status })
     }
 
     const data = await response.json()
+    ;({ providerModel, tokens } = readAnthropicMetadata(data))
     const parsed = parseAndValidateToolUse(data, 'body_analysis_output', bodyAnalysisOutputSchema)
     if (!parsed.ok) {
       console.error('[analyze-body] Invalid structured response')
       return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
     }
     const result = parsed.value
+    outcome = 'succeeded'
     return NextResponse.json(result)
   } catch (e: any) {
     console.error('[analyze-body] Error:', e.message)
     return NextResponse.json({ error: e.message || 'Erreur interne' }, { status: 500 })
+  } finally {
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
   }
 }

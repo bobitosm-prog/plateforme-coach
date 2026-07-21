@@ -8874,3 +8874,84 @@ Centraliser parsing et validation structurée.
 ### Prochaine action unique
 
 Unifier quotas et journalisation d'usage.
+
+## Entrée — 2026-07-20 — Audit quotas et contrat d'usage IA (tâche ouverte)
+
+- Matrice des 15 flux établie : 7 limites horaires DB, 4 quotas lourds
+  glissants 30 jours, 1 flux journalisé sans limite effective et 7 flux sans
+  quota DB; limites IP, rôles et principaux cron documentés séparément.
+- Blocage confirmé : `ai_usage_logs` exécute `COUNT` puis `INSERT`, sans
+  correlation ID, statut réservé ni finalisation; deux appels concurrents
+  peuvent être autorisés et les insertions pré-fournisseur valent succès.
+- Noyau pur `lib/ai/usage` créé avec 15 features stables, policies exactes,
+  décisions discriminées, ports injectés, réservation/finalisation, horloge,
+  événements bornés et coûts `bigint` issus du registre.
+- Contrat testé pour concurrence à la dernière place, correlation dupliquée,
+  double finalisation, panne fail-closed, périodes, tokens complets/partiels/
+  absents, zéro explicite, modèle inconnu, coût et expurgation.
+- Aucun adaptateur Supabase ni migration ajouté : la garantie atomique du port
+  serait fausse avec le schéma courant. La migration additive/RPC minimale et
+  ses exigences SECURITY DEFINER/RLS sont documentées sans backfill risqué.
+- Tests ciblés usage/coûts : 4 fichiers, 24 tests verts; suite complète : 171
+  fichiers, 1 388 tests verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- La tâche roadmap reste ouverte; aucun quota, statut HTTP, endpoint
+  `/api/ai-quota`, prompt, modèle, parsing, transport, migration, RLS ou E2E
+  modifié. Staging vide et changements concurrents protégés.
+
+### Prochaine action unique
+
+Valider et implémenter la réservation atomique des usages IA, puis migrer les
+consommateurs sans modifier leurs limites.
+
+## Entrée — 2026-07-20 — Quotas et journalisation d'usage IA unifiés
+
+- Migration additive `20260720190000_atomic_ai_usage.sql` appliquée sur les
+  141 migrations locales : correlation, feature/policy, principal, statut,
+  expiration, modèles, tokens, durée, tentatives et coût entier ajoutés sans
+  modifier ni supprimer les colonnes ou lignes legacy.
+- `reserve_ai_usage` sérialise par advisory locks transactionnels le couple
+  utilisateur/feature et le quota lourd partagé. Les limites restent 7
+  horaires historiques et 6 usages lourds sur 30 jours glissants; les lignes
+  historiques continuent de compter via `endpoint`/`created_at`.
+- Réservation répétée identique idempotente; correlation réutilisée avec une
+  autre autorité, feature, policy ou modèle refusée. Les réservations orphelines
+  comptent 15 minutes puis expirent.
+- `finalize_ai_usage` accepte success/failed/cancelled, vérifie toute
+  l'autorité et les métadonnées, distingue zéro et inconnu et rend une
+  répétition identique idempotente, une contradiction conflictuelle.
+- RLS/grants : anon sans accès; authenticated en SELECT propriétaire et RPC
+  utilisateur seulement, sans mutation directe; fonctions internes et RPC
+  serveur réservées à service-role; `search_path=''` sur SECURITY DEFINER.
+- Adaptateur Supabase injecté, façade runtime, extraction sûre des métadonnées
+  fournisseur et estimation en micros USD ajoutés sous `lib/ai/usage`. Aucun
+  prompt, réponse, image, e-mail, body, secret ou erreur SQL brute n'est
+  persisté ou propagé.
+- Les 15 features sont raccordées : 13 flux utilisateur et les deux cron avec
+  principal serveur explicite et utilisateur cible. Les limites IP, auth,
+  rôles, modèles, prompts, sorties et ordres métier restent distincts; les flux
+  sans quota sont journalisés sans limite ajoutée.
+- Preuve SQL : succès, échec, annulation, expiration, lignes legacy,
+  idempotence, contradictions, bornes et RLS verts. Preuve concurrente réelle :
+  à 19/20, deux transactions produisent exactement un `allowed` et un
+  `denied`; zéro fixture de correlation subsiste après nettoyage.
+- Reset local reproductible vert, empreinte canonique
+  `c91f7f48af4912cee446308775ccc717`; types Supabase régénérés et conformes;
+  matrice RLS/PostgREST complète verte.
+- Tests ciblés usage/routes verts; suite Vitest complète : 172 fichiers,
+  1 395 tests verts et 3 `todo`; TypeScript vert. ESLint du nouveau module,
+  des tests et du runner vert; l'audit des consommateurs retrouve 24 erreurs
+  `no-explicit-any` historiques, sans nouvelle occurrence dans le diff. Phase
+  8 reste décochée et
+  les trois changements concurrents restent hors périmètre et hors staging.
+
+### Dettes préservées
+
+- `/api/ai-quota` reste un lecteur de compatibilité des succès lourds;
+- tokens absents du transport restent inconnus; aucun zéro n'est inventé;
+- la réponse métier n'est pas mise en cache par correlation ID;
+- la migration des transports vers `AiProvider` commun reste volontairement
+  séparée.
+
+### Prochaine action unique
+
+Migrer Chat, Recipes et Suggest Exercise.

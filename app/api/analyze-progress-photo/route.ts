@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { checkRateLimit, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
 import { buildProgressPhotoAssessmentInvocation, buildProgressPhotoInvocation } from '../../../lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
@@ -22,11 +23,14 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   // DB-backed hourly rate limit (Sprint 3)
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-progress-photo')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  const aiQ = await checkAiQuota(supabase, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabase, user.id, 'analyze-progress-photo')
+  const usage = await startAiUsage({ client: supabase, feature: 'analyze-progress-photo', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-opus-4-8' })
+  if (usage.status === 'denied') return usage.reason === 'monthly_exhausted'
+    ? aiQuotaResponse(6, Math.ceil(usage.retryAfterMs / 1000))
+    : aiRateLimitResponse(10, Math.ceil(usage.retryAfterMs / 1000))
+  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  let outcome: 'succeeded' | 'failed' = 'failed'
+  let providerModel: string | undefined
+  let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -41,12 +45,12 @@ export async function POST(req: NextRequest) {
       try {
         res = await fetch(url)
       } catch (fetchErr: any) {
-        console.error('[analyze-progress-photo] Fetch image failed:', fetchErr.message, 'URL:', url.slice(0, 120))
+        console.error('[analyze-progress-photo] Fetch image failed')
         throw new Error(`Impossible de télécharger l'image: ${fetchErr.message}`)
       }
 
       if (!res.ok) {
-        console.error('[analyze-progress-photo] Image fetch HTTP error:', res.status, res.statusText, 'URL:', url.slice(0, 120))
+        console.error('[analyze-progress-photo] Image fetch HTTP error:', res.status)
         throw new Error(`Erreur HTTP ${res.status} lors du téléchargement de l'image`)
       }
 
@@ -83,12 +87,13 @@ export async function POST(req: NextRequest) {
       })
 
       if (!res.ok) {
-        const err = await res.text()
         return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
       }
 
       const data = await res.json()
+      ;({ providerModel, tokens } = readAnthropicMetadata(data))
       const analysis = data.content?.[0]?.text || 'Analyse indisponible.'
+      outcome = 'succeeded'
       return NextResponse.json({ analysis })
     }
 
@@ -121,18 +126,21 @@ export async function POST(req: NextRequest) {
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error('[analyze-progress-photo] Claude API error:', res.status, err.slice(0, 300))
+      console.error('[analyze-progress-photo] Claude API error:', res.status)
       return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
     }
 
     const data = await res.json()
+    ;({ providerModel, tokens } = readAnthropicMetadata(data))
     const analysis = data.content?.[0]?.text || 'Impossible de générer l\'analyse.'
 
+    outcome = 'succeeded'
     return NextResponse.json({ analysis })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erreur inattendue'
     console.error('[analyze-progress-photo] Unhandled error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
+  } finally {
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
   }
 }

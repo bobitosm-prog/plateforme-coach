@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
 import { guardInvitedClient } from '../../../lib/api-guard'
 import { buildOverloadInvocation } from '../../../lib/ai/prompts'
 import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
@@ -31,6 +32,12 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
   const rl = checkRateLimit(`overload:${ip}`, 10, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+
+  const usage = await startAiUsage({ client: supabaseAuth, feature: 'suggest-overload', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-haiku-4-5-20251001' })
+  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  let outcome: 'succeeded' | 'failed' = 'failed'
+  let providerModel: string | undefined
+  let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
   try {
     const body = await req.json()
@@ -111,11 +118,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!res.ok) {
-      console.error('[suggest-overload] Claude API error:', res.status, await res.text())
+      console.error('[suggest-overload] Claude API error:', res.status)
       return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
     }
 
     const data = await res.json()
+    ;({ providerModel, tokens } = readAnthropicMetadata(data))
     const text = data.content?.[0]?.text || ''
 
     const parsed = parseAndValidateAiOutput(text, overloadSuggestionOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
@@ -156,6 +164,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    outcome = 'succeeded'
     return NextResponse.json({
       ok: true,
       suggestion: {
@@ -170,5 +179,7 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : 'Unknown error'
     console.error('[suggest-overload] Exception:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
+  } finally {
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
   }
 }

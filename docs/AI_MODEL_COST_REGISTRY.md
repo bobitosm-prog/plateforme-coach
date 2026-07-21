@@ -156,10 +156,16 @@ erreurs ne contiennent aucun prompt, secret ou contenu utilisateur.
   inconnus.
 - Aucun coût ne doit être utilisé comme montant facturé au client.
 
-La prochaine étape de la roadmap est de séparer les prompts du transport HTTP.
+La [frontière d'usage IA](AI_USAGE_QUOTAS.md) réutilise `estimateAiCost()` pour
+produire et persister un coût technique en micros USD lorsque modèle et tokens
+sont connus. Une absence de tokens reste `unavailable`, jamais zéro inventé.
+
+La prochaine étape de la roadmap est de migrer Chat, Recipes et Suggest
+Exercise vers l'interface provider commune.
 
 ## Références
 
 - [Inventaire des prompts, modèles et sorties](AI_PROMPTS_MODELS_OUTPUTS_INVENTORY.md)
 - [Interface commune du provider IA](AI_PROVIDER_INTERFACE.md)
 - [Politique commune de résilience](AI_RESILIENCE_POLICY.md)
+- [Quotas et journalisation d'usage](AI_USAGE_QUOTAS.md)

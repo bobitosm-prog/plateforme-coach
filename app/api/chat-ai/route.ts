@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
+import { checkRateLimit, aiRateLimitResponse } from '../../../lib/rate-limit'
+import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
 import { getChatAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 import { buildAthenaInvocation } from '../../../lib/ai/prompts'
 
@@ -30,8 +31,12 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   // DB-backed hourly rate limit per user
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'chat-ai')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+  const usage = await startAiUsage({ client: supabase, feature: 'chat-ai', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-sonnet-4-6' })
+  if (usage.status === 'denied') return aiRateLimitResponse(20, Math.ceil(usage.retryAfterMs / 1000))
+  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  let outcome: 'succeeded' | 'failed' = 'failed'
+  let providerModel: string | undefined
+  let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -92,12 +97,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error('[chat-ai] Anthropic error:', res.status, err)
+      console.error('[chat-ai] Anthropic error:', res.status)
       return NextResponse.json({ error: `Erreur serveur (${res.status})` }, { status: res.status })
     }
 
     const data = await res.json()
+    ;({ providerModel, tokens } = readAnthropicMetadata(data))
     const aiMessage = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.'
 
     // INSERT assistant response AFTER reception (best effort)
@@ -110,10 +115,12 @@ export async function POST(req: NextRequest) {
       // Don't fail the request — user still gets the response
     }
 
-    await logAiUsage(supabase, user.id, 'chat-ai')
+    outcome = 'succeeded'
     return NextResponse.json({ message: aiMessage })
   } catch (e: unknown) {
     console.error('[chat-ai] unexpected error:', e)
     return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
+  } finally {
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
   }
 }
