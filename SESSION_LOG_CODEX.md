@@ -9143,3 +9143,31 @@ Ajouter golden fixtures et tests de contrat.
 ### Prochaine action unique
 
 Définir et tester les fallbacks.
+
+## Entrée — 2026-07-21 — Politique explicite des fallbacks IA
+
+- Le registre pur `lib/ai/fallbacks` couvre exactement les quinze features et
+  distingue modèle, fournisseur, contenu, erreur publique, partial, cache,
+  stale validé, valeur de présentation, retry et fonctionnement sans IA.
+- Onze features sont `no_fallback`. Quatre comportements historiques sont
+  `explicit_partial` : journées valides du plan Nutrition, batch
+  d'instructions, agrégat du cron Training et agrégat du cron diagnostic.
+- Aucun fallback de modèle/fournisseur, retry, cache, contenu synthétique ou
+  contournement de quota n'est autorisé. Quota, annulation et erreur inattendue
+  échouent toujours fermés; une sortie invalide ne devient jamais zéro.
+- La matrice 15 × 7 couvre refus fournisseur, quota, timeout, réseau, sortie
+  invalide, erreur inattendue et annulation. Un partial exige au moins un
+  fragment valide, est immuable et porte une raison stable expurgée.
+- Aucune feature actuelle n'autorise une donnée stale : aucun cache n'a été
+  ajouté. Aucun raccordement runtime n'a été réalisé afin de préserver statuts
+  HTTP, SSE et persistance legacy.
+- Aucun transport, prompt, modèle, quota, timeout, retry, migration, RLS ou E2E
+  n'a été modifié. Aucun fournisseur externe n'a été appelé.
+- Tests ciblés provider/résilience/golden/fallback : 8 fichiers et 187 tests
+  verts. Suite complète : 182 fichiers, 1 599 tests verts et 3 `todo`;
+  TypeScript et ESLint ciblé verts.
+
+### Prochaine action unique
+
+Auditer la définition de terminé de la Phase 7 et les huit transports
+historiques avant d'activer la Phase 8.

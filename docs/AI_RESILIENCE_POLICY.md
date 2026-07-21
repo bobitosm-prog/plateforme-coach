@@ -1,5 +1,10 @@
 # Politique commune de résilience IA
 
+Les retries et timeouts décrits ici sont distincts des fallbacks métier. La
+[politique explicite des fallbacks](AI_FALLBACK_POLICY.md) interdit tout
+changement silencieux de modèle/fournisseur et tout contenu synthétique après
+échec. Un résultat partiel ne conserve que des fragments déjà validés.
+
 > Contrat défini le 20 juillet 2026. Aucun des 15 flux IA runtime n'utilise
 > encore cette politique; leurs timeouts, retries et erreurs restent inchangés.
 

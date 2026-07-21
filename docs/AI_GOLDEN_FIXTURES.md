@@ -50,4 +50,9 @@ Cette procédure interdit les mises à jour opportunistes via snapshot/update mo
 
 Les tests prouvent la couverture 15/15, l'égalité exacte des invocations, le partage byte-identique des deux contrats communs, le déterminisme, l'immutabilité, les cas publics minimaux et l'absence de marqueurs de secret. Les sorties structurées restent validées par les [schémas IA](./AI_OUTPUT_SCHEMAS.md) et le [parseur commun](./AI_STRUCTURED_PARSING.md).
 
+Les cas publics d'échec et de partialité sont recoupés avec la
+[politique des fallbacks](./AI_FALLBACK_POLICY.md). Le manifeste golden fige le
+contrat observé; le registre décide séparément si des fragments déjà valides
+peuvent être conservés.
+
 Les empreintes sont exactes mais ne constituent pas une approbation métier du contenu des prompts. Les sept points d'entrée encore sur transport historique restent couverts comme contrats observés ; cette tranche ne les migre pas. Les fallbacks restent absents et seront traités séparément.

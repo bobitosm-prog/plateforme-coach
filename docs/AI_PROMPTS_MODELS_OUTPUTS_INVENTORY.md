@@ -68,6 +68,11 @@ semi-structurées.
 Les sept points d'entrée migrés utilisent des identifiants logiques résolus par
 le registre. Les huit autres flux conservent leurs littéraux historiques.
 
+La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
+features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
+résultat partiel historique composé de fragments déjà valides. Aucune feature
+n'autorise un fallback de modèle, de fournisseur ou une donnée stale.
+
 ## Matrice exhaustive des flux
 
 ### Chat et coaching conversationnel
