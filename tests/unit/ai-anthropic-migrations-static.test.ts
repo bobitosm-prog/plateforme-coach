@@ -10,7 +10,16 @@ const routes = [
   'app/api/generate-program/route.ts',
   'app/api/generate-custom-program/route.ts',
   'app/api/generate-meal-plan/route.ts',
+  'app/api/adapt-workout/route.ts',
+  'app/api/training-regen/cron/route.ts',
 ]
+
+function routeFiles(folder: string): string[] {
+  return fs.readdirSync(path.join(root, folder), { withFileTypes: true }).flatMap(entry => {
+    const relative = path.join(folder, entry.name)
+    return entry.isDirectory() ? routeFiles(relative) : entry.name === 'route.ts' ? [relative] : []
+  })
+}
 
 describe('Anthropic provider migration boundaries', () => {
   it('keeps direct Anthropic transport and provider model literals out of migrated routes', () => {
@@ -32,11 +41,9 @@ describe('Anthropic provider migration boundaries', () => {
     }
   })
 
-  it('tracks the migrated top-level routes', () => {
-    const migrated = fs.readdirSync(path.join(root, 'app/api'), { withFileTypes: true })
-      .filter(entry => entry.isDirectory())
-      .map(entry => `app/api/${entry.name}/route.ts`)
-      .filter(file => fs.existsSync(path.join(root, file)) && fs.readFileSync(path.join(root, file), 'utf8').includes('createAnthropicProvider'))
+  it('tracks all migrated runtime entry points', () => {
+    const migrated = routeFiles('app/api')
+      .filter(file => fs.readFileSync(path.join(root, file), 'utf8').includes('createAnthropicProvider'))
       .sort()
     expect(migrated).toEqual([...routes].sort())
   })

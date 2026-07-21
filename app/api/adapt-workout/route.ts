@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { buildAdaptWorkoutInvocation } from '../../../lib/ai/prompts'
-import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
-import { adaptedWorkoutOutputSchema } from '../../../lib/ai/schemas'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToJsonRequest } from '../../../lib/ai/providers/anthropic'
+import { adaptedWorkoutOutputSchema, createAiOutputValidator } from '../../../lib/ai/schemas'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -24,9 +26,12 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`adapt:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
-  const usage = await startAiUsage({ client: supabase, feature: 'adapt-workout', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-sonnet-4-6' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-sonnet-4.6')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabase, feature: 'adapt-workout', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
@@ -37,22 +42,28 @@ export async function POST(req: NextRequest) {
     const { exercises, availableMinutes, sessionType } = await req.json()
 
     const invocation = buildAdaptWorkoutInvocation({ exercises, availableMinutes, sessionType })
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify(invocation)
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(promptInvocationToJsonRequest(
+      invocation,
+      model.model.providerModelId,
+      createAiOutputValidator(adaptedWorkoutOutputSchema),
+    ), {
+      correlationId,
+      timeoutMs: 300_000,
+      cancellation: abortSignalToAiCancellation(req.signal),
     })
-
-    const data = await res.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const text = data.content?.[0]?.text || ''
-    const parsed = parseAndValidateAiOutput(text, adaptedWorkoutOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
-    if (!parsed.ok) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') outcome = 'cancelled'
+      if (generated.error.code === 'invalid_output') return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
+      return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
+    }
     outcome = 'succeeded'
-    return NextResponse.json({ exercises: parsed.value })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ exercises: generated.value })
+  } catch {
+    return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
   } finally {
-    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : outcome === 'cancelled' ? 'request_cancelled' : 'request_failed', providerModel, tokens })
   }
 }

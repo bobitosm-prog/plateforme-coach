@@ -9198,3 +9198,40 @@ historiques avant d'activer la Phase 8.
 
 Migrer `adapt-workout` vers `AiProvider` avec tests de contrat, sans changer le
 prompt ni la réponse publique.
+
+## Entrée — 2026-07-21 — Migration AiProvider de l'adaptation de séance
+
+- `POST /api/adapt-workout` utilise désormais `createAnthropicProvider`, le
+  registre `anthropic-sonnet-4.6` → `claude-sonnet-4-6`, le builder
+  `buildAdaptWorkoutInvocation` et le validateur commun
+  `adaptedWorkoutOutputSchema`.
+- Le golden reste byte-identique : même système, même message utilisateur,
+  `max_tokens=800`, aucune température, aucun retry, fallback ou timeout réseau
+  ajouté. La policy `adapt-workout` reste `no_fallback`.
+- L'ordre session → limite IP 5/min → réservation d'usage → fournisseur reste
+  inchangé. Le même correlation ID relie réservation, provider et finalisation;
+  `Request.signal` est propagé au transport.
+- Le succès public `{ exercises }`, les statuts d'authentification, de limite IP,
+  de conflit/indisponibilité d'usage et l'échec de validation `Format invalide`
+  sont conservés. Les exceptions et refus fournisseur ne renvoient plus de
+  contenu brut et deviennent une erreur générique expurgée de classe HTTP 500.
+- La finalisation est unique et distingue `succeeded`, `failed` et `cancelled`.
+  Modèle réel et tokens sont transmis lorsqu'ils existent; leur absence reste
+  inconnue afin que le coût demeure `unavailable` plutôt que zéro.
+- Aucun objet vide ni adaptation synthétique n'est produit après panne. Aucune
+  écriture, notification, requête Supabase, migration, policy RLS, type généré,
+  E2E, prompt, quota ou autre flux IA n'a été modifié.
+- Compteurs après migration : 8/15 points d'entrée via `AiProvider`, 7/15
+  historiques, 6 expressions HTTP Anthropic directes, 1 client SDK direct et 8
+  sites d'invocation runtime au total.
+- Tests ciblés : 9 fichiers et 80 tests verts, couvrant contrat de route,
+  provider, modèle, paramètres, schéma/parsing, golden, usage, erreurs,
+  annulation, tokens connus/inconnus et finalisation unique. Suite complète :
+  183 fichiers, 1 608 tests verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- Phase 7 reste active et incomplète. Phase 8 reste inactive et entièrement
+  décochée. Aucun fournisseur ni service externe n'a été appelé.
+
+### Prochaine action unique
+
+Migrer `analyze-meal-photo` vers `AiProvider` avec tests de contrat, sans
+changer le prompt ni la réponse publique.

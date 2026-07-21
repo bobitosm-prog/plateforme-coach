@@ -2,7 +2,8 @@
 
 > État vérifié le 21 juillet 2026. Chat Athena, génération de recette,
 > suggestion d'exercice, les trois points d'entrée de génération Training et
-> la génération de plan Nutrition utilisent cette frontière; huit points d'entrée IA conservent leur transport
+> la génération de plan Nutrition ainsi que l'adaptation de séance utilisent
+> cette frontière; sept points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -34,6 +35,7 @@ persiste rien.
 | Programme coach legacy | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON texte validé par `legacyTrainingProgramOutputSchema`, puis sept jours normalisés | `max_tokens=3000`, message unique historique sans champ système |
 | Programme Training et cron | `anthropic-opus-4.8` → `claude-opus-4-8` | outil forcé `generate_program`, validé par `modernTrainingProgramOutputSchema` | `max_tokens=8000`, système, message, catalogue et paramètres historiques |
 | Plan Nutrition | `anthropic-opus-4.8` → `claude-opus-4-8` | sept JSON texte validés par `legacyNutritionDayOutputSchema` | sept appels séquentiels, `max_tokens=1500`, sans température, contexte cumulatif et SSE applicatif inchangés |
+| Adaptation de séance | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | JSON texte validé par `adaptedWorkoutOutputSchema` | `max_tokens=800`, système et message historiques, sans température |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -84,9 +86,10 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les huit autres flux utilisent encore leur transport
+Limites restantes : les sept autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
-les golden fixtures exhaustives restent une tâche séparée.
+les analyses multimodales, le batch d'instructions, la surcharge et les
+diagnostics restent à migrer.
 
 ## Références
 
