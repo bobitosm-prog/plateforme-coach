@@ -2,11 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { buildProgressPhotoAssessmentInvocation, buildProgressPhotoInvocation } from '../../../lib/ai/prompts'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { AI_PROVIDER_LIMITS } from '../../../lib/ai/provider'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToTextRequest } from '../../../lib/ai/providers/anthropic'
+import { aiFreeTextSchema, validateAiOutput } from '../../../lib/ai/schemas'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
+
+const IMAGE_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
+
+function isImageMediaType(value: string): value is typeof IMAGE_MEDIA_TYPES[number] {
+  return IMAGE_MEDIA_TYPES.some(mediaType => mediaType === value)
+}
+
+async function fetchImage(url: string): Promise<{ base64: string; mediaType: typeof IMAGE_MEDIA_TYPES[number] }> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('image_unavailable')
+  const buffer = await response.arrayBuffer()
+  if (buffer.byteLength === 0) throw new Error('invalid_image')
+  const base64 = Buffer.from(buffer).toString('base64')
+  const mediaType = (response.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
+  if (!isImageMediaType(mediaType) || base64.length > AI_PROVIDER_LIMITS.maxImageBase64Characters) {
+    throw new Error('invalid_image')
+  }
+  return { base64, mediaType }
+}
 
 export async function POST(req: NextRequest) {
-  // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,21 +37,33 @@ export async function POST(req: NextRequest) {
     { cookies: { getAll: () => cookieStore.getAll() } }
   )
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`photo:${ip}`, 3, 60000)
-  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+  const rateLimit = checkRateLimit(`photo:${ip}`, 3, 60000)
+  if (!rateLimit.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
-  // DB-backed hourly rate limit (Sprint 3)
-  const usage = await startAiUsage({ client: supabase, feature: 'analyze-progress-photo', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-opus-4-8' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') {
+    return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  }
+  const usage = await startAiUsage({
+    client: supabase,
+    feature: 'analyze-progress-photo',
+    principal: { kind: 'user', id: user.id },
+    correlationId,
+    logicalModel: model.model.logicalId,
+  })
   if (usage.status === 'denied') return usage.reason === 'monthly_exhausted'
     ? aiQuotaResponse(6, Math.ceil(usage.retryAfterMs / 1000))
     : aiRateLimitResponse(10, Math.ceil(usage.retryAfterMs / 1000))
-  if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  if (usage.status !== 'started') {
+    return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
+  }
+
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
+  let reasonCode = 'request_failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
@@ -38,109 +73,71 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { photoUrl, profileData, previousPhotoUrl, mode, photoFrontUrl, photoBackUrl, photoSideUrl } = body
+    let invocation
 
-    // Fetch photo as base64 with detailed error handling
-    const fetchImage = async (url: string): Promise<{ base64: string; mediaType: string }> => {
-      let res: Response
-      try {
-        res = await fetch(url)
-      } catch (fetchErr: any) {
-        console.error('[analyze-progress-photo] Fetch image failed')
-        throw new Error(`Impossible de télécharger l'image: ${fetchErr.message}`)
-      }
-
-      if (!res.ok) {
-        console.error('[analyze-progress-photo] Image fetch HTTP error:', res.status)
-        throw new Error(`Erreur HTTP ${res.status} lors du téléchargement de l'image`)
-      }
-
-      const buffer = await res.arrayBuffer()
-      if (buffer.byteLength === 0) {
-        console.error('[analyze-progress-photo] Empty image buffer')
-        throw new Error('Image vide reçue')
-      }
-
-      const base64 = Buffer.from(buffer).toString('base64')
-      const contentType = res.headers.get('content-type') || 'image/jpeg'
-      const mediaType = contentType.split(';')[0].trim()
-
-      return { base64, mediaType }
-    }
-
-    // ── Assessment mode (3 photos) ──
     if (mode === 'assessment') {
       const [frontImg, backImg, sideImg] = await Promise.all([
         fetchImage(photoFrontUrl),
         fetchImage(photoBackUrl),
         fetchImage(photoSideUrl),
       ])
-
-      const invocation = buildProgressPhotoAssessmentInvocation({ profileData, frontImg, backImg, sideImg })
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify(invocation),
-      })
-
-      if (!res.ok) {
-        return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+      invocation = buildProgressPhotoAssessmentInvocation({ profileData, frontImg, backImg, sideImg })
+    } else {
+      if (!photoUrl) return NextResponse.json({ error: 'Photo URL manquante' }, { status: 400 })
+      const mainImage = await fetchImage(photoUrl)
+      let previousImage: Awaited<ReturnType<typeof fetchImage>> | null = null
+      if (previousPhotoUrl) {
+        try {
+          previousImage = await fetchImage(previousPhotoUrl)
+        } catch {
+          previousImage = null
+        }
       }
-
-      const data = await res.json()
-      ;({ providerModel, tokens } = readAnthropicMetadata(data))
-      const analysis = data.content?.[0]?.text || 'Analyse indisponible.'
-      outcome = 'succeeded'
-      return NextResponse.json({ analysis })
+      invocation = buildProgressPhotoInvocation({ profileData, mainImage, previousImage })
     }
 
-    if (!photoUrl) return NextResponse.json({ error: 'Photo URL manquante' }, { status: 400 })
-
-    let mainImage: { base64: string; mediaType: string }
-    try {
-      mainImage = await fetchImage(photoUrl)
-    } catch (imgErr: any) {
-      return NextResponse.json({ error: imgErr.message }, { status: 500 })
-    }
-
-    let previousImage: { base64: string; mediaType: string } | null = null
-    if (previousPhotoUrl) {
-      try {
-        previousImage = await fetchImage(previousPhotoUrl)
-      } catch {
-        console.error('[analyze-progress-photo] Previous photo fetch failed, continuing without comparison')
-      }
-    }
-    const invocation = buildProgressPhotoInvocation({ profileData, mainImage, previousImage })
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(
+      promptInvocationToTextRequest(invocation, model.model.providerModelId),
+      {
+        correlationId,
+        timeoutMs: 300_000,
+        cancellation: abortSignalToAiCancellation(req.signal),
       },
-      body: JSON.stringify(invocation),
-    })
+    )
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
 
-    if (!res.ok) {
-      console.error('[analyze-progress-photo] Claude API error:', res.status)
-      return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') {
+        outcome = 'cancelled'
+        reasonCode = 'request_cancelled'
+        return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
+      }
+      if (generated.error.code === 'quota_exceeded') {
+        reasonCode = 'provider_quota'
+        return NextResponse.json({ error: 'Erreur IA (429)' }, { status: 429 })
+      }
+      if (generated.error.code === 'invalid_output') {
+        reasonCode = 'invalid_output'
+        return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
+      }
+      reasonCode = 'provider_error'
+      return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
     }
 
-    const data = await res.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const analysis = data.content?.[0]?.text || 'Impossible de générer l\'analyse.'
+    const analysis = validateAiOutput(aiFreeTextSchema, generated.value)
+    if (!analysis.ok) {
+      reasonCode = 'invalid_output'
+      return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
+    }
 
     outcome = 'succeeded'
-    return NextResponse.json({ analysis })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Erreur inattendue'
-    console.error('[analyze-progress-photo] Unhandled error:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    reasonCode = 'completed'
+    return NextResponse.json({ analysis: analysis.value })
+  } catch {
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   } finally {
-    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
+    await usage.tracker.finalize({ outcome, reasonCode, providerModel, tokens })
   }
 }

@@ -9432,3 +9432,53 @@ changer le prompt, l'autorité ni la réponse publique.
 Migrer `analyze-progress-photo` vers `AiProvider` avec tests des deux modes
 multimodaux et du texte libre, sans changer le prompt, l'autorité ni la réponse
 publique.
+
+## Entrée — 2026-07-22 — Migration AiProvider de l'analyse de progression photo
+
+- `POST /api/analyze-progress-photo` utilise désormais
+  `createAnthropicProvider`, le registre `anthropic-opus-4.8` →
+  `claude-opus-4-8`, les builders existants et
+  `promptInvocationToTextRequest`.
+- Les trois branches sont préservées : évaluation face/dos/profil/texte avec
+  `max_tokens=2048`, analyse simple image/texte et comparaison
+  ancienne/actuelle/texte avec `max_tokens=1024`. Système, messages, absence de
+  température et ordre des blocs restent identiques aux goldens.
+- Le repli explicite comparaison → analyse simple reste actif lorsque
+  l'ancienne image ne peut pas être téléchargée. Les deux textes génériques
+  silencieux après sortie absente sont supprimés conformément à la policy
+  `no_fallback`; texte vide, blanc ou supérieur à 100 000 caractères échoue
+  via `aiFreeTextSchema`.
+- Session, limite IP 3/min, réservation 10/h et quota lourd 6/30 jours gardent
+  leur ordre. Une seule réservation et une seule finalisation relient le même
+  correlation ID au provider; `succeeded`, `failed` et `cancelled`, modèle réel
+  et tokens disponibles sont transmis sans inventer un coût.
+- JPEG, PNG, WebP et GIF restent transmis en Base64. Réponse non image, vide ou
+  dépassant la borne commune échoue avant le provider. URL, image, profil,
+  prompt, sortie et erreur fournisseur ne sont ni journalisés ni exposés.
+- Le contrat de succès reste `{ analysis }`; les erreurs d'authentification,
+  photo absente, configuration, limites et quotas sont préservées. Refus,
+  réseau, annulation et sortie invalide échouent sans objet ou texte d'analyse
+  synthétique.
+- La route ne réalise aucune écriture. Le consommateur onboarding qui ne
+  vérifiait pas `res.ok` conserve son message d'erreur visible, mais ne le
+  transmet plus au générateur de plan Nutrition comme s'il s'agissait d'une
+  analyse fournisseur.
+- Compteurs après migration : 13/15 points d'entrée via `AiProvider`, 2/15
+  historiques, une expression HTTP Anthropic directe partagée et zéro client
+  SDK direct runtime hors adaptateur commun.
+- Tests ciblés : 13 fichiers, 235 tests verts, dont 18 contrats
+  de route couvrant les trois branches, limites, quotas, modèle, tokens,
+  annulation, confidentialité et sorties invalides. La suite complète compte
+  189 fichiers, 1 676 tests verts et 3 `todo`; TypeScript et ESLint des fichiers
+  nouveaux/migrés sont verts. Le consommateur onboarding conserve sa dette
+  historique ciblée de 3 erreurs et 7 avertissements ESLint, sans nouvelle
+  occurrence de `any`.
+- Aucun autre flux, prompt, modèle, quota, migration, RLS, type Supabase, E2E
+  ou fichier concurrent n'est modifié. Phase 7 reste active et incomplète;
+  Phase 8 reste inactive et décochée.
+
+### Prochaine action unique
+
+Migrer le transport partagé du diagnostic hebdomadaire manuel et cron vers
+`AiProvider`, avec tests des écritures, notifications et résultats partiels,
+sans changer le prompt ni l'autorité.

@@ -15,6 +15,7 @@ const routes = [
   'app/api/adapt-workout/route.ts',
   'app/api/analyze-meal-photo/route.ts',
   'app/api/analyze-body/route.ts',
+  'app/api/analyze-progress-photo/route.ts',
   'app/api/training-regen/cron/route.ts',
 ]
 

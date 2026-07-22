@@ -20,6 +20,7 @@ export default function OnboardingPhotoContent() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoPath, setPhotoPath] = useState<string | null>(null)
   const [analysisText, setAnalysisText] = useState('')
+  const [analysisFailed, setAnalysisFailed] = useState(false)
   const [analysisMsg, setAnalysisMsg] = useState(0)
   const [profileData, setProfileData] = useState<any>(null)
   const [generating, setGenerating] = useState(false)
@@ -66,6 +67,7 @@ export default function OnboardingPhotoContent() {
     setPhotoPath(path)
     setUploading(false)
     setPhase('analyzing')
+    setAnalysisFailed(false)
     try {
       const res = await fetch('/api/analyze-progress-photo', {
         method: 'POST',
@@ -73,8 +75,10 @@ export default function OnboardingPhotoContent() {
         body: JSON.stringify({ photoUrl: signedUrl, profileData }),
       })
       const data = await res.json()
-      setAnalysisText(data.analysis || t('results.analysisUnavailable'))
+      if (!res.ok || typeof data.analysis !== 'string' || !data.analysis.trim()) throw new Error('analysis_failed')
+      setAnalysisText(data.analysis)
     } catch {
+      setAnalysisFailed(true)
       setAnalysisText(t('results.analysisError'))
     }
     setPhase('results')
@@ -284,7 +288,7 @@ export default function OnboardingPhotoContent() {
               {t('results.skip')}
             </button>
           )}
-          <button onClick={() => generateMealPlan(analysisText)} disabled={generating}
+          <button onClick={() => generateMealPlan(analysisFailed ? null : analysisText)} disabled={generating}
             style={{ ...btnPrimary, width: '100%', padding: 16, fontSize: 16, letterSpacing: '0.1em', opacity: generating ? 0.6 : 1, cursor: generating ? 'wait' : 'pointer', transition: 'all 0.2s' }}>
             {generating ? t('results.continueGenerating') : t('results.continue')}
           </button>

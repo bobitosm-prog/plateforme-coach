@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **21 juillet 2026**.
+> Dernière mise à jour : **22 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 7 — Plateforme IA**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -495,7 +495,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 **Durée cible : 5 à 8 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 7 incomplète malgré 13 tâches de checklist sur 13 — 3 points
+**Statut : Phase 7 incomplète malgré 13 tâches de checklist sur 13 — 2 points
 d'entrée utilisent encore un transport Anthropic historique. Voir
 [`docs/AI_PHASE_7_COMPLETION_AUDIT.md`](docs/AI_PHASE_7_COMPLETION_AUDIT.md).**
 

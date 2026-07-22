@@ -6,9 +6,9 @@
 > cette frontière. L'analyse de repas photographié réutilise également son
 > support multimodal générique, la suggestion de surcharge conserve sa
 > persistance legacy et le batch d'instructions conserve ses écritures
-> séquentielles et l'analyse corporelle utilise l'outil structuré commun;
-> trois points d'entrée IA conservent leur transport
-> historique.
+> séquentielles. L'analyse corporelle utilise l'outil structuré commun et
+> l'analyse de progression photo le texte libre multimodal borné. Deux points
+> d'entrée diagnostic conservent leur transport historique partagé.
 
 ## Responsabilité et API
 
@@ -44,6 +44,7 @@ persiste rien.
 | Suggestion de surcharge | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | texte JSON validé par le parseur commun et `overloadSuggestionOutputSchema` | `max_tokens=300`, `temperature=0.3`, système, historique et message historiques |
 | Instructions d'exercice | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON validé par `exerciseInstructionsOutputSchema`, puis écriture par exercice | boucle séquentielle bornée à 20, `max_tokens=500`, message unique sans système ni température |
 | Analyse corporelle | `anthropic-opus-4.8` → `claude-opus-4-8` | trois images puis texte, outil forcé `body_analysis_output`, validé par `bodyAnalysisOutputSchema` | `max_tokens=1024`, système, blocs, schéma et choix d'outil historiques, sans température |
+| Analyse de progression photo | `anthropic-opus-4.8` → `claude-opus-4-8` | texte libre borné par `aiFreeTextSchema`, une ou trois images selon le mode | `max_tokens=2048` en évaluation, `1024` en simple/comparaison; ordre des images et prompts historiques |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -138,9 +139,16 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les trois autres flux utilisent encore leur transport
-historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
-les autres analyses multimodales et les diagnostics restent à migrer.
+L'analyse de progression conserve ses trois branches : face/dos/profil/texte,
+image/texte et ancienne/actuelle/texte. L'échec de téléchargement de l'ancienne
+photo conserve le repli explicite vers l'analyse simple; les anciens textes
+génériques après réponse fournisseur vide sont supprimés conformément à la
+policy `no_fallback`. Le consommateur onboarding affiche toujours son message
+d'erreur local, mais ne l'envoie plus comme analyse au plan Nutrition.
+
+Limites restantes : les deux flux diagnostic utilisent encore leur transport
+historique partagé; aucun timeout produit n'est défini; `stream()` n'est pas
+migré; le diagnostic manuel/cron reste à migrer.
 
 ## Références
 

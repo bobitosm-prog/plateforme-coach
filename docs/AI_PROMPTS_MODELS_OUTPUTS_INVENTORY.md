@@ -6,7 +6,8 @@
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
 les trois points d'entrée de génération Training, l'adaptation de séance,
-l'analyse de repas photographié, le plan Nutrition, le batch d'instructions et l'analyse corporelle l'utilisent désormais via
+l'analyse de repas photographié, le plan Nutrition, le batch d'instructions,
+l'analyse corporelle et l'analyse de progression photo l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md). La suggestion de surcharge
 utilise aussi cette frontière tout en conservant son écriture legacy.
 
@@ -64,11 +65,11 @@ semi-structurées.
 |---|---|---|
 | `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | adaptateur commun |
 | `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour les trois flux |
-| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training, Nutrition et analyse corporelle; HTTP direct ailleurs |
+| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun sauf diagnostic hebdomadaire encore HTTP direct |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les douze points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les trois autres flux conservent leurs littéraux historiques.
+Les treize points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les deux flux diagnostic restants partagent leur littéral historique.
 
 La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
 features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
@@ -125,7 +126,7 @@ la mutation échoue.
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
 | Analyse corporelle | `POST /api/analyze-body`; contrôleur Progression | Système d'analyse; trois URL de photos, poids et taille; images téléchargées en parallèle puis ordonnées face/dos/profil | Outil forcé `body_analysis_output` via `AiProvider`, input validé par `bodyAnalysisOutputSchema`; aucun objet synthétique après erreur | Session, limite IP 5/min, quota 5/h et 6/30 jours; retry 429 consommateur inchangé; signal propagé, tokens/coût suivis, aucune donnée corporelle journalisée; persistance cliente après succès uniquement |
-| Analyse de photos | `POST /api/analyze-progress-photo`; onboarding et Progression | Deux branches : évaluation trois vues ou comparaison simple; photos téléchargées, contexte et mesures éventuels | Texte libre dans les deux branches, sans schéma; réponse `{ analysis }` | Session, limites IP/IA et quota global; aucune reprise serveur; URL et extraits d'erreur journalisés; téléchargement d'URL non borné à une origine de stockage explicite |
+| Analyse de photos | `POST /api/analyze-progress-photo`; onboarding et Progression | Trois branches : évaluation trois vues, analyse simple ou comparaison; photos téléchargées, contexte et mesures éventuels | Texte libre via `AiProvider`, borné par `aiFreeTextSchema`; réponse `{ analysis }`; aucune analyse synthétique après échec | Session, limite IP 3/min, quota 10/h et 6/30 jours; signal propagé, erreurs expurgées; téléchargement d'URL non borné à une origine de stockage explicite |
 | Diagnostic hebdomadaire manuel | `POST /api/weekly-diagnostic`; `HomeTab` | Système et prompt assemblant entraînement, nutrition, poids, bien-être, objectifs et profil lus côté serveur | Outil forcé `weekly_diagnostic_output`; score, points forts/alerte, ajustements, objectif et `raisonnement`; absence de validation Zod; écrit diagnostic et prochaine date | Session, limite IP; pas de quota IA commun visible dans la route; persistance multi-étapes et push en best effort. Le raisonnement fournisseur est persisté |
 | Diagnostic hebdomadaire cron | `POST /api/weekly-diagnostic/cron`; planificateur serveur | Même générateur que le flux manuel | Même outil et mêmes écritures; résultat par utilisateur partiel | `CRON_SECRET` et service role; logs contenant préfixes d'identifiants et erreurs; aucun retry/timeout fournisseur |
 
@@ -149,8 +150,8 @@ la mutation échoue.
 Les trois frontières à outil forcé transmettent un JSON Schema puis valident la
 sortie avec les schémas Zod communs. Les huit sorties JSON-dans-texte passent
 par le parsing et les schémas communs. Les deux flux texte libre restent
-distincts; la progression photo ne borne pas encore son texte dans sa route
-historique.
+distincts et bornés; la progression photo valide désormais sa sortie avant de
+répondre.
 
 ### Texte libre et SSE
 
@@ -172,7 +173,7 @@ historique.
 | Quota global | Programme custom, plan Nutrition, analyse corporelle et analyse de progression |
 | Timeout fournisseur | Aucun timer réseau commun activé; l'adaptateur commun classe annulation et `TimeoutError`, et les routes migrées propagent leur signal sans inventer d'échéance |
 | Retry fournisseur | Aucun retry serveur commun; analyse corporelle possède un retry 429 côté client |
-| Fallback | Registre commun 15/15; quatre partials historiques. La progression photo conserve encore deux textes génériques silencieux dans son runtime historique |
+| Fallback | Registre commun 15/15; quatre partials historiques. La progression photo applique désormais sa policy `no_fallback`; seul le repli explicite comparaison → analyse simple sur image antérieure indisponible est préservé |
 
 L'usage est souvent enregistré avant la réussite fournisseur. Les statuts 429,
 500 et les sorties invalides ne sont pas mappés uniformément.
@@ -198,11 +199,11 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent surtout les douze flux migrés, la génération de plan
+- Les tests dédiés couvrent surtout les treize flux migrés, la génération de plan
   Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les trois
   transports historiques manquent encore de contrats de route complets.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant possède trois expressions HTTP runtime et
+  chemins `fetch`; le code courant possède une expression HTTP runtime et
   aucun appel SDK runtime hors adaptateur commun. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
@@ -210,11 +211,11 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Trois flux restent hors du provider commun, tous sur les transports HTTP directs historiques.
-2. Les littéraux fournisseur subsistent dans ces flux; le script opérationnel a déjà
+1. Deux flux diagnostic restent hors du provider commun sur un transport HTTP direct partagé.
+2. Le littéral fournisseur subsiste dans ce transport; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
-3. Les sorties structurées utilisent les schémas communs, mais le texte libre
-   de progression photo accepte encore un contenu absent comme succès générique.
+3. Les sorties structurées et textes libres runtime migrés utilisent les
+   schémas communs; le diagnostic doit encore conserver cette garantie pendant sa migration.
 4. Timeout, retry, quota, usage et mapping d'erreur ne sont pas uniformes.
 5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent
    entrer dans les logs ou réponses.
