@@ -9533,3 +9533,30 @@ sans changer le prompt ni l'autorité.
 Auditer la clôture de la Phase 7 contre sa définition de terminé, les quinze
 flux, les scans de confidentialité et les validations complètes, sans migration
 fonctionnelle supplémentaire.
+
+## Entrée — 2026-07-22 — Audit final Phase 7 non concluant
+
+- Audit documentaire des 15 points d'entrée : 15/15 via `AiProvider`, zéro
+  transport Anthropic runtime historique, 15 features usage, 15 goldens et 15
+  policies fallback. Les trois modèles runtime passent par le registre.
+- Les onze sorties structurées passent par parsing et schémas communs; les deux
+  textes libres sont bornés. Les migrations restent couvertes par leurs
+  empreintes golden et aucun changement de prompt n'a été effectué ici.
+- L'observabilité commune couvre les 15 features : résultat, durée, modèle réel
+  et tokens/coût lorsqu'ils sont disponibles; absence et zéro restent distincts.
+- La clôture est refusée : Chat journalise encore des objets d'erreur Supabase,
+  `training-regen` journalise une erreur de lecture brute et retourne des
+  `user_id`/messages d'exception, et `loadExerciseCatalog` journalise des
+  messages bruts. Le cron Training ne propage pas non plus `Request.signal` à
+  `generateProgram`.
+- Validations : 39 fichiers IA ciblés / 422 tests verts; suite complète 192
+  fichiers / 1 694 tests verts + 3 `todo`; TypeScript vert; RPC/RLS usage IA et
+  concurrence verts. ESLint ciblé conserve 6 erreurs historiques dans les
+  fichiers Training concernés.
+- Aucun fichier applicatif, test, E2E, migration, RLS ou type Supabase n'a été
+  modifié. Phase 8 reste inactive et sa baseline décochée.
+
+### Prochaine action unique
+
+Expurger les derniers logs/erreurs IA bruts et propager l'annulation dans
+`training-regen`, puis rejouer l'audit de clôture.

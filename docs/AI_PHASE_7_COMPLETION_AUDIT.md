@@ -1,15 +1,17 @@
 # Audit de clôture de la Phase 7 — Plateforme IA
 
-> État préparatoire mis à jour après la migration du transport partagé des
-> diagnostics hebdomadaires, le 22 juillet 2026. La clôture reste soumise à un
-> audit final séparé de toute migration.
+> Audit final documentaire exécuté le 22 juillet 2026, sans modification du
+> runtime. Les preuves positives et les écarts sont distingués explicitement.
 
 ## Verdict
 
-**Phase 7 en attente d'audit final.** Les quinze points d'entrée utilisent
-désormais `AiProvider` et aucun transport Anthropic runtime historique ne
-subsiste. Cette migration ne clôt pas automatiquement la phase : l'audit final
-doit vérifier tous les critères de terminé. La Phase 8 ne doit pas être activée.
+**Phase 7 non clôturée.** Les quinze points d'entrée utilisent `AiProvider`,
+les sorties structurées sont validées et l'usage commun expose résultat,
+durée, modèle et tokens/coût lorsqu'ils sont calculables. L'audit trouve
+cependant une conformité runtime de confidentialité et d'annulation encore
+partielle : des chemins IA journalisent ou retournent des erreurs brutes et le
+cron `training-regen` ne propage pas `Request.signal` au provider. La Phase 8
+reste inactive et entièrement décochée.
 
 ## Compteurs reproductibles
 
@@ -78,21 +80,21 @@ La roadmap exige textuellement : tous les appels via provider commun; toutes les
 
 | Critère | État | Preuve et risque | Action minimale |
 |---|---|---|---|
-| Tous appels via provider | **met à réauditer** | 15/15; 0 transport direct | confirmer par audit final |
+| Tous appels via provider | **met** | 15/15; 0 transport direct; un seul site HTTP dans l'adaptateur | conserver la garde statique |
 | Toutes sorties structurées validées | **met** | parseurs et Zod communs sur JSON/tool | préserver pendant migration |
 | Texte libre borné/valide | **met** | Athena et progression photo valident leur texte | préserver fail-closed |
 | Durée/résultat observables | **met** | 15 passent par usage/finalisation | préserver la frontière |
-| Modèle/tokens/coût | **met à réauditer** | modèle réel/tokens propagés; absence distincte de zéro | confirmer les quinze flux |
-| Modèles centralisés | **met à réauditer** | diagnostics résolus par `anthropic-opus-4.8` | scanner les runtimes |
+| Modèle/tokens/coût | **met** | les 15 features passent par réservation/finalisation; modèle réel et tokens optionnels alimentent un coût `complete`, `partial` ou `unavailable` | préserver inconnu distinct de zéro |
+| Modèles centralisés | **met** | trois modèles runtime résolus par le registre; aucun littéral fournisseur dans les routes | script hors runtime exclu |
 | Prompts séparés | **met** | 15 builders purs et goldens | conserver les empreintes |
 | Parsing centralisé | **met** pour structuré | helpers communs | ajouter texte libre au moment de sa migration |
 | Quotas/usages atomiques | **met** | 15 `AI_FEATURES`, RPC/service commun | ne pas modifier les quotas |
 | Goldens / fallbacks | **met** | 15/15 et 15/15 | garder les gardes exhaustives |
-| Erreurs expurgées | **met à réauditer** | diagnostic mappe provider, SQL et push sans détail brut | audit global des quinze flux |
-| Logs sans données sensibles | **partial à réauditer** | diagnostic nettoyé; dette globale à rescanner | audit final dédié |
-| Annulation/timeout/retry communs | **partial à réauditer** | diagnostics propagent le signal; aucun nouveau timer/retry | vérifier chaque flux |
-| Tests déterministes historiques | **met à réauditer** | contrats route/générateur/cron ajoutés | exécuter matrice finale |
-| Couverture cron | **met à réauditer** | lots, partial, échec total et annulation couverts | audit final |
+| Erreurs expurgées | **partial** | `training-regen` remet `e.message` et des `user_id` dans `details`; Chat journalise les objets d'erreur d'insertion | remplacer par codes bornés sans contenu brut |
+| Logs sans données sensibles | **partial** | `training-regen` journalise `usersErr`; `loadExerciseCatalog` journalise `error.message`; Chat journalise les erreurs Supabase brutes | expurger les chemins recensés |
+| Annulation/timeout/retry communs | **partial** | 14 points propagent leur signal directement ou via le générateur partagé; `training-regen` appelle `generateProgram` sans cancellation | propager le signal et arrêter les lots suivants |
+| Tests déterministes historiques | **met** | 39 fichiers ciblés / 422 tests et suite 192 fichiers / 1 694 tests + 3 todo | conserver les goldens |
+| Couverture cron | **partial** | diagnostic cron couvre annulation; `training-regen` n'a pas le contrat équivalent | ajouter le test de signal/cleanup |
 | Migration sans prompt mêlé | **met** | builders et goldens | comparaison exacte |
 | Critère Phase 8 | **not_applicable** | baseline performance décochée | ne pas activer Phase 8 |
 
@@ -103,11 +105,28 @@ La roadmap exige textuellement : tous les appels via provider commun; toutes les
 | 1 | `weekly-diagnostic` | tool + écritures/push | migré | no-fallback, session, signal HTTP | générateur partagé |
 | 2 | `weekly-diagnostic-cron` | même tool + batch | migré | lots de 5, explicit_partial, signal serveur | générateur partagé |
 
+## Validation exécutée
+
+- contrats IA ciblés : 39 fichiers, 422 tests verts ;
+- suite complète : 192 fichiers, 1 694 tests verts, 3 `todo` ;
+- `npx tsc --noEmit` : vert ;
+- matrice RPC/RLS usage IA : verte ; concurrence : exactement une réservation
+  autorisée à la dernière place ;
+- ESLint Phase 7 : 6 erreurs historiques, toutes dans le périmètre Training
+  (`training-regen`, `generate-program`, `load-exercise-catalog`) ;
+- scans : 15 features / 15 goldens / 15 policies, 13 routes créent directement
+  l'adaptateur et deux diagnostics passent par le générateur partagé ; zéro
+  client SDK ou HTTP Anthropic runtime hors adaptateur.
+
 ## Décision roadmap
 
 Les cases existantes restent inchangées : elles attestent des tranches
-réalisées, pas de la définition globale. La Phase 7 reste active jusqu'à son
-audit final. La Phase 8 et sa baseline restent décochées.
+réalisées, pas la conformité globale. La Phase 7 reste active. Son **unique
+blocage** est la conformité runtime sécurité/résilience incomplète, matérialisée
+par les erreurs/logs bruts et l'annulation absente de `training-regen`. La
+prochaine tranche unique doit corriger et tester ces écarts sans modifier les
+prompts, modèles, quotas ou contrats publics légitimes. La Phase 8 et sa
+baseline restent décochées.
 
 `analyze-progress-photo` conserve Opus 4.8, ses builders, `max_tokens=2048`
 pour l'évaluation et `1024` pour les branches simple/comparaison, ainsi que
@@ -123,6 +142,5 @@ erreur HTTP expurgée en contenu IA envoyé au plan Nutrition. Signal HTTP,
 modèle réel et tokens sont propagés; images, URL, profil, prompt et sortie ne
 sont ni journalisés ni placés dans les erreurs publiques.
 
-Prochaine tâche unique : **auditer la clôture de la Phase 7 contre sa définition
-de terminé, les quinze flux, les scans de confidentialité et les validations
-complètes, sans migration fonctionnelle supplémentaire**.
+Prochaine tâche unique : **expurger les derniers logs/erreurs IA bruts et
+propager l'annulation dans `training-regen`, puis rejouer l'audit de clôture**.

@@ -19,7 +19,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; douze points d'entrée utilisent désormais `AiProvider`.
+restent inchangés; les quinze points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -45,7 +45,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 4 sites | 1 adaptateur HTTP partagé par 12 points d'entrée et 3 autres transports HTTP |
+| Invocations Anthropic runtime | 1 site | adaptateur HTTP commun partagé par les 15 points d'entrée |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -138,8 +138,8 @@ la mutation échoue.
   sont les instructions d'exercice et le programme coach legacy, dont toutes
   les instructions sont placées dans le message utilisateur.
 - Tous les appels construisent au moins un message utilisateur dynamique.
-- Les prompts sont inline dans les routes ou services, sauf les constantes de
-  connaissance coach/Training et les deux services déjà extraits.
+- Les prompts des quinze points d'entrée sont construits par les builders purs
+  de `lib/ai/prompts`; routes et transports n'en assemblent plus.
 - Les données envoyées couvrent profil, objectifs, santé déclarative,
   nutrition, historique d'entraînement, mesures, photos et conversations. Il
   n'existe pas de politique commune de minimisation ou de redaction avant
