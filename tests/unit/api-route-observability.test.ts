@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { apiFailureResponse } from '../../lib/api/response'
-import { createApiRouteObservability } from '../../lib/api/route-observability'
+import { createApiRouteObservability, writeApiRouteEvent } from '../../lib/api/route-observability'
 
 const request = (requestId?: string) => new Request('http://localhost/api/test?token=hidden', {
   headers: requestId ? { 'x-request-id': requestId } : undefined,
@@ -10,6 +10,28 @@ const request = (requestId?: string) => new Request('http://localhost/api/test?t
 const descriptor = { event: 'TEST_REQUEST', domain: 'test', operation: 'GET /api/test' }
 
 describe('API route observability', () => {
+  it('writes bounded internal events without serializing raw errors or sensitive context', () => {
+    const write = vi.fn()
+    writeApiRouteEvent(
+      { event: 'AI_CHAT_PERSISTENCE', domain: 'ai', operation: 'POST /api/chat-ai' },
+      {
+        outcome: 'failed',
+        reason: 'ASSISTANT_MESSAGE_PERSISTENCE_FAILED',
+        context: { prompt: 'secret prompt', error: 'postgres detail', attempt: 1 },
+      },
+      { requestId: 'request_ABC-1234', status: 500, durationMs: 2, timestamp: '2026-07-22T00:00:00.000Z', write },
+    )
+
+    expect(write).toHaveBeenCalledTimes(1)
+    const serialized = write.mock.calls[0]?.[1] as string
+    expect(JSON.parse(serialized)).toMatchObject({
+      event: 'AI_CHAT_PERSISTENCE', outcome: 'failed',
+      reason: 'ASSISTANT_MESSAGE_PERSISTENCE_FAILED', request_id: 'request_ABC-1234',
+      context: { attempt: 1 },
+    })
+    expect(serialized).not.toContain('secret prompt')
+    expect(serialized).not.toContain('postgres detail')
+  })
   it('reuses a valid incoming ID in the response and structured log', () => {
     const writes: string[] = []
     const observe = createApiRouteObservability(request('request_ABC-1234'), descriptor, {

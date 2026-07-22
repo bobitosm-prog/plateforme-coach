@@ -495,9 +495,10 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 **Durée cible : 5 à 8 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 7 active, audit final non concluant malgré 13 tâches de
-checklist sur 13 — les 15 points d'entrée utilisent `AiProvider`, mais la
-conformité runtime de confidentialité et d'annulation reste partielle. Voir
+**Statut : Phase 7 terminée — 13 tâches sur 13 et définition de terminé
+validée; les 15 points d'entrée utilisent `AiProvider`, les sorties sont
+validées, l'usage est observable et la conformité runtime sécurité/résilience
+est verte. Voir
 [`docs/AI_PHASE_7_COMPLETION_AUDIT.md`](docs/AI_PHASE_7_COMPLETION_AUDIT.md).**
 
 ### Pourquoi
@@ -535,6 +536,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
+
+**Statut : Phase 8 active — prochaine tranche : capturer la baseline bundle,
+LCP, INP, CLS et requêtes; aucune tâche Phase 8 n'est encore cochée.**
 
 ### Pourquoi
 

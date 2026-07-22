@@ -9560,3 +9560,32 @@ fonctionnelle supplémentaire.
 
 Expurger les derniers logs/erreurs IA bruts et propager l'annulation dans
 `training-regen`, puis rejouer l'audit de clôture.
+
+## Entrée — 2026-07-22 — Clôture de la Phase 7 Plateforme IA
+
+- Chat remplace ses deux logs d'erreurs Supabase brutes par le writer
+  d'observabilité existant : événement `AI_CHAT_PERSISTENCE`, raison stable,
+  correlation ID et aucun message, prompt, historique ou contenu assistant.
+- Le catalogue Training remplace ses deux `error.message` par des événements
+  bornés. `training-regen` n'expose plus `usersErr`, message d'exception ou
+  identifiant utilisateur dans ses détails publics; quatre codes stables
+  distinguent indisponibilité usage, annulation, génération et persistance.
+- Le cron conserve sa concurrence de trois et l'ordre historique des écritures.
+  `Request.signal` traverse le batch, `generateProgram` et l'adaptateur
+  Anthropic. Une annulation bloque les items non démarrés et le lot suivant,
+  finalise `cancelled`, ne persiste pas le résultat annulé et conserve les
+  succès déjà terminés.
+- Les gardes couvrent les quinze entrées, interdisent les objets d'erreur bruts
+  et imposent le signal au cron Training. Les tests de route couvrent aussi
+  annulation avant départ, pendant lot, succès antérieurs, principal serveur et
+  erreurs publiques expurgées.
+- Validations : 43 fichiers Phase 7 / 443 tests verts; suite complète 195
+  fichiers / 1 711 tests verts + 3 `todo`; TypeScript et ESLint ciblé verts.
+  Aucun prompt, modèle, quota, persistance, migration, RLS, type Supabase ou E2E
+  n'est modifié.
+- L'audit final est entièrement `met`/`not_applicable`. Phase 7 est terminée.
+  Phase 8 devient active; sa première tâche reste décochée.
+
+### Prochaine action unique
+
+Capturer la baseline bundle, LCP, INP, CLS et requêtes de référence.

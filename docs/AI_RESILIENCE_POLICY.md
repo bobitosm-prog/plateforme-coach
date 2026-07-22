@@ -167,8 +167,8 @@ la première terminaison; les annulations répétées sont idempotentes. Une
 Promise fournisseur tardive ne peut plus modifier le résultat.
 
 Le noyau ne peut pas interrompre physiquement un transport qui ignore le
-signal. Cette responsabilité restera obligatoire dans l'adaptateur fournisseur
-commun.
+signal. L'adaptateur Anthropic commun respecte cette responsabilité; les quinze
+points d'entrée runtime transmettent désormais leur signal HTTP ou serveur.
 
 ## Confidentialité et erreurs finales
 
@@ -192,14 +192,16 @@ stabilité du correlation ID, changement de modèle, expurgation et nettoyage.
 Les gardes statiques interdisent imports fournisseur/framework/base/app,
 transport réseau, API navigateur, secret, réponse brute et fallback de modèle.
 
-## Limites et migration future
+## Limites conservées après migration
 
-- Aucun flux runtime n'est migré et aucune politique par fonctionnalité n'est
-  encore choisie.
-- Aucun adaptateur Anthropic commun n'existe.
-- Aucune clé d'idempotence IA n'est créée par le noyau.
-- Le registre des modèles et coûts reste la prochaine étape de la roadmap.
-- Les golden fixtures, schémas métier et observabilité d'usage restent à venir.
+- Les quinze flux runtime utilisent l'adaptateur Anthropic commun et leurs
+  politiques fonctionnelles restent explicites.
+- Aucun timeout produit ou retry automatique n'est activé : l'absence est
+  volontaire et documentée, sans timer caché.
+- Aucune clé d'idempotence métier IA n'est créée par le noyau.
+- Les deux SSE restent applicatifs et n'utilisent pas `AiProvider.stream()`.
+- Le registre des modèles/coûts, les goldens, schémas et usages communs sont
+  actifs; leur contrat reste couvert par les tests Phase 7.
 
 ## Références
 

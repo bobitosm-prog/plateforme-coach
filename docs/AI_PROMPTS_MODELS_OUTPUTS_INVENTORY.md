@@ -108,7 +108,7 @@ l'adaptateur commun tout en gardant leurs contrats distincts. Voir le
 | Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON via `AiProvider`, validé par `exerciseInstructionsOutputSchema`; résultat batch partiel, écritures séquentielles non transactionnelles | Session, e-mail admin exact, limite IP 2/min, une opération d'usage; service role après autorisation, tokens/coûts agrégés, annulation propagée et erreurs expurgées |
 | Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | JSON texte via `AiProvider`, validé par `legacyTrainingProgramOutputSchema`, puis sept jours legacy normalisés | Session, limite IP et usage inchangés; erreurs fournisseur expurgées, annulation reliée au signal HTTP |
 | Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program` via `AiProvider`, validé par `modernTrainingProgramOutputSchema`, puis SSE `progress`/`done` inchangé | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; annulation finalisée séparément |
-| Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil validé; écritures par client et agrégat succès/erreur partiel conservés | `CRON_SECRET` et service role; concurrence bornée à trois; ordre désactivation/insertion/prochaine date inchangé; pas de retry fournisseur |
+| Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil validé; écritures par client et agrégat succès/erreur partiel conservés | `CRON_SECRET` et service role; concurrence bornée à trois; signal propagé, ordre désactivation/insertion/prochaine date inchangé; pas de retry fournisseur |
 | Adaptation de séance | `POST /api/adapt-workout`; aucun consommateur actif trouvé | Système `PROGRAM_GENERATION_PROMPT`; exercices, durée et type de séance reçus | JSON texte via `AiProvider`, tableau validé par parsing commun et `adaptedWorkoutOutputSchema` | Session, limite IP et usage inchangés; route orpheline, annulation propagée et erreurs expurgées |
 | Surcharge progressive | `POST /api/suggest-overload`; action dashboard client | Système extrait; exercice, charge, répétitions et quatre historiques lus côté serveur | Texte via `AiProvider`, JSON validé par parsing commun et `overloadSuggestionOutputSchema`, puis insertion | Session, limite IP 10/min, garde invité; usage sans quota DB, service role après contrôles, erreurs fournisseur/SQL expurgées |
 
@@ -180,12 +180,11 @@ L'usage est souvent enregistré avant la réussite fournisseur. Les statuts 429,
 
 ## Journalisation et confidentialité
 
-Les frontières les plus prudentes sont le service Nutrition et l'adaptateur
-commun. Ailleurs, plusieurs routes journalisent des corps fournisseur,
-des textes invalides, des URL de photos, des noms d'exercice, des messages
-d'exception ou des détails SQL. Certaines réponses HTTP/SSE retransmettent un
-message brut. Aucun token ou clé n'est volontairement loggé, mais les contenus
-peuvent révéler prompt, données personnelles ou détails internes.
+Le scan final des quinze points d'entrée ne trouve plus de corps fournisseur,
+texte invalide, URL de photo, nom d'exercice, message d'exception ou détail SQL
+dans les logs. Chat et Training utilisent des événements structurés, raisons
+stables, correlation IDs et métadonnées primitives bornées. Les réponses
+publiques d'échec restent génériques ou utilisent des codes legacy bornés.
 
 Le diagnostic hebdomadaire persiste un champ `raisonnement` produit par le
 modèle. Ce champ doit être considéré comme une sortie métier sensible et non
@@ -212,14 +211,14 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Les quinze flux runtime passent par le provider commun; l'audit final doit
-   encore confirmer la définition globale de terminé.
+1. Les quinze flux runtime passent par le provider commun; l'audit final du 22
+   juillet 2026 valide la définition globale de terminé.
 2. Le script opérationnel hors runtime utilise encore une autre version d'Opus.
 3. Les sorties structurées et textes libres runtime utilisent les schémas communs.
 4. Timeout, retry, quota, usage et mapping d'erreur restent volontairement
    différents selon les contrats historiques.
-5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent encore
-   entrer dans les logs ou réponses.
+5. Les logs runtime IA sont expurgés; toute nouvelle route doit conserver les
+   gardes statiques sur erreurs brutes et données sensibles.
 6. La recette prend une décision d'autorité à partir de données navigateur;
    surcharge et instruction utilisent encore un service role localement, mais
    leur transport fournisseur passe désormais par la frontière commune.

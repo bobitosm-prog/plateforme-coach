@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { buildProgramParams } from '@/lib/training/build-program-params'
-import { generateProgram } from '@/lib/training/generate-program'
+import { generateProgram, TrainingProgramGenerationError } from '@/lib/training/generate-program'
 import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
 import { aiUsageCorrelationId, startAiUsage } from '@/lib/ai/usage'
 import { resolveAiModel } from '@/lib/ai/models'
-import { createAnthropicProvider } from '@/lib/ai/providers/anthropic'
+import { abortSignalToAiCancellation, createAnthropicProvider } from '@/lib/ai/providers/anthropic'
 import { getAnthropicMessagesUrl } from '@/lib/anthropic/chat-transport'
+import { writeApiRouteEvent } from '@/lib/api/route-observability'
+import type { Profile } from '@/lib/profile-service'
+import { runTrainingRegenerationBatches } from '@/lib/training/regeneration-batch'
+
+const TRAINING_REGEN_LOG = { event: 'AI_TRAINING_REGEN', domain: 'ai', operation: 'POST /api/training-regen/cron' } as const
 
 // Vercel : Hobby clamp 60s, Pro 300s. La génération programme ~50s/user.
 // Capacité réelle : ~1 user/run sur Hobby (60s), ~5-6 users/run sur Pro (300s).
@@ -44,17 +49,15 @@ export async function POST(req: NextRequest) {
 
   // 4. FETCH USERS DUE (next_program_regen_at <= NOW, role client, onboarded)
   const nowIso = new Date().toISOString()
-  console.log(`[cron training-regen] Filtering users due (now=${nowIso})`)
-
   const { data: users, error: usersErr } = await supabaseAdmin
     .from('profiles')
-    .select('*')
+    .select('id,objective,onboarding_answers,training_location,home_equipment,gender')
     .eq('role', 'client')
     .eq('onboarding_completed', true)
     .lte('next_program_regen_at', nowIso)
 
   if (usersErr) {
-    console.error('[cron training-regen] Error fetching users:', usersErr)
+    writeApiRouteEvent(TRAINING_REGEN_LOG, { outcome: 'failed', reason: 'PROFILE_READ_FAILED' }, { requestId: operationId, status: 500 })
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 
@@ -62,35 +65,42 @@ export async function POST(req: NextRequest) {
   // Concurrency 3 : génération programme ~50s, compromis vitesse / rate limit.
   const CONCURRENCY = 3
   // Load exercise catalog once for all users
-  const catalog = await loadExerciseCatalog(supabaseAdmin)
+  const catalog = await loadExerciseCatalog(supabaseAdmin, operationId)
   const startTime = Date.now()
   const results = {
     total: users?.length || 0,
     success: 0,
     errors: 0,
-    details: [] as { user_id: string; status: string; error?: string }[],
+    details: [] as { status: 'success' | 'error'; error?: 'usage_unavailable' | 'request_cancelled' | 'generation_failed' | 'persistence_failed' }[],
   }
   const allUsers = users || []
   const next14j = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
-  for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
-    const batch = allUsers.slice(i, i + CONCURRENCY)
-    await Promise.all(batch.map(async (profile: any) => {
+  await runTrainingRegenerationBatches({
+    items: allUsers,
+    concurrency: CONCURRENCY,
+    signal: req.signal,
+    process: async profile => {
       const correlationId = `${operationId.slice(0, 80)}:${profile.id}`
       const usage = await startAiUsage({ client: supabaseAdmin, feature: 'training-regen', principal: { kind: 'server', id: 'cron.training-regen', subjectUserId: profile.id }, correlationId, logicalModel: model.model.logicalId })
       if (usage.status !== 'started') {
         results.errors++
-        results.details.push({ user_id: profile.id, status: 'error', error: 'Usage store unavailable' })
+        results.details.push({ status: 'error', error: 'usage_unavailable' })
         return
       }
+      let providerModel: string | undefined
+      let tokens: { inputTokens?: number; outputTokens?: number } | undefined
       try {
-        let providerModel: string | undefined
-        let tokens: { inputTokens?: number; outputTokens?: number } | undefined
-        const params = buildProgramParams(profile, {
+        const params = buildProgramParams(profile as Profile, {
           notes: 'Varie les exercices et la structure par rapport au programme precedent pour eviter la stagnation, tout en respectant le meme objectif et niveau.',
         })
-        const program = await generateProgram(params, { provider, correlationId }, catalog, metadata => { ({ providerModel, tokens } = metadata) })
-        if (!program) throw new Error('No program generated')
+        const program = await generateProgram(params, {
+          provider,
+          correlationId,
+          cancellation: abortSignalToAiCancellation(req.signal),
+        }, catalog, metadata => { ({ providerModel, tokens } = metadata) })
+        if (!program) throw new TrainingProgramGenerationError('invalid_output')
+        if (req.signal.aborted) throw new TrainingProgramGenerationError('cancelled')
 
         // Deactivate old + insert new
         await supabaseAdmin
@@ -118,23 +128,24 @@ export async function POST(req: NextRequest) {
 
         results.success++
         await usage.tracker.finalize({ outcome: 'succeeded', reasonCode: 'completed', providerModel, tokens })
-        results.details.push({ user_id: profile.id, status: 'success' })
-      } catch (e: any) {
-        await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'generation_failed' })
+        results.details.push({ status: 'success' })
+      } catch (error: unknown) {
+        const cancelled = error instanceof TrainingProgramGenerationError && error.code === 'cancelled'
+        const generationFailed = error instanceof TrainingProgramGenerationError
+        const reasonCode = cancelled ? 'request_cancelled' : generationFailed ? 'generation_failed' : 'persistence_failed'
+        await usage.tracker.finalize({ outcome: cancelled ? 'cancelled' : 'failed', reasonCode, providerModel, tokens })
         results.errors++
-        results.details.push({ user_id: profile.id, status: 'error', error: e.message })
+        results.details.push({ status: 'error', error: reasonCode })
       }
-    }))
-  }
+    },
+  })
 
   const durationMs = Date.now() - startTime
-  console.log('[cron training-regen]', JSON.stringify({
-    total: results.total,
-    success: results.success,
-    errors: results.errors,
-    duration_ms: durationMs,
-    concurrency: CONCURRENCY,
-  }))
+  writeApiRouteEvent(TRAINING_REGEN_LOG, {
+    outcome: results.errors > 0 ? 'failed' : 'success',
+    reason: req.signal.aborted ? 'REQUEST_CANCELLED' : results.errors > 0 ? 'BATCH_PARTIAL' : 'COMPLETED',
+    context: { total: results.total, success: results.success, errors: results.errors, concurrency: CONCURRENCY },
+  }, { requestId: operationId, status: 200, durationMs })
   return NextResponse.json(results)
 }
 

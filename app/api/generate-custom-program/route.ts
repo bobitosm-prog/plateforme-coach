@@ -6,7 +6,7 @@ import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { resolveAiModel } from '../../../lib/ai/models'
 import { abortSignalToAiCancellation, createAnthropicProvider } from '../../../lib/ai/providers/anthropic'
 import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
-import { generateProgram, TrainingProgramGenerationError } from '../../../lib/training/generate-program'
+import { generateProgram, TrainingProgramGenerationError, trainingProgramGenerationMessage } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 
 export const maxDuration = 300
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           }
         }, 5000)
         try {
-          const catalog = await loadExerciseCatalog(supabaseAuth)
+          const catalog = await loadExerciseCatalog(supabaseAuth, correlationId)
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
           }, { provider, correlationId, cancellation: abortSignalToAiCancellation(req.signal) }, catalog, metadata => { ({ providerModel, tokens } = metadata) })
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
           clearInterval(heartbeat)
           const cancelled = error instanceof TrainingProgramGenerationError && error.code === 'cancelled'
           await usage.tracker.finalize({ outcome: cancelled ? 'cancelled' : 'failed', reasonCode: cancelled ? 'request_cancelled' : 'provider_error', providerModel, tokens })
-          const message = error instanceof TrainingProgramGenerationError ? error.message : 'Génération IA impossible'
+          const message = error instanceof TrainingProgramGenerationError ? trainingProgramGenerationMessage(error.code) : 'Génération IA impossible'
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: message })}\n\n`))
           controller.close()
         }

@@ -7,6 +7,9 @@ import { resolveAiModel } from '../../../lib/ai/models'
 import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToTextRequest } from '../../../lib/ai/providers/anthropic'
 import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 import { buildAthenaInvocation } from '../../../lib/ai/prompts'
+import { writeApiRouteEvent } from '../../../lib/api/route-observability'
+
+const CHAT_PERSISTENCE_LOG = { event: 'AI_CHAT_PERSISTENCE', domain: 'ai', operation: 'POST /api/chat-ai' } as const
 
 type ChatProfile = {
   full_name?: string | null; current_weight?: number | null; target_weight?: number | null; height?: number | null
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
       .insert({ user_id: user.id, role: 'user', content: trimmedMessage })
 
     if (insertUserErr) {
-      console.error('[chat-ai] insert user message failed:', insertUserErr)
+      writeApiRouteEvent(CHAT_PERSISTENCE_LOG, { outcome: 'failed', reason: 'USER_MESSAGE_PERSISTENCE_FAILED' }, { requestId: correlationId, status: 500 })
       return NextResponse.json({ error: 'Erreur sauvegarde message' }, { status: 500 })
     }
 
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
       .insert({ user_id: user.id, role: 'assistant', content: aiMessage })
 
     if (insertAiErr) {
-      console.error('[chat-ai] insert assistant message failed:', insertAiErr)
+      writeApiRouteEvent(CHAT_PERSISTENCE_LOG, { outcome: 'failed', reason: 'ASSISTANT_MESSAGE_PERSISTENCE_FAILED' }, { requestId: correlationId, status: 500 })
       // Don't fail the request — user still gets the response
     }
 

@@ -5,13 +5,12 @@
 
 ## Verdict
 
-**Phase 7 non clôturée.** Les quinze points d'entrée utilisent `AiProvider`,
-les sorties structurées sont validées et l'usage commun expose résultat,
-durée, modèle et tokens/coût lorsqu'ils sont calculables. L'audit trouve
-cependant une conformité runtime de confidentialité et d'annulation encore
-partielle : des chemins IA journalisent ou retournent des erreurs brutes et le
-cron `training-regen` ne propage pas `Request.signal` au provider. La Phase 8
-reste inactive et entièrement décochée.
+**Phase 7 clôturée.** Les quinze points d'entrée utilisent `AiProvider`, les
+sorties structurées sont validées et l'usage commun expose résultat, durée,
+modèle et tokens/coût lorsqu'ils sont calculables. Les derniers logs et erreurs
+bruts sont expurgés; chaque route HTTP IA transmet son signal d'annulation, y
+compris `training-regen`. Tous les critères sont `met` ou `not_applicable`.
+La Phase 8 devient active, sans cocher sa baseline.
 
 ## Compteurs reproductibles
 
@@ -90,43 +89,48 @@ La roadmap exige textuellement : tous les appels via provider commun; toutes les
 | Parsing centralisé | **met** pour structuré | helpers communs | ajouter texte libre au moment de sa migration |
 | Quotas/usages atomiques | **met** | 15 `AI_FEATURES`, RPC/service commun | ne pas modifier les quotas |
 | Goldens / fallbacks | **met** | 15/15 et 15/15 | garder les gardes exhaustives |
-| Erreurs expurgées | **partial** | `training-regen` remet `e.message` et des `user_id` dans `details`; Chat journalise les objets d'erreur d'insertion | remplacer par codes bornés sans contenu brut |
-| Logs sans données sensibles | **partial** | `training-regen` journalise `usersErr`; `loadExerciseCatalog` journalise `error.message`; Chat journalise les erreurs Supabase brutes | expurger les chemins recensés |
-| Annulation/timeout/retry communs | **partial** | 14 points propagent leur signal directement ou via le générateur partagé; `training-regen` appelle `generateProgram` sans cancellation | propager le signal et arrêter les lots suivants |
-| Tests déterministes historiques | **met** | 39 fichiers ciblés / 422 tests et suite 192 fichiers / 1 694 tests + 3 todo | conserver les goldens |
-| Couverture cron | **partial** | diagnostic cron couvre annulation; `training-regen` n'a pas le contrat équivalent | ajouter le test de signal/cleanup |
+| Erreurs expurgées | **met** | Chat et Training n'émettent que des codes de raison bornés; aucun objet Supabase/provider ou `error.message` brut | garde statique sur les 15 entrées |
+| Logs sans données sensibles | **met** | writer commun filtre clés/valeurs sensibles; catalogue et crons utilisent événements/résultats/codes et métriques primitives | préserver l'inventaire statique |
+| Annulation/timeout/retry communs | **met** | les 15 points propagent le signal; `training-regen` arrête les travaux non démarrés et finalise `cancelled`; absence de timeout/retry produit explicitement conservée | aucun retry ou timer caché |
+| Tests déterministes historiques | **met** | 43 fichiers ciblés / 443 tests et suite 195 fichiers / 1 711 tests + 3 todo | conserver les goldens |
+| Couverture cron | **met** | diagnostics et Training couvrent annulation avant démarrage, pendant lot, succès antérieurs et principal serveur | préserver concurrence 5/3 |
 | Migration sans prompt mêlé | **met** | builders et goldens | comparaison exacte |
 | Critère Phase 8 | **not_applicable** | baseline performance décochée | ne pas activer Phase 8 |
 
-## Migration diagnostic réalisée
+## Annulation et confidentialité finales
 
-| Ordre | Feature(s) | Forme | Complexité / risque | Test manquant | Partage possible |
-|---:|---|---|---|---|---|
-| 1 | `weekly-diagnostic` | tool + écritures/push | migré | no-fallback, session, signal HTTP | générateur partagé |
-| 2 | `weekly-diagnostic-cron` | même tool + batch | migré | lots de 5, explicit_partial, signal serveur | générateur partagé |
+- Chat remplace deux logs d'objets Supabase par `AI_CHAT_PERSISTENCE`, une
+  raison stable et la correlation ID; la persistance assistant reste best
+  effort et les corps HTTP restent inchangés.
+- Le catalogue Training ne journalise plus `error.message`; ses deux chemins
+  d'échec utilisent `AI_TRAINING_CATALOG` et des raisons bornées.
+- `training-regen` ne retourne plus d'identifiant utilisateur ni de message
+  d'exception. Ses erreurs publiques de détail sont `usage_unavailable`,
+  `request_cancelled`, `generation_failed` ou `persistence_failed`.
+- Le cron conserve des lots de trois. Le signal traverse le batch, puis
+  `abortSignalToAiCancellation`, jusqu'au provider. Un lot suivant ou un item
+  pas encore démarré ne part pas après annulation; les appels du lot courant
+  reçoivent le signal et les succès déjà persistés restent acquis.
 
 ## Validation exécutée
 
-- contrats IA ciblés : 39 fichiers, 422 tests verts ;
-- suite complète : 192 fichiers, 1 694 tests verts, 3 `todo` ;
+- contrats IA ciblés : 43 fichiers, 443 tests verts ;
+- suite complète : 195 fichiers, 1 711 tests verts, 3 `todo` ;
 - `npx tsc --noEmit` : vert ;
 - matrice RPC/RLS usage IA : verte ; concurrence : exactement une réservation
   autorisée à la dernière place ;
-- ESLint Phase 7 : 6 erreurs historiques, toutes dans le périmètre Training
-  (`training-regen`, `generate-program`, `load-exercise-catalog`) ;
+- ESLint Phase 7 et nouveaux tests : vert; les six erreurs Training mesurées
+  lors du premier audit sont supprimées ;
 - scans : 15 features / 15 goldens / 15 policies, 13 routes créent directement
   l'adaptateur et deux diagnostics passent par le générateur partagé ; zéro
   client SDK ou HTTP Anthropic runtime hors adaptateur.
 
 ## Décision roadmap
 
-Les cases existantes restent inchangées : elles attestent des tranches
-réalisées, pas la conformité globale. La Phase 7 reste active. Son **unique
-blocage** est la conformité runtime sécurité/résilience incomplète, matérialisée
-par les erreurs/logs bruts et l'annulation absente de `training-regen`. La
-prochaine tranche unique doit corriger et tester ces écarts sans modifier les
-prompts, modèles, quotas ou contrats publics légitimes. La Phase 8 et sa
-baseline restent décochées.
+Les treize tâches et les quatre critères textuels sont satisfaits; les critères
+complémentaires de confidentialité, annulation, crons et déterminisme sont
+également verts. La Phase 7 est clôturée. La Phase 8 est activée, mais sa
+première tâche reste décochée jusqu'à la mesure effective de la baseline.
 
 `analyze-progress-photo` conserve Opus 4.8, ses builders, `max_tokens=2048`
 pour l'évaluation et `1024` pour les branches simple/comparaison, ainsi que
@@ -142,5 +146,5 @@ erreur HTTP expurgée en contenu IA envoyé au plan Nutrition. Signal HTTP,
 modèle réel et tokens sont propagés; images, URL, profil, prompt et sortie ne
 sont ni journalisés ni placés dans les erreurs publiques.
 
-Prochaine tâche unique : **expurger les derniers logs/erreurs IA bruts et
-propager l'annulation dans `training-regen`, puis rejouer l'audit de clôture**.
+Prochaine tâche unique : **capturer la baseline bundle, LCP, INP, CLS et
+requêtes de référence de la Phase 8**.

@@ -8,6 +8,7 @@ import { resolveAiModel } from '../ai/models'
 import type { AiCancellationSignal, AiErrorCode, AiProvider } from '../ai/provider'
 import { promptInvocationToToolRequest } from '../ai/providers/anthropic'
 import { createAiOutputValidator, modernTrainingProgramOutputSchema } from '../ai/schemas'
+import type { ModernTrainingProgramOutput } from '../ai/schemas'
 import type { AiRecordedTokens } from '../ai/usage/types'
 
 export interface GenerateProgramInput {
@@ -27,9 +28,15 @@ export interface GenerateProgramRuntime {
   cancellation?: AiCancellationSignal
 }
 
+export function trainingProgramGenerationMessage(code: AiErrorCode | 'model_unavailable'): string {
+  if (code === 'invalid_output') return 'Format IA invalide'
+  if (code === 'model_unavailable') return 'Modèle IA indisponible'
+  return `Génération IA impossible (${code})`
+}
+
 export class TrainingProgramGenerationError extends Error {
   constructor(readonly code: AiErrorCode | 'model_unavailable') {
-    super(code === 'invalid_output' ? 'Format IA invalide' : code === 'model_unavailable' ? 'Modèle IA indisponible' : `Génération IA impossible (${code})`)
+    super(trainingProgramGenerationMessage(code))
     this.name = 'TrainingProgramGenerationError'
   }
 }
@@ -45,7 +52,7 @@ export async function generateProgram(
   runtime: GenerateProgramRuntime,
   catalog: { id: string; name: string }[] = [],
   onProviderMetadata?: (metadata: { providerModel?: string; tokens?: AiRecordedTokens }) => void,
-): Promise<any> {
+): Promise<ModernTrainingProgramOutput> {
   const invocation = buildTrainingProgramInvocation(input, catalog)
   const model = resolveAiModel('anthropic-opus-4.8')
   if (!model.ok || model.model.status !== 'active') throw new TrainingProgramGenerationError('model_unavailable')

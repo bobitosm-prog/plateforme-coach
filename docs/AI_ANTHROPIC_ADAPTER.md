@@ -155,8 +155,10 @@ session, la limite IP 3/min et la policy sans quota DB. Le cron garde
 cinq et son agrégat partiel. Chaque tentative possède sa correlation ID et sa
 finalisation uniques; aucun résultat échoué n'est persisté ou notifié.
 
-Limites restantes : aucun timeout produit n'est défini; `stream()` n'est pas
-migré; la Phase 7 attend encore son audit final séparé.
+Limites acceptées : aucun timeout produit n'est défini et aucun retry implicite
+n'est activé; cette absence est documentée et les signaux HTTP sont propagés.
+`stream()` n'est pas migré, car les deux SSE restent des enveloppes applicatives.
+L'audit final de Phase 7 est vert.
 
 ## Références
 

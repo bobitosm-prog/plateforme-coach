@@ -152,13 +152,13 @@ function rebalanceMacros(day: LegacyDay, targets: { protein_goal: number; carbs_
 
   // (b) kcal out of range
   if (Math.abs(final.k - calorie_goal) > 100) {
-    console.warn(`[rebalanceMacros] Kcal out of range after rebalance (${final.k} vs ${calorie_goal}), reverting`)
+    console.warn(JSON.stringify({ event: 'AI_NUTRITION_REBALANCE', outcome: 'skipped', reason: 'CALORIES_OUT_OF_RANGE' }))
     return original
   }
 
   // (c) do-no-harm: protein gap must not worsen
   if (Math.abs(final.p - protein_goal) > protGapBefore + 1) {
-    console.warn(`[rebalanceMacros] Protein gap worsened (${Math.abs(final.p - protein_goal)} > ${protGapBefore}), reverting`)
+    console.warn(JSON.stringify({ event: 'AI_NUTRITION_REBALANCE', outcome: 'skipped', reason: 'PROTEIN_GAP_WORSENED' }))
     return original
   }
 
@@ -193,7 +193,7 @@ function verifyDayPlan(day: LegacyDay, params: MealGenerationParams): LegacyDay 
     }
   }
   if (Math.abs(totalKcal - targetKcal) > 150) {
-    console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${targetKcal} (diff: ${totalKcal - targetKcal})`)
+    console.warn(JSON.stringify({ event: 'AI_NUTRITION_PLAN', outcome: 'partial', reason: 'DAY_OUT_OF_TARGET' }))
   }
 
   // Rebalance macros if targets available (captures return — may be original or rebalanced copy)

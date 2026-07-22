@@ -115,4 +115,40 @@ describe('migrated AI route contracts', () => {
     expect((await recipePost(request('/api/generate-recipe', { category: 'diner', profile: {} }))).status).toBe(429)
     expect(JSON.stringify(await (await recipePost(request('/api/generate-recipe', { category: 'diner', profile: {} }))).json())).not.toContain('local-test-key')
   })
+
+  it.each(['provider_refused', 'network_error', 'invalid_output'] as const)(
+    'keeps Athena %s failures and logs sanitized', async code => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mocks.generate.mockResolvedValue({
+        ok: false, error: { code, retryable: true, detail: 'raw-provider-secret' },
+        metadata: { correlationId: 'correlation-route-1', requestedModel: 'claude-sonnet-4-6' },
+      })
+      const response = await chatPost(request('/api/chat-ai', { message: 'question privée' }))
+      expect(response.status).toBe(500)
+      expect(await response.json()).toEqual({ error: 'Erreur serveur (500)' })
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(/raw-provider-secret|question privée/)
+      expect(mocks.finalize).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'failed' }))
+      log.mockRestore()
+    },
+  )
+
+  it('sanitizes Chat persistence errors while preserving the public failure', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'profiles') return { select: () => ({ eq: () => ({ single: async () => ({ data: { subscription_type: 'client_monthly' } }) }) }) }
+      if (table === 'chat_ai_messages') return {
+        select: () => ({ eq: () => ({ order: () => ({ limit: async () => ({ data: [] }) }) }) }),
+        insert: vi.fn(async () => ({ error: { message: 'private SQL detail', content: 'message privé' } })),
+      }
+      throw new Error(`unexpected table ${table}`)
+    })
+
+    const response = await chatPost(request('/api/chat-ai', { message: 'message privé' }))
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: 'Erreur sauvegarde message' })
+    const serialized = JSON.stringify(log.mock.calls)
+    expect(serialized).toContain('USER_MESSAGE_PERSISTENCE_FAILED')
+    expect(serialized).not.toMatch(/private SQL detail|message privé/)
+    log.mockRestore()
+  })
 })

@@ -33,7 +33,7 @@ const SAFE_NAME_PATTERN = /^[A-Z][A-Z0-9_]{2,63}$/
 const SAFE_DOMAIN_PATTERN = /^[a-z][a-z0-9_]{1,31}$/
 const SAFE_OPERATION_PATTERN = /^(GET|POST|PUT|PATCH|DELETE) \/[A-Za-z0-9_./-]{1,100}$/
 const SAFE_CONTEXT_STRING_PATTERN = /^[A-Za-z0-9_.:/ -]{1,64}$/
-const BLOCKED_CONTEXT_KEY = /(authorization|body|cookie|email|hash|key|path|payload|prompt|secret|session|signature|stack|subscription|token|url|vapid)/i
+const BLOCKED_CONTEXT_KEY = /(authorization|body|cause|cookie|email|error|hash|key|message|path|payload|prompt|secret|session|signature|stack|subscription|token|url|vapid)/i
 const BLOCKED_CONTEXT_VALUE = /(?:@|bearer\s|https?:\/\/|api[_-]?key|anthropic|cookie|password|secret|session|stripe|token|vapid)/i
 
 function safeName(value: string, fallback: string): string {
@@ -60,6 +60,40 @@ function levelFor(outcome: ApiRouteOutcome): ApiRouteLogLevel {
   if (outcome === 'failed') return 'error'
   if (outcome === 'rejected') return 'warning'
   return 'info'
+}
+
+export function writeApiRouteEvent(
+  descriptor: ApiRouteDescriptor,
+  completion: ApiRouteCompletion,
+  options: {
+    requestId: string
+    status: number
+    durationMs?: number
+    timestamp?: string
+    write?: (level: ApiRouteLogLevel, serialized: string) => void
+  },
+): void {
+  const outcome = completion.outcome
+  const level = levelFor(outcome)
+  const record: ApiRouteLogRecord = {
+    timestamp: options.timestamp ?? new Date().toISOString(),
+    level,
+    event: safeName(descriptor.event, 'API_REQUEST'),
+    domain: SAFE_DOMAIN_PATTERN.test(descriptor.domain) ? descriptor.domain : 'api',
+    operation: SAFE_OPERATION_PATTERN.test(descriptor.operation) ? descriptor.operation : 'GET /unknown',
+    outcome,
+    reason: safeName(completion.reason, 'UNKNOWN_REASON'),
+    status: options.status,
+    request_id: options.requestId,
+    duration_ms: Math.min(86_400_000, Math.max(0, Math.round(options.durationMs ?? 0))),
+    context: safeContext(completion.context),
+  }
+  const write = options.write ?? ((recordLevel: ApiRouteLogLevel, serialized: string) => {
+    if (recordLevel === 'error') console.error(serialized)
+    else if (recordLevel === 'warning') console.warn(serialized)
+    else console.info(serialized)
+  })
+  write(level, JSON.stringify(record))
 }
 
 export function createApiRouteObservability(
@@ -91,21 +125,13 @@ export function createApiRouteObservability(
       response.headers.set('x-request-id', requestId)
       if (logged) return response
       logged = true
-      const outcome = completion.outcome
-      const record: ApiRouteLogRecord = {
-        timestamp: options.timestamp?.() ?? new Date().toISOString(),
-        level: levelFor(outcome),
-        event,
-        domain,
-        operation,
-        outcome,
-        reason: safeName(completion.reason, 'UNKNOWN_REASON'),
+      writeApiRouteEvent({ event, domain, operation }, completion, {
+        requestId,
         status: response.status,
-        request_id: requestId,
-        duration_ms: Math.min(86_400_000, Math.max(0, Math.round(now() - startedAt))),
-        context: safeContext(completion.context),
-      }
-      write(record.level, JSON.stringify(record))
+        durationMs: now() - startedAt,
+        timestamp: options.timestamp?.(),
+        write,
+      })
       return response
     },
   }
