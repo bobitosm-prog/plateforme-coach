@@ -9589,3 +9589,32 @@ Expurger les derniers logs/erreurs IA bruts et propager l'annulation dans
 ### Prochaine action unique
 
 Capturer la baseline bundle, LCP, INP, CLS et requêtes de référence.
+
+## Entrée — 2026-07-22 — Baseline Phase 8 bloquée avant mesure
+
+- La première tâche Phase 8 a été engagée sans modification applicative. Le
+  protocole cible un build Next.js de production local, Chromium, trois runs
+  indépendants, les parcours client mobile Accueil/Training/Nutrition et coach
+  desktop Accueil/Clients/Messages/détail client.
+- `npm run build` échoue avant tout artefact mesurable avec Next.js 16.1.6 et
+  Turbopack. `next/font/google`, importé par `app/layout.tsx`, ne peut récupérer
+  Anton, Barlow Condensed, Bebas Neue, DM Sans et Outfit depuis
+  `fonts.googleapis.com`; le build se termine avec cinq erreurs de récupération
+  de police.
+- L'unique mécanisme de réponses simulées repéré dans le paquet installé est
+  interne au code compilé Next. Il n'a pas été employé comme substitut à une
+  méthode officiellement supportée. Aucun patch de police, accès réseau,
+  serveur de développement ou chiffre approximatif n'a été utilisé.
+- Bundle, LCP, INP, CLS et requêtes multi-parcours sont donc explicitement
+  indisponibles. Aucun runner, scénario Playwright, extracteur ou artefact JSON
+  trompeur n'a été ajouté. La tâche reste décochée et aucune autre tâche Phase
+  8 n'est commencée.
+- La tranche ne modifie que la documentation et le suivi. Aucun fichier
+  applicatif, test, E2E, migration, policy RLS, type Supabase, donnée ou service
+  distant n'est touché.
+
+### Prochaine action unique
+
+Rendre disponible un build de production local capable de résoudre les cinq
+polices, ou adopter séparément une méthode Next officiellement supportée pour
+un build hermétique, puis reprendre la capture de baseline Phase 8.

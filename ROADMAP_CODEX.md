@@ -537,8 +537,11 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : Phase 8 active — prochaine tranche : capturer la baseline bundle,
-LCP, INP, CLS et requêtes; aucune tâche Phase 8 n'est encore cochée.**
+**Statut : Phase 8 active — la première tranche reste ouverte : le build de
+production local est bloqué par le téléchargement de cinq polices Google.
+Reprendre la capture bundle, LCP, INP, CLS et requêtes dans un environnement de
+build autorisé ou rendu hermétique par une méthode Next officiellement
+supportée; aucune tâche Phase 8 n'est encore cochée.**
 
 ### Pourquoi
 
