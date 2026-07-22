@@ -79,7 +79,13 @@ describe('Anthropic AiProvider adapter', () => {
     expect(calls[0]?.body).toMatchObject({ tools: [{ name: 'recipe', input_schema: { type: 'object' } }], tool_choice: { type: 'tool', name: 'recipe' } })
     response.body = { content: [] }
     await expect(createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)).resolves.toMatchObject({ ok: false, error: { code: 'invalid_output' } })
+    response.body = { content: [{ type: 'tool_use', name: 'wrong', input: {} }] }
+    await expect(createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)).resolves.toMatchObject({ ok: false, error: { code: 'invalid_output' } })
     response.body = { content: [{ type: 'tool_use', name: 'recipe', input: {} }, { type: 'tool_use', name: 'recipe', input: {} }] }
+    await expect(createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)).resolves.toMatchObject({ ok: false, error: { code: 'invalid_output' } })
+    response.body = { model: textRequest.model, stop_reason: 'tool_use', content: [{ type: 'tool_use', name: 'recipe', input: { input: { title: 'wrapped' } } }] }
+    await expect(createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)).resolves.toMatchObject({ ok: true, value: { title: 'wrapped' } })
+    response.body = { model: textRequest.model, stop_reason: 'tool_use', content: [{ type: 'tool_use', name: 'recipe', input: { input: { input: { title: 'double' } } } }] }
     await expect(createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)).resolves.toMatchObject({ ok: false, error: { code: 'invalid_output' } })
   })
 

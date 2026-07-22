@@ -12,10 +12,6 @@ const migrated = [
   'app/api/suggest-overload/route.ts',
   'app/api/generate-exercise-instructions/route.ts',
 ]
-const excluded = [
-  'app/api/analyze-body/route.ts',
-]
-
 function source(file: string) {
   return fs.readFileSync(path.join(root, file), 'utf8')
 }
@@ -53,7 +49,4 @@ describe('Training generation migration boundaries', () => {
     expect(source(migrated[0])).toContain('checkRateLimit(`program:${ip}`, 5, 60000)')
   })
 
-  it.each(excluded)('does not migrate excluded flow %s', file => {
-    expect(source(file)).not.toContain('createAnthropicProvider')
-  })
 })

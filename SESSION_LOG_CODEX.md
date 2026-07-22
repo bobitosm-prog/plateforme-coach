@@ -9377,3 +9377,58 @@ batch, sans changer le prompt, l'autorité ni la réponse publique.
 
 Migrer `analyze-body` vers `AiProvider` avec tests de contrat multimodal, sans
 changer le prompt, l'autorité ni la réponse publique.
+
+## Entrée — 2026-07-22 — Migration AiProvider de l'analyse corporelle
+
+- `POST /api/analyze-body` utilise désormais `createAnthropicProvider`, le
+  registre `anthropic-opus-4.8` → `claude-opus-4-8`, le builder
+  `buildBodyAnalysisInvocation`, `promptInvocationToToolRequest` et le
+  validateur commun `bodyAnalysisOutputSchema`.
+- Le golden reste inchangé : système, `max_tokens=1024`, absence de température,
+  trois images dans l'ordre face/dos/profil, bloc texte final, outil
+  `body_analysis_output`, `input_schema` et `tool_choice` forcé exacts. Aucun
+  retry, fallback de modèle ni timer réseau n'est ajouté; la policy reste
+  `no_fallback`.
+- L'ordre de contrôle reste session → limite IP 5/min → réservation atomique
+  5/h et 6/30 jours lourds → configuration → corps → téléchargement parallèle
+  des trois images → provider. Une panne de réservation reste fail-closed et
+  une seule opération d'usage est créée.
+- Les photos sont toujours téléchargées depuis les trois URL reçues. JPEG, PNG,
+  WebP et GIF sont transmis en Base64 sans conversion. Un contenu non image ou
+  dépassant la borne générique de 14 000 000 caractères Base64 échoue avant le
+  provider; aucune image réelle n'est utilisée dans les tests.
+- Le provider accepte exactement un `tool_use` nommé correctement, un seul
+  wrapper legacy `input`, puis valide les six champs corporels. Outil absent,
+  multiple, ambigu, mal nommé, input vide, inconnu ou hors bornes produit
+  `Format IA invalide`, sans analyse synthétique.
+- Le succès HTTP reste directement l'objet d'analyse. Les erreurs légitimes
+  d'authentification, photos, clé, limites et quotas sont préservées; refus,
+  réseau et annulation sont expurgés. Le provider 429 reste HTTP 429
+  `Erreur IA (429)` et le signal HTTP est propagé.
+- La route n'effectue historiquement aucune persistance métier. Le contrôleur
+  Progression existant insère dans `body_analyses` seulement après une réponse
+  sans erreur; ce consommateur et l'ordre provider → validation → réponse →
+  insertion cliente restent inchangés et non transactionnels.
+- Le même correlation ID relie réservation, provider et finalisation unique.
+  Les outcomes `succeeded`, `failed` et `cancelled`, le modèle réel et les
+  tokens disponibles sont transmis; leur absence reste inconnue et le coût
+  `unavailable`, jamais zéro inventé.
+- Images, Base64, URL, poids, taille, description corporelle, prompt, output,
+  tool input et erreurs fournisseur/SQL ne sont plus journalisés ni exposés.
+- Compteurs après migration : 12/15 points d'entrée via `AiProvider`, 3/15
+  transports historiques, trois expressions HTTP directes et zéro client SDK
+  direct runtime hors adaptateur commun.
+- Tests ciblés : 12 fichiers et 215 tests verts, couvrant route,
+  multimodal, outil, wrapper legacy, parsing/schéma, quotas, usage, golden,
+  fallback, annulation, tokens et confidentialité. La suite complète compte
+  187 fichiers, 1 656 tests verts et 3 `todo`; TypeScript et ESLint ciblé sont
+  verts.
+- Aucun consommateur, autre flux, prompt, modèle, quota, migration, RLS, type
+  Supabase, E2E ou fichier concurrent n'est modifié. Phase 7 reste active et
+  incomplète; Phase 8 reste inactive et décochée.
+
+### Prochaine action unique
+
+Migrer `analyze-progress-photo` vers `AiProvider` avec tests des deux modes
+multimodaux et du texte libre, sans changer le prompt, l'autorité ni la réponse
+publique.

@@ -6,7 +6,7 @@
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
 les trois points d'entrée de génération Training, l'adaptation de séance,
-l'analyse de repas photographié, le plan Nutrition et le batch d'instructions l'utilisent désormais via
+l'analyse de repas photographié, le plan Nutrition, le batch d'instructions et l'analyse corporelle l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md). La suggestion de surcharge
 utilise aussi cette frontière tout en conservant son écriture legacy.
 
@@ -18,7 +18,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; onze points d'entrée utilisent désormais `AiProvider`.
+restent inchangés; douze points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -44,7 +44,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 5 sites | 1 adaptateur HTTP partagé par 11 points d'entrée et 4 autres transports HTTP |
+| Invocations Anthropic runtime | 4 sites | 1 adaptateur HTTP partagé par 12 points d'entrée et 3 autres transports HTTP |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -64,11 +64,11 @@ semi-structurées.
 |---|---|---|
 | `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | adaptateur commun |
 | `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour les trois flux |
-| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training/Nutrition; HTTP direct ailleurs |
+| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training, Nutrition et analyse corporelle; HTTP direct ailleurs |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les onze points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les quatre autres flux conservent leurs littéraux historiques.
+Les douze points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les trois autres flux conservent leurs littéraux historiques.
 
 La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
 features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
@@ -124,7 +124,7 @@ la mutation échoue.
 
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
-| Analyse corporelle | `POST /api/analyze-body`; contrôleur Progression | Système d'analyse; trois URL de photos, poids et taille | Outil forcé `body_analysis_output` avec estimations, forces, améliorations, symétrie et résumé; présence de l'outil vérifiée, pas de validation Zod | Session, limites IP/IA et quota global; retry 429 uniquement dans le consommateur (3 essais); URL téléchargées côté serveur, corps fournisseur journalisé et parfois renvoyé |
+| Analyse corporelle | `POST /api/analyze-body`; contrôleur Progression | Système d'analyse; trois URL de photos, poids et taille; images téléchargées en parallèle puis ordonnées face/dos/profil | Outil forcé `body_analysis_output` via `AiProvider`, input validé par `bodyAnalysisOutputSchema`; aucun objet synthétique après erreur | Session, limite IP 5/min, quota 5/h et 6/30 jours; retry 429 consommateur inchangé; signal propagé, tokens/coût suivis, aucune donnée corporelle journalisée; persistance cliente après succès uniquement |
 | Analyse de photos | `POST /api/analyze-progress-photo`; onboarding et Progression | Deux branches : évaluation trois vues ou comparaison simple; photos téléchargées, contexte et mesures éventuels | Texte libre dans les deux branches, sans schéma; réponse `{ analysis }` | Session, limites IP/IA et quota global; aucune reprise serveur; URL et extraits d'erreur journalisés; téléchargement d'URL non borné à une origine de stockage explicite |
 | Diagnostic hebdomadaire manuel | `POST /api/weekly-diagnostic`; `HomeTab` | Système et prompt assemblant entraînement, nutrition, poids, bien-être, objectifs et profil lus côté serveur | Outil forcé `weekly_diagnostic_output`; score, points forts/alerte, ajustements, objectif et `raisonnement`; absence de validation Zod; écrit diagnostic et prochaine date | Session, limite IP; pas de quota IA commun visible dans la route; persistance multi-étapes et push en best effort. Le raisonnement fournisseur est persisté |
 | Diagnostic hebdomadaire cron | `POST /api/weekly-diagnostic/cron`; planificateur serveur | Même générateur que le flux manuel | Même outil et mêmes écritures; résultat par utilisateur partiel | `CRON_SECRET` et service role; logs contenant préfixes d'identifiants et erreurs; aucun retry/timeout fournisseur |
@@ -198,11 +198,11 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent surtout les onze flux migrés, la génération de plan
-  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les quatre
+- Les tests dédiés couvrent surtout les douze flux migrés, la génération de plan
+  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les trois
   transports historiques manquent encore de contrats de route complets.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant possède quatre expressions HTTP runtime et
+  chemins `fetch`; le code courant possède trois expressions HTTP runtime et
   aucun appel SDK runtime hors adaptateur commun. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
@@ -210,7 +210,7 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Quatre flux restent hors du provider commun, tous sur les transports HTTP directs historiques.
+1. Trois flux restent hors du provider commun, tous sur les transports HTTP directs historiques.
 2. Les littéraux fournisseur subsistent dans ces flux; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
 3. Les sorties structurées utilisent les schémas communs, mais le texte libre

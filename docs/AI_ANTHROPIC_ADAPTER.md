@@ -6,7 +6,8 @@
 > cette frontière. L'analyse de repas photographié réutilise également son
 > support multimodal générique, la suggestion de surcharge conserve sa
 > persistance legacy et le batch d'instructions conserve ses écritures
-> séquentielles; quatre points d'entrée IA conservent leur transport
+> séquentielles et l'analyse corporelle utilise l'outil structuré commun;
+> trois points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -42,6 +43,7 @@ persiste rien.
 | Analyse de repas photographié | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | image JPEG déclarée puis texte, JSON validé par `mealPhotoOutputSchema` | `max_tokens=1000`, ordre image/texte et données Base64 historiques, sans système ni température |
 | Suggestion de surcharge | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | texte JSON validé par le parseur commun et `overloadSuggestionOutputSchema` | `max_tokens=300`, `temperature=0.3`, système, historique et message historiques |
 | Instructions d'exercice | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON validé par `exerciseInstructionsOutputSchema`, puis écriture par exercice | boucle séquentielle bornée à 20, `max_tokens=500`, message unique sans système ni température |
+| Analyse corporelle | `anthropic-opus-4.8` → `claude-opus-4-8` | trois images puis texte, outil forcé `body_analysis_output`, validé par `bodyAnalysisOutputSchema` | `max_tokens=1024`, système, blocs, schéma et choix d'outil historiques, sans température |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -83,6 +85,20 @@ La route transmet le nombre réel d'appels dans `attemptCount`; la normalisation
 commune conserve toutefois sa borne historique de 1 à 10, donc un batch de 11
 à 20 appels n'est pas représentable exactement dans la colonne actuelle.
 
+L'analyse corporelle télécharge toujours les trois URL en parallèle, puis
+conserve dans la requête l'ordre face, dos, profil et texte. Les media types
+JPEG, PNG, WebP et GIF sont transmis sans conversion; une réponse non image ou
+une image dépassant la borne générique provider échoue avant l'appel. Le
+provider accepte exactement un `tool_use` correctement nommé, un wrapper
+legacy `input` au plus, puis valide le contenu sans extraction ad hoc.
+
+La route ne possède aucune persistance métier : le contrôleur Progression
+existant insère dans `body_analyses` seulement après un succès HTTP. Cette
+frontière et l'ordre provider → validation → réponse → insertion cliente restent
+inchangés et non transactionnels. Images, Base64, URL, poids, taille, prompt,
+sortie outil et erreurs fournisseur/SQL ne sont ni journalisés ni placés dans
+les événements d'usage.
+
 ## Erreurs, annulation et confidentialité
 
 Les statuts fournisseur deviennent les erreurs sûres du provider : 429 en
@@ -122,7 +138,7 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les quatre autres flux utilisent encore leur transport
+Limites restantes : les trois autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
 les autres analyses multimodales et les diagnostics restent à migrer.
 
