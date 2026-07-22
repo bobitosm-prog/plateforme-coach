@@ -49,7 +49,7 @@ import { useClientPermissions } from '../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
-const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
+const CoachDashboard = dynamic(() => import('./coach/components/CoachPageContent'), { ssr: false })
 
 import { checkAndShowReminder } from '../lib/notifications'
 

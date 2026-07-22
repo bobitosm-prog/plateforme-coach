@@ -3,10 +3,10 @@
 ## Statut
 
 La dépendance réseau des polices est supprimée au 22 juillet 2026 grâce à
-l'[auto-hébergement des polices](./LOCAL_FONT_HOSTING.md). Le build complet
-reste néanmoins bloqué par une erreur de typage Next préexistante dans
-`app/coach/page.tsx`. Aucune valeur de bundle, LCP, INP, CLS ou requête de
-référence n'est encore publiée. La tâche Phase 8 reste ouverte.
+l'[auto-hébergement des polices](./LOCAL_FONT_HOSTING.md) et deux builds de
+production hermétiques complets sont validés. Aucune valeur de bundle, LCP,
+INP, CLS ou requête de référence n'est encore publiée. La tâche Phase 8 reste
+ouverte jusqu'à la capture reproductible.
 
 Les valeurs issues d'un serveur de développement ne sont pas substituables à
 une mesure du build de production et n'ont pas été collectées.
@@ -65,10 +65,10 @@ mock, patch de police, accès réseau exceptionnel ou changement applicatif n'a
 
 | Mesure | Résultat |
 |---|---|
-| Bundle de production | Indisponible : build non produit |
-| LCP | Indisponible : serveur de production non démarrable |
-| INP | Indisponible : serveur de production non démarrable |
-| CLS | Indisponible : serveur de production non démarrable |
+| Bundle de production | Build disponible, tailles non encore extraites |
+| LCP | Non encore capturé |
+| INP | Non encore capturé |
+| CLS | Non encore capturé |
 | Requêtes de référence | Indisponible : parcours non exécutés |
 
 ## Prérequis polices au 22 juillet 2026
@@ -78,23 +78,21 @@ officiels auto-hébergés et leurs licences OFL. Deux compilations Webpack de
 production isolées ont réussi respectivement en 16,5 s et 16,0 s dans le
 sandbox sans réseau externe. Elles n'ont produit aucune tentative Google Fonts.
 
-Les deux commandes échouent ensuite de manière identique pendant le contrôle
-de types Next : `app/coach/page.tsx` expose un type
-`{ initialSession?: any } | undefined` qui ne satisfait pas `PageProps`. Cette
-erreur est hors du périmètre polices et n'est pas contournée. Le build
-Turbopack n'a, pour sa part, émis aucune erreur réseau mais est resté sans
-progression observable dans `compile` et a été interrompu. Aucun build complet,
-`BUILD_ID` ou manifest final n'est donc revendiqué.
+Le contrat `PageProps` de `/coach` est ensuite corrigé sans changer son flux
+d'authentification : `app/coach/page.tsx` est un default export sans props et le
+seam applicatif `initialSession` typé `Session` est déplacé dans
+`CoachPageContent`. Deux builds `next build --webpack` isolés réussissent avec
+des compilations de 17,2 s et 16,9 s. Ils génèrent 88 pages, les `BUILD_ID`
+`TKrTRWcoNZF5SHAnHD1Bq` et `yezBZgbPeew6lpeP7jjbi`, et tous les manifests
+finaux attendus. Les sorties ne contiennent aucun marqueur Google Fonts.
 
 Aucun runner, scénario Playwright, extracteur de bundle ou artefact JSON n'est
-ajouté tant que le prérequis de build n'est pas satisfait : ils ne pourraient
-pas valider la baseline demandée.
+ajouté dans cette tranche de prérequis.
 
 ## Condition de reprise
 
-Corriger séparément le contrat `PageProps` de `app/coach/page.tsx`, puis obtenir
-deux builds locaux complets sans accès externe. Le protocole ci-dessus devra
-ensuite être implémenté et exécuté trois fois avant de cocher la tâche.
+Le protocole ci-dessus doit maintenant être implémenté et exécuté trois fois
+avant de cocher la tâche.
 
 La baseline de requêtes coach déjà documentée dans
 [Requêtes initiales du dashboard coach](./COACH_DASHBOARD_INITIAL_REQUESTS.md)

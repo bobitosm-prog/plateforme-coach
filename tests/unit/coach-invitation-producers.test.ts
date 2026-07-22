@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const files = [
   'app/coach/page.tsx',
+  'app/coach/components/CoachPageContent.tsx',
   'app/coach/hooks/useCoachDashboard.ts',
   'app/coach/components/ClientsList.tsx',
   'app/onboarding-coach/OnboardingCoachContent.tsx',
@@ -18,11 +19,11 @@ describe('verified coach invitation producers', () => {
   })
 
   it('uses only the verified creation endpoint from the coach UI', () => {
-    const page = readFileSync('app/coach/page.tsx', 'utf8')
-    expect(page).toContain("fetch('/api/coach/invitations'")
-    expect(page).toContain("fetch('/api/coach/invitations/revoke'")
-    expect(page).not.toContain("fetch('/api/invite-client'")
-    expect(page).not.toContain('inviteLink:')
-    expect(page).not.toContain("window.open('mailto:")
+    const content = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
+    expect(content).toContain("fetch('/api/coach/invitations'")
+    expect(content).toContain("fetch('/api/coach/invitations/revoke'")
+    expect(content).not.toContain("fetch('/api/invite-client'")
+    expect(content).not.toContain('inviteLink:')
+    expect(content).not.toContain("window.open('mailto:")
   })
 })

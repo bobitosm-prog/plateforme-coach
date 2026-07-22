@@ -9654,3 +9654,46 @@ un build hermétique, puis reprendre la capture de baseline Phase 8.
 
 Corriger séparément le contrat `PageProps` de `app/coach/page.tsx`, obtenir deux
 builds hermétiques complets, puis reprendre la capture baseline Phase 8.
+
+## Entrée — 2026-07-22 — Contrat PageProps corrigé et builds hermétiques verts
+
+- Cause : le default export de `app/coach/page.tsx` acceptait la prop arbitraire
+  `initialSession` avec une valeur par défaut. La validation générée par Next
+  refuse cette signature pour la route statique `/coach`, qui n'a aucun segment
+  dynamique.
+- `app/coach/page.tsx` devient un adaptateur App Router sans prop. Le seam est
+  déplacé dans `CoachPageContent`, typé avec `Session`, et le consommateur
+  historique de `app/page.tsx` importe cette frontière directement. Le provider
+  i18n, l'authentification, la redirection, les layouts différés, les invitations
+  et le contrat `useCoachDashboard` restent inchangés.
+- Les tests statiques vérifient le default export fermé, le seam avec et sans
+  session synthétique, le câblage des layouts et l'absence de nouvelle création
+  Supabase ou de `any` dans les frontières.
+- Deux builds officiels `next build --webpack` sont exécutés successivement
+  dans `.next-font-validation`, sandbox sans réseau externe et télémétrie
+  désactivée. Ils compilent en 17,2 s puis 16,9 s, passent le contrôle de types,
+  génèrent 88 pages et finalisent l'optimisation et les traces.
+- Les `BUILD_ID` sont `TKrTRWcoNZF5SHAnHD1Bq` et
+  `yezBZgbPeew6lpeP7jjbi`; les manifests build, routes, prerender, App Router et
+  polices sont présents. Aucun marqueur Google Fonts n'est trouvé dans les
+  sorties. Le répertoire isolé est nettoyé après vérification.
+- Les tests ciblés passent (15 assertions), comme la suite complète (197
+  fichiers, 1 723 tests verts et 3 `todo`), TypeScript, `git diff --check` et
+  les liens documentaires. L'ESLint ciblé des nouvelles frontières ne remonte
+  aucune erreur et conserve un avertissement historique `no-img-element` ; le
+  fichier racine `app/page.tsx` conserve sa dette historique inchangée.
+- Les quatre parcours E2E coach/client passent. Leurs fixtures sont supprimées
+  et contrôlées dans les blocs `finally`, les ports temporaires sont fermés et
+  Mailpit est vide après exécution. La stack Supabase locale canonique reste
+  saine ; aucune donnée ou ressource distante n'est utilisée.
+- La vérification visuelle n'est pas revendiquée : le contrôle navigateur
+  intégré n'est pas disponible dans la session. Aucun Web Vital, taille bundle
+  ou comptage de requêtes n'est collecté dans cette tranche.
+- La baseline Phase 8 reste décochée. Aucun fichier Supabase, migration, RLS ou
+  E2E n'est modifié; les changements concurrents restent intacts et hors
+  staging.
+
+### Prochaine action unique
+
+Reprendre la capture reproductible de la baseline Phase 8 : bundle, LCP, INP,
+CLS et requêtes de référence.

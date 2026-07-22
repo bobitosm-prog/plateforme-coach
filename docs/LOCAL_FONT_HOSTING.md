@@ -74,14 +74,18 @@ configuration fonctionnelle du build; elle ne fait que sélectionner `distDir`.
 
 ### Résultat du 22 juillet 2026
 
-- le build Turbopack isolé ne tente aucun accès Google Fonts, mais reste sans
-  progression observable dans `compile` et a été interrompu ;
-- deux builds Webpack isolés compilent l'application avec succès en 16,5 s et
-  16,0 s, sans tentative externe ;
-- les deux échouent ensuite pendant le contrôle Next des types sur le même
-  contrat `PageProps` préexistant dans `app/coach/page.tsx` ;
-- aucun `BUILD_ID` ou manifest final n'est donc disponible et la validation de
-  deux builds complets reste ouverte ;
+- le contrat App Router de `/coach` est corrigé : le default export de
+  `app/coach/page.tsx` n'accepte plus de prop applicative et le seam
+  `initialSession` typé `Session` réside dans `CoachPageContent` ;
+- deux builds Webpack de production isolés réussissent intégralement. La
+  compilation dure 17,2 s puis 16,9 s; contrôle de types, collecte des données,
+  génération des 88 pages, optimisation et traces sont finalisés ;
+- les `BUILD_ID` sont `TKrTRWcoNZF5SHAnHD1Bq` et
+  `yezBZgbPeew6lpeP7jjbi`. Les manifests build, routes, prerender, App Router et
+  polices sont présents et non vides ;
+- aucun import, domaine ou artefact Google Fonts n'est trouvé dans les sorties.
+  Les builds s'exécutent dans le sandbox sans réseau externe et avec la
+  télémétrie Next désactivée ;
 - le contrôle visuel via le navigateur intégré n'était pas disponible dans la
   session. Aucune comparaison visuelle n'est revendiquée.
 
@@ -91,8 +95,10 @@ pages conservent leurs règles CSS et le navigateur peut synthétiser l'italique
 depuis Outfit normal 300. Cette variation potentielle reste à vérifier
 visuellement; aucun faux fichier italique n'a été créé.
 
-La correction du contrat de page est volontairement laissée à une tranche
-séparée : aucun contrôle de type n'est désactivé pour faire passer le build.
+Webpack est sélectionné avec l'option officielle `next build --webpack` de
+Next.js 16.1.6, car le build Turbopack observé précédemment ne progressait pas.
+Aucun contrôle de type n'est désactivé et aucun comportement de production
+n'est modifié pour effectuer cette sélection de mesure.
 
 Cette tranche ne capture aucune taille de bundle ni Web Vital. La méthode de
 mesure reste décrite dans [Baseline de performance](./PERFORMANCE_BASELINE.md).
