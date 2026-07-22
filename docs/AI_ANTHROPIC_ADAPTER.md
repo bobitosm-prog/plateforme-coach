@@ -3,7 +3,8 @@
 > État vérifié le 21 juillet 2026. Chat Athena, génération de recette,
 > suggestion d'exercice, les trois points d'entrée de génération Training et
 > la génération de plan Nutrition ainsi que l'adaptation de séance utilisent
-> cette frontière; sept points d'entrée IA conservent leur transport
+> cette frontière. L'analyse de repas photographié réutilise également son
+> support multimodal générique; six points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -36,6 +37,7 @@ persiste rien.
 | Programme Training et cron | `anthropic-opus-4.8` → `claude-opus-4-8` | outil forcé `generate_program`, validé par `modernTrainingProgramOutputSchema` | `max_tokens=8000`, système, message, catalogue et paramètres historiques |
 | Plan Nutrition | `anthropic-opus-4.8` → `claude-opus-4-8` | sept JSON texte validés par `legacyNutritionDayOutputSchema` | sept appels séquentiels, `max_tokens=1500`, sans température, contexte cumulatif et SSE applicatif inchangés |
 | Adaptation de séance | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | JSON texte validé par `adaptedWorkoutOutputSchema` | `max_tokens=800`, système et message historiques, sans température |
+| Analyse de repas photographié | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | image JPEG déclarée puis texte, JSON validé par `mealPhotoOutputSchema` | `max_tokens=1000`, ordre image/texte et données Base64 historiques, sans système ni température |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -46,6 +48,12 @@ partagent au contraire le même constructeur d'appel outil et le même service.
 Les builders sous `lib/ai/prompts`, les schémas Zod et le parsing central sont
 les seules frontières de prompt et de sortie. Les routes ne contiennent ni
 URL Anthropic, ni identifiant fournisseur, ni parsing manuel.
+
+Le support multimodal était déjà générique dans l'adaptateur : les blocs image
+conservent `type=base64`, leur media type typé et leurs données, puis les blocs
+texte restent dans leur ordre d'origine. La route repas conserve son contrat
+legacy : préfixe `data:image/<mot>;base64,` retiré, media type fournisseur forcé
+à `image/jpeg` et plafond local de 6 700 000 caractères.
 
 ## Erreurs, annulation et confidentialité
 
@@ -86,9 +94,9 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les sept autres flux utilisent encore leur transport
+Limites restantes : les six autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
-les analyses multimodales, le batch d'instructions, la surcharge et les
+les autres analyses multimodales, le batch d'instructions, la surcharge et les
 diagnostics restent à migrer.
 
 ## Références

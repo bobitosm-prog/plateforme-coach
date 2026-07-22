@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, aiRateLimitResponse } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { buildMealPhotoInvocation } from '../../../lib/ai/prompts'
-import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
-import { mealPhotoOutputSchema } from '../../../lib/ai/schemas'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToJsonRequest } from '../../../lib/ai/providers/anthropic'
+import { createAiOutputValidator, mealPhotoOutputSchema } from '../../../lib/ai/schemas'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -25,11 +27,14 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }, { status: 429 })
 
   // DB-backed hourly rate limit
-  const usage = await startAiUsage({ client: supabase, feature: 'analyze-meal-photo', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-sonnet-4-6' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-sonnet-4.6')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabase, feature: 'analyze-meal-photo', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status === 'denied') return aiRateLimitResponse(15, Math.ceil(usage.retryAfterMs / 1000))
   if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
 
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
   let reasonCode = 'request_failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
@@ -48,28 +53,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Image trop volumineuse (max 5 MB)' }, { status: 413 })
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify(buildMealPhotoInvocation(base64Data)),
+    const invocation = buildMealPhotoInvocation(base64Data)
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(promptInvocationToJsonRequest(
+      invocation,
+      model.model.providerModelId,
+      createAiOutputValidator(mealPhotoOutputSchema),
+    ), {
+      correlationId,
+      timeoutMs: 300_000,
+      cancellation: abortSignalToAiCancellation(req.signal),
     })
-
-    if (!res.ok) {
-      console.error('[analyze-meal-photo] Anthropic error:', res.status)
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') {
+        outcome = 'cancelled'
+        reasonCode = 'request_cancelled'
+      }
+      if (generated.error.code === 'invalid_output') {
+        return NextResponse.json({ error: 'Reponse IA invalide' }, { status: 500 })
+      }
       return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
     }
-
-    const data = await res.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const text = data.content?.[0]?.text || ''
-    const parsed = parseAndValidateAiOutput(text, mealPhotoOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
-    if (!parsed.ok) return NextResponse.json({ error: 'Reponse IA invalide' }, { status: 500 })
     outcome = 'succeeded'
     reasonCode = 'completed'
-    return NextResponse.json(parsed.value)
-  } catch (e: any) {
-    console.error('[analyze-meal-photo] Error:', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json(generated.value)
+  } catch {
+    return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
   } finally {
     await usage.tracker.finalize({ outcome, reasonCode, providerModel, tokens })
   }

@@ -11,6 +11,7 @@ const routes = [
   'app/api/generate-custom-program/route.ts',
   'app/api/generate-meal-plan/route.ts',
   'app/api/adapt-workout/route.ts',
+  'app/api/analyze-meal-photo/route.ts',
   'app/api/training-regen/cron/route.ts',
 ]
 

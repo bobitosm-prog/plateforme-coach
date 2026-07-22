@@ -5,7 +5,8 @@
 
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
-les trois points d'entrée de génération Training, l'adaptation de séance et le plan Nutrition l'utilisent désormais via
+les trois points d'entrée de génération Training, l'adaptation de séance,
+l'analyse de repas photographié et le plan Nutrition l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md).
 
 Le [registre des modèles et coûts](AI_MODEL_COST_REGISTRY.md) relie désormais
@@ -16,7 +17,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; huit points d'entrée utilisent désormais `AiProvider`.
+restent inchangés; neuf points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -42,7 +43,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 8 sites | 1 adaptateur HTTP partagé par 8 points d'entrée, 6 autres transports HTTP, 1 appel SDK |
+| Invocations Anthropic runtime | 7 sites | 1 adaptateur HTTP partagé par 9 points d'entrée, 5 autres transports HTTP, 1 appel SDK |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -61,12 +62,12 @@ semi-structurées.
 | Modèle exact | Frontières runtime | Transport |
 |---|---|---|
 | `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | HTTP direct, sauf instructions via SDK |
-| `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour Athena et adaptation; HTTP direct pour l'analyse de repas |
+| `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour les trois flux |
 | `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training/Nutrition; HTTP direct ailleurs |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les huit points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les sept autres flux conservent leurs littéraux historiques.
+Les neuf points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les six autres flux conservent leurs littéraux historiques.
 
 La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
 features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
@@ -91,10 +92,10 @@ Références : [harnais E2E Athena](E2E_CHAT_HARNESS.md),
 |---|---|---|---|---|
 | Génération de recette | `POST /api/generate-recipe`; `RecipesSection` | Système avec exemple JSON; profil, objectifs, régime, aliments inclus/exclus fournis par le navigateur | JSON texte via `AiProvider`, parsing central et `recipeOutputSchema`; arrondis conservés | Session et limite IP; garde `invited` navigateur historique préservée; adaptateur injecté et tests de route, erreurs expurgées |
 | Génération de plan | `POST /api/generate-meal-plan`; six producteurs actuels dont onboarding, préférences et détail client | Système et prompt quotidien construits dans le service; objectifs, préférences, allergies, régime et contexte cumulatif fournis au provider | Sept appels JSON séquentiels via `AiProvider`, schéma Zod puis adaptation; SSE `progress`, puis `done`; une journée invalide devient vide sans marqueur public de partialité | Session serveur, limite réelle 3/min IP, 10/h et 6/30 jours lourds, invité refusé; une réservation, tokens/coûts agrégés, annulation propagée, aucun timeout/retry ajouté |
-| Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON validé par parsing commun et `mealPhotoOutputSchema` | Session, limite IP et quota IA; image 5 MB max, média forcé JPEG; transport direct et message d'exception brut |
+| Analyse de repas photographié | `POST /api/analyze-meal-photo`; `NutritionTab` | Image Base64 navigateur, multimodal sans prompt système distinct | JSON via `AiProvider`, parsing commun et `mealPhotoOutputSchema` | Session, limite IP 5/min et quota 15/h; image 5 MB max, média forcé JPEG; signal propagé et erreurs expurgées |
 
-La génération de plan utilise désormais l'adaptateur commun. L'analyse de repas
-photographié reste un flux distinct non migré. Voir le
+La génération de plan et l'analyse de repas photographié utilisent désormais
+l'adaptateur commun tout en gardant leurs contrats distincts. Voir le
 [service de génération Nutrition](NUTRITION_MEAL_GENERATION_SERVICE.md).
 
 ### Training
@@ -187,11 +188,11 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent surtout les huit flux migrés, la génération de plan
-  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les sept
+- Les tests dédiés couvrent surtout les neuf flux migrés, la génération de plan
+  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les six
   transports historiques manquent encore de contrats de route complets.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant possède six expressions HTTP runtime et un
+  chemins `fetch`; le code courant possède cinq expressions HTTP runtime et un
   appel SDK runtime. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
@@ -199,7 +200,7 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Sept flux restent hors du provider commun : HTTP direct et SDK coexistent encore.
+1. Six flux restent hors du provider commun : HTTP direct et SDK coexistent encore.
 2. Les littéraux fournisseur subsistent dans ces flux; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
 3. Les sorties structurées utilisent les schémas communs, mais le texte libre

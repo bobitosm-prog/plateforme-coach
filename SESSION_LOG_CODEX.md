@@ -9235,3 +9235,47 @@ prompt ni la réponse publique.
 
 Migrer `analyze-meal-photo` vers `AiProvider` avec tests de contrat, sans
 changer le prompt ni la réponse publique.
+
+## Entrée — 2026-07-21 — Migration AiProvider de l'analyse de repas photographié
+
+- `POST /api/analyze-meal-photo` utilise désormais
+  `createAnthropicProvider`, le registre `anthropic-sonnet-4.6` →
+  `claude-sonnet-4-6`, `buildMealPhotoInvocation` et le validateur commun
+  `mealPhotoOutputSchema`.
+- Le support multimodal générique existant a été réutilisé sans nouveau
+  transport : bloc image Base64 déclaré JPEG, puis bloc texte, dans l'ordre
+  historique exact. Le golden reste inchangé avec `max_tokens=1000`, sans
+  système, température, retry, fallback ni timeout réseau ajouté.
+- Le contrat d'entrée legacy est caractérisé sans être durci : toute chaîne est
+  acceptée, un préfixe `data:image/<mot>;base64,` est retiré, le media type
+  fournisseur reste forcé à `image/jpeg` et le plafond reste 6 700 000
+  caractères Base64, annoncé comme 5 MB.
+- L'ordre session → limite IP 5/min → réservation DB 15/h → validation du
+  corps/taille → fournisseur reste inchangé. Une seule réservation est créée;
+  le même correlation ID relie route, provider et finalisation, et
+  `Request.signal` est propagé.
+- Les réponses publiques légitimes sont conservées : résultat Nutrition brut,
+  `Image requise`, image trop volumineuse, limite IP, quota DB,
+  indisponibilité d'usage, `Erreur IA` et `Reponse IA invalide`. Les exceptions
+  et contenus fournisseur ne sont plus journalisés ni renvoyés bruts.
+- La finalisation est idempotente et distingue `succeeded`, `failed` et
+  `cancelled`. Le modèle réel et les tokens sont transmis lorsqu'ils existent;
+  leur absence reste inconnue et le coût demeure alors `unavailable`.
+- Aucun repas vide, aliment ou macro n'est inventé après une sortie invalide.
+  Aucune écriture, notification, lecture Supabase supplémentaire, migration,
+  RLS, type généré, E2E, prompt, quota ou autre flux IA n'a été modifié.
+- Compteurs après migration : 9/15 points d'entrée via `AiProvider`, 6/15
+  historiques, 5 expressions HTTP Anthropic directes, 1 client SDK direct et 7
+  sites d'invocation runtime au total.
+- Tests ciblés : 10 fichiers et 89 tests verts, couvrant golden, requête
+  multimodale exacte, image minimale/excessive, comportement media legacy,
+  schéma Nutrition, parsing invalide/tronqué, refus/réseau/annulation, quotas,
+  tokens connus/inconnus, coût et finalisation unique. Suite complète : 184
+  fichiers, 1 620 tests verts et 3 `todo`; TypeScript et ESLint ciblé verts.
+- Aucun fournisseur ni service externe n'a été appelé. Phase 7 reste active et
+  incomplète; Phase 8 reste inactive et entièrement décochée.
+
+### Prochaine action unique
+
+Migrer `suggest-overload` vers `AiProvider` avec tests de contrat, sans changer
+le prompt, l'ordre des écritures ni la réponse publique.

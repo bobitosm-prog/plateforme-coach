@@ -15,11 +15,12 @@ describe('Nutrition generation migration boundaries', () => {
     expect(source(file)).not.toMatch(/api\.anthropic\.com|claude-(?:haiku|sonnet|opus)|JSON\.parse|parseAndValidateAiOutput|createAnthropicMealGenerationProvider/)
   })
 
-  it('routes only meal-plan generation through the common provider', () => {
+  it('routes meal-plan and meal-photo generation through the common provider', () => {
     expect(source(files[0])).toContain('createAnthropicProvider')
     expect(source(files[0])).toContain("resolveAiModel('anthropic-opus-4.8')")
     expect(source(files[1])).toContain('createAiOutputValidator(legacyNutritionDayOutputSchema)')
-    expect(source('app/api/analyze-meal-photo/route.ts')).not.toContain('createAnthropicProvider')
+    expect(source('app/api/analyze-meal-photo/route.ts')).toContain('createAnthropicProvider')
+    expect(source('app/api/analyze-meal-photo/route.ts')).toContain("resolveAiModel('anthropic-sonnet-4.6')")
   })
 
   it('keeps seven ordered progress events, one usage operation and no persistence', () => {

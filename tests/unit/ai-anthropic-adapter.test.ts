@@ -54,6 +54,24 @@ describe('Anthropic AiProvider adapter', () => {
     expect(JSON.stringify(invalid)).not.toContain('secret')
   })
 
+  it('preserves multimodal image/text block order and exact image metadata', async () => {
+    response.body = { model: textRequest.model, stop_reason: 'end_turn', content: [{ type: 'text', text: '{"ok":true}' }] }
+    const request = {
+      ...textRequest,
+      output: 'json' as const,
+      messages: [{ role: 'user' as const, content: [
+        { type: 'image' as const, mediaType: 'image/jpeg' as const, dataBase64: 'AQID' },
+        { type: 'text' as const, text: 'analyse exacte' },
+      ] }],
+      validate: (input: unknown) => ({ ok: true as const, value: input }),
+    }
+    await createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(request, context)
+    expect(calls[0]?.body).toMatchObject({ messages: [{ role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AQID' } },
+      { type: 'text', text: 'analyse exacte' },
+    ] }] })
+  })
+
   it('supports one exact tool, rejects absent or ambiguous tools, and maps stop reasons', async () => {
     const request = { ...textRequest, output: 'tool' as const, tools: [{ name: 'recipe', inputSchema: { type: 'object' } }], forcedTool: 'recipe', validate: (input: unknown) => typeof input === 'object' && input !== null ? { ok: true as const, value: input } : { ok: false as const } }
     response.body = { model: textRequest.model, stop_reason: 'tool_use', content: [{ type: 'tool_use', name: 'recipe', input: { title: 'A' } }] }
