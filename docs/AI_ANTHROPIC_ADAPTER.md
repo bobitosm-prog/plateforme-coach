@@ -1,11 +1,12 @@
 # Adaptateur Anthropic commun
 
-> État vérifié le 21 juillet 2026. Chat Athena, génération de recette,
+> État vérifié le 22 juillet 2026. Chat Athena, génération de recette,
 > suggestion d'exercice, les trois points d'entrée de génération Training et
 > la génération de plan Nutrition ainsi que l'adaptation de séance utilisent
 > cette frontière. L'analyse de repas photographié réutilise également son
-> support multimodal générique et la suggestion de surcharge conserve sa
-> persistance legacy; cinq points d'entrée IA conservent leur transport
+> support multimodal générique, la suggestion de surcharge conserve sa
+> persistance legacy et le batch d'instructions conserve ses écritures
+> séquentielles; quatre points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -40,6 +41,7 @@ persiste rien.
 | Adaptation de séance | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | JSON texte validé par `adaptedWorkoutOutputSchema` | `max_tokens=800`, système et message historiques, sans température |
 | Analyse de repas photographié | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | image JPEG déclarée puis texte, JSON validé par `mealPhotoOutputSchema` | `max_tokens=1000`, ordre image/texte et données Base64 historiques, sans système ni température |
 | Suggestion de surcharge | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | texte JSON validé par le parseur commun et `overloadSuggestionOutputSchema` | `max_tokens=300`, `temperature=0.3`, système, historique et message historiques |
+| Instructions d'exercice | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON validé par `exerciseInstructionsOutputSchema`, puis écriture par exercice | boucle séquentielle bornée à 20, `max_tokens=500`, message unique sans système ni température |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -65,6 +67,21 @@ vient de la session. Une erreur d'insertion reste une réponse HTTP 200
 `skipped`, avec usage finalisé en échec. Cette chaîne n'est ni transactionnelle
 ni idempotente au-delà du contrôle pending/contrainte legacy; les détails SQL
 bruts ne sont plus exposés.
+
+Le batch d'instructions conserve l'ordre source et l'enchaînement strict
+provider → validation → `update exercises_db` pour chaque exercice. Les
+réussites déjà écrites ne sont pas annulées lorsqu'un appel suivant échoue et
+la réponse reste `{ done: false, processed, remaining }`. Une réponse partielle
+reste enregistrée `succeeded`, car le schéma d'usage ne possède pas d'état
+`partial`; `reasonCode=partial_completed` rend ce mapping explicite. Les
+appels, tokens et coûts connus sont agrégés sur une seule opération d'usage.
+Une absence partielle de tokens reste `partial`, leur absence totale
+`unavailable`. La chaîne est non transactionnelle et l'erreur SQL retournée
+par le client reste historiquement sans effet sur le compteur `processed`, mais
+aucun détail SQL, nom d'exercice ou message fournisseur n'est journalisé.
+La route transmet le nombre réel d'appels dans `attemptCount`; la normalisation
+commune conserve toutefois sa borne historique de 1 à 10, donc un batch de 11
+à 20 appels n'est pas représentable exactement dans la colonne actuelle.
 
 ## Erreurs, annulation et confidentialité
 
@@ -95,7 +112,7 @@ correlation ID relie route, provider et finalisation. `input_tokens` et
 `output_tokens`, ainsi que les tokens cache présents, sont normalisés; une
 absence reste inconnue. Le modèle réellement retourné alimente la finalisation
 et l'estimation en micros USD. Succès, échec et annulation sont distincts.
-Pour Nutrition, les compteurs des appels réellement effectués sont additionnés
+Pour Nutrition et les instructions d'exercice, les compteurs des appels réellement effectués sont additionnés
 sans flottant et leur complétude reste `complete`, `partial` ou `unavailable`.
 
 ## Tests et limites
@@ -105,10 +122,9 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les cinq autres flux utilisent encore leur transport
+Limites restantes : les quatre autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
-les autres analyses multimodales, le batch d'instructions et les
-diagnostics restent à migrer.
+les autres analyses multimodales et les diagnostics restent à migrer.
 
 ## Références
 

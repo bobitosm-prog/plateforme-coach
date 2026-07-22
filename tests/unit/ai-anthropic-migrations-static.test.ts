@@ -8,6 +8,7 @@ const routes = [
   'app/api/generate-recipe/route.ts',
   'app/api/suggest-exercise/route.ts',
   'app/api/suggest-overload/route.ts',
+  'app/api/generate-exercise-instructions/route.ts',
   'app/api/generate-program/route.ts',
   'app/api/generate-custom-program/route.ts',
   'app/api/generate-meal-plan/route.ts',

@@ -1,12 +1,12 @@
 # Inventaire des prompts, modèles et contrats de sortie IA
 
-> État constaté dans le dépôt au 21 juillet 2026. Ce document décrit le code
+> État constaté dans le dépôt au 22 juillet 2026. Ce document décrit le code
 > existant sans modifier les prompts, les modèles, les quotas ni les contrats.
 
 L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
 les trois points d'entrée de génération Training, l'adaptation de séance,
-l'analyse de repas photographié et le plan Nutrition l'utilisent désormais via
+l'analyse de repas photographié, le plan Nutrition et le batch d'instructions l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md). La suggestion de surcharge
 utilise aussi cette frontière tout en conservant son écriture legacy.
 
@@ -18,7 +18,7 @@ aucun littéral runtime et ne constitue ni un fallback ni une migration.
 L'[extraction des frontières de prompts](AI_PROMPT_BOUNDARIES.md) est terminée :
 les quinze points d'entrée délèguent désormais leur contrat exact à des
 builders purs. Les transports, modèles, paramètres, parseurs et contrats HTTP
-restent inchangés; dix points d'entrée utilisent désormais `AiProvider`.
+restent inchangés; onze points d'entrée utilisent désormais `AiProvider`.
 
 ## Périmètre et méthode
 
@@ -44,7 +44,7 @@ rg -l "chat-ai|generate-recipe|suggest-exercise|generate-exercise-instructions|g
 | Mesure | Compteur | Détail |
 |---|---:|---|
 | Points d'entrée runtime | 15 | 12 routes utilisateur, 3 routes cron/techniques |
-| Invocations Anthropic runtime | 6 sites | 1 adaptateur HTTP partagé par 10 points d'entrée, 4 autres transports HTTP, 1 appel SDK |
+| Invocations Anthropic runtime | 5 sites | 1 adaptateur HTTP partagé par 11 points d'entrée et 4 autres transports HTTP |
 | Invocation hors runtime | 1 | script de backfill utilisant le SDK |
 | Modèles runtime distincts | 3 | Haiku 4.5, Sonnet 4.6, Opus 4.8 |
 | Modèle supplémentaire hors runtime | 1 | Opus 4.7 dans le script de backfill |
@@ -62,13 +62,13 @@ semi-structurées.
 
 | Modèle exact | Frontières runtime | Transport |
 |---|---|---|
-| `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | adaptateur commun, sauf instructions via SDK |
+| `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | adaptateur commun |
 | `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour les trois flux |
 | `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour Training/Nutrition; HTTP direct ailleurs |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les dix points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les cinq autres flux conservent leurs littéraux historiques.
+Les onze points d'entrée migrés utilisent des identifiants logiques résolus par
+le registre. Les quatre autres flux conservent leurs littéraux historiques.
 
 La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
 features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
@@ -104,7 +104,7 @@ l'adaptateur commun tout en gardant leurs contrats distincts. Voir le
 | Flux | Entrée et consommateur | Prompt et données | Sortie, validation et échec | Autorité, quota, tests et dette |
 |---|---|---|---|---|
 | Suggestion d'alternative | `POST /api/suggest-exercise`; aucun consommateur actif trouvé | Système `EXERCISE_SWAP_PROMPT`; exercice, motif, muscles, équipement et type reçus | JSON texte via `AiProvider`, parsing central et schéma exact de trois suggestions | Session, limites IP/IA et usage inchangés; route orpheline, adaptateur injecté et erreurs expurgées |
-| Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON validé par parsing commun et `exerciseInstructionsOutputSchema`; résultat batch partiel | Session, e-mail admin exact, limite IP, service role; SDK Anthropic; erreurs par exercice journalisant nom et message; pas de test de route dédié |
+| Instructions d'exercice | `POST /api/generate-exercise-instructions`; endpoint admin/batch sans consommateur UI trouvé | Prompt utilisateur par exercice, sans prompt système; nom, groupe et équipement de la base | JSON via `AiProvider`, validé par `exerciseInstructionsOutputSchema`; résultat batch partiel, écritures séquentielles non transactionnelles | Session, e-mail admin exact, limite IP 2/min, une opération d'usage; service role après autorisation, tokens/coûts agrégés, annulation propagée et erreurs expurgées |
 | Programme coach legacy | `POST /api/generate-program`; détail client coach | Prompt unique sans champ système séparé; profil client et paramètres d'entraînement | JSON texte via `AiProvider`, validé par `legacyTrainingProgramOutputSchema`, puis sept jours legacy normalisés | Session, limite IP et usage inchangés; erreurs fournisseur expurgées, annulation reliée au signal HTTP |
 | Programme Training | `POST /api/generate-custom-program`; onboarding, builder et diagnostic | Système dynamique avec règles, sexe, équipement et catalogue; prompt utilisateur avec profil et objectifs | Outil forcé `generate_program` via `AiProvider`, validé par `modernTrainingProgramOutputSchema`, puis SSE `progress`/`done` inchangé | Session, limites IP/IA, quota global, usage avant appel; service partagé avec le cron; annulation finalisée séparément |
 | Régénération Training | `POST /api/training-regen/cron`; planificateur serveur | Même service et mêmes prompts que le programme Training | Même outil validé; écritures par client et agrégat succès/erreur partiel conservés | `CRON_SECRET` et service role; concurrence bornée à trois; ordre désactivation/insertion/prochaine date inchangé; pas de retry fournisseur |
@@ -198,19 +198,19 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent surtout les dix flux migrés, la génération de plan
-  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les cinq
+- Les tests dédiés couvrent surtout les onze flux migrés, la génération de plan
+  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les quatre
   transports historiques manquent encore de contrats de route complets.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant possède quatre expressions HTTP runtime et un
-  appel SDK runtime. Ce compteur documentaire historique est obsolète.
+  chemins `fetch`; le code courant possède quatre expressions HTTP runtime et
+  aucun appel SDK runtime hors adaptateur commun. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
   commune.
 
 ## Divergences et risques prioritaires
 
-1. Cinq flux restent hors du provider commun : HTTP direct et SDK coexistent encore.
+1. Quatre flux restent hors du provider commun, tous sur les transports HTTP directs historiques.
 2. Les littéraux fournisseur subsistent dans ces flux; le script opérationnel a déjà
    dérivé vers une autre version d'Opus.
 3. Les sorties structurées utilisent les schémas communs, mais le texte libre
@@ -219,8 +219,8 @@ comme une trace technique fiable.
 5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent
    entrer dans les logs ou réponses.
 6. La recette prend une décision d'autorité à partir de données navigateur;
-   surcharge et instruction utilisent un service role localement sans
-   frontière provider commune.
+   surcharge et instruction utilisent encore un service role localement, mais
+   leur transport fournisseur passe désormais par la frontière commune.
 7. Deux routes sont sans consommateur actif (`suggest-exercise`,
    `adapt-workout`) et une route batch admin n'a pas de consommateur UI.
 8. Les deux SSE ne streament pas le fournisseur et n'ont pas un protocole

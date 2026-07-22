@@ -9326,3 +9326,54 @@ le prompt, l'ordre des écritures ni la réponse publique.
 
 Migrer `generate-exercise-instructions` vers `AiProvider` avec tests de contrat
 batch, sans changer le prompt, l'autorité ni la réponse publique.
+
+## Entrée — 2026-07-22 — Migration AiProvider du batch d'instructions d'exercice
+
+- `POST /api/generate-exercise-instructions` n'instancie plus le SDK Anthropic
+  direct. La route utilise `createAnthropicProvider`, le registre
+  `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001`, le builder
+  `buildExerciseInstructionsInvocation` et le validateur commun
+  `exerciseInstructionsOutputSchema`.
+- Le golden est inchangé : message utilisateur par exercice, absence de
+  système et de température, `max_tokens=500`. Aucun retry, fallback de modèle
+  ni timer réseau n'est ajouté; la policy reste `explicit_partial`.
+- Le contrôle reste session → e-mail `ADMIN_EMAIL` exact → limite IP 2/min →
+  une réservation d'usage → configuration → client service-role. La lecture
+  reste `exercises_db(id, name, muscle_group, equipment)` avec
+  `instructions IS NULL`, limitée à 20.
+- La boucle reste séquentielle et ordonnée. Pour chaque élément, provider,
+  validation puis `update exercises_db` de `instructions` et `tips` restent
+  intercalés. Les écritures réussies ne sont pas annulées après un échec; la
+  chaîne batch demeure non transactionnelle et sans retry.
+- Le contrat public reste `{ done: true, count: 0 }` si rien n'est à traiter,
+  sinon `{ done: false, processed, remaining }`. Les erreurs élémentaires ne
+  créent aucune instruction et ne deviennent pas un échec total si une
+  réussite a déjà été comptée. Le comportement legacy d'un résultat SQL
+  retourné sans exception reste caractérisé : l'élément est compté traité,
+  sans exposer le détail SQL.
+- Une seule opération d'usage couvre le batch. Le même correlation ID est
+  transmis à tous les appels; le modèle réel, les appels exécutés et les
+  tokens connus sont agrégés. La complétude est `complete`, `partial` ou
+  `unavailable`; un batch partiel conserve l'outcome historique `succeeded`
+  avec `reasonCode=partial_completed`, faute d'outcome `partial` dans le
+  schéma d'usage.
+- `Request.signal` est propagé. Une annulation arrête les éléments non démarrés,
+  finalise une seule fois en `cancelled` et ne déclenche aucune écriture pour
+  l'élément annulé. Les noms d'exercice, réponses fournisseur et détails SQL
+  ne sont plus journalisés.
+- Compteurs après migration : 11/15 points d'entrée via `AiProvider`, 4/15
+  transports historiques, quatre expressions HTTP directes et zéro client SDK
+  direct runtime hors adaptateur commun.
+- Tests ciblés : 12 fichiers et 222 tests verts, dont le nouveau
+  contrat batch, provider, parsing/schémas, golden, fallback et usage. Les
+  validations complètes comptent 186 fichiers, 1 644 tests verts et 3 `todo`;
+  TypeScript, ESLint ciblé, liens documentaires et `git diff --check` sont
+  verts.
+- Aucun autre flux, prompt, modèle, quota, route, migration, RLS, type Supabase,
+  E2E ou fichier concurrent n'est modifié. Phase 7 reste active et incomplète;
+  Phase 8 reste inactive et décochée.
+
+### Prochaine action unique
+
+Migrer `analyze-body` vers `AiProvider` avec tests de contrat multimodal, sans
+changer le prompt, l'autorité ni la réponse publique.

@@ -10,9 +10,9 @@ const migrated = [
   'lib/training/generate-program.ts',
   'app/api/adapt-workout/route.ts',
   'app/api/suggest-overload/route.ts',
+  'app/api/generate-exercise-instructions/route.ts',
 ]
 const excluded = [
-  'app/api/generate-exercise-instructions/route.ts',
   'app/api/analyze-body/route.ts',
 ]
 
@@ -32,6 +32,7 @@ describe('Training generation migration boundaries', () => {
     expect(source(migrated[3])).toContain('promptInvocationToToolRequest')
     expect(source(migrated[4])).toContain('createAnthropicProvider')
     expect(source(migrated[5])).toContain('createAnthropicProvider')
+    expect(source(migrated[6])).toContain('createAnthropicProvider')
     expect(source(migrated[1])).toContain('abortSignalToAiCancellation(req.signal)')
   })
 
