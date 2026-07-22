@@ -3,11 +3,14 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { aiUsageCorrelationId, readAnthropicMetadata, startAiUsage } from '../../../lib/ai/usage'
+import { aiUsageCorrelationId, startAiUsage } from '../../../lib/ai/usage'
 import { guardInvitedClient } from '../../../lib/api-guard'
 import { buildOverloadInvocation } from '../../../lib/ai/prompts'
 import { parseAndValidateAiOutput } from '../../../lib/ai/parsing'
 import { overloadSuggestionOutputSchema } from '../../../lib/ai/schemas'
+import { resolveAiModel } from '../../../lib/ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToTextRequest } from '../../../lib/ai/providers/anthropic'
+import { getAnthropicMessagesUrl } from '../../../lib/anthropic/chat-transport'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -33,9 +36,12 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`overload:${ip}`, 10, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
 
-  const usage = await startAiUsage({ client: supabaseAuth, feature: 'suggest-overload', principal: { kind: 'user', id: user.id }, correlationId: aiUsageCorrelationId(req), logicalModel: 'claude-haiku-4-5-20251001' })
+  const correlationId = aiUsageCorrelationId(req)
+  const model = resolveAiModel('anthropic-haiku-4.5')
+  if (!model.ok || model.model.status !== 'active') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+  const usage = await startAiUsage({ client: supabaseAuth, feature: 'suggest-overload', principal: { kind: 'user', id: user.id }, correlationId, logicalModel: model.model.logicalId })
   if (usage.status !== 'started') return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: usage.status === 'conflict' ? 409 : 503 })
-  let outcome: 'succeeded' | 'failed' = 'failed'
+  let outcome: 'succeeded' | 'failed' | 'cancelled' = 'failed'
   let providerModel: string | undefined
   let tokens: { inputTokens?: number; outputTokens?: number } | undefined
 
@@ -107,26 +113,20 @@ export async function POST(req: NextRequest) {
 
     const invocation = buildOverloadInvocation({ exerciseName, currentWeight, currentReps, setsCompleted, historyLines })
     // ── Call Claude API ──
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(invocation),
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(promptInvocationToTextRequest(invocation, model.model.providerModelId), {
+      correlationId,
+      timeoutMs: 300_000,
+      cancellation: abortSignalToAiCancellation(req.signal),
     })
-
-    if (!res.ok) {
-      console.error('[suggest-overload] Claude API error:', res.status)
+    providerModel = generated.metadata.actualModel
+    tokens = generated.metadata.usage
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') outcome = 'cancelled'
       return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
     }
 
-    const data = await res.json()
-    ;({ providerModel, tokens } = readAnthropicMetadata(data))
-    const text = data.content?.[0]?.text || ''
-
-    const parsed = parseAndValidateAiOutput(text, overloadSuggestionOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
+    const parsed = parseAndValidateAiOutput(generated.value, overloadSuggestionOutputSchema, { allowMarkdownFence: true, allowLegacySurroundingText: true })
     if (!parsed.ok) {
       const error = parsed.error.reason === 'invalid_json' ? 'JSON parse échoué'
         : parsed.error.reason === 'invalid_shape' ? 'Suggestion invalide'
@@ -151,16 +151,9 @@ export async function POST(req: NextRequest) {
       })
 
     if (insertError) {
-      console.error('[suggest-overload] Insert error:', insertError)
       return NextResponse.json({
         skipped: true,
         reason: insertError.code === '23505' ? 'already_pending' : 'insert_failed',
-        debug: {
-          message: insertError.message,
-          code: insertError.code,
-          details: insertError.details,
-          hint: insertError.hint
-        }
       })
     }
 
@@ -175,11 +168,9 @@ export async function POST(req: NextRequest) {
         reasoning: suggestion.reasoning,
       },
     })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    console.error('[suggest-overload] Exception:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
   } finally {
-    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : 'request_failed', providerModel, tokens })
+    await usage.tracker.finalize({ outcome, reasonCode: outcome === 'succeeded' ? 'completed' : outcome === 'cancelled' ? 'request_cancelled' : 'request_failed', providerModel, tokens })
   }
 }

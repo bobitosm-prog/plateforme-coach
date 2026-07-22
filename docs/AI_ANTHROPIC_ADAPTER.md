@@ -4,7 +4,8 @@
 > suggestion d'exercice, les trois points d'entrée de génération Training et
 > la génération de plan Nutrition ainsi que l'adaptation de séance utilisent
 > cette frontière. L'analyse de repas photographié réutilise également son
-> support multimodal générique; six points d'entrée IA conservent leur transport
+> support multimodal générique et la suggestion de surcharge conserve sa
+> persistance legacy; cinq points d'entrée IA conservent leur transport
 > historique.
 
 ## Responsabilité et API
@@ -38,6 +39,7 @@ persiste rien.
 | Plan Nutrition | `anthropic-opus-4.8` → `claude-opus-4-8` | sept JSON texte validés par `legacyNutritionDayOutputSchema` | sept appels séquentiels, `max_tokens=1500`, sans température, contexte cumulatif et SSE applicatif inchangés |
 | Adaptation de séance | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | JSON texte validé par `adaptedWorkoutOutputSchema` | `max_tokens=800`, système et message historiques, sans température |
 | Analyse de repas photographié | `anthropic-sonnet-4.6` → `claude-sonnet-4-6` | image JPEG déclarée puis texte, JSON validé par `mealPhotoOutputSchema` | `max_tokens=1000`, ordre image/texte et données Base64 historiques, sans système ni température |
+| Suggestion de surcharge | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | texte JSON validé par le parseur commun et `overloadSuggestionOutputSchema` | `max_tokens=300`, `temperature=0.3`, système, historique et message historiques |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -54,6 +56,15 @@ conservent `type=base64`, leur media type typé et leurs données, puis les bloc
 texte restent dans leur ordre d'origine. La route repas conserve son contrat
 legacy : préfixe `data:image/<mot>;base64,` retiré, media type fournisseur forcé
 à `image/jpeg` et plafond local de 6 700 000 caractères.
+
+La surcharge garde le parseur commun dans la route après une génération texte
+afin de préserver ses trois erreurs publiques historiques (`JSON parse échoué`,
+`Suggestion invalide`, `Format IA invalide`). Après validation seulement, le
+client service-role insère dans `progressive_overload_suggestions`; `user_id`
+vient de la session. Une erreur d'insertion reste une réponse HTTP 200
+`skipped`, avec usage finalisé en échec. Cette chaîne n'est ni transactionnelle
+ni idempotente au-delà du contrôle pending/contrainte legacy; les détails SQL
+bruts ne sont plus exposés.
 
 ## Erreurs, annulation et confidentialité
 
@@ -94,9 +105,9 @@ erreurs expurgées, annulation, quotas, persistance Athena, arrondis recette,
 suggestions et absence de double réservation. Le harnais Athena vérifie le
 transport local réel et le Markdown hostile inerte.
 
-Limites restantes : les six autres flux utilisent encore leur transport
+Limites restantes : les cinq autres flux utilisent encore leur transport
 historique; aucun timeout produit n'est défini; `stream()` n'est pas migré;
-les autres analyses multimodales, le batch d'instructions, la surcharge et les
+les autres analyses multimodales, le batch d'instructions et les
 diagnostics restent à migrer.
 
 ## Références

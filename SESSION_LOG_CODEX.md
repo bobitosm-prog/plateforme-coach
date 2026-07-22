@@ -9279,3 +9279,50 @@ changer le prompt ni la réponse publique.
 
 Migrer `suggest-overload` vers `AiProvider` avec tests de contrat, sans changer
 le prompt, l'ordre des écritures ni la réponse publique.
+
+## Entrée — 2026-07-22 — Migration AiProvider des suggestions de surcharge
+
+- `POST /api/suggest-overload` utilise désormais `createAnthropicProvider`, le
+  registre `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001`,
+  `buildOverloadInvocation` et le parseur/schéma commun
+  `overloadSuggestionOutputSchema`.
+- Le golden reste byte-identique : système, historique des quatre dernières
+  séances, message utilisateur, `max_tokens=300` et `temperature=0.3` sont
+  inchangés. Aucun retry, fallback ou timeout réseau n'est ajouté; la policy
+  reste `no_fallback`.
+- L'ordre historique est conservé : session → limite IP 10/min → usage sans
+  quota DB → garde invité → validation → contrôle pending owner-scoped → lecture
+  de `workout_sets` owner-scoped → fournisseur → parsing/validation → insertion
+  dans `progressive_overload_suggestions` → réponse.
+- L'insertion conserve exactement `user_id`, `exercise_name`, poids/répétitions
+  actuels et suggérés, `reasoning`, `status=pending` et `session_id_origin`.
+  `user_id` vient uniquement de la session; le client service-role n'est créé
+  qu'après les contrôles historiques.
+- Refus, panne réseau, annulation, JSON invalide ou schéma invalide ne
+  déclenchent aucune insertion. Une erreur d'insertion après succès fournisseur
+  reste HTTP 200 `{ skipped: true, reason }`, finalise l'usage en échec et ne
+  rejoue pas la mutation. La chaîne reste volontairement non transactionnelle.
+- Les corps de succès, skips, validations, auth, invité, limite et
+  indisponibilité d'usage sont conservés. Les messages fournisseur, exceptions
+  et détails SQL/Supabase ne sont plus journalisés ni renvoyés bruts.
+- Le même correlation ID relie usage et provider. La finalisation unique
+  distingue `succeeded`, `failed` et `cancelled`; modèle réel et tokens sont
+  transmis lorsqu'ils existent, sinon le coût reste `unavailable` plutôt que
+  zéro.
+- Divergence confirmée : `progressive_overload_suggestions` est absente des
+  types générés et d'une migration de création/policy versionnée; seules les
+  migrations de suppression de compte la citent. Aucune migration/RLS n'a été
+  inventée dans cette tranche.
+- Compteurs après migration : 10/15 points d'entrée via `AiProvider`, 5/15
+  historiques, 4 expressions HTTP Anthropic directes, 1 client SDK direct et 6
+  sites d'invocation runtime au total.
+- Tests ciblés : 11 fichiers et 98 tests verts. Suite complète : 185 fichiers,
+  1 632 tests verts et 3 `todo`; TypeScript et ESLint ciblé verts. Aucun service
+  ou fournisseur externe n'a été appelé.
+- Phase 7 reste active et incomplète. Phase 8 reste inactive et entièrement
+  décochée; routes, migrations, RLS, types Supabase et E2E sont inchangés.
+
+### Prochaine action unique
+
+Migrer `generate-exercise-instructions` vers `AiProvider` avec tests de contrat
+batch, sans changer le prompt, l'autorité ni la réponse publique.

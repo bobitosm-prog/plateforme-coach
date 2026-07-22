@@ -7,6 +7,7 @@ const routes = [
   'app/api/chat-ai/route.ts',
   'app/api/generate-recipe/route.ts',
   'app/api/suggest-exercise/route.ts',
+  'app/api/suggest-overload/route.ts',
   'app/api/generate-program/route.ts',
   'app/api/generate-custom-program/route.ts',
   'app/api/generate-meal-plan/route.ts',

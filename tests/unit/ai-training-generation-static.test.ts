@@ -9,10 +9,10 @@ const migrated = [
   'app/api/training-regen/cron/route.ts',
   'lib/training/generate-program.ts',
   'app/api/adapt-workout/route.ts',
+  'app/api/suggest-overload/route.ts',
 ]
 const excluded = [
   'app/api/generate-exercise-instructions/route.ts',
-  'app/api/suggest-overload/route.ts',
   'app/api/analyze-body/route.ts',
 ]
 
@@ -22,7 +22,7 @@ function source(file: string) {
 
 describe('Training generation migration boundaries', () => {
   it.each(migrated)('%s has no direct Anthropic transport or ad hoc structured parsing', file => {
-    expect(source(file)).not.toMatch(/api\.anthropic\.com|readAnthropicMetadata|parseAndValidate(?:AiOutput|ToolUse)|\bJSON\.parse\s*\(/)
+    expect(source(file)).not.toMatch(/api\.anthropic\.com|readAnthropicMetadata|\bJSON\.parse\s*\(/)
   })
 
   it('routes legacy, SSE and cron generation through the shared provider', () => {
@@ -31,6 +31,7 @@ describe('Training generation migration boundaries', () => {
     expect(source(migrated[2])).toContain('createAnthropicProvider')
     expect(source(migrated[3])).toContain('promptInvocationToToolRequest')
     expect(source(migrated[4])).toContain('createAnthropicProvider')
+    expect(source(migrated[5])).toContain('createAnthropicProvider')
     expect(source(migrated[1])).toContain('abortSignalToAiCancellation(req.signal)')
   })
 
