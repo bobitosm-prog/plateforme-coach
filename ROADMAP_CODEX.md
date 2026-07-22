@@ -4,7 +4,7 @@
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
 > Dernière mise à jour : **22 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 7 — Plateforme IA**.
+> Phase active : **Phase 8 — React, App Router et performance**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -537,10 +537,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : Phase 8 active — les cinq familles sont auto-hébergées et deux
-builds de production hermétiques complets sont validés. Prochaine tranche :
-capturer bundle, LCP, INP, CLS et requêtes. Aucune tâche Phase 8 n'est encore
-cochée.**
+**Statut : Phase 8 active — baseline production Webpack capturée deux fois,
+avec bundle brut/gzip, LCP, INP, CLS et requêtes locales sur trois passages par
+parcours. Prochaine tranche : définir les budgets de performance.**
 
 ### Pourquoi
 
@@ -550,7 +549,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
-| [ ] Capturer bundle, LCP, INP, CLS et requêtes de référence | 1,5 j | Moyenne | Faible | Élevé | — |
+| [x] Capturer bundle, LCP, INP, CLS et requêtes de référence | 1,5 j | Moyenne | Faible | Élevé | — |
 | [ ] Définir les budgets de performance | 0,5 j | Moyenne | Faible | Moyen | Baseline |
 | [ ] Créer une coque serveur pour le dashboard | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
 | [ ] Ajouter `loading.tsx` par segment important | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |

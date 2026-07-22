@@ -9697,3 +9697,37 @@ builds hermétiques complets, puis reprendre la capture baseline Phase 8.
 
 Reprendre la capture reproductible de la baseline Phase 8 : bundle, LCP, INP,
 CLS et requêtes de référence.
+
+## Entrée — 2026-07-22 — Baseline Phase 8 production capturée
+
+- Un harnais canonique `npm run perf:baseline` construit MoovX avec
+  `next build --webpack`, vérifie `BUILD_ID` et les manifests, sert le résultat
+  avec `next start`, puis mesure uniquement des origines locales dans Chromium.
+- Chaque exécution crée trois contextes client mobile 390 × 844 et trois
+  contextes coach desktop 1440 × 900. Les parcours couvrent Home, Training,
+  Nutrition, Home coach, Clients, Messages et détail client autorisé.
+- Deux exécutions complètes réussissent avec les `BUILD_ID`
+  `3SsmZGs4buSrw3lXUjHJu` et `trz-4UEZ9K_w9uD-xZKhc`. Les octets bruts du
+  bundle sont identiques; le gzip global varie de 930 652 à 930 646 octets.
+- Baseline principale : client LCP 416/352/328 ms, INP 48/32/32 ms, CLS
+  0,003886/0,010764/0,010764 et 122/104/93 requêtes (80/62/50 applicatives).
+  Coach : LCP 276/308/224 ms, INP 24/24/24 ms, CLS nul et 107/108/107 requêtes
+  (40 applicatives à chaque passage).
+- Le bundle déclaré vaut 3 086 045 o brut / 886 824 o gzip pour `/`,
+  3 109 558 / 895 710 pour `/coach`, 3 235 133 / 921 760 pour
+  `/client/[id]`; l'union dédupliquée vaut 3 258 646 / 930 646 octets.
+- LCP et CLS viennent de `PerformanceObserver`; CLS exclut `hadRecentInput`.
+  INP est la durée maximale des vraies interactions Playwright exposées par
+  `PerformanceEventTiming`, jamais un temps de navigation.
+- Toute origine externe est bloquée et fait échouer le test. Aucun marqueur
+  Google Fonts, secret, e-mail, UUID synthétique ou contenu utilisateur ne se
+  trouve dans les artefacts.
+- Les fixtures et comptes sont supprimés et contrôlés en `finally`; Mailpit est
+  vide, le port 3211 est fermé et le build temporaire supprimé après chaque
+  exécution. La tâche baseline Phase 8 est cochée.
+- Dettes observées sans correction : 42 à 72 appels PostgREST client selon le
+  passage, `/api/feedback/mine` à 500 et avertissement Supabase `getSession()`.
+
+### Prochaine action unique
+
+Définir les budgets de performance.

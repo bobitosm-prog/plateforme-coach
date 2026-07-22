@@ -1,0 +1,1827 @@
+{
+  "bundle": {
+    "globalDeduplicated": {
+      "files": [
+        {
+          "file": "static/chunks/1041-4037b6ef8a2c65e7.js",
+          "gzipBytes": 5071,
+          "rawBytes": 14975
+        },
+        {
+          "file": "static/chunks/1241-12c4cda9024e7518.js",
+          "gzipBytes": 12316,
+          "rawBytes": 41440
+        },
+        {
+          "file": "static/chunks/1581-77cc8e8e0fbf87ab.js",
+          "gzipBytes": 4829,
+          "rawBytes": 13017
+        },
+        {
+          "file": "static/chunks/2170a4aa-68122b3592e38606.js",
+          "gzipBytes": 138443,
+          "rawBytes": 408335
+        },
+        {
+          "file": "static/chunks/2212-8b5f263303003324.js",
+          "gzipBytes": 3709,
+          "rawBytes": 10942
+        },
+        {
+          "file": "static/chunks/3313-7b647765f5bf4f9f.js",
+          "gzipBytes": 53874,
+          "rawBytes": 175645
+        },
+        {
+          "file": "static/chunks/3794-337d1ca25ad99a89.js",
+          "gzipBytes": 51201,
+          "rawBytes": 188659
+        },
+        {
+          "file": "static/chunks/4058-0b3f42a5864fe2d1.js",
+          "gzipBytes": 4623,
+          "rawBytes": 12976
+        },
+        {
+          "file": "static/chunks/44530001-5fe5f6dc7acd321a.js",
+          "gzipBytes": 12565,
+          "rawBytes": 59044
+        },
+        {
+          "file": "static/chunks/4bd1b696-e5d7c65570c947b7.js",
+          "gzipBytes": 62319,
+          "rawBytes": 198492
+        },
+        {
+          "file": "static/chunks/5134-f207b0b06da98f6c.js",
+          "gzipBytes": 7077,
+          "rawBytes": 23285
+        },
+        {
+          "file": "static/chunks/5464-fc20109f6b3dd875.js",
+          "gzipBytes": 7606,
+          "rawBytes": 20091
+        },
+        {
+          "file": "static/chunks/5952-4808ecf538345cfc.js",
+          "gzipBytes": 25392,
+          "rawBytes": 98100
+        },
+        {
+          "file": "static/chunks/6185-96f0c607bbb0719c.js",
+          "gzipBytes": 3534,
+          "rawBytes": 9094
+        },
+        {
+          "file": "static/chunks/6576-02892b4a6de3400b.js",
+          "gzipBytes": 15437,
+          "rawBytes": 52254
+        },
+        {
+          "file": "static/chunks/6585-e3492b171892bbb5.js",
+          "gzipBytes": 51797,
+          "rawBytes": 183882
+        },
+        {
+          "file": "static/chunks/6609-5f743d5c58d6f934.js",
+          "gzipBytes": 9257,
+          "rawBytes": 33595
+        },
+        {
+          "file": "static/chunks/7239-532608e49ca0df9b.js",
+          "gzipBytes": 43559,
+          "rawBytes": 131256
+        },
+        {
+          "file": "static/chunks/8500-98e13bcce54aa7a0.js",
+          "gzipBytes": 3529,
+          "rawBytes": 8746
+        },
+        {
+          "file": "static/chunks/8762-5d40fd5e6b9c758d.js",
+          "gzipBytes": 10218,
+          "rawBytes": 32930
+        },
+        {
+          "file": "static/chunks/8780-b73998e7f0997d5b.js",
+          "gzipBytes": 5934,
+          "rawBytes": 15620
+        },
+        {
+          "file": "static/chunks/9359-f855f0fa8e4effd8.js",
+          "gzipBytes": 102249,
+          "rawBytes": 341725
+        },
+        {
+          "file": "static/chunks/app/client/%5Bid%5D/page-0c41a67e6ae88758.js",
+          "gzipBytes": 34936,
+          "rawBytes": 149088
+        },
+        {
+          "file": "static/chunks/app/coach/page-e32e1dd4606a6d6a.js",
+          "gzipBytes": 1280,
+          "rawBytes": 3422
+        },
+        {
+          "file": "static/chunks/app/error-a0665ae65c75e724.js",
+          "gzipBytes": 3000,
+          "rawBytes": 7945
+        },
+        {
+          "file": "static/chunks/app/layout-2ba595ab7a3e41b5.js",
+          "gzipBytes": 4080,
+          "rawBytes": 11507
+        },
+        {
+          "file": "static/chunks/app/not-found-4016736c2d08e489.js",
+          "gzipBytes": 2897,
+          "rawBytes": 7494
+        },
+        {
+          "file": "static/chunks/app/page-73a84d03774db5b1.js",
+          "gzipBytes": 198247,
+          "rawBytes": 840420
+        },
+        {
+          "file": "static/chunks/main-app-c392e831bbebcb60.js",
+          "gzipBytes": 233,
+          "rawBytes": 529
+        },
+        {
+          "file": "static/chunks/polyfills-42372ed130431b0a.js",
+          "gzipBytes": 39520,
+          "rawBytes": 112594
+        },
+        {
+          "file": "static/chunks/webpack-22454a89d4c8a56f.js",
+          "gzipBytes": 2199,
+          "rawBytes": 4092
+        },
+        {
+          "file": "static/css/f5b737f1da2e2b96.css",
+          "gzipBytes": 9715,
+          "rawBytes": 47452
+        }
+      ],
+      "totals": {
+        "gzipBytes": 930646,
+        "rawBytes": 3258646
+      }
+    },
+    "manifests": [
+      "build-manifest.json",
+      "server/app/page_client-reference-manifest.js",
+      "server/app/coach/page_client-reference-manifest.js",
+      "server/app/client/[id]/page_client-reference-manifest.js"
+    ],
+    "method": "Union of root framework files and App Router client-reference chunks/CSS; shared files are those present in more than one measured route.",
+    "routes": {
+      "client": {
+        "all": [
+          {
+            "file": "static/chunks/1041-4037b6ef8a2c65e7.js",
+            "gzipBytes": 5071,
+            "rawBytes": 14975
+          },
+          {
+            "file": "static/chunks/1241-12c4cda9024e7518.js",
+            "gzipBytes": 12316,
+            "rawBytes": 41440
+          },
+          {
+            "file": "static/chunks/1581-77cc8e8e0fbf87ab.js",
+            "gzipBytes": 4829,
+            "rawBytes": 13017
+          },
+          {
+            "file": "static/chunks/2170a4aa-68122b3592e38606.js",
+            "gzipBytes": 138443,
+            "rawBytes": 408335
+          },
+          {
+            "file": "static/chunks/2212-8b5f263303003324.js",
+            "gzipBytes": 3709,
+            "rawBytes": 10942
+          },
+          {
+            "file": "static/chunks/3313-7b647765f5bf4f9f.js",
+            "gzipBytes": 53874,
+            "rawBytes": 175645
+          },
+          {
+            "file": "static/chunks/3794-337d1ca25ad99a89.js",
+            "gzipBytes": 51201,
+            "rawBytes": 188659
+          },
+          {
+            "file": "static/chunks/4058-0b3f42a5864fe2d1.js",
+            "gzipBytes": 4623,
+            "rawBytes": 12976
+          },
+          {
+            "file": "static/chunks/44530001-5fe5f6dc7acd321a.js",
+            "gzipBytes": 12565,
+            "rawBytes": 59044
+          },
+          {
+            "file": "static/chunks/4bd1b696-e5d7c65570c947b7.js",
+            "gzipBytes": 62319,
+            "rawBytes": 198492
+          },
+          {
+            "file": "static/chunks/5134-f207b0b06da98f6c.js",
+            "gzipBytes": 7077,
+            "rawBytes": 23285
+          },
+          {
+            "file": "static/chunks/5952-4808ecf538345cfc.js",
+            "gzipBytes": 25392,
+            "rawBytes": 98100
+          },
+          {
+            "file": "static/chunks/6185-96f0c607bbb0719c.js",
+            "gzipBytes": 3534,
+            "rawBytes": 9094
+          },
+          {
+            "file": "static/chunks/6576-02892b4a6de3400b.js",
+            "gzipBytes": 15437,
+            "rawBytes": 52254
+          },
+          {
+            "file": "static/chunks/6585-e3492b171892bbb5.js",
+            "gzipBytes": 51797,
+            "rawBytes": 183882
+          },
+          {
+            "file": "static/chunks/6609-5f743d5c58d6f934.js",
+            "gzipBytes": 9257,
+            "rawBytes": 33595
+          },
+          {
+            "file": "static/chunks/7239-532608e49ca0df9b.js",
+            "gzipBytes": 43559,
+            "rawBytes": 131256
+          },
+          {
+            "file": "static/chunks/8500-98e13bcce54aa7a0.js",
+            "gzipBytes": 3529,
+            "rawBytes": 8746
+          },
+          {
+            "file": "static/chunks/8762-5d40fd5e6b9c758d.js",
+            "gzipBytes": 10218,
+            "rawBytes": 32930
+          },
+          {
+            "file": "static/chunks/8780-b73998e7f0997d5b.js",
+            "gzipBytes": 5934,
+            "rawBytes": 15620
+          },
+          {
+            "file": "static/chunks/9359-f855f0fa8e4effd8.js",
+            "gzipBytes": 102249,
+            "rawBytes": 341725
+          },
+          {
+            "file": "static/chunks/app/error-a0665ae65c75e724.js",
+            "gzipBytes": 3000,
+            "rawBytes": 7945
+          },
+          {
+            "file": "static/chunks/app/layout-2ba595ab7a3e41b5.js",
+            "gzipBytes": 4080,
+            "rawBytes": 11507
+          },
+          {
+            "file": "static/chunks/app/not-found-4016736c2d08e489.js",
+            "gzipBytes": 2897,
+            "rawBytes": 7494
+          },
+          {
+            "file": "static/chunks/app/page-73a84d03774db5b1.js",
+            "gzipBytes": 198247,
+            "rawBytes": 840420
+          },
+          {
+            "file": "static/chunks/main-app-c392e831bbebcb60.js",
+            "gzipBytes": 233,
+            "rawBytes": 529
+          },
+          {
+            "file": "static/chunks/polyfills-42372ed130431b0a.js",
+            "gzipBytes": 39520,
+            "rawBytes": 112594
+          },
+          {
+            "file": "static/chunks/webpack-22454a89d4c8a56f.js",
+            "gzipBytes": 2199,
+            "rawBytes": 4092
+          },
+          {
+            "file": "static/css/f5b737f1da2e2b96.css",
+            "gzipBytes": 9715,
+            "rawBytes": 47452
+          }
+        ],
+        "routeSpecific": [],
+        "routeSpecificTotals": {
+          "gzipBytes": 0,
+          "rawBytes": 0
+        },
+        "totals": {
+          "gzipBytes": 886824,
+          "rawBytes": 3086045
+        }
+      },
+      "clientDetail": {
+        "all": [
+          {
+            "file": "static/chunks/1041-4037b6ef8a2c65e7.js",
+            "gzipBytes": 5071,
+            "rawBytes": 14975
+          },
+          {
+            "file": "static/chunks/1241-12c4cda9024e7518.js",
+            "gzipBytes": 12316,
+            "rawBytes": 41440
+          },
+          {
+            "file": "static/chunks/1581-77cc8e8e0fbf87ab.js",
+            "gzipBytes": 4829,
+            "rawBytes": 13017
+          },
+          {
+            "file": "static/chunks/2170a4aa-68122b3592e38606.js",
+            "gzipBytes": 138443,
+            "rawBytes": 408335
+          },
+          {
+            "file": "static/chunks/2212-8b5f263303003324.js",
+            "gzipBytes": 3709,
+            "rawBytes": 10942
+          },
+          {
+            "file": "static/chunks/3313-7b647765f5bf4f9f.js",
+            "gzipBytes": 53874,
+            "rawBytes": 175645
+          },
+          {
+            "file": "static/chunks/3794-337d1ca25ad99a89.js",
+            "gzipBytes": 51201,
+            "rawBytes": 188659
+          },
+          {
+            "file": "static/chunks/4058-0b3f42a5864fe2d1.js",
+            "gzipBytes": 4623,
+            "rawBytes": 12976
+          },
+          {
+            "file": "static/chunks/44530001-5fe5f6dc7acd321a.js",
+            "gzipBytes": 12565,
+            "rawBytes": 59044
+          },
+          {
+            "file": "static/chunks/4bd1b696-e5d7c65570c947b7.js",
+            "gzipBytes": 62319,
+            "rawBytes": 198492
+          },
+          {
+            "file": "static/chunks/5134-f207b0b06da98f6c.js",
+            "gzipBytes": 7077,
+            "rawBytes": 23285
+          },
+          {
+            "file": "static/chunks/5952-4808ecf538345cfc.js",
+            "gzipBytes": 25392,
+            "rawBytes": 98100
+          },
+          {
+            "file": "static/chunks/6185-96f0c607bbb0719c.js",
+            "gzipBytes": 3534,
+            "rawBytes": 9094
+          },
+          {
+            "file": "static/chunks/6576-02892b4a6de3400b.js",
+            "gzipBytes": 15437,
+            "rawBytes": 52254
+          },
+          {
+            "file": "static/chunks/6585-e3492b171892bbb5.js",
+            "gzipBytes": 51797,
+            "rawBytes": 183882
+          },
+          {
+            "file": "static/chunks/6609-5f743d5c58d6f934.js",
+            "gzipBytes": 9257,
+            "rawBytes": 33595
+          },
+          {
+            "file": "static/chunks/7239-532608e49ca0df9b.js",
+            "gzipBytes": 43559,
+            "rawBytes": 131256
+          },
+          {
+            "file": "static/chunks/8500-98e13bcce54aa7a0.js",
+            "gzipBytes": 3529,
+            "rawBytes": 8746
+          },
+          {
+            "file": "static/chunks/8762-5d40fd5e6b9c758d.js",
+            "gzipBytes": 10218,
+            "rawBytes": 32930
+          },
+          {
+            "file": "static/chunks/8780-b73998e7f0997d5b.js",
+            "gzipBytes": 5934,
+            "rawBytes": 15620
+          },
+          {
+            "file": "static/chunks/9359-f855f0fa8e4effd8.js",
+            "gzipBytes": 102249,
+            "rawBytes": 341725
+          },
+          {
+            "file": "static/chunks/app/client/%5Bid%5D/page-0c41a67e6ae88758.js",
+            "gzipBytes": 34936,
+            "rawBytes": 149088
+          },
+          {
+            "file": "static/chunks/app/error-a0665ae65c75e724.js",
+            "gzipBytes": 3000,
+            "rawBytes": 7945
+          },
+          {
+            "file": "static/chunks/app/layout-2ba595ab7a3e41b5.js",
+            "gzipBytes": 4080,
+            "rawBytes": 11507
+          },
+          {
+            "file": "static/chunks/app/not-found-4016736c2d08e489.js",
+            "gzipBytes": 2897,
+            "rawBytes": 7494
+          },
+          {
+            "file": "static/chunks/app/page-73a84d03774db5b1.js",
+            "gzipBytes": 198247,
+            "rawBytes": 840420
+          },
+          {
+            "file": "static/chunks/main-app-c392e831bbebcb60.js",
+            "gzipBytes": 233,
+            "rawBytes": 529
+          },
+          {
+            "file": "static/chunks/polyfills-42372ed130431b0a.js",
+            "gzipBytes": 39520,
+            "rawBytes": 112594
+          },
+          {
+            "file": "static/chunks/webpack-22454a89d4c8a56f.js",
+            "gzipBytes": 2199,
+            "rawBytes": 4092
+          },
+          {
+            "file": "static/css/f5b737f1da2e2b96.css",
+            "gzipBytes": 9715,
+            "rawBytes": 47452
+          }
+        ],
+        "routeSpecific": [
+          {
+            "file": "static/chunks/app/client/%5Bid%5D/page-0c41a67e6ae88758.js",
+            "gzipBytes": 34936,
+            "rawBytes": 149088
+          }
+        ],
+        "routeSpecificTotals": {
+          "gzipBytes": 34936,
+          "rawBytes": 149088
+        },
+        "totals": {
+          "gzipBytes": 921760,
+          "rawBytes": 3235133
+        }
+      },
+      "coach": {
+        "all": [
+          {
+            "file": "static/chunks/1041-4037b6ef8a2c65e7.js",
+            "gzipBytes": 5071,
+            "rawBytes": 14975
+          },
+          {
+            "file": "static/chunks/1241-12c4cda9024e7518.js",
+            "gzipBytes": 12316,
+            "rawBytes": 41440
+          },
+          {
+            "file": "static/chunks/1581-77cc8e8e0fbf87ab.js",
+            "gzipBytes": 4829,
+            "rawBytes": 13017
+          },
+          {
+            "file": "static/chunks/2170a4aa-68122b3592e38606.js",
+            "gzipBytes": 138443,
+            "rawBytes": 408335
+          },
+          {
+            "file": "static/chunks/2212-8b5f263303003324.js",
+            "gzipBytes": 3709,
+            "rawBytes": 10942
+          },
+          {
+            "file": "static/chunks/3313-7b647765f5bf4f9f.js",
+            "gzipBytes": 53874,
+            "rawBytes": 175645
+          },
+          {
+            "file": "static/chunks/3794-337d1ca25ad99a89.js",
+            "gzipBytes": 51201,
+            "rawBytes": 188659
+          },
+          {
+            "file": "static/chunks/4058-0b3f42a5864fe2d1.js",
+            "gzipBytes": 4623,
+            "rawBytes": 12976
+          },
+          {
+            "file": "static/chunks/44530001-5fe5f6dc7acd321a.js",
+            "gzipBytes": 12565,
+            "rawBytes": 59044
+          },
+          {
+            "file": "static/chunks/4bd1b696-e5d7c65570c947b7.js",
+            "gzipBytes": 62319,
+            "rawBytes": 198492
+          },
+          {
+            "file": "static/chunks/5134-f207b0b06da98f6c.js",
+            "gzipBytes": 7077,
+            "rawBytes": 23285
+          },
+          {
+            "file": "static/chunks/5464-fc20109f6b3dd875.js",
+            "gzipBytes": 7606,
+            "rawBytes": 20091
+          },
+          {
+            "file": "static/chunks/5952-4808ecf538345cfc.js",
+            "gzipBytes": 25392,
+            "rawBytes": 98100
+          },
+          {
+            "file": "static/chunks/6185-96f0c607bbb0719c.js",
+            "gzipBytes": 3534,
+            "rawBytes": 9094
+          },
+          {
+            "file": "static/chunks/6576-02892b4a6de3400b.js",
+            "gzipBytes": 15437,
+            "rawBytes": 52254
+          },
+          {
+            "file": "static/chunks/6585-e3492b171892bbb5.js",
+            "gzipBytes": 51797,
+            "rawBytes": 183882
+          },
+          {
+            "file": "static/chunks/6609-5f743d5c58d6f934.js",
+            "gzipBytes": 9257,
+            "rawBytes": 33595
+          },
+          {
+            "file": "static/chunks/7239-532608e49ca0df9b.js",
+            "gzipBytes": 43559,
+            "rawBytes": 131256
+          },
+          {
+            "file": "static/chunks/8500-98e13bcce54aa7a0.js",
+            "gzipBytes": 3529,
+            "rawBytes": 8746
+          },
+          {
+            "file": "static/chunks/8762-5d40fd5e6b9c758d.js",
+            "gzipBytes": 10218,
+            "rawBytes": 32930
+          },
+          {
+            "file": "static/chunks/8780-b73998e7f0997d5b.js",
+            "gzipBytes": 5934,
+            "rawBytes": 15620
+          },
+          {
+            "file": "static/chunks/9359-f855f0fa8e4effd8.js",
+            "gzipBytes": 102249,
+            "rawBytes": 341725
+          },
+          {
+            "file": "static/chunks/app/coach/page-e32e1dd4606a6d6a.js",
+            "gzipBytes": 1280,
+            "rawBytes": 3422
+          },
+          {
+            "file": "static/chunks/app/error-a0665ae65c75e724.js",
+            "gzipBytes": 3000,
+            "rawBytes": 7945
+          },
+          {
+            "file": "static/chunks/app/layout-2ba595ab7a3e41b5.js",
+            "gzipBytes": 4080,
+            "rawBytes": 11507
+          },
+          {
+            "file": "static/chunks/app/not-found-4016736c2d08e489.js",
+            "gzipBytes": 2897,
+            "rawBytes": 7494
+          },
+          {
+            "file": "static/chunks/app/page-73a84d03774db5b1.js",
+            "gzipBytes": 198247,
+            "rawBytes": 840420
+          },
+          {
+            "file": "static/chunks/main-app-c392e831bbebcb60.js",
+            "gzipBytes": 233,
+            "rawBytes": 529
+          },
+          {
+            "file": "static/chunks/polyfills-42372ed130431b0a.js",
+            "gzipBytes": 39520,
+            "rawBytes": 112594
+          },
+          {
+            "file": "static/chunks/webpack-22454a89d4c8a56f.js",
+            "gzipBytes": 2199,
+            "rawBytes": 4092
+          },
+          {
+            "file": "static/css/f5b737f1da2e2b96.css",
+            "gzipBytes": 9715,
+            "rawBytes": 47452
+          }
+        ],
+        "routeSpecific": [
+          {
+            "file": "static/chunks/5464-fc20109f6b3dd875.js",
+            "gzipBytes": 7606,
+            "rawBytes": 20091
+          },
+          {
+            "file": "static/chunks/app/coach/page-e32e1dd4606a6d6a.js",
+            "gzipBytes": 1280,
+            "rawBytes": 3422
+          }
+        ],
+        "routeSpecificTotals": {
+          "gzipBytes": 8886,
+          "rawBytes": 23513
+        },
+        "totals": {
+          "gzipBytes": 895710,
+          "rawBytes": 3109558
+        }
+      }
+    },
+    "shared": {
+      "files": [
+        {
+          "file": "static/chunks/1041-4037b6ef8a2c65e7.js",
+          "gzipBytes": 5071,
+          "rawBytes": 14975
+        },
+        {
+          "file": "static/chunks/1241-12c4cda9024e7518.js",
+          "gzipBytes": 12316,
+          "rawBytes": 41440
+        },
+        {
+          "file": "static/chunks/1581-77cc8e8e0fbf87ab.js",
+          "gzipBytes": 4829,
+          "rawBytes": 13017
+        },
+        {
+          "file": "static/chunks/2170a4aa-68122b3592e38606.js",
+          "gzipBytes": 138443,
+          "rawBytes": 408335
+        },
+        {
+          "file": "static/chunks/2212-8b5f263303003324.js",
+          "gzipBytes": 3709,
+          "rawBytes": 10942
+        },
+        {
+          "file": "static/chunks/3313-7b647765f5bf4f9f.js",
+          "gzipBytes": 53874,
+          "rawBytes": 175645
+        },
+        {
+          "file": "static/chunks/3794-337d1ca25ad99a89.js",
+          "gzipBytes": 51201,
+          "rawBytes": 188659
+        },
+        {
+          "file": "static/chunks/4058-0b3f42a5864fe2d1.js",
+          "gzipBytes": 4623,
+          "rawBytes": 12976
+        },
+        {
+          "file": "static/chunks/44530001-5fe5f6dc7acd321a.js",
+          "gzipBytes": 12565,
+          "rawBytes": 59044
+        },
+        {
+          "file": "static/chunks/4bd1b696-e5d7c65570c947b7.js",
+          "gzipBytes": 62319,
+          "rawBytes": 198492
+        },
+        {
+          "file": "static/chunks/5134-f207b0b06da98f6c.js",
+          "gzipBytes": 7077,
+          "rawBytes": 23285
+        },
+        {
+          "file": "static/chunks/5952-4808ecf538345cfc.js",
+          "gzipBytes": 25392,
+          "rawBytes": 98100
+        },
+        {
+          "file": "static/chunks/6185-96f0c607bbb0719c.js",
+          "gzipBytes": 3534,
+          "rawBytes": 9094
+        },
+        {
+          "file": "static/chunks/6576-02892b4a6de3400b.js",
+          "gzipBytes": 15437,
+          "rawBytes": 52254
+        },
+        {
+          "file": "static/chunks/6585-e3492b171892bbb5.js",
+          "gzipBytes": 51797,
+          "rawBytes": 183882
+        },
+        {
+          "file": "static/chunks/6609-5f743d5c58d6f934.js",
+          "gzipBytes": 9257,
+          "rawBytes": 33595
+        },
+        {
+          "file": "static/chunks/7239-532608e49ca0df9b.js",
+          "gzipBytes": 43559,
+          "rawBytes": 131256
+        },
+        {
+          "file": "static/chunks/8500-98e13bcce54aa7a0.js",
+          "gzipBytes": 3529,
+          "rawBytes": 8746
+        },
+        {
+          "file": "static/chunks/8762-5d40fd5e6b9c758d.js",
+          "gzipBytes": 10218,
+          "rawBytes": 32930
+        },
+        {
+          "file": "static/chunks/8780-b73998e7f0997d5b.js",
+          "gzipBytes": 5934,
+          "rawBytes": 15620
+        },
+        {
+          "file": "static/chunks/9359-f855f0fa8e4effd8.js",
+          "gzipBytes": 102249,
+          "rawBytes": 341725
+        },
+        {
+          "file": "static/chunks/app/error-a0665ae65c75e724.js",
+          "gzipBytes": 3000,
+          "rawBytes": 7945
+        },
+        {
+          "file": "static/chunks/app/layout-2ba595ab7a3e41b5.js",
+          "gzipBytes": 4080,
+          "rawBytes": 11507
+        },
+        {
+          "file": "static/chunks/app/not-found-4016736c2d08e489.js",
+          "gzipBytes": 2897,
+          "rawBytes": 7494
+        },
+        {
+          "file": "static/chunks/app/page-73a84d03774db5b1.js",
+          "gzipBytes": 198247,
+          "rawBytes": 840420
+        },
+        {
+          "file": "static/chunks/main-app-c392e831bbebcb60.js",
+          "gzipBytes": 233,
+          "rawBytes": 529
+        },
+        {
+          "file": "static/chunks/polyfills-42372ed130431b0a.js",
+          "gzipBytes": 39520,
+          "rawBytes": 112594
+        },
+        {
+          "file": "static/chunks/webpack-22454a89d4c8a56f.js",
+          "gzipBytes": 2199,
+          "rawBytes": 4092
+        },
+        {
+          "file": "static/css/f5b737f1da2e2b96.css",
+          "gzipBytes": 9715,
+          "rawBytes": 47452
+        }
+      ],
+      "totals": {
+        "gzipBytes": 886824,
+        "rawBytes": 3086045
+      }
+    }
+  },
+  "environment": {
+    "browser": "149.0.7827.55",
+    "buildId": "trz-4UEZ9K_w9uD-xZKhc",
+    "commit": "2025c7135e361866591af9296355fde05587d01d",
+    "measuredAt": "2026-07-22T19:06:17.182Z",
+    "network": "localhost-only; external browser requests aborted and asserted absent",
+    "next": "16.1.6",
+    "node": "v24.14.0",
+    "npm": "11.9.0",
+    "playwright": "^1.61.1",
+    "timezone": "Europe/Zurich",
+    "viewports": {
+      "clientMobile": {
+        "height": 844,
+        "width": 390
+      },
+      "coachDesktop": {
+        "height": 900,
+        "width": 1440
+      }
+    }
+  },
+  "journeys": {
+    "clientMobile": {
+      "aggregate": {
+        "cls": {
+          "max": 0.010764427324414466,
+          "median": 0.010764201451461395,
+          "min": 0.0038861441575539974,
+          "values": [
+            0.0038861441575539974,
+            0.010764201451461395,
+            0.010764427324414466
+          ]
+        },
+        "inp": {
+          "max": 48,
+          "median": 32,
+          "min": 32,
+          "values": [
+            48,
+            32,
+            32
+          ]
+        },
+        "lcp": {
+          "max": 416,
+          "median": 352,
+          "min": 328,
+          "values": [
+            416,
+            352,
+            328
+          ]
+        },
+        "requests": {
+          "application": {
+            "max": 80,
+            "median": 62,
+            "min": 50,
+            "values": [
+              80,
+              62,
+              50
+            ]
+          },
+          "categories": {
+            "auth": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3
+              ]
+            },
+            "css": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "document": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "font": {
+              "max": 7,
+              "median": 7,
+              "min": 7,
+              "values": [
+                7,
+                7,
+                7
+              ]
+            },
+            "image-media": {
+              "max": 6,
+              "median": 6,
+              "min": 6,
+              "values": [
+                6,
+                6,
+                6
+              ]
+            },
+            "javascript": {
+              "max": 29,
+              "median": 28,
+              "min": 28,
+              "values": [
+                28,
+                28,
+                29
+              ]
+            },
+            "next-api": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "other-local": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "postgrest": {
+              "max": 72,
+              "median": 54,
+              "min": 42,
+              "values": [
+                72,
+                54,
+                42
+              ]
+            },
+            "realtime": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3
+              ]
+            }
+          },
+          "total": {
+            "max": 122,
+            "median": 104,
+            "min": 93,
+            "values": [
+              122,
+              104,
+              93
+            ]
+          }
+        }
+      },
+      "runs": [
+        {
+          "pass": 1,
+          "requests": {
+            "application": 80,
+            "categories": {
+              "auth": 3,
+              "css": 1,
+              "document": 1,
+              "font": 7,
+              "image-media": 6,
+              "javascript": 28,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 72,
+              "realtime": 3
+            },
+            "total": 122
+          },
+          "segments": [
+            {
+              "cls": 0.0038861441575539974,
+              "eventTimingSupported": true,
+              "inp": 48,
+              "interactionCount": 6,
+              "lcp": 416
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 70,
+                "categories": {
+                  "auth": 3,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 4,
+                  "javascript": 28,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 63,
+                  "realtime": 2
+                },
+                "total": 110
+              }
+            },
+            {
+              "name": "training",
+              "requests": {
+                "application": 4,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 2,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 4,
+                  "realtime": 0
+                },
+                "total": 6
+              }
+            },
+            {
+              "name": "nutrition",
+              "requests": {
+                "application": 6,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 5,
+                  "realtime": 1
+                },
+                "total": 6
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0.0038861441575539974,
+            "eventTimingSupported": true,
+            "inp": 48,
+            "interactionCount": 6,
+            "lcp": 416
+          }
+        },
+        {
+          "pass": 2,
+          "requests": {
+            "application": 62,
+            "categories": {
+              "auth": 3,
+              "css": 1,
+              "document": 1,
+              "font": 7,
+              "image-media": 6,
+              "javascript": 28,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 54,
+              "realtime": 3
+            },
+            "total": 104
+          },
+          "segments": [
+            {
+              "cls": 0.010764201451461395,
+              "eventTimingSupported": true,
+              "inp": 32,
+              "interactionCount": 6,
+              "lcp": 352
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 52,
+                "categories": {
+                  "auth": 3,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 4,
+                  "javascript": 28,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 45,
+                  "realtime": 2
+                },
+                "total": 92
+              }
+            },
+            {
+              "name": "training",
+              "requests": {
+                "application": 4,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 2,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 4,
+                  "realtime": 0
+                },
+                "total": 6
+              }
+            },
+            {
+              "name": "nutrition",
+              "requests": {
+                "application": 6,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 5,
+                  "realtime": 1
+                },
+                "total": 6
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0.010764201451461395,
+            "eventTimingSupported": true,
+            "inp": 32,
+            "interactionCount": 6,
+            "lcp": 352
+          }
+        },
+        {
+          "pass": 3,
+          "requests": {
+            "application": 50,
+            "categories": {
+              "auth": 3,
+              "css": 1,
+              "document": 1,
+              "font": 7,
+              "image-media": 6,
+              "javascript": 29,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 42,
+              "realtime": 3
+            },
+            "total": 93
+          },
+          "segments": [
+            {
+              "cls": 0.010764427324414466,
+              "eventTimingSupported": true,
+              "inp": 32,
+              "interactionCount": 6,
+              "lcp": 328
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 40,
+                "categories": {
+                  "auth": 3,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 4,
+                  "javascript": 29,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 33,
+                  "realtime": 2
+                },
+                "total": 81
+              }
+            },
+            {
+              "name": "training",
+              "requests": {
+                "application": 4,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 2,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 4,
+                  "realtime": 0
+                },
+                "total": 6
+              }
+            },
+            {
+              "name": "nutrition",
+              "requests": {
+                "application": 6,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 0,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 5,
+                  "realtime": 1
+                },
+                "total": 6
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0.010764427324414466,
+            "eventTimingSupported": true,
+            "inp": 32,
+            "interactionCount": 6,
+            "lcp": 328
+          }
+        }
+      ]
+    },
+    "coachDesktop": {
+      "aggregate": {
+        "cls": {
+          "max": 0,
+          "median": 0,
+          "min": 0,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "inp": {
+          "max": 24,
+          "median": 24,
+          "min": 24,
+          "values": [
+            24,
+            24,
+            24
+          ]
+        },
+        "lcp": {
+          "max": 308,
+          "median": 276,
+          "min": 224,
+          "values": [
+            276,
+            308,
+            224
+          ]
+        },
+        "requests": {
+          "application": {
+            "max": 40,
+            "median": 40,
+            "min": 40,
+            "values": [
+              40,
+              40,
+              40
+            ]
+          },
+          "categories": {
+            "auth": {
+              "max": 6,
+              "median": 6,
+              "min": 5,
+              "values": [
+                5,
+                6,
+                6
+              ]
+            },
+            "css": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2
+              ]
+            },
+            "document": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2
+              ]
+            },
+            "font": {
+              "max": 14,
+              "median": 14,
+              "min": 14,
+              "values": [
+                14,
+                14,
+                14
+              ]
+            },
+            "image-media": {
+              "max": 4,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                4,
+                3
+              ]
+            },
+            "javascript": {
+              "max": 48,
+              "median": 48,
+              "min": 48,
+              "values": [
+                48,
+                48,
+                48
+              ]
+            },
+            "next-api": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "other-local": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "postgrest": {
+              "max": 27,
+              "median": 26,
+              "min": 26,
+              "values": [
+                27,
+                26,
+                26
+              ]
+            },
+            "realtime": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5,
+                5
+              ]
+            }
+          },
+          "total": {
+            "max": 108,
+            "median": 107,
+            "min": 107,
+            "values": [
+              107,
+              108,
+              107
+            ]
+          }
+        }
+      },
+      "runs": [
+        {
+          "pass": 1,
+          "requests": {
+            "application": 40,
+            "categories": {
+              "auth": 5,
+              "css": 2,
+              "document": 2,
+              "font": 14,
+              "image-media": 3,
+              "javascript": 48,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 27,
+              "realtime": 5
+            },
+            "total": 107
+          },
+          "segments": [
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 24,
+              "interactionCount": 6,
+              "lcp": 220
+            },
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 16,
+              "interactionCount": 3,
+              "lcp": 276
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 15,
+                "categories": {
+                  "auth": 1,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 3,
+                  "javascript": 25,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 10,
+                  "realtime": 2
+                },
+                "total": 51
+              }
+            },
+            {
+              "name": "clients",
+              "requests": {
+                "application": 1,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 1,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 0,
+                  "realtime": 1
+                },
+                "total": 2
+              }
+            },
+            {
+              "name": "messages",
+              "requests": {
+                "application": 6,
+                "categories": {
+                  "auth": 3,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 2,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 3,
+                  "realtime": 0
+                },
+                "total": 8
+              }
+            },
+            {
+              "name": "client-detail",
+              "requests": {
+                "application": 18,
+                "categories": {
+                  "auth": 1,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 0,
+                  "javascript": 20,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 14,
+                  "realtime": 2
+                },
+                "total": 46
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0,
+            "eventTimingSupported": true,
+            "inp": 24,
+            "interactionCount": 9,
+            "lcp": 276
+          }
+        },
+        {
+          "pass": 2,
+          "requests": {
+            "application": 40,
+            "categories": {
+              "auth": 6,
+              "css": 2,
+              "document": 2,
+              "font": 14,
+              "image-media": 4,
+              "javascript": 48,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 26,
+              "realtime": 5
+            },
+            "total": 108
+          },
+          "segments": [
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 24,
+              "interactionCount": 6,
+              "lcp": 308
+            },
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 16,
+              "interactionCount": 3,
+              "lcp": 232
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 15,
+                "categories": {
+                  "auth": 2,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 4,
+                  "javascript": 25,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 9,
+                  "realtime": 2
+                },
+                "total": 52
+              }
+            },
+            {
+              "name": "clients",
+              "requests": {
+                "application": 0,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 1,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 0,
+                  "realtime": 0
+                },
+                "total": 1
+              }
+            },
+            {
+              "name": "messages",
+              "requests": {
+                "application": 7,
+                "categories": {
+                  "auth": 3,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 2,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 3,
+                  "realtime": 1
+                },
+                "total": 9
+              }
+            },
+            {
+              "name": "client-detail",
+              "requests": {
+                "application": 18,
+                "categories": {
+                  "auth": 1,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 0,
+                  "javascript": 20,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 14,
+                  "realtime": 2
+                },
+                "total": 46
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0,
+            "eventTimingSupported": true,
+            "inp": 24,
+            "interactionCount": 9,
+            "lcp": 308
+          }
+        },
+        {
+          "pass": 3,
+          "requests": {
+            "application": 40,
+            "categories": {
+              "auth": 6,
+              "css": 2,
+              "document": 2,
+              "font": 14,
+              "image-media": 3,
+              "javascript": 48,
+              "next-api": 1,
+              "other-local": 0,
+              "postgrest": 26,
+              "realtime": 5
+            },
+            "total": 107
+          },
+          "segments": [
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 24,
+              "interactionCount": 6,
+              "lcp": 204
+            },
+            {
+              "cls": 0,
+              "eventTimingSupported": true,
+              "inp": 24,
+              "interactionCount": 3,
+              "lcp": 224
+            }
+          ],
+          "steps": [
+            {
+              "name": "home",
+              "requests": {
+                "application": 15,
+                "categories": {
+                  "auth": 2,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 3,
+                  "javascript": 25,
+                  "next-api": 1,
+                  "other-local": 0,
+                  "postgrest": 9,
+                  "realtime": 2
+                },
+                "total": 51
+              }
+            },
+            {
+              "name": "clients",
+              "requests": {
+                "application": 1,
+                "categories": {
+                  "auth": 0,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 1,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 0,
+                  "realtime": 1
+                },
+                "total": 2
+              }
+            },
+            {
+              "name": "messages",
+              "requests": {
+                "application": 6,
+                "categories": {
+                  "auth": 3,
+                  "css": 0,
+                  "document": 0,
+                  "font": 0,
+                  "image-media": 0,
+                  "javascript": 2,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 3,
+                  "realtime": 0
+                },
+                "total": 8
+              }
+            },
+            {
+              "name": "client-detail",
+              "requests": {
+                "application": 18,
+                "categories": {
+                  "auth": 1,
+                  "css": 1,
+                  "document": 1,
+                  "font": 7,
+                  "image-media": 0,
+                  "javascript": 20,
+                  "next-api": 0,
+                  "other-local": 0,
+                  "postgrest": 14,
+                  "realtime": 2
+                },
+                "total": 46
+              }
+            }
+          ],
+          "vitals": {
+            "cls": 0,
+            "eventTimingSupported": true,
+            "inp": 24,
+            "interactionCount": 9,
+            "lcp": 224
+          }
+        }
+      ]
+    }
+  },
+  "schemaVersion": 1
+}

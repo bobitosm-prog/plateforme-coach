@@ -144,6 +144,15 @@ Ces gardes réduisent le risque mais ne constituent pas un bac à sable réseau 
 
 ## 6. Cadence de validation
 
+### Baseline de performance production
+
+`npm run perf:baseline` construit exclusivement avec Webpack, démarre
+`next start`, exécute trois passages client mobile et coach desktop, puis écrit
+`perf/baseline/phase-8-baseline.json`. Le harnais refuse les origines navigateur
+externes, exige les manifests complets, nettoie fixtures, Mailpit, processus et
+port temporaire. Le protocole et les métriques sont détaillés dans la
+[baseline Phase 8](./PERFORMANCE_BASELINE.md).
+
 ### À chaque modification
 
 - test Vitest du fichier ou domaine touché;
