@@ -14,6 +14,9 @@ Artefacts bruts et déterministes :
 - [`phase-8-baseline-run-2.json`](../perf/baseline/phase-8-baseline-run-2.json),
   `BUILD_ID` `trz-4UEZ9K_w9uD-xZKhc` (baseline principale ci-dessous).
 
+Les plafonds automatisés dérivés de ces captures sont documentés dans
+[Budgets de performance](./PERFORMANCE_BUDGETS.md).
+
 ## Commande canonique
 
 ```bash

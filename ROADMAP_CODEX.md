@@ -537,9 +537,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : Phase 8 active — baseline production Webpack capturée deux fois,
-avec bundle brut/gzip, LCP, INP, CLS et requêtes locales sur trois passages par
-parcours. Prochaine tranche : définir les budgets de performance.**
+**Statut : Phase 8 active — baseline production Webpack capturée deux fois et
+budgets anti-régression automatisés pour bundle, Web Vitals locaux et requêtes.
+Prochaine tranche : créer une coque serveur pour le dashboard.**
 
 ### Pourquoi
 
@@ -550,7 +550,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
 | [x] Capturer bundle, LCP, INP, CLS et requêtes de référence | 1,5 j | Moyenne | Faible | Élevé | — |
-| [ ] Définir les budgets de performance | 0,5 j | Moyenne | Faible | Moyen | Baseline |
+| [x] Définir les budgets de performance | 0,5 j | Moyenne | Faible | Moyen | Baseline |
 | [ ] Créer une coque serveur pour le dashboard | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
 | [ ] Ajouter `loading.tsx` par segment important | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |
 | [ ] Ajouter `error.tsx` par domaine critique | 1,5 j | Moyenne | Faible | Moyen | Contrats erreurs |

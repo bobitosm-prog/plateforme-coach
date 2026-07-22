@@ -9731,3 +9731,28 @@ CLS et requêtes de référence.
 ### Prochaine action unique
 
 Définir les budgets de performance.
+
+## Entrée — 2026-07-22 — Budgets de performance automatisés
+
+- Un registre typé versionne les plafonds bundle gzip pour `/`, `/coach`,
+  `/client/[id]` et l'union dédupliquée, les LCP/INP/CLS client et coach, ainsi
+  que les requêtes applicatives, Auth, PostgREST, Realtime et Next/API.
+- Les limites utilisent le maximum des deux captures, une marge exacte de 10 %
+  arrondie vers le haut, +1 minimum pour les petits compteurs et un plancher
+  CLS coach de 0,001. Chaque passage et la médiane recalculée sont bloquants;
+  le total réseau reste informatif.
+- `checkPerformanceBudgets` retourne `passed`, `failed`, `unavailable` ou
+  `invalid`, avec écarts absolus/relatifs et ordre déterministe. Une métrique
+  absente n'est jamais remplacée par zéro et les entrées restent immuables.
+- `npm run perf:budget:check` vérifie par défaut les deux artefacts ou accepte
+  un futur fichier. La commande ne démarre aucun build, navigateur, Supabase ou
+  réseau et n'affiche jamais de contenu brut.
+- Les deux références passent chacune 79 contrôles sans dépassement informatif.
+  Les tests couvrent bundle, LCP, INP, CLS, requêtes, invalidité, absence,
+  seuil exact, immutabilité, tri et code de sortie CLI.
+- Les dettes PostgREST client, `/api/feedback/mine` à 500 et l'avertissement
+  `getSession()` restent documentées et inchangées. Phase 8 reste active.
+
+### Prochaine action unique
+
+Créer une coque serveur pour le dashboard.

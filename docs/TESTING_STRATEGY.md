@@ -153,6 +153,11 @@ externes, exige les manifests complets, nettoie fixtures, Mailpit, processus et
 port temporaire. Le protocole et les métriques sont détaillés dans la
 [baseline Phase 8](./PERFORMANCE_BASELINE.md).
 
+`npm run perf:budget:check` relit les deux artefacts sans démarrer aucun
+service et applique les [budgets locaux anti-régression](./PERFORMANCE_BUDGETS.md).
+Un dépassement bloquant, une métrique requise indisponible ou un artefact
+invalide produit un code non nul.
+
 ### À chaque modification
 
 - test Vitest du fichier ou domaine touché;
