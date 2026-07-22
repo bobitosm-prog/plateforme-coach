@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     .or(`next_diagnostic_at.is.null,next_diagnostic_at.lte.${nowIso}`)
 
   if (usersErr) {
-    console.error('[cron weekly-diagnostic] Error fetching users:', usersErr)
+    console.error('[cron weekly-diagnostic] Error fetching users')
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 
@@ -62,23 +62,25 @@ export async function POST(req: NextRequest) {
 
   const allUsers = users || []
   for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
+    if (req.signal.aborted) break
     const batch = allUsers.slice(i, i + CONCURRENCY)
     await Promise.all(batch.map(async (u) => {
-      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'weekly-diagnostic-cron', principal: { kind: 'server', id: 'cron.weekly-diagnostic', subjectUserId: u.id }, correlationId: `${operationId.slice(0, 80)}:${u.id}`, logicalModel: 'claude-opus-4-8' })
+      const correlationId = `${operationId.slice(0, 80)}:${u.id}`
+      const usage = await startAiUsage({ client: supabaseAdmin, feature: 'weekly-diagnostic-cron', principal: { kind: 'server', id: 'cron.weekly-diagnostic', subjectUserId: u.id }, correlationId, logicalModel: 'anthropic-opus-4.8' })
       if (usage.status !== 'started') {
         results.errors++
         results.details.push({ user_id: u.id, status: 'error', error: 'Usage store unavailable' })
         return
       }
       try {
-        const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin)
+        const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin, { correlationId, signal: req.signal })
 
         if (result.already_exists) {
           await usage.tracker.finalize({ outcome: 'cancelled', reasonCode: 'already_exists' })
           results.skipped++
           results.details.push({ user_id: u.id, status: 'skipped' })
         } else if (result.error) {
-          await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'generation_failed' })
+          await usage.tracker.finalize({ outcome: result.cancelled ? 'cancelled' : 'failed', reasonCode: result.reasonCode ?? 'generation_failed', providerModel: result.providerModel, tokens: result.tokens })
           results.errors++
           results.details.push({ user_id: u.id, status: 'error', error: result.error })
         } else {
@@ -86,10 +88,10 @@ export async function POST(req: NextRequest) {
           results.success++
           results.details.push({ user_id: u.id, status: 'success', diagnostic_id: result.diagnostic_id })
         }
-      } catch (e: any) {
+      } catch {
         await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'unexpected_error' })
         results.errors++
-        results.details.push({ user_id: u.id, status: 'error', error: e.message })
+        results.details.push({ user_id: u.id, status: 'error', error: 'Erreur interne' })
       }
     }))
   }

@@ -7,8 +7,8 @@
 > support multimodal générique, la suggestion de surcharge conserve sa
 > persistance legacy et le batch d'instructions conserve ses écritures
 > séquentielles. L'analyse corporelle utilise l'outil structuré commun et
-> l'analyse de progression photo le texte libre multimodal borné. Deux points
-> d'entrée diagnostic conservent leur transport historique partagé.
+> l'analyse de progression photo le texte libre multimodal borné. Les deux
+> diagnostics utilisent désormais le même générateur partagé via cette frontière.
 
 ## Responsabilité et API
 
@@ -45,6 +45,7 @@ persiste rien.
 | Instructions d'exercice | `anthropic-haiku-4.5` → `claude-haiku-4-5-20251001` | JSON validé par `exerciseInstructionsOutputSchema`, puis écriture par exercice | boucle séquentielle bornée à 20, `max_tokens=500`, message unique sans système ni température |
 | Analyse corporelle | `anthropic-opus-4.8` → `claude-opus-4-8` | trois images puis texte, outil forcé `body_analysis_output`, validé par `bodyAnalysisOutputSchema` | `max_tokens=1024`, système, blocs, schéma et choix d'outil historiques, sans température |
 | Analyse de progression photo | `anthropic-opus-4.8` → `claude-opus-4-8` | texte libre borné par `aiFreeTextSchema`, une ou trois images selon le mode | `max_tokens=2048` en évaluation, `1024` en simple/comparaison; ordre des images et prompts historiques |
+| Diagnostic hebdomadaire manuel et cron | `anthropic-opus-4.8` → `claude-opus-4-8` | outil forcé `weekly_diagnostic_output`, validé par `weeklyDiagnosticOutputSchema` | `max_tokens=2048`, système, message, schéma et choix d'outil identiques; collecte et écritures partagées |
 
 La recette n'utilisait pas d'outil avant cette migration. Elle reste donc une
 sortie JSON textuelle; inventer un `tool_use` aurait modifié la requête et le
@@ -146,9 +147,16 @@ génériques après réponse fournisseur vide sont supprimés conformément à l
 policy `no_fallback`. Le consommateur onboarding affiche toujours son message
 d'erreur local, mais ne l'envoie plus comme analyse au plan Nutrition.
 
-Limites restantes : les deux flux diagnostic utilisent encore leur transport
-historique partagé; aucun timeout produit n'est défini; `stream()` n'est pas
-migré; le diagnostic manuel/cron reste à migrer.
+Le diagnostic conserve un générateur métier unique : collecte parallèle,
+calculs déterministes, provider, validation, insertion `weekly_diagnostics`,
+mise à jour `next_diagnostic_at`, puis push best effort. Le manuel garde la
+session, la limite IP 3/min et la policy sans quota DB. Le cron garde
+`CRON_SECRET`, le principal serveur par utilisateur, les lots parallèles de
+cinq et son agrégat partiel. Chaque tentative possède sa correlation ID et sa
+finalisation uniques; aucun résultat échoué n'est persisté ou notifié.
+
+Limites restantes : aucun timeout produit n'est défini; `stream()` n'est pas
+migré; la Phase 7 attend encore son audit final séparé.
 
 ## Références
 

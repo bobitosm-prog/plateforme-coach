@@ -34,8 +34,8 @@ et seules celles avec `success=true` comptent dans le quota lourd historique.
 | `suggest-overload` | session | aucune | journalisation illimitée |
 | `analyze-body` | session | 5 / heure + lourd | réservation + finalisation |
 | `analyze-progress-photo` | session | 10 / heure + lourd | réservation + finalisation |
-| `weekly-diagnostic` | session | aucune | journalisation illimitée |
-| `weekly-diagnostic-cron` | serveur + utilisateur cible | aucune | une réservation par utilisateur |
+| `weekly-diagnostic` | session | aucune | journalisation illimitée, correlation et signal HTTP propagés |
+| `weekly-diagnostic-cron` | serveur + utilisateur cible | aucune | une réservation par utilisateur tenté, correlation distincte par sujet |
 
 Le quota lourd reste exactement six succès ou réservations actives sur 30
 jours glissants, partagé par Meal Plan, Custom Program, Body et Progress Photo.
@@ -126,8 +126,8 @@ zéro correlation synthétique résiduelle.
 - `/api/ai-quota` reste un lecteur de compatibilité du compteur lourd finalisé;
 - les flux qui ne reçoivent pas de compteurs fournisseur conservent des tokens
   inconnus, jamais zéro inventé ;
-- sept points d'entrée utilisent l'interface provider commune; les huit autres restent
-  à migrer sans modifier leurs quotas ;
+- les quinze points d'entrée utilisent l'interface provider commune; l'audit
+  final doit encore vérifier la définition de terminé sans modifier les quotas ;
 - les réponses métier ne sont pas mises en cache par correlation ID : une
   reprise ne consomme pas une seconde place, mais le transport doit encore
   gérer sa propre idempotence métier.

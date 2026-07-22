@@ -7,7 +7,7 @@ L'[interface commune du provider IA](AI_PROVIDER_INTERFACE.md) est désormais
 définie comme cible de migration. Chat Athena, Recipes, Suggest Exercise et
 les trois points d'entrée de génération Training, l'adaptation de séance,
 l'analyse de repas photographié, le plan Nutrition, le batch d'instructions,
-l'analyse corporelle et l'analyse de progression photo l'utilisent désormais via
+l'analyse corporelle, l'analyse de progression photo et les deux diagnostics l'utilisent désormais via
 l'[adaptateur Anthropic](AI_ANTHROPIC_ADAPTER.md). La suggestion de surcharge
 utilise aussi cette frontière tout en conservant son écriture legacy.
 
@@ -65,11 +65,11 @@ semi-structurées.
 |---|---|---|
 | `claude-haiku-4-5-20251001` (`anthropic-haiku-4.5`) | recette, suggestion d'exercice, instructions d'exercice, programme coach legacy, surcharge progressive | adaptateur commun |
 | `claude-sonnet-4-6` (`anthropic-sonnet-4.6`) | chat Athena, adaptation de séance, analyse de repas photographié | adaptateur commun pour les trois flux |
-| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun sauf diagnostic hebdomadaire encore HTTP direct |
+| `claude-opus-4-8` (`anthropic-opus-4.8`) | programme Training canonique/cron, plan Nutrition, diagnostic hebdomadaire, analyse corporelle, analyse de photos de progression | adaptateur commun pour tous les flux |
 | `claude-opus-4-7` (`anthropic-opus-4.7-legacy`) | backfill hors runtime des traductions d'exercices | SDK, modèle divergent à traiter séparément |
 
-Les treize points d'entrée migrés utilisent des identifiants logiques résolus par
-le registre. Les deux flux diagnostic restants partagent leur littéral historique.
+Les quinze points d'entrée utilisent des identifiants logiques résolus par le
+registre. Les diagnostics manuel et cron partagent un unique générateur.
 
 La [politique explicite des fallbacks](AI_FALLBACK_POLICY.md) couvre les quinze
 features. Onze n'autorisent aucun fallback; quatre préservent uniquement un
@@ -127,8 +127,8 @@ la mutation échoue.
 |---|---|---|---|---|
 | Analyse corporelle | `POST /api/analyze-body`; contrôleur Progression | Système d'analyse; trois URL de photos, poids et taille; images téléchargées en parallèle puis ordonnées face/dos/profil | Outil forcé `body_analysis_output` via `AiProvider`, input validé par `bodyAnalysisOutputSchema`; aucun objet synthétique après erreur | Session, limite IP 5/min, quota 5/h et 6/30 jours; retry 429 consommateur inchangé; signal propagé, tokens/coût suivis, aucune donnée corporelle journalisée; persistance cliente après succès uniquement |
 | Analyse de photos | `POST /api/analyze-progress-photo`; onboarding et Progression | Trois branches : évaluation trois vues, analyse simple ou comparaison; photos téléchargées, contexte et mesures éventuels | Texte libre via `AiProvider`, borné par `aiFreeTextSchema`; réponse `{ analysis }`; aucune analyse synthétique après échec | Session, limite IP 3/min, quota 10/h et 6/30 jours; signal propagé, erreurs expurgées; téléchargement d'URL non borné à une origine de stockage explicite |
-| Diagnostic hebdomadaire manuel | `POST /api/weekly-diagnostic`; `HomeTab` | Système et prompt assemblant entraînement, nutrition, poids, bien-être, objectifs et profil lus côté serveur | Outil forcé `weekly_diagnostic_output`; score, points forts/alerte, ajustements, objectif et `raisonnement`; absence de validation Zod; écrit diagnostic et prochaine date | Session, limite IP; pas de quota IA commun visible dans la route; persistance multi-étapes et push en best effort. Le raisonnement fournisseur est persisté |
-| Diagnostic hebdomadaire cron | `POST /api/weekly-diagnostic/cron`; planificateur serveur | Même générateur que le flux manuel | Même outil et mêmes écritures; résultat par utilisateur partiel | `CRON_SECRET` et service role; logs contenant préfixes d'identifiants et erreurs; aucun retry/timeout fournisseur |
+| Diagnostic hebdomadaire manuel | `POST /api/weekly-diagnostic`; `HomeTab` | Système et prompt assemblant entraînement, nutrition, poids, bien-être, objectifs et profil lus côté serveur | Outil forcé via `AiProvider`, validé par `weeklyDiagnosticOutputSchema`; écrit diagnostic puis prochaine date, push best effort | Session, limite IP 3/min, usage journalisé sans quota DB; signal HTTP, erreurs expurgées. Le raisonnement fournisseur reste persisté |
+| Diagnostic hebdomadaire cron | `POST /api/weekly-diagnostic/cron`; planificateur serveur | Même générateur et invocation que le flux manuel | Même outil/validation/écritures; lots parallèles de 5, succès conservés et échecs comptés | `CRON_SECRET`, service role, principal serveur + sujet; une opération par utilisateur tenté, signal serveur, aucun retry/timeout fournisseur |
 
 ## Contrats de prompt et de sortie
 
@@ -199,11 +199,12 @@ comme une trace technique fiable.
 - [`scripts/fake-anthropic-server.mjs`](../scripts/fake-anthropic-server.mjs)
   est le faux serveur HTTP E2E. Il n'est branchable qu'au chat Athena par la
   garde locale stricte actuelle.
-- Les tests dédiés couvrent surtout les treize flux migrés, la génération de plan
-  Nutrition et le harnais chat. Les quinze flux ont des goldens, mais les trois
-  transports historiques manquent encore de contrats de route complets.
+- Les tests dédiés couvrent les quinze flux, la génération de plan Nutrition et
+  le harnais chat. Les diagnostics ajoutent des contrats du générateur partagé,
+  des routes manuel/cron, des lots et des résultats partiels.
 - Le document [Mocks de fournisseurs](TEST_PROVIDER_MOCKS.md) mentionne onze
-  chemins `fetch`; le code courant possède une expression HTTP runtime et
+  chemins `fetch`; le code courant ne possède plus d'expression HTTP Anthropic
+  directe hors adaptateur et
   aucun appel SDK runtime hors adaptateur commun. Ce compteur documentaire historique est obsolète.
 - Le script `backfill-exercise-i18n.mjs` est un consommateur SDK hors runtime et
   utilise Opus 4.7; il n'est ni un endpoint produit ni couvert par la frontière
@@ -211,13 +212,13 @@ comme une trace technique fiable.
 
 ## Divergences et risques prioritaires
 
-1. Deux flux diagnostic restent hors du provider commun sur un transport HTTP direct partagé.
-2. Le littéral fournisseur subsiste dans ce transport; le script opérationnel a déjà
-   dérivé vers une autre version d'Opus.
-3. Les sorties structurées et textes libres runtime migrés utilisent les
-   schémas communs; le diagnostic doit encore conserver cette garantie pendant sa migration.
-4. Timeout, retry, quota, usage et mapping d'erreur ne sont pas uniformes.
-5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent
+1. Les quinze flux runtime passent par le provider commun; l'audit final doit
+   encore confirmer la définition globale de terminé.
+2. Le script opérationnel hors runtime utilise encore une autre version d'Opus.
+3. Les sorties structurées et textes libres runtime utilisent les schémas communs.
+4. Timeout, retry, quota, usage et mapping d'erreur restent volontairement
+   différents selon les contrats historiques.
+5. Des corps fournisseur, contenus invalides, URL et détails internes peuvent encore
    entrer dans les logs ou réponses.
 6. La recette prend une décision d'autorité à partir de données navigateur;
    surcharge et instruction utilisent encore un service role localement, mais

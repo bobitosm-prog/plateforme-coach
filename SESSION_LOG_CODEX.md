@@ -9482,3 +9482,54 @@ publique.
 Migrer le transport partagé du diagnostic hebdomadaire manuel et cron vers
 `AiProvider`, avec tests des écritures, notifications et résultats partiels,
 sans changer le prompt ni l'autorité.
+
+## Entrée — 2026-07-22 — Migration AiProvider des diagnostics hebdomadaires
+
+- Les points d'entrée manuel et cron conservent un unique générateur métier
+  `lib/weekly-diagnostic/generator.ts`. Son transport HTTP direct est remplacé
+  par `createAnthropicProvider`, le registre `anthropic-opus-4.8` →
+  `claude-opus-4-8`, `promptInvocationToToolRequest` et
+  `weeklyDiagnosticOutputSchema`.
+- Le golden reste identique pour les deux orchestrateurs : même système, même
+  message, `max_tokens=2048`, absence de température, outil forcé
+  `weekly_diagnostic_output`, schéma et choix d'outil inchangés. Aucun timeout
+  effectif, retry ou fallback de modèle n'est ajouté.
+- L'ordre métier reste collecte parallèle → calculs déterministes → provider →
+  validation → insertion `weekly_diagnostics` → mise à jour
+  `profiles.next_diagnostic_at` → push best effort. Les requêtes, fenêtres
+  Europe/Zurich, scores, payloads et non-transactionnalité restent inchangés.
+- Le manuel conserve session → limite IP 3/min → usage journalisé sans quota
+  DB. Son correlation ID et `Request.signal` sont transmis au générateur; une
+  sortie invalide, un refus, une panne réseau ou une annulation ne persiste et
+  ne notifie rien. La policy reste `no_fallback`.
+- Le cron conserve `CRON_SECRET`, le client service-role, la sélection des
+  profils dus et ses lots parallèles de cinq. Chaque utilisateur tenté garde un
+  principal serveur + sujet, une correlation ID distincte et une finalisation
+  unique. Une annulation empêche le lot suivant de démarrer; les diagnostics
+  réussis restent acquis et les échecs restent comptés conformément à
+  `explicit_partial`.
+- Modèle réel et tokens fournisseur sont transmis à l'usage et à la ligne
+  diagnostic. Leur absence est persistée `NULL`, jamais transformée en zéro.
+  Les erreurs provider, SQL et push sont expurgées; aucun prompt, métrique,
+  score, diagnostic ou préfixe d'UUID n'est ajouté aux logs.
+- Le push reste déclenché seulement après l'insertion réussie et reste
+  non-bloquant. Une panne de push ne transforme pas la réussite métier en
+  échec; aucun push n'est tenté après provider, validation ou insertion en
+  échec.
+- Compteurs après migration : 15/15 points d'entrée via `AiProvider`, zéro
+  transport HTTP/SDK Anthropic runtime historique et un seul site de transport
+  fournisseur dans l'adaptateur commun. La Phase 7 n'est pas fermée : elle
+  attend un audit final séparé. Phase 8 reste inactive et décochée.
+- Tests ciblés : 14 fichiers, 263 tests verts. La suite complète compte 192
+  fichiers, 1 694 tests verts et 3 `todo`; TypeScript est vert. Les nouveaux
+  fichiers, orchestrateurs et générateur passent ESLint. Le générateur supprime
+  ses 10 occurrences `any` historiques sans en introduire une nouvelle.
+- Aucun autre flux, prompt, modèle, quota, migration, RLS, type Supabase, E2E
+  ou fichier concurrent n'est modifié. Aucun fournisseur ou service externe
+  n'a été contacté.
+
+### Prochaine action unique
+
+Auditer la clôture de la Phase 7 contre sa définition de terminé, les quinze
+flux, les scans de confidentialité et les validations complètes, sans migration
+fonctionnelle supplémentaire.

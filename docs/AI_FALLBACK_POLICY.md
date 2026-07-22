@@ -56,4 +56,11 @@ Le module n'importe ni React, Next.js, Supabase, Anthropic, navigateur ni `app/`
 
 ## Intégration et limites
 
-Aucun raccordement runtime n'est effectué : il pourrait modifier un statut HTTP, un corps SSE ou une persistance legacy. Les quatre comportements partiels restent caractérisés sans nouvelle autorité. Le plan Nutrition masque encore la liste des journées invalides. Crons et batch d'instructions exposent un agrégat partiel sans transaction. Les huit transports historiques restent hors périmètre.
+Le registre reste une frontière de décision pure; les routes n'appellent pas
+automatiquement `evaluateAiFallback`. Les comportements runtime migrés suivent
+cependant ces contrats : le diagnostic manuel échoue sans score ni persistance,
+alors que le cron conserve uniquement les diagnostics utilisateurs déjà
+validés et compte séparément les échecs. Le plan Nutrition masque encore la
+liste des journées invalides. Crons et batch d'instructions exposent un agrégat
+partiel sans transaction. Aucun transport fournisseur historique runtime ne
+subsiste hors de l'adaptateur commun.

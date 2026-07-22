@@ -36,6 +36,7 @@ describe('AI golden fixture architecture', () => {
       'app/api/suggest-exercise/route.ts', 'app/api/suggest-overload/route.ts',
       'app/api/training-regen/cron/route.ts', 'app/api/weekly-diagnostic/cron/route.ts',
       'app/api/weekly-diagnostic/service.ts',
+      'lib/weekly-diagnostic/generator.ts',
     ])
   })
 })

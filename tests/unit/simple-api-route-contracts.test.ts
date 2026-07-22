@@ -149,8 +149,8 @@ describe('weekly diagnostic route', () => {
     }) as never)
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ diagnostic_id: 'diag-one', diagnostic: { score: 8 } })
-    expect(mocks.generateWeeklyDiagnostic).toHaveBeenCalledWith('session-user', expect.anything())
-    expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'weekly-diagnostic', principal: { kind: 'user', id: 'session-user' } }))
+    expect(mocks.generateWeeklyDiagnostic).toHaveBeenCalledWith('session-user', expect.anything(), expect.objectContaining({ correlationId: 'request-test', signal: expect.any(AbortSignal) }))
+    expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'weekly-diagnostic', principal: { kind: 'user', id: 'session-user' }, logicalModel: 'anthropic-opus-4.8' }))
     expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded' }))
   })
 
@@ -161,5 +161,30 @@ describe('weekly diagnostic route', () => {
     const response = await weeklyDiagnostic(new Request('http://localhost') as never)
     expect(response.status).toBe(500)
     expect(await response.json()).toMatchObject({ error: 'Service temporairement indisponible' })
+  })
+
+  it('finalizes manual provider failures and cancellation once with safe metadata', async () => {
+    mocks.generateWeeklyDiagnostic.mockResolvedValueOnce({ error: 'Erreur IA', reasonCode: 'provider_error', providerModel: 'claude-opus-4-8', tokens: { inputTokens: 9, outputTokens: 3 } })
+    let response = await weeklyDiagnostic(new Request('http://localhost/api/weekly-diagnostic', { method: 'POST' }) as never)
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: 'Erreur IA' })
+    expect(mocks.finalizeUsage).toHaveBeenCalledOnce()
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'failed', reasonCode: 'provider_error', providerModel: 'claude-opus-4-8', tokens: { inputTokens: 9, outputTokens: 3 } }))
+
+    mocks.finalizeUsage.mockClear()
+    mocks.generateWeeklyDiagnostic.mockResolvedValueOnce({ error: 'Erreur interne', reasonCode: 'request_cancelled', cancelled: true })
+    response = await weeklyDiagnostic(new Request('http://localhost/api/weekly-diagnostic', { method: 'POST' }) as never)
+    expect(response.status).toBe(500)
+    expect(mocks.finalizeUsage).toHaveBeenCalledOnce()
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'cancelled', reasonCode: 'request_cancelled' }))
+  })
+
+  it('keeps an existing weekly diagnostic as a skipped public success', async () => {
+    mocks.generateWeeklyDiagnostic.mockResolvedValue({ already_exists: true, diagnostic_id: 'existing-diagnostic' })
+    const response = await weeklyDiagnostic(new Request('http://localhost/api/weekly-diagnostic', { method: 'POST' }) as never)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ already_exists: true, diagnostic_id: 'existing-diagnostic', message: 'Diagnostic déjà généré pour cette semaine' })
+    expect(mocks.finalizeUsage).toHaveBeenCalledOnce()
+    expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'cancelled', reasonCode: 'already_exists' }))
   })
 })

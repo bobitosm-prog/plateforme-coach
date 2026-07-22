@@ -7,27 +7,43 @@
  * @see lib/anthropic/unwrap-tool-input.ts for the double-wrap 'input' fix
  */
 import webpush from 'web-push'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildWeeklyDiagnosticInvocation } from '../ai/prompts'
-import { parseAndValidateToolUse } from '../ai/parsing'
-import { weeklyDiagnosticOutputSchema } from '../ai/schemas'
-import { readAnthropicMetadata } from '../ai/usage/provider-metadata'
+import { resolveAiModel } from '../ai/models'
+import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationToToolRequest } from '../ai/providers/anthropic'
+import { createAiOutputValidator, weeklyDiagnosticOutputSchema } from '../ai/schemas'
 import type { AiRecordedTokens } from '../ai/usage/types'
+import { getAnthropicMessagesUrl } from '../anthropic/chat-transport'
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 export interface DiagnosticResult {
   diagnostic_id?: string
-  diagnostic?: any
+  diagnostic?: unknown
   already_exists?: boolean
   error?: string
+  reasonCode?: string
+  cancelled?: boolean
   providerModel?: string
   tokens?: AiRecordedTokens
 }
 
+export interface WeeklyDiagnosticGenerationContext {
+  correlationId: string
+  signal?: AbortSignal
+}
+
 export async function generateWeeklyDiagnostic(
   userId: string,
-  supabase: any
+  supabase: SupabaseClient,
+  context: WeeklyDiagnosticGenerationContext,
 ): Promise<DiagnosticResult> {
   const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
   if (!apiKey) return { error: 'API key manquante' }
+  const model = resolveAiModel('anthropic-opus-4.8')
+  if (!model.ok || model.model.status !== 'active') return { error: 'Service temporairement indisponible' }
 
   try {
     // 1. WEEK BOUNDARIES — calcul en TZ Europe/Zurich (lundi 00:00 → dimanche 23:59)
@@ -122,7 +138,7 @@ export async function generateWeeklyDiagnostic(
     // 4. TRAINING VOLUME (workout_sets tonnage)
     let trainingVolumeTotal = 0
     if (workoutSessionsRes.data && workoutSessionsRes.data.length > 0) {
-      const sessionIds = workoutSessionsRes.data.map((s: any) => s.id)
+      const sessionIds = workoutSessionsRes.data.map((session: { id: string }) => session.id)
       const { data: sets } = await supabase
         .from('workout_sets')
         .select('weight, reps, completed')
@@ -130,14 +146,15 @@ export async function generateWeeklyDiagnostic(
         .eq('completed', true)
 
       if (sets) {
-        trainingVolumeTotal = sets.reduce((sum: number, s: any) =>
-          sum + ((s.weight || 0) * (s.reps || 0)), 0)
+        trainingVolumeTotal = sets.reduce((sum: number, set: { weight: number | null; reps: number | null }) =>
+          sum + ((set.weight || 0) * (set.reps || 0)), 0)
       }
     }
 
     // 5. SERVER PRE-ANALYSIS (deterministic)
     const sessionsDone = workoutSessionsRes.data?.length || 0
-    const sessionsPlanned = (profile.onboarding_answers as any)?.sessions_per_week || 4
+    const onboardingAnswers = isRecord(profile.onboarding_answers) ? profile.onboarding_answers : null
+    const sessionsPlanned = Number(onboardingAnswers?.sessions_per_week) || 4
     const adherencePct = sessionsPlanned > 0
       ? Math.min(100, (sessionsDone / sessionsPlanned) * 100)
       : 0
@@ -186,31 +203,37 @@ export async function generateWeeklyDiagnostic(
       calorieAvgReal, calorieAvgTarget, proteinAvgG, proteinCompliancePct,
       daysLogged, weightDeltaKg, coherenceFlags, previousDiagnostic: prevDiagRes.data,
     })
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+    const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const generated = await provider.generate(
+      promptInvocationToToolRequest(
+        invocation,
+        model.model.providerModelId,
+        createAiOutputValidator(weeklyDiagnosticOutputSchema),
+      ),
+      {
+        correlationId: context.correlationId,
+        timeoutMs: 300_000,
+        cancellation: context.signal ? abortSignalToAiCancellation(context.signal) : undefined,
       },
-      body: JSON.stringify(invocation),
-    })
-
-    if (!res.ok) {
-      console.error('[generateWeeklyDiagnostic] Claude API error:', res.status)
-      return { error: `Erreur IA (${res.status})` }
+    )
+    const providerModel = generated.metadata.actualModel
+    const tokens = generated.metadata.usage
+    if (!generated.ok) {
+      if (generated.error.code === 'cancelled') {
+        return { error: 'Erreur interne', reasonCode: 'request_cancelled', cancelled: true, providerModel, tokens }
+      }
+      if (generated.error.code === 'quota_exceeded') {
+        return { error: 'Erreur IA (429)', reasonCode: 'provider_quota', providerModel, tokens }
+      }
+      if (generated.error.code === 'invalid_output') {
+        return { error: 'Format IA invalide', reasonCode: 'invalid_output', providerModel, tokens }
+      }
+      return { error: 'Erreur IA', reasonCode: 'provider_error', providerModel, tokens }
     }
-
-    const aiData = await res.json()
-    const providerMetadata = readAnthropicMetadata(aiData)
-
-    const parsed = parseAndValidateToolUse(aiData, 'weekly_diagnostic_output', weeklyDiagnosticOutputSchema)
-    if (!parsed.ok) {
-      console.error('[generateWeeklyDiagnostic] Invalid structured response')
-      return { error: 'Format IA invalide' }
-    }
-    const aiOutput = parsed.value
-    const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
+    const aiOutput = generated.value
+    const aiTokensUsed = tokens && (tokens.inputTokens !== undefined || tokens.outputTokens !== undefined)
+      ? (tokens.inputTokens ?? 0) + (tokens.outputTokens ?? 0)
+      : null
 
     // 9. PERSIST
     const { data: saved, error: insertErr } = await supabase
@@ -234,15 +257,14 @@ export async function generateWeeklyDiagnostic(
         exercice_a_ajouter: aiOutput.exercice_a_ajouter,
         objectif_semaine_prochaine: aiOutput.objectif_semaine_prochaine,
         raisonnement: aiOutput.raisonnement,
-        ai_model: 'claude-opus-4-8',
+        ai_model: generated.metadata.actualModel,
         ai_tokens_used: aiTokensUsed,
       })
       .select()
       .single()
 
     if (insertErr) {
-      console.error('[generateWeeklyDiagnostic] Insert error:', insertErr)
-      return { error: 'Erreur sauvegarde' }
+      return { error: 'Erreur sauvegarde', reasonCode: 'persistence_failed', providerModel, tokens }
     }
 
     // Schedule next diagnostic in 7 days (Architecture B: strict per-user rhythm)
@@ -251,17 +273,16 @@ export async function generateWeeklyDiagnostic(
       .from('profiles')
       .update({ next_diagnostic_at: nextDiagAt })
       .eq('id', userId)
-    if (nextErr) console.warn('[generator] next_diagnostic_at update failed:', nextErr.message)
+    if (nextErr) console.warn('[generator] next_diagnostic_at update failed')
 
     // Push notification (non-blocking, best effort)
     sendDiagnosticPush(userId, saved.id, saved.score_semaine, supabase)
-      .catch(err => console.error('[generator] push failed:', err.message))
+      .catch(() => console.error('[generator] push failed'))
 
-    return { diagnostic_id: saved.id, diagnostic: saved, ...providerMetadata }
+    return { diagnostic_id: saved.id, diagnostic: saved, providerModel, tokens }
 
-  } catch (e: any) {
-    console.error('[generateWeeklyDiagnostic] Error:', e.message)
-    return { error: e.message || 'Erreur interne' }
+  } catch {
+    return { error: 'Erreur interne', reasonCode: 'unexpected_error' }
   }
 }
 
@@ -271,7 +292,7 @@ async function sendDiagnosticPush(
   userId: string,
   diagnosticId: string,
   score: number,
-  supabase: any
+  supabase: SupabaseClient,
 ): Promise<{ sent: number; cleaned: number }> {
   try {
     const vapidPublic = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=/g, '').trim()
@@ -305,15 +326,16 @@ async function sendDiagnosticPush(
     let sent = 0
     const toDelete: string[] = []
 
-    await Promise.all(subs.map(async (sub: any) => {
+    await Promise.all(subs.map(async (sub: { id: string; subscription: Parameters<typeof webpush.sendNotification>[0] }) => {
       try {
         await webpush.sendNotification(sub.subscription, payload)
         sent++
-      } catch (err: any) {
-        if (err.statusCode === 410 || err.statusCode === 404) {
+      } catch (err: unknown) {
+        const statusCode = isRecord(err) ? err.statusCode : undefined
+        if (statusCode === 410 || statusCode === 404) {
           toDelete.push(sub.id)
         } else {
-          console.error('[push diagnostic] failed:', err.statusCode, err.message)
+          console.error('[push diagnostic] failed')
         }
       }
     }))
@@ -327,10 +349,9 @@ async function sendDiagnosticPush(
       if (!error) cleaned = toDelete.length
     }
 
-    console.log(`[push diagnostic] user=${userId.slice(0, 8)} sent=${sent} cleaned=${cleaned}`)
     return { sent, cleaned }
-  } catch (e: any) {
-    console.error('[push diagnostic] unhandled:', e.message)
+  } catch {
+    console.error('[push diagnostic] unhandled')
     return { sent: 0, cleaned: 0 }
   }
 }

@@ -9,16 +9,21 @@ export type WeeklyDiagnosticServiceResult =
   | { ok: true; data: { diagnostic_id?: string; diagnostic?: unknown; already_exists?: true; message?: string } }
   | { ok: false; code: Extract<ApiErrorCode, 'AUTH_REQUIRED' | 'RATE_LIMITED' | 'QUOTA_EXCEEDED' | 'INTERNAL_ERROR'>; limit?: number; resetIn?: number; message?: string }
 
-export async function createWeeklyDiagnostic(input: { ip: string; correlationId: string }): Promise<WeeklyDiagnosticServiceResult> {
+export async function createWeeklyDiagnostic(input: { ip: string; correlationId: string; signal?: AbortSignal }): Promise<WeeklyDiagnosticServiceResult> {
   const supabase = await createSupabaseServerClient()
   const identity = await createIdentityRepository(supabase).getCurrent()
   if (!identity.ok) return { ok: false, code: 'AUTH_REQUIRED' }
   if (!checkRateLimit(`diag:${input.ip}`, 3, 60_000).allowed) return { ok: false, code: 'RATE_LIMITED' }
-  const usage = await startAiUsage({ client: supabase, feature: 'weekly-diagnostic', principal: { kind: 'user', id: identity.data.id }, correlationId: input.correlationId, logicalModel: 'claude-opus-4-8' })
+  const usage = await startAiUsage({ client: supabase, feature: 'weekly-diagnostic', principal: { kind: 'user', id: identity.data.id }, correlationId: input.correlationId, logicalModel: 'anthropic-opus-4.8' })
   if (usage.status !== 'started') return { ok: false, code: 'INTERNAL_ERROR', message: 'Service temporairement indisponible' }
-  const result = await generateWeeklyDiagnostic(identity.data.id, supabase)
+  const result = await generateWeeklyDiagnostic(identity.data.id, supabase, { correlationId: input.correlationId, signal: input.signal })
   if (result.error) {
-    await usage.tracker.finalize({ outcome: 'failed', reasonCode: 'generation_failed' })
+    await usage.tracker.finalize({
+      outcome: result.cancelled ? 'cancelled' : 'failed',
+      reasonCode: result.reasonCode ?? 'generation_failed',
+      providerModel: result.providerModel,
+      tokens: result.tokens,
+    })
     return { ok: false, code: 'INTERNAL_ERROR', message: result.error }
   }
   if (result.already_exists) {
