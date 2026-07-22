@@ -3,9 +3,11 @@ import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 const isE2E = process.env.MOOVX_E2E === '1'
+const isolatedBuildDir = process.env.MOOVX_BUILD_DIR
+const distDir = isolatedBuildDir || (isE2E ? '.next-e2e' : undefined)
 
 const nextConfig: NextConfig = {
-  ...(isE2E ? { distDir: '.next-e2e' } : {}),
+  ...(distDir ? { distDir } : {}),
   // AVIF first (5-10x compression vs PNG), WebP fallback navigateurs anciens.
   // Quality default 75 = sweet spot Vercel/Next, ne pas surcharger.
   images: {
@@ -17,9 +19,9 @@ const nextConfig: NextConfig = {
     const cspDirectives = [
       `default-src 'self'`,
       `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.stripe.com https://*.vercel-insights.com https://vercel-scripts.com https://*.vercel-scripts.com`,
-      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+      `style-src 'self' 'unsafe-inline'`,
       `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch https://moovx.ch https://*.googleusercontent.com`,
-      `font-src 'self' data: https://fonts.gstatic.com`,
+      `font-src 'self' data:`,
       `connect-src 'self' ${isE2E ? 'http://127.0.0.1:* ws://127.0.0.1:*' : ''} https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`,
       `media-src 'self' https://*.supabase.co blob:`,
       `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com`,

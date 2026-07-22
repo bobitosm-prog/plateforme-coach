@@ -537,11 +537,11 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : Phase 8 active — la première tranche reste ouverte : le build de
-production local est bloqué par le téléchargement de cinq polices Google.
-Reprendre la capture bundle, LCP, INP, CLS et requêtes dans un environnement de
-build autorisé ou rendu hermétique par une méthode Next officiellement
-supportée; aucune tâche Phase 8 n'est encore cochée.**
+**Statut : Phase 8 active — les cinq familles sont auto-hébergées et ne
+dépendent plus du réseau; le build complet reste bloqué par le contrat
+`PageProps` préexistant de `app/coach/page.tsx`. Corriger ce prérequis puis
+reprendre la capture bundle, LCP, INP, CLS et requêtes. Aucune tâche Phase 8
+n'est encore cochée.**
 
 ### Pourquoi
 

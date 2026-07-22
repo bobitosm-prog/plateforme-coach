@@ -101,7 +101,7 @@ npm run build
 git diff --check
 ```
 
-Le build peut nécessiter un environnement réseau approprié car `app/layout.tsx` utilise `next/font/google`. Une panne de téléchargement de police doit être déclarée comme blocage d'environnement, jamais présentée comme un build vert. La cible Phase 8 est d'auto-héberger les polices nécessaires.
+Les polices applicatives sont auto-hébergées via `next/font/local`; le build ne doit effectuer aucun téléchargement de police. Toute tentative réseau de police est une régression bloquante.
 
 ## 3. Les sept parcours E2E actuels
 
@@ -241,7 +241,7 @@ Les titres de tests décrivent résultat et contexte. Les noms « contract », �
 - **Concurrence** : utiliser plusieurs sessions PostgreSQL et une synchronisation observable; ne pas simuler la course avec des appels purement séquentiels.
 - **Intermittence** : aucun retry masquant par défaut. Isoler la cause, borner les attentes et mesurer; un test instable connu est une dette bloquante pour la confiance CI.
 - **Lint historique** : ne pas élargir la dette. Le lint ciblé doit être vert; le lint global est suivi séparément jusqu'à résorption.
-- **Build et polices** : un échec réseau de `next/font/google` est enregistré comme limite d'environnement. Le build doit être rejoué dans un environnement réseau approprié avant fusion/déploiement.
+- **Build et polices** : le build doit réussir sans réseau de police grâce aux assets locaux vérifiés. Un import Google Fonts ou une origine CSS/font distante est une régression bloquante.
 
 ## 11. Pyramide cible réaliste
 

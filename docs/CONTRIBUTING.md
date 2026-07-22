@@ -46,7 +46,7 @@ npm run test:e2e:critical
 git diff --check
 ```
 
-`npm run lint` peut encore révéler une dette historique hors tranche ; le lint ciblé des fichiers modifiés reste obligatoire et toute nouvelle erreur est refusée. Le build doit être exécuté avant livraison dans un environnement réseau approprié : `next/font/google` peut le bloquer lorsque les polices externes sont inaccessibles. Un build ainsi bloqué est déclaré comme tel, jamais présenté comme vert.
+`npm run lint` peut encore révéler une dette historique hors tranche ; le lint ciblé des fichiers modifiés reste obligatoire et toute nouvelle erreur est refusée. Le build doit être exécuté avant livraison sans dépendre d'un réseau de police : les familles applicatives sont auto-hébergées et toute tentative Google Fonts est une régression bloquante.
 
 Lancer un seul E2E pendant une boucle ciblée ; lancer la suite critique complète lorsqu'un changement traverse plusieurs frontières ou avant fusion/déploiement. La suite critique exécute, dans un ordre stable, invitation, checkout plateforme, checkout coach, push et chat sur Chromium local.
 

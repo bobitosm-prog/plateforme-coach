@@ -2,9 +2,11 @@
 
 ## Statut
 
-La capture est **bloquée avant mesure** au 22 juillet 2026. Aucune valeur de
-bundle, LCP, INP, CLS ou requête de référence n'est publiée dans ce document.
-La tâche Phase 8 reste ouverte.
+La dépendance réseau des polices est supprimée au 22 juillet 2026 grâce à
+l'[auto-hébergement des polices](./LOCAL_FONT_HOSTING.md). Le build complet
+reste néanmoins bloqué par une erreur de typage Next préexistante dans
+`app/coach/page.tsx`. Aucune valeur de bundle, LCP, INP, CLS ou requête de
+référence n'est encore publiée. La tâche Phase 8 reste ouverte.
 
 Les valeurs issues d'un serveur de développement ne sont pas substituables à
 une mesure du build de production et n'ont pas été collectées.
@@ -41,7 +43,7 @@ Environnement observé :
 
 La commande inchangée `npm run build` échoue avant la production des artefacts
 mesurables. `next/font/google`, importé par `app/layout.tsx`, tente de récupérer
-les feuilles de style de cinq familles sur `fonts.googleapis.com` :
+les feuilles de style de cinq familles auprès du service CSS Google Fonts :
 
 - Anton ;
 - Barlow Condensed ;
@@ -69,17 +71,30 @@ mock, patch de police, accès réseau exceptionnel ou changement applicatif n'a
 | CLS | Indisponible : serveur de production non démarrable |
 | Requêtes de référence | Indisponible : parcours non exécutés |
 
+## Prérequis polices au 22 juillet 2026
+
+Les cinq familles utilisent désormais `next/font/local`, leurs fichiers
+officiels auto-hébergés et leurs licences OFL. Deux compilations Webpack de
+production isolées ont réussi respectivement en 16,5 s et 16,0 s dans le
+sandbox sans réseau externe. Elles n'ont produit aucune tentative Google Fonts.
+
+Les deux commandes échouent ensuite de manière identique pendant le contrôle
+de types Next : `app/coach/page.tsx` expose un type
+`{ initialSession?: any } | undefined` qui ne satisfait pas `PageProps`. Cette
+erreur est hors du périmètre polices et n'est pas contournée. Le build
+Turbopack n'a, pour sa part, émis aucune erreur réseau mais est resté sans
+progression observable dans `compile` et a été interrompu. Aucun build complet,
+`BUILD_ID` ou manifest final n'est donc revendiqué.
+
 Aucun runner, scénario Playwright, extracteur de bundle ou artefact JSON n'est
 ajouté tant que le prérequis de build n'est pas satisfait : ils ne pourraient
 pas valider la baseline demandée.
 
 ## Condition de reprise
 
-La même tâche doit reprendre dans un environnement local autorisé à résoudre
-les cinq polices pendant le build, ou après adoption dans une tranche séparée
-d'une méthode Next officiellement supportée rendant le build hermétique sans
-changer le rendu de production. Le protocole ci-dessus devra alors être
-implémenté et exécuté trois fois avant de cocher la tâche.
+Corriger séparément le contrat `PageProps` de `app/coach/page.tsx`, puis obtenir
+deux builds locaux complets sans accès externe. Le protocole ci-dessus devra
+ensuite être implémenté et exécuté trois fois avant de cocher la tâche.
 
 La baseline de requêtes coach déjà documentée dans
 [Requêtes initiales du dashboard coach](./COACH_DASHBOARD_INITIAL_REQUESTS.md)

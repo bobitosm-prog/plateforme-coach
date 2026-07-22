@@ -9599,7 +9599,7 @@ Capturer la baseline bundle, LCP, INP, CLS et requêtes de référence.
 - `npm run build` échoue avant tout artefact mesurable avec Next.js 16.1.6 et
   Turbopack. `next/font/google`, importé par `app/layout.tsx`, ne peut récupérer
   Anton, Barlow Condensed, Bebas Neue, DM Sans et Outfit depuis
-  `fonts.googleapis.com`; le build se termine avec cinq erreurs de récupération
+  le service CSS Google Fonts; le build se termine avec cinq erreurs de récupération
   de police.
 - L'unique mécanisme de réponses simulées repéré dans le paquet installé est
   interne au code compilé Next. Il n'a pas été employé comme substitut à une
@@ -9618,3 +9618,39 @@ Capturer la baseline bundle, LCP, INP, CLS et requêtes de référence.
 Rendre disponible un build de production local capable de résoudre les cinq
 polices, ou adopter séparément une méthode Next officiellement supportée pour
 un build hermétique, puis reprendre la capture de baseline Phase 8.
+
+## Entrée — 2026-07-22 — Polices locales, build encore bloqué après compilation
+
+- L'unique déclaration `next/font/google` de `app/layout.tsx` est remplacée par
+  une frontière `next/font/local` centralisée. Bebas Neue 400, Barlow Condensed
+  700/800/900 et Anton 400 utilisent des TTF statiques; Outfit 300–600 et DM
+  Sans 400–700 utilisent leurs fichiers variables officiels.
+- Les cinq variables historiques (`--font-display`, `--font-alt`,
+  `--font-body`, `--font-dm-sans`, `--font-impact`), les styles normaux,
+  `display: swap`, le préchargement et le fallback ajusté Arial sont conservés.
+- Les sept assets et cinq licences OFL proviennent du dépôt officiel
+  `google/fonts`, commit `966486d0728ceec5dc3b79cbad3073371bac51c0` du 22
+  juillet 2026. Leurs SHA-256 sont documentés et vérifiés par test.
+- Les origines Google Fonts devenues inutiles sont retirées de la CSP. Les
+  scans runtime ne trouvent plus d'import Google Fonts ni d'origine CSS/font
+  Google. `MOOVX_BUILD_DIR` isole les sorties de validation de `.next` et
+  `.next-e2e`.
+- Le build Turbopack isolé ne signale plus aucune récupération de police mais
+  reste bloqué sans progression dans `compile`; il est interrompu sans résultat
+  revendiqué. Deux builds Webpack isolés compilent avec succès en 16,5 s et
+  16,0 s sans tentative externe, puis échouent tous deux sur le même contrat
+  `PageProps` préexistant de `app/coach/page.tsx`.
+- Aucun contournement TypeScript n'est ajouté. Faute de build complet, aucun
+  `BUILD_ID`, manifest final, chiffre bundle ou Web Vital n'est publié. Le
+  contrôle visuel navigateur n'était pas disponible dans la session et aucune
+  équivalence visuelle non observée n'est affirmée. Les pages HTML autonomes
+  demandaient Outfit italique 300 alors que la source officielle épinglée ne
+  fournit pas d'italique; une synthèse navigateur reste donc à contrôler.
+- La baseline Phase 8 reste décochée. Aucun fichier Supabase, migration, RLS,
+  E2E ou donnée n'est modifié; les changements concurrents restent hors
+  périmètre et hors staging.
+
+### Prochaine action unique
+
+Corriger séparément le contrat `PageProps` de `app/coach/page.tsx`, obtenir deux
+builds hermétiques complets, puis reprendre la capture baseline Phase 8.

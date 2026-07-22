@@ -1,45 +1,10 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans, Anton } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AnalyticsGate from "@/components/AnalyticsGate";
 import { WebVitals } from "./web-vitals";
 import AppErrorBoundary from "./components/ui/AppErrorBoundary";
-
-const bebasNeue = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const barlowCondensed = Barlow_Condensed({
-  weight: ["700", "800", "900"],
-  subsets: ["latin"],
-  variable: "--font-alt",
-  display: "swap",
-});
-
-const outfit = Outfit({
-  weight: ["300", "400", "500", "600"],
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const dmSans = DM_Sans({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const anton = Anton({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-impact",
-  display: "swap",
-});
+import { anton, barlowCondensed, bebasNeue, dmSans, outfit } from "./fonts";
 
 export const metadata: Metadata = {
   title: "MoovX",

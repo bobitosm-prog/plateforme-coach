@@ -31,11 +31,11 @@
 - **Heading Font:** Barlow Condensed
 - **Body Font:** Barlow
 - **Mood:** sports, fitness, athletic, energetic, condensed, action
-- **Google Fonts:** [Barlow Condensed + Barlow](https://fonts.google.com/share?selection.family=Barlow+Condensed:wght@400;500;600;700|Barlow:wght@300;400;500;600;700)
+- **Polices:** utiliser les familles auto-hébergées du projet.
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
+@import url('/fonts/moovx-fonts.css');
 ```
 
 ### Spacing Variables
