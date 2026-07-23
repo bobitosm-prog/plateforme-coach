@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 const rootPage = readFileSync('app/page.tsx', 'utf8')
 const coachPage = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
 const clientPage = readFileSync('app/client/[id]/page.tsx', 'utf8')
+const clientIsland = readFileSync('app/client/[id]/components/page/ClientDetailPageClient.tsx', 'utf8')
 const performanceSpec = readFileSync('e2e/performance-baseline.spec.ts', 'utf8')
 
 describe('important segment loading boundaries before extraction', () => {
@@ -21,6 +22,7 @@ describe('important segment loading boundaries before extraction', () => {
   it('records the existing client-only states that segment boundaries must not replace', () => {
     expect(coachPage).toContain('CoachSectionFallback')
     expect(coachPage).toContain("if (!h.mounted || h.loading")
-    expect(clientPage).toContain('ClientDetailLoadingView')
+    expect(clientPage).toContain('<ClientDetailPageClient />')
+    expect(clientIsland).toContain('ClientDetailLoadingView')
   })
 })

@@ -13,7 +13,8 @@ describe('coach page lazy section architecture', () => {
     for (const [name, source, limit] of [['page', page, 50], ['content', content, 250], ['desktop', desktop, 500], ['mobile', mobile, 500], ['contract', contract, 500], ['wheel', wheel, 500]] as const) {
       expect(source.split('\n').length, name).toBeLessThan(limit)
     }
-    expect(page).toContain('return <CoachPageContent />')
+    expect(page).toContain('<CoachStyles />')
+    expect(page).toContain('<CoachPageContent />')
     expect(page).not.toContain('initialSession')
     expect(content).toContain('useCoachDashboard(initialSession)')
     expect(content).toContain('isDesktop ? <CoachDesktopLayout')

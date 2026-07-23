@@ -1,5 +1,8 @@
 # Baseline de performance
 
+La réduction mesurée des frontières hydratées est décrite dans
+[Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+
 ## Statut
 
 Baseline Phase 8 capturée le 22 juillet 2026 sur un vrai build Next.js 16.1.6

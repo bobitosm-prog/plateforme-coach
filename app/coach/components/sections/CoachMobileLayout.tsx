@@ -8,7 +8,6 @@ import { cache } from '@/lib/cache'
 import { BG_BASE, BG_CARD_2, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RADIUS_CARD, RED, TEXT_MUTED, TEXT_PRIMARY } from '@/lib/design-tokens'
 import { SESSION_COLORS, SESSION_TYPES, WP_DAYS, WP_HOURS, WP_MINS, WP_MONTHS, WP_YEARS } from '../../hooks/useCoachDashboard'
 import BugReport from '../../../components/BugReport'
-import CoachStyles from '../CoachStyles'
 import CoachSectionFallback from './CoachSectionFallback'
 import CoachSessionWheelPicker from './CoachSessionWheelPicker'
 import type { CoachPageLayoutProps, CoachSection } from './coach-page-types'
@@ -30,7 +29,6 @@ export default function CoachMobileLayout({ h, isMobile, revMonth, setRevMonth, 
 ══════════════════════════════════════════════════════════ */
 return (
   <div style={{ minHeight: '100vh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY, overflowX: 'hidden', maxWidth: '100vw', paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-    <CoachStyles />
 
     {/* ── GLASS BAR HEADER ── */}
     <div style={{ padding: '12px 14px 0', position: 'sticky', top: 0, zIndex: 50 }}>

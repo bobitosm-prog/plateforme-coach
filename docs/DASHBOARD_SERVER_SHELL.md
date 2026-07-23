@@ -1,5 +1,8 @@
 # Coque serveur du dashboard
 
+La réduction suivante des frontières hydratées est documentée dans
+[Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+
 ## Frontière
 
 La route racine [`app/page.tsx`](../app/page.tsx) est une Server Component App

@@ -9987,3 +9987,38 @@ Différer Recharts, MediaPipe, QR et XLSX.
 ### Prochaine action unique
 
 Réduire progressivement les modules `use client`.
+
+## Entrée — 2026-07-23 — Frontières Client Components réduites
+
+- La baseline recense 253 directives exactes dans `app/`. Le lot a été borné
+  avant modification aux présentations CSS statiques des trois routes
+  critiques, avec objectif d’une sortie serveur réelle et d’une baisse JS gzip.
+- `DashboardStyles`, `CoachStyles` et `ClientDetailPageStyles` sont composés
+  par les pages serveur. `/client/[id]` redevient une façade serveur de
+  11 lignes et délègue hooks, navigation et overlays à
+  `ClientDetailPageClient` (48 lignes). Aucun profil, session, client
+  Supabase, secret, callback ou fonction non sérialisable ne traverse ces
+  frontières.
+- Le total passe de 253 à 252 directives. La directive déplacée de la page
+  détail vers son îlot n’est pas revendiquée comme gain ; `CoachStyles` sort
+  réellement des graphes `/` et `/coach`, et les blocs CSS inline sortent du
+  JavaScript hydraté.
+- Face au contrôle HEAD `5KTbl6telmUXgq-J9ssYQ`, le JS initial diminue de
+  473 o bruts / 223–229 gzip sur `/` et `/coach`, et de 7 077 o bruts /
+  1 830–1 836 gzip sur `/client/[id]`. Les chunks restent 29, 32 et 31.
+  La taille RSC reste indisponible car le protocole ne capture pas de façon
+  stable les octets RSC authentifiés ; aucune estimation n’est publiée.
+- Deux contrôles après consécutifs, `qL0g4gN9zJn1wcfQLwkcu` et
+  `epfY_tip_m72DIdGGJIoD`, passent chacun 79/79. Les requêtes restent client
+  `110/109/109` dont `63/62/62` applicatives et coach `104/104/104` dont
+  `39/39/39`, sans origine externe.
+- Les validations finales passent 216 fichiers / 1 815 tests + 3 `todo`,
+  TypeScript, E2E coach/client 4/4 et default-coach 1/1. Les nouvelles gardes
+  vérifient serveur sans hooks/navigateur/Supabase, îlots explicites, absence
+  de `ssr:false`, props vides, rendu serveur et frontières sous 500 lignes.
+  ESLint ne conserve que quatre avertissements historiques `no-img-element`.
+  Les baselines et budgets versionnés restent inchangés.
+
+### Prochaine action unique
+
+Inventorier et optimiser images/vidéos lourdes.

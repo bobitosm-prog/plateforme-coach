@@ -24,19 +24,20 @@ describe('lazy secondary UI architecture', () => {
 
   it('loads detail tabs and overlays dynamically', () => {
     const view = read('app/client/[id]/components/page/ClientDetailPageView.tsx')
-    const page = read('app/client/[id]/page.tsx')
+    const client = read('app/client/[id]/components/page/ClientDetailPageClient.tsx')
     for (const component of ['ClientProgram', 'ClientProgress', 'ClientNutrition', 'ClientMessages', 'ClientNotes']) {
       expect(view).toMatch(new RegExp(`const ${component} = dynamic\\(\\(\\) => import\\(`))
       expect(view).not.toMatch(new RegExp(`import ${component} from`))
     }
-    expect(page).toContain("dynamic(() => import('./components/page/ClientDetailPageOverlays')")
-    expect(page).toContain('hasOpenClientDetailOverlay(detail, pendingTemplate)')
+    expect(client).toContain("dynamic(() => import('./ClientDetailPageOverlays')")
+    expect(client).toContain('hasOpenClientDetailOverlay(detail, pendingTemplate)')
   })
 
   it('does not introduce unsupported client-only dynamic boundaries', () => {
     const files = [
       'app/components/dashboard/DashboardClientIsland.tsx',
       'app/client/[id]/page.tsx',
+      'app/client/[id]/components/page/ClientDetailPageClient.tsx',
       'app/client/[id]/components/page/ClientDetailPageView.tsx',
     ]
     for (const path of files) {

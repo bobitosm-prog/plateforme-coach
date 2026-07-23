@@ -170,15 +170,6 @@ export default function DashboardClientIsland() {
 
       {/* ── MAIN CONTENT AREA ── */}
       <div className="main-content-area" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100dvh', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        * { box-sizing: border-box; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .photo-cell:hover .photo-delete-btn { opacity: 1 !important; }
-        .client-main-scroll { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
-        @media (min-width: 768px) { .client-main-scroll { padding-bottom: 16px; } }
-      `}</style>
-
       {/* ── F6.B.5a : auto-gen progress banner ── */}
       {initialGen.generating && (
         <div style={{

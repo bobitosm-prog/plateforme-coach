@@ -541,7 +541,8 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 budgets anti-régression automatisés, coque serveur du dashboard extraite,
 frontières de chargement ajoutées aux segments importants, frontières d’erreur
 critiques expurgées, onglets/modales secondaires chargés à la demande et
-bibliothèques lourdes différées avec deux contrôles finaux à 79/79.**
+bibliothèques lourdes différées et premières frontières Client Components
+réduites avec deux contrôles finaux à 79/79.**
 
 ### Pourquoi
 
@@ -558,7 +559,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] [Ajouter `error.tsx` par domaine critique](docs/PERFORMANCE_ERROR_BOUNDARIES.md) | 1,5 j | Moyenne | Faible | Moyen | Contrats erreurs |
 | [x] [Charger onglets et modales secondaires à la demande](docs/PERFORMANCE_LAZY_UI.md) | 3 j | Élevée | Moyen | Élevé | Composants découpés |
 | [x] [Différer Recharts, MediaPipe, QR et XLSX](docs/PERFORMANCE_HEAVY_LIBRARIES.md) | 2 j | Moyenne | Moyen | Élevé | Dynamic imports |
-| [ ] Réduire progressivement les modules `use client` | 4 j | Élevée | Moyen | Élevé | Coque serveur |
+| [x] [Réduire progressivement les modules `use client`](docs/PERFORMANCE_CLIENT_BOUNDARIES.md) | 4 j | Élevée | Moyen | Élevé | Coque serveur |
 | [ ] Inventorier et optimiser images/vidéos lourdes | 3 j | Moyenne | Moyen | Élevé | Manifest médias |
 | [ ] Définir posters et chargement vidéo différé | 2 j | Moyenne | Moyen | Moyen | Médias optimisés |
 | [ ] Étudier puis déployer un stockage/CDN média | 3 j | Élevée | Élevé | Élevé | Chemins compatibles |

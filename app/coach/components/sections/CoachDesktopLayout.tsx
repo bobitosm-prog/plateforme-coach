@@ -8,7 +8,6 @@ import { cache } from '@/lib/cache'
 import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GOLD_DIM, GREEN, RADIUS_CARD, RED, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY } from '@/lib/design-tokens'
 import { SESSION_COLORS, SESSION_TYPES, WP_MONTHS } from '../../hooks/useCoachDashboard'
 import BugReport from '../../../components/BugReport'
-import CoachStyles from '../CoachStyles'
 import CoachSectionFallback from './CoachSectionFallback'
 import type { CoachPageLayoutProps, CoachSection } from './coach-page-types'
 
@@ -51,7 +50,6 @@ export default function CoachDesktopLayout({ h, ct, revMonth, setRevMonth, revYe
 
   return (
     <div style={{ display: 'flex', width: '100%', minHeight: '100dvh', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
-      <CoachStyles />
       {/* SIDEBAR */}
       <aside style={{ width: SIDEBAR_W, flexShrink: 0, position: 'fixed', top: 0, left: 0, height: '100dvh', background: BG_BASE, borderRight: `1px solid rgba(255,255,255,0.06)`, display: 'flex', flexDirection: 'column', zIndex: 50 }}>
         <div style={{ padding: '24px 20px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>

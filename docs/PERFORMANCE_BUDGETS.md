@@ -1,5 +1,8 @@
 # Budgets de performance
 
+La tranche de réduction des Client Components conserve ces seuils inchangés ;
+voir [Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+
 ## Rôle
 
 Ces budgets sont des garde-fous locaux anti-régression dérivés des deux

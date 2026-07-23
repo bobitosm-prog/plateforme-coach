@@ -10,7 +10,8 @@ const dashboardFacade = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'ut
 describe('coach App Router page contract', () => {
   it('renders the application component from a parameterless default page export', () => {
     expect(page).toContain('export default function CoachPage()')
-    expect(page).toContain('return <CoachPageContent />')
+    expect(page).toContain('<CoachStyles />')
+    expect(page).toContain('<CoachPageContent />')
     expect(page).not.toContain('initialSession')
   })
 

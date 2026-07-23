@@ -1,5 +1,9 @@
 # Chargement différé des onglets et modales secondaires
 
+La composition serveur des styles statiques des trois routes critiques est
+décrite dans
+[Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+
 ## Périmètre
 
 Cette tranche réduit le JavaScript initial des trois routes de référence sans
