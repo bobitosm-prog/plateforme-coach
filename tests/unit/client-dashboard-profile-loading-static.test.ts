@@ -6,7 +6,8 @@ const root = process.cwd()
 const hook = fs.readFileSync(path.join(root, 'app/hooks/useClientDashboard.ts'), 'utf8')
 const dataHook = fs.readFileSync(path.join(root, 'lib/client-dashboard/use-client-dashboard-data.ts'), 'utf8')
 const loadingBoundary = `${hook}\n${dataHook}`
-const page = fs.readFileSync(path.join(root, 'app/page.tsx'), 'utf8')
+const page = fs.readFileSync(path.join(root, 'app/components/dashboard/DashboardClientIsland.tsx'), 'utf8')
+const profileError = fs.readFileSync(path.join(root, 'app/components/dashboard/DashboardProfileError.tsx'), 'utf8')
 
 describe('useClientDashboard profile loading boundary', () => {
   it('delegates identity, cache ownership, and profile absence to the extracted loader', () => {
@@ -27,8 +28,9 @@ describe('useClientDashboard profile loading boundary', () => {
   })
 
   it('exposes a full-screen retry boundary before dashboard content', () => {
-    expect(page).toContain('data-testid="profile-load-error"')
-    expect(page).toContain('onClick={h.retryProfileLoad}')
+    expect(profileError).toContain('data-testid="profile-load-error"')
+    expect(profileError).toContain('onClick={onRetry}')
+    expect(page).toContain('<DashboardProfileError onRetry={h.retryProfileLoad} />')
     expect(page).toContain("h.profileLoadStatus === 'not_found'")
     expect(page.indexOf("h.profileLoadStatus === 'error'")).toBeLessThan(page.indexOf('Coach role → render coach dashboard'))
   })

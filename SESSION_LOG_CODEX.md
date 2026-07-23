@@ -9756,3 +9756,45 @@ Définir les budgets de performance.
 ### Prochaine action unique
 
 Créer une coque serveur pour le dashboard.
+
+## Entrée — 2026-07-22 — Coque serveur du dashboard
+
+- `app/page.tsx` passe de 745 à 21 lignes et devient une Server Component App
+  Router sans props, hook client, API navigateur ou client Supabase. Elle rend
+  la racine sémantique, le titre accessible, `Suspense` et le fallback MoovX.
+- L'orchestrateur historique devient `DashboardClientIsland` (498 lignes).
+  Les effets navigateur et le rail sont isolés dans
+  `useDashboardClientRuntime` (213 lignes), l'erreur profil (19 lignes), le
+  fallback (36 lignes) et la session avec célébrations (34 lignes). Toutes les
+  nouvelles frontières restent sous 500 lignes.
+- Aucune identité n'est préchargée côté serveur : cela aurait dupliqué le
+  chargement Auth/profil owner-scoped existant. La coque ne sérialise donc
+  aucune `Session`, identité, rôle, e-mail, cookie ou token. Le contrat client
+  conserve profil absent versus panne, retry, onboarding, coach/client,
+  paywall, cache owner-scoped, réponses obsolètes et Strict Mode.
+- Les tests de caractérisation ont été exécutés avant le déplacement. Les
+  gardes finales couvrent Server Component, PageProps fermé, imports interdits,
+  confidentialité, chargement, identité absente, coach/client, absence/erreur
+  profil et autorité initiale unique.
+- Mesures : contrôle `BUILD_ID` `UhNub4Z8iBOmkjXkELcKM`, bundle `/`
+  3 088 093 o brut / 887 263 o gzip contre 3 086 045 / 886 824 (+439 o gzip,
+  +0,05 %), aucun chunk propre à `/`. Client : LCP 400/372/428 ms, INP
+  32/32/32 ms, CLS 0,003886/0,010764/0,003886, requêtes 106/104/104 dont
+  63/62/62 applicatives, Auth 3/3/3 et PostgREST 55/54/54. Coach : LCP
+  304/248/236 ms, INP 24/24/24, CLS nul, requêtes 107/107/108 dont 40/43/40
+  applicatives, Auth 5/5/6 et PostgREST 27/30/26.
+- Les 79 budgets du contrôle et les 79 contrôles de chacune des deux baselines
+  passent sans dépassement. Le build Webpack de validation produit aussi le
+  `BUILD_ID` `Xs9lP_yJFuQk1TNokSY2s` et tous les manifests requis.
+- Validations : 52 tests ciblés verts; suite complète 204 fichiers / 1 763
+  tests verts + 3 `todo`; TypeScript vert; types Supabase conformes; ESLint
+  ciblé sans erreur (quatre avertissements `no-img-element`, contre 11 erreurs
+  et 11 avertissements historiques dans l'ancienne page); E2E coach/client
+  4/4 et default-coach 1/1 verts; `git diff --check`, liens et nettoyage à
+  contrôler en clôture.
+- Dettes inchangées : `/api/feedback/mine` à 500, avertissement historique
+  `getSession()`, volume PostgREST et grand îlot client proche de 500 lignes.
+
+### Prochaine action unique
+
+Ajouter `loading.tsx` par segment important.

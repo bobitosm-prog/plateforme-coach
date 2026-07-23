@@ -16,6 +16,8 @@ Artefacts bruts et déterministes :
 
 Les plafonds automatisés dérivés de ces captures sont documentés dans
 [Budgets de performance](./PERFORMANCE_BUDGETS.md).
+La séparation entre la Server Component racine et ses îlots interactifs est
+décrite dans [Coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md).
 
 ## Commande canonique
 

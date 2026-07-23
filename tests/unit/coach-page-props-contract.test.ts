@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 const page = readFileSync('app/coach/page.tsx', 'utf8')
 const content = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
 const rootPage = readFileSync('app/page.tsx', 'utf8')
+const dashboardIsland = readFileSync('app/components/dashboard/DashboardClientIsland.tsx', 'utf8')
 const dashboardFacade = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf8')
 
 describe('coach App Router page contract', () => {
@@ -19,8 +20,9 @@ describe('coach App Router page contract', () => {
     expect(content).toContain('initialSession?: Session | null')
     expect(content).toContain('function CoachPageContent({ initialSession }: CoachPageContentProps = {})')
     expect(content).toContain('<ClientIntlProvider><CoachPageContentInner initialSession={initialSession} /></ClientIntlProvider>')
-    expect(rootPage).toContain("dynamic(() => import('./coach/components/CoachPageContent')")
-    expect(rootPage).toContain('<CoachDashboard initialSession={h.session} />')
+    expect(rootPage).toContain('<DashboardClientIsland />')
+    expect(dashboardIsland).toContain("dynamic(() => import('../../coach/components/CoachPageContent')")
+    expect(dashboardIsland).toContain('<CoachDashboard initialSession={h.session} />')
   })
 
   it('preserves dashboard, lazy layout, auth and navigation wiring', () => {

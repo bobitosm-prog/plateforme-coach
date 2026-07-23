@@ -537,9 +537,10 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : Phase 8 active — baseline production Webpack capturée deux fois et
-budgets anti-régression automatisés pour bundle, Web Vitals locaux et requêtes.
-Prochaine tranche : créer une coque serveur pour le dashboard.**
+**Statut : Phase 8 active — baseline production Webpack capturée deux fois,
+budgets anti-régression automatisés et coque serveur du dashboard extraite sans
+dupliquer l'autorité Auth/profil. Prochaine tranche : ajouter `loading.tsx` par
+segment important.**
 
 ### Pourquoi
 
@@ -551,7 +552,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 |---|---:|---|---|---|---|
 | [x] Capturer bundle, LCP, INP, CLS et requêtes de référence | 1,5 j | Moyenne | Faible | Élevé | — |
 | [x] Définir les budgets de performance | 0,5 j | Moyenne | Faible | Moyen | Baseline |
-| [ ] Créer une coque serveur pour le dashboard | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
+| [x] [Créer une coque serveur pour le dashboard](docs/DASHBOARD_SERVER_SHELL.md) | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
 | [ ] Ajouter `loading.tsx` par segment important | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |
 | [ ] Ajouter `error.tsx` par domaine critique | 1,5 j | Moyenne | Faible | Moyen | Contrats erreurs |
 | [ ] Charger onglets et modales secondaires à la demande | 3 j | Élevée | Moyen | Élevé | Composants découpés |
@@ -757,7 +758,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈57 % (79/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈58 % (80/138 tâches) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |

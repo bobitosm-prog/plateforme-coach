@@ -7,6 +7,9 @@ Ces budgets sont des garde-fous locaux anti-régression dérivés des deux
 terrain ni les seuils Web Vitals généraux de Google. Le protocole est local,
 sans throttling CPU ou réseau.
 
+Ils protègent notamment les évolutions de la
+[coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md).
+
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 
 ```bash
