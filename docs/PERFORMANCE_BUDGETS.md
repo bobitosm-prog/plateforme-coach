@@ -14,6 +14,9 @@ protègent aussi les
 [frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md).
 Ils encadrent également le
 [chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
+Le chargement à l’intention des bibliothèques fonctionnelles lourdes est
+documenté dans
+[Chargement différé des bibliothèques lourdes](./PERFORMANCE_HEAVY_LIBRARIES.md).
 
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 

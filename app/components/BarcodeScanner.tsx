@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 import { X, Camera, Search, Plus } from 'lucide-react'
 import { colors, fonts } from '../../lib/design-tokens'
 
+type Html5QrcodeInstance = import('html5-qrcode').Html5Qrcode
+
 const NUTRI_COLORS: Record<string, string> = { a: '#038141', b: '#85BB2F', c: '#FECB02', d: '#EE8100', e: '#E63E11' }
 
 interface BarcodeScannerProps {
@@ -15,7 +17,9 @@ interface BarcodeScannerProps {
 }
 
 export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType, continuousMode }: BarcodeScannerProps) {
-  const scannerRef = useRef<any>(null)
+  const scannerRef = useRef<Html5QrcodeInstance | null>(null)
+  const scannerGenerationRef = useRef(0)
+  const startingRef = useRef(false)
   const [scanning, setScanning] = useState(false)
   const [manualCode, setManualCode] = useState('')
   const [scanCount, setScanCount] = useState(0)
@@ -30,14 +34,18 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   // Auto-start on mount
   useEffect(() => {
     mountedRef.current = true
-    startCamera()
+    void startCamera()
     return () => { mountedRef.current = false; stopCamera() }
   }, [])
 
   async function startCamera() {
+    if (startingRef.current || scannerRef.current) return
+    const generation = scannerGenerationRef.current
+    startingRef.current = true
     setError('')
     try {
       const { Html5Qrcode } = await import('html5-qrcode')
+      if (!mountedRef.current || generation !== scannerGenerationRef.current) return
       const scanner = new Html5Qrcode('barcode-reader', { verbose: false })
       scannerRef.current = scanner
 
@@ -51,9 +59,15 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
         },
         () => {} // scan in progress
       )
-      if (mountedRef.current) setScanning(true)
-    } catch (err: any) {
-      const msg = String(err?.message || err || '')
+      if (!mountedRef.current || generation !== scannerGenerationRef.current) {
+        await scanner.stop().catch(() => {})
+        if (scannerRef.current === scanner) scannerRef.current = null
+        return
+      }
+      setScanning(true)
+    } catch (error: unknown) {
+      if (!mountedRef.current || generation !== scannerGenerationRef.current) return
+      const msg = error instanceof Error ? error.message : ''
       if (msg.includes('NotAllowed') || msg.includes('Permission')) {
         setError("Autorise l'accès à la caméra dans les réglages de ton navigateur.")
       } else if (msg.includes('NotFound') || msg.includes('Requested device not found')) {
@@ -61,15 +75,19 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
       } else {
         setError("Impossible d'ouvrir la caméra. Saisis le code manuellement.")
       }
+    } finally {
+      if (generation === scannerGenerationRef.current) startingRef.current = false
     }
   }
 
   function stopCamera() {
+    scannerGenerationRef.current += 1
+    startingRef.current = false
     if (scannerRef.current) {
       scannerRef.current.stop().catch(() => {})
       scannerRef.current = null
     }
-    setScanning(false)
+    if (mountedRef.current) setScanning(false)
   }
 
   async function lookupProduct(code: string) {

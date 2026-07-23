@@ -9935,3 +9935,55 @@ Charger les onglets et modales secondaires à la demande.
 ### Prochaine action unique
 
 Différer Recharts, MediaPipe, QR et XLSX.
+
+## Entrée — 2026-07-23 — Recharts, MediaPipe, QR et XLSX différés
+
+- L’inventaire exhaustif confirme Recharts `3.8.0` (sept consommateurs),
+  MediaPipe Tasks Vision `0.10.34`, html5-qrcode `2.3.8` et XLSX `0.18.5`.
+  Aucun barrel runtime caché n’a été trouvé.
+- Recharts reste synchrone dans ses vues graphiques déjà différées afin de
+  préserver SSR, axes, tooltips et géométrie. MediaPipe et son module
+  d’alignement ne sont chargés qu’à l’action ; le détecteur est fermé et les
+  résolutions tardives sont invalidées. Le scanner QR conserve ses options,
+  verrouille l’initialisation et nettoie les instances obsolètes.
+- Les imports/exports XLSX programmes et progression chargent SheetJS dans
+  l’action explicite. Les feuilles, colonnes, formats et noms restent
+  identiques ; des verrous empêchent les traitements concurrents.
+- Deux contrôles Webpack complets stabilisés passent. Le contrôle final
+  `JFSMGl2PZEJ9g2rC11VJw` observe Recharts à 69 054 o / 18 459 gzip et XLSX à
+  411 819 o / 139 745 gzip au premier usage, puis zéro chunk à la réouverture.
+  QR et MediaPipe restent explicitement indisponibles en runtime hermétique,
+  faute de caméra et de paire de photos/modèles locaux ; aucune valeur n’est
+  simulée.
+- Les manifests initiaux restent quasi identiques face au contrôle précédent :
+  union 2 017 448 o / 593 250 gzip contre 2 017 445 / 593 224. Client : LCP
+  médian 388 ms, INP 48 ms, CLS 0,003886, requêtes 109/62. Coach : LCP médian
+  256 ms, INP 24 ms, CLS nul, requêtes 104/39.
+- Les tests ciblés finaux passent 34 assertions. Le build produit 88 pages,
+  un BUILD_ID et tous les manifests, sans origine externe. Les validations
+  complètes passent 215 fichiers / 1 810 tests + 3 `todo`, TypeScript,
+  E2E coach/client 4/4 et default-coach 1/1. Les deux références passent
+  chacune 79/79. Les E2E coach/client passent 4/4, default-coach 1/1 et la
+  preuve lourde séparée 1/1. Les nouvelles frontières et gardes ESLint sont
+  propres ; la dette historique des consommateurs reste à 37 erreurs et
+  10 avertissements, sans augmentation.
+- Trois diagnostics consécutifs et sans changement de code passent 79/79
+  (`Dr7RYw_b6nuD0pHpa12qB`, `f9_wTo4o3jOWkYgKetXet`,
+  `wLNwtmugWf3hn-oWm6g5O`). L’attribution expurgée relie les valeurs INP
+  client 32/48 ms à la navigation Training, sans longue tâche ni action des
+  quatre bibliothèques. Le LCP coach isolé à 596 ms n’est pas reproduit
+  (224–252 ms sur les diagnostics).
+- L’attribution détaillée devient opt-in ; le calcul canonique reste inchangé.
+  Deux contrôles finaux neufs et consécutifs passent chacun 79/79 sans
+  dépassement informatif : `GbQqErj-h5pGl082idkqi` (client
+  LCP/INP/CLS médians 336 ms/32 ms/0,010764, coach 236 ms/24 ms/0) puis
+  `u5NKsNBOicU7ZubQzAQ9y` (352 ms/32 ms/0,010764 et
+  244 ms/24 ms/0). La preuve lourde séparée passe 1/1 après le premier
+  contrôle.
+- Aucun calcul, rendu, contrat, requête, Auth, Supabase, repository, migration,
+  RLS, baseline ou budget versionné n’est modifié. Les changements concurrents
+  restent hors staging.
+
+### Prochaine action unique
+
+Réduire progressivement les modules `use client`.

@@ -1,4 +1,7 @@
-import * as XLSX from 'xlsx'
+type XlsxModule = typeof import('xlsx')
+type WorkSheet = import('xlsx').WorkSheet
+
+const loadXlsx = (): Promise<XlsxModule> => import('xlsx')
 
 /* ─── Types ─── */
 interface ExerciseData {
@@ -48,7 +51,8 @@ function getRest(ex: ExerciseData): number {
 }
 
 /* ─── EXPORT ─── */
-export function exportProgramToXlsx(program: ProgramData) {
+export async function exportProgramToXlsx(program: ProgramData) {
+  const XLSX = await loadXlsx()
   const wb = XLSX.utils.book_new()
 
   // Sheet 1: Programme info
@@ -101,7 +105,8 @@ export function exportProgramToXlsx(program: ProgramData) {
 }
 
 /* ─── TEMPLATE ─── */
-export function downloadBlankTemplate() {
+export async function downloadBlankTemplate() {
+  const XLSX = await loadXlsx()
   const wb = XLSX.utils.book_new()
 
   const infoData = [
@@ -282,7 +287,7 @@ interface SheetParseResult {
   description?: string
 }
 
-function parseSheet(sheetName: string, ws: any): SheetParseResult {
+function parseSheet(XLSX: XlsxModule, sheetName: string, ws: WorkSheet): SheetParseResult {
   const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
   if (!rows.length) return { type: 'skipped', sheetName }
 
@@ -388,7 +393,8 @@ function parseSheet(sheetName: string, ws: any): SheetParseResult {
   return { type: 'day', sheetName, day: { name: dayName, is_rest: false, exercises } }
 }
 
-export function parseProgramFromXlsx(file: File): Promise<ImportResult> {
+export async function parseProgramFromXlsx(file: File): Promise<ImportResult> {
+  const XLSX = await loadXlsx()
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -408,7 +414,7 @@ export function parseProgramFromXlsx(file: File): Promise<ImportResult> {
 
         for (const sheetName of wb.SheetNames) {
           const ws = wb.Sheets[sheetName]
-          const result = parseSheet(sheetName, ws)
+          const result = parseSheet(XLSX, sheetName, ws)
 
           switch (result.type) {
             case 'info':

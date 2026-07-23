@@ -2,6 +2,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { gzipSync } from 'node:zlib'
 import { config as loadEnv } from 'dotenv'
 import { analyzeProductionBundles } from './performance-baseline-bundle.ts'
 import { stableJson } from '../lib/performance/baseline.ts'
@@ -46,6 +47,31 @@ async function assertMailpitEmpty() {
   if (count) throw new Error('Mailpit must be empty before and after the performance baseline')
 }
 
+function enrichHeavyLibraryEvidence(evidencePath: string) {
+  const evidence = JSON.parse(readFileSync(evidencePath, 'utf8')) as Record<string, unknown>
+  const groups = ['recharts', 'xlsx', 'qr', 'mediapipe'] as const
+  const chunkGroups = Object.fromEntries(groups.map(group => {
+    const value = evidence[group]
+    const paths = typeof value === 'object' && value !== null && 'first' in value && Array.isArray(value.first)
+      ? value.first.filter((path): path is string => typeof path === 'string')
+      : []
+    const files = paths.map(path => {
+      if (!path.startsWith('/_next/')) throw new Error(`Unexpected heavy-library chunk path: ${path}`)
+      const file = path.slice('/_next/'.length)
+      const bytes = readFileSync(resolve(BUILD_DIR, file))
+      return { file, rawBytes: bytes.byteLength, gzipBytes: gzipSync(bytes).byteLength }
+    })
+    return [group, {
+      files,
+      totals: files.reduce((total, file) => ({
+        rawBytes: total.rawBytes + file.rawBytes,
+        gzipBytes: total.gzipBytes + file.gzipBytes,
+      }), { rawBytes: 0, gzipBytes: 0 }),
+    }]
+  }))
+  writeFileSync(evidencePath, stableJson({ ...evidence, chunkGroups }))
+}
+
 let completed = false
 try {
   run(process.execPath, ['scripts/supabase-local.mjs', 'ensure'])
@@ -77,6 +103,10 @@ try {
   run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-baseline.spec.ts'], env)
   if (process.env.MOOVX_LAZY_UI_EVIDENCE_PATH) {
     run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-lazy-secondary-ui.spec.ts'], env)
+  }
+  if (process.env.MOOVX_HEAVY_UI_EVIDENCE_PATH) {
+    run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-heavy-libraries.spec.ts'], env)
+    enrichHeavyLibraryEvidence(process.env.MOOVX_HEAVY_UI_EVIDENCE_PATH)
   }
   if (!existsSync(rawPath)) throw new Error('Playwright did not produce raw baseline measurements')
 

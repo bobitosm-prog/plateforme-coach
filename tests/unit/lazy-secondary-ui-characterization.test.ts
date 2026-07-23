@@ -1,7 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 
-const read = (path: string) => execFileSync('git', ['show', `HEAD:${path}`], { encoding: 'utf8' })
+// Immutable parent of the lazy-secondary-UI migration. Using HEAD here makes
+// this historical characterization change meaning after the migration commit.
+const BASELINE_COMMIT = '1af24af872b3699adacbbfdd5e50356c28504fdb'
+const read = (path: string) => execFileSync('git', ['show', `${BASELINE_COMMIT}:${path}`], { encoding: 'utf8' })
 
 describe('secondary UI before lazy migration', () => {
   it('keeps the real initial client and detail views eager', () => {

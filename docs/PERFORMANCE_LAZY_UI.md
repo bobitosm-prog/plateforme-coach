@@ -110,7 +110,7 @@ second contrôle complet stabilisé est retenu.
   partagés.
 - Les requêtes PostgREST, l'erreur historique `/api/feedback/mine` et les
   avertissements Supabase `getSession()` ne relèvent pas de cette tranche.
-- Recharts, MediaPipe, QR et XLSX n'ont pas été ciblés ici : leur report est la
-  prochaine tâche distincte.
+- Recharts, MediaPipe, QR et XLSX sont traités dans
+  [Chargement différé des bibliothèques lourdes](./PERFORMANCE_HEAVY_LIBRARIES.md).
 - Les trois avertissements ESLint `no-img-element` du dashboard client sont
   historiques et inchangés.

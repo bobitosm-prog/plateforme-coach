@@ -6,7 +6,6 @@ import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
-import BarcodeScanner from '../BarcodeScanner'
 import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import SectionTitle from '../ui/SectionTitle'
@@ -47,8 +46,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
-  const [showScanner, setShowScanner] = useState(false)
-  const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
@@ -310,20 +307,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           )
         })}
       </div>
-
-      {/* Barcode scanner modal (single scan) */}
-      {showScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
-          onProductAdded={() => { setShowScanner(false); fetchDailyLogs() }}
-          onClose={() => setShowScanner(false)} />
-      )}
-
-      {/* Fridge scanner (continuous mode) */}
-      {showFridgeScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} continuousMode
-          onProductAdded={() => { setShowFridgeScanner(false); fetchAll() }}
-          onClose={() => setShowFridgeScanner(false)} />
-      )}
 
       {/* Food search modal */}
       {showFoodSearch && (

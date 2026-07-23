@@ -1,18 +1,22 @@
 'use client'
-import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
+
+type PoseLandmarker = import('@mediapipe/tasks-vision').PoseLandmarker
 
 let poseLandmarker: PoseLandmarker | null = null
 let initPromise: Promise<PoseLandmarker> | null = null
+let lifecycle = 0
 
 async function initPoseLandmarker(): Promise<PoseLandmarker> {
   if (poseLandmarker) return poseLandmarker
   if (initPromise) return initPromise
 
+  const requestedLifecycle = lifecycle
   initPromise = (async () => {
+    const { FilesetResolver, PoseLandmarker } = await import('@mediapipe/tasks-vision')
     const vision = await FilesetResolver.forVisionTasks(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
     )
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+    const created = await PoseLandmarker.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath:
           'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
@@ -20,10 +24,26 @@ async function initPoseLandmarker(): Promise<PoseLandmarker> {
       runningMode: 'IMAGE',
       numPoses: 1,
     })
-    return poseLandmarker
+    if (requestedLifecycle !== lifecycle) {
+      created.close()
+      throw new Error('PHOTO_ALIGNMENT_CANCELLED')
+    }
+    poseLandmarker = created
+    return created
   })()
 
-  return initPromise
+  try {
+    return await initPromise
+  } finally {
+    initPromise = null
+  }
+}
+
+export function disposePhotoAlignment() {
+  lifecycle += 1
+  poseLandmarker?.close()
+  poseLandmarker = null
+  initPromise = null
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

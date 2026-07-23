@@ -1,6 +1,6 @@
 'use client'
 
-import type { ChangeEvent } from 'react'
+import { useRef, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 import ExerciseSearchModal from '../../modals/ExerciseSearchModal'
 import ExerciseDetailModal from '../../modals/ExerciseDetailModal'
@@ -23,6 +23,7 @@ import type { LegacyTrainingExercise } from './training-tab-types'
 import type { TrainingTabRuntime } from '../TrainingTabView'
 
 export default function TrainingTabOverlays({ runtime }: { runtime: TrainingTabRuntime }) {
+  const spreadsheetActionRef = useRef<'import' | 'export' | 'template' | null>(null)
   const {
     t, locale, supabase, session, aiAllowed, showProgramManager, setShowProgramManager,
     customPrograms, expandedProgram, confirmDelete, importFileRef, setExpandedProgram, setConfirmDelete, setEditingProgram,
@@ -58,24 +59,51 @@ export default function TrainingTabOverlays({ runtime }: { runtime: TrainingTabR
         onCreate={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }}
         onImportFile={async (event: ChangeEvent<HTMLInputElement>) => {
           const file = event.target.files?.[0]
-          if (!file) return
-          const result = await parseProgramFromXlsx(file)
-          if (!result.success) { toast.error(result.error || t('calendar.toasts.error')); return }
-          if (result.program) {
-            setImportPreview(result.program)
-            setImportName(result.program.name)
-            setImportSkipped(result.skippedSheets || [])
+          if (!file || spreadsheetActionRef.current) return
+          spreadsheetActionRef.current = 'import'
+          try {
+            const result = await parseProgramFromXlsx(file)
+            if (!result.success) { toast.error(result.error || t('calendar.toasts.error')); return }
+            if (result.program) {
+              setImportPreview(result.program)
+              setImportName(result.program.name)
+              setImportSkipped(result.skippedSheets || [])
+            }
+          } catch {
+            toast.error(t('calendar.toasts.error'))
+          } finally {
+            spreadsheetActionRef.current = null
+            event.target.value = ''
           }
-          event.target.value = ''
         }}
         onToggleExpanded={setExpandedProgram}
         onActivate={activateProgram}
         onDeactivate={deactivateProgram}
         onEdit={(program: ManagedTrainingProgram) => { setEditingProgram(program); setShowProgramBuilder(true); setShowProgramManager(false) }}
-        onExport={(program: ManagedTrainingProgram) => exportProgramToXlsx(program as Parameters<typeof exportProgramToXlsx>[0])}
+        onExport={async (program: ManagedTrainingProgram) => {
+          if (spreadsheetActionRef.current) return
+          spreadsheetActionRef.current = 'export'
+          try {
+            await exportProgramToXlsx(program as Parameters<typeof exportProgramToXlsx>[0])
+          } catch {
+            toast.error(t('calendar.toasts.error'))
+          } finally {
+            spreadsheetActionRef.current = null
+          }
+        }}
         onRequestDelete={setConfirmDelete}
         onDelete={(programId: string) => { deleteProgram(programId); setConfirmDelete(null); setExpandedProgram(null) }}
-        onDownloadTemplate={downloadBlankTemplate}
+        onDownloadTemplate={async () => {
+          if (spreadsheetActionRef.current) return
+          spreadsheetActionRef.current = 'template'
+          try {
+            await downloadBlankTemplate()
+          } catch {
+            toast.error(t('calendar.toasts.error'))
+          } finally {
+            spreadsheetActionRef.current = null
+          }
+        }}
       />
     )}
 
