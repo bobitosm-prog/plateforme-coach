@@ -148,23 +148,6 @@ export function useDashboardClientRuntime(h: DashboardState) {
   }, [h.activeTab])
 
   React.useEffect(() => {
-    const index = TAB_INDEX[h.activeTab as keyof typeof TAB_INDEX]
-    if (index === undefined) return
-    const neighbors = [TAB_RAIL_KEYS[index - 1], TAB_RAIL_KEYS[index + 1]].filter(Boolean) as string[]
-    const missing = neighbors.filter(tab => !visitedTabs.current.has(tab))
-    if (missing.length === 0) return
-    const mount = () => {
-      missing.forEach(tab => visitedTabs.current.add(tab))
-      forceRender(value => value + 1)
-    }
-    const timer = setTimeout(() => {
-      if ('requestIdleCallback' in window) window.requestIdleCallback(mount, { timeout: 2000 })
-      else mount()
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [h.activeTab])
-
-  React.useEffect(() => {
     const element = mainRef.current
     if (!element) return
     const lock = () => { if (element.scrollLeft !== 0) element.scrollLeft = 0 }

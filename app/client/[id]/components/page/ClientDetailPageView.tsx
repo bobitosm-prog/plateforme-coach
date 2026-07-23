@@ -1,15 +1,19 @@
 'use client'
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { ArrowLeft, Dumbbell, Utensils, LayoutDashboard, FileText, MessageCircle, Pencil, TrendingUp } from 'lucide-react'
 import ClientOverview from '../ClientOverview'
-import ClientProgram from '../ClientProgram'
-import ClientNutrition from '../ClientNutrition'
-import ClientMessages from '../ClientMessages'
-import ClientNotes from '../ClientNotes'
-import ClientProgress from '../ClientProgress'
+import DeferredContentFallback from '@/app/components/loading/DeferredContentFallback'
 import type { MealPlanTemplate } from '@/lib/meal-plan-templates'
 import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '@/lib/design-tokens'
 import type { ClientDetailState, ClientProgramTemplate } from './client-detail-page-types'
+
+const deferredContent = () => <DeferredContentFallback />
+const ClientProgram = dynamic(() => import('../ClientProgram'), { loading: deferredContent })
+const ClientNutrition = dynamic(() => import('../ClientNutrition'), { loading: deferredContent })
+const ClientMessages = dynamic(() => import('../ClientMessages'), { loading: deferredContent })
+const ClientNotes = dynamic(() => import('../ClientNotes'), { loading: deferredContent })
+const ClientProgress = dynamic(() => import('../ClientProgress'), { loading: deferredContent })
 
 function initials(name: string | null) {
   if (!name) return '?'

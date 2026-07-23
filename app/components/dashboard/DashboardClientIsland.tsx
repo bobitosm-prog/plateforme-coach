@@ -1,6 +1,5 @@
 'use client'
 import React from 'react'
-import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
@@ -12,25 +11,9 @@ import Paywall from '../Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../../components/ClientIntlProvider'
 import BugReport from '../BugReport'
-import BadgeCelebration from '../BadgeCelebration'
-import FeedbackTab from '../client/FeedbackTab'
 import ChatAI from '../ChatAI'
-import BarcodeScanner from '../BarcodeScanner'
 import { cache } from '../../../lib/cache'
-import WeightModal from '../modals/WeightModal'
-import MeasureModal from '../modals/MeasureModal'
-import BmrModal from '../modals/BmrModal'
-import ObjectiveModal from '../modals/ObjectiveModal'
 import HomeTab from '../tabs/HomeTab'
-import TrainingTab from '../tabs/TrainingTab'
-import NutritionTab from '../tabs/NutritionTab'
-import ProgressTab from '../tabs/ProgressTab'
-import ProfileTab from '../tabs/ProfileTab'
-import MessagesTab from '../tabs/MessagesTab'
-import PreferencesSection from '../tabs/profile/PreferencesSection'
-import AccountSection from '../tabs/profile/AccountSection'
-import GoalsSection from '../tabs/profile/GoalsSection'
-import AccountTab from '../tabs/AccountTab'
 import DesktopDashboard from '../../(dashboard)/page-desktop'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -42,7 +25,13 @@ import { useTranslations } from 'next-intl'
 import { useDashboardClientRuntime } from './useDashboardClientRuntime'
 import DashboardProfileError from './DashboardProfileError'
 import DashboardServerFallback from './DashboardServerFallback'
-import WorkoutSessionWithCelebrations from './WorkoutSessionWithCelebrations'
+import {
+  AccountSection, AccountTab, BadgeCelebration, BarcodeScanner, BmrModal,
+  FeedbackTab, GoalsSection, MeasureModal, MessagesTab, NutritionTab,
+  ObjectiveModal, PreferencesSection, ProfileTab, ProgressTab, TrainingTab,
+  WeightModal, WorkoutSessionWithCelebrations,
+} from './dashboard-deferred-components'
+import dynamic from 'next/dynamic'
 
 const CoachDashboard = dynamic(() => import('../../coach/components/CoachPageContent'), { ssr: false })
 /** Micro-component for translated nav label — must be rendered INSIDE ClientIntlProvider */

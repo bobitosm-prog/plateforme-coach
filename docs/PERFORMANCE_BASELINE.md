@@ -22,6 +22,8 @@ Les frontières de navigation retenues et leurs exclusions sont décrites dans
 [États de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md).
 La politique d’erreur publique et de reset est décrite dans
 [Frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md).
+Le découpage à la demande et sa preuve par chunks sont décrits dans
+[Chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
 
 ## Commande canonique
 

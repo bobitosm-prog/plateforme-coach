@@ -539,9 +539,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 
 **Statut : Phase 8 active — baseline production Webpack capturée deux fois,
 budgets anti-régression automatisés, coque serveur du dashboard extraite,
-frontières de chargement ajoutées aux segments importants et frontières
-d’erreur critiques expurgées. Prochaine tranche : charger onglets et modales
-secondaires à la demande.**
+frontières de chargement ajoutées aux segments importants, frontières d’erreur
+critiques expurgées et onglets/modales secondaires chargés à la demande.
+Prochaine tranche : différer Recharts, MediaPipe, QR et XLSX.**
 
 ### Pourquoi
 
@@ -556,7 +556,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] [Créer une coque serveur pour le dashboard](docs/DASHBOARD_SERVER_SHELL.md) | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
 | [x] [Ajouter `loading.tsx` par segment important](docs/PERFORMANCE_SEGMENT_LOADING.md) | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |
 | [x] [Ajouter `error.tsx` par domaine critique](docs/PERFORMANCE_ERROR_BOUNDARIES.md) | 1,5 j | Moyenne | Faible | Moyen | Contrats erreurs |
-| [ ] Charger onglets et modales secondaires à la demande | 3 j | Élevée | Moyen | Élevé | Composants découpés |
+| [x] [Charger onglets et modales secondaires à la demande](docs/PERFORMANCE_LAZY_UI.md) | 3 j | Élevée | Moyen | Élevé | Composants découpés |
 | [ ] Différer Recharts, MediaPipe, QR et XLSX | 2 j | Moyenne | Moyen | Élevé | Dynamic imports |
 | [ ] Réduire progressivement les modules `use client` | 4 j | Élevée | Moyen | Élevé | Coque serveur |
 | [ ] Inventorier et optimiser images/vidéos lourdes | 3 j | Moyenne | Moyen | Élevé | Manifest médias |

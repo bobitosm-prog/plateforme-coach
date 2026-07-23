@@ -1,5 +1,9 @@
 # Sections différées de la page coach
 
+La preuve navigateur production de premier chargement et de réouverture est
+centralisée dans
+[Chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
+
 ## Inventaire et comportement historique
 
 La page expose huit sections réelles : `accueil`, `dashboard` (clients),

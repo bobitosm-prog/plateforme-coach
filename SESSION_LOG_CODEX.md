@@ -9892,3 +9892,46 @@ Ajouter `error.tsx` par domaine critique.
 ### Prochaine action unique
 
 Charger les onglets et modales secondaires à la demande.
+
+## Entrée — 2026-07-23 — Onglets et modales secondaires à la demande
+
+- L'inventaire des trois routes de référence conserve les vues initiales,
+  l'authentification, les permissions, les paywalls et les frontières
+  `loading.tsx`/`error.tsx` synchrones. Les onglets secondaires du dashboard
+  client et du détail client utilisent désormais `next/dynamic` au niveau
+  module avec SSR par défaut; les sections coach réutilisent leur découpage
+  existant.
+- `WorkoutSession`, les modales de mesures/objectifs, le scanner, la
+  célébration et les overlays du détail client ne sont montés que lorsqu'ils
+  sont ouverts. `DeferredContentFallback` réserve une géométrie stable et
+  accessible sans donnée, requête ou autorité.
+- Le préchargement client automatique après trois secondes est supprimé car il
+  chargeait les onglets sans intention. Les vues visitées restent montées :
+  les réouvertures Training, Clients, Programme et overlay produisent zéro
+  nouveau chunk et zéro nouvelle requête Auth/PostgREST/Realtime.
+- La preuve Webpack production observe au premier affichage 3 chunks Training,
+  2 Nutrition, 1 Clients, 2 Messages, 1 Programme, 1 Nutrition détail et
+  2 overlays. Les changements rapides client et coach, les réouvertures et les
+  parcours mobile/desktop sont couverts sans origine externe.
+- Face au contrôle antérieur `0M7ff9iMf0u6GjvJ6hjs7`, le contrôle final
+  `miv4lys-1k6ofBZT3gFNq` réduit l'union bundle de
+  3 263 440 / 932 550 octets à 2 017 445 / 593 224 octets
+  (−38,180 % brut, −36,387 % gzip). Les réductions gzip par route sont
+  −36,250 % client, −35,984 % coach et −36,647 % détail client.
+- Le contrôle final passe 79/79 budgets. Client : LCP
+  `368/324/308 ms`, INP `48/32/32 ms`, CLS
+  `0,003886/0,010764/0,010764`, requêtes `111/110/110` dont `63/62/62`
+  applicatives. Coach : LCP `220/236/224 ms`, INP `24/24/24 ms`, CLS nul,
+  requêtes `107/104/104` dont `42/39/39` applicatives.
+- Les tests ciblés passent 20 assertions; la suite complète passe 213 fichiers,
+  1 802 tests et 3 `todo`; TypeScript est vert et ESLint ciblé
+  conserve uniquement trois avertissements historiques `no-img-element`.
+  Le build Webpack produit 88 pages et des manifests complets. Les E2E
+  coach/client passent 4/4 et default-coach 1/1.
+- Aucun contrat métier, ordre d'écriture, requête, souscription, route API,
+  repository, migration, RLS, baseline ou budget versionné n'est modifié.
+  Recharts, MediaPipe, QR et XLSX restent explicitement hors périmètre.
+
+### Prochaine action unique
+
+Différer Recharts, MediaPipe, QR et XLSX.

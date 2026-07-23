@@ -59,6 +59,8 @@ rester sous les [budgets anti-régression](./PERFORMANCE_BUDGETS.md). Les
 la coque sans ajouter de `app/loading.tsx` à la racine. Les
 [frontières d’erreur critiques](./PERFORMANCE_ERROR_BOUNDARIES.md) capturent les
 erreurs de rendu sans remplacer les états métier du profil.
+Les îlots secondaires et leur preuve de téléchargement sont documentés dans
+[Chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
 
 ## Contrôle de performance
 

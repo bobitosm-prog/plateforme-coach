@@ -1,5 +1,8 @@
 # Architecture de la page détail client
 
+Le découpage runtime des onglets secondaires et overlays est documenté dans
+[Chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
+
 ## Contrat préservé
 
 La route `client/[id]` reste une cible, jamais une preuve d'autorité. La façade

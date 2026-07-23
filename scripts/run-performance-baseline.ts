@@ -75,6 +75,9 @@ try {
   start('./node_modules/.bin/next', ['start', '--hostname', '127.0.0.1', '--port', '3211'], env)
   await ready(APP_URL)
   run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-baseline.spec.ts'], env)
+  if (process.env.MOOVX_LAZY_UI_EVIDENCE_PATH) {
+    run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-lazy-secondary-ui.spec.ts'], env)
+  }
   if (!existsSync(rawPath)) throw new Error('Playwright did not produce raw baseline measurements')
 
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as { dependencies: Record<string, string>; devDependencies: Record<string, string> }

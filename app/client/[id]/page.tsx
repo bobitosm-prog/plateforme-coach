@@ -1,11 +1,17 @@
 'use client'
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import useClientDetail from './hooks/useClientDetail'
 import type { MealPlanTemplate } from '@/lib/meal-plan-templates'
 import type { ClientProgramTemplate } from './components/page/client-detail-page-types'
 import ClientDetailPageView from './components/page/ClientDetailPageView'
-import ClientDetailPageOverlays from './components/page/ClientDetailPageOverlays'
 import { ClientDetailLoadingView, ClientDetailUnavailableView } from './components/page/ClientDetailPageStates'
+import DeferredContentFallback from '@/app/components/loading/DeferredContentFallback'
+import { hasOpenClientDetailOverlay } from './components/page/client-detail-overlay-state'
+
+const ClientDetailPageOverlays = dynamic(() => import('./components/page/ClientDetailPageOverlays'), {
+  loading: () => <DeferredContentFallback label="Ouverture…" overlay />,
+})
 
 export default function ClientProfilePage() {
   const detail = useClientDetail()
@@ -26,6 +32,8 @@ export default function ClientProfilePage() {
 
   return <>
     <ClientDetailPageView detail={detail} onApplyMealTemplate={handleApplyMealTemplate} onRequestTemplate={setPendingTemplate} />
-    <ClientDetailPageOverlays detail={detail} pendingTemplate={pendingTemplate} onClearPendingTemplate={() => setPendingTemplate(null)} />
+    {hasOpenClientDetailOverlay(detail, pendingTemplate) && (
+      <ClientDetailPageOverlays detail={detail} pendingTemplate={pendingTemplate} onClearPendingTemplate={() => setPendingTemplate(null)} />
+    )}
   </>
 }

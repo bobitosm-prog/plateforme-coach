@@ -12,6 +12,8 @@ Ils protègent notamment les évolutions de la
 [états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md). Ils
 protègent aussi les
 [frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md).
+Ils encadrent également le
+[chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
 
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 
