@@ -58,7 +58,9 @@ libellés accessibles et la géométrie mobile/desktop.
 Le build Webpack de production et les parcours coach/client sont les autorités
 de validation. Toute mesure postérieure doit rester sous les
 [budgets anti-régression](./PERFORMANCE_BUDGETS.md). La prochaine tranche est
-l'ajout d'`error.tsx` aux domaines critiques, indépendamment de ces fallbacks.
+l'ajout d'`error.tsx` aux domaines critiques, documenté dans
+[Frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md)
+et indépendant de ces fallbacks.
 
 ## Contrôle du 23 juillet 2026
 

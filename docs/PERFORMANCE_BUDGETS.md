@@ -9,7 +9,9 @@ sans throttling CPU ou réseau.
 
 Ils protègent notamment les évolutions de la
 [coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md) et des
-[états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md).
+[états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md). Ils
+protègent aussi les
+[frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md).
 
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 

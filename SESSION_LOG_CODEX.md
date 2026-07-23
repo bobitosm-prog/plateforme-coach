@@ -9845,3 +9845,50 @@ Ajouter `loading.tsx` par segment important.
 ### Prochaine action unique
 
 Ajouter `error.tsx` par domaine critique.
+
+## Entrée — 2026-07-23 — Frontières d’erreur des domaines critiques
+
+- L’inventaire des routes de référence sélectionne le filet global existant,
+  `/coach` et `/client/[id]`. Auth, onboarding, invitation, administration et
+  les états métier locaux restent exclus : `DashboardProfileError`,
+  `ClientDetailUnavailableView`, les chargements et les fallbacks dynamiques
+  conservent leurs contrats distincts.
+- `app/error.tsx`, `app/coach/error.tsx` et `app/client/[id]/error.tsx` sont des
+  adaptateurs Client Component de 8 lignes. La présentation commune fait
+  154 lignes, le contrôleur 68 lignes, le verrou pur 24 lignes et les types
+  14 lignes.
+- Les erreurs brutes sont ignorées : aucun accès à `message`, `stack`, `cause`
+  ou `digest`, aucune journalisation applicative, donnée personnelle, URL,
+  requête ou effet au rendu. Les textes publics restent génériques et le détail
+  client ne confirme aucune ressource protégée.
+- Le retry appelle uniquement `reset()`. Un verrou par montage empêche les
+  doubles clics, se réarme après une exception synchrone et repart proprement
+  après remontage. La navigation de secours reste explicite, utilise
+  `replace()` vers `/` ou `/coach` et ne touche ni session, cache ou données.
+- Le scénario réel existant couvre détail autorisé, retour arrière et refus RLS
+  normal. Une injection RSC Playwright ne déclenche pas une frontière lors
+  d’une navigation document complète; aucun backdoor de production n’a été
+  ajouté. Rendu serveur, tests purs et gardes statiques valident donc
+  déterministement affichage, expurgation, reset unique et remontage.
+- Le build Webpack isolé compile 88 pages, tous les manifests et le `BUILD_ID`
+  `oIOZoTnjk77JzB84QZ6Jz`. Le contrôle performance conforme utilise
+  `0M7ff9iMf0u6GjvJ6hjs7` et passe 79/79 budgets. Union bundle :
+  3 263 440 octets bruts / 932 550 gzip.
+- Contrôle retenu : client LCP `400/356/376 ms`, INP `48/32/32 ms`, CLS
+  `0,003886/0,010764/0,010764`, requêtes `106/105/105` dont `63/62/62`
+  applicatives; coach LCP `308/236/236 ms`, INP `24/24/24 ms`, CLS nul,
+  `107` requêtes dont `39` applicatives à chaque passage. Les deux références
+  passent chacune 79/79 budgets.
+- Trois contrôles précédents ont conservé des fluctuations ponctuelles LCP/INP,
+  dont un passage contaminé par la latence historique de
+  `/api/feedback/mine`; aucun budget ni baseline n’a été modifié.
+- Validations : 28 assertions ciblées vertes; suite complète 211 fichiers /
+  1 791 tests verts + 3 `todo`; TypeScript et ESLint ciblé verts; E2E
+  coach/client 4/4 et default-coach 1/1 verts; build Webpack et manifests
+  conformes; contrôle performance 79/79 et deux références 79/79. Les audits
+  de diff, liens, secrets, staging, processus, ports et fixtures sont effectués
+  à la clôture.
+
+### Prochaine action unique
+
+Charger les onglets et modales secondaires à la demande.

@@ -56,7 +56,9 @@ Les mesures avant changement sont dans la
 [baseline Phase 8](./PERFORMANCE_BASELINE.md). Tout contrôle postérieur doit
 rester sous les [budgets anti-régression](./PERFORMANCE_BUDGETS.md). Les
 [états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md) complètent
-la coque sans ajouter de `app/loading.tsx` à la racine.
+la coque sans ajouter de `app/loading.tsx` à la racine. Les
+[frontières d’erreur critiques](./PERFORMANCE_ERROR_BOUNDARIES.md) capturent les
+erreurs de rendu sans remplacer les états métier du profil.
 
 ## Contrôle de performance
 

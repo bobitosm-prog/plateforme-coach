@@ -20,6 +20,8 @@ La séparation entre la Server Component racine et ses îlots interactifs est
 décrite dans [Coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md).
 Les frontières de navigation retenues et leurs exclusions sont décrites dans
 [États de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md).
+La politique d’erreur publique et de reset est décrite dans
+[Frontières d’erreur des domaines critiques](./PERFORMANCE_ERROR_BOUNDARIES.md).
 
 ## Commande canonique
 
