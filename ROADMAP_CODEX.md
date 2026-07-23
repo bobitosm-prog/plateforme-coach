@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **22 juillet 2026**.
+> Dernière mise à jour : **23 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 8 — React, App Router et performance**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -538,9 +538,10 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Priorité : P2/P3**
 
 **Statut : Phase 8 active — baseline production Webpack capturée deux fois,
-budgets anti-régression automatisés et coque serveur du dashboard extraite sans
-dupliquer l'autorité Auth/profil. Prochaine tranche : ajouter `loading.tsx` par
-segment important.**
+budgets anti-régression automatisés, coque serveur du dashboard extraite et
+frontières de chargement ajoutées aux segments coach et détail client sans
+dupliquer l'autorité Auth/profil. Prochaine tranche : ajouter `error.tsx` par
+domaine critique.**
 
 ### Pourquoi
 
@@ -553,7 +554,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] Capturer bundle, LCP, INP, CLS et requêtes de référence | 1,5 j | Moyenne | Faible | Élevé | — |
 | [x] Définir les budgets de performance | 0,5 j | Moyenne | Faible | Moyen | Baseline |
 | [x] [Créer une coque serveur pour le dashboard](docs/DASHBOARD_SERVER_SHELL.md) | 3 j | Élevée | Élevé | Élevé | Domaines stabilisés |
-| [ ] Ajouter `loading.tsx` par segment important | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |
+| [x] [Ajouter `loading.tsx` par segment important](docs/PERFORMANCE_SEGMENT_LOADING.md) | 1,5 j | Moyenne | Faible | Moyen | Coque serveur |
 | [ ] Ajouter `error.tsx` par domaine critique | 1,5 j | Moyenne | Faible | Moyen | Contrats erreurs |
 | [ ] Charger onglets et modales secondaires à la demande | 3 j | Élevée | Moyen | Élevé | Composants découpés |
 | [ ] Différer Recharts, MediaPipe, QR et XLSX | 2 j | Moyenne | Moyen | Élevé | Dynamic imports |

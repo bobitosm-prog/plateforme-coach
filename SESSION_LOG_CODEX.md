@@ -9798,3 +9798,50 @@ Créer une coque serveur pour le dashboard.
 ### Prochaine action unique
 
 Ajouter `loading.tsx` par segment important.
+
+## Entrée — 2026-07-23 — États de chargement des segments importants
+
+- L'inventaire App Router, les parcours Phase 8 et les fallbacks existants
+  sélectionnent uniquement `/coach` et `/client/[id]`. La racine reste couverte
+  par `DashboardServerFallback`; auth, invitation, onboarding, marketing,
+  administration et diagnostic sont exclus faute de preuve de chargement
+  important ou pour ne pas précéder leur autorité locale.
+- `app/coach/loading.tsx` et `app/client/[id]/loading.tsx` composent
+  `DashboardSegmentLoading`, Server Component neutre de 136 lignes. Les deux
+  adaptateurs font 5 lignes. La vue réserve une géométrie stable mobile/desktop,
+  expose un statut accessible et ne contient ni animation, donnée utilisateur,
+  valeur métier, hook, API navigateur, Supabase, repository ou requête.
+- Les frontières App Router ne remplacent pas le chargement Auth/rôle coach,
+  `CoachSectionFallback`, `ClientDetailLoadingView` ou le fallback serveur de la
+  racine : chaque état conserve sa phase et son autorité.
+- Les tests de caractérisation ont d'abord figé les trois routes de référence
+  et les états locaux existants. Les gardes finales vérifient sélection,
+  exclusions, rendu serveur, accessibilité, imports interdits, absence de
+  duplication et limites de taille.
+- Le build Webpack isolé est vert, génère 88 pages, les manifests complets et le
+  `BUILD_ID` `eeAhYDKa0wvv4MoQCw3x1`. Les loaders sont présents dans les deux
+  arbres de route compilés.
+- Deux contrôles temporaires complets produisent `KvRuqM1lWSwpI8u7reYl-` et
+  `QGt3rAkmwF6V1zxtxQBJa`. Leur union bundle identique vaut 3 260 554 octets
+  bruts / 931 055 gzip, soit +409 octets gzip (+0,04 %) face à la baseline
+  principale. Le second contrôle passe 79/79 budgets; le premier conserve deux
+  fluctuations INP documentées (médiane client 48 ms, passage coach 32 ms).
+- Contrôle 2 : client LCP `420/356/380 ms`, CLS
+  `0,003886/0,010764/0,010764`, INP `48/32/32 ms`; coach LCP
+  `300/252/228 ms`, CLS `0/0/0`, INP `16/24/24 ms`. Les six parcours terminent
+  sans origine externe.
+- Le scénario E2E technique dédié confirme qu'après navigation coach → détail
+  autorisé, retour arrière et détail indisponible, aucun fallback de segment ne
+  reste affiché. Les E2E coach/client passent 4/4 et default-coach 1/1.
+- Validations : 11 assertions ciblées dédiées, puis suite complète 207
+  fichiers / 1 774 tests verts + 3 `todo`; TypeScript et ESLint ciblé verts;
+  les deux références passent chacune 79 budgets. Les contrôles finaux de diff,
+  liens, secrets, staging, processus, ports et fixtures sont consignés à la
+  clôture.
+- Aucune autorité, navigation, profil, route API, repository, migration, RLS,
+  contrat métier ou baseline versionnée n'est modifié. Les fichiers concurrents
+  restent intacts et hors staging.
+
+### Prochaine action unique
+
+Ajouter `error.tsx` par domaine critique.

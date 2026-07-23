@@ -54,8 +54,9 @@ avertissements historiques `no-img-element`.
 
 Les mesures avant changement sont dans la
 [baseline Phase 8](./PERFORMANCE_BASELINE.md). Tout contrôle postérieur doit
-rester sous les [budgets anti-régression](./PERFORMANCE_BUDGETS.md). La prochaine
-tranche est l'ajout de `loading.tsx` aux segments importants.
+rester sous les [budgets anti-régression](./PERFORMANCE_BUDGETS.md). Les
+[états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md) complètent
+la coque sans ajouter de `app/loading.tsx` à la racine.
 
 ## Contrôle de performance
 

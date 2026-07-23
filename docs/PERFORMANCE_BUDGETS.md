@@ -8,7 +8,8 @@ terrain ni les seuils Web Vitals généraux de Google. Le protocole est local,
 sans throttling CPU ou réseau.
 
 Ils protègent notamment les évolutions de la
-[coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md).
+[coque serveur du dashboard](./DASHBOARD_SERVER_SHELL.md) et des
+[états de chargement par segment](./PERFORMANCE_SEGMENT_LOADING.md).
 
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 
