@@ -10448,3 +10448,37 @@ une optimisation ciblée, ou définir une nouvelle campagne pré-déclarée.
 ### Prochaine action unique
 
 Démarrer l'audit RC1 par la confirmation exhaustive des Phases 1 à 8.
+
+## Entrée — 2026-07-24 — Audit RC1 des Phases 1 à 8
+
+**Travail effectué :** audit documentaire des 124 tâches et 36 critères de
+sortie des Phases 1 à 8 ; vérification des preuves de phase, des artefacts
+Performance et de leurs SHA-256 ; correction du compteur global de roadmap.
+
+**Tâches cochées :** aucune. L'item RC1 d'audit reste décoché, car quatre
+phases ne satisfont pas intégralement leur définition de terminé.
+
+**Décisions prises :** Phases 1, 3, 5 et 7 `met` ; Phases 2, 4 et 8 `partial` ;
+Phase 6 `blocked`. Bilan des critères : 31 `met`, 2 `partial`, 2 `unmet`,
+1 `blocked`, 0 `not_applicable`.
+
+**Problèmes rencontrés :** absence de preuve exhaustive des factories pour les
+nouvelles fonctionnalités ; divergences Nutrition/Progression versionnées ;
+aucune réconciliation préproduction consignée ; LCP local médian à 16,580 %
+et aucune preuve p75 terrain.
+
+**Risques ou dette restante :** une checklist cochée ne vaut pas validation de
+phase. Phase 9 reste inactive et les 38 validations RC1 restent ouvertes.
+
+**Tests exécutés :** aucun test applicatif. Comptage reproductible des
+checklists, contrôle des liens, SHA-256 des artefacts Performance,
+`git diff --check` et audit Git documentaire.
+
+**Mesures avant/après :** compteur global corrigé de 80/138 à 124/138 ;
+aucune mesure runtime modifiée. Calibration INP conservée à 64/48 ms et
+diagnostic `environment_variance` inchangé.
+
+**Temps passé :** tranche documentaire bornée.
+
+**Prochaine action :** rendre automatisable et prouver le critère Phase 2
+« les nouvelles fonctionnalités utilisent les factories Supabase ».

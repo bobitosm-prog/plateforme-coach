@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : Phase 2 terminée — 18 tâches sur 18 ; stratégie de tests, frontières Supabase/API, cache, observabilité, ADR et guide de contribution documentés**
+**Statut : checklist terminée — 18 tâches sur 18 ; définition de terminé partielle en audit RC1, faute de preuve exhaustive que toute nouvelle fonctionnalité utilise les factories Supabase**
 
 ### Pourquoi
 
@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : Phase 4 terminée — 16 tâches sur 16 ; modèles, calculs, read models, façades et matrices de frontières stabilisés**
+**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1, les fixtures de comparaison conservant des résultats divergents et partiels**
 
 ### Pourquoi
 
@@ -460,7 +460,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : Phase 6 terminée — 10 tâches sur 10 ; domaine, services, contrats, réconciliation, robustesse webhook et cycle de vie documentés**
+**Statut : checklist terminée — 10 tâches sur 10 ; définition de terminé bloquée en audit RC1 par l'absence de preuve de réconciliation sans divergence en préproduction**
 
 ### Pourquoi
 
@@ -823,7 +823,7 @@ Mettre à jour ce tableau chaque vendredi.
 
 | Indicateur | Baseline | Cible intermédiaire | Cible finale | Valeur actuelle | Statut |
 |---|---:|---:|---:|---:|---|
-| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈58 % (80/138 tâches) | 🟠 |
+| Progression globale de la roadmap | 0 % | 50 % | 100 % | ≈90 % (124/138 tâches des Phases 1–9) | 🟠 |
 | Tâches P0 restantes | 15 | 0 | 0 | 0 | 🟢 |
 | Composants >1 000 lignes | 5 | 3 | 0–1 | 3 | 🟠 |
 | Hooks >500 lignes | 3 | 2 | 0 | 2 | 🟠 |
