@@ -14,7 +14,7 @@
 | Journal manuel/recherche | catalogue ou aliment personnalisé | colonnes `daily_food_logs` singulières | quantité appliquée et arrondie avant insertion | fibres généralement absentes | journal, analytics, diagnostic | différé : table structurée, pas un snapshot JSON |
 | Scanner code-barres | Open Food Facts/catalogue | `custom_foods`, `community_foods`, puis journal | alias par 100 g variables | écritures séquentielles ; provenance partielle | scanner, journal | différé : plusieurs autorités et bases |
 | Analyse photo | aliments IA `proteins/fats` | une ligne `daily_food_logs` par aliment | projection vers `protein/fat`, fallback zéro | estimation et champs absents non versionnés | journal | différé : contrat d'estimation distinct |
-| Import/copie/réutilisation de repas | plan, journal ou `saved_meals.foods` | nouvelles lignes `daily_food_logs` | `protein/proteins`, `fat/fats` | choix via `||` ; conflits invisibles | journal | différé : mutation distante inchangée dans cette tranche |
+| Import/copie/réutilisation de repas | plan, journal ou `saved_meals.foods` | nouvelles lignes `daily_food_logs` | `protein/proteins`, `fat/fats` | réutilisation `saved_meals` validée ; autres copies encore legacy | journal | `saved_meals` migré vers `prepareSavedMealReuse` |
 | Plan personnel | sortie génération | `meal_plans.plan_data` JSON | macros françaises, totaux journaliers | format IA legacy, jours partiels possibles | NutritionTab, shopping | différé : version du plan et snapshot nutritionnel à coordonner |
 | Plan coach | éditeur coach | `client_meal_plans.meal_plan` JSON et totaux colonnes | forme anglaise distincte | payload multi-jours non versionné | détail client, client Nutrition | différé : autorité coach et schéma distincts |
 | Génération IA coach/client | catalogue + profil | formats de plan précédents | arrondis aliment/jour | provenance IA connue hors snapshot | routes/services et UI | différé : ne pas modifier les contrats IA ici |
@@ -94,15 +94,59 @@ La garde statique interdit aux producteurs de construire manuellement
 préparateurs communs. Les imports/copies/réutilisations écrivent dans
 `daily_food_logs`, pas dans `saved_meals`; ils restent différés.
 
+## Réutilisation vers `daily_food_logs`
+
+La migration `20260404_community_foods.sql` et les types générés concordent.
+`Row` contient exactement `id`, `user_id`, `date`, `meal_type`, `food_id`,
+`custom_name`, `quantity_g`, `calories`, `protein`, `carbs`, `fat`,
+`created_at`. `calories`, `date`, `meal_type`, `quantity_g`, `id` sont non
+null dans `Row`; les quatre macros sont nullables sauf l'énergie.
+
+Pour `Insert`, `calories` et `meal_type` sont obligatoires. `date` et
+`quantity_g` sont optionnels grâce aux valeurs SQL par défaut ; `protein`,
+`carbs`, `fat`, `food_id`, `custom_name`, `user_id`, `id`, `created_at` sont
+optionnels et nullables selon leur type. `Update` rend tous les champs
+optionnels.
+
+Avant migration, `NutritionTab.applySavedMeal` parcourait `foods` et exécutait
+une insertion par aliment. Il choisissait silencieusement
+`proteins || protein || 0` et `fats || fat || 0`, remplaçait toutes les
+inconnues par zéro, puis tentait une écriture `use_count`. Un échec à
+l'insertion N laissait les N−1 lignes précédentes persistées ; l'erreur était
+ignorée, le journal rafraîchi et l'overlay fermé.
+
+Après migration, `prepareSavedMealReuse` :
+
+1. valide la date ISO et le `meal_type` ;
+2. valide tous les aliments et snapshots avant toute écriture ;
+3. refuse repas vide, énergie absente, quantité invalide et aliment sans nom ;
+4. conserve les macros optionnelles inconnues à `null` ;
+5. retourne `ready`, `alias_conflict`, `invalid` ou `unsupported` ;
+6. produit un tableau typé `TablesInsert<'daily_food_logs'>` dans l'ordre
+   historique.
+
+`persistSavedMealReuse` effectue ensuite un unique `insert([...])`. Il ne crée
+pas une transaction métier supplémentaire, mais supprime le scénario
+historique de plusieurs requêtes dont seule une partie réussit. L'UI se ferme
+et se rafraîchit uniquement après le succès de ce lot. Une garde d'exécution
+empêche le double clic et un identifiant de requête ignore les réponses
+obsolètes après changement d'utilisateur ou fermeture.
+
+`use_count` est déclaré **unsupported** : aucune colonne n'existe dans les
+migrations ou types générés, donc aucune lecture, aucun tri, aucun affichage et
+aucune écriture ne subsistent dans ce flux. Une future métrique d'utilisation
+exigerait une tranche séparée définissant ownership, RLS et sémantique de
+concurrence.
+
 ## Limites et prochaine tranche
 
 - Aucun historique n'est réécrit.
 - Aucun total déclaré incohérent n'est corrigé.
 - Les plans, recettes, journaux, imports et sorties IA restent non versionnés.
-- La réutilisation vers `daily_food_logs` conserve encore une priorité
-  silencieuse entre alias et un `use_count` absent du schéma typé.
+- Les copies de journal et imports de plans, distincts de la réutilisation
+  `saved_meals`, conservent encore leurs adaptateurs legacy.
 - La Phase 4 reste `partial`.
 
-La prochaine tranche minimale est de caractériser puis sécuriser la
-réutilisation de `saved_meals` vers `daily_food_logs`, avec refus des conflits
-d'alias et décision explicite sur le compteur `use_count`.
+La prochaine tranche minimale est de caractériser les producteurs de totaux
+déclarés des plans `meal_plans` et `client_meal_plans` avant de décider leur
+versionnement.

@@ -10683,3 +10683,45 @@ fixtures historiques inchangées, SHA-256
 **Prochaine action :** caractériser puis sécuriser la réutilisation de
 `saved_meals` vers `daily_food_logs`, avec refus des conflits d'alias et
 décision explicite sur `use_count`.
+
+## Entrée — 2026-07-24 — Réutilisation sûre des repas sauvegardés
+
+**Travail effectué :** recoupement de `daily_food_logs`, caractérisation de la
+boucle historique puis ajout de `prepareSavedMealReuse` et
+`persistSavedMealReuse`. Le flux valide tous les aliments avant un unique
+insert de lot et conserve l'ordre JSON.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial` et le critère
+de concordance reste `unmet`.
+
+**Décisions prises :** énergie absente, repas vide, date/type invalides et
+aliment invalide sont refusés. Les macros optionnelles inconnues restent
+`null`. `alias_conflict` produit zéro écriture. `use_count` est `unsupported`
+et a été retiré de la lecture, du tri, de l'affichage et de l'écriture.
+
+**Problèmes rencontrés :** le flux historique effectuait N insertions puis une
+mise à jour de colonne inexistante, sans inspecter les erreurs. Un échec à N
+laissait N−1 lignes persistées et fermait néanmoins l'overlay.
+
+**Risques ou dette restante :** l'insert de lot est une seule instruction
+Supabase, pas une nouvelle transaction métier. Les autres copies/imports vers
+le journal restent des flux legacy distincts. Les deux divergences des preuves
+restent inchangées.
+
+**Tests exécutés :** historique non versionné, snapshot v1, alias singulier et
+pluriel, alias égaux et contradictoires, zéro/inconnu, repas vide, aliment/date
+et type invalides, erreur de lot, ancien échec intermédiaire rendu impossible,
+ordre, immutabilité, messages expurgés, double clic/réponse obsolète par gardes
+statiques et UI accessible ; suite complète 239 fichiers, 1 962 tests réussis
+et 3 `todo` ; TypeScript vert ; ESLint des nouvelles frontières vert.
+`NutritionTab` passe de 18 à 17 erreurs historiques et conserve 3
+avertissements, sans nouvelle occurrence.
+
+**Mesures avant/après :** appels d'insertion par réutilisation N → 1 ; écritures
+possibles avant validation complète N → 0 ; accès `use_count` dans le flux
+2 → 0 ; fixtures historiques inchangées.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser les producteurs de totaux déclarés des
+plans `meal_plans` et `client_meal_plans` avant de décider leur versionnement.

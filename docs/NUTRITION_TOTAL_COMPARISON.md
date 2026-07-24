@@ -112,6 +112,11 @@ nouvelle perte silencieuse d'alias dans ces écritures, sans modifier les douze
 preuves. Les deux divergences historiques restent donc `divergent` et le
 critère global de concordance reste non satisfait.
 
+La réutilisation de ces snapshots vers `daily_food_logs` valide désormais les
+alias avant de produire le lot complet. Elle conserve une macro inconnue à
+`null` et refuse une énergie inconnue, obligatoire dans la table. Cette
+prévention prospective ne requalifie toujours aucune fixture historique.
+
 ## Analyse des quatre cas sensibles
 
 ### Totaux déclarés divergents

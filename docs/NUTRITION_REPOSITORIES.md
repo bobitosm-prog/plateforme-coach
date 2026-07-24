@@ -43,6 +43,13 @@ par la frontière pure et typée
 Elle utilise `TablesInsert`/`TablesUpdate`, projette uniquement les colonnes
 singulières réelles et refuse les conflits d'alias avant l'appel Supabase.
 
+La réutilisation vers le journal passe de même par
+[`saved-meal-reuse.ts`](../lib/nutrition/saved-meal-reuse.ts). Cette frontière
+valide le lot complet puis produit uniquement des
+`TablesInsert<'daily_food_logs'>`. Le repository reste read-only. Le composant
+effectue un seul insert de lot et n'écrit plus le champ `use_count`, absent du
+schéma démontré.
+
 ## Limites de schéma
 
 Seules les colonnes de `lib/supabase/database.types.ts` sont projetées. Les

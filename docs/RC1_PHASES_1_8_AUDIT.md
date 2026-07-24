@@ -89,7 +89,7 @@ donnée distante.
 | Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md) et [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md). |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
-| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sépare déclaré/calculé ; lecture, création et édition de `saved_meals` conservent les alias et refusent leurs conflits. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
+| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
 
 ## Phase 5 — `met`
 
@@ -156,6 +156,6 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis sécuriser la réutilisation de `saved_meals` vers
-`daily_food_logs`, avec refus des conflits d'alias et décision explicite sur
-le compteur `use_count` absent du schéma typé.
+Caractériser les producteurs de totaux déclarés des plans `meal_plans` et
+`client_meal_plans` avant de décider leur versionnement, sans requalifier les
+preuves historiques.
