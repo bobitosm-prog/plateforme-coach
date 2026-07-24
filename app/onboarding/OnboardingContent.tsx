@@ -187,7 +187,7 @@ export default function OnboardingContent() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', gap: 32 }}>
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 20 }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <img src="/logo-moovx.png" alt="MoovX" width={88} height={88} style={{ borderRadius: radii.card }} className="animate-pulse-gold" />
+                <img src="/logo-moovx-96.png" alt="MoovX" width={88} height={88} style={{ borderRadius: radii.card }} className="animate-pulse-gold" />
                 <span style={{ ...T, fontSize: '2.8rem', fontWeight: 800, letterSpacing: '3px' }}>MOOVX</span>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ textAlign: 'center' }}>

@@ -312,7 +312,7 @@ export default function DesktopDashboard({
       {/* SIDEBAR */}
       <aside style={{ width: 240, flexShrink: 0, position: 'fixed', top: 0, left: 0, height: '100dvh', background: BG, borderRight: `1px solid ${CARD_BORDER}`, display: 'flex', flexDirection: 'column', zIndex: 50 }}>
         <div style={{ padding: '24px 20px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 40, borderRadius: 10, objectFit: 'contain' }} />
+          <img src="/logo-moovx-96.png" alt="MoovX" width={40} height={40} style={{ borderRadius: 10, objectFit: 'contain' }} />
           <span style={{ fontFamily: HEADLINE, fontSize: 14, fontWeight: 700, color: GOLD, letterSpacing: '0.15em' }}>MOOVX</span>
         </div>
         <div style={{ height: 1, background: 'rgba(230,195,100,0.10)', margin: '0 20px 16px' }} />
@@ -941,4 +941,3 @@ function SettingsView({ profile, onNavigate, setModal }: any) {
     </div>
   )
 }
-

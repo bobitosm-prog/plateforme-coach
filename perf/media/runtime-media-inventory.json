@@ -1,0 +1,4026 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    "public/",
+    "app/",
+    "assets/"
+  ],
+  "protectedPaths": [
+    "scripts/enrich-parent-exercises.mjs",
+    "public/videos/exercises/developpe-couche-barre.jpg",
+    "public/videos/exercises/developpe-couche-barre.mp4",
+    "supabase/.temp/cli-latest"
+  ],
+  "remoteMediaDownloaded": false,
+  "totals": {
+    "application": {
+      "count": 85,
+      "bytes": 72684733
+    },
+    "exercise": {
+      "count": 46,
+      "bytes": 92242019
+    }
+  },
+  "thresholds": {
+    "heavyImageBytes": 200000,
+    "heavyVideoBytes": 2000000
+  },
+  "exactDuplicateGroups": [
+    {
+      "sha256": "44a14b570e279ebb5f3fb2359a0c58a340720ea6a4a54cbd64041387ee8753ea",
+      "paths": [
+        "public/favicon.png",
+        "public/logo-moovx-32.png"
+      ]
+    },
+    {
+      "sha256": "dfbb781d1034c512decd69bb5e5c0d6a7011b352f8dd5ddfaa6120b1e6d8e311",
+      "paths": [
+        "public/icon-192x192.png",
+        "public/logo-moovx-192.png"
+      ]
+    },
+    {
+      "sha256": "c948ae37e16afad6c91bdb333d506b03d86fd1c9aaa47cd49cfd941bc80c40d1",
+      "paths": [
+        "public/Moovx.png",
+        "public/logo-moovx.png"
+      ]
+    },
+    {
+      "sha256": "860bf6c8860d35505b0f73316645cad4ec1843d95e19a63df6a26dbdc39a83d4",
+      "paths": [
+        "public/videos/exercises/dips.mp4",
+        "public/videos/exercises/tractions-pronation.mp4"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "path": "app/favicon.ico",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 25931,
+      "mimeType": "image/vnd.microsoft.icon",
+      "sha256": "2b8ad2d33455a8f736fc3a8ebf8f0bdea8848ad4c0db48a2833bd0f9cd775932",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": null,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/Moovx.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 916924,
+      "mimeType": "image/png",
+      "sha256": "c948ae37e16afad6c91bdb333d506b03d86fd1c9aaa47cd49cfd941bc80c40d1",
+      "metadata": {
+        "kind": "image",
+        "width": 1000,
+        "height": 1000,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": 1
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 40032,
+      "mimeType": "image/png",
+      "sha256": "7f32db1dabb8daa357df482dd9cd9718329e09bb28f783b0f7ac5eef21dcc5cf",
+      "metadata": {
+        "kind": "image",
+        "width": 180,
+        "height": 180,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "app/layout.tsx",
+        "public/manifest.json",
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/layout.tsx",
+          "route": "/",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/favicon-16x16.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 813,
+      "mimeType": "image/png",
+      "sha256": "936104e21960cddf53970fe61eada155f8a16915fc96607476bd2e12e3985e1c",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/favicon-32x32.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2408,
+      "mimeType": "image/png",
+      "sha256": "d3e79520cb9c3c70ed1feb03178560b8aec273981f8b54d632196009f5e98240",
+      "metadata": {
+        "kind": "image",
+        "width": 32,
+        "height": 32,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/favicon.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2424,
+      "mimeType": "image/png",
+      "sha256": "44a14b570e279ebb5f3fb2359a0c58a340720ea6a4a54cbd64041387ee8753ea",
+      "metadata": {
+        "kind": "image",
+        "width": 32,
+        "height": 32,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/file.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 391,
+      "mimeType": "image/svg+xml",
+      "sha256": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/globe.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1035,
+      "mimeType": "image/svg+xml",
+      "sha256": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/icon-128x128.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 27294,
+      "mimeType": "image/png",
+      "sha256": "f76352fca4fe919d18ab4b3feee159ff5bb130c764d5e7f693f1778a74b57152",
+      "metadata": {
+        "kind": "image",
+        "width": 128,
+        "height": 128,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-144x144.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 33886,
+      "mimeType": "image/png",
+      "sha256": "045df757bd4494006183498be7ee5538aa30d21276f99e9f634d97b2aa2c5ca5",
+      "metadata": {
+        "kind": "image",
+        "width": 144,
+        "height": 144,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-152x152.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 37476,
+      "mimeType": "image/png",
+      "sha256": "335e139d911e6276949b2885d1e0df731c33c95abcb1d6c2a2c49952b828db7e",
+      "metadata": {
+        "kind": "image",
+        "width": 152,
+        "height": 152,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-192.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 3004,
+      "mimeType": "image/png",
+      "sha256": "31ef4161a24959a573ed4dffbaae7b98e5e7f9e948d2c1481ba5ded0ed1361de",
+      "metadata": {
+        "kind": "image",
+        "width": 192,
+        "height": 192,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "app/hooks/useScheduledSessions.ts",
+        "lib/schedule-utils.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/hooks/useScheduledSessions.ts",
+          "route": "/hooks",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "lib/schedule-utils.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-192x192.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 44869,
+      "mimeType": "image/png",
+      "sha256": "dfbb781d1034c512decd69bb5e5c0d6a7011b352f8dd5ddfaa6120b1e6d8e311",
+      "metadata": {
+        "kind": "image",
+        "width": 192,
+        "height": 192,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/notifications.ts",
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/notifications.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-384x384.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 227168,
+      "mimeType": "image/png",
+      "sha256": "cf89782e236108118d230202a5b869b96c11663aa84ee23645cc6c6bc655cb7e",
+      "metadata": {
+        "kind": "image",
+        "width": 384,
+        "height": 384,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-512.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 13205,
+      "mimeType": "image/png",
+      "sha256": "86085657e5b390ebf243c538df1678be7e8e625f9cd70ab9c8dac52ed2e14fa5",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/icon-512x512.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 403878,
+      "mimeType": "image/png",
+      "sha256": "7ec7b85d9459276accc48248a418779425cf09b765a8f19add8b9d39f272775d",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-72x72.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 9733,
+      "mimeType": "image/png",
+      "sha256": "7ace748aed45153a20ec37c969b8f4fa1b87dfd7224c5df3015045aca82c9745",
+      "metadata": {
+        "kind": "image",
+        "width": 72,
+        "height": 72,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-96x96.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 16085,
+      "mimeType": "image/png",
+      "sha256": "58ea0d1cb9e3ccdaa3a00d53b39f723378c26eddec4b83aca6cb8f92c6b06c11",
+      "metadata": {
+        "kind": "image",
+        "width": 96,
+        "height": 96,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/icon-moovx.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1261,
+      "mimeType": "image/svg+xml",
+      "sha256": "47baebf1842aafc9d41d6e432c7014d5f98d8e5afec540556416f5757f0d2d35",
+      "metadata": {
+        "kind": "image",
+        "width": 256,
+        "height": 256,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/coach-bg.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 399352,
+      "mimeType": "image/jpeg",
+      "sha256": "b4cd56515944832d002170f1c20c946ccafada01a3e37cf3d195a120a303d3ec",
+      "metadata": {
+        "kind": "image",
+        "width": 1920,
+        "height": 1280,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/features-bg.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 237353,
+      "mimeType": "image/jpeg",
+      "sha256": "d957495dcc597c8eb50438877cf3c33a48ab5e2fdc1908488f44857b9ba3b6ab",
+      "metadata": {
+        "kind": "image",
+        "width": 1920,
+        "height": 1280,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-athlete.png",
+      "category": "application",
+      "role": "source",
+      "bytes": 7369580,
+      "mimeType": "image/png",
+      "sha256": "48edf5bdbb6e7cdc8a84650f46c44e40496bdef6e8c63f0f61cb9c0a064d5c25",
+      "metadata": {
+        "kind": "image",
+        "width": 2752,
+        "height": 1536,
+        "ratio": 1.791667,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-athlete.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 21338,
+      "mimeType": "image/webp",
+      "sha256": "681031d36bfb811f3b9b7370a58fe1668d738608909ece729eecb275007b4ba7",
+      "metadata": {
+        "kind": "image",
+        "width": 800,
+        "height": 447,
+        "ratio": 1.789709,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-bg.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 357334,
+      "mimeType": "image/jpeg",
+      "sha256": "8f8d9efae14c0a61c8f5ab1f2ca9fa651ae3e4b459c239519b77f770b1be610e",
+      "metadata": {
+        "kind": "image",
+        "width": 1920,
+        "height": 1280,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-coaching.png",
+      "category": "application",
+      "role": "source",
+      "bytes": 7921232,
+      "mimeType": "image/png",
+      "sha256": "8373ce16128c1a1cf1b9a8a2c33193e229c578e42cf4f8ce174e25607dcb019c",
+      "metadata": {
+        "kind": "image",
+        "width": 2752,
+        "height": 1536,
+        "ratio": 1.791667,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-coaching.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 33508,
+      "mimeType": "image/webp",
+      "sha256": "8e649e367c59bb421bd50793373644e6df089f4b6a0710ddc502820886b546bf",
+      "metadata": {
+        "kind": "image",
+        "width": 800,
+        "height": 447,
+        "ratio": 1.789709,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-gym.png",
+      "category": "application",
+      "role": "source",
+      "bytes": 7978510,
+      "mimeType": "image/png",
+      "sha256": "2c68f9daf6197cac20ded436a6934d40b72ccc0c485c6adea3099010ae1d49d0",
+      "metadata": {
+        "kind": "image",
+        "width": 2752,
+        "height": 1536,
+        "ratio": 1.791667,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-gym.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 31634,
+      "mimeType": "image/webp",
+      "sha256": "6ead7b962ddc71707f4d69d9f06692a6705359cc1a2b108c3cd289623bb62b07",
+      "metadata": {
+        "kind": "image",
+        "width": 800,
+        "height": 447,
+        "ratio": 1.789709,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/login/LoginPageContent.tsx",
+        "app/register-client/RegisterClientContent.tsx",
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/login/LoginPageContent.tsx",
+          "route": "/login",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/register-client/RegisterClientContent.tsx",
+          "route": "/register-client",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-nutrition.png",
+      "category": "application",
+      "role": "source",
+      "bytes": 9331853,
+      "mimeType": "image/png",
+      "sha256": "ee8b2e290a4769aaa35b7b15b2b195008686066d1d2a37ab233a2db522926512",
+      "metadata": {
+        "kind": "image",
+        "width": 2752,
+        "height": 1536,
+        "ratio": 1.791667,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero-nutrition.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 61870,
+      "mimeType": "image/webp",
+      "sha256": "1caacd3952aa8f478e5580bd0a7f2b8614f5f10a5e7231bb6912f128ad1474c5",
+      "metadata": {
+        "kind": "image",
+        "width": 800,
+        "height": 447,
+        "ratio": 1.789709,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "scripts/optimize-images.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "scripts/optimize-images.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero/hero-cardio.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 92828,
+      "mimeType": "image/webp",
+      "sha256": "6242a87c47f442ca840a715fe94f25ef8f98438adb66d23f43f6ff9af09d2d20",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/hero/hero-default.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 137160,
+      "mimeType": "image/webp",
+      "sha256": "54a6f741e4b47a96c341c21b3025740597bc795ddb2288366fcc0cea52a8b378",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/components/home/HeroSessionCard.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/components/home/HeroSessionCard.tsx",
+          "route": "/",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/hero/hero-full.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 103220,
+      "mimeType": "image/webp",
+      "sha256": "3812366379e99d0ed12ebf55fc4112b11fdfb42be9de0e7c9e31d5c965573750",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/hero/hero-legs.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 86948,
+      "mimeType": "image/webp",
+      "sha256": "4c0e5532960f1198b367a71b215233a75285c9ab4ec97740fc82dc1e450cba2d",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/hero/hero-pull.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 69914,
+      "mimeType": "image/webp",
+      "sha256": "f79060978586d24ca3318d6db7a85261be8e50fddcfa350c72123ad85b5c5b2f",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/hero/hero-push.webp",
+      "category": "application",
+      "role": "derived",
+      "bytes": 79222,
+      "mimeType": "image/webp",
+      "sha256": "9b7b4a60e812e7a2570fbd1b34bb6a7363788433eb99fe71489437d4379af209",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/new/ai-neurons.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2624009,
+      "mimeType": "image/png",
+      "sha256": "ade6c579cab78c5c9caf7191e6326fb8d6f722def7068c9b736c40b45f981278",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/CoachIaSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/CoachIaSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/app-athena-ai.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1561173,
+      "mimeType": "image/png",
+      "sha256": "6d092b64288f76158e8d1da1d9bf91b93fca037c7ca3e5e3ad3ae4886b27bb89",
+      "metadata": {
+        "kind": "image",
+        "width": 1402,
+        "height": 1122,
+        "ratio": 1.249554,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/CoachIaSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/CoachIaSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/app-scan-food.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1978026,
+      "mimeType": "image/png",
+      "sha256": "317457654bbae801006a86918fc778a9926d27ad02143c868ad7a8316696ccc7",
+      "metadata": {
+        "kind": "image",
+        "width": 1402,
+        "height": 1122,
+        "ratio": 1.249554,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/new/athlete-deadlift.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1845273,
+      "mimeType": "image/png",
+      "sha256": "ac2005e6b24855f308ea9b67e518e6545a660daf1e0130b4bf9f811e4098ddd5",
+      "metadata": {
+        "kind": "image",
+        "width": 1122,
+        "height": 1402,
+        "ratio": 0.800285,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/new/coach-tablet.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1808290,
+      "mimeType": "image/png",
+      "sha256": "685ce69f6e05a4c83aa422387979af5a994e63de23f83f055600106ec535e420",
+      "metadata": {
+        "kind": "image",
+        "width": 1122,
+        "height": 1402,
+        "ratio": 0.800285,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/CoachingPro.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/CoachingPro.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/dashboard-3d.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1969343,
+      "mimeType": "image/png",
+      "sha256": "b6fa1fb3c3d16fa22f5410c85985a6dea4cdc5d291cf4d57b95c05daa68abe95",
+      "metadata": {
+        "kind": "image",
+        "width": 1402,
+        "height": 1122,
+        "ratio": 1.249554,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/TrackingSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/TrackingSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/geneva-sunset.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2559207,
+      "mimeType": "image/png",
+      "sha256": "22a3e41e949f5a4efe986cce206e6045e140343b9e2cc95ca7dcfeb7f291b51f",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/GenevaSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/GenevaSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/gold-splash.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2314830,
+      "mimeType": "image/png",
+      "sha256": "bc9a59de6186c81126cb43a9407c02154d8e8e93ed51a6a575ffa2d52205417b",
+      "metadata": {
+        "kind": "image",
+        "width": 1402,
+        "height": 1122,
+        "ratio": 1.249554,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/new/hero-chalk.png",
+      "category": "application",
+      "role": "source",
+      "bytes": 1934973,
+      "mimeType": "image/png",
+      "sha256": "02c162b28f4b7d55416cbbc6ca122abab140bcc01162672579c07d3da1633c0b",
+      "metadata": {
+        "kind": "image",
+        "width": 1672,
+        "height": 941,
+        "ratio": 1.776833,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/Hero.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/Hero.tsx",
+          "route": "/[locale]/landing",
+          "loading": "explicit-eager",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/medal-gold.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1980024,
+      "mimeType": "image/png",
+      "sha256": "ae2ae8cf6102d7fc6f03b853a618c82d5de439a02ccf00933bb52eb2e3f9bbc1",
+      "metadata": {
+        "kind": "image",
+        "width": 1122,
+        "height": 1402,
+        "ratio": 0.800285,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/Testimonials.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/Testimonials.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/nutrition-bowl.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2592291,
+      "mimeType": "image/png",
+      "sha256": "3a5ebcd31f4bb1c5c3919ecf2a6205904b7fa0eb16d3d475b9e845498c19d058",
+      "metadata": {
+        "kind": "image",
+        "width": 1402,
+        "height": 1122,
+        "ratio": 1.249554,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/NutritionSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/NutritionSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/runner-mountains.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1803790,
+      "mimeType": "image/png",
+      "sha256": "b9060cbfd0e57d522636ecdd8deeab4b91dd8823e15439d519f0d1c782e70233",
+      "metadata": {
+        "kind": "image",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/TrainingSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/TrainingSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/transformation.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2162635,
+      "mimeType": "image/png",
+      "sha256": "f70c456ac3ef0331f289cf54300e0ff5680f17391637bea98e1901acccc008cf",
+      "metadata": {
+        "kind": "image",
+        "width": 1448,
+        "height": 1086,
+        "ratio": 1.333333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/Results.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/Results.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/new/victory.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1900543,
+      "mimeType": "image/png",
+      "sha256": "6ad3afc5b84d0dce49e1ee4c31369954931ea0a61a8c434e9d670fb2c5faefc1",
+      "metadata": {
+        "kind": "image",
+        "width": 1122,
+        "height": 1402,
+        "ratio": 0.800285,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/components/CtaSection.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/CtaSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/nutrition-hero.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 934465,
+      "mimeType": "image/jpeg",
+      "sha256": "7500c2175df900144b7b12c2996a4fdf8f82559accf1c28714c475d49ea59099",
+      "metadata": {
+        "kind": "image",
+        "width": 1408,
+        "height": 768,
+        "ratio": 1.833333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/onboarding/fitness-goals-3d.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 282109,
+      "mimeType": "image/png",
+      "sha256": "236580cb2263e0dddde1dd0b7f6a535c6b658b5e32b8eac4cca31e43840f3702",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/onboarding-fitness/OnboardingFitnessContent.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/onboarding-fitness/OnboardingFitnessContent.tsx",
+          "route": "/onboarding-fitness",
+          "loading": "explicit-eager",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/onboarding/fitness-score-3d.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 289213,
+      "mimeType": "image/png",
+      "sha256": "d64008ac4fb061b66fe1dd744e6185df4a036d7b219390ae28fa6e4035fe8e01",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/pricing-bg.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 574136,
+      "mimeType": "image/jpeg",
+      "sha256": "22bfd7f9b20be4f3fdec92fca887dc1098457f46ca24be3b82622e3d7cf2c457",
+      "metadata": {
+        "kind": "image",
+        "width": 1920,
+        "height": 1280,
+        "ratio": 1.5,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/profile-hero.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 600175,
+      "mimeType": "image/jpeg",
+      "sha256": "46e22f6b42ef11d9be0eca4a455f743152404c50860d8b01f8911051d870e0a7",
+      "metadata": {
+        "kind": "image",
+        "width": 1408,
+        "height": 768,
+        "ratio": 1.833333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/progress-hero.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 655257,
+      "mimeType": "image/jpeg",
+      "sha256": "41a3d9b069910e53fdaf6055f59e0b9c4dd8e2216657480f76cda5607043389b",
+      "metadata": {
+        "kind": "image",
+        "width": 1408,
+        "height": 768,
+        "ratio": 1.833333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/recovery/body-back.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 73564,
+      "mimeType": "image/webp",
+      "sha256": "15ddf89ed9aeeb09049fee7453fdc0c1b6c3d30451a3792289e699aad939e196",
+      "metadata": {
+        "kind": "image",
+        "width": 1086,
+        "height": 1448,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/recovery/body-front.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 74620,
+      "mimeType": "image/webp",
+      "sha256": "60752400618de8caf56f72d625d1f08c21e8bb53e38bf1c158345f4d1d0045b2",
+      "metadata": {
+        "kind": "image",
+        "width": 1086,
+        "height": 1448,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/components/home/cards/RecoveryCard.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/components/home/cards/RecoveryCard.tsx",
+          "route": "/",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/screens/active-training.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 54269,
+      "mimeType": "image/png",
+      "sha256": "aed439a3717009aafa1b34f4d96d748bfa9b34dde208548d88df2a820190f9fc",
+      "metadata": {
+        "kind": "image",
+        "width": 203,
+        "height": 512,
+        "ratio": 0.396484,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "explicit-lazy",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/screens/home-dashboard.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 31189,
+      "mimeType": "image/png",
+      "sha256": "00d13dcf308368925d86c98beb72f56d36f3eb437ee2f512be19ae9cc5edf4da",
+      "metadata": {
+        "kind": "image",
+        "width": 149,
+        "height": 512,
+        "ratio": 0.291016,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "explicit-lazy",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/screens/nutrition-track.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 34981,
+      "mimeType": "image/png",
+      "sha256": "5ca55f147a42a4b6bef087fb30e66385f2df274c3ae51d7492f2c04f9bb8c4f5",
+      "metadata": {
+        "kind": "image",
+        "width": 132,
+        "height": 512,
+        "ratio": 0.257813,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "explicit-lazy",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/screens/profile-settings.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 32274,
+      "mimeType": "image/png",
+      "sha256": "e58543d1aa60c598b67f0f123776ac1d931f7c4fad2547100dc3386ea89b153d",
+      "metadata": {
+        "kind": "image",
+        "width": 214,
+        "height": 512,
+        "ratio": 0.417969,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "explicit-lazy",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/screens/progress-analytics.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 40096,
+      "mimeType": "image/png",
+      "sha256": "fc2273d643e8967f326df03c89cd9414a969c172e44ef1d3b43b593577f77890",
+      "metadata": {
+        "kind": "image",
+        "width": 125,
+        "height": 512,
+        "ratio": 0.244141,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "public/vitrine.html"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "explicit-lazy",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/stitch-avatar.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 439964,
+      "mimeType": "image/png",
+      "sha256": "ccbdd59b21c21e4b7f6201e72ceb162ae99e0536cbbdce66c44a5fece2c2c0ec",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/stitch-barbell.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 488813,
+      "mimeType": "image/png",
+      "sha256": "276e230e3afe49dec154eda8968666d61cf7bc6c3635ba6aa662c946cec2793c",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/stitch-gym.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 311554,
+      "mimeType": "image/png",
+      "sha256": "a3a97d9ca8cd2631aaf2edfe3e9a28a766eb7dbc0811eba9d87c46e60dee3aed",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/stitch-profile.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 370428,
+      "mimeType": "image/png",
+      "sha256": "0e1c4034f7ca4acec84ece9b47a18bd39b204aeb63033642f505a95e71a8316f",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/images/workout-hero.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 735198,
+      "mimeType": "image/jpeg",
+      "sha256": "4cea5f580e192960683067431a4e69fab1ef64cd290d50574741ac6e6bba0e86",
+      "metadata": {
+        "kind": "image",
+        "width": 1408,
+        "height": 768,
+        "ratio": 1.833333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/logo-moovx-128.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 22180,
+      "mimeType": "image/png",
+      "sha256": "19f940a56a7cdf5876688e6b4fbff85cdefd6e9a28b781dfac4183b947dba456",
+      "metadata": {
+        "kind": "image",
+        "width": 128,
+        "height": 128,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-144.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 27209,
+      "mimeType": "image/png",
+      "sha256": "dd01c6b2d47414f265ea9b683ce9a3812562e3ff8571bcebfbace4d4ea658938",
+      "metadata": {
+        "kind": "image",
+        "width": 144,
+        "height": 144,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-152.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 29718,
+      "mimeType": "image/png",
+      "sha256": "670cef6beddb144747155d9e2141a1740f5690e567a21693ae37cbe919213650",
+      "metadata": {
+        "kind": "image",
+        "width": 152,
+        "height": 152,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-16.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 875,
+      "mimeType": "image/png",
+      "sha256": "ae2bf6ea2d4ca32bcdb740a61c3c2f6b681fef66ae2cc6d9644885275086a3cd",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "app/layout.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/layout.tsx",
+          "route": "/",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-192.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 44869,
+      "mimeType": "image/png",
+      "sha256": "dfbb781d1034c512decd69bb5e5c0d6a7011b352f8dd5ddfaa6120b1e6d8e311",
+      "metadata": {
+        "kind": "image",
+        "width": 192,
+        "height": 192,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json",
+        "public/sw.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/sw.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-32.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2424,
+      "mimeType": "image/png",
+      "sha256": "44a14b570e279ebb5f3fb2359a0c58a340720ea6a4a54cbd64041387ee8753ea",
+      "metadata": {
+        "kind": "image",
+        "width": 32,
+        "height": 32,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "app/layout.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/layout.tsx",
+          "route": "/",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-384.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 158557,
+      "mimeType": "image/png",
+      "sha256": "20897775a9d184331ff8efed6df5304139de0ea34f2de0386a98c53998b7000e",
+      "metadata": {
+        "kind": "image",
+        "width": 384,
+        "height": 384,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-48.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 4467,
+      "mimeType": "image/png",
+      "sha256": "5d4bb33f664f2f30e26efddb49be413afadc671a29c174301190e87706cfa7f7",
+      "metadata": {
+        "kind": "image",
+        "width": 48,
+        "height": 48,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/logo-moovx-512.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 270578,
+      "mimeType": "image/png",
+      "sha256": "fc1b5c163a1e562e00b12ce649d7477343dd1221e45557cac89e76e7e28c98c2",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-72.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 8726,
+      "mimeType": "image/png",
+      "sha256": "19724485cbb587699cebb469cf3719f5c999bf83dcee1b0b80f3cbdd9b0869fc",
+      "metadata": {
+        "kind": "image",
+        "width": 72,
+        "height": 72,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx-96.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 13745,
+      "mimeType": "image/png",
+      "sha256": "fd751c3ff7ef3758fb9d0fb16c6fab2ae9d39776eee2be6a7c9c59f3cf38c564",
+      "metadata": {
+        "kind": "image",
+        "width": 96,
+        "height": 96,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [
+        "app/(dashboard)/page-desktop.tsx",
+        "app/[locale]/landing/components/FooterSection.tsx",
+        "app/coach/components/CoachPageContent.tsx",
+        "app/coach/components/sections/CoachDesktopLayout.tsx",
+        "app/components/dashboard/DashboardClientIsland.tsx",
+        "app/components/dashboard/DashboardProfileError.tsx",
+        "app/components/dashboard/DashboardServerFallback.tsx",
+        "app/join/JoinPageContent.tsx",
+        "app/login/LoginPageContent.tsx",
+        "app/onboarding/OnboardingContent.tsx",
+        "app/register-client/RegisterClientContent.tsx",
+        "public/manifest.json"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/(dashboard)/page-desktop.tsx",
+          "route": "/(dashboard)",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/[locale]/landing/components/FooterSection.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/coach/components/CoachPageContent.tsx",
+          "route": "/coach",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/coach/components/sections/CoachDesktopLayout.tsx",
+          "route": "/coach",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/components/dashboard/DashboardClientIsland.tsx",
+          "route": "/",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/components/dashboard/DashboardProfileError.tsx",
+          "route": "/",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/components/dashboard/DashboardServerFallback.tsx",
+          "route": "/",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/join/JoinPageContent.tsx",
+          "route": "/join",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/login/LoginPageContent.tsx",
+          "route": "/login",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/onboarding/OnboardingContent.tsx",
+          "route": "/onboarding",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/register-client/RegisterClientContent.tsx",
+          "route": "/register-client",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "fixed",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/manifest.json",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx.png",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 916924,
+      "mimeType": "image/png",
+      "sha256": "c948ae37e16afad6c91bdb333d506b03d86fd1c9aaa47cd49cfd941bc80c40d1",
+      "metadata": {
+        "kind": "image",
+        "width": 1000,
+        "height": 1000,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": 1
+      },
+      "consumers": [
+        "app/[locale]/landing/components/Navbar.tsx",
+        "app/layout.tsx",
+        "lib/structured-data.ts",
+        "public/guide-musculation.html",
+        "public/guide-nutrition.html",
+        "public/index-vitrine.html",
+        "public/vitrine.html",
+        "scripts/generate-icons.js"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/components/Navbar.tsx",
+          "route": "/[locale]/landing",
+          "loading": "browser-default",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "app/layout.tsx",
+          "route": "/",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "lib/structured-data.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/guide-musculation.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/guide-nutrition.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/index-vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "public/vitrine.html",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "scripts/generate-icons.js",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "responsive",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/logo-moovx.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 2065,
+      "mimeType": "image/svg+xml",
+      "sha256": "2cbc01ab0acf84a2e66654b2d81f17e15dcde4f2ac1497073e3204ea95065bc9",
+      "metadata": {
+        "kind": "image",
+        "width": 512,
+        "height": 512,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/next.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 1375,
+      "mimeType": "image/svg+xml",
+      "sha256": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "metadata": {
+        "kind": "image",
+        "width": 394,
+        "height": 80,
+        "ratio": 4.925,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/og-image.jpg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 3123,
+      "mimeType": "image/jpeg",
+      "sha256": "be0ec38c182012dc6829cd4d49ce2a6c94583655606ffc305e09c0a8307042fa",
+      "metadata": {
+        "kind": "image",
+        "width": 1200,
+        "height": 630,
+        "ratio": 1.904762,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "app/[locale]/landing/page.tsx"
+      ],
+      "delivery": [
+        {
+          "consumer": "app/[locale]/landing/page.tsx",
+          "route": "/[locale]/landing",
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/vercel.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 128,
+      "mimeType": "image/svg+xml",
+      "sha256": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4",
+      "metadata": {
+        "kind": "image",
+        "width": 1155,
+        "height": 1000,
+        "ratio": 1.155,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/arnold-press.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 656169,
+      "mimeType": "image/jpeg",
+      "sha256": "58b9e718a4e19a4f65820c15fc856ca01965b94d6b624b486cc0d2b035e0f122",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260421_arnold_press_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260421_arnold_press_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/arnold-press.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1127373,
+      "mimeType": "video/mp4",
+      "sha256": "a7d744244eb1f520b5e2b942d6d122bd5736fdd3276c90e8f4c3e1e3b582b54d",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1119396,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260421_arnold_press_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260421_arnold_press_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/curl-halteres.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 7198474,
+      "mimeType": "image/png",
+      "sha256": "434304005cd6dcce3bd9c61825b02521c09b2f518346bf8451d0f7862cde06ba",
+      "metadata": {
+        "kind": "image",
+        "width": 1728,
+        "height": 2304,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260415_exercise_video_curl_halteres.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260415_exercise_video_curl_halteres.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/curl-marteau.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 633923,
+      "mimeType": "image/jpeg",
+      "sha256": "0cfe3e881e1ed7a0ba9dab8c2c57bc4750874588de3e79e0752b6f3f23ead079",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260422_curl_marteau_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260422_curl_marteau_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-couche-halteres.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 967863,
+      "mimeType": "video/mp4",
+      "sha256": "650f3e146bbbd585b5b50eec804c1e90e3a501a08aa3b4fd761635ea80ccc9a2",
+      "metadata": {
+        "kind": "video",
+        "width": 720,
+        "height": 1280,
+        "ratio": 0.5625,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 10.053991,
+        "bitRate": 770132,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_couche.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_couche.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-incline-halteres.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 2436738,
+      "mimeType": "video/mp4",
+      "sha256": "397fc4c5c908f904788b65fe82b10f663bdbe408502152e33f5c6bc47afda74c",
+      "metadata": {
+        "kind": "video",
+        "width": 720,
+        "height": 1280,
+        "ratio": 0.5625,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 10.053991,
+        "bitRate": 1938921,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_incline.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_incline.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire-barre-debout.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 115281,
+      "mimeType": "image/jpeg",
+      "sha256": "61f406f84c547bdb2a5b619d7719b5c981abb3a42941ac2f8f1695ff3a7b83a7",
+      "metadata": {
+        "kind": "image",
+        "width": 810,
+        "height": 1080,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire-barre-debout.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1730509,
+      "mimeType": "video/mp4",
+      "sha256": "3d4ac42d29d3e1c5b8f1c21eb29cda3d5748f55ae209bc1648ec895b482931cb",
+      "metadata": {
+        "kind": "video",
+        "width": 834,
+        "height": 1112,
+        "ratio": 0.75,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.041667,
+        "bitRate": 1721542,
+        "hasAudio": false
+      },
+      "consumers": [
+        "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire-barre.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 129511,
+      "mimeType": "image/jpeg",
+      "sha256": "62503c4d832e02111574823cbd24dfb02686983886133ff658b9357dc326504f",
+      "metadata": {
+        "kind": "image",
+        "width": 1080,
+        "height": 1440,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire-barre.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1782871,
+      "mimeType": "video/mp4",
+      "sha256": "bbf44014313c88446d0dda640bbc458793f9d02d01c70a806ce0c4ba5642fc02",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1770256,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
+        "supabase/migrations/20260419_militaire_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "supabase/migrations/20260419_militaire_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire-barre.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 6767790,
+      "mimeType": "image/png",
+      "sha256": "7c92cf9dea7cb88fb10077f51aea2cfd1e69d88847699b67b5dac75b393e1460",
+      "metadata": {
+        "kind": "image",
+        "width": 1728,
+        "height": 2304,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_militaire_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_militaire_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 201679,
+      "mimeType": "image/jpeg",
+      "sha256": "4b91a2f61b02755551eeebeb7ba1dc0ff9fe0c6f0f983b33fb7ea94d02236318",
+      "metadata": {
+        "kind": "image",
+        "width": 1072,
+        "height": 1920,
+        "ratio": 0.558333,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_militaire.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/developpe-militaire.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 3419987,
+      "mimeType": "video/mp4",
+      "sha256": "fa7184c952727fe28f471cc6bcbd41326f288a90c130c7d8be5a8f4f6bffd593",
+      "metadata": {
+        "kind": "video",
+        "width": 720,
+        "height": 1280,
+        "ratio": 0.5625,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 10.041667,
+        "bitRate": 2724636,
+        "hasAudio": false
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_developpe_militaire.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/dips.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1321988,
+      "mimeType": "video/mp4",
+      "sha256": "860bf6c8860d35505b0f73316645cad4ec1843d95e19a63df6a26dbdc39a83d4",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1312634,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260419_dips_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_dips_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/dips.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1385474,
+      "mimeType": "image/png",
+      "sha256": "3ab35d4f7c5d5d0f7fe03b61e2d14e8edf20bc8a09c608e0af0b05d844eb5208",
+      "metadata": {
+        "kind": "image",
+        "width": 896,
+        "height": 1200,
+        "ratio": 0.746667,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_dips_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_dips_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/elevations-frontales-halteres.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 692418,
+      "mimeType": "image/jpeg",
+      "sha256": "c6d8fe58100844835188f2999673cdc9415b150b1076d733c2511786b49f62eb",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260422_elevations_frontales_halteres_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260422_elevations_frontales_halteres_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/elevations-frontales-halteres.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1412311,
+      "mimeType": "video/mp4",
+      "sha256": "a9fdb7c2d69a3257767987c8fe0f645c4d32c1f16e07c6ebc9577746fb8ae683",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1402318,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260422_elevations_frontales_halteres_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260422_elevations_frontales_halteres_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/elevations-laterales-halteres.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 676744,
+      "mimeType": "image/jpeg",
+      "sha256": "5872f9329f9fd853bcdbdfe5ec230025ca43acae9bc3070db8e31bd238af93e4",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260420_elevations_laterales_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260420_elevations_laterales_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/elevations-laterales-halteres.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1211035,
+      "mimeType": "video/mp4",
+      "sha256": "b17300a714d5d6c124fbe85e4f84f27b990457c0a318bfc1be6b1891b9cd99bb",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1202466,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260420_elevations_laterales_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260420_elevations_laterales_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/elevations-laterales-halteres.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 7121904,
+      "mimeType": "image/png",
+      "sha256": "714b02290cc3bd153ea9eff82cd17b6bdd172273488e6b1fb78ddd1c259b9185",
+      "metadata": {
+        "kind": "image",
+        "width": 1728,
+        "height": 2304,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/hack-squat-machine.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 686605,
+      "mimeType": "image/jpeg",
+      "sha256": "ad3ceba9acfe7cfe3e1b66ff3d28a2ef2b52cfe08d4c115a662266facf21e5ce",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/hack-squat-machine.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1483628,
+      "mimeType": "video/mp4",
+      "sha256": "e4acf8a320a2422fe41e320523c2404c8b80415d26561c223bbed17c45048f21",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1473130,
+        "hasAudio": true
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/hip-thrust.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 638664,
+      "mimeType": "image/jpeg",
+      "sha256": "b900ddf03ed8baad3f482d3141014152d4c203d65246ed5ed7c100d9fe7edda3",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260421_hip_thrust_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260421_hip_thrust_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/hip-thrust.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1185490,
+      "mimeType": "video/mp4",
+      "sha256": "018270a6ed1b3457d1a90afc0cb8bbaccc0871f99618ba828745b0ca7ec67073",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1177102,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260421_hip_thrust_video.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260421_hip_thrust_video.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/kettlebell-swing.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 610180,
+      "mimeType": "image/jpeg",
+      "sha256": "bb430490595c04c20439eac837ba329cba428a803d998dbd9045b285aec8267d",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260420_kettlebell_swing_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260420_kettlebell_swing_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/kettlebell-swing.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1088348,
+      "mimeType": "video/mp4",
+      "sha256": "11af06691d7e9fd50a4d2627f9373ec4cac03d002c37d5446a9ea1b1742e8c13",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1080647,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260420_kettlebell_swing_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260420_kettlebell_swing_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/leg-extension.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 641341,
+      "mimeType": "image/jpeg",
+      "sha256": "d6e4c3cc431e1e559acdc25b5360fcbc9e15c0ca27dc32abeeb9b6db40eb9b86",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/leg-extension.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1443950,
+      "mimeType": "video/mp4",
+      "sha256": "548695f2fe14be6511338b1b6eee6918b725e560944978f2c4734b6f7583e11d",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1433733,
+        "hasAudio": true
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/leg-press.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 643150,
+      "mimeType": "image/jpeg",
+      "sha256": "1636d4214865cb2067a593a7feab30d6fc14f758f2bab39ed6cfb77171e28384",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/leg-press.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1397814,
+      "mimeType": "video/mp4",
+      "sha256": "db476dce064506654e4a302f7db4bfaef85069ae62492865cbd847641c6bda6b",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1387923,
+        "hasAudio": true
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/pull-over-poulie-haute.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 653806,
+      "mimeType": "image/jpeg",
+      "sha256": "91a2d877bdbb75aeaf3e7b48626d62862d8317f3c8f253a9086d62c9772c5801",
+      "metadata": {
+        "kind": "image",
+        "width": 768,
+        "height": 1376,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/pull-over-poulie-haute.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1425216,
+      "mimeType": "video/mp4",
+      "sha256": "c429d7bb8d876e3f4094b986af8a86c26ca03562aed459df1472ab11f0c3829a",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1415131,
+        "hasAudio": true
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    },
+    {
+      "path": "public/videos/exercises/rowing-barre.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 153496,
+      "mimeType": "image/jpeg",
+      "sha256": "a2c37b834fddca81fd7e71516747262dc50b6e74d03c2210757ee3557f327710",
+      "metadata": {
+        "kind": "image",
+        "width": 1080,
+        "height": 1440,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_rowing_barre.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_rowing_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/rowing-barre.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 4062302,
+      "mimeType": "video/mp4",
+      "sha256": "e9af10775527ccea1039a67b904d913b10e918dc30774a834f7ba4520d5c2993",
+      "metadata": {
+        "kind": "video",
+        "width": 834,
+        "height": 1112,
+        "ratio": 0.75,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 4033559,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_rowing_barre.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_rowing_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre-roumain.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 130461,
+      "mimeType": "image/jpeg",
+      "sha256": "bf498a97cc9906fc9c395d97a98089fab64bf781ec879be457cc53512f80f211",
+      "metadata": {
+        "kind": "image",
+        "width": 1080,
+        "height": 1446,
+        "ratio": 0.746888,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre-roumain.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1193219,
+      "mimeType": "video/mp4",
+      "sha256": "8b2f15690c78f5d11c2110d23cbb0c551f7eae659432be974b737125b61b9f98",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1184776,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
+        "supabase/migrations/20260419_rdl_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "supabase/migrations/20260419_rdl_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre-roumain.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1074612,
+      "mimeType": "image/png",
+      "sha256": "dfabb42f120d4219b1fb1c807d90a13fa4e0a040aaca79677cc6ae0fccdffe7d",
+      "metadata": {
+        "kind": "image",
+        "width": 896,
+        "height": 1200,
+        "ratio": 0.746667,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_rdl_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_rdl_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 145817,
+      "mimeType": "image/jpeg",
+      "sha256": "fd05eb50f05483168612d1b353d0c4a081e308f74b34f9a74c9a8003322620e9",
+      "metadata": {
+        "kind": "image",
+        "width": 1080,
+        "height": 1440,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 2000565,
+      "mimeType": "video/mp4",
+      "sha256": "5d1d62bf0864ec0ab45db07335636320bb58d83c9c3ab4fc3be1b0f61825efe8",
+      "metadata": {
+        "kind": "video",
+        "width": 720,
+        "height": 1280,
+        "ratio": 0.5625,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8,
+        "bitRate": 2000565,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
+        "supabase/migrations/20260419_souleve_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "supabase/migrations/20260419_souleve_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/souleve-de-terre.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 7431576,
+      "mimeType": "image/png",
+      "sha256": "d9687a7d22bd4783ebb66ccd6968a216f42bbcf8dcbccdde039617157a0bf0f0",
+      "metadata": {
+        "kind": "image",
+        "width": 1728,
+        "height": 2304,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_souleve_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_souleve_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/squat-barre.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 182227,
+      "mimeType": "image/jpeg",
+      "sha256": "554121c8dd68760e78d553cbf01b111bc386655e3be42631a5e443f46787a14a",
+      "metadata": {
+        "kind": "image",
+        "width": 1079,
+        "height": 1920,
+        "ratio": 0.561979,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_squat_barre.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_squat_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/squat-barre.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 6666219,
+      "mimeType": "video/mp4",
+      "sha256": "b8815862993ed03f2de73ff7169a9cf056df9a7eef7d9808841f972da118d108",
+      "metadata": {
+        "kind": "video",
+        "width": 1080,
+        "height": 1920,
+        "ratio": 0.5625,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8,
+        "bitRate": 6666219,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_squat_barre.sql",
+        "supabase/migrations/20260419_squat_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_squat_barre.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "supabase/migrations/20260419_squat_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/squat-barre.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 8172955,
+      "mimeType": "image/png",
+      "sha256": "7cf7d37eeb8721b62873ab8c54226a762327060dfe42c9345207850f4c058180",
+      "metadata": {
+        "kind": "image",
+        "width": 1600,
+        "height": 2848,
+        "ratio": 0.561798,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_squat_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_squat_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/tractions-pronation.jpg",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 117505,
+      "mimeType": "image/jpeg",
+      "sha256": "8d5412c7ae2e96f90e1f92050ecb214e3e6b7126ff58a2ee65a82e97d13eb13e",
+      "metadata": {
+        "kind": "image",
+        "width": 1080,
+        "height": 1440,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_tractions_pronation.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/tractions-pronation.mp4",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 1321988,
+      "mimeType": "video/mp4",
+      "sha256": "860bf6c8860d35505b0f73316645cad4ec1843d95e19a63df6a26dbdc39a83d4",
+      "metadata": {
+        "kind": "video",
+        "width": 496,
+        "height": 864,
+        "ratio": 0.574074,
+        "codec": "h264",
+        "container": "mov,mp4,m4a,3gp,3g2,mj2",
+        "durationSeconds": 8.057007,
+        "bitRate": 1312634,
+        "hasAudio": true
+      },
+      "consumers": [
+        "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
+        "supabase/migrations/20260419_tractions_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
+        {
+          "consumer": "supabase/migrations/20260419_tractions_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/videos/exercises/tractions-pronation.png",
+      "category": "exercise",
+      "role": "unknown",
+      "bytes": 6700843,
+      "mimeType": "image/png",
+      "sha256": "e0634f55b0ba347ad4a7def70b502ae94fd5e3fec359b156f37d6bdd7a4023fa",
+      "metadata": {
+        "kind": "image",
+        "width": 1728,
+        "height": 2304,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "supabase/migrations/20260419_tractions_video_v4.sql"
+      ],
+      "delivery": [
+        {
+          "consumer": "supabase/migrations/20260419_tractions_video_v4.sql",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/window.svg",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 385,
+      "mimeType": "image/svg+xml",
+      "sha256": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+      "metadata": {
+        "kind": "image",
+        "width": 16,
+        "height": 16,
+        "ratio": 1,
+        "hasAlpha": true,
+        "orientation": null
+      },
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
+    }
+  ]
+}

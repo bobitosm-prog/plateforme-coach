@@ -55,7 +55,7 @@ export default function FooterSection() {
         {/* Left */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <img src="/logo-moovx.png" alt="MoovX" width={24} height={24} style={{ borderRadius: 4 }} />
+            <img src="/logo-moovx-96.png" alt="MoovX" width={24} height={24} style={{ borderRadius: 4 }} />
             <span style={{
               fontFamily: 'var(--font-display)',
               fontSize: 22, color: 'var(--gold)', letterSpacing: 3,

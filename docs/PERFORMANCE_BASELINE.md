@@ -29,6 +29,8 @@ Le découpage à la demande et sa preuve par chunks sont décrits dans
 [Chargement différé des onglets et modales](./PERFORMANCE_LAZY_UI.md).
 La mesure des chunks Recharts/XLSX et les limites QR/MediaPipe sont décrites
 dans [Chargement différé des bibliothèques lourdes](./PERFORMANCE_HEAVY_LIBRARIES.md).
+L’inventaire local, les doublons et le lot de livraison optimisé sont décrits
+dans [Inventaire des médias runtime](./PERFORMANCE_MEDIA_INVENTORY.md).
 
 ## Commande canonique
 

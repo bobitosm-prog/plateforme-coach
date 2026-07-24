@@ -20,6 +20,9 @@ Ils encadrent également le
 Le chargement à l’intention des bibliothèques fonctionnelles lourdes est
 documenté dans
 [Chargement différé des bibliothèques lourdes](./PERFORMANCE_HEAVY_LIBRARIES.md).
+La taille disque et la stratégie de livraison des images et vidéos sont suivies
+séparément dans [Inventaire des médias runtime](./PERFORMANCE_MEDIA_INVENTORY.md) ;
+les seuils de ce document restent inchangés.
 
 Le registre typé est dans `lib/performance/budgets/registry.ts`. La commande :
 

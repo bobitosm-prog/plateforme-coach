@@ -71,7 +71,7 @@ export default function DashboardClientIsland() {
     <div style={{ minHeight: '100dvh', background: '#0D0B08', display: 'flex', flexDirection: 'column' }}>
       {(h.trialExpired || h.betaExpired) && (
         <div style={{ textAlign: 'center', padding: '40px 24px 0' }}>
-          <img src="/logo-moovx.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
+          <img src="/logo-moovx-96.png" alt="MoovX Logo" width={56} height={56} style={{ borderRadius: 16, margin: '0 auto 16px', display: 'block' }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(1.6rem,4vw,2.2rem)', letterSpacing: 3, color: '#F8FAFC', margin: '0 0 8px' }}>
             {h.betaExpired ? 'TON ACCÈS BETA EST TERMINÉ' : 'TA PÉRIODE D\'ESSAI EST TERMINÉE'}
           </h1>
@@ -131,7 +131,7 @@ export default function DashboardClientIsland() {
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: Z_NAV, padding: '24px 0' }}>
         <div style={{ padding: '0 20px', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
+          <img src="/logo-moovx-96.png" alt="MoovX" width={40} height={40} style={{ objectFit: 'contain' }} />
         </div>
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '0 12px' }}>
           {([

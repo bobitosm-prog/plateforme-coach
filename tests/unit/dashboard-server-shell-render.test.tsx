@@ -8,7 +8,7 @@ describe('dashboard shell server-safe states', () => {
     const html = renderToStaticMarkup(<DashboardServerFallback />)
     expect(html).toContain('role="status"')
     expect(html).toContain('Chargement de MoovX')
-    expect(html).toContain('/logo-moovx.png')
+    expect(html).toContain('/logo-moovx-96.png')
   })
 
   it('renders the recoverable profile error without invoking its callback', () => {

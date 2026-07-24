@@ -16,7 +16,7 @@ export default function DashboardServerFallback() {
       <img
         alt="MoovX"
         height={80}
-        src="/logo-moovx.png"
+        src="/logo-moovx-96.png"
         style={{ borderRadius: 20, filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }}
         width={80}
       />

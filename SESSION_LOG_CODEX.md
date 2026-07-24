@@ -10022,3 +10022,49 @@ Réduire progressivement les modules `use client`.
 ### Prochaine action unique
 
 Inventorier et optimiser images/vidéos lourdes.
+
+## Entrée — 2026-07-24 — Inventaire et optimisation des médias lourds
+
+- L’inventaire reproductible exclut les quatre chemins concurrents avant toute
+  lecture. Il couvre 131 médias locaux : 85 images applicatives
+  (72 684 733 octets) et 46 médias d’exercice, dont 26 images et 20 vidéos
+  (92 242 019 octets), soit 164 926 752 octets au total.
+- Les seuils identifient 56 images supérieures à 200 Ko, 5 vidéos supérieures
+  à 2 Mo, 4 groupes de doublons SHA-256 et 38 candidats sans référence
+  statique. Aucun doublon ou candidat n’est supprimé ; les références
+  dynamiques et les données catalogue interdisent cette conclusion.
+- Le lot borné remplace le logo local 1000×1000 de 916 924 octets par son
+  dérivé versionné 96×96 de 13 745 octets dans les rendus de 24 à 88 px :
+  −903 179 octets, soit −98,50 %, sans requête supplémentaire ni changement
+  de ratio. Les usages OG haute définition restent inchangés.
+- La comparaison visuelle ImageMagick réelle confirme cadrage, ratio,
+  transparence, couleurs et silhouette. Aucun dérivé nouveau n’est créé et
+  aucune métadonnée EXIF/GPS n’est introduite.
+- Les vidéos utilisateur secondaires de feedback passent à `preload="none"`
+  avec `playsInline`; URL, contrôles et lecture à l’action restent inchangés.
+  Aucun média distant ou utilisateur n’est téléchargé, capturé ou réencodé.
+- L’artefact `perf/media/runtime-media-inventory.json` conserve type réel,
+  taille, dimensions, ratio, codec/conteneur, durée, débit, audio, SHA-256,
+  consommateurs et indices de livraison. Les valeurs impossibles à conclure
+  restent explicitement inconnues.
+- Le contrôle Webpack produit 88 pages, les manifests complets et le BUILD_ID
+  `TlnL_LijclPSDyTfL5f3_`; il passe 79/79 budgets. Client :
+  LCP `384/344/328 ms`, INP `48/32/32 ms`, CLS
+  `0,003886/0,010764/0,010764`, requêtes `110/109/109` dont
+  `63/62/62` applicatives. Coach : LCP `224/240/228 ms`, INP
+  `24/24/24 ms`, CLS nul, requêtes `104/104/104` dont `39/39/39`.
+- Le bundle dédupliqué vaut 2 010 385 octets bruts / 591 421 gzip. Le nombre
+  de requêtes reste identique au contrôle précédent ; le corps froid du logo
+  passe de 916 924 à 13 745 octets. Les fluctuations Web Vitals restent dans
+  les observations historiques et les budgets.
+- Validations : 37 assertions ciblées puis suite complète 218 fichiers /
+  1 821 tests verts + 3 `todo`; TypeScript vert; nouveaux fichiers ESLint
+  propres; dette des anciens consommateurs inchangée à 82 erreurs /
+  52 avertissements sur le périmètre large; E2E coach/client 4/4 et
+  default-coach 1/1; deux références et le contrôle passent chacun 79/79.
+  Les audits finaux de diff, liens, secrets, Mailpit, ports, staging et état
+  concurrent complètent la clôture.
+
+### Prochaine action unique
+
+Définir posters et chargement vidéo différé.

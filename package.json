@@ -24,6 +24,7 @@
     "test:e2e:client-journey": "node scripts/run-coach-client-e2e.mjs e2e/coach-client-client.spec.ts",
     "perf:baseline": "node scripts/run-performance-baseline.ts",
     "perf:budget:check": "node scripts/check-performance-budgets.ts",
+    "perf:media:inventory": "node scripts/inventory-runtime-media.ts",
     "supabase:local:start": "node scripts/supabase-local.mjs start",
     "supabase:local:status": "node scripts/supabase-local.mjs status",
     "supabase:local:reset": "node scripts/supabase-local.mjs reset",

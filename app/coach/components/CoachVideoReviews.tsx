@@ -135,6 +135,7 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
               src={fb.video_url}
               controls
               playsInline
+              preload="none"
               style={{
                 width: '100%',
                 maxWidth: 480,

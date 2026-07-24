@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **23 juillet 2026**.
+> Dernière mise à jour : **24 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 8 — React, App Router et performance**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -541,8 +541,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 budgets anti-régression automatisés, coque serveur du dashboard extraite,
 frontières de chargement ajoutées aux segments importants, frontières d’erreur
 critiques expurgées, onglets/modales secondaires chargés à la demande et
-bibliothèques lourdes différées et premières frontières Client Components
-réduites avec deux contrôles finaux à 79/79.**
+bibliothèques lourdes différées, premières frontières Client Components
+réduites et [inventaire des médias runtime](docs/PERFORMANCE_MEDIA_INVENTORY.md)
+livré avec un premier gain mesuré.**
 
 ### Pourquoi
 
@@ -560,7 +561,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] [Charger onglets et modales secondaires à la demande](docs/PERFORMANCE_LAZY_UI.md) | 3 j | Élevée | Moyen | Élevé | Composants découpés |
 | [x] [Différer Recharts, MediaPipe, QR et XLSX](docs/PERFORMANCE_HEAVY_LIBRARIES.md) | 2 j | Moyenne | Moyen | Élevé | Dynamic imports |
 | [x] [Réduire progressivement les modules `use client`](docs/PERFORMANCE_CLIENT_BOUNDARIES.md) | 4 j | Élevée | Moyen | Élevé | Coque serveur |
-| [ ] Inventorier et optimiser images/vidéos lourdes | 3 j | Moyenne | Moyen | Élevé | Manifest médias |
+| [x] [Inventorier et optimiser images/vidéos lourdes](docs/PERFORMANCE_MEDIA_INVENTORY.md) | 3 j | Moyenne | Moyen | Élevé | Manifest médias |
 | [ ] Définir posters et chargement vidéo différé | 2 j | Moyenne | Moyen | Moyen | Médias optimisés |
 | [ ] Étudier puis déployer un stockage/CDN média | 3 j | Élevée | Élevé | Élevé | Chemins compatibles |
 | [ ] Réduire et auto-héberger les polices nécessaires | 1,5 j | Moyenne | Faible | Moyen | Baseline |

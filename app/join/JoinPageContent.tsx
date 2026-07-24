@@ -189,7 +189,7 @@ function JoinContent() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;background:${BG_BASE};border:1px solid ${BORDER};border-radius:0;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}`}</style>
       <div style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo-moovx.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
+          <img src="/logo-moovx-96.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>{t('title')}</h1>
           <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0 }}>{t('subtitle')}</p>
         </div>

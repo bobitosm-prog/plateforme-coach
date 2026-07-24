@@ -35,7 +35,7 @@ describe('dashboard server shell architecture', () => {
     expect(fallback).not.toContain("'use client'")
     expect(fallback).toContain('role="status"')
     expect(fallback).toContain('aria-label="Chargement de MoovX"')
-    expect(fallback).toContain('src="/logo-moovx.png"')
+    expect(fallback).toContain('src="/logo-moovx-96.png"')
     expect(island).toContain('return <DashboardServerFallback />')
   })
 
