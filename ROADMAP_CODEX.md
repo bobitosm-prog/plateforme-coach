@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1, les fixtures de comparaison conservant des résultats divergents et partiels**
+**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1 : les 12 preuves sont classées et gardées, mais deux cas pleinement comparables restent divergents**
 
 ### Pourquoi
 
@@ -414,7 +414,7 @@ Les fonctions de progression peuvent avancer pendant la stabilisation des reposi
 - Les calculs nutritionnels sont testés avec des bornes et tolérances explicites.
 - Les composants ciblés respectent les seuils.
 - [Les agrégations ne sont plus recalculées dans plusieurs composants](docs/PROGRESSION_AGGREGATION_AUTHORITY.md).
-- Les nouvelles et anciennes métriques concordent sur les fixtures.
+- [Les nouvelles et anciennes métriques concordent sur les fixtures](docs/NUTRITION_TOTAL_COMPARISON.md) — critère non satisfait : 2 divergences pleinement comparables restent visibles.
 
 ---
 

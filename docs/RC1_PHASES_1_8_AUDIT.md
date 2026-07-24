@@ -89,7 +89,7 @@ donnée distante.
 | Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md) et [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md). |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
-| Anciennes/nouvelles métriques concordantes | `unmet` | La matrice Nutrition versionnée compte 2 `divergent` et 2 `partial`; les divergences sont volontairement visibles. |
+| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves : 4 `equivalent`, 2 `within_tolerance`, 2 `divergent`, 2 `partial`, 1 `unavailable`, 1 `invalid`. Les deux cas partiels prouvent l'information absente, mais 600→500 kcal et 0→18 g de protéines restent pleinement comparables et inexpliqués par les tolérances. |
 
 ## Phase 5 — `met`
 
@@ -156,6 +156,6 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Traiter le premier critère restant : statuer honnêtement sur la concordance des
-anciennes et nouvelles métriques Phase 4, dont les fixtures Nutrition
-conservent actuellement des résultats `divergent` et `partial`.
+Traiter la correction minimale prouvable du premier blocage Phase 4 :
+versionner la provenance des totaux déclarés et préserver les alias lors de la
+production des snapshots legacy, sans réécrire les preuves historiques.

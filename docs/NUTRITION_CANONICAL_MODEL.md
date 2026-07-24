@@ -145,6 +145,21 @@ règle non définie dans le dépôt et reste donc fail-closed. La tolérance ent
 énergie déclarée et énergie issue des macros est toujours fournie explicitement
 par l'appelant ; aucun écart ne constitue automatiquement une corruption.
 
+### 4.5 Concordance avec un total legacy
+
+La comparaison conserve deux projections legacy distinctes :
+
+- le total **observé**, qui reproduit un éventuel fallback historique vers
+  zéro ;
+- le total **comparable**, où tout nutriment absent reste `null`.
+
+Seule la projection comparable participe aux différences numériques. Un zéro
+explicitement fourni reste comparable ; un zéro produit parce qu'une fibre ou
+une macro manque ne l'est pas. Un total déclaré différent d'une somme
+canonique reste `divergent`, sans être automatiquement corrigé ni déclaré
+corrompu. Les alias admis et les tolérances appartiennent à un contrat
+versionné ; leur extension exige une preuve de producteur legacy.
+
 ## 5. Portions et unités
 
 ### 5.1 `Quantity`

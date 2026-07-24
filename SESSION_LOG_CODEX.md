@@ -10554,3 +10554,44 @@ internes Training distincts conservés comme exceptions exactes.
 
 **Prochaine action :** statuer sur la concordance des anciennes et nouvelles
 métriques Phase 4 sans masquer les fixtures `divergent` et `partial`.
+
+## Entrée — 2026-07-24 — Politique de concordance Nutrition
+
+**Travail effectué :** rejeu byte-identique des douze fixtures Nutrition,
+analyse composante par composante, formalisation d'une politique versionnée et
+ajout de gardes sur le hash des preuves, les tolérances, alias, statuts,
+arrondis et reclassifications. Le comparateur distingue désormais le total
+legacy observé de sa projection honnêtement comparable.
+
+**Tâches cochées :** aucune case RC1. Le dernier critère Phase 4 reste `unmet`
+et la phase reste `partial`.
+
+**Décisions prises :** quatre cas sont `equivalent`, deux
+`within_tolerance`, deux `divergent`, deux `partial`, un `unavailable` et un
+`invalid`. Les tolérances restent 1 kcal, 0,1 g et 0,5 % avec une règle
+absolue-ou-relative. Les douze fixtures brutes restent inchangées.
+
+**Problèmes rencontrés :** le total déclaré 600 kcal diverge d'un total
+canonique 500 kcal sans arrondi ou conversion explicative. Une autre preuve
+arrive avec `protein: 0` après perte de l'alias qui portait 18 g ; le
+comparateur ne peut pas reconstruire une information absente.
+
+**Risques ou dette restante :** les deux divergences sont pleinement
+comparables et empêchent honnêtement la clôture Phase 4. Les deux cas partiels
+sont justifiés par une fibre legacy absente et une énergie canonique inconnue ;
+ils restent visibles et ne sont pas convertis en zéro.
+
+**Tests exécutés :** invariants Nutrition, comparaison legacy/canonique,
+politique et gardes statiques ; suite complète, TypeScript, ESLint ciblé,
+liens et `git diff --check`.
+
+**Mesures avant/après :** distribution inchangée
+`4/2/2/2/1/1`; nutriments legacy absents comparables comme zéro : 2 → 0 ;
+SHA-256 des fixtures
+`cb9afe859dcf7a20b2adf41f20646e51d78a43e5dc5e8e6607e44b0ddc8d0f08`.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** versionner la provenance des totaux déclarés et
+préserver les alias lors de la production des snapshots legacy, sans réécrire
+les preuves historiques.

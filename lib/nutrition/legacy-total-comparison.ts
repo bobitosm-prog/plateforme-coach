@@ -57,6 +57,28 @@ export const DEFAULT_TOTAL_TOLERANCE: ComparisonTolerance = Object.freeze({
   relative: 0.005,
 })
 
+export const TOTAL_CONCORDANCE_POLICY = Object.freeze({
+  version: 1,
+  toleranceMode: 'absolute_or_relative',
+  intermediateRounding: 'forbidden',
+  statuses: Object.freeze([
+    'equivalent',
+    'within_tolerance',
+    'divergent',
+    'partial',
+    'unavailable',
+    'invalid',
+  ] as const),
+})
+
+export const LEGACY_NUTRIENT_ALIASES = Object.freeze({
+  kcal: Object.freeze(['calories', 'kcal'] as const),
+  proteinG: Object.freeze(['protein', 'proteins', 'prot'] as const),
+  carbsG: Object.freeze(['carbs', 'carb'] as const),
+  fatG: Object.freeze(['fat', 'fats'] as const),
+  fiberG: Object.freeze(['fiber', 'fibers'] as const),
+} as const)
+
 export interface NutrientDifference {
   readonly nutrient: NutrientKey
   readonly status: Exclude<TotalComparisonStatus, 'partial'>
@@ -70,6 +92,7 @@ export interface LegacyCanonicalComparison {
   readonly status: TotalComparisonStatus
   readonly format: LegacyNutritionFormat
   readonly legacy: NutritionValues
+  readonly legacyComparable: NutritionValues
   readonly canonical: NutritionValues
   readonly nutrients: readonly NutrientDifference[]
   readonly issues: readonly ComparisonIssue[]
@@ -91,18 +114,21 @@ export interface ComparisonIssue {
 const KEYS: readonly NutrientKey[] = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fiberG']
 const UNKNOWN: NutritionValues = Object.freeze({ kcal: null, proteinG: null, carbsG: null, fatG: null, fiberG: null })
 
-function firstDefined(...values: readonly (number | null | undefined)[]): number | null {
-  const found = values.find(value => value !== undefined && value !== null)
+function firstDefined(
+  entry: LegacyNutritionEntry,
+  aliases: readonly (keyof LegacyNutritionEntry)[],
+): number | null {
+  const found = aliases.map(alias => entry[alias]).find(value => value !== undefined && value !== null)
   return found ?? null
 }
 
 function entryValues(entry: LegacyNutritionEntry): NutritionValues {
   return {
-    kcal: firstDefined(entry.calories, entry.kcal),
-    proteinG: firstDefined(entry.protein, entry.proteins, entry.prot),
-    carbsG: firstDefined(entry.carbs, entry.carb),
-    fatG: firstDefined(entry.fat, entry.fats),
-    fiberG: firstDefined(entry.fiber, entry.fibers),
+    kcal: firstDefined(entry, LEGACY_NUTRIENT_ALIASES.kcal),
+    proteinG: firstDefined(entry, LEGACY_NUTRIENT_ALIASES.proteinG),
+    carbsG: firstDefined(entry, LEGACY_NUTRIENT_ALIASES.carbsG),
+    fatG: firstDefined(entry, LEGACY_NUTRIENT_ALIASES.fatG),
+    fiberG: firstDefined(entry, LEGACY_NUTRIENT_ALIASES.fiberG),
   }
 }
 
@@ -116,11 +142,17 @@ function declaredValues(totals: LegacyDeclaredTotals): NutritionValues {
   }
 }
 
-function legacyTotals(source: LegacyTotalSource): { values: NutritionValues; issues: ComparisonIssue[]; invalid: boolean } {
+function legacyTotals(source: LegacyTotalSource): {
+  values: NutritionValues
+  comparable: NutritionValues
+  issues: ComparisonIssue[]
+  invalid: boolean
+} {
   const rows = source.format === 'declared_totals' ? [declaredValues(source.totals)] : source.entries.map(entryValues)
-  if (rows.length === 0) return { values: UNKNOWN, issues: [], invalid: false }
+  if (rows.length === 0) return { values: UNKNOWN, comparable: UNKNOWN, issues: [], invalid: false }
   const issues: ComparisonIssue[] = []
   let invalid = false
+  const comparableEntries: [NutrientKey, number | null][] = []
   const values = Object.fromEntries(KEYS.map(key => {
     const nutrientValues = rows.map(row => row[key])
     for (const [index, value] of nutrientValues.entries()) {
@@ -129,12 +161,16 @@ function legacyTotals(source: LegacyTotalSource): { values: NutritionValues; iss
         issues.push({ code: 'legacy_invalid_value', path: `entries.${index}.${key}` })
       }
     }
-    if (nutrientValues.some(value => value === null)) {
+    const hasUnknown = nutrientValues.some(value => value === null)
+    if (hasUnknown) {
       issues.push({ code: 'legacy_unknown_treated_as_zero', path: `values.${key}` })
     }
-    return [key, nutrientValues.reduce<number>((sum, value) => sum + (value ?? 0), 0)]
+    const observed = nutrientValues.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+    comparableEntries.push([key, hasUnknown ? null : observed])
+    return [key, observed]
   })) as unknown as NutritionValues
-  return { values, issues, invalid }
+  const comparable = Object.fromEntries(comparableEntries) as unknown as NutritionValues
+  return { values, comparable, issues, invalid }
 }
 
 function toleranceValid(value: ComparisonTolerance): boolean {
@@ -178,7 +214,7 @@ export function compareLegacyCanonicalTotals(input: {
   if (input.canonical.status === 'unavailable') issues.push({ code: 'canonical_unavailable', path: 'canonical' })
   if (input.canonical.status === 'partial') issues.push({ code: 'canonical_partial', path: 'canonical' })
 
-  const nutrients = KEYS.map(key => compareNutrient(key, legacy.values[key], input.canonical.values[key], tolerance))
+  const nutrients = KEYS.map(key => compareNutrient(key, legacy.comparable[key], input.canonical.values[key], tolerance))
   const comparable = nutrients.filter(item => item.status !== 'unavailable')
   let status: TotalComparisonStatus
   if (legacy.invalid || input.canonical.status === 'invalid' || !toleranceValid(tolerance) || nutrients.some(item => item.status === 'invalid')) status = 'invalid'
@@ -188,7 +224,15 @@ export function compareLegacyCanonicalTotals(input: {
   else if (nutrients.some(item => item.status === 'within_tolerance')) status = 'within_tolerance'
   else status = 'equivalent'
 
-  return { status, format: input.legacy.format, legacy: legacy.values, canonical: input.canonical.values, nutrients, issues }
+  return {
+    status,
+    format: input.legacy.format,
+    legacy: legacy.values,
+    legacyComparable: legacy.comparable,
+    canonical: input.canonical.values,
+    nutrients,
+    issues,
+  }
 }
 
 export function aggregateCanonicalTotals(entries: readonly NutritionCalculationResult[]): NutritionCalculationResult {
