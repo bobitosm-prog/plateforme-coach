@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createAnalyticsReadModel, groupMixedLocalUtcLegacyWeeklyTonnage, LatestAnalyticsReadCoordinator, type AnalyticsPersonalRecord, type AnalyticsReadPort } from '../../lib/progression'
+import { createAnalyticsReadModel, estimatedOneRepMax, groupMixedLocalUtcLegacyWeeklyTonnage, LatestAnalyticsReadCoordinator, type AnalyticsPersonalRecord, type AnalyticsReadPort } from '../../lib/progression'
 import { createNutritionJournalRepository } from '../../lib/repositories/nutrition'
 import type { DatabaseClient } from '../../lib/supabase/types'
 
@@ -47,7 +47,9 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
   async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
     if (!uid || !weight || !reps) return { newPR: false }
 
-    const estimated1RM = weight * (1 + reps / 30) // Epley formula
+    const estimate = estimatedOneRepMax(weight, reps, null)
+    if (estimate.status !== 'complete') return { newPR: false }
+    const estimated1RM = estimate.value
     const { data: currentRecord } = await supabase
       .from('personal_records')
       .select('value')

@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { bestSetByEstimatedOneRepMax } from '../progression'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/profile-service'
 import { checkAndUnlockBadges, type Badge } from '@/lib/check-badges'
@@ -135,11 +136,13 @@ export function useClientDashboardActions(options: UseClientDashboardActionsOpti
         for (const exercise of data.exercises) {
           const valid = (exercise.sets ?? []).filter(set => Number(set.weight) > 0 && Number(set.reps) > 0)
           if (valid.length === 0) continue
-          const best = valid.reduce((left, right) => {
-            const leftScore = Number(left.weight) * (1 + Number(left.reps) / 30)
-            const rightScore = Number(right.weight) * (1 + Number(right.reps) / 30)
-            return leftScore >= rightScore ? left : right
-          })
+          const bestResult = bestSetByEstimatedOneRepMax(valid.map(set => ({
+            ...set,
+            weight: Number(set.weight),
+            reps: Number(set.reps),
+          })))
+          if (bestResult.status !== 'complete') continue
+          const best = bestResult.value
           const result = await checkForPR(exercise.name, Number(best.weight), Number(best.reps))
           if (result.newPR && result.exercise && result.value) newPRs.push({ exercise: result.exercise, value: result.value })
         }

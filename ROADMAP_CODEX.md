@@ -413,7 +413,7 @@ Les fonctions de progression peuvent avancer pendant la stabilisation des reposi
 
 - Les calculs nutritionnels sont testés avec des bornes et tolérances explicites.
 - Les composants ciblés respectent les seuils.
-- Les agrégations ne sont plus recalculées dans plusieurs composants.
+- [Les agrégations ne sont plus recalculées dans plusieurs composants](docs/PROGRESSION_AGGREGATION_AUTHORITY.md).
 - Les nouvelles et anciennes métriques concordent sur les fixtures.
 
 ---

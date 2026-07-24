@@ -8,6 +8,7 @@ import { getMuscleLabel } from '../../../../lib/i18n-muscle'
 import { TECHNIQUE_LABELS } from '../../../../lib/technique-labels'
 import { BG_BASE, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GOLD_DIM, GOLD_RULE, GREEN, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY, colors } from '../../../../lib/design-tokens'
 import { WorkoutActiveRestView } from './WorkoutRestViews'
+import { legacyTonnage } from '../../../../lib/progression'
 import type { WorkoutSessionExercise, WorkoutTranslate } from './types'
 
 export interface WorkoutProgressionSuggestion { weight: number; status: 'progress' | 'hold' | 'deload'; step: number }
@@ -125,8 +126,8 @@ export function WorkoutExerciseEditor(props: WorkoutExerciseEditorProps) {
             const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
             if (!doneSets.length) return null
             const n = Math.min(doneSets.length, prev.length)
-            const curVol = doneSets.slice(0, n).reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0)
-            const prevVol = prev.slice(0, n).reduce((s, st) => s + st.weight * st.reps, 0)
+            const curVol = legacyTonnage(doneSets.slice(0, n).map(set => ({ weight: Number(set.weight), reps: Number(set.reps) })))
+            const prevVol = legacyTonnage(prev.slice(0, n))
             if (!prevVol) return null
             return Math.round(((curVol - prevVol) / prevVol) * 100)
           })()

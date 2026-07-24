@@ -10,10 +10,30 @@ export interface RecordInput {
   readonly achievedAt: string | null
 }
 
-export function estimatedOneRepMax(weight: number, reps: number, decimals = 1): AggregationResult<number> {
+export function estimatedOneRepMax(weight: number, reps: number, decimals: number | null = 1): AggregationResult<number> {
   if (![weight, reps].every(Number.isFinite) || weight <= 0 || reps <= 0) return { status: 'invalid', value: null, issues: [{ code: 'invalid_number', path: 'set' }] }
+  if (decimals === null) return { status: 'complete', value: weight * (1 + reps / 30), issues: [] }
   const factor = 10 ** decimals
   return { status: 'complete', value: Math.round(weight * (1 + reps / 30) * factor) / factor, issues: [] }
+}
+
+export function bestSetByEstimatedOneRepMax<T extends {
+  readonly weight: number
+  readonly reps: number
+}>(sets: readonly T[]): AggregationResult<T> {
+  if (sets.length === 0) return { status: 'unavailable', value: null, issues: [{ code: 'empty_input', path: 'sets' }] }
+  let best = sets[0]
+  let bestEstimate = estimatedOneRepMax(best.weight, best.reps, null)
+  if (bestEstimate.status !== 'complete') return { status: 'invalid', value: null, issues: bestEstimate.issues }
+  for (const set of sets.slice(1)) {
+    const estimate = estimatedOneRepMax(set.weight, set.reps, null)
+    if (estimate.status !== 'complete') return { status: 'invalid', value: null, issues: estimate.issues }
+    if (estimate.value > bestEstimate.value) {
+      best = set
+      bestEstimate = estimate
+    }
+  }
+  return { status: 'complete', value: best, issues: [] }
 }
 
 function knownType(value: string): value is KnownRecordType {

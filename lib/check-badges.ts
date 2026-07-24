@@ -2,6 +2,7 @@
 import { computeStreak } from './streak'
 import { projectRestDates } from './project-rest-days'
 import { getLevelFromXP, getLevelTitle } from './gamification'
+import { legacyTonnage } from './progression'
 
 export interface Badge {
   id: string
@@ -40,7 +41,7 @@ async function getConditionValue(userId: string, conditionType: string, supabase
     }
     case 'total_volume': {
       const { data } = await supabase.from('workout_sets').select('weight, reps').eq('user_id', userId)
-      return (data || []).reduce((s: number, r: any) => s + (r.weight || 0) * (r.reps || 0), 0)
+      return legacyTonnage(data || [])
     }
     case 'pr_count': {
       const { data } = await supabase.from('workout_sessions').select('personal_records').eq('user_id', userId).not('personal_records', 'is', null)

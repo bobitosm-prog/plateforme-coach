@@ -57,15 +57,20 @@ assistance machine n'est déduite sans unité et règle explicites.
 
 ## Consommateurs migrés et équivalence
 
-`AnalyticsSection` utilise désormais `estimatedOneRepMax` pour la formule Epley
-arrondie au dixième et `percentageChangeLegacy` pour la variation entre les deux
-dernières semaines présentes. Les lectures, filtres, props, textes, formes de
-sortie et valeurs visibles ne changent pas. Une garde statique empêche le retour
-des deux formules locales.
+`AnalyticsSection` utilise `estimatedOneRepMax` pour la formule Epley arrondie
+au dixième et `percentageChangeLegacy` pour la variation entre les deux
+dernières semaines présentes. `useAnalytics`, la fin de séance et les vues
+dashboard réutilisent maintenant les mêmes autorités Epley/tonnage. Les
+lectures, filtres, props, textes, formes de sortie et valeurs visibles ne
+changent pas.
 
 Les autres calculs restent en place lorsqu'une divergence existe sur la source,
 la fenêtre, l'arrondi ou le traitement de l'absence. Ils seront raccordés après
 la création des read models, pas par substitution implicite.
+
+La [matrice d'autorité RC1](PROGRESSION_AGGREGATION_AUTHORITY.md) classe ces
+variantes et la garde `npm run progression:authority:check` empêche le retour
+des duplications de formules couvertes dans les composants et hooks.
 
 ## Limites conservées
 

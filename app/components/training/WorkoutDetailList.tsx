@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
 import { summarizeWorkoutDetail, type WorkoutExerciseDetail } from '../../../lib/training/session-history'
+import { legacyTonnage } from '../../../lib/progression'
 
 interface WorkoutDetailListProps {
   detail: WorkoutExerciseDetail[]
@@ -78,7 +79,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
               <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, width: 22, height: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.reps || 0}</span>
-              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{((set.weight || 0) * (set.reps || 0)).toLocaleString(locale)} kg</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{legacyTonnage([set]).toLocaleString(locale)} kg</span>
             </div>
           ))}
         </div>

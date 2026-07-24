@@ -15,6 +15,7 @@ import { colors, fonts } from '../../lib/design-tokens'
 import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle } from '../../lib/gamification'
 import { getRestSeconds } from '../../lib/utils/exercise'
+import { legacyTonnage } from '../../lib/progression'
 
 /* ═══════════════════════════════════════════════════
    TYPES
@@ -214,7 +215,7 @@ export default function DesktopDashboard({
           const day = jsToFr[new Date(s.created_at).getDay()]
           const sc = (s.duration_minutes || 0) * 8; cal += sc
           if (byDay[day]) byDay[day].calories += sc
-          ;(s.workout_sets || []).forEach((st: any) => { const v = (st.weight || 0) * (st.reps || 0); vol += v; if (byDay[day]) byDay[day].volume += v })
+          ;(s.workout_sets || []).forEach((st: any) => { const v = legacyTonnage([st]); vol += v; if (byDay[day]) byDay[day].volume += v })
         })
         setWeeklyData(DAYS_FR.map(d => ({ day: d, calories: byDay[d].calories, volume: Math.round(byDay[d].volume) })))
         setWeekSessions(data.length); setWeekVolume(vol); setWeekCalories(cal)
@@ -502,7 +503,7 @@ function DashboardView({ weeklyData, weekSessions, weekCalories, weekVolume, wee
         <CardTitle title="Dernieres Seances" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {recentSessions.length > 0 ? recentSessions.slice(0, 3).map((s: any, i: number) => {
-            const vol = (s.workout_sets || []).reduce((a: number, ws: any) => a + (ws.weight || 0) * (ws.reps || 0), 0)
+            const vol = legacyTonnage(s.workout_sets || [])
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                 <Activity size={13} color={GOLD} />
@@ -575,7 +576,7 @@ function TrainingView({ todaySessionInfo, todaySessionDone, weekProgram, todayKe
         <CardTitle title="Dernieres Seances" chevron />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {recentSessions.slice(0, 6).map((s: any, i: number) => {
-            const vol = (s.workout_sets || []).reduce((a: number, ws: any) => a + (ws.weight || 0) * (ws.reps || 0), 0)
+            const vol = legacyTonnage(s.workout_sets || [])
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
                 <Activity size={13} color={GOLD} />

@@ -37,6 +37,7 @@ import SectionTitle from '../ui/SectionTitle'
 import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
+import { legacyTonnage } from '../../../lib/progression'
 
 /**
  * Get daily quote index — deterministic per day of year.
@@ -246,7 +247,7 @@ export default function HomeTab({
     supabase.from('workout_sets').select('weight, reps').eq('user_id', userId)
       .gte('created_at', oneWeekAgo).limit(500)
       .then(({ data }: any) => {
-        const vol = (data || []).reduce((sum: number, s: any) => sum + ((Number(s.weight) || 0) * (Number(s.reps) || 0)), 0)
+        const vol = legacyTonnage(data || [])
         setWeekVolume(Math.round(vol))
       })
 

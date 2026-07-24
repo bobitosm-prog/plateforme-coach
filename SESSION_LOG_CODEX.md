@@ -10517,3 +10517,40 @@ ESLint ciblé ; contrôle des liens et `git diff --check`.
 
 **Prochaine action :** démontrer que les agrégations Progression ne sont plus
 recalculées dans plusieurs composants, sans masquer les divergences de sources.
+
+## Entrée — 2026-07-24 — Autorités des agrégations Progression
+
+**Travail effectué :** inventaire des agrégations Progression, matrice
+d'autorité, migration de deux duplications Epley et de dix calculs de tonnage
+vers `lib/progression/`, puis garde AST couvrant tout `app/` et tout `lib/`
+hors noyau autoritaire.
+
+**Tâches cochées :** aucune case RC1. Le critère Phase 4 « agrégations non
+recalculées dans plusieurs composants » passe de `partial` à `met`.
+
+**Décisions prises :** les historiques `workout_sessions`,
+`completed_sessions` et `scheduled_sessions`, les fenêtres 7/28/30 jours,
+le mois civil et les stratégies hebdomadaires locale/local-UTC restent
+distincts. Les présenters ne sont pas traités comme autorités métier.
+
+**Problèmes rencontrés :** le dashboard desktop recalculait trois fois le
+tonnage ; `useAnalytics` et la fin de séance reproduisaient Epley. Toutes ces
+duplications étaient équivalentes et ont été raccordées sans changer le rendu.
+
+**Risques ou dette restante :** le dernier critère Phase 4 reste `unmet` :
+les fixtures Nutrition comportent encore des résultats `divergent` et
+`partial`. La garde couvre les formules Epley et tonnage connues ; les nouvelles
+familles devront être ajoutées avec leurs fixtures lors de leur centralisation.
+
+**Tests exécutés :** garde Progression, tests ciblés d'autorité et
+d'équivalence, tests Progression existants, suite complète, TypeScript, ESLint
+ciblé, liens et `git diff --check`.
+
+**Mesures avant/après :** duplications Epley 2 → 0 ; multiplications
+poids×répétitions dans les consommateurs Progression 10 → 0 ; deux contrats
+internes Training distincts conservés comme exceptions exactes.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** statuer sur la concordance des anciennes et nouvelles
+métriques Phase 4 sans masquer les fixtures `divergent` et `partial`.

@@ -320,3 +320,14 @@ sets sans `exercise_id`, jours Nutrition absents et résultats déterministes.
 Chaque fixture indiquera la source, la timezone, l'horloge, l'unité, le statut
 attendu et les éléments exclus. Aucun test ne devra inventer une correspondance
 entre les deux historiques de séance.
+
+## 12. Audit d'autorité RC1
+
+La [matrice d'autorité](PROGRESSION_AGGREGATION_AUTHORITY.md) remplace les
+anciens numéros de ligne comme preuve active. Les formules Epley et tonnage
+réutilisent désormais `lib/progression/` dans les consommateurs ; les variantes
+de sources, fenêtres et timezones restent séparées et nommées.
+
+La garde `npm run progression:authority:check` parcourt tout `app/` et les
+consommateurs métier `lib/` explicitement concernés. Elle refuse une nouvelle
+formule Epley ou poids×répétitions hors noyau partagé.

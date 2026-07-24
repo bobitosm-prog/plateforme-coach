@@ -14,6 +14,7 @@ import { abortSignalToAiCancellation, createAnthropicProvider, promptInvocationT
 import { createAiOutputValidator, weeklyDiagnosticOutputSchema } from '../ai/schemas'
 import type { AiRecordedTokens } from '../ai/usage/types'
 import { getAnthropicMessagesUrl } from '../anthropic/chat-transport'
+import { legacyTonnage } from '../progression'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -146,8 +147,7 @@ export async function generateWeeklyDiagnostic(
         .eq('completed', true)
 
       if (sets) {
-        trainingVolumeTotal = sets.reduce((sum: number, set: { weight: number | null; reps: number | null }) =>
-          sum + ((set.weight || 0) * (set.reps || 0)), 0)
+        trainingVolumeTotal = legacyTonnage(sets)
       }
     }
 

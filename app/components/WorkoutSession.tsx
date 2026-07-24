@@ -10,6 +10,7 @@ import { initAudio } from '../../lib/timer-audio'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
+import { legacyTonnage } from '../../lib/progression'
 import { discardWorkoutDraftSnapshot, restoreWorkoutDraftSnapshot, saveWorkoutDraftSnapshot } from '../../lib/training/workout-draft-sync'
 import { useWorkoutRuntime } from '../hooks/useWorkoutRuntime'
 import { WorkoutDraftResumeView } from './training/workout-session/WorkoutDraftResumeView'
@@ -22,7 +23,6 @@ import { WorkoutExerciseEditor } from './training/workout-session/WorkoutExercis
 import { WorkoutSessionOverlays } from './training/workout-session/WorkoutSessionOverlays'
 import DeferredVideo from './media/DeferredVideo'
 import type { WorkoutExerciseInfo, WorkoutExerciseVariant, WorkoutSessionExercise as Exo, WorkoutSessionSet as ExSet, WorkoutTempoExecutorState, WorkoutTempoModalState, WorkoutVariantPopupState } from './training/workout-session/types'
-
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -314,7 +314,9 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
-  const volume = exos.reduce((v, e) => v + e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0), 0)
+  const volume = exos.reduce((value, exercise) =>
+    value + legacyTonnage(exercise.sets.filter(set => set.done && set.weight && set.reps)
+      .map(set => ({ weight: Number(set.weight), reps: Number(set.reps) }))), 0)
   const pct = total > 0 ? (completed / total) * 100 : 0
 
   const finish = () => {

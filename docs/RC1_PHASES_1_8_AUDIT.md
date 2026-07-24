@@ -8,7 +8,7 @@
 
 Les checklists des Phases 1 à 8 totalisent **124/124 tâches cochées**. Ce
 compteur ne prouve pas leurs définitions de terminé. Sur 36 critères de sortie,
-l'audit classe **32 `met`, 1 `partial`, 2 `unmet`, 1 `blocked` et
+l'audit classe **33 `met`, 0 `partial`, 2 `unmet`, 1 `blocked` et
 0 `not_applicable`**.
 
 | Phase | Checklist | Critères (`met/partial/unmet/blocked/n/a`) | Statut |
@@ -16,7 +16,7 @@ l'audit classe **32 `met`, 1 `partial`, 2 `unmet`, 1 `blocked` et
 | 1 — Stabilisation et sécurité | 15/15 | 4/0/0/0/0 | `met` |
 | 2 — Filet de sécurité | 18/18 | 5/0/0/0/0 | `met` |
 | 3 — Training | 27/27 | 6/0/0/0/0 | `met` |
-| 4 — Nutrition et progression | 16/16 | 2/1/1/0/0 | `partial` |
+| 4 — Nutrition et progression | 16/16 | 3/0/1/0/0 | `partial` |
 | 5 — Coaching et messagerie | 12/12 | 4/0/0/0/0 | `met` |
 | 6 — Billing | 10/10 | 3/0/0/1/0 | `blocked` |
 | 7 — Plateforme IA | 13/13 | 4/0/0/0/0 | `met` |
@@ -88,7 +88,7 @@ donnée distante.
 |---|---|---|
 | Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md) et [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md). |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
-| Agrégations non dupliquées | `partial` | [`PROGRESSION_AGGREGATIONS.md`](PROGRESSION_AGGREGATIONS.md) conserve des calculs en place quand les sources divergent. |
+| Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
 | Anciennes/nouvelles métriques concordantes | `unmet` | La matrice Nutrition versionnée compte 2 `divergent` et 2 `partial`; les divergences sont volontairement visibles. |
 
 ## Phase 5 — `met`
@@ -156,6 +156,6 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Traiter le premier critère restant : démontrer que les agrégations Progression
-ne sont plus recalculées dans plusieurs composants, sans masquer les
-divergences de sources documentées.
+Traiter le premier critère restant : statuer honnêtement sur la concordance des
+anciennes et nouvelles métriques Phase 4, dont les fixtures Nutrition
+conservent actuellement des résultats `divergent` et `partial`.
