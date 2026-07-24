@@ -42,16 +42,17 @@ export function buildSavedMealFoodSnapshots(
 ): SavedMealSnapshotSuccess | SavedMealSnapshotFailure {
   const versioned: (SavedMealFoodSnapshotInput & VersionedLegacyNutritionEntry)[] = []
   const values: NutritionValues[] = []
+  const totalProvenance = source === 'imported_meal' ? 'imported' : 'calculated'
   for (const [index, food] of foods.entries()) {
     const initial = buildNutritionLegacySnapshot({
       source,
-      totalProvenance: source === 'saved_meal' ? 'calculated' : 'imported',
+      totalProvenance,
       legacy: food,
     })
     if (!initial.ok) return { ...initial, paths: initial.paths.map(path => `foods.${index}.${path}`) }
     const result = buildNutritionLegacySnapshot({
       source,
-      totalProvenance: source === 'saved_meal' ? 'calculated' : 'imported',
+      totalProvenance,
       legacy: food,
       calculated: initial.snapshot.values,
     })

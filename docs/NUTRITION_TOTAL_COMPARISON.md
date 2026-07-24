@@ -19,7 +19,7 @@ fausses et sans transformer une valeur absente en zéro canonique.
 | `useFoodLog`, `FoodSearch`, `BarcodeScanner` | catalogue/custom par 100 g | multiplication par quantité puis arrondi par aliment | arrondi kcal à l'unité et macros au dixième avant agrégation |
 | `parseMealPlan` puis `computeDayTotals` | coach `kcal/prot/carb/fat` et IA `calories/proteines/glucides/lipides` | coercition tolérante puis somme repas/journée | valeur absente ou invalide coercée à zéro ; fibres non représentées |
 | `NutritionSavedMealsSection` | aliments sauvegardés singuliers `calories/protein/carbs/fat` | somme puis arrondi d'affichage | certains producteurs enregistrent `proteins/fats`, invisibles pour ce calcul |
-| sauvegarde/édition des repas | `total_calories/total_proteins/total_carbs/total_fats` | somme avec alias partiels et fallback zéro | totaux déclarés et éléments JSON peuvent diverger |
+| sauvegarde/édition des repas | colonnes SQL singulières et alias JSON singuliers/pluriels | snapshot v1, agrégation sans fallback et refus des conflits | les nouvelles écritures sont traçables ; les lignes historiques ne sont pas réécrites |
 | `NutritionPlanContent` | totaux du jour ou fallback plan/profil | priorité aux totaux strictement positifs | un zéro explicite peut déclencher le fallback d'affichage |
 
 Ces familles restent distinctes. Le comparateur ne fusionne ni
@@ -105,6 +105,12 @@ La distribution reste donc volontairement **4 `equivalent`, 2
 `within_tolerance`, 2 `divergent`, 2 `partial`, 1 `unavailable`, 1 `invalid`**.
 La correction effectuée ne requalifie aucune preuve : elle empêche seulement
 la fibre absente des deux cas partiels d'apparaître comme un zéro comparable.
+
+Depuis le 24 juillet 2026, les trois producteurs sûrs de `saved_meals`
+utilisent le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md). Cela empêche une
+nouvelle perte silencieuse d'alias dans ces écritures, sans modifier les douze
+preuves. Les deux divergences historiques restent donc `divergent` et le
+critère global de concordance reste non satisfait.
 
 ## Analyse des quatre cas sensibles
 

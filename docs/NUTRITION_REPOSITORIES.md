@@ -37,6 +37,12 @@ et la RLS du client injecté reste obligatoire.
 - Aucune mutation n'est incluse. Les futures écritures devront vivre dans des
   modules d'autorité séparés et server-only lorsque nécessaire.
 
+Les payloads client existants de `saved_meals` sont préparés hors repository
+par la frontière pure et typée
+[`saved-meal-persistence.ts`](../lib/nutrition/saved-meal-persistence.ts).
+Elle utilise `TablesInsert`/`TablesUpdate`, projette uniquement les colonnes
+singulières réelles et refuse les conflits d'alias avant l'appel Supabase.
+
 ## Limites de schéma
 
 Seules les colonnes de `lib/supabase/database.types.ts` sont projetées. Les

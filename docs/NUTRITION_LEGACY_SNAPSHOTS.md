@@ -7,9 +7,9 @@
 
 | Producteur | Entrée | Forme persistée | Alias/totaux | Perte ou version | Consommateurs | Décision |
 |---|---|---|---|---|---|---|
-| Sauvegarde d'un repas depuis le journal, `NutritionTab.onStartSave/onSaveMeal` | lignes `daily_food_logs`, macros singulières | `saved_meals.foods` avec `proteins/fats`; colonnes `total_*` | total recalculé par `reduce`; aucune valeur déclarée séparée | `protein` renommé `proteins`; aucune version | onglet repas, overlay de réutilisation, copie vers journal | producteur différé : contrat de colonnes runtime divergent des types générés |
-| Éditeur de repas sauvegardé, `onSaveEdit` | JSON historique singulier ou pluriel | remplace `foods` et `total_*` | fallback `protein || proteins || 0`, idem lipides | zéro et conflit d'alias peuvent être masqués | onglet repas et réutilisation | différé : exige un état d'erreur UI explicite avant migration |
-| Création d'un repas vide | nom/type, aucun aliment | `saved_meals`, `foods: []` | aucun total | non versionné | éditeur | pas de snapshot nutritionnel à versionner |
+| Sauvegarde d'un repas depuis le journal, `NutritionTab.onStartSave/onSaveMeal` | lignes `daily_food_logs`, macros singulières projetées en alias pluriels historiques | `saved_meals.foods` versionné ; colonnes SQL singulières | total calculé sans fallback de valeur inconnue | alias conservés dans `observedAliases` | onglet repas, overlay de réutilisation, copie vers journal | migré vers `prepareSavedMealInsert` |
+| Éditeur de repas sauvegardé, `onSaveEdit` | JSON historique singulier ou pluriel | remplace `foods` et les quatre colonnes de totaux singulières | conflit détecté avant agrégation | `alias_conflict` empêche l'écriture et affiche une erreur stable | onglet repas et réutilisation | migré vers `prepareSavedMealUpdate` |
+| Création d'un repas vide | nom/type, aucun aliment | `saved_meals`, `foods: []` | aucun total écrit | aucun snapshot alimentaire vide inventé | éditeur | migré vers `prepareEmptySavedMealInsert` |
 | Recettes manuelles/IA, `RecipesSection` | sortie IA ou formulaire | colonnes `recipes.*_per_serving`, ingrédients JSON | vocabulaire `proteins_per_serving` | provenance `source`, mais pas de version nutritionnelle | section recettes | différé : densité des ingrédients non démontrée |
 | Journal manuel/recherche | catalogue ou aliment personnalisé | colonnes `daily_food_logs` singulières | quantité appliquée et arrondie avant insertion | fibres généralement absentes | journal, analytics, diagnostic | différé : table structurée, pas un snapshot JSON |
 | Scanner code-barres | Open Food Facts/catalogue | `custom_foods`, `community_foods`, puis journal | alias par 100 g variables | écritures séquentielles ; provenance partielle | scanner, journal | différé : plusieurs autorités et bases |
@@ -20,10 +20,25 @@
 | Génération IA coach/client | catalogue + profil | formats de plan précédents | arrondis aliment/jour | provenance IA connue hors snapshot | routes/services et UI | différé : ne pas modifier les contrats IA ici |
 | Projections UI legacy | JSON/table existants | aucune écriture | lecteurs singulier/pluriel hétérogènes | alias parfois perdus à la lecture | `NutritionSavedMealsSection`, overlays, parseur plan | lecture des repas sauvegardés migrée |
 
-Les types générés exposent `saved_meals.total_protein` et `total_fat`, tandis
-que le producteur historique écrit `total_proteins` et `total_fats`. Cette
-divergence empêche d'ajouter honnêtement une métadonnée agrégée au niveau SQL
-sans migration de schéma, interdite dans cette tranche.
+## Contrat SQL recoupé
+
+La migration `20260415_master_rls_fix.sql` et
+`lib/supabase/database.types.ts` concordent. `Row` contient exactement :
+`id`, `user_id`, `name`, `meal_type`, `foods`, `total_calories`,
+`total_protein`, `total_carbs`, `total_fat`, `created_at`. `Insert` rend
+`name` obligatoire et les neuf autres champs optionnels. `Update` rend les dix
+champs optionnels.
+
+`total_proteins`, `total_fats` et `use_count` ne sont pas des colonnes
+contractuelles. Les deux premiers sont uniquement des formes JSON/UI legacy.
+La mutation historique de `use_count` reste une dette distincte.
+
+Avant migration, sauvegarde et édition envoyaient
+`total_calories/total_proteins/total_carbs/total_fats` et résolvaient les alias
+par `|| 0`. Après migration, les payloads typés
+`TablesInsert<'saved_meals'>` et `TablesUpdate<'saved_meals'>` envoient
+`total_calories/total_protein/total_carbs/total_fat`. Les alias originaux
+restent dans chaque objet de `foods` et dans son `_nutrition_snapshot`.
 
 ## Contrat versionné
 
@@ -63,24 +78,31 @@ preuve historique `protein: 0` contre 18 g n'est pas reclassée.
 
 ## Producteurs migrés et différés
 
-Cette tranche migre uniquement la **lecture** des snapshots de repas sauvegardés
-et livre le constructeur pur `buildSavedMealFoodSnapshots`. Aucun producteur
-persistant n'est migré : l'incohérence des noms de colonnes `total_*`, les
-fallbacks de l'éditeur et l'absence d'un retour d'erreur UI démontré empêchent
-une écriture sûre.
+Les trois producteurs sûrs passent par
+`lib/nutrition/saved-meal-persistence.ts` : création vide, sauvegarde depuis
+le journal (`source: daily_food_log`) et édition (`source: saved_meal`).
 
-La garde statique interdit la construction manuelle de `_nutrition_snapshot`
-ou `schemaVersion: 1` sous `app/`. Les futurs producteurs doivent passer par la
-frontière pure, traiter explicitement son résultat discriminé, puis conserver
-leur payload public existant.
+Une valeur absente produit `null` dans le total SQL ; zéro reste zéro. Deux
+alias identiques sont conservés. Deux alias contradictoires produisent
+`alias_conflict`, aucune écriture Supabase n'est lancée et toute correction
+efface l'alerte pour permettre un retry. L'alerte accessible ne contient ni
+chemin, ni valeur, ni erreur Supabase. Les pannes persistantes utilisent un
+message générique distinct.
+
+La garde statique interdit aux producteurs de construire manuellement
+`_nutrition_snapshot`, d'écrire les colonnes pluriels ou de contourner les
+préparateurs communs. Les imports/copies/réutilisations écrivent dans
+`daily_food_logs`, pas dans `saved_meals`; ils restent différés.
 
 ## Limites et prochaine tranche
 
 - Aucun historique n'est réécrit.
 - Aucun total déclaré incohérent n'est corrigé.
 - Les plans, recettes, journaux, imports et sorties IA restent non versionnés.
+- La réutilisation vers `daily_food_logs` conserve encore une priorité
+  silencieuse entre alias et un `use_count` absent du schéma typé.
 - La Phase 4 reste `partial`.
 
-La prochaine tranche minimale est de caractériser puis migrer séparément
-`saved_meals` avec un contrat de colonnes confirmé et un état UI explicite pour
-`alias_conflict`, avant toute écriture versionnée.
+La prochaine tranche minimale est de caractériser puis sécuriser la
+réutilisation de `saved_meals` vers `daily_food_logs`, avec refus des conflits
+d'alias et décision explicite sur le compteur `use_count`.

@@ -10638,3 +10638,48 @@ inchangées, SHA-256
 **Prochaine action :** caractériser puis migrer le producteur `saved_meals`
 avec le contrat réel des colonnes et un état UI explicite pour
 `alias_conflict`.
+
+## Entrée — 2026-07-24 — Producteurs `saved_meals` versionnés
+
+**Travail effectué :** recoupement de la migration, des types générés, du
+repository read-only et des consommateurs ; caractérisation des payloads
+création/édition ; ajout d'une frontière pure typée Insert/Update ; migration
+de la création vide, de la sauvegarde journal et de l'édition vers le snapshot
+Nutrition v1.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial` et son dernier
+critère reste `unmet`, car les deux divergences historiques ne sont ni
+réécrites ni requalifiées.
+
+**Décisions prises :** seules les colonnes réelles `total_calories`,
+`total_protein`, `total_carbs`, `total_fat` sont persistées. Les alias
+`protein/proteins` et `fat/fats` restent dans `foods` et
+`observedAliases`. Une inconnue produit `null`, zéro reste zéro.
+
+**Problèmes rencontrés :** `total_proteins`, `total_fats` et `use_count`
+n'existent pas dans les types ou la migration de `saved_meals`. Les deux
+premiers ont été retirés des payloads nutritionnels ; `use_count` reste une
+dette distincte du flux de réutilisation.
+
+**Risques ou dette restante :** la copie/réutilisation vers
+`daily_food_logs` choisit encore silencieusement entre alias et utilise un
+compteur non typé. Plans, recettes, journaux, imports et sorties IA restent
+hors snapshot.
+
+**Tests exécutés :** payloads Insert/Update exacts, zéro/inconnu, chaque alias,
+alias identiques et contradictoires, messages expurgés, immutabilité, rendu
+accessible de l'alerte et gardes statiques (46/46 ciblés) ; suite complète
+237 fichiers, 1 939 tests réussis et 3 `todo` ; TypeScript vert ; ESLint des
+nouvelles frontières vert. `NutritionTab` conserve sa dette historique de
+18 erreurs et 3 avertissements, sans nouvelle occurrence.
+
+**Mesures avant/après :** producteurs persistants `saved_meals` versionnés
+0 → 2, plus création vide validée ; payloads avec colonnes pluriels 2 → 0 ;
+fixtures historiques inchangées, SHA-256
+`cb9afe859dcf7a20b2adf41f20646e51d78a43e5dc5e8e6607e44b0ddc8d0f08`.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis sécuriser la réutilisation de
+`saved_meals` vers `daily_food_logs`, avec refus des conflits d'alias et
+décision explicite sur `use_count`.
