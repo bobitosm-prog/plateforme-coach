@@ -254,7 +254,7 @@ Le parcours invitation Playwright est documenté dans [`docs/E2E_INVITATION_HARN
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : checklist terminée — 18 tâches sur 18 ; définition de terminé partielle en audit RC1, faute de preuve exhaustive que toute nouvelle fonctionnalité utilise les factories Supabase**
+**Statut : Phase 2 terminée — 18 tâches sur 18 ; définition de terminé validée par la garde fail-closed des constructions Supabase**
 
 ### Pourquoi
 

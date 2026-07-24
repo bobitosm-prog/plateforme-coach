@@ -10482,3 +10482,38 @@ diagnostic `environment_variance` inchangé.
 
 **Prochaine action :** rendre automatisable et prouver le critère Phase 2
 « les nouvelles fonctionnalités utilisent les factories Supabase ».
+
+## Entrée — 2026-07-24 — Garde des constructions Supabase
+
+**Travail effectué :** inventaire AST des constructions Supabase dans `app/`,
+`lib/` et `proxy.ts`; ajout d'une baseline exacte et d'une garde fail-closed
+indépendante de Git ; documentation des factories et de la réduction naturelle
+de la dette.
+
+**Tâches cochées :** aucune case RC1. Le critère de définition de terminé
+Phase 2 sur l'usage des factories passe de `partial` à `met`.
+
+**Décisions prises :** quatre constructions canoniques sont autorisées :
+`lib/supabase/browser.ts`, `lib/supabase/server.ts`,
+`lib/supabase/admin.ts` et `proxy.ts`. Les 53 constructions legacy restent
+figées individuellement par fichier, ligne, colonne et constructeur.
+
+**Problèmes rencontrés :** aucune migration legacy n'était nécessaire pour
+prouver la règle prospective. La première exécution a confirmé la baseline
+historique de 53 occurrences.
+
+**Risques ou dette restante :** 19 constructions browser, 19 server et
+15 administration directes restent à migrer par tranches. Elles ne peuvent
+être déplacées, multipliées ou complétées sans faire échouer la garde.
+
+**Tests exécutés :** `npm run supabase:factories:check`; 48 tests ciblés ;
+`npm test` (229 fichiers, 1 883 tests actifs, 3 `todo`) ; `npx tsc --noEmit` ;
+ESLint ciblé ; contrôle des liens et `git diff --check`.
+
+**Mesures avant/après :** 57 constructions avant et après : 4 canoniques,
+53 legacy ; nouvelles constructions non déclarées autorisées : 0.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** démontrer que les agrégations Progression ne sont plus
+recalculées dans plusieurs composants, sans masquer les divergences de sources.

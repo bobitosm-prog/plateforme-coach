@@ -8,13 +8,13 @@
 
 Les checklists des Phases 1 à 8 totalisent **124/124 tâches cochées**. Ce
 compteur ne prouve pas leurs définitions de terminé. Sur 36 critères de sortie,
-l'audit classe **31 `met`, 2 `partial`, 2 `unmet`, 1 `blocked` et
+l'audit classe **32 `met`, 1 `partial`, 2 `unmet`, 1 `blocked` et
 0 `not_applicable`**.
 
 | Phase | Checklist | Critères (`met/partial/unmet/blocked/n/a`) | Statut |
 |---|---:|---:|---|
 | 1 — Stabilisation et sécurité | 15/15 | 4/0/0/0/0 | `met` |
-| 2 — Filet de sécurité | 18/18 | 4/1/0/0/0 | `partial` |
+| 2 — Filet de sécurité | 18/18 | 5/0/0/0/0 | `met` |
 | 3 — Training | 27/27 | 6/0/0/0/0 | `met` |
 | 4 — Nutrition et progression | 16/16 | 2/1/1/0/0 | `partial` |
 | 5 — Coaching et messagerie | 12/12 | 4/0/0/0/0 | `met` |
@@ -22,9 +22,9 @@ l'audit classe **31 `met`, 2 `partial`, 2 `unmet`, 1 `blocked` et
 | 7 — Plateforme IA | 13/13 | 4/0/0/0/0 | `met` |
 | 8 — React et performance | 13/13 | 4/0/1/0/0 | `partial` |
 
-La validation RC1 « Phases 1 à 8 terminées à 100 % » est donc impossible. Le
-premier blocage réel est la Phase 2 dans l'ordre de la roadmap ; le blocage
-externe le plus net est la preuve de préproduction exigée en Phase 6.
+La validation RC1 « Phases 1 à 8 terminées à 100 % » reste impossible. Le
+premier critère non satisfait est désormais en Phase 4 ; le blocage externe le
+plus net est la preuve de préproduction exigée en Phase 6.
 
 ## Méthode reproductible
 
@@ -60,14 +60,14 @@ disponible ; `not_applicable`, que le critère ne s'applique pas.
 | Invitation, checkout, push et chat en E2E | `met` | [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) et harness E2E invitation/checkout/push/chat, cinq parcours locaux datés du 15 juillet 2026. |
 | Rollback documenté | `met` | [`PHASE_1_ROLLBACK.md`](PHASE_1_ROLLBACK.md) ; procédure documentaire, non exercice de production. |
 
-## Phase 2 — `partial`
+## Phase 2 — `met`
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
 | Commandes unitaires/intégration/E2E distinctes | `met` | [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) et scripts `package.json`. |
 | Aucun test en configuration production | `met` | Gardes localhost du même document ; ne prouve pas un environnement distant. |
 | Au moins huit routes sur les contrats communs | `met` | [`API_SIMPLE_ROUTE_MIGRATION.md`](API_SIMPLE_ROUTE_MIGRATION.md), inventaire de huit routes. |
-| Toute nouvelle fonctionnalité utilise les factories | `partial` | [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md) confirme encore 53 constructions legacy ; aucune garde historique ne permet d'attribuer exhaustivement chaque ajout postérieur. |
+| Toute nouvelle fonctionnalité utilise les factories | `met` | [`SUPABASE_CLIENT_CONSTRUCTION_GUARD.md`](SUPABASE_CLIENT_CONSTRUCTION_GUARD.md) fige 53 constructions legacy par fichier/position et refuse toute addition, duplication, déplacement ou entrée obsolète sans dépendre de Git. |
 | Dix accès migrés équivalents | `met` | Inventaire et tests de contrat dans [`SUPABASE_ACCESS_MIGRATION.md`](SUPABASE_ACCESS_MIGRATION.md). |
 
 ## Phase 3 — `met`
@@ -148,15 +148,14 @@ une métrique terrain.
 
 - La roadmap Phases 1–9 contient 138 tâches, dont 124 cochées : **≈89,855 %**.
 - Les 38 cases RC1 et les 14 tâches Phase 9 restent décochées.
-- Les statuts Phase 2, 4 et 6 ont été corrigés pour ne plus confondre checklist
-  terminée et définition satisfaite. Phase 8 était déjà explicitement ouverte.
+- Le statut Phase 2 passe à `met` grâce à une garde fail-closed reproductible ;
+  les Phases 4, 6 et 8 restent non satisfaites.
 - Aucun item n'est compté deux fois dans les tableaux de phases.
-- RC1 est bloquée par les preuves manquantes/contradictoires des Phases 2, 4,
-  6 et 8 ; aucune de ces dettes n'est corrigée dans cet audit.
+- RC1 reste bloquée par les preuves manquantes/contradictoires des Phases 4, 6
+  et 8.
 
 ## Recommandation unique
 
-Produire une décision RC1 explicite sur le premier critère non démontré :
-établir une garde reproductible prouvant que toute nouvelle fonctionnalité
-utilise les factories Supabase, ou reformuler ce critère prospectif en contrôle
-automatisable avant de poursuivre les autres validations RC1.
+Traiter le premier critère restant : démontrer que les agrégations Progression
+ne sont plus recalculées dans plusieurs composants, sans masquer les
+divergences de sources documentées.

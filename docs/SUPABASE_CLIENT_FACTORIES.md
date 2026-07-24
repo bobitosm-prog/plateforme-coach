@@ -66,3 +66,7 @@ Posséder la service-role n'est jamais une preuve d'autorisation. La route doit 
 Les créations restantes seront migrées par tranches : caractérisation, remplacement par la factory appropriée, suppression de la lecture d'environnement locale, typecheck tables/vues/RPC, puis tests RLS/E2E. Un client session ne devient jamais admin par migration mécanique.
 
 La stratégie locale est décrite dans [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md). Les frontières de données injectées sont documentées dans [`SUPABASE_REPOSITORIES.md`](SUPABASE_REPOSITORIES.md).
+
+La garde RC1 qui interdit toute nouvelle construction directe et fige les
+53 occurrences legacy restantes est documentée dans
+[`SUPABASE_CLIENT_CONSTRUCTION_GUARD.md`](SUPABASE_CLIENT_CONSTRUCTION_GUARD.md).
