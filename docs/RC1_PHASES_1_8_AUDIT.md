@@ -156,9 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Implémenter les types, validateurs et adaptateurs read-only de
-`NutritionPlanEnvelopeV1` et des formes legacy conformément à
-[l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md), sans migrer de
-producteur. La décision d'architecture ne requalifie aucune preuve historique :
-les valeurs observées mélangent toujours objectifs, total du lundi et totaux
-journaliers.
+Caractériser puis raccorder la double lecture
+`NutritionPlanEnvelopeV1`/legacy dans un consommateur isolé, sans migrer
+d'écriture. La [frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
+[l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) ne requalifient
+aucune preuve historique : les valeurs observées mélangent toujours objectifs,
+total du lundi et totaux journaliers.

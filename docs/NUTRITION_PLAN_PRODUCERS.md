@@ -144,5 +144,8 @@ complété les jours, et le plan manuel persiste les valeurs d'éditeur.
 
 ## Prochaine étape
 
-Implémenter les types, validateurs et adaptateurs de lecture purs de
-`NutritionPlanEnvelopeV1` et des deux formes legacy, sans migrer de producteur.
+Les types, validateurs et adaptateurs de lecture purs de
+`NutritionPlanEnvelopeV1` et des deux formes legacy sont désormais disponibles
+sans migration de producteur dans
+[NUTRITION_PLAN_ENVELOPE.md](NUTRITION_PLAN_ENVELOPE.md). La prochaine tranche
+peut caractériser une double lecture dans un consommateur isolé, sans écriture.

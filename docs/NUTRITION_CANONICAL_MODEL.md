@@ -285,6 +285,11 @@ statut SQL par migration additive. Objectifs, totaux et provenance
 appartiennent à `NutritionPlanEnvelopeV1` dans `plan`. Aucune identité ou
 autorité RLS n'est dupliquée dans le JSON.
 
+La [frontière de lecture pure](NUTRITION_PLAN_ENVELOPE.md) valide cette
+enveloppe, conserve les totaux journaliers legacy à leur niveau d'origine et
+refuse les conflits d'alias, de document ou d'activation. Elle n'est encore
+raccordée à aucun consommateur.
+
 ### 9.1 `MealPlanDefinition`
 
 Un plan est un agrégat versionné :

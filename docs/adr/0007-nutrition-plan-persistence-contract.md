@@ -25,6 +25,11 @@ aliment v1 ne versionne pas l'enveloppe d'un plan.
 Cette décision fixe la cible. Elle ne prouve pas que le schéma distant est
 identique au schéma local et n'autorise aucune migration de producteur.
 
+Les types, validateurs et adaptateurs read-only de cette cible sont désormais
+implémentés et documentés dans
+[NUTRITION_PLAN_ENVELOPE.md](../NUTRITION_PLAN_ENVELOPE.md). Aucun consommateur
+runtime n'est raccordé.
+
 ## Décision
 
 ### Principes
@@ -87,7 +92,7 @@ La version 1 distingue sans heuristique le canonique des semaines JSON legacy :
   planVersion: integer >= 1,
   timezone: IANA timezone | null,
   content: {
-    days: exactly 7 ordered day snapshots,
+    days: exactly 7 ordered day snapshots with optional declared day totals,
     rules: bounded declarative rules,
     alternatives: explicit bounded alternatives
   },
@@ -119,7 +124,7 @@ Le JSON ne contient jamais `user_id`, `client_id`, `coach_id`, `created_by`,
 
 Les futures validations bornent le document sérialisé à 1 MiB, exactement
 sept jours, douze repas par jour, 64 éléments par repas, seize alternatives
-par élément et 128 warnings. Ce sont des limites du nouveau contrat, pas une
+par plan et 128 warnings. Ce sont des limites du nouveau contrat, pas une
 affirmation sur la conformité des lignes legacy.
 
 Les jours et repas utilisent le vocabulaire du
@@ -203,6 +208,7 @@ n'appartient à la migration initiale.
 ## Références
 
 - [Modèle Nutrition canonique](../NUTRITION_CANONICAL_MODEL.md)
+- [API de lecture des plans](../NUTRITION_PLAN_ENVELOPE.md)
 - [Producteurs de plans](../NUTRITION_PLAN_PRODUCERS.md)
 - [Repositories Nutrition](../NUTRITION_REPOSITORIES.md)
 - [Snapshots legacy](../NUTRITION_LEGACY_SNAPSHOTS.md)

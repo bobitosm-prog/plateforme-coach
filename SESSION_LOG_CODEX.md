@@ -10805,3 +10805,41 @@ repository modifié.
 **Prochaine action :** implémenter les types, validateurs et adaptateurs de
 lecture purs de `NutritionPlanEnvelopeV1` et des formes legacy, sans migrer de
 producteur.
+
+## Entrée — 2026-07-24 — Lecture pure des enveloppes de plans Nutrition
+
+**Travail effectué :** création des types et du schéma Zod strict
+`NutritionPlanEnvelopeV1`, adaptateurs des formes coach/IA françaises,
+double lecture canonique-prioritaire et lecteurs de lignes séparant le JSON
+des autorités SQL.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** les totaux IA legacy restent au niveau journée ; les
+totaux de plan ne sont jamais inventés. Les jours manquants, coach omis et IA
+vides ont des états distincts. Les jours anglais non démontrés sont refusés.
+`plan` et `active` restent prioritaires, avec conflits fail-closed.
+
+**Problèmes rencontrés :** aucune provenance historique ne permet de déclarer
+un total legacy calculé. Une enveloppe canonique invalide ne peut pas être
+masquée par `plan_data`.
+
+**Risques ou dette restante :** aucun producteur ou consommateur runtime n'est
+migré ; `week_start` et `status` n'existent toujours pas en SQL ; aucune donnée
+distante ou ligne réelle n'est observée.
+
+**Tests exécutés :** 45 tests Nutrition ciblés sur schéma, ordre des jours,
+timezone, bornes, 1 MiB, totaux, zéro/inconnu, alias, formes legacy, double
+lecture, activation, lignes, immutabilité, déterminisme, expurgation et pureté ;
+suite complète 244 fichiers, 2 007 tests réussis et 3 `todo` ; TypeScript,
+ESLint ciblé, liens et `git diff --check` verts.
+
+**Mesures :** 5 modules purs ; 2 formats legacy acceptés ; 5 statuts
+discriminés ; 0 consommateur, producteur, repository ou migration modifié.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis raccorder la double lecture
+`NutritionPlanEnvelopeV1`/legacy dans un consommateur isolé, sans migrer
+d'écriture.

@@ -78,3 +78,8 @@ dans l'enveloppe JSON avec provenance; `week_start` et le statut d'une
 affectation nécessitent une migration additive future. Tant que cette
 migration n'existe pas, aucune colonne runtime absente ne rejoint les
 projections des repositories.
+
+Les repositories ne dépendent pas de la
+[frontière de lecture des enveloppes](NUTRITION_PLAN_ENVELOPE.md). L'appelant
+pourra ultérieurement adapter leur JSON brut, mais cette tranche ne modifie ni
+projection, ni requête, ni scope.
