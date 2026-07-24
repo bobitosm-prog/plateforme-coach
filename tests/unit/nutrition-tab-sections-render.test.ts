@@ -40,4 +40,20 @@ describe('NutritionTab extracted section rendering', () => {
     expect(html).toContain('Repas test')
     expect(html).toContain('500 kcal')
   })
+
+  it('preserves plural aliases when rendering an unversioned saved meal', () => {
+    const props = { search: '', filter: 'all', locale: 'fr', labels: { title: 'Mes repas', search: 'Rechercher', all: 'Tous', breakfast: 'Petit-déjeuner', lunch: 'Déjeuner', dinner: 'Dîner', snack: 'Collation', empty: 'Aucun repas', create: 'Créer un repas' }, mealLabels: { dejeuner: 'Déjeuner' }, confirmDeleteId: null, onSearchChange: vi.fn(), onFilterChange: vi.fn(), onEdit: vi.fn(), onAskDelete: vi.fn(), onDelete: vi.fn(), onCreate: vi.fn() }
+    const html = renderToStaticMarkup(createElement(NutritionSavedMealsSection, {
+      ...props,
+      meals: [{
+        id: 'legacy-plural',
+        name: 'Alias historique',
+        meal_type: 'dejeuner',
+        foods: [{ calories: 200, proteins: 18, carbs: 15, fats: 6 }],
+      }],
+    }))
+    expect(html).toContain('200 kcal')
+    expect(html).toContain('18g P')
+    expect(html).toContain('6g L')
+  })
 })

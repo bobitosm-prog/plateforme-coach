@@ -167,4 +167,8 @@ Les tests de concordance figent :
 
 La correction minimale suivante consiste à versionner la provenance des
 totaux déclarés et à préserver les alias au moment de produire le snapshot
-legacy. Elle ne peut pas réparer rétroactivement une valeur déjà perdue.
+legacy. Le [contrat v1](NUTRITION_LEGACY_SNAPSHOTS.md) fournit désormais cette
+frontière pure et migre la lecture des repas sauvegardés. Les producteurs
+persistants restent différés tant que le contrat de colonnes et le traitement
+UI des conflits ne sont pas démontrés. Aucune valeur déjà perdue n'est
+reconstruite.

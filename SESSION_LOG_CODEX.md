@@ -10595,3 +10595,46 @@ SHA-256 des fixtures
 **Prochaine action :** versionner la provenance des totaux déclarés et
 préserver les alias lors de la production des snapshots legacy, sans réécrire
 les preuves historiques.
+
+## Entrée — 2026-07-24 — Snapshots Nutrition legacy versionnés
+
+**Travail effectué :** inventaire des producteurs Nutrition, définition du
+snapshot v1 pur, séparation des totaux calculés et déclarés, conservation des
+alias observés, détection fail-closed des conflits et compatibilité de lecture
+des objets historiques non versionnés. La vue des repas sauvegardés utilise
+désormais cette lecture commune.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial` et son dernier
+critère reste `unmet`.
+
+**Décisions prises :** `_nutrition_snapshot` est une enveloppe additive
+réservée, avec `schemaVersion: 1`, source et provenance bornées. Zéro reste
+distinct de l'inconnu ; `calculated` et `declared` ne s'écrasent jamais. Deux
+alias contradictoires retournent `alias_conflict`.
+
+**Problèmes rencontrés :** les types générés exposent
+`saved_meals.total_protein/total_fat`, tandis que les producteurs runtime
+écrivent `total_proteins/total_fats`. L'éditeur utilise encore des fallbacks
+`|| 0` et ne possède pas d'état d'erreur de conflit démontré.
+
+**Risques ou dette restante :** aucun producteur persistant n'est migré dans
+cette tranche ; plans, recettes, journaux, imports et IA restent non
+versionnés. Le constructeur `buildSavedMealFoodSnapshots` est prêt, mais son
+raccordement exige d'abord un contrat de colonnes et une UX d'erreur explicites.
+Les deux divergences historiques restent inchangées.
+
+**Tests exécutés :** tests du snapshot, alias, conflits, provenances,
+round-trip, immutabilité, compatibilité historique, garde statique, tests
+Nutrition ciblés, suite complète, TypeScript, ESLint, liens et
+`git diff --check`.
+
+**Mesures avant/après :** lecteurs de repas sauvegardés préservant les alias
+0 → 1 ; producteurs persistants versionnés 0 → 0 ; fixtures historiques
+inchangées, SHA-256
+`cb9afe859dcf7a20b2adf41f20646e51d78a43e5dc5e8e6607e44b0ddc8d0f08`.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis migrer le producteur `saved_meals`
+avec le contrat réel des colonnes et un état UI explicite pour
+`alias_conflict`.

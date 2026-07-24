@@ -160,6 +160,11 @@ canonique reste `divergent`, sans être automatiquement corrigé ni déclaré
 corrompu. Les alias admis et les tolérances appartiennent à un contrat
 versionné ; leur extension exige une preuve de producteur legacy.
 
+Le [contrat de snapshot legacy](NUTRITION_LEGACY_SNAPSHOTS.md) formalise cette
+provenance : valeurs calculées et déclarées restent séparées, les alias
+observés sont conservés et tout conflit est fail-closed. Les formats
+historiques sans version restent lisibles avec `legacy_unknown`.
+
 ## 5. Portions et unités
 
 ### 5.1 `Quantity`
