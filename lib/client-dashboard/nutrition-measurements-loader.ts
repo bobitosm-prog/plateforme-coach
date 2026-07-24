@@ -1,5 +1,9 @@
 import { repositoryFailure, type RepositoryErrorKind, type RepositoryResult } from '@/lib/repositories/result'
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
+import {
+  readLatestCoachMealPlan,
+  type CoachMealPlanReadErrorCode,
+} from '@/lib/client-dashboard/coach-meal-plan-reader'
 
 export const WEIGHT_HISTORY_PROJECTION = 'date,poids' as const
 export const BODY_MEASUREMENTS_PROJECTION = 'id,user_id,date,chest,waist,hips,created_at' as const
@@ -34,7 +38,14 @@ export interface NutritionMeasurementsData {
 
 export type NutritionMeasurementsLoadResult =
   | { ok: true; data: NutritionMeasurementsData }
-  | { ok: false; error: { kind: RepositoryErrorKind; sources: NutritionMeasurementsSource[] } }
+  | {
+    ok: false
+    error: {
+      kind: RepositoryErrorKind
+      sources: NutritionMeasurementsSource[]
+      planReason?: CoachMealPlanReadErrorCode
+    }
+  }
 
 export function createNutritionMeasurementsReaders(client: DatabaseClient): NutritionMeasurementsReaders {
   return {
@@ -95,13 +106,29 @@ export function createNutritionMeasurementsLoader(readers: NutritionMeasurements
         }
       }
 
+      const coachMealPlan = readLatestCoachMealPlan(mealPlan)
+      if (coachMealPlan.status !== 'ready' && coachMealPlan.status !== 'absent') {
+        return {
+          ok: false,
+          error: {
+            kind: coachMealPlan.status === 'conflict'
+              ? 'conflict'
+              : coachMealPlan.status === 'failure'
+                ? coachMealPlan.error.repositoryKind ?? 'unexpected'
+                : 'unexpected',
+            sources: ['coach_meal_plan'],
+            planReason: coachMealPlan.error.code,
+          },
+        }
+      }
+
       return {
         ok: true,
         data: {
           weightHistory: weights.ok ? weights.data : [],
           measurements: measurements.ok ? measurements.data : [],
           progressPhotos: photos.ok ? photos.data : [],
-          coachMealPlan: mealPlan.ok ? mealPlan.data.plan : null,
+          coachMealPlan: coachMealPlan.status === 'ready' ? coachMealPlan.plan : null,
         },
       }
     },

@@ -28,7 +28,9 @@ identique au schéma local et n'autorise aucune migration de producteur.
 Les types, validateurs et adaptateurs read-only de cette cible sont désormais
 implémentés et documentés dans
 [NUTRITION_PLAN_ENVELOPE.md](../NUTRITION_PLAN_ENVELOPE.md). Aucun consommateur
-runtime n'est raccordé.
+runtime n'était raccordé lors de la décision. Le premier raccordement est
+désormais limité à la
+[lecture dashboard du dernier plan coach](../NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md).
 
 ## Décision
 
@@ -209,6 +211,7 @@ n'appartient à la migration initiale.
 
 - [Modèle Nutrition canonique](../NUTRITION_CANONICAL_MODEL.md)
 - [API de lecture des plans](../NUTRITION_PLAN_ENVELOPE.md)
+- [Premier consommateur read-only](../NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md)
 - [Producteurs de plans](../NUTRITION_PLAN_PRODUCERS.md)
 - [Repositories Nutrition](../NUTRITION_REPOSITORIES.md)
 - [Snapshots legacy](../NUTRITION_LEGACY_SNAPSHOTS.md)

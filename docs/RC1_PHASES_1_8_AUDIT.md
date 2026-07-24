@@ -156,9 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis raccorder la double lecture
-`NutritionPlanEnvelopeV1`/legacy dans un consommateur isolé, sans migrer
-d'écriture. La [frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
+Caractériser puis raccorder la double lecture au prochain consommateur
+personnel read-only, sans migrer d'écriture. Le
+[premier raccordement isolé](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md), la
+[frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) ne requalifient
-aucune preuve historique : les valeurs observées mélangent toujours objectifs,
-total du lundi et totaux journaliers.
+aucune preuve historique.

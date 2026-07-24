@@ -5,8 +5,9 @@
 `lib/nutrition/plan-envelope/` implémente le contrat read-only de
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md). Le module est
 pur : il ne dépend ni de React, Next, Supabase, `app/`, navigateur, réseau ou
-variables d'environnement. Aucun producteur ou consommateur runtime ne
-l'utilise encore.
+variables d'environnement. Un seul
+[consommateur dashboard read-only](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md)
+l'utilise désormais ; aucun producteur n'est raccordé.
 
 ## API publique
 
@@ -87,7 +88,8 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 ## Limites restantes
 
 - Aucun writer ne produit encore `NutritionPlanEnvelopeV1`.
-- Aucun consommateur applicatif n'utilise encore cette lecture.
+- Un seul consommateur read-only l'utilise ; les lecteurs personnels et coach
+  détail restent legacy.
 - Les colonnes SQL futures `week_start` et `status` ne sont pas créées.
 - Aucun backfill ou contrôle distant n'a été réalisé.
 - La priorité produit entre plan personnel et plan coach reste inchangée.

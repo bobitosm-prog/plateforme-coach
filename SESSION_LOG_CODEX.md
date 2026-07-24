@@ -10843,3 +10843,40 @@ discriminés ; 0 consommateur, producteur, repository ou migration modifié.
 **Prochaine action :** caractériser puis raccorder la double lecture
 `NutritionPlanEnvelopeV1`/legacy dans un consommateur isolé, sans migrer
 d'écriture.
+
+## Entrée — 2026-07-24 — Premier consommateur de plans Nutrition raccordé
+
+**Travail effectué :** inventaire des lecteurs puis sélection de la lecture du
+dernier plan coach du dashboard client. Une frontière injectée valide le
+`RepositoryResult<{plan}>`, utilise `readClientMealPlanRow` et présente le
+contrat UI historique.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** la projection `plan`, le filtre `client_id`, le tri
+`created_at DESC`, la limite 1 et l'absence `null` sont inchangés. Seul
+`not_found` vaut absence. Conflit, invalidité, unsupported et panne restent des
+erreurs récupérables distinctes.
+
+**Problèmes rencontrés :** le presenter legacy historique convertirait une
+macro absente en zéro. La nouvelle frontière refuse donc une projection UI
+incomplète au lieu d'inventer cette valeur.
+
+**Risques ou dette restante :** `useNutritionPlans`, `NutritionTab`, `HomeTab`
+et le détail client coach restent legacy. Aucun writer n'écrit encore
+`NutritionPlanEnvelopeV1`; les deux divergences historiques restent inchangées.
+
+**Tests exécutés :** 75 tests ciblés sur absence, repository failure,
+canonique, legacy, conflits, invalidité, unsupported, projection UI,
+immutabilité, déterminisme, lifecycle obsolète, rendu, requête inchangée,
+absence d'écriture et gardes de raccordement ; suite complète 246 fichiers,
+2 019 tests réussis et 3 `todo` ; TypeScript et ESLint ciblé verts.
+
+**Mesures :** consommateurs raccordés 0 → 1 ; requêtes 1 → 1 ; projection
+`plan` → `plan` ; limite 1 → 1 ; écritures 0 → 0.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis raccorder la double lecture au
+prochain consommateur personnel read-only, sans migrer d'écriture.

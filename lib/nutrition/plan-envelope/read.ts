@@ -16,6 +16,10 @@ function invalid(paths: readonly string[]): NutritionPlanReadResult {
   return { status: 'invalid', issue: { code: 'invalid_envelope', paths } }
 }
 
+function looksCanonical(value: unknown): boolean {
+  return isRecord(value) && ('schemaVersion' in value || 'documentType' in value)
+}
+
 function comparable(envelope: NutritionPlanEnvelopeV1): string {
   return JSON.stringify({
     content: envelope.content,
@@ -54,6 +58,8 @@ export function readNutritionPlanDocument(input: {
     return { status: 'canonical', envelope: canonical, warnings }
   }
   if (input.plan !== undefined && (!legacyPlan || legacyPlan.status !== 'legacy_converted')) {
+    if (looksCanonical(input.plan)) return invalid(['plan'])
+    if (legacyPlan) return legacyPlan
     return invalid(['plan'])
   }
   if (legacyPlan?.status === 'legacy_converted' && legacyData?.status === 'legacy_converted') {

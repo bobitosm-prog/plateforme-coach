@@ -9,6 +9,7 @@ import {
   createNutritionMeasurementsLoader,
   createNutritionMeasurementsReaders,
 } from '@/lib/client-dashboard/nutrition-measurements-loader'
+import { LEGACY_COACH_WEEK } from '@/tests/fixtures/nutrition-plan-envelope'
 
 const success = <T>(data: T) => ({ ok: true as const, data })
 
@@ -25,7 +26,7 @@ const photos = [{
   date: '2026-07-17', adjustments: { brightness: 1 }, ai_analysis: null, ai_analyzed_at: null,
   created_at: '2026-07-17T10:00:00Z',
 }]
-const mealPlan = { lundi: { meals: [{ name: 'Déjeuner' }] }, calorie_target: 2100 }
+const mealPlan = LEGACY_COACH_WEEK
 
 function setup(overrides: Record<string, unknown> = {}) {
   const readers = {
@@ -71,6 +72,22 @@ describe('client nutrition and measurements dashboard loader', () => {
     expect(await loader.load('client-1')).toEqual({
       ok: true,
       data: { weightHistory: [], measurements: [], progressPhotos: [], coachMealPlan: null },
+    })
+  })
+
+  it('keeps an invalid coach plan distinct from absence', async () => {
+    const { loader } = setup({
+      findLatestCoachMealPlan: vi.fn(async () => success({
+        plan: { schemaVersion: 2, documentType: 'nutrition_plan' },
+      })),
+    })
+    expect(await loader.load('client-1')).toEqual({
+      ok: false,
+      error: {
+        kind: 'unexpected',
+        sources: ['coach_meal_plan'],
+        planReason: 'invalid_document',
+      },
     })
   })
 
