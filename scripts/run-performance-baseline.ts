@@ -140,6 +140,9 @@ try {
   if (process.env.MOOVX_VIDEO_EVIDENCE_PATH) {
     run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-video-delivery.spec.ts'], env)
   }
+  if (process.env.MOOVX_FONT_EVIDENCE_PATH) {
+    run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-font-loading.spec.ts'], env)
+  }
   if (!existsSync(rawPath)) throw new Error('Playwright did not produce raw baseline measurements')
 
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as { dependencies: Record<string, string>; devDependencies: Record<string, string> }

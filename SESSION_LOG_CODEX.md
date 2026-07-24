@@ -10275,3 +10275,45 @@ juridiction UE obligatoire.
 ### Prochaine action unique
 
 Réduire et auto-héberger les polices nécessaires.
+
+## Entrée — 2026-07-24 — Polices locales réduites et dédupliquées
+
+- L'inventaire confirme cinq familles et sept TTF officiels ; aucun WOFF2
+  applicatif n'est versionné. Les sources dupliquées entre App Router et les
+  HTML autonomes représentaient 1 657 780 octets.
+- Les sept sources résident désormais une seule fois sous
+  `public/fonts/moovx/`. Next les consomme depuis `app/fonts.ts`; les cinq
+  licences OFL 1.1 restent inchangées sous `app/fonts/`.
+- Barlow Condensed 900 n'a aucun consommateur dans `app/`, mais reste utilisé
+  par deux vitrines HTML. Il est retiré uniquement de `next/font/local`.
+  Le payload Next par document passe de 914 296 à 803 468 octets
+  (−110 828 ; −12,122 %) et les sources versionnées à 914 296 octets
+  (−743 484 ; −44,848 %).
+- Le corpus exécutable couvre français, allemand/suisse, portugais, chiffres,
+  ponctuation, devises et unités. Chaque caractère existe dans au moins une
+  famille ; les scripts arabe, cyrillique, CJK et devanagari sont explicitement
+  délégués à `Arial, sans-serif`.
+- Les hashes, tailles, licences, déclarations, fichiers existants, références
+  Google Fonts, corpus et fallback sont testés. Aucun subset n'est généré :
+  aucun outil local n'était disponible et aucun téléchargement n'est autorisé.
+- Les captures réelles client, coach, login, onboarding, landing, quatre HTML
+  autonomes et spécimen sont produites avec Playwright local. L'inspection
+  confirme accents, graisses, crénage, montants et unités sans tofu. Les faces
+  utilisées sont byte-identiques ; aucun faux gras ou faux italique nouveau
+  n'est introduit.
+- La baseline avant, BUILD_ID `znYK5S5ARUJwBZqdMnTxf`, observe 7 requêtes font
+  client et 14 coach. Les contrôles finaux
+  `jQFvyWrYnL-uZkYVLpvFY` et `SGy66Cn-3N8fWsyXWIQQ4` observent 6 et 12 et
+  passent 79/79 sans modifier les seuils.
+- Le contrôle final mesure client LCP `336/324/324 ms`, CLS
+  `0,003886/0,010764/0,010764`, INP `32/32/32 ms`; coach LCP
+  `228/252/236 ms`, CLS `0/0/0`, INP `24/24/16 ms`.
+- Un contrôle intermédiaire 78/79 avec LCP froid client à 464 ms reste
+  documenté. Les dettes historiques feedback 500, `getSession()` et les
+  requêtes d'images `app.moovx.ch` bloquées ne sont pas corrigées.
+- Aucun domaine de police externe, changement de baseline, budget, R2,
+  Supabase, migration ou RLS n'est introduit. La tâche polices est cochée.
+
+### Prochaine action unique
+
+Comparer les Core Web Vitals avant/après.

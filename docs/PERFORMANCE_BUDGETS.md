@@ -141,3 +141,9 @@ budget ou artefact de référence n’est modifié.
 L’[étude stockage/CDN](./MEDIA_STORAGE_CDN_STUDY.md) ne modifie aucun seuil.
 Après un déploiement explicitement approuvé, le canary puis chaque lot devront
 passer les 79 contrôles existants avant activation et après rollback simulé.
+
+L'optimisation des [polices locales](./LOCAL_FONT_HOSTING.md) ne modifie aucun
+seuil. Un contrôle intermédiaire échoue 78/79 sur un LCP client froid à 464 ms
+pour une limite de 458 ms. Deux contrôles indépendants suivants, BUILD_ID
+`jQFvyWrYnL-uZkYVLpvFY` et `SGy66Cn-3N8fWsyXWIQQ4`, passent chacun 79/79 avec
+six requêtes font client et douze coach.

@@ -20,19 +20,19 @@ const staticPages = [
 ].map((path) => readFileSync(join(root, path), "utf8"));
 
 const assets = {
-  "app/fonts/anton/Anton-Regular.ttf":
+  "public/fonts/moovx/Anton-Regular.ttf":
     "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab",
-  "app/fonts/barlow-condensed/BarlowCondensed-Bold.ttf":
+  "public/fonts/moovx/BarlowCondensed-Bold.ttf":
     "e476562ec9c1e16cf16475895b511f08c804f438cc9a9f80a44ea50a0eeb5b65",
-  "app/fonts/barlow-condensed/BarlowCondensed-ExtraBold.ttf":
+  "public/fonts/moovx/BarlowCondensed-ExtraBold.ttf":
     "724c9c25952d5f4a2d87185d9767aa006144c5f0d944dc05bf7d5d603551c260",
-  "app/fonts/barlow-condensed/BarlowCondensed-Black.ttf":
+  "public/fonts/moovx/BarlowCondensed-Black.ttf":
     "e74b750df582c608f35db467b711b2b60d2217618e85e60b72b42dfd00446cab",
-  "app/fonts/bebas-neue/BebasNeue-Regular.ttf":
+  "public/fonts/moovx/BebasNeue-Regular.ttf":
     "08e4623805102d819f58601e46e345648846075e363b2ceb23313c2d1c83ec73",
-  "app/fonts/dm-sans/DMSans-Variable.ttf":
+  "public/fonts/moovx/DMSans-Variable.ttf":
     "8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d",
-  "app/fonts/outfit/Outfit-Variable.ttf":
+  "public/fonts/moovx/Outfit-Variable.ttf":
     "fc7287273e66929776e2ba54f144fe699080bec29f61bf649d70d871468aeade",
 } as const;
 
@@ -67,10 +67,11 @@ describe("local application fonts", () => {
   });
 
   it("preserves the requested normal styles and weight ranges", () => {
-    for (const weight of ["400", "700", "800", "900", "300 600", "400 700"]) {
+    for (const weight of ["400", "700", "800", "300 600", "400 700"]) {
       expect(fontModule).toContain(`weight: "${weight}"`);
     }
-    expect(fontModule.match(/style: "normal"/g)).toHaveLength(7);
+    expect(fontModule).not.toContain('weight: "900"');
+    expect(fontModule.match(/style: "normal"/g)).toHaveLength(6);
     expect(fontModule.match(/display: "swap"/g)).toHaveLength(5);
     expect(fontModule.match(/preload: true/g)).toHaveLength(5);
   });
@@ -112,15 +113,20 @@ describe("local application fonts", () => {
   });
 
   it("serves the same verified assets to standalone public pages", () => {
-    for (const [sourcePath, expectedHash] of Object.entries(assets)) {
-      if (sourcePath.includes("/anton/")) continue;
-      const publicPath = join(root, "public/fonts/moovx", sourcePath.split("/").at(-1)!);
+    for (const [publicPath, expectedHash] of Object.entries(assets)) {
+      if (publicPath.endsWith("Anton-Regular.ttf")) continue;
       const actualHash = createHash("sha256")
-        .update(readFileSync(publicPath))
+        .update(readFileSync(join(root, publicPath)))
         .digest("hex");
       expect(actualHash, publicPath).toBe(expectedHash);
     }
     expect(publicFontCss.match(/@font-face/g)).toHaveLength(6);
+  });
+
+  it("shares one source copy and keeps weight 900 out of the global Next preload", () => {
+    expect(fontModule).toContain("../public/fonts/moovx/");
+    expect(fontModule).not.toContain("BarlowCondensed-Black.ttf");
+    expect(publicFontCss).toContain("BarlowCondensed-Black.ttf");
   });
 
   it("supports an isolated production build directory", () => {

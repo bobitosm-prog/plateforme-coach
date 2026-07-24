@@ -547,7 +547,10 @@ livré avec un premier gain mesuré et
 [diffusion vidéo différée](docs/PERFORMANCE_VIDEO_DELIVERY.md) vérifiée en
 production locale. Le [stockage/CDN média](docs/MEDIA_STORAGE_CDN_DEPLOYMENT.md)
 est déployé sur R2 `eu` pour un canary et les 17 posters, avec domaine TLS,
-cache immuable, CORS borné, fallback local et rollback validés.**
+cache immuable, CORS borné, fallback local et rollback validés.
+Les [polices locales](docs/LOCAL_FONT_HOSTING.md) partagent désormais une
+source unique et excluent le poids Barlow 900 inutilisé de chaque document
+Next, avec six requêtes au lieu de sept et deux contrôles 79/79.**
 
 ### Pourquoi
 
@@ -568,7 +571,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] [Inventorier et optimiser images/vidéos lourdes](docs/PERFORMANCE_MEDIA_INVENTORY.md) | 3 j | Moyenne | Moyen | Élevé | Manifest médias |
 | [x] [Définir posters et chargement vidéo différé](docs/PERFORMANCE_VIDEO_DELIVERY.md) — preuve vidéo et diagnostic INP indépendants validés | 2 j | Moyenne | Moyen | Moyen | Médias optimisés |
 | [x] [Étudier puis déployer un stockage/CDN média](docs/MEDIA_STORAGE_CDN_STUDY.md) — R2 Standard `eu`, `media.moovx.ch`, canary et 17 posters (216 510 octets), fallback/rollback validés | 3 j | Élevée | Élevé | Élevé | Chemins compatibles |
-| [ ] Réduire et auto-héberger les polices nécessaires | 1,5 j | Moyenne | Faible | Moyen | Baseline |
+| [x] [Réduire et auto-héberger les polices nécessaires](docs/LOCAL_FONT_HOSTING.md) — −44,848 % d'octets versionnés, −12,122 % par document Next et une requête font en moins | 1,5 j | Moyenne | Faible | Moyen | Baseline |
 | [ ] Comparer les Core Web Vitals avant/après | 1 j | Moyenne | Faible | Élevé | Optimisations |
 
 ### Définition de terminé

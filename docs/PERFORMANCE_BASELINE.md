@@ -231,3 +231,35 @@ Le [jalon stockage/CDN](./MEDIA_STORAGE_CDN_DEPLOYMENT.md) a ensuite migré
 uniquement le canary approuvé et les 17 posters, avec fallback local. Un
 contrôle production hermétique sous BUILD_ID `0bvylxtGKvQJvAuDb22Sr` passe
 79/79 : il ne remplace ni la baseline versionnée ni ses budgets.
+
+### Contrôle des polices locales — 24 juillet 2026
+
+L'[optimisation des polices](./LOCAL_FONT_HOSTING.md) déduplique les sources et
+retire uniquement Barlow Condensed 900 du preload Next, sans changer les six
+faces réellement utilisées. Le parcours client passe de 7 à 6 requêtes font
+par passage ; le parcours coach de 14 à 12, car il charge deux documents.
+
+Avant, BUILD_ID `znYK5S5ARUJwBZqdMnTxf` :
+
+- client LCP `384/344/372 ms`, CLS
+  `0,003886/0,010764/0,010764`, INP `32/32/32 ms` ;
+- coach LCP `236/272/232 ms`, CLS `0/0/0`, INP `24/24/16 ms`.
+
+Contrôle final, BUILD_ID `SGy66Cn-3N8fWsyXWIQQ4` :
+
+- client LCP `336/324/324 ms`, CLS
+  `0,003886/0,010764/0,010764`, INP `32/32/32 ms` ;
+- coach LCP `228/252/236 ms`, CLS `0/0/0`, INP `24/24/16 ms`.
+
+Le bundle reste stable : client 1 929 798 octets bruts / 566 007 gzip et coach
+1 950 787 / 574 235. Le contrôle final passe 79/79. Un contrôle intermédiaire
+conserve honnêtement un LCP client froid à 464 ms, soit 6 ms au-dessus du
+garde, tandis que ses deux autres passages valent 360/356 ms. Aucun seuil ou
+artefact de baseline n'est modifié.
+
+La preuve réseau bloque les service workers et toute origine externe. Login,
+onboarding, landing, client et coach transfèrent six fontes locales pour
+803 468 octets. Les guides autonomes transfèrent quatre fontes pour
+392 492 octets ; les vitrines six pour 743 484 octets. Les requêtes
+historiques vers `app.moovx.ch` sont bloquées et consignées ; aucune requête de
+police externe n'est observée.

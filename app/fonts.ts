@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 
 export const bebasNeue = localFont({
-  src: "./fonts/bebas-neue/BebasNeue-Regular.ttf",
+  src: "../public/fonts/moovx/BebasNeue-Regular.ttf",
   weight: "400",
   style: "normal",
   variable: "--font-display",
@@ -14,18 +14,13 @@ export const bebasNeue = localFont({
 export const barlowCondensed = localFont({
   src: [
     {
-      path: "./fonts/barlow-condensed/BarlowCondensed-Bold.ttf",
+      path: "../public/fonts/moovx/BarlowCondensed-Bold.ttf",
       weight: "700",
       style: "normal",
     },
     {
-      path: "./fonts/barlow-condensed/BarlowCondensed-ExtraBold.ttf",
+      path: "../public/fonts/moovx/BarlowCondensed-ExtraBold.ttf",
       weight: "800",
-      style: "normal",
-    },
-    {
-      path: "./fonts/barlow-condensed/BarlowCondensed-Black.ttf",
-      weight: "900",
       style: "normal",
     },
   ],
@@ -37,7 +32,7 @@ export const barlowCondensed = localFont({
 });
 
 export const outfit = localFont({
-  src: "./fonts/outfit/Outfit-Variable.ttf",
+  src: "../public/fonts/moovx/Outfit-Variable.ttf",
   weight: "300 600",
   style: "normal",
   variable: "--font-body",
@@ -48,7 +43,7 @@ export const outfit = localFont({
 });
 
 export const dmSans = localFont({
-  src: "./fonts/dm-sans/DMSans-Variable.ttf",
+  src: "../public/fonts/moovx/DMSans-Variable.ttf",
   weight: "400 700",
   style: "normal",
   variable: "--font-dm-sans",
@@ -59,7 +54,7 @@ export const dmSans = localFont({
 });
 
 export const anton = localFont({
-  src: "./fonts/anton/Anton-Regular.ttf",
+  src: "../public/fonts/moovx/Anton-Regular.ttf",
   weight: "400",
   style: "normal",
   variable: "--font-impact",
