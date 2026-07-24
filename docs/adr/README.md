@@ -55,3 +55,4 @@ Les affirmations doivent être vérifiables dans le code ou dans une documentati
 - [ADR 0004 — Contrats des routes API](0004-api-route-contracts.md)
 - [ADR 0005 — Séparer contrat financier et accès produit dans Billing](0005-billing-domain-model.md)
 - [ADR 0006 — Stockage et CDN des médias](0006-media-storage-cdn.md)
+- [ADR 0007 — Contrat de persistance des plans Nutrition](0007-nutrition-plan-persistence-contract.md)

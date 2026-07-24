@@ -156,9 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Décider et aligner le contrat de persistance `meal_plans.plan/active` contre
-`plan_data/is_active`, puis les colonnes runtime de `client_meal_plans`, avant
-toute migration de producteur. La
-[caractérisation des producteurs](NUTRITION_PLAN_PRODUCERS.md) interdit de
-requalifier les preuves historiques : les valeurs observées mélangent
-objectifs, total du lundi et totaux journaliers.
+Implémenter les types, validateurs et adaptateurs read-only de
+`NutritionPlanEnvelopeV1` et des formes legacy conformément à
+[l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md), sans migrer de
+producteur. La décision d'architecture ne requalifie aucune preuve historique :
+les valeurs observées mélangent toujours objectifs, total du lundi et totaux
+journaliers.

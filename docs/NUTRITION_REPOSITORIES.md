@@ -71,3 +71,10 @@ caractérisées dans
 [NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Les repositories
 restent volontairement inchangés : ajouter `plan_data`, `is_active`,
 `week_start` ou les cibles absentes des types inventerait des colonnes.
+
+[L'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) fixe la cible :
+`plan`/`active` sont canoniques pour `meal_plans`; objectifs et totaux vivent
+dans l'enveloppe JSON avec provenance; `week_start` et le statut d'une
+affectation nécessitent une migration additive future. Tant que cette
+migration n'existe pas, aucune colonne runtime absente ne rejoint les
+projections des repositories.

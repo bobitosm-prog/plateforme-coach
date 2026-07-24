@@ -10765,3 +10765,43 @@ semaine ; 0 producteur migré ; 0 snapshot v2 créé.
 **Prochaine action :** décider et aligner le contrat de persistance
 `meal_plans.plan/active` contre `plan_data/is_active`, puis les colonnes
 runtime de `client_meal_plans`, avant toute migration de producteur.
+
+## Entrée — 2026-07-24 — Contrat de persistance des plans Nutrition
+
+**Travail effectué :** décision ADR recoupant schéma, types, repositories,
+RLS, sept producteurs, consommateurs et modèle canonique. Une matrice statue
+sur chaque champ runtime et définit une séquence progressive avec rollback.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** `meal_plans.plan/active` deviennent les seules
+autorités canoniques ; `plan_data/is_active` restent des alias de lecture
+legacy. `client_id`, `coach_id`, `week_start` et le futur statut restent en
+SQL. Objectifs, totaux et provenance vivent dans
+`NutritionPlanEnvelopeV1`. `week_start` et le statut exigent une future
+migration additive.
+
+**Problèmes rencontrés :** les colonnes runtime absentes ne peuvent pas être
+rendues canoniques. Les totaux existants mélangent cible, lundi et calcul
+journalier. Le schéma distant n'est pas vérifié dans cette tranche.
+
+**Risques ou dette restante :** aucun validateur ou adaptateur runtime de
+l'enveloppe n'est encore implémenté ; aucun producteur n'est migré ; la
+relation coach active et l'unicité d'une affectation active nécessitent des
+tranches séparées. Les deux divergences historiques restent inchangées.
+
+**Tests exécutés :** 22 tests ciblés sur colonnes, autorités SQL, provenance,
+compatibilité legacy, sept producteurs et rollback ; suite complète
+242 fichiers, 1 984 tests réussis et 3 `todo` ; TypeScript, ESLint ciblé,
+liens et `git diff --check` verts.
+
+**Mesures :** 2 tables décidées ; 7 producteurs couverts ; 7 champs runtime
+absents classés ; 2 futures colonnes additives ; 0 producteur, migration ou
+repository modifié.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** implémenter les types, validateurs et adaptateurs de
+lecture purs de `NutritionPlanEnvelopeV1` et des formes legacy, sans migrer de
+producteur.

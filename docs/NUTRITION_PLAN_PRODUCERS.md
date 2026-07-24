@@ -6,7 +6,7 @@ Cette caractérisation couvre les écritures locales connues vers `meal_plans`
 et `client_meal_plans`. Elle ne consulte aucune donnée distante et ne modifie
 ni producteur, ni schéma, ni policy.
 
-**Décision : ne pas versionner ces producteurs dans leur état actuel.** Les
+**Décision d'exécution : ne pas versionner ces producteurs dans leur état actuel.** Les
 types générés et les migrations décrivent `meal_plans.plan` / `active`, alors
 que quatre producteurs et leurs consommateurs écrivent ou lisent
 `plan_data` / `is_active` ainsi que des colonnes de totaux absentes. Le même
@@ -17,7 +17,10 @@ inventerait un contrat.
 Le snapshot Nutrition v1 reste réutilisable pour des aliments individuels
 dont la source et les alias sont connus. Il ne suffit pas pour versionner un
 plan : il ne décrit ni l'enveloppe du plan, ni son activation, ni ses
-objectifs, ni son affectation. Aucun snapshot v2 n'est donc créé.
+objectifs, ni son affectation. Aucun snapshot v2 n'est donc créé. L'autorité
+cible et une enveloppe de plan distincte sont désormais fixées par
+[l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md), sans migration
+des sept producteurs.
 
 ## Contrat SQL démontré
 
@@ -136,11 +139,10 @@ complété les jours, et le plan manuel persiste les valeurs d'éditeur.
 | Versionner aujourd'hui `meal_plans` | refusé | contrat `plan/active` contre `plan_data/is_active` non résolu |
 | Versionner aujourd'hui `client_meal_plans` | refusé | cibles et `week_start` runtime absents du schéma généré |
 | Déclarer les colonnes de total comme sommes | refusé | certaines sont des objectifs, une autre représente lundi |
-| Créer snapshot v2 | refusé | aucune enveloppe de plan incontestable |
+| Créer une enveloppe de plan | contrat accepté, implémentation différée | l'ADR 0007 définit `NutritionPlanEnvelopeV1`; aucun producteur ne l'écrit encore |
 | Réécrire les deux divergences historiques | interdit | elles restent des preuves réelles |
 
 ## Prochaine étape
 
-Décider et aligner explicitement le contrat de persistance local
-`meal_plans.plan/active` contre `plan_data/is_active`, puis les colonnes
-d'affectation de `client_meal_plans`, avant toute migration de producteur.
+Implémenter les types, validateurs et adaptateurs de lecture purs de
+`NutritionPlanEnvelopeV1` et des deux formes legacy, sans migrer de producteur.

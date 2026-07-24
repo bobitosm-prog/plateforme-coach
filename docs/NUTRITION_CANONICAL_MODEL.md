@@ -277,6 +277,14 @@ preuve métier.
 
 ## 9. Plan alimentaire
 
+Le contrat de persistance est fixé par
+[l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) : `meal_plans`
+utilise exclusivement `plan` et `active`; `client_meal_plans` conserve
+`client_id`/`coach_id` en SQL et recevra ultérieurement `week_start` et un
+statut SQL par migration additive. Objectifs, totaux et provenance
+appartiennent à `NutritionPlanEnvelopeV1` dans `plan`. Aucune identité ou
+autorité RLS n'est dupliquée dans le JSON.
+
 ### 9.1 `MealPlanDefinition`
 
 Un plan est un agrégat versionné :
@@ -418,8 +426,8 @@ aux écritures multi-tables.
 
 | Adaptateur | Entrée | Sortie / règle |
 |---|---|---|
-| Plan personnel | `meal_plans.plan_data/is_active` ou `plan/active` | plan versionné ; conserver le couple de colonnes réellement lu. |
-| Plan coach | `client_meal_plans.plan` et cibles runtime | plan + affectation séparée ; owner/beneficiary obligatoires. |
+| Plan personnel | `meal_plans.plan_data/is_active` ou `plan/active` | lire les deux formes ; écrire à terme uniquement `plan/active` selon l'ADR 0007. |
+| Plan coach | `client_meal_plans.plan` et cibles runtime | enveloppe dans `plan`; affectation SQL séparée ; objectifs avec provenance dans le JSON. |
 | Jour IA français | `repas`, `aliment`, `quantite_g`, macros FR | journée planifiée ; refuser les repas/aliments non structurés. |
 | Jour `lib/meal-plan` | `meals`, `totals`, macros abrégées | snapshot planifié ; comparer les totaux, ne pas leur faire confiance implicitement. |
 | Template textuel | `qty: "60g"`, `1 grande` | quantité si parsable, sinon `legacyText` non calculable. |
