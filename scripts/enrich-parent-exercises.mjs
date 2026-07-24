@@ -48,6 +48,8 @@ const PARENT_MAPPING = {
   'Presse à cuisses': { slug: 'leg-press', imgExt: 'jpg' },
 
   'Pull-over poulie haute bras tendus': { slug: 'pull-over-poulie-haute', imgExt: 'jpg' },
+
+  'Développé Couché Barre': { slug: 'developpe-couche-barre', imgExt: 'jpg' },
 }
 
 // Normalize a name to a slug: lowercase, no accents, hyphens
