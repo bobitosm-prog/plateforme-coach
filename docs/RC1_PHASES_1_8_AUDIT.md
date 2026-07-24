@@ -156,9 +156,10 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis raccorder la double lecture au prochain consommateur
-personnel read-only, sans migrer d'écriture. Le
-[premier raccordement isolé](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md), la
+Caractériser puis raccorder la double lecture à la lecture personnelle
+read-only de `HomeTab`, sans migrer d'écriture. Les raccordements
+[dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et
+[plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), la
 [frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) ne requalifient
 aucune preuve historique.

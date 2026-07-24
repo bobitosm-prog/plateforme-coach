@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1 : production et réutilisation de `saved_meals` sont versionnées et fail-closed ; l'ADR 0007 et sa frontière read-only fixent la cible des plans, un seul lecteur dashboard est raccordé sans écriture, et deux cas historiques pleinement comparables restent divergents**
+**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1 : production et réutilisation de `saved_meals` sont versionnées et fail-closed ; l'ADR 0007 et sa frontière read-only fixent la cible des plans, les lecteurs dashboard coach et plan personnel actif sont raccordés sans écriture, et deux cas historiques pleinement comparables restent divergents**
 
 ### Pourquoi
 

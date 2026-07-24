@@ -1,10 +1,13 @@
 import {
+  isNutritionPlanDisplaySafe,
+  presentNutritionPlanForLegacyUi,
   readClientMealPlanRow,
-  type NutritionPlanEnvelopeV1,
   type NutritionPlanWarningCode,
 } from '@/lib/nutrition/plan-envelope'
 import type { RepositoryErrorKind, RepositoryResult } from '@/lib/repositories/result'
 import type { Json } from '@/lib/supabase/types'
+
+export { presentNutritionPlanForLegacyUi } from '@/lib/nutrition/plan-envelope'
 
 export interface CoachMealPlanReadRow {
   readonly plan: Json
@@ -33,16 +36,6 @@ export type CoachMealPlanReadResult =
     }
   }
 
-const FRENCH_DAYS = [
-  'lundi',
-  'mardi',
-  'mercredi',
-  'jeudi',
-  'vendredi',
-  'samedi',
-  'dimanche',
-] as const
-
 function isReadablePlan(
   result: ReturnType<typeof readClientMealPlanRow>,
 ): result is Extract<
@@ -50,35 +43,6 @@ function isReadablePlan(
   { readonly status: 'canonical' | 'legacy_converted' }
 > {
   return result.status === 'canonical' || result.status === 'legacy_converted'
-}
-
-function isDisplaySafe(envelope: NutritionPlanEnvelopeV1): boolean {
-  return envelope.content.days.every(day => day.meals.every(meal => meal.items.every(item =>
-    item.quantity.grams !== null &&
-    item.nutrition.energyKcal !== null &&
-    item.nutrition.proteinG !== null &&
-    item.nutrition.carbsG !== null &&
-    item.nutrition.fatG !== null)))
-}
-
-export function presentNutritionPlanForLegacyUi(envelope: NutritionPlanEnvelopeV1): Json | null {
-  if (!isDisplaySafe(envelope)) return null
-  return Object.fromEntries(envelope.content.days.map((day, dayIndex) => [
-    FRENCH_DAYS[dayIndex],
-    {
-      meals: day.meals.map(meal => ({
-        type: meal.type,
-        foods: meal.items.map(item => ({
-          name: item.label,
-          qty: item.quantity.grams,
-          kcal: item.nutrition.energyKcal,
-          prot: item.nutrition.proteinG,
-          carb: item.nutrition.carbsG,
-          fat: item.nutrition.fatG,
-        })),
-      })),
-    },
-  ])) as Json
 }
 
 export function readLatestCoachMealPlan(
@@ -106,7 +70,7 @@ export function readLatestCoachMealPlan(
     return { status: 'invalid', error: { code: 'invalid_document' } }
   }
 
-  if (!isDisplaySafe(read.envelope)) {
+  if (!isNutritionPlanDisplaySafe(read.envelope)) {
     return { status: 'invalid', error: { code: 'incomplete_ui_projection' } }
   }
   const plan = read.status === 'legacy_converted'

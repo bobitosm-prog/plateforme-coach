@@ -1,17 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+import {
+  createActivePersonalMealPlanReader,
+  type LegacyActiveMealPlan,
+} from '@/lib/nutrition/personal-meal-plan-reader'
+import { createNutritionPlanRepository } from '@/lib/repositories/nutrition'
 
 import type { NutritionLoadState } from './useNutritionJournal'
 
-export interface LegacyActiveMealPlan {
-  id: string
-  user_id: string
-  plan_data: unknown
-  is_active: boolean
-  created_at: string
-}
+export type { LegacyActiveMealPlan } from '@/lib/nutrition/personal-meal-plan-reader'
 
 interface UseNutritionPlansParams {
   supabase: SupabaseClient
@@ -24,22 +24,24 @@ export function useNutritionPlans({ supabase, userId, date }: UseNutritionPlansP
   const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
   const [state, setState] = useState<NutritionLoadState>('idle')
   const requestId = useRef(0)
+  const personalPlanReader = useMemo(() => createActivePersonalMealPlanReader(
+    createNutritionPlanRepository(supabase),
+  ), [supabase])
 
   const reload = useCallback(async () => {
     if (!userId) { setActivePersonalPlan(null); setCompletedMeals(new Set()); setState('idle'); return }
     const current = ++requestId.current
     setState('loading')
     const [plan, tracking] = await Promise.all([
-      supabase.from('meal_plans').select('id,user_id,plan_data,is_active,created_at')
-        .eq('user_id', userId).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      personalPlanReader.load(userId),
       supabase.from('meal_tracking').select('meal_type').eq('user_id', userId).eq('date', date).eq('is_completed', true).limit(50),
     ])
     if (current !== requestId.current) return
-    if (plan.error || tracking.error) { setState('error'); return }
-    setActivePersonalPlan(plan.data as LegacyActiveMealPlan | null)
+    if ((plan.status !== 'ready' && plan.status !== 'absent') || tracking.error) { setState('error'); return }
+    setActivePersonalPlan(plan.status === 'ready' ? plan.plan : null)
     setCompletedMeals(new Set((tracking.data ?? []).map(item => item.meal_type)))
-    setState(plan.data ? 'ready' : 'empty')
-  }, [date, supabase, userId])
+    setState(plan.status === 'ready' ? 'ready' : 'empty')
+  }, [date, personalPlanReader, supabase, userId])
 
   useEffect(() => { queueMicrotask(() => { void reload() }); return () => { requestId.current += 1 } }, [reload])
 

@@ -10880,3 +10880,45 @@ absence d'écriture et gardes de raccordement ; suite complète 246 fichiers,
 
 **Prochaine action :** caractériser puis raccorder la double lecture au
 prochain consommateur personnel read-only, sans migrer d'écriture.
+
+## Entrée — 2026-07-24 — Plan personnel actif raccordé à la double lecture
+
+**Travail effectué :** caractérisation de `useNutritionPlans`, extraction de
+sa seule lecture `meal_plans` vers une frontière read-only injectée, usage de
+`readMealPlanRow` et projection explicite vers le contrat UI historique. Le
+presenter sans inconnue→zéro est partagé avec le lecteur dashboard coach.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** `useNutritionPlans` est l'unique nouveau consommateur
+migré. Il conserve la priorité plan personnel avant plan coach, son état local
+owner-scoped, `retry === reload` et son compteur anti-réponse-obsolète. Seul
+`not_found` devient `null`; conflit, invalidité, legacy inconnu, projection
+incomplète et panne deviennent un état `error` récupérable.
+
+**Problèmes rencontrés :** l'ancienne requête projetait
+`plan_data/is_active`, absents des types générés. La requête canonique projette
+donc `plan/active` et laisse les alias legacy au lecteur documentaire. Une
+enveloppe valide peut rester improjetable si une macro UI est inconnue ; elle
+est refusée sans fabriquer zéro.
+
+**Risques ou dette restante :** `HomeTab`, le détail client et d'autres
+lecteurs restent directs. Aucun producteur, writer, activation ou complétion
+n'est migré. Les deux divergences historiques de totaux restent inchangées.
+
+**Tests exécutés :** 65 tests ciblés sur
+absence/canonique/legacy/tri repository,
+inactif/conflit/invalid/unsupported/panne/projection incomplète, déterminisme,
+immutabilité, scope, retry, réponse obsolète, priorité UI et mutation
+inchangée ; suite complète 248 fichiers, 2 029 tests réussis et 3 `todo` ;
+TypeScript, ESLint ciblé, liens et `git diff --check` verts.
+
+**Mesures avant/après :** requêtes plan 1 → 1 ; limite 1 → 1 ; projection
+legacy fictive 5 champs → projection canonique typée 7 champs ; consommateurs
+communs 1 → 2 ; écritures et `upsert meal_tracking` 1 → 1.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis raccorder la double lecture à la
+lecture personnelle read-only de `HomeTab`, sans migrer d'écriture.

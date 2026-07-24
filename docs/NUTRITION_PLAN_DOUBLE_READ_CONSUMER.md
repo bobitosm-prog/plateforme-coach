@@ -17,8 +17,9 @@ Ce choix minimise le rayon d'impact :
 - tests unitaires préexistants du loader ;
 - rollback limité au retrait de `readLatestCoachMealPlan(mealPlan)`.
 
-`useNutritionPlans`, le détail client coach, `HomeTab` et les lectures
-personnelles directes restent explicitement non migrés.
+La [lecture personnelle de `useNutritionPlans`](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md)
+est désormais le second raccordement. Le détail client coach, `HomeTab` et
+les autres lectures directes restent explicitement non migrés.
 
 | Candidat | Décision | Motif |
 |---|---|---|
@@ -106,8 +107,7 @@ frontière isolée. La requête, le cache et l'UI ne changent pas.
 
 Restent non migrés :
 
-- `useNutritionPlans` et sa lecture `plan_data/is_active`;
-- la lecture personnelle de `NutritionTab`;
+- la lecture personnelle directe de `HomeTab`;
 - la lecture Nutrition de `HomeTab`;
 - `lib/coaching/client-detail/nutrition.ts`;
 - les producteurs préférences, onboarding, diagnostic, coach IA et édition

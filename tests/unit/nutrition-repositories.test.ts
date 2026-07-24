@@ -95,6 +95,12 @@ describe('Nutrition repositories', () => {
     expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
       ['user_id', 'owner-id'], ['active', true],
     ])
+    expect(callsFor(mock, 'order')).toContainEqual({
+      table: 'meal_plans',
+      args: ['created_at', { ascending: false }],
+    })
+    expect(callsFor(mock, 'limit')).toContainEqual({ table: 'meal_plans', args: [1] })
+    expect(callsFor(mock, 'maybeSingle')).toHaveLength(1)
   })
 
   it('lists assigned plans by client scope with a stable bound', async () => {

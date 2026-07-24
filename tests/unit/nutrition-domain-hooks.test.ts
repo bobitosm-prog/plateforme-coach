@@ -36,7 +36,7 @@ describe('Nutrition domain hook contracts', () => {
     expect(source).not.toMatch(/from ['"](?:@\/app|next\/|react-dom)/)
     expect(source).toContain('createNutritionRecipeRepository')
     expect(source).toContain("from('daily_food_logs')")
-    expect(source).toContain("from('meal_plans')")
+    expect(source).toContain('createActivePersonalMealPlanReader')
   })
 
   it('wires journal, plans, recipes and goals to their existing consumers', () => {

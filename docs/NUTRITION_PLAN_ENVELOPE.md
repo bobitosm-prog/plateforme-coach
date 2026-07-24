@@ -5,9 +5,10 @@
 `lib/nutrition/plan-envelope/` implémente le contrat read-only de
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md). Le module est
 pur : il ne dépend ni de React, Next, Supabase, `app/`, navigateur, réseau ou
-variables d'environnement. Un seul
-[consommateur dashboard read-only](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md)
-l'utilise désormais ; aucun producteur n'est raccordé.
+variables d'environnement. Le
+[consommateur dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et la
+[lecture du plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md)
+l'utilisent désormais ; aucun producteur n'est raccordé.
 
 ## API publique
 
@@ -22,6 +23,7 @@ l'utilise désormais ; aucun producteur n'est raccordé.
 | `readNutritionPlanDocument({plan, planData})` | Double lecture canonique-prioritaire. |
 | `readMealPlanRow(value)` | Sépare document et autorité SQL de `meal_plans`. |
 | `readClientMealPlanRow(value)` | Sépare document et autorité SQL de `client_meal_plans`. |
+| `presentNutritionPlanForLegacyUi(envelope)` | Projette sans perte démontrée vers le contrat UI historique ou refuse la projection. |
 
 Les résultats sont discriminés :
 
@@ -88,8 +90,8 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 ## Limites restantes
 
 - Aucun writer ne produit encore `NutritionPlanEnvelopeV1`.
-- Un seul consommateur read-only l'utilise ; les lecteurs personnels et coach
-  détail restent legacy.
+- Deux consommateurs read-only l'utilisent ; `HomeTab` et les lecteurs du
+  détail client restent legacy.
 - Les colonnes SQL futures `week_start` et `status` ne sont pas créées.
 - Aucun backfill ou contrôle distant n'a été réalisé.
 - La priorité produit entre plan personnel et plan coach reste inchangée.
