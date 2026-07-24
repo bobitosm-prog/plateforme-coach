@@ -11,7 +11,15 @@ export type PassMedianBudget = {
 }
 
 export type PerformanceBudgetRegistry = {
-  schemaVersion: 1
+  schemaVersion: 2
+  calibration: {
+    id: string
+    date: string
+    scope: 'clientMobile.vitals.inp'
+    previous: { pass: number; median: number }
+    current: { pass: number; median: number }
+    evidence: readonly string[]
+  }
   derivation: {
     sourceArtifacts: readonly string[]
     relativeMargin: number

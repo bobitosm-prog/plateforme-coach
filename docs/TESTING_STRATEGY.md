@@ -1,5 +1,12 @@
 # Stratégie de tests MoovX
 
+La campagne Core Web Vitals anti-cherry-picking du 24 juillet 2026 a
+pré-déclaré exactement deux captures normatives. Une capture défavorable est
+conservée et ne doit jamais être remplacée par une relance ; voir
+[`PERFORMANCE_CWV_COMPARISON.md`](PERFORMANCE_CWV_COMPARISON.md).
+La calibration qui en résulte est portée par le registre de budgets v2 et doit
+toujours être vérifiée sur les six artefacts conservés.
+
 > État mesuré le 15 juillet 2026 après intégration de la suite E2E critique canonique de Phase 2. Cette stratégie décrit le dépôt réel puis la cible. Aucun test ne doit contacter la production.
 
 Les invariants de cache (TTL, propriétaire, version, autorité et invalidation) et l'inventaire statique du legacy sont décrits dans [`CACHE_STRATEGY.md`](CACHE_STRATEGY.md).
@@ -157,6 +164,12 @@ port temporaire. Le protocole et les métriques sont détaillés dans la
 service et applique les [budgets locaux anti-régression](./PERFORMANCE_BUDGETS.md).
 Un dépassement bloquant, une métrique requise indisponible ou un artefact
 invalide produit un code non nul.
+
+`npm run perf:compare` relit exactement deux références avant et deux captures
+après, valide leur protocole commun et écrit un rapport JSON déterministe sans
+démarrer build, navigateur, Supabase ou réseau. Le comparateur et ses limites
+sont documentés dans la
+[comparaison Core Web Vitals Phase 8](./PERFORMANCE_CWV_COMPARISON.md).
 
 ### À chaque modification
 

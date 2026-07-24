@@ -1,0 +1,2602 @@
+{
+  "artifacts": {
+    "after": [
+      {
+        "browser": "149.0.7827.55",
+        "buildId": "NylPNRZFx9HmPOvYtl5H5",
+        "commit": "aa9dd9a7f200c028372fc87ee080b49387d6a69e",
+        "measuredAt": "2026-07-24T12:48:37.275Z",
+        "network": "localhost-only; external browser requests aborted and asserted absent",
+        "next": "16.1.6",
+        "node": "v24.14.0",
+        "npm": "11.9.0",
+        "playwright": "^1.61.1",
+        "timezone": "Europe/Zurich",
+        "viewports": {
+          "clientMobile": {
+            "height": 844,
+            "width": 390
+          },
+          "coachDesktop": {
+            "height": 900,
+            "width": 1440
+          }
+        }
+      },
+      {
+        "browser": "149.0.7827.55",
+        "buildId": "eluwqnitSMMb4YQUA70Pb",
+        "commit": "aa9dd9a7f200c028372fc87ee080b49387d6a69e",
+        "measuredAt": "2026-07-24T12:50:08.107Z",
+        "network": "localhost-only; external browser requests aborted and asserted absent",
+        "next": "16.1.6",
+        "node": "v24.14.0",
+        "npm": "11.9.0",
+        "playwright": "^1.61.1",
+        "timezone": "Europe/Zurich",
+        "viewports": {
+          "clientMobile": {
+            "height": 844,
+            "width": 390
+          },
+          "coachDesktop": {
+            "height": 900,
+            "width": 1440
+          }
+        }
+      }
+    ],
+    "before": [
+      {
+        "browser": "149.0.7827.55",
+        "buildId": "3SsmZGs4buSrw3lXUjHJu",
+        "commit": "2025c7135e361866591af9296355fde05587d01d",
+        "measuredAt": "2026-07-22T19:04:21.151Z",
+        "network": "localhost-only; external browser requests aborted and asserted absent",
+        "next": "16.1.6",
+        "node": "v24.14.0",
+        "npm": "11.9.0",
+        "playwright": "^1.61.1",
+        "timezone": "Europe/Zurich",
+        "viewports": {
+          "clientMobile": {
+            "height": 844,
+            "width": 390
+          },
+          "coachDesktop": {
+            "height": 900,
+            "width": 1440
+          }
+        }
+      },
+      {
+        "browser": "149.0.7827.55",
+        "buildId": "trz-4UEZ9K_w9uD-xZKhc",
+        "commit": "2025c7135e361866591af9296355fde05587d01d",
+        "measuredAt": "2026-07-22T19:06:17.182Z",
+        "network": "localhost-only; external browser requests aborted and asserted absent",
+        "next": "16.1.6",
+        "node": "v24.14.0",
+        "npm": "11.9.0",
+        "playwright": "^1.61.1",
+        "timezone": "Europe/Zurich",
+        "viewports": {
+          "clientMobile": {
+            "height": 844,
+            "width": 390
+          },
+          "coachDesktop": {
+            "height": 900,
+            "width": 1440
+          }
+        }
+      }
+    ]
+  },
+  "bundle": {
+    "globalDeduplicatedGzipBytes": {
+      "after": {
+        "max": 591408,
+        "median": 591408,
+        "min": 591408,
+        "values": [
+          591408,
+          591408
+        ]
+      },
+      "before": {
+        "max": 930652,
+        "median": 930649,
+        "min": 930646,
+        "values": [
+          930652,
+          930646
+        ]
+      },
+      "deltaAbsolute": -339241,
+      "deltaPercent": -36.45208881114147
+    },
+    "routes": {
+      "client": {
+        "routeSpecificGzipBytes": {
+          "after": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0
+            ]
+          },
+          "before": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0
+            ]
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": null
+        },
+        "totalGzipBytes": {
+          "after": {
+            "max": 566007,
+            "median": 566007,
+            "min": 566007,
+            "values": [
+              566007,
+              566007
+            ]
+          },
+          "before": {
+            "max": 886830,
+            "median": 886827,
+            "min": 886824,
+            "values": [
+              886830,
+              886824
+            ]
+          },
+          "deltaAbsolute": -320820,
+          "deltaPercent": -36.176165137056046
+        }
+      },
+      "clientDetail": {
+        "routeSpecificGzipBytes": {
+          "after": {
+            "max": 17173,
+            "median": 17173,
+            "min": 17173,
+            "values": [
+              17173,
+              17173
+            ]
+          },
+          "before": {
+            "max": 34936,
+            "median": 34936,
+            "min": 34936,
+            "values": [
+              34936,
+              34936
+            ]
+          },
+          "deltaAbsolute": -17763,
+          "deltaPercent": -50.8444011907488
+        },
+        "totalGzipBytes": {
+          "after": {
+            "max": 583180,
+            "median": 583180,
+            "min": 583180,
+            "values": [
+              583180,
+              583180
+            ]
+          },
+          "before": {
+            "max": 921766,
+            "median": 921763,
+            "min": 921760,
+            "values": [
+              921766,
+              921760
+            ]
+          },
+          "deltaAbsolute": -338583,
+          "deltaPercent": -36.73211009771492
+        }
+      },
+      "coach": {
+        "routeSpecificGzipBytes": {
+          "after": {
+            "max": 8228,
+            "median": 8228,
+            "min": 8228,
+            "values": [
+              8228,
+              8228
+            ]
+          },
+          "before": {
+            "max": 8886,
+            "median": 8886,
+            "min": 8886,
+            "values": [
+              8886,
+              8886
+            ]
+          },
+          "deltaAbsolute": -658,
+          "deltaPercent": -7.4049065946432595
+        },
+        "totalGzipBytes": {
+          "after": {
+            "max": 574235,
+            "median": 574235,
+            "min": 574235,
+            "values": [
+              574235,
+              574235
+            ]
+          },
+          "before": {
+            "max": 895716,
+            "median": 895713,
+            "min": 895710,
+            "values": [
+              895716,
+              895710
+            ]
+          },
+          "deltaAbsolute": -321478,
+          "deltaPercent": -35.89073732322742
+        }
+      }
+    }
+  },
+  "journeys": {
+    "clientMobile": {
+      "metrics": {
+        "cls": {
+          "after": {
+            "max": 0.010764427324414466,
+            "median": 0.010764201451461395,
+            "min": 0.0038861441575539974,
+            "values": [
+              0.0038861441575539974,
+              0.010764427324414466,
+              0.010764201451461395,
+              0.0038861441575539974,
+              0.010764201451461395,
+              0.010764201451461395
+            ]
+          },
+          "before": {
+            "max": 0.010764427324414466,
+            "median": 0.010764201451461395,
+            "min": 0.0038861441575539974,
+            "values": [
+              0.0038861441575539974,
+              0.010764427324414466,
+              0.010764201451461395,
+              0.0038861441575539974,
+              0.010764201451461395,
+              0.010764427324414466
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 0.0038861441575539974,
+              "median": 0.0038861441575539974,
+              "min": 0.0038861441575539974,
+              "values": [
+                0.0038861441575539974,
+                0.0038861441575539974
+              ]
+            },
+            "before": {
+              "max": 0.0038861441575539974,
+              "median": 0.0038861441575539974,
+              "min": 0.0038861441575539974,
+              "values": [
+                0.0038861441575539974,
+                0.0038861441575539974
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 0.010764427324414466,
+              "median": 0.010764201451461395,
+              "min": 0.010764201451461395,
+              "values": [
+                0.010764427324414466,
+                0.010764201451461395,
+                0.010764201451461395,
+                0.010764201451461395
+              ]
+            },
+            "before": {
+              "max": 0.010764427324414466,
+              "median": 0.01076431438793793,
+              "min": 0.010764201451461395,
+              "values": [
+                0.010764427324414466,
+                0.010764201451461395,
+                0.010764201451461395,
+                0.010764427324414466
+              ]
+            }
+          }
+        },
+        "inp": {
+          "after": {
+            "max": 48,
+            "median": 40,
+            "min": 32,
+            "values": [
+              48,
+              32,
+              32,
+              32,
+              48,
+              48
+            ]
+          },
+          "before": {
+            "max": 48,
+            "median": 32,
+            "min": 32,
+            "values": [
+              48,
+              32,
+              32,
+              48,
+              32,
+              32
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 48,
+              "median": 40,
+              "min": 32,
+              "values": [
+                48,
+                32
+              ]
+            },
+            "before": {
+              "max": 48,
+              "median": 48,
+              "min": 48,
+              "values": [
+                48,
+                48
+              ]
+            }
+          },
+          "deltaAbsolute": 8,
+          "deltaPercent": 25,
+          "direction": "regression",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 48,
+              "median": 40,
+              "min": 32,
+              "values": [
+                32,
+                32,
+                48,
+                48
+              ]
+            },
+            "before": {
+              "max": 32,
+              "median": 32,
+              "min": 32,
+              "values": [
+                32,
+                32,
+                32,
+                32
+              ]
+            }
+          }
+        },
+        "lcp": {
+          "after": {
+            "max": 384,
+            "median": 322,
+            "min": 304,
+            "values": [
+              384,
+              304,
+              308,
+              336,
+              308,
+              340
+            ]
+          },
+          "before": {
+            "max": 416,
+            "median": 386,
+            "min": 328,
+            "values": [
+              416,
+              396,
+              376,
+              416,
+              352,
+              328
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 384,
+              "median": 360,
+              "min": 336,
+              "values": [
+                384,
+                336
+              ]
+            },
+            "before": {
+              "max": 416,
+              "median": 416,
+              "min": 416,
+              "values": [
+                416,
+                416
+              ]
+            }
+          },
+          "deltaAbsolute": -64,
+          "deltaPercent": -16.580310880829018,
+          "direction": "improvement",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 340,
+              "median": 308,
+              "min": 304,
+              "values": [
+                304,
+                308,
+                308,
+                340
+              ]
+            },
+            "before": {
+              "max": 396,
+              "median": 364,
+              "min": 328,
+              "values": [
+                396,
+                376,
+                352,
+                328
+              ]
+            }
+          }
+        }
+      },
+      "requests": {
+        "application": {
+          "after": {
+            "max": 63,
+            "median": 62,
+            "min": 62,
+            "values": [
+              63,
+              62,
+              62,
+              63,
+              62,
+              62
+            ]
+          },
+          "before": {
+            "max": 80,
+            "median": 65,
+            "min": 50,
+            "values": [
+              68,
+              74,
+              62,
+              80,
+              62,
+              50
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 63,
+              "median": 63,
+              "min": 63,
+              "values": [
+                63,
+                63
+              ]
+            },
+            "before": {
+              "max": 80,
+              "median": 74,
+              "min": 68,
+              "values": [
+                68,
+                80
+              ]
+            }
+          },
+          "deltaAbsolute": -3,
+          "deltaPercent": -4.615384615384616,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 62,
+              "median": 62,
+              "min": 62,
+              "values": [
+                62,
+                62,
+                62,
+                62
+              ]
+            },
+            "before": {
+              "max": 74,
+              "median": 62,
+              "min": 50,
+              "values": [
+                74,
+                62,
+                62,
+                50
+              ]
+            }
+          }
+        },
+        "auth": {
+          "after": {
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "before": {
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3,
+                3
+              ]
+            }
+          }
+        },
+        "css": {
+          "after": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "before": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "document": {
+          "after": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "before": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "font": {
+          "after": {
+            "max": 6,
+            "median": 6,
+            "min": 6,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "before": {
+            "max": 7,
+            "median": 7,
+            "min": 7,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 6,
+              "median": 6,
+              "min": 6,
+              "values": [
+                6,
+                6
+              ]
+            },
+            "before": {
+              "max": 7,
+              "median": 7,
+              "min": 7,
+              "values": [
+                7,
+                7
+              ]
+            }
+          },
+          "deltaAbsolute": -1,
+          "deltaPercent": -14.285714285714285,
+          "direction": "improvement",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 6,
+              "median": 6,
+              "min": 6,
+              "values": [
+                6,
+                6,
+                6,
+                6
+              ]
+            },
+            "before": {
+              "max": 7,
+              "median": 7,
+              "min": 7,
+              "values": [
+                7,
+                7,
+                7,
+                7
+              ]
+            }
+          }
+        },
+        "image-media": {
+          "after": {
+            "max": 7,
+            "median": 7,
+            "min": 7,
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7,
+              7
+            ]
+          },
+          "before": {
+            "max": 6,
+            "median": 6,
+            "min": 6,
+            "values": [
+              6,
+              6,
+              6,
+              6,
+              6,
+              6
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 7,
+              "median": 7,
+              "min": 7,
+              "values": [
+                7,
+                7
+              ]
+            },
+            "before": {
+              "max": 6,
+              "median": 6,
+              "min": 6,
+              "values": [
+                6,
+                6
+              ]
+            }
+          },
+          "deltaAbsolute": 1,
+          "deltaPercent": 16.666666666666664,
+          "direction": "regression",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 7,
+              "median": 7,
+              "min": 7,
+              "values": [
+                7,
+                7,
+                7,
+                7
+              ]
+            },
+            "before": {
+              "max": 6,
+              "median": 6,
+              "min": 6,
+              "values": [
+                6,
+                6,
+                6,
+                6
+              ]
+            }
+          }
+        },
+        "javascript": {
+          "after": {
+            "max": 32,
+            "median": 32,
+            "min": 32,
+            "values": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          },
+          "before": {
+            "max": 29,
+            "median": 28,
+            "min": 28,
+            "values": [
+              28,
+              28,
+              28,
+              28,
+              28,
+              29
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 32,
+              "median": 32,
+              "min": 32,
+              "values": [
+                32,
+                32
+              ]
+            },
+            "before": {
+              "max": 28,
+              "median": 28,
+              "min": 28,
+              "values": [
+                28,
+                28
+              ]
+            }
+          },
+          "deltaAbsolute": 4,
+          "deltaPercent": 14.285714285714285,
+          "direction": "regression",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 32,
+              "median": 32,
+              "min": 32,
+              "values": [
+                32,
+                32,
+                32,
+                32
+              ]
+            },
+            "before": {
+              "max": 29,
+              "median": 28,
+              "min": 28,
+              "values": [
+                28,
+                28,
+                28,
+                29
+              ]
+            }
+          }
+        },
+        "next-api": {
+          "after": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "before": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "other-local": {
+          "after": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "before": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": null,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "postgrest": {
+          "after": {
+            "max": 55,
+            "median": 54,
+            "min": 54,
+            "values": [
+              55,
+              54,
+              54,
+              55,
+              54,
+              54
+            ]
+          },
+          "before": {
+            "max": 72,
+            "median": 57,
+            "min": 42,
+            "values": [
+              60,
+              66,
+              54,
+              72,
+              54,
+              42
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 55,
+              "median": 55,
+              "min": 55,
+              "values": [
+                55,
+                55
+              ]
+            },
+            "before": {
+              "max": 72,
+              "median": 66,
+              "min": 60,
+              "values": [
+                60,
+                72
+              ]
+            }
+          },
+          "deltaAbsolute": -3,
+          "deltaPercent": -5.263157894736842,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 54,
+              "median": 54,
+              "min": 54,
+              "values": [
+                54,
+                54,
+                54,
+                54
+              ]
+            },
+            "before": {
+              "max": 66,
+              "median": 54,
+              "min": 42,
+              "values": [
+                66,
+                54,
+                54,
+                42
+              ]
+            }
+          }
+        },
+        "realtime": {
+          "after": {
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "before": {
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3,
+                3
+              ]
+            }
+          }
+        },
+        "total": {
+          "after": {
+            "max": 109,
+            "median": 108,
+            "min": 108,
+            "values": [
+              109,
+              108,
+              108,
+              109,
+              108,
+              108
+            ]
+          },
+          "before": {
+            "max": 122,
+            "median": 107,
+            "min": 93,
+            "values": [
+              110,
+              116,
+              104,
+              122,
+              104,
+              93
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 109,
+              "median": 109,
+              "min": 109,
+              "values": [
+                109,
+                109
+              ]
+            },
+            "before": {
+              "max": 122,
+              "median": 116,
+              "min": 110,
+              "values": [
+                110,
+                122
+              ]
+            }
+          },
+          "deltaAbsolute": 1,
+          "deltaPercent": 0.9345794392523363,
+          "direction": "regression",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 108,
+              "median": 108,
+              "min": 108,
+              "values": [
+                108,
+                108,
+                108,
+                108
+              ]
+            },
+            "before": {
+              "max": 116,
+              "median": 104,
+              "min": 93,
+              "values": [
+                116,
+                104,
+                104,
+                93
+              ]
+            }
+          }
+        }
+      }
+    },
+    "coachDesktop": {
+      "metrics": {
+        "cls": {
+          "after": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "before": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": null,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "inp": {
+          "after": {
+            "max": 24,
+            "median": 24,
+            "min": 24,
+            "values": [
+              24,
+              24,
+              24,
+              24,
+              24,
+              24
+            ]
+          },
+          "before": {
+            "max": 24,
+            "median": 24,
+            "min": 24,
+            "values": [
+              24,
+              24,
+              24,
+              24,
+              24,
+              24
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 24,
+              "median": 24,
+              "min": 24,
+              "values": [
+                24,
+                24
+              ]
+            },
+            "before": {
+              "max": 24,
+              "median": 24,
+              "min": 24,
+              "values": [
+                24,
+                24
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 24,
+              "median": 24,
+              "min": 24,
+              "values": [
+                24,
+                24,
+                24,
+                24
+              ]
+            },
+            "before": {
+              "max": 24,
+              "median": 24,
+              "min": 24,
+              "values": [
+                24,
+                24,
+                24,
+                24
+              ]
+            }
+          }
+        },
+        "lcp": {
+          "after": {
+            "max": 244,
+            "median": 222,
+            "min": 212,
+            "values": [
+              220,
+              224,
+              228,
+              244,
+              212,
+              216
+            ]
+          },
+          "before": {
+            "max": 308,
+            "median": 280,
+            "min": 220,
+            "values": [
+              284,
+              220,
+              292,
+              276,
+              308,
+              224
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 244,
+              "median": 232,
+              "min": 220,
+              "values": [
+                220,
+                244
+              ]
+            },
+            "before": {
+              "max": 284,
+              "median": 280,
+              "min": 276,
+              "values": [
+                284,
+                276
+              ]
+            }
+          },
+          "deltaAbsolute": -58,
+          "deltaPercent": -20.714285714285715,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 228,
+              "median": 220,
+              "min": 212,
+              "values": [
+                224,
+                228,
+                212,
+                216
+              ]
+            },
+            "before": {
+              "max": 308,
+              "median": 258,
+              "min": 220,
+              "values": [
+                220,
+                292,
+                308,
+                224
+              ]
+            }
+          }
+        }
+      },
+      "requests": {
+        "application": {
+          "after": {
+            "max": 39,
+            "median": 39,
+            "min": 39,
+            "values": [
+              39,
+              39,
+              39,
+              39,
+              39,
+              39
+            ]
+          },
+          "before": {
+            "max": 40,
+            "median": 40,
+            "min": 39,
+            "values": [
+              40,
+              40,
+              39,
+              40,
+              40,
+              40
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 39,
+              "median": 39,
+              "min": 39,
+              "values": [
+                39,
+                39
+              ]
+            },
+            "before": {
+              "max": 40,
+              "median": 40,
+              "min": 40,
+              "values": [
+                40,
+                40
+              ]
+            }
+          },
+          "deltaAbsolute": -1,
+          "deltaPercent": -2.5,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 39,
+              "median": 39,
+              "min": 39,
+              "values": [
+                39,
+                39,
+                39,
+                39
+              ]
+            },
+            "before": {
+              "max": 40,
+              "median": 40,
+              "min": 39,
+              "values": [
+                40,
+                39,
+                40,
+                40
+              ]
+            }
+          }
+        },
+        "auth": {
+          "after": {
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "before": {
+            "max": 6,
+            "median": 5.5,
+            "min": 5,
+            "values": [
+              5,
+              6,
+              5,
+              5,
+              6,
+              6
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5
+              ]
+            },
+            "before": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5
+              ]
+            }
+          },
+          "deltaAbsolute": -0.5,
+          "deltaPercent": -9.090909090909092,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            "before": {
+              "max": 6,
+              "median": 6,
+              "min": 5,
+              "values": [
+                6,
+                5,
+                6,
+                6
+              ]
+            }
+          }
+        },
+        "css": {
+          "after": {
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "before": {
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2
+              ]
+            },
+            "before": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2,
+                2
+              ]
+            },
+            "before": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          }
+        },
+        "document": {
+          "after": {
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "before": {
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "values": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2
+              ]
+            },
+            "before": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2,
+                2
+              ]
+            },
+            "before": {
+              "max": 2,
+              "median": 2,
+              "min": 2,
+              "values": [
+                2,
+                2,
+                2,
+                2
+              ]
+            }
+          }
+        },
+        "font": {
+          "after": {
+            "max": 12,
+            "median": 12,
+            "min": 12,
+            "values": [
+              12,
+              12,
+              12,
+              12,
+              12,
+              12
+            ]
+          },
+          "before": {
+            "max": 14,
+            "median": 14,
+            "min": 14,
+            "values": [
+              14,
+              14,
+              14,
+              14,
+              14,
+              14
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 12,
+              "median": 12,
+              "min": 12,
+              "values": [
+                12,
+                12
+              ]
+            },
+            "before": {
+              "max": 14,
+              "median": 14,
+              "min": 14,
+              "values": [
+                14,
+                14
+              ]
+            }
+          },
+          "deltaAbsolute": -2,
+          "deltaPercent": -14.285714285714285,
+          "direction": "improvement",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 12,
+              "median": 12,
+              "min": 12,
+              "values": [
+                12,
+                12,
+                12,
+                12
+              ]
+            },
+            "before": {
+              "max": 14,
+              "median": 14,
+              "min": 14,
+              "values": [
+                14,
+                14,
+                14,
+                14
+              ]
+            }
+          }
+        },
+        "image-media": {
+          "after": {
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ]
+          },
+          "before": {
+            "max": 4,
+            "median": 3.5,
+            "min": 3,
+            "values": [
+              3,
+              4,
+              4,
+              3,
+              4,
+              3
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3
+              ]
+            }
+          },
+          "deltaAbsolute": -0.5,
+          "deltaPercent": -14.285714285714285,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 3,
+              "median": 3,
+              "min": 3,
+              "values": [
+                3,
+                3,
+                3,
+                3
+              ]
+            },
+            "before": {
+              "max": 4,
+              "median": 4,
+              "min": 3,
+              "values": [
+                4,
+                4,
+                4,
+                3
+              ]
+            }
+          }
+        },
+        "javascript": {
+          "after": {
+            "max": 46,
+            "median": 46,
+            "min": 46,
+            "values": [
+              46,
+              46,
+              46,
+              46,
+              46,
+              46
+            ]
+          },
+          "before": {
+            "max": 48,
+            "median": 48,
+            "min": 45,
+            "values": [
+              48,
+              45,
+              45,
+              48,
+              48,
+              48
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 46,
+              "median": 46,
+              "min": 46,
+              "values": [
+                46,
+                46
+              ]
+            },
+            "before": {
+              "max": 48,
+              "median": 48,
+              "min": 48,
+              "values": [
+                48,
+                48
+              ]
+            }
+          },
+          "deltaAbsolute": -2,
+          "deltaPercent": -4.166666666666666,
+          "direction": "improvement",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 46,
+              "median": 46,
+              "min": 46,
+              "values": [
+                46,
+                46,
+                46,
+                46
+              ]
+            },
+            "before": {
+              "max": 48,
+              "median": 46.5,
+              "min": 45,
+              "values": [
+                45,
+                45,
+                48,
+                48
+              ]
+            }
+          }
+        },
+        "next-api": {
+          "after": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "before": {
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "before": {
+              "max": 1,
+              "median": 1,
+              "min": 1,
+              "values": [
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "other-local": {
+          "after": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "before": {
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": null,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "before": {
+              "max": 0,
+              "median": 0,
+              "min": 0,
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "postgrest": {
+          "after": {
+            "max": 26,
+            "median": 26,
+            "min": 26,
+            "values": [
+              26,
+              26,
+              26,
+              26,
+              26,
+              26
+            ]
+          },
+          "before": {
+            "max": 27,
+            "median": 26,
+            "min": 26,
+            "values": [
+              27,
+              26,
+              26,
+              27,
+              26,
+              26
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 26,
+              "median": 26,
+              "min": 26,
+              "values": [
+                26,
+                26
+              ]
+            },
+            "before": {
+              "max": 27,
+              "median": 27,
+              "min": 27,
+              "values": [
+                27,
+                27
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 26,
+              "median": 26,
+              "min": 26,
+              "values": [
+                26,
+                26,
+                26,
+                26
+              ]
+            },
+            "before": {
+              "max": 26,
+              "median": 26,
+              "min": 26,
+              "values": [
+                26,
+                26,
+                26,
+                26
+              ]
+            }
+          }
+        },
+        "realtime": {
+          "after": {
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "before": {
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5
+              ]
+            },
+            "before": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5
+              ]
+            }
+          },
+          "deltaAbsolute": 0,
+          "deltaPercent": 0,
+          "direction": "stable",
+          "dispersion": "within-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5,
+                5,
+                5
+              ]
+            },
+            "before": {
+              "max": 5,
+              "median": 5,
+              "min": 5,
+              "values": [
+                5,
+                5,
+                5,
+                5
+              ]
+            }
+          }
+        },
+        "total": {
+          "after": {
+            "max": 102,
+            "median": 102,
+            "min": 102,
+            "values": [
+              102,
+              102,
+              102,
+              102,
+              102,
+              102
+            ]
+          },
+          "before": {
+            "max": 108,
+            "median": 107,
+            "min": 104,
+            "values": [
+              107,
+              105,
+              104,
+              107,
+              108,
+              107
+            ]
+          },
+          "cold": {
+            "after": {
+              "max": 102,
+              "median": 102,
+              "min": 102,
+              "values": [
+                102,
+                102
+              ]
+            },
+            "before": {
+              "max": 107,
+              "median": 107,
+              "min": 107,
+              "values": [
+                107,
+                107
+              ]
+            }
+          },
+          "deltaAbsolute": -5,
+          "deltaPercent": -4.672897196261682,
+          "direction": "improvement",
+          "dispersion": "outside-before-range",
+          "status": "comparable",
+          "warm": {
+            "after": {
+              "max": 102,
+              "median": 102,
+              "min": 102,
+              "values": [
+                102,
+                102,
+                102,
+                102
+              ]
+            },
+            "before": {
+              "max": 108,
+              "median": 106,
+              "min": 104,
+              "values": [
+                105,
+                104,
+                108,
+                107
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "protocol": {
+    "afterRuns": 2,
+    "beforeRuns": 2,
+    "coldPasses": [
+      1,
+      4
+    ],
+    "localWithoutThrottling": true,
+    "observationsPerJourney": 6,
+    "passesPerRun": 3,
+    "warmPasses": [
+      2,
+      3,
+      5,
+      6
+    ]
+  },
+  "schemaVersion": 1
+}

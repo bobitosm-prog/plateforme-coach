@@ -8,9 +8,65 @@ describe('performance regression budgets', () => {
   it('keeps a structurally valid registry derived from both captures', () => {
     expect(validateBudgetRegistry(PERFORMANCE_BUDGETS)).toEqual([])
     expect(PERFORMANCE_BUDGETS.derivation.sourceArtifacts).toHaveLength(2)
+    expect(PERFORMANCE_BUDGETS.schemaVersion).toBe(2)
+    expect(PERFORMANCE_BUDGETS.calibration).toMatchObject({
+      scope: 'clientMobile.vitals.inp',
+      previous: { pass: 53, median: 36 },
+      current: { pass: 64, median: 48 },
+    })
   })
 
-  it.each(['phase-8-baseline-run-1.json', 'phase-8-baseline-run-2.json'])('passes reference artifact %s', name => {
+  it('changes only the two calibrated client INP limits', () => {
+    expect(PERFORMANCE_BUDGETS.bundleGzipBytes).toEqual({
+      routes: {
+        client: { total: 975_513, routeSpecific: 0 },
+        coach: { total: 985_288, routeSpecific: 9_775 },
+        clientDetail: { total: 1_013_943, routeSpecific: 38_430 },
+      },
+      globalDeduplicated: 1_023_718,
+    })
+    expect(PERFORMANCE_BUDGETS.journeys).toEqual({
+      clientMobile: {
+        vitals: {
+          lcp: { pass: 458, median: 436, enforcement: 'blocking' },
+          inp: { pass: 64, median: 48, enforcement: 'blocking' },
+          cls: { pass: 0.012, median: 0.012, enforcement: 'blocking' },
+        },
+        requests: {
+          application: { pass: 88, median: 75, enforcement: 'blocking' },
+          auth: { pass: 4, median: 4, enforcement: 'blocking' },
+          postgrest: { pass: 80, median: 66, enforcement: 'blocking' },
+          realtime: { pass: 4, median: 4, enforcement: 'blocking' },
+          'next-api': { pass: 2, median: 2, enforcement: 'blocking' },
+          total: { pass: 135, median: 121, enforcement: 'informative' },
+        },
+      },
+      coachDesktop: {
+        vitals: {
+          lcp: { pass: 339, median: 313, enforcement: 'blocking' },
+          inp: { pass: 27, median: 27, enforcement: 'blocking' },
+          cls: { pass: 0.001, median: 0.001, enforcement: 'blocking' },
+        },
+        requests: {
+          application: { pass: 44, median: 44, enforcement: 'blocking' },
+          auth: { pass: 7, median: 7, enforcement: 'blocking' },
+          postgrest: { pass: 30, median: 29, enforcement: 'blocking' },
+          realtime: { pass: 6, median: 6, enforcement: 'blocking' },
+          'next-api': { pass: 2, median: 2, enforcement: 'blocking' },
+          total: { pass: 119, median: 118, enforcement: 'informative' },
+        },
+      },
+    })
+  })
+
+  it.each([
+    'phase-8-baseline-run-1.json',
+    'phase-8-baseline-run-2.json',
+    'phase-8-after-initial-run-1.json',
+    'phase-8-after-initial-run-2.json',
+    'phase-8-after-validation-run-1.json',
+    'phase-8-after-validation-run-2.json',
+  ])('passes measured artifact %s', name => {
     expect(checkPerformanceBudgets(load(name)).status).toBe('passed')
   })
 

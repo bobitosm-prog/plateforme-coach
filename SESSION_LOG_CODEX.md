@@ -10317,3 +10317,134 @@ Réduire et auto-héberger les polices nécessaires.
 ### Prochaine action unique
 
 Comparer les Core Web Vitals avant/après.
+
+## Entrée — 2026-07-24 — Comparaison Core Web Vitals ouverte
+
+- Les deux références immuables conservent leurs SHA-256 et passent chacune
+  79/79. Deux captures Webpack de production indépendantes sont ajoutées sous
+  les BUILD_ID `KIJy5Q2IFd93eTcrhTiex` et `VmABzAAzxal0Z6uOEiJgf`.
+- Le comparateur pur valide exactement deux runs avant, deux après, trois
+  passages par parcours, versions, timezone, viewports, ordre des étapes,
+  métriques et catégories réseau. Il expose les états `comparable`,
+  `unavailable` et `invalid`, conserve ses entrées et refuse les nombres non
+  finis, négatifs ou les protocoles incompatibles.
+- Client : LCP médian `386 → 342 ms` (`−44`, `−11,399 %`), INP médian
+  `32 → 32 ms`, CLS médian stable à `0,010764`. Coach : LCP médian
+  `280 → 228 ms` (`−52`, `−18,571 %`), INP stable à 24 ms et CLS à zéro.
+- Le bundle gzip médian baisse de 36,176 % client, 35,891 % coach et 36,452 %
+  sur l'union dédupliquée. Les requêtes font passent de 7 à 6 client et de 14
+  à 12 coach.
+- Les deux contrôles après échouent toutefois 78/79 : leur premier INP client
+  vaut exactement 64 ms pour un plafond inchangé de 53 ms. Les passages chauds
+  restent tous à 32 ms. Cette régression froide reproductible empêche la
+  clôture ; aucune mesure n'est remplacée, aucun seuil n'est modifié et la
+  tâche roadmap reste décochée.
+- Le rapport déterministe est produit par `npm run perf:compare`. Les limites
+  locales, l'absence de significativité avec six observations et l'impossibilité
+  d'attribuer causalement un gain à une optimisation isolée sont documentées.
+
+### Prochaine action unique
+
+Diagnostiquer l'INP froid client à 64 ms sans modifier les budgets ni optimiser
+l'application.
+
+## Entrée — 2026-07-24 — Diagnostic causal de l'INP froid client
+
+- Un unique build Next.js production Webpack, BUILD_ID
+  `liZGGbdmUy5CIamKf7QPu`, exécute sept expériences pré-déclarées dans des
+  contextes neufs : A1/A2/A3 froids canoniques, B chunks préchargés, C onglet
+  préchauffé, D images bloquées et E trace auxiliaire.
+- Les contrôles froids donnent `48/32/48 ms`. Le clic Training A1 contient
+  1,7 ms d'attente d'entrée, 4,8 ms de traitement et 41,5 ms de présentation ;
+  aucun long task ni Long Animation Frame ne chevauche l'interaction.
+- Les chunks `2661…js` et `5777…js` représentent 62 479 octets transférés à
+  froid. Leur préchargement retire leurs requêtes de l'interaction et Training
+  mesure 32 ms, mais le contrôle A2 atteint déjà 32 ms sans intervention. Le
+  blocage des images laisse 48 ms. Le
+  préchauffage complet de Training ramène le clic à 32 ms.
+- Le verdict discriminé est `environment_variance`, permis par les trois
+  contrôles pré-déclarés et leur dispersion de 16 ms. La variance se concentre
+  dans la présentation ; les preuves excluent les images comme cause suffisante
+  mais ne permettent pas d'isoler causalement les chunks, un commit
+  React, un style, un layout ou un paint particulier ; ces sous-phases ne sont
+  pas observables sans instrumentation intrusive.
+- L'artefact expurgé
+  `perf/diagnostics/phase-8-inp-causal-matrix.json` conserve le BUILD_ID, les
+  timings et les ressources locales. Les baselines avant et après, les budgets
+  et le comportement applicatif restent inchangés. La reconstruction
+  historique n'est pas lancée : le commit de référence ne contient pas le même
+  harnais et le greffer au schéma local créerait un protocole non comparable.
+- La tâche « Comparer les Core Web Vitals avant/après » reste décochée : aucune
+  nouvelle paire normative 79/79 n'a été produite.
+
+### Prochaine action unique
+
+Refaire deux captures normatives indépendantes sans instrumentation ; ne
+proposer une optimisation que si elles reproduisent encore le dépassement.
+
+## Entrée — 2026-07-24 — Validations normatives finales anti-cherry-picking
+
+- Exactement deux captures ont été pré-déclarées et exécutées, sans troisième
+  essai, instrumentation diagnostique, tracing, blocage, préchargement, cache
+  artificiellement chauffé ou attente supplémentaire.
+- Validation 1, BUILD_ID `NylPNRZFx9HmPOvYtl5H5` : client LCP
+  `384/304/308 ms`, INP `48/32/32 ms`, CLS
+  `0,003886/0,010764/0,010764`; coach LCP `220/224/228 ms`, INP
+  `24/24/24 ms`, CLS nul. Elle passe 79/79.
+- Validation 2, BUILD_ID `eluwqnitSMMb4YQUA70Pb` : client LCP
+  `336/308/340 ms`, INP `32/48/48 ms`, même série CLS ; coach LCP
+  `244/212/216 ms`, INP `24/24/24 ms`, CLS nul. Elle échoue 78/79 sur la
+  médiane INP client, 48 ms pour une limite inchangée de 36 ms.
+- Chaque capture comporte trois contextes client et trois coach, toutes les
+  métriques sont disponibles et aucune requête externe n'est observée.
+- Les deux échecs initiaux restent byte-identiques sous les noms explicites
+  `phase-8-after-initial-run-1.json` et
+  `phase-8-after-initial-run-2.json`. Les deux validations sont conservées
+  sous `phase-8-after-validation-run-1.json` et
+  `phase-8-after-validation-run-2.json`.
+- Le rapport `phase-8-comparison.json` n'est pas remplacé par les validations :
+  le critère exigeait deux passages 79/79. `npm run perf:compare` continue donc
+  de reproduire le rapport initial avec les chemins renommés.
+- Aucun budget, baseline historique, fichier applicatif, Supabase, CDN, RLS ou
+  comportement métier n'est modifié. La tâche reste décochée.
+
+### Prochaine action unique
+
+Demander une décision explicite : accepter la variance documentée, autoriser
+une optimisation ciblée, ou définir une nouvelle campagne pré-déclarée.
+
+## Entrée — 2026-07-24 — Calibration INP acceptée et comparaison Phase 8 close
+
+- La décision explicite accepte la variance INP locale et autorise une
+  calibration unique, strictement limitée à `clientMobile.vitals.inp`.
+  Le registre de budgets passe en v2 avec les plafonds par passage/médiane
+  `53/36 → 64/48 ms`. Tous les autres seuils restent byte-identiques.
+- La justification conserve les paliers observés `32/48/64 ms`, une médiane
+  agrégée des validations à 40 ms, une variance concentrée dans
+  `presentationDelay`, aucune long task ou Long Animation Frame et aucune
+  ressource, image ou chunk causalement démontré. Aucun clic, observer,
+  comportement applicatif ou artefact de mesure n'est modifié.
+- Les deux baselines historiques, les deux captures initiales et les deux
+  validations passent désormais chacune 79/79. Les anciens statuts restent
+  documentés : captures initiales 78/79, validation 1 79/79 et validation 2
+  78/79 sous l'ancien plafond médian de 36 ms.
+- `npm run perf:compare` utilise désormais les validations
+  `NylPNRZFx9HmPOvYtl5H5` et `eluwqnitSMMb4YQUA70Pb`. Deux générations
+  consécutives donnent le SHA-256
+  `e0d89784a31da139c56d7d35aff6c6a65c8825546b33cec433f18e7851cd88ff`.
+- Comparaison finale : client LCP médian `386 → 322 ms` (`−16,580 %`), INP
+  `32 → 40 ms`, CLS stable ; coach LCP `280 → 222 ms` (`−20,714 %`), INP et
+  CLS stables. Bundle gzip réduit de 35,891 % à 36,732 % selon la route ;
+  requêtes applicatives client `65 → 62`, coach `40 → 39`. L'échantillon reste
+  `n=6`, sans significativité statistique ni attribution causale.
+- La tâche « Comparer les Core Web Vitals avant/après » est cochée. La
+  checklist Phase 8 atteint 13/13, mais la phase n'est pas déclarée terminée à
+  100 % : sa définition exige encore un gain LCP p75 mobile d'au moins 20 %,
+  non démontrable avec `n=6`; la médiane locale gagne 16,580 %. Ce point passe
+  dans l'audit RC1.
+- Le jalon Release Candidate RC1 est inséré avant Phase 9 avec 38 cases toutes
+  décochées. Phase 9 reste inactive.
+
+### Prochaine action unique
+
+Démarrer l'audit RC1 par la confirmation exhaustive des Phases 1 à 8.

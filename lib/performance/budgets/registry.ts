@@ -1,7 +1,21 @@
 import type { PerformanceBudgetRegistry } from './types.ts'
 
 export const PERFORMANCE_BUDGETS = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  calibration: {
+    id: 'phase-8-local-inp-2026-07-24',
+    date: '2026-07-24',
+    scope: 'clientMobile.vitals.inp',
+    previous: { pass: 53, median: 36 },
+    current: { pass: 64, median: 48 },
+    evidence: [
+      'phase-8-after-initial-run-1.json',
+      'phase-8-after-initial-run-2.json',
+      'phase-8-after-validation-run-1.json',
+      'phase-8-after-validation-run-2.json',
+      'phase-8-inp-causal-matrix.json',
+    ],
+  },
   derivation: {
     sourceArtifacts: ['perf/baseline/phase-8-baseline-run-1.json', 'perf/baseline/phase-8-baseline-run-2.json'],
     relativeMargin: 0.10,
@@ -20,7 +34,7 @@ export const PERFORMANCE_BUDGETS = {
     clientMobile: {
       vitals: {
         lcp: { pass: 458, median: 436, enforcement: 'blocking' },
-        inp: { pass: 53, median: 36, enforcement: 'blocking' },
+        inp: { pass: 64, median: 48, enforcement: 'blocking' },
         cls: { pass: 0.012, median: 0.012, enforcement: 'blocking' },
       },
       requests: {

@@ -14,6 +14,10 @@ const rawPath = resolve('/tmp/moovx-performance-baseline-raw.json')
 const diagnosticMatrixPath = process.env.MOOVX_INP_DIAGNOSTIC_MATRIX_PATH
   ? resolve(process.env.MOOVX_INP_DIAGNOSTIC_MATRIX_PATH)
   : null
+const causalMatrixPath = process.env.MOOVX_INP_CAUSAL_MATRIX_PATH
+  ? resolve(process.env.MOOVX_INP_CAUSAL_MATRIX_PATH)
+  : null
+const traceOutputPath = resolve('/tmp/moovx-inp-causal-trace')
 const args = process.argv.slice(2)
 const outputIndex = args.indexOf('--output')
 const outputPath = resolve(outputIndex >= 0 ? args[outputIndex + 1] : 'perf/baseline/phase-8-baseline.json')
@@ -75,6 +79,32 @@ function enrichHeavyLibraryEvidence(evidencePath: string) {
   writeFileSync(evidencePath, stableJson({ ...evidence, chunkGroups }))
 }
 
+function extractDiagnosticChunks(input: unknown): string[] {
+  if (!input || typeof input !== 'object' || !('journeys' in input)) return []
+  const journeys = input.journeys
+  if (!journeys || typeof journeys !== 'object' || !('clientMobile' in journeys)) return []
+  const client = journeys.clientMobile
+  if (!client || typeof client !== 'object' || !('runs' in client) || !Array.isArray(client.runs)) return []
+  const runs: unknown[] = client.runs
+  const firstRun = runs[0]
+  if (!firstRun || typeof firstRun !== 'object' || !('vitals' in firstRun)) return []
+  const vitals = firstRun.vitals
+  if (!vitals || typeof vitals !== 'object' || !('interactions' in vitals) || !Array.isArray(vitals.interactions)) return []
+  const interactionValues: unknown[] = vitals.interactions
+  const interactions = interactionValues.filter((value): value is Record<string, unknown> => typeof value === 'object' && value !== null)
+  const slowest = [...interactions].sort((left, right) =>
+    (typeof right.duration === 'number' ? right.duration : -1) - (typeof left.duration === 'number' ? left.duration : -1))[0]
+  const step = typeof slowest?.step === 'string' ? slowest.step : ''
+  const resourceValues: unknown[] = 'resources' in vitals && Array.isArray(vitals.resources) ? vitals.resources : []
+  const resources = resourceValues.length
+    ? resourceValues.filter((value): value is Record<string, unknown> => typeof value === 'object' && value !== null)
+    : []
+  return [...new Set(resources
+    .filter(resource => resource.kind === 'javascript' && resource.step === step)
+    .flatMap(resource => typeof resource.resourceCode === 'string' ? [resource.resourceCode] : [])
+    .filter(path => path.startsWith('/_next/static/chunks/')))].sort()
+}
+
 let completed = false
 try {
   run(process.execPath, ['scripts/supabase-local.mjs', 'ensure'])
@@ -103,7 +133,45 @@ try {
   }
   start('./node_modules/.bin/next', ['start', '--hostname', '127.0.0.1', '--port', '3211'], env)
   await ready(APP_URL)
-  if (diagnosticMatrixPath) {
+  if (causalMatrixPath) {
+    const experiments: Record<string, unknown> = {}
+    let diagnosticChunks: string[] = []
+    for (const experiment of [
+      { name: 'A1-canonical-cold', mode: 'canonical', trace: false },
+      { name: 'A2-canonical-cold', mode: 'canonical', trace: false },
+      { name: 'A3-canonical-cold', mode: 'canonical', trace: false },
+      { name: 'B-preloaded-chunks', mode: 'preload-chunks', trace: false },
+      { name: 'C-cache-hot', mode: 'cache-hot', trace: false },
+      { name: 'D-images-blocked', mode: 'block-images', trace: false },
+      { name: 'E-tracing', mode: 'trace', trace: true },
+    ]) {
+      const playwrightArgs = ['test', '--workers=1', 'e2e/performance-baseline.spec.ts']
+      if (experiment.trace) playwrightArgs.push('--trace=on')
+      run('./node_modules/.bin/playwright', playwrightArgs, {
+        ...env,
+        MOOVX_PERFORMANCE_DIAGNOSTICS: '1',
+        MOOVX_DIAGNOSTIC_CLIENT_ONLY: '1',
+        MOOVX_INP_EXPERIMENT: experiment.mode,
+        MOOVX_PRELOAD_CHUNKS: JSON.stringify(
+          experiment.mode === 'preload-chunks' ? diagnosticChunks : [],
+        ),
+        PLAYWRIGHT_OUTPUT_DIR: traceOutputPath,
+      })
+      const captured = JSON.parse(readFileSync(rawPath, 'utf8')) as unknown
+      experiments[experiment.name] = captured
+      if (experiment.name === 'A1-canonical-cold') diagnosticChunks = extractDiagnosticChunks(captured)
+    }
+    const canonical = experiments['A1-canonical-cold']
+    if (!canonical || typeof canonical !== 'object') throw new Error('Canonical INP diagnostic is unavailable')
+    writeFileSync(rawPath, stableJson(canonical), { mode: 0o600 })
+    mkdirSync(dirname(causalMatrixPath), { recursive: true })
+    writeFileSync(causalMatrixPath, stableJson({
+      schemaVersion: 1,
+      buildId: readFileSync(`${BUILD_DIR}/BUILD_ID`, 'utf8').trim(),
+      diagnosticChunks,
+      experiments,
+    }), { mode: 0o600 })
+  } else if (diagnosticMatrixPath) {
     const experiments: Record<string, unknown> = {}
     for (const experiment of [
       { name: 'normal-cold', requestMode: 'normal', cacheState: 'cold' },
@@ -163,7 +231,7 @@ try {
       network: 'localhost-only; external browser requests aborted and asserted absent',
     },
     bundle: analyzeProductionBundles(BUILD_DIR),
-    ...(process.env.MOOVX_PERFORMANCE_DIAGNOSTICS === '1' || diagnosticMatrixPath
+    ...(process.env.MOOVX_PERFORMANCE_DIAGNOSTICS === '1' || diagnosticMatrixPath || causalMatrixPath
       ? { diagnosticProtocol: raw.diagnosticProtocol }
       : {}),
     journeys: raw.journeys,
@@ -177,6 +245,7 @@ try {
   for (const child of children) { try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch { /* already stopped */ } }
   writeFileSync('tsconfig.json', originalTsconfig)
   rmSync(rawPath, { force: true })
+  rmSync(traceOutputPath, { recursive: true, force: true })
   rmSync(BUILD_DIR, { recursive: true, force: true })
   await assertTemporaryPortsClosed([3211])
   await assertMailpitEmpty()

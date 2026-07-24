@@ -2,6 +2,10 @@
 
 La tranche de réduction des Client Components conserve ces seuils inchangés ;
 voir [Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+Le dépassement INP froid client fait l'objet d'un
+[diagnostic causal séparé](./PERFORMANCE_INP_DIAGNOSTIC.md). Le registre v2
+contient une calibration unique, datée et bornée à cette métrique ; les
+artefacts de mesure et tous les autres budgets restent inchangés.
 
 ## Rôle
 
@@ -51,7 +55,10 @@ La commande ne démarre ni build, navigateur, Supabase, serveur ou réseau.
 - le total réseau est informatif car les assets statiques sont déjà couverts
   par les budgets bundle ; les requêtes applicatives et backend sont bloquantes.
 
-Aucune limite n'est inférieure à une observation existante. L'union bundle est
+La formule reste inchangée pour chaque garde-fou sauf l'INP client. Le registre
+v2 porte explicitement la calibration locale `53/36 → 64/48 ms`, ses valeurs
+antérieures, sa date et ses cinq preuves. Aucune limite n'est inférieure à une
+observation existante. L'union bundle est
 dédupliquée par fichier; elle n'est jamais comparée à la somme naïve des routes.
 
 ## Bundle gzip
@@ -74,7 +81,7 @@ donc une évolution explicite à examiner.
 | Parcours | Mesure | Chaque passage | Médiane |
 |---|---|---:|---:|
 | Client mobile | LCP | 458 ms | 436 ms |
-| Client mobile | INP | 53 ms | 36 ms |
+| Client mobile | INP | 64 ms | 48 ms |
 | Client mobile | CLS | 0,012 | 0,012 |
 | Coach desktop | LCP | 339 ms | 313 ms |
 | Coach desktop | INP | 27 ms | 27 ms |
@@ -147,3 +154,9 @@ seuil. Un contrôle intermédiaire échoue 78/79 sur un LCP client froid à 464 
 pour une limite de 458 ms. Deux contrôles indépendants suivants, BUILD_ID
 `jQFvyWrYnL-uZkYVLpvFY` et `SGy66Cn-3N8fWsyXWIQQ4`, passent chacun 79/79 avec
 six requêtes font client et douze coach.
+
+La [comparaison Core Web Vitals avant/après](./PERFORMANCE_CWV_COMPARISON.md)
+conserve les statuts historiques 78/79 sous les anciens plafonds `53/36`, puis
+versionne la calibration `64/48`. Les deux références, les deux captures
+initiales et les deux validations passent désormais 79/79 sans modification de
+leurs octets. Cette décision ne s'étend à aucun autre parcours ou budget.

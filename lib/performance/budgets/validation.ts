@@ -9,7 +9,16 @@ const finite = (value: unknown): value is number => typeof value === 'number' &&
 
 export function validateBudgetRegistry(registry: PerformanceBudgetRegistry): string[] {
   const issues: string[] = []
-  if (registry.schemaVersion !== 1) issues.push('registry.schemaVersion')
+  if (registry.schemaVersion !== 2) issues.push('registry.schemaVersion')
+  if (!registry.calibration.id || registry.calibration.date !== '2026-07-24') issues.push('registry.calibration.identity')
+  if (registry.calibration.scope !== 'clientMobile.vitals.inp') issues.push('registry.calibration.scope')
+  for (const [name, limits] of Object.entries({
+    previous: registry.calibration.previous,
+    current: registry.calibration.current,
+  })) {
+    if (!finite(limits.pass) || !finite(limits.median)) issues.push(`registry.calibration.${name}`)
+  }
+  if (!registry.calibration.evidence.length) issues.push('registry.calibration.evidence')
   if (!finite(registry.derivation.relativeMargin)) issues.push('registry.derivation.relativeMargin')
   for (const route of BUNDLE_ROUTES) {
     if (!finite(registry.bundleGzipBytes.routes[route]?.total)) issues.push(`registry.bundle.${route}.total`)

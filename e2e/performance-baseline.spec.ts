@@ -22,12 +22,23 @@ type InteractionDiagnostic = {
   domBefore: MediaDomDiagnostic
   domAfter: MediaDomDiagnostic
   associatedLongTasks: LongTaskDiagnostic[]
+  associatedLongAnimationFrames: LongAnimationFrameDiagnostic[]
   associatedResources: ResourceDiagnostic[]
 }
 type LongTaskDiagnostic = { duration: number; startTime: number; step: string }
+type LongAnimationFrameDiagnostic = {
+  duration: number
+  blockingDuration: number
+  renderDuration: number | null
+  styleAndLayoutDuration: number | null
+  scriptDuration: number
+  startTime: number
+  step: string
+}
 type MediaDomDiagnostic = { videos: number; posterAttributes: number; posterImages: number }
 type ResourceDiagnostic = {
   kind: 'image' | 'javascript'
+  resourceCode: string
   startTime: number
   duration: number
   transferSize: number
@@ -43,8 +54,10 @@ type VitalSnapshot = {
   eventTimingSupported: boolean
   interactions: InteractionDiagnostic[]
   longTasks: LongTaskDiagnostic[]
+  longAnimationFrames: LongAnimationFrameDiagnostic[]
   resources: ResourceDiagnostic[]
   imageDecodeObservable: false
+  reactCommitsObservable: false
   lcpEntry: LcpDiagnostic | null
 }
 type StepResult = { name: string; requests: ReturnType<typeof summarizeRequests> }
@@ -65,11 +78,22 @@ const RAW_PATH = process.env.MOOVX_BASELINE_RAW_PATH
 const DIAGNOSTICS_ENABLED = process.env.MOOVX_PERFORMANCE_DIAGNOSTICS === '1'
 const POSTER_REQUEST_MODE = process.env.MOOVX_POSTER_REQUEST_MODE ?? 'normal'
 const POSTER_CACHE_STATE = process.env.MOOVX_POSTER_CACHE_STATE ?? 'cold'
+const INP_EXPERIMENT = process.env.MOOVX_INP_EXPERIMENT ?? 'normative'
+const PRELOAD_CHUNKS = process.env.MOOVX_PRELOAD_CHUNKS
+  ? JSON.parse(process.env.MOOVX_PRELOAD_CHUNKS) as string[]
+  : []
+const DIAGNOSTIC_CLIENT_ONLY = process.env.MOOVX_DIAGNOSTIC_CLIENT_ONLY === '1'
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost'])
 
 if (!RAW_PATH) throw new Error('MOOVX_BASELINE_RAW_PATH is required')
 if (!['normal', 'block'].includes(POSTER_REQUEST_MODE)) throw new Error('MOOVX_POSTER_REQUEST_MODE must be normal or block')
 if (!['cold', 'hot'].includes(POSTER_CACHE_STATE)) throw new Error('MOOVX_POSTER_CACHE_STATE must be cold or hot')
+if (!['normative', 'canonical', 'preload-chunks', 'cache-hot', 'block-images', 'trace'].includes(INP_EXPERIMENT)) {
+  throw new Error('Unsupported MOOVX_INP_EXPERIMENT')
+}
+if (!Array.isArray(PRELOAD_CHUNKS) || PRELOAD_CHUNKS.some(path => typeof path !== 'string' || !path.startsWith('/_next/static/chunks/'))) {
+  throw new Error('MOOVX_PRELOAD_CHUNKS must contain local Next.js chunk paths')
+}
 
 test.setTimeout(8 * 60_000)
 
@@ -84,6 +108,7 @@ function installVitalObservers(page: Page) {
     let lcpEntry: LcpDiagnostic | null = null
     let interactions: InteractionDiagnostic[] = []
     let longTasks: LongTaskDiagnostic[] = []
+    let longAnimationFrames: LongAnimationFrameDiagnostic[] = []
     let resources: ResourceDiagnostic[] = []
     let domBefore: MediaDomDiagnostic = { videos: 0, posterAttributes: 0, posterImages: 0 }
     const mediaDom = (): MediaDomDiagnostic => ({
@@ -147,12 +172,35 @@ function installVitalObservers(page: Page) {
           domBefore,
           domAfter: mediaDom(),
           associatedLongTasks: [],
+          associatedLongAnimationFrames: [],
           associatedResources: [],
         }].slice(-100)
       }
     })
     if (diagnosticsEnabled) observe('longtask', entry => {
       longTasks = [...longTasks, { duration: entry.duration, startTime: entry.startTime, step }].slice(-100)
+    })
+    if (diagnosticsEnabled) observe('long-animation-frame', entry => {
+      const frame = entry as PerformanceEntry & {
+        blockingDuration?: number
+        renderStart?: number
+        styleAndLayoutStart?: number
+        scripts?: Array<{ duration?: number }>
+      }
+      const end = entry.startTime + entry.duration
+      longAnimationFrames = [...longAnimationFrames, {
+        duration: entry.duration,
+        blockingDuration: frame.blockingDuration ?? 0,
+        renderDuration: typeof frame.renderStart === 'number' && frame.renderStart > 0
+          ? Math.max(0, end - frame.renderStart)
+          : null,
+        styleAndLayoutDuration: typeof frame.styleAndLayoutStart === 'number' && frame.styleAndLayoutStart > 0
+          ? Math.max(0, end - frame.styleAndLayoutStart)
+          : null,
+        scriptDuration: (frame.scripts ?? []).reduce((total, script) => total + (script.duration ?? 0), 0),
+        startTime: entry.startTime,
+        step,
+      }].slice(-100)
     })
     if (diagnosticsEnabled) observe('resource', entry => {
       const resource = entry as PerformanceResourceTiming
@@ -165,6 +213,7 @@ function installVitalObservers(page: Page) {
       })()
       resources = [...resources, {
         kind,
+        resourceCode: pathname,
         startTime: resource.startTime,
         duration: resource.duration,
         transferSize: resource.transferSize,
@@ -175,7 +224,7 @@ function installVitalObservers(page: Page) {
     window.__moovxBaseline = {
       reset: () => {
         lcp = null; cls = 0; inp = null; interactionCount = 0
-        lcpEntry = null; interactions = []; longTasks = []; resources = []
+        lcpEntry = null; interactions = []; longTasks = []; longAnimationFrames = []; resources = []
       },
       setContext: (nextStep, nextThermalState) => {
         step = nextStep
@@ -183,21 +232,23 @@ function installVitalObservers(page: Page) {
         domBefore = mediaDom()
       },
       snapshot: () => {
-        const windowPadding = 100
         const annotatedInteractions = interactions.map(interaction => {
-          const windowStart = interaction.startTime - windowPadding
-          const windowEnd = interaction.startTime + interaction.duration + windowPadding
+          const windowStart = interaction.startTime
+          const windowEnd = interaction.startTime + interaction.duration
           return {
             ...interaction,
             associatedLongTasks: longTasks.filter(task =>
               task.startTime + task.duration >= windowStart && task.startTime <= windowEnd),
+            associatedLongAnimationFrames: longAnimationFrames.filter(frame =>
+              frame.startTime + frame.duration >= windowStart && frame.startTime <= windowEnd),
             associatedResources: resources.filter(resource =>
-              resource.startTime + resource.duration >= windowStart && resource.startTime <= windowEnd),
+              resource.startTime >= windowStart && resource.startTime <= windowEnd),
           }
         })
         return {
-          lcp, cls, inp, interactionCount, interactions: annotatedInteractions, longTasks, resources,
+          lcp, cls, inp, interactionCount, interactions: annotatedInteractions, longTasks, longAnimationFrames, resources,
           imageDecodeObservable: false as const,
+          reactCommitsObservable: false as const,
           lcpEntry,
           eventTimingSupported: PerformanceObserver.supportedEntryTypes.includes('event'),
         }
@@ -230,10 +281,12 @@ function createRequestRecorder(page: Page) {
 
 async function newMeasuredPage(browser: Browser, viewport: { width: number; height: number }) {
   const context = await browser.newContext({ viewport, timezoneId: 'Europe/Zurich', serviceWorkers: 'block' })
+  let blockDiagnosticImages = false
   await context.route('**/*', async route => {
     const url = new URL(route.request().url())
     if (['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol) && !LOCAL_HOSTS.has(url.hostname)) return route.abort('blockedbyclient')
     if (POSTER_REQUEST_MODE === 'block' && url.pathname.startsWith('/images/video-posters/')) return route.abort('blockedbyclient')
+    if (blockDiagnosticImages && route.request().resourceType() === 'image') return route.abort('blockedbyclient')
     return route.continue()
   })
   const page = await context.newPage()
@@ -248,7 +301,12 @@ async function newMeasuredPage(browser: Browser, viewport: { width: number; heig
       })))
     }, Object.values(LOCAL_EXERCISE_VIDEO_POSTERS))
   }
-  return { context, page, recorder: createRequestRecorder(page) }
+  return {
+    context,
+    page,
+    recorder: createRequestRecorder(page),
+    setDiagnosticImageBlocking: (enabled: boolean) => { blockDiagnosticImages = enabled },
+  }
 }
 
 async function settle(page: Page) {
@@ -288,8 +346,10 @@ function aggregateSegments(segments: VitalSnapshot[]): VitalSnapshot {
     eventTimingSupported: segments.every(segment => segment.eventTimingSupported),
     interactions: segments.flatMap(segment => segment.interactions),
     longTasks: segments.flatMap(segment => segment.longTasks),
+    longAnimationFrames: segments.flatMap(segment => segment.longAnimationFrames),
     resources: segments.flatMap(segment => segment.resources),
     imageDecodeObservable: false,
+    reactCommitsObservable: false,
     lcpEntry: [...segments].sort((a, b) => (b.lcp ?? -1) - (a.lcp ?? -1))[0]?.lcpEntry ?? null,
   }
 }
@@ -300,7 +360,7 @@ function aggregateStepRequests(steps: StepResult[]): RequestSummary {
 }
 
 async function measureClientPass(browser: Browser, fixture: CoachClientFixture, pass: number): Promise<JourneyRun> {
-  const { context, page, recorder } = await newMeasuredPage(browser, { width: 390, height: 844 })
+  const { context, page, recorder, setDiagnosticImageBlocking } = await newMeasuredPage(browser, { width: 390, height: 844 })
   try {
     await loginLocalPersona(page, fixture.client)
     recorder.reset()
@@ -308,6 +368,30 @@ async function measureClientPass(browser: Browser, fixture: CoachClientFixture, 
     await expect(page.getByText('SÉANCE DU JOUR').first()).toBeVisible({ timeout: 25_000 })
     await settle(page)
     const steps = [recorder.finish('home')]
+
+    if (INP_EXPERIMENT === 'preload-chunks') {
+      await page.evaluate(async paths => {
+        await Promise.all(paths.map(path => new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = path
+          script.onload = () => { script.remove(); resolve() }
+          script.onerror = () => reject(new Error('Diagnostic chunk preload failed'))
+          document.head.append(script)
+        })))
+      }, PRELOAD_CHUNKS)
+      recorder.reset()
+    }
+    if (INP_EXPERIMENT === 'cache-hot') {
+      await page.locator('nav.mobile-nav button').nth(1).click()
+      await expect(page.getByText(/MES PROGRAMMES/i).first()).toBeVisible()
+      await settle(page)
+      await page.locator('nav.mobile-nav button').nth(0).click()
+      await expect(page.getByText('SÉANCE DU JOUR').first()).toBeVisible()
+      await settle(page)
+      await page.evaluate(() => window.__moovxBaseline.reset())
+      recorder.reset()
+    }
+    if (INP_EXPERIMENT === 'block-images') setDiagnosticImageBlocking(true)
 
     recorder.reset()
     await setMeasurementContext(page, 'client:training', pass)
@@ -387,8 +471,11 @@ test('captures three independent production journeys without external requests',
   try {
     const client: JourneyRun[] = []
     const coach: JourneyRun[] = []
-    for (let pass = 1; pass <= 3; pass += 1) client.push(await measureClientPass(browser, fixture, pass))
-    for (let pass = 1; pass <= 3; pass += 1) coach.push(await measureCoachPass(browser, fixture, pass))
+    const passCount = DIAGNOSTIC_CLIENT_ONLY ? 1 : 3
+    for (let pass = 1; pass <= passCount; pass += 1) client.push(await measureClientPass(browser, fixture, pass))
+    if (!DIAGNOSTIC_CLIENT_ONLY) {
+      for (let pass = 1; pass <= 3; pass += 1) coach.push(await measureCoachPass(browser, fixture, pass))
+    }
     const output = {
       browser: browser.version(),
       diagnosticProtocol: {
@@ -396,10 +483,14 @@ test('captures three independent production journeys without external requests',
         posterRequestMode: POSTER_REQUEST_MODE,
         posterCacheState: POSTER_CACHE_STATE,
         imageDecodeObservable: false,
+        reactCommitsObservable: false,
+        inpExperiment: INP_EXPERIMENT,
+        preloadedChunks: PRELOAD_CHUNKS,
+        tracingNormative: false,
       },
       journeys: {
         clientMobile: { runs: client, aggregate: summarizeJourney(client) },
-        coachDesktop: { runs: coach, aggregate: summarizeJourney(coach) },
+        ...(DIAGNOSTIC_CLIENT_ONLY ? {} : { coachDesktop: { runs: coach, aggregate: summarizeJourney(coach) } }),
       },
     }
     mkdirSync(dirname(RAW_PATH), { recursive: true })

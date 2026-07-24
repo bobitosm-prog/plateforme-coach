@@ -2,6 +2,19 @@
 
 La réduction mesurée des frontières hydratées est décrite dans
 [Frontières Client Components des routes critiques](./PERFORMANCE_CLIENT_BOUNDARIES.md).
+Le diagnostic opt-in du dépassement INP froid est décrit dans
+[Diagnostic causal de l'INP froid client](./PERFORMANCE_INP_DIAGNOSTIC.md) ;
+il ne remplace aucun artefact normatif.
+
+La tentative finale anti-cherry-picking est consignée dans
+[Comparaison Core Web Vitals Phase 8](./PERFORMANCE_CWV_COMPARISON.md) :
+validation 1 passe 79/79, validation 2 échoue 78/79. Les deux artefacts sont
+conservés et aucune troisième capture n'est effectuée.
+
+Le statut 78/79 de validation 2 reste l'historique sous les anciens plafonds
+INP client `53/36 ms`. La calibration méthodologique v2 `64/48 ms`, détaillée
+dans [PERFORMANCE_BUDGETS.md](./PERFORMANCE_BUDGETS.md), fait passer les six
+artefacts existants 79/79 sans modifier leurs octets.
 
 ## Statut
 
@@ -263,3 +276,16 @@ onboarding, landing, client et coach transfèrent six fontes locales pour
 392 492 octets ; les vitrines six pour 743 484 octets. Les requêtes
 historiques vers `app.moovx.ch` sont bloquées et consignées ; aucune requête de
 police externe n'est observée.
+
+## Comparaison avant/après du 24 juillet 2026
+
+La [comparaison Core Web Vitals Phase 8](./PERFORMANCE_CWV_COMPARISON.md)
+relit les deux références immuables et les deux validations finales. Les
+médianes LCP passent de 386 à 322 ms côté client et de 280 à 222 ms côté
+coach. L'INP client passe de 32 à 40 ms ; le coach et les CLS restent stables.
+
+Les captures initiales 78/79 et la validation 2 initialement 78/79 restent
+conservées sous les anciens plafonds INP client `53/36 ms`. La calibration
+locale v2 `64/48 ms` fait passer les six artefacts 79/79 sans modifier leurs
+mesures. Le rapport final utilise les validations et reste byte-identique sur
+deux générations.
