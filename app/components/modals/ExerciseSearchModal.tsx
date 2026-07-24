@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { X, Search, Dumbbell } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
+import DeferredVideo from '../media/DeferredVideo'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -247,7 +249,17 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
               {/* Video or placeholder */}
               {selectedExDb.video_url ? (
                 <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, background: colors.surface }}>
-                  <video src={`${selectedExDb.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  <DeferredVideo
+                    activation="mount"
+                    ariaLabel={`${getExerciseName(selectedExDb, locale)} — démonstration`}
+                    autoPlay
+                    controls={false}
+                    loop
+                    muted
+                    poster={resolveLocalExerciseVideoPoster(selectedExDb.video_url)}
+                    src={`${selectedExDb.video_url}?v=2`}
+                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
                 </div>
               ) : (
                 <div style={{ borderRadius: 12, border: `1px dashed ${BORDER}`, padding: '32px 20px', textAlign: 'center', background: colors.surface, marginBottom: 20 }}>

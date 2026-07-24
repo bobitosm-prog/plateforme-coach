@@ -2,6 +2,7 @@ import { expect, test, type Browser, type Page, type Request } from '@playwright
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { classifyLocalRequest, REQUEST_CATEGORIES, stableJson, summarizeNumbers, summarizeRequests, type RequestSample, type RequestSummary } from '../lib/performance/baseline'
+import { LOCAL_EXERCISE_VIDEO_POSTERS } from '../lib/media/exercise-video-posters'
 import { createRunSuffix } from '../tests/fixtures/personas'
 import { createLocalAdminClient } from '../tests/fixtures/supabase'
 import { assertNoSyntheticCoachClientRows, buildCoachClientFixture, cleanupCoachClientFixture, loginLocalPersona, seedCoachClientFixture, type CoachClientFixture } from './helpers/coach-client-fixtures'
@@ -11,12 +12,28 @@ type InteractionDiagnostic = {
   eventType: string
   duration: number
   startTime: number
+  inputDelay: number
+  processingDuration: number
+  presentationDelay: number | null
   targetCode: string
   step: string
   thermalState: 'cold' | 'warm'
   javascriptRequestedInStep: boolean
+  domBefore: MediaDomDiagnostic
+  domAfter: MediaDomDiagnostic
+  associatedLongTasks: LongTaskDiagnostic[]
+  associatedResources: ResourceDiagnostic[]
 }
 type LongTaskDiagnostic = { duration: number; startTime: number; step: string }
+type MediaDomDiagnostic = { videos: number; posterAttributes: number; posterImages: number }
+type ResourceDiagnostic = {
+  kind: 'image' | 'javascript'
+  startTime: number
+  duration: number
+  transferSize: number
+  poster: boolean
+  step: string
+}
 type LcpDiagnostic = { startTime: number; targetCode: string; step: string }
 type VitalSnapshot = {
   lcp: number | null
@@ -26,6 +43,8 @@ type VitalSnapshot = {
   eventTimingSupported: boolean
   interactions: InteractionDiagnostic[]
   longTasks: LongTaskDiagnostic[]
+  resources: ResourceDiagnostic[]
+  imageDecodeObservable: false
   lcpEntry: LcpDiagnostic | null
 }
 type StepResult = { name: string; requests: ReturnType<typeof summarizeRequests> }
@@ -44,9 +63,13 @@ declare global {
 const APP_URL = new URL(process.env.MOOVX_E2E_APP_URL || 'http://127.0.0.1:3211')
 const RAW_PATH = process.env.MOOVX_BASELINE_RAW_PATH
 const DIAGNOSTICS_ENABLED = process.env.MOOVX_PERFORMANCE_DIAGNOSTICS === '1'
+const POSTER_REQUEST_MODE = process.env.MOOVX_POSTER_REQUEST_MODE ?? 'normal'
+const POSTER_CACHE_STATE = process.env.MOOVX_POSTER_CACHE_STATE ?? 'cold'
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost'])
 
 if (!RAW_PATH) throw new Error('MOOVX_BASELINE_RAW_PATH is required')
+if (!['normal', 'block'].includes(POSTER_REQUEST_MODE)) throw new Error('MOOVX_POSTER_REQUEST_MODE must be normal or block')
+if (!['cold', 'hot'].includes(POSTER_CACHE_STATE)) throw new Error('MOOVX_POSTER_CACHE_STATE must be cold or hot')
 
 test.setTimeout(8 * 60_000)
 
@@ -61,6 +84,13 @@ function installVitalObservers(page: Page) {
     let lcpEntry: LcpDiagnostic | null = null
     let interactions: InteractionDiagnostic[] = []
     let longTasks: LongTaskDiagnostic[] = []
+    let resources: ResourceDiagnostic[] = []
+    let domBefore: MediaDomDiagnostic = { videos: 0, posterAttributes: 0, posterImages: 0 }
+    const mediaDom = (): MediaDomDiagnostic => ({
+      videos: document.querySelectorAll('video').length,
+      posterAttributes: document.querySelectorAll('video[poster]').length,
+      posterImages: document.querySelectorAll('img[src*="/images/video-posters/"]').length,
+    })
     const targetCode = (target: EventTarget | null) => {
       if (!(target instanceof Element)) return 'unknown'
       const mobileButton = target.closest('nav.mobile-nav button')
@@ -91,7 +121,12 @@ function installVitalObservers(page: Page) {
       if (!shift.hadRecentInput) cls += shift.value
     })
     observe('event', entry => {
-      const event = entry as PerformanceEntry & { duration: number; interactionId: number }
+      const event = entry as PerformanceEntry & {
+        duration: number
+        interactionId: number
+        processingStart: number
+        processingEnd: number
+      }
       if (event.interactionId > 0) {
         interactionCount += 1
         inp = Math.max(inp ?? 0, event.duration)
@@ -100,26 +135,73 @@ function installVitalObservers(page: Page) {
           eventType: entry.name,
           duration: event.duration,
           startTime: event.startTime,
+          inputDelay: Math.max(0, event.processingStart - event.startTime),
+          processingDuration: Math.max(0, event.processingEnd - event.processingStart),
+          presentationDelay: Number.isFinite(event.duration)
+            ? Math.max(0, event.startTime + event.duration - event.processingEnd)
+            : null,
           targetCode: targetCode((event as PerformanceEntry & { target?: EventTarget | null }).target ?? null),
           step,
           thermalState,
           javascriptRequestedInStep: false,
+          domBefore,
+          domAfter: mediaDom(),
+          associatedLongTasks: [],
+          associatedResources: [],
         }].slice(-100)
       }
     })
     if (diagnosticsEnabled) observe('longtask', entry => {
       longTasks = [...longTasks, { duration: entry.duration, startTime: entry.startTime, step }].slice(-100)
     })
+    if (diagnosticsEnabled) observe('resource', entry => {
+      const resource = entry as PerformanceResourceTiming
+      const kind: ResourceDiagnostic['kind'] | null = resource.initiatorType === 'script'
+        ? 'javascript'
+        : ['img', 'image', 'video'].includes(resource.initiatorType) ? 'image' : null
+      if (!kind) return
+      const pathname = (() => {
+        try { return new URL(resource.name, location.origin).pathname } catch { return '' }
+      })()
+      resources = [...resources, {
+        kind,
+        startTime: resource.startTime,
+        duration: resource.duration,
+        transferSize: resource.transferSize,
+        poster: pathname.startsWith('/images/video-posters/'),
+        step,
+      }].slice(-200)
+    })
     window.__moovxBaseline = {
       reset: () => {
         lcp = null; cls = 0; inp = null; interactionCount = 0
-        lcpEntry = null; interactions = []; longTasks = []
+        lcpEntry = null; interactions = []; longTasks = []; resources = []
       },
-      setContext: (nextStep, nextThermalState) => { step = nextStep; thermalState = nextThermalState },
-      snapshot: () => ({
-        lcp, cls, inp, interactionCount, interactions, longTasks, lcpEntry,
-        eventTimingSupported: PerformanceObserver.supportedEntryTypes.includes('event'),
-      }),
+      setContext: (nextStep, nextThermalState) => {
+        step = nextStep
+        thermalState = nextThermalState
+        domBefore = mediaDom()
+      },
+      snapshot: () => {
+        const windowPadding = 100
+        const annotatedInteractions = interactions.map(interaction => {
+          const windowStart = interaction.startTime - windowPadding
+          const windowEnd = interaction.startTime + interaction.duration + windowPadding
+          return {
+            ...interaction,
+            associatedLongTasks: longTasks.filter(task =>
+              task.startTime + task.duration >= windowStart && task.startTime <= windowEnd),
+            associatedResources: resources.filter(resource =>
+              resource.startTime + resource.duration >= windowStart && resource.startTime <= windowEnd),
+          }
+        })
+        return {
+          lcp, cls, inp, interactionCount, interactions: annotatedInteractions, longTasks, resources,
+          imageDecodeObservable: false as const,
+          lcpEntry,
+          eventTimingSupported: PerformanceObserver.supportedEntryTypes.includes('event'),
+        }
+      },
     }
   }, { diagnosticsEnabled: DIAGNOSTICS_ENABLED })
 }
@@ -151,10 +233,21 @@ async function newMeasuredPage(browser: Browser, viewport: { width: number; heig
   await context.route('**/*', async route => {
     const url = new URL(route.request().url())
     if (['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol) && !LOCAL_HOSTS.has(url.hostname)) return route.abort('blockedbyclient')
+    if (POSTER_REQUEST_MODE === 'block' && url.pathname.startsWith('/images/video-posters/')) return route.abort('blockedbyclient')
     return route.continue()
   })
   const page = await context.newPage()
   await installVitalObservers(page)
+  if (POSTER_CACHE_STATE === 'hot') {
+    await page.goto(APP_URL.origin)
+    await page.evaluate(async posterPaths => {
+      await Promise.all(posterPaths.map(path => new Promise<void>(resolve => {
+        const image = new Image()
+        image.onload = image.onerror = () => resolve()
+        image.src = path
+      })))
+    }, Object.values(LOCAL_EXERCISE_VIDEO_POSTERS))
+  }
   return { context, page, recorder: createRequestRecorder(page) }
 }
 
@@ -195,6 +288,8 @@ function aggregateSegments(segments: VitalSnapshot[]): VitalSnapshot {
     eventTimingSupported: segments.every(segment => segment.eventTimingSupported),
     interactions: segments.flatMap(segment => segment.interactions),
     longTasks: segments.flatMap(segment => segment.longTasks),
+    resources: segments.flatMap(segment => segment.resources),
+    imageDecodeObservable: false,
     lcpEntry: [...segments].sort((a, b) => (b.lcp ?? -1) - (a.lcp ?? -1))[0]?.lcpEntry ?? null,
   }
 }
@@ -296,6 +391,12 @@ test('captures three independent production journeys without external requests',
     for (let pass = 1; pass <= 3; pass += 1) coach.push(await measureCoachPass(browser, fixture, pass))
     const output = {
       browser: browser.version(),
+      diagnosticProtocol: {
+        enabled: DIAGNOSTICS_ENABLED,
+        posterRequestMode: POSTER_REQUEST_MODE,
+        posterCacheState: POSTER_CACHE_STATE,
+        imageDecodeObservable: false,
+      },
       journeys: {
         clientMobile: { runs: client, aggregate: summarizeJourney(client) },
         coachDesktop: { runs: coach, aggregate: summarizeJourney(coach) },

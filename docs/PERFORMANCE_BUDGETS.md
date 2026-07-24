@@ -129,3 +129,11 @@ Cette tranche ne corrige pas :
 - les 42 à 72 appels PostgREST du parcours client ;
 - la réponse 500 de `/api/feedback/mine` ;
 - l'avertissement Supabase historique lié à `getSession()`.
+
+La preuve de [diffusion vidéo différée](./PERFORMANCE_VIDEO_DELIVERY.md) passe
+1/1 deux fois. Les deux contrôles initiaux à 78/79 sont conservés : leur INP
+client médian valait 48 ms pour une limite de 36 ms. La matrice causale montre
+zéro lecteur, poster, requête ou octet poster dans le parcours canonique, avec
+la même médiane de 32 ms en normal, posters bloqués et cache préchauffé. Deux
+contrôles finaux consécutifs passent 79/79. Aucun seuil média spécifique,
+budget ou artefact de référence n’est modifié.

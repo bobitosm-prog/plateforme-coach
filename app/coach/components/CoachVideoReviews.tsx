@@ -5,6 +5,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../../lib/design-tokens'
+import DeferredVideo from '../../components/media/DeferredVideo'
 
 interface ExerciseFeedback {
   id: string
@@ -131,11 +132,10 @@ export default function CoachVideoReviews({ session, supabase }: { session: any;
               </p>
             )}
 
-            <video
+            <DeferredVideo
+              activation="user"
+              ariaLabel={`Lire la vidéo de ${fb.exercise_name}`}
               src={fb.video_url}
-              controls
-              playsInline
-              preload="none"
               style={{
                 width: '100%',
                 maxWidth: 480,

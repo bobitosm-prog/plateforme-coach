@@ -36,9 +36,9 @@ Mesure du 24 juillet 2026, hors exclusions :
 
 | Catégorie | Images | Vidéos | Total | Octets | Mio |
 |---|---:|---:|---:|---:|---:|
-| Assets versionnés de l’application | 85 | 0 | 85 | 72 684 733 | 69,32 |
+| Assets versionnés de l’application | 102 | 0 | 102 | 72 901 243 | 69,52 |
 | Médias d’exercice versionnés | 26 | 20 | 46 | 92 242 019 | 87,97 |
-| **Total local inventorié** | **111** | **20** | **131** | **164 926 752** | **157,29** |
+| **Total local inventorié** | **128** | **20** | **148** | **165 143 262** | **157,49** |
 
 Les autres catégories sont volontairement séparées :
 
@@ -127,8 +127,10 @@ l’action et cycle de montage restent inchangés. Cela interdit le préchargeme
 agressif avant intention sans capturer l’URL ni le contenu utilisateur.
 
 Les vidéos d’exercice ouvertes dans une modale conservent leur comportement
-historique `autoPlay`; posters et chargement à visibilité relèvent de la tâche
-suivante. Aucun fichier vidéo n’est réencodé.
+historique `autoPlay`, mais leur source est désormais absente avant ouverture.
+La politique, les 17 posters bornés et la preuve réseau sont documentés dans
+[Diffusion vidéo différée](./PERFORMANCE_VIDEO_DELIVERY.md). Aucun fichier
+vidéo n’est réencodé.
 
 ## Risques, exclusions et suites
 
@@ -177,5 +179,4 @@ réponse statique froide, le corps PNG servi pour le logo passe exactement de
 parcours initiaux ; `preload="none"` est couvert statiquement sans capturer
 leur URL utilisateur.
 
-La prochaine tranche unique est de définir les posters et le chargement vidéo
-différé à partir de cet inventaire.
+La prochaine tranche unique est d’étudier puis déployer un stockage/CDN média.

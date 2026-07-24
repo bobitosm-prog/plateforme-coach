@@ -542,8 +542,10 @@ budgets anti-régression automatisés, coque serveur du dashboard extraite,
 frontières de chargement ajoutées aux segments importants, frontières d’erreur
 critiques expurgées, onglets/modales secondaires chargés à la demande et
 bibliothèques lourdes différées, premières frontières Client Components
-réduites et [inventaire des médias runtime](docs/PERFORMANCE_MEDIA_INVENTORY.md)
-livré avec un premier gain mesuré.**
+réduites, [inventaire des médias runtime](docs/PERFORMANCE_MEDIA_INVENTORY.md)
+livré avec un premier gain mesuré et
+[diffusion vidéo différée](docs/PERFORMANCE_VIDEO_DELIVERY.md) vérifiée en
+production locale.**
 
 ### Pourquoi
 
@@ -562,7 +564,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 | [x] [Différer Recharts, MediaPipe, QR et XLSX](docs/PERFORMANCE_HEAVY_LIBRARIES.md) | 2 j | Moyenne | Moyen | Élevé | Dynamic imports |
 | [x] [Réduire progressivement les modules `use client`](docs/PERFORMANCE_CLIENT_BOUNDARIES.md) | 4 j | Élevée | Moyen | Élevé | Coque serveur |
 | [x] [Inventorier et optimiser images/vidéos lourdes](docs/PERFORMANCE_MEDIA_INVENTORY.md) | 3 j | Moyenne | Moyen | Élevé | Manifest médias |
-| [ ] Définir posters et chargement vidéo différé | 2 j | Moyenne | Moyen | Moyen | Médias optimisés |
+| [x] [Définir posters et chargement vidéo différé](docs/PERFORMANCE_VIDEO_DELIVERY.md) — preuve vidéo et diagnostic INP indépendants validés | 2 j | Moyenne | Moyen | Moyen | Médias optimisés |
 | [ ] Étudier puis déployer un stockage/CDN média | 3 j | Élevée | Élevé | Élevé | Chemins compatibles |
 | [ ] Réduire et auto-héberger les polices nécessaires | 1,5 j | Moyenne | Faible | Moyen | Baseline |
 | [ ] Comparer les Core Web Vitals avant/après | 1 j | Moyenne | Faible | Élevé | Optimisations |

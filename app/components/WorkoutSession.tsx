@@ -20,6 +20,7 @@ import { WorkoutActiveSessionFinishView, WorkoutActiveSessionHeaderView } from '
 import { WorkoutCustomBuilder } from './training/workout-session/WorkoutCustomBuilder'
 import { WorkoutExerciseEditor } from './training/workout-session/WorkoutExerciseEditor'
 import { WorkoutSessionOverlays } from './training/workout-session/WorkoutSessionOverlays'
+import DeferredVideo from './media/DeferredVideo'
 import type { WorkoutExerciseInfo, WorkoutExerciseVariant, WorkoutSessionExercise as Exo, WorkoutSessionSet as ExSet, WorkoutTempoExecutorState, WorkoutTempoModalState, WorkoutVariantPopupState } from './training/workout-session/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -449,7 +450,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           onAddThirtySeconds={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }}
           onContinue={dismissRestDone} />
       )}
-      {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
+      {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><DeferredVideo activation="mount" ariaLabel={t('demo')} src={showVideo} className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       <WorkoutActiveSessionHeaderView sessionName={sessionName} elapsed={dur(elapsed)} completedSets={completed} totalSets={total} progressPercent={pct} t={t} onClose={onClose} />
 

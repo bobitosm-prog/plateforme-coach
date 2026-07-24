@@ -6,6 +6,8 @@ import { BG_CARD_2, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GOLD_DIM, G
 import TempoModal from '../TempoModal'
 import TempoExecutor from '../TempoExecutor'
 import type { WorkoutExerciseInfo, WorkoutExerciseVariant, WorkoutTempoExecutorState, WorkoutTempoModalState, WorkoutTranslate, WorkoutVariantPopupState } from './types'
+import DeferredVideo from '../../media/DeferredVideo'
+import { resolveLocalExerciseVideoPoster } from '../../../../lib/media/exercise-video-posters'
 
 interface WorkoutSessionOverlaysProps {
   exerciseInfo: WorkoutExerciseInfo | null
@@ -47,7 +49,7 @@ export function WorkoutSessionOverlays(props: WorkoutSessionOverlaysProps) {
             <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch'}}>
               {exerciseInfo.video_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <video src={`${exerciseInfo.video_url}?v=2`} autoPlay loop muted playsInline style={{width:'100%',height:'auto',display:'block'}}/>
+                  <DeferredVideo activation="mount" ariaLabel={`${getExerciseName(exerciseInfo, locale)} — démonstration`} autoPlay controls={false} loop muted poster={resolveLocalExerciseVideoPoster(exerciseInfo.video_url)} src={`${exerciseInfo.video_url}?v=2`} style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
               ):exerciseInfo.gif_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>

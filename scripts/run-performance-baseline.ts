@@ -11,6 +11,9 @@ import { assertLocalE2eUrl, assertTemporaryPortsClosed, redactE2eOutput } from '
 const BUILD_DIR = '.next-performance-baseline'
 const APP_URL = 'http://127.0.0.1:3211'
 const rawPath = resolve('/tmp/moovx-performance-baseline-raw.json')
+const diagnosticMatrixPath = process.env.MOOVX_INP_DIAGNOSTIC_MATRIX_PATH
+  ? resolve(process.env.MOOVX_INP_DIAGNOSTIC_MATRIX_PATH)
+  : null
 const args = process.argv.slice(2)
 const outputIndex = args.indexOf('--output')
 const outputPath = resolve(outputIndex >= 0 ? args[outputIndex + 1] : 'perf/baseline/phase-8-baseline.json')
@@ -100,13 +103,42 @@ try {
   }
   start('./node_modules/.bin/next', ['start', '--hostname', '127.0.0.1', '--port', '3211'], env)
   await ready(APP_URL)
-  run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-baseline.spec.ts'], env)
+  if (diagnosticMatrixPath) {
+    const experiments: Record<string, unknown> = {}
+    for (const experiment of [
+      { name: 'normal-cold', requestMode: 'normal', cacheState: 'cold' },
+      { name: 'blocked-cold', requestMode: 'block', cacheState: 'cold' },
+      { name: 'normal-hot', requestMode: 'normal', cacheState: 'hot' },
+    ]) {
+      run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-baseline.spec.ts'], {
+        ...env,
+        MOOVX_PERFORMANCE_DIAGNOSTICS: '1',
+        MOOVX_POSTER_REQUEST_MODE: experiment.requestMode,
+        MOOVX_POSTER_CACHE_STATE: experiment.cacheState,
+      })
+      experiments[experiment.name] = JSON.parse(readFileSync(rawPath, 'utf8')) as unknown
+    }
+    const normalCold = experiments['normal-cold']
+    if (!normalCold || typeof normalCold !== 'object') throw new Error('Normal cold diagnostic is unavailable')
+    writeFileSync(rawPath, stableJson(normalCold), { mode: 0o600 })
+    mkdirSync(dirname(diagnosticMatrixPath), { recursive: true })
+    writeFileSync(diagnosticMatrixPath, stableJson({
+      schemaVersion: 1,
+      buildId: readFileSync(`${BUILD_DIR}/BUILD_ID`, 'utf8').trim(),
+      experiments,
+    }), { mode: 0o600 })
+  } else {
+    run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-baseline.spec.ts'], env)
+  }
   if (process.env.MOOVX_LAZY_UI_EVIDENCE_PATH) {
     run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-lazy-secondary-ui.spec.ts'], env)
   }
   if (process.env.MOOVX_HEAVY_UI_EVIDENCE_PATH) {
     run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-heavy-libraries.spec.ts'], env)
     enrichHeavyLibraryEvidence(process.env.MOOVX_HEAVY_UI_EVIDENCE_PATH)
+  }
+  if (process.env.MOOVX_VIDEO_EVIDENCE_PATH) {
+    run('./node_modules/.bin/playwright', ['test', '--workers=1', 'e2e/performance-video-delivery.spec.ts'], env)
   }
   if (!existsSync(rawPath)) throw new Error('Playwright did not produce raw baseline measurements')
 
@@ -128,6 +160,9 @@ try {
       network: 'localhost-only; external browser requests aborted and asserted absent',
     },
     bundle: analyzeProductionBundles(BUILD_DIR),
+    ...(process.env.MOOVX_PERFORMANCE_DIAGNOSTICS === '1' || diagnosticMatrixPath
+      ? { diagnosticProtocol: raw.diagnosticProtocol }
+      : {}),
     journeys: raw.journeys,
   }
   mkdirSync(dirname(outputPath), { recursive: true })

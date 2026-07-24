@@ -195,3 +195,34 @@ Les artefacts ne contiennent ni e-mail, UUID de fixture, token, cookie, clé,
 URL distante ni contenu utilisateur. Les comptes et lignes synthétiques sont
 supprimés et vérifiés après chaque exécution. Mailpit est vide, le port 3211 est
 fermé et le répertoire de build temporaire est absent après chaque run.
+
+## Contrôle vidéo différée du 24 juillet 2026
+
+Le contrôle opt-in décrit dans
+[Diffusion vidéo différée](./PERFORMANCE_VIDEO_DELIVERY.md) utilise le même
+build Webpack hermétique. Il confirme, aux viewports 390×844 et 1024×768,
+zéro requête vidéo avant ouverture, le poster et la vidéo uniquement à
+l’ouverture, puis zéro requête après fermeture et à la réouverture dans le
+même contexte. Le résultat initial est reproduit avec
+`SrLPOoGmnP25bgwl4YVAc` puis
+`VLEOjiNamO8KiuxqReFvB`. Les deux contrôles passent 78/79 : l’INP client
+médian de 48 ms dépasse la limite historique de 36 ms. Les références
+versionnées restent 79/79 et aucun seuil n’est modifié.
+
+Le diagnostic suivant attribue le 48 ms à la navigation Training, sans
+lecteur, poster, requête poster ni longue tâche. Sous le même build
+`qbqpoF9UAbUO0cuXMncsp`, le contrôle normal et le blocage des seuls posters
+donnent chacun `48/32/32 ms`; le cache posters préchauffé donne `32/32/32 ms`.
+Les trois médianes valent 32 ms et zéro poster intervient dans le parcours.
+Deux contrôles complets consécutifs passent ensuite 79/79 :
+`_PpsGszLdiCClVl7EEBto` (`32/32/48 ms`) et
+`yJ62kxdndNlRX2xppcZi3` (`32/32/32 ms`).
+
+La preuve média séparée est ensuite répétée sous `Ky_94DxnOzVtoy8WaJzNX` et
+`0RCJgkLlOyBcMr3tpQSzI` : 1/1 et 79/79 deux fois. Elle conserve zéro transfert
+avant activation et après fermeture. Une seule des quatre réouvertures émet
+une petite plage 206 de 13 261 octets ; aucune ne retransfère la vidéo complète.
+
+Ce contrôle n’écrase ni ne redéfinit la baseline versionnée : il caractérise
+un parcours média secondaire. Les diagnostics restent opt-in, expurgés et
+temporaires. Aucun budget, baseline ou comportement applicatif n’est modifié.

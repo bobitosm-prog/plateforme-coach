@@ -10068,3 +10068,95 @@ Inventorier et optimiser images/vidéos lourdes.
 ### Prochaine action unique
 
 Définir posters et chargement vidéo différé.
+
+## Entrée — 2026-07-24 — Posters et chargement vidéo différé, clôture ouverte
+
+- Les neuf lecteurs visibles ont été cartographiés et centralisés derrière
+  `DeferredVideo`. La source reste absente du rendu serveur, est affectée
+  uniquement à l’ouverture ou à l’action autorisée, puis est retirée avec
+  pause et `load()` au démontage. `preload="none"`, `playsInline`, autoplay
+  muet, reduced motion, erreur expurgée et nettoyage Strict Mode sont couverts.
+- Dix-sept posters WebP locaux sont produits à partir d’images d’exercice déjà
+  associées : qualité 78, largeur 360 px, ratio conservé, 7 222 à 16 808
+  octets par fichier. Les URLs Storage/blob, les sources inconnues et les
+  quatre chemins concurrents sont exclus fail-closed.
+- L’inspection visuelle réelle des 17 WebP confirme des mouvements cohérents,
+  des ratios verticaux stables et aucun cadre noir. La comparaison Squat avec
+  une frame vidéo confirme la même famille de mouvement, sans revendiquer une
+  équivalence pixel à pixel.
+- Deux builds Webpack production hermétiques complets passent avec les
+  `BUILD_ID` `SrLPOoGmnP25bgwl4YVAc` et `VLEOjiNamO8KiuxqReFvB`. La preuve
+  Arnold Press passe 1/1 deux fois aux viewports 390×844 et 1024×768 :
+  zéro requête/octet avant ouverture, poster 14 316 octets et réponse vidéo
+  206 de 1 127 373 octets à l’ouverture, puis zéro requête après fermeture et
+  à la réouverture dans le même contexte.
+- Le serveur local annonce `Cache-Control: public, max-age=0`; le navigateur
+  réutilise néanmoins la ressource à la réouverture observée. Une politique
+  CDN durable reste une dette distincte.
+- L’inventaire déterministe passe de 131 à 148 médias hors exclusions :
+  102 assets applicatifs pour 72 901 243 octets et 46 médias d’exercice pour
+  92 242 019 octets, total 165 143 262 octets.
+- Les 12 tests unitaires/statiques ciblés finaux passent, puis la suite complète passe
+  220 fichiers, 1 830 tests et 3 `todo`; TypeScript et les nouvelles
+  frontières ESLint sont verts. Le consommateur historique
+  `VideoFeedbackModal` conserve une erreur `no-explicit-any` et un avertissement
+  d’import inutilisé, sans nouvelle occurrence.
+  Les E2E coach/client passent 4/4 et default-coach 1/1. Les deux références
+  versionnées passent 79/79 budgets. En revanche, les deux nouveaux contrôles
+  globaux passent 78/79 : INP client médian 48 ms pour une limite historique
+  de 36 ms. Aucun seuil n’est modifié et la tâche reste décochée conformément
+  à la règle de clôture.
+- Aucun contrat, accès Supabase, Storage, migration, RLS, repository, vidéo,
+  budget ou baseline versionnée n’est modifié. Les fixtures, comptes, Mailpit,
+  build et port 3211 sont nettoyés par le harnais.
+
+### Prochaine action unique
+
+Diagnostiquer le dépassement reproductible du budget INP client (48 ms contre
+36 ms) avant de clôturer « Définir posters et chargement vidéo différé ».
+
+## Entrée — 2026-07-24 — Diagnostic INP et clôture vidéo différée
+
+- Le diagnostic `PerformanceEventTiming` opt-in enregistre uniquement des
+  identifiants d’interaction, types d’événements, délais d’entrée/traitement/
+  présentation, étapes sémantiques, longues tâches, catégories/octet de
+  ressources et compteurs DOM média. Aucun texte, e-mail, UUID, token, URL ou
+  donnée métier n’est collecté. Le décodage image, non exposé par Chromium,
+  reste explicitement indisponible.
+- L’événement à 48 ms est le clic mobile vers Training. Le traitement du clic
+  vaut environ 4,5 ms et le délai de présentation environ 42 ms. Aucun lecteur,
+  poster ou transfert poster n’est monté ou demandé, et aucune longue tâche
+  n’est observée. Deux chunks Training et une image non-poster sont voisins de
+  l’interaction. Un passage avec posters bloqués partage le maximum avec
+  Nutrition, ce qui confirme une variation de présentation indépendante.
+- La matrice causale utilise le même build `qbqpoF9UAbUO0cuXMncsp`, le même
+  Chromium, les mêmes observers, clics, viewports et timezone. A normal/froid :
+  INP `48/32/32 ms`; B, seules requêtes poster bloquées : `48/32/32 ms`; C,
+  posters préchauffés hors mesure : `32/32/32 ms`. Les trois médianes valent
+  32 ms, avec zéro requête/octet poster, zéro DOM vidéo/poster et zéro longue
+  tâche dans les trois expériences. Aucun correctif applicatif n’est appliqué.
+- Deux contrôles complets consécutifs passent 79/79 :
+  `_PpsGszLdiCClVl7EEBto` (client LCP `332/324/340 ms`, INP
+  `32/32/48 ms`, CLS `0,003886/0,010764/0,003886`, requêtes
+  `110/109/109` dont `63/62/62` applicatives) puis
+  `yJ62kxdndNlRX2xppcZi3` (LCP `336/360/324 ms`, INP `32/32/32 ms`,
+  CLS `0,003886/0,010764/0,010764`, mêmes requêtes). Coach conserve INP
+  `24/24/24 ms`; aucun budget ou artefact de référence n’est modifié.
+- La preuve média séparée est répétée avec de vrais clics sous
+  `Ky_94DxnOzVtoy8WaJzNX` et `0RCJgkLlOyBcMr3tpQSzI` : 1/1 et 79/79 deux
+  fois. Les quatre parcours ont zéro requête avant activation et après
+  fermeture, le poster attendu de 14 316 octets et une vidéo 206. Trois
+  réouvertures ne demandent rien ; une réouverture large émet uniquement une
+  plage 206 de 13 261 octets, sans retransfert complet.
+- Les 19 tests ciblés initiaux passent, puis la suite complète passe
+  220 fichiers, 1 831 tests et 3 `todo`; TypeScript et ESLint ciblé sont
+  verts. Les E2E coach/client passent 4/4 et default-coach 1/1. Le build
+  hermétique produit 88 pages et les manifests complets ; fixtures, comptes,
+  Mailpit, builds et port 3211 sont nettoyés par chaque exécution. La tâche
+  roadmap vidéo est clôturée. Les liens documentaires, le scan expurgé, le
+  diff et le staging vide sont vérifiés ; les changements concurrents restent
+  hors staging.
+
+### Prochaine action unique
+
+Étudier puis déployer un stockage/CDN média.

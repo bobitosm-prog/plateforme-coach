@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { createBrowserClient } from '@supabase/ssr'
 import { X, Video } from 'lucide-react'
@@ -8,6 +8,7 @@ import {
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
+import DeferredVideo from './media/DeferredVideo'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -23,17 +24,26 @@ interface Props {
 export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Props) {
   const t = useTranslations('videoFeedback')
   const fileRef = useRef<HTMLInputElement>(null)
+  const previewRef = useRef<string | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoPreview, setVideoPreview] = useState<string | null>(null)
   const [clientNote, setClientNote] = useState('')
   const [uploading, setUploading] = useState(false)
 
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    previewRef.current = null
+  }, [])
+
   function handleVideoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 50 * 1024 * 1024) { alert(t('tooHeavy')); return }
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    const preview = URL.createObjectURL(file)
+    previewRef.current = preview
     setVideoFile(file)
-    setVideoPreview(URL.createObjectURL(file))
+    setVideoPreview(preview)
   }
 
   async function handleSubmit() {
@@ -96,8 +106,8 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
           </div>
         ) : (
           <div>
-            <video src={videoPreview!} controls style={{ width: '100%', borderRadius: 12, maxHeight: 240 }} />
-            <button onClick={() => { setVideoFile(null); setVideoPreview(null) }} style={{ background: 'none', border: 'none', color: RED, fontSize: 12, cursor: 'pointer', marginTop: 8, fontFamily: FONT_BODY }}>
+            <DeferredVideo activation="mount" ariaLabel={t('title')} src={videoPreview!} style={{ width: '100%', borderRadius: 12, maxHeight: 240 }} />
+            <button onClick={() => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); previewRef.current = null; setVideoFile(null); setVideoPreview(null) }} style={{ background: 'none', border: 'none', color: RED, fontSize: 12, cursor: 'pointer', marginTop: 8, fontFamily: FONT_BODY }}>
               {t('deleteRetry')}
             </button>
           </div>

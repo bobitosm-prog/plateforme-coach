@@ -26,6 +26,26 @@ describe('production performance baseline architecture', () => {
     expect(spec).toContain('pass <= 3')
   })
 
+  it('keeps sanitized interaction attribution opt-in and can block only local posters', () => {
+    for (const field of [
+      'inputDelay',
+      'processingDuration',
+      'presentationDelay',
+      'associatedLongTasks',
+      'associatedResources',
+      'domBefore',
+      'domAfter',
+      'imageDecodeObservable',
+    ]) expect(spec).toContain(field)
+    expect(spec).toContain("MOOVX_PERFORMANCE_DIAGNOSTICS === '1'")
+    expect(spec).toContain("url.pathname.startsWith('/images/video-posters/')")
+    expect(spec).not.toMatch(/innerText|textContent|localStorage|sessionStorage/)
+    expect(runner).toContain('MOOVX_INP_DIAGNOSTIC_MATRIX_PATH')
+    expect(runner).toContain("'normal-cold'")
+    expect(runner).toContain("'blocked-cold'")
+    expect(runner).toContain("'normal-hot'")
+  })
+
   it('blocks external browser origins and does not expose fixture identities', () => {
     expect(spec).toContain("route.abort('blockedbyclient')")
     expect(spec).not.toMatch(/\.email\b|fixture\.ids\s*[,}]/)

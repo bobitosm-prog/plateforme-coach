@@ -8,6 +8,7 @@ import {
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
+import DeferredVideo from './media/DeferredVideo'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -70,7 +71,7 @@ export default function VideoFeedbackHistory({ userId }: { userId: string }) {
 
               {isExpanded && (
                 <div style={{ marginTop: 12 }}>
-                  <video src={fb.video_url} controls playsInline preload="none" style={{ width: '100%', borderRadius: 12, maxHeight: 200, marginBottom: 8 }} />
+                  <DeferredVideo activation="mount" ariaLabel={t('myVideos', { count: 1 })} src={fb.video_url} style={{ width: '100%', borderRadius: 12, maxHeight: 200, marginBottom: 8 }} />
                   {fb.client_note && (
                     <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'italic', margin: '0 0 8px', fontFamily: FONT_BODY }}>{t('yourNote', { note: fb.client_note })}</p>
                   )}

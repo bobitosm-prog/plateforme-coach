@@ -14,8 +14,8 @@
   "remoteMediaDownloaded": false,
   "totals": {
     "application": {
-      "count": 85,
-      "bytes": 72684733
+      "count": 102,
+      "bytes": 72901243
     },
     "exercise": {
       "count": 46,
@@ -1919,6 +1919,533 @@
       "referenced": false
     },
     {
+      "path": "public/images/video-posters/arnold-press.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 14316,
+      "mimeType": "image/webp",
+      "sha256": "300ca0d1781536a346c926519c113a6e7e54c500667eac6e8905b64dbf1d28ff",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/developpe-militaire-barre-debout.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 8448,
+      "mimeType": "image/webp",
+      "sha256": "dc2b52aeb16e16b9455a2de5f162880c7cd0cd87b26dc0e3aee00bff79aa1e25",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 480,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/developpe-militaire-barre.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 8800,
+      "mimeType": "image/webp",
+      "sha256": "0a13b452acdf36309131fe36c83e67430aef4ccd63cc475af2dab7a493bd7d60",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 480,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/developpe-militaire.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 16704,
+      "mimeType": "image/webp",
+      "sha256": "bbecbffd04e01b40e0941ba7948c8af6790b2db628df61d34e299882c95f1d44",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/elevations-frontales-halteres.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 16808,
+      "mimeType": "image/webp",
+      "sha256": "3b43b9e5fe7b3c59e4ec1051c4e0e11b06a198e9dbfc621e503cb4d51a2398b3",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/elevations-laterales-halteres.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 15390,
+      "mimeType": "image/webp",
+      "sha256": "4e16c8b18c4035ec5c3bc7dc622d0cce29daea63812bf17258676f3661f5f2f7",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/hack-squat-machine.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 15724,
+      "mimeType": "image/webp",
+      "sha256": "8cea91df307aa119d7db5c7d3079082f97d7d6288251a569e3ec2bc476267e76",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/hip-thrust.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 9376,
+      "mimeType": "image/webp",
+      "sha256": "82e1b671afe51aef7d7a83867d03026c8fd9b70ddc3bf3cae91a861a00cae2b0",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/kettlebell-swing.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 12070,
+      "mimeType": "image/webp",
+      "sha256": "f57044f901d7327370a89ccfb97ba0965a1ad8af33919bc4a04a24ca2ff3df09",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/leg-extension.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 15980,
+      "mimeType": "image/webp",
+      "sha256": "6cc64fd90c95fd42042c56d249593875f27b2905a7bddec3ae6d0c04beef9dc6",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/leg-press.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 14874,
+      "mimeType": "image/webp",
+      "sha256": "4e6d4a8a63c71f1796d3617e58123364ad1f25d3e2045a1cc8e6f7352bdbb4d5",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/pull-over-poulie-haute.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 15184,
+      "mimeType": "image/webp",
+      "sha256": "8e5a48654febf0f1f8bbc0a00e049cf1debfe3477771da8ba44dcac45923d08d",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 645,
+        "ratio": 0.55814,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/rowing-barre.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 14588,
+      "mimeType": "image/webp",
+      "sha256": "4c003a166fb6db6c3b8a7c4a12bda3cc978449c8c0e321ca39e0b127b6225f33",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 480,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/souleve-de-terre-roumain.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 9540,
+      "mimeType": "image/webp",
+      "sha256": "f66519ce9b8769c8710ba1f22cec6b8daf5ff3c464db9b30bf4b9f0233ad2592",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 482,
+        "ratio": 0.746888,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/souleve-de-terre.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 10930,
+      "mimeType": "image/webp",
+      "sha256": "7e9fccdddc542199d58b22173e8efb5dbfcd6ebb19b96d4854769cdc4e2c155c",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 480,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/squat-barre.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 10556,
+      "mimeType": "image/webp",
+      "sha256": "177ef2e43a6d31f32b30ad03ed4b48dfbd082b8b9f677417627c75c56b8eae32",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 641,
+        "ratio": 0.561622,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
+      "path": "public/images/video-posters/tractions-pronation.webp",
+      "category": "application",
+      "role": "unknown",
+      "bytes": 7222,
+      "mimeType": "image/webp",
+      "sha256": "bf639f268aa5fbd75a5baee4803e3cd15b2c1fd27a9ec9c627c7b6495e6ff1ec",
+      "metadata": {
+        "kind": "image",
+        "width": 360,
+        "height": 480,
+        "ratio": 0.75,
+        "hasAlpha": false,
+        "orientation": null
+      },
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
+    },
+    {
       "path": "public/images/workout-hero.jpg",
       "category": "application",
       "role": "unknown",
@@ -2625,9 +3152,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260421_arnold_press_video.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260421_arnold_press_video.sql",
           "route": null,
@@ -2820,9 +3357,19 @@
         "hasAudio": false
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql",
           "route": null,
@@ -2885,10 +3432,20 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
         "supabase/migrations/20260419_militaire_video_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
           "route": null,
@@ -2991,9 +3548,19 @@
         "hasAudio": false
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_developpe_militaire.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_developpe_militaire.sql",
           "route": null,
@@ -3121,9 +3688,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260422_elevations_frontales_halteres_video.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260422_elevations_frontales_halteres_video.sql",
           "route": null,
@@ -3186,9 +3763,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260420_elevations_laterales_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260420_elevations_laterales_v4.sql",
           "route": null,
@@ -3257,9 +3844,21 @@
         "bitRate": 1473130,
         "hasAudio": true
       },
-      "consumers": [],
-      "delivery": [],
-      "referenced": false
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
     },
     {
       "path": "public/videos/exercises/hip-thrust.jpg",
@@ -3311,9 +3910,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260421_hip_thrust_video.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260421_hip_thrust_video.sql",
           "route": null,
@@ -3376,9 +3985,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260420_kettlebell_swing_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260420_kettlebell_swing_v4.sql",
           "route": null,
@@ -3428,9 +4047,21 @@
         "bitRate": 1433733,
         "hasAudio": true
       },
-      "consumers": [],
-      "delivery": [],
-      "referenced": false
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
     },
     {
       "path": "public/videos/exercises/leg-press.jpg",
@@ -3469,9 +4100,21 @@
         "bitRate": 1387923,
         "hasAudio": true
       },
-      "consumers": [],
-      "delivery": [],
-      "referenced": false
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
     },
     {
       "path": "public/videos/exercises/pull-over-poulie-haute.jpg",
@@ -3510,9 +4153,21 @@
         "bitRate": 1415131,
         "hasAudio": true
       },
-      "consumers": [],
-      "delivery": [],
-      "referenced": false
+      "consumers": [
+        "lib/media/exercise-video-posters.ts"
+      ],
+      "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        }
+      ],
+      "referenced": true
     },
     {
       "path": "public/videos/exercises/rowing-barre.jpg",
@@ -3564,9 +4219,19 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_rowing_barre.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_rowing_barre.sql",
           "route": null,
@@ -3629,10 +4294,20 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
         "supabase/migrations/20260419_rdl_video_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
           "route": null,
@@ -3735,10 +4410,20 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
         "supabase/migrations/20260419_souleve_video_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
           "route": null,
@@ -3841,10 +4526,20 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_squat_barre.sql",
         "supabase/migrations/20260419_squat_video_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_squat_barre.sql",
           "route": null,
@@ -3947,10 +4642,20 @@
         "hasAudio": true
       },
       "consumers": [
+        "lib/media/exercise-video-posters.ts",
         "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
         "supabase/migrations/20260419_tractions_video_v4.sql"
       ],
       "delivery": [
+        {
+          "consumer": "lib/media/exercise-video-posters.ts",
+          "route": null,
+          "loading": "unknown",
+          "preload": "unspecified",
+          "poster": false,
+          "sizing": "unknown",
+          "aboveTheFold": "unknown"
+        },
         {
           "consumer": "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
           "route": null,

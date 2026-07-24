@@ -20,8 +20,9 @@ describe('media delivery boundaries', () => {
   })
 
   it('does not preload secondary feedback videos', () => {
-    expect(read('app/coach/components/CoachVideoReviews.tsx')).toContain('preload="none"')
-    expect(read('app/components/VideoFeedbackHistory.tsx')).toContain('preload="none"')
+    expect(read('app/coach/components/CoachVideoReviews.tsx')).toContain('DeferredVideo')
+    expect(read('app/components/VideoFeedbackHistory.tsx')).toContain('DeferredVideo')
+    expect(read('app/components/media/DeferredVideo.tsx')).toContain('preload="none"')
   })
 
   it('keeps the inventory independent from network and protected media contents', () => {
