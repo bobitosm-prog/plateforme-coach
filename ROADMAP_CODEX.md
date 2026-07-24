@@ -378,7 +378,7 @@ Perte de séance, divergence de programme, régression mobile, historique incomp
 **Durée cible : 6 à 9 semaines**  
 **Priorité : P2**
 
-**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1 : production et réutilisation de `saved_meals` sont versionnées et fail-closed ; l'ADR 0007 et sa frontière read-only fixent la cible des plans, six lectures runtime dont le contrôle de génération initiale et les deux du détail client coach sont raccordées sans écriture avec schéma déployé vérifié et sémantiques legacy préservées, et deux cas historiques pleinement comparables restent divergents**
+**Statut : checklist terminée — 16 tâches sur 16 ; définition de terminé partielle en audit RC1 : production et réutilisation de `saved_meals` sont versionnées et fail-closed ; l'ADR 0007 et sa frontière read-only fixent la cible des plans, six lectures runtime dont le contrôle de génération initiale et les deux du détail client coach sont raccordées sans écriture avec schéma déployé vérifié et sémantiques legacy préservées ; le [diagnostic hebdomadaire](docs/NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md) n'a aucune migration de plan applicable et son agrégation `daily_food_logs` distingue désormais zéro, inconnue et invalide ; deux cas historiques pleinement comparables restent divergents**
 
 ### Pourquoi
 

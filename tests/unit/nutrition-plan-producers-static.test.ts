@@ -10,6 +10,8 @@ const coachAi = readFileSync('app/client/[id]/hooks/useClientDetailAi.ts', 'utf8
 const coachController = readFileSync('app/client/[id]/hooks/useClientDetailController.ts', 'utf8')
 const onboardingPhoto = readFileSync('app/onboarding-photo/OnboardingPhotoContent.tsx', 'utf8')
 const absCalculator = readFileSync('app/components/progress/AbsCalculator.tsx', 'utf8')
+const weeklyDiagnosticGenerator = readFileSync('lib/weekly-diagnostic/generator.ts', 'utf8')
+const weeklyDiagnosticDetail = readFileSync('app/weekly-diagnostic/[id]/WeeklyDiagnosticDetailContent.tsx', 'utf8')
 
 function tableBlock(table: string, nextTable: string): string {
   return types.slice(types.indexOf(`      ${table}: {`), types.indexOf(`      ${nextTable}: {`))
@@ -74,5 +76,25 @@ describe('Nutrition plan runtime producer characterization', () => {
       expect(source).not.toContain('_nutrition_snapshot')
       expect(source).not.toContain('totalProvenance')
     }
+  })
+
+  it('keeps the weekly diagnostic plan-free while preserving its legacy regeneration writes', () => {
+    expect(weeklyDiagnosticGenerator).toContain("from('profiles')")
+    expect(weeklyDiagnosticGenerator).toContain("from('daily_food_logs')")
+    expect(weeklyDiagnosticGenerator).not.toMatch(
+      /from\(['"](?:meal_plans|client_meal_plans|meal_tracking|saved_meals)['"]\)/,
+    )
+    expect(weeklyDiagnosticGenerator).not.toContain('NutritionPlanEnvelopeV1')
+    expect(weeklyDiagnosticGenerator).not.toContain('createActivePersonalMealPlanReader')
+
+    expect(weeklyDiagnosticDetail.match(/from\('meal_plans'\)/g)).toHaveLength(2)
+    expect(weeklyDiagnosticDetail).toContain("from('meal_plans')\n        .update(")
+    expect(weeklyDiagnosticDetail).toContain("from('meal_plans')\n        .insert(")
+    expect(weeklyDiagnosticDetail).toContain(
+      'presentWeeklyDiagnosticMetric(diagnostic.calorie_avg_real, 0)',
+    )
+    expect(weeklyDiagnosticDetail).toContain(
+      "presentWeeklyDiagnosticMetric(diagnostic.protein_compliance_pct, 0, '%')",
+    )
   })
 })

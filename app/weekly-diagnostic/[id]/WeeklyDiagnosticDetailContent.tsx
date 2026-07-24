@@ -10,8 +10,8 @@ import { cache } from '@/lib/cache'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
+import { presentWeeklyDiagnosticMetric } from '@/lib/weekly-diagnostic/nutrition-aggregation'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
-
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
@@ -297,8 +297,8 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
   const metrics = [
     { label: t('metric_adherence'), value: `${(diagnostic.adherence_pct || 0).toFixed(0)}%` },
     { label: t('metric_weight_delta'), value: `${diagnostic.weight_delta_kg > 0 ? '+' : ''}${(diagnostic.weight_delta_kg || 0).toFixed(1)} kg` },
-    { label: t('metric_calories'), value: `${(diagnostic.calorie_avg_real || 0).toFixed(0)}` },
-    { label: t('metric_protein_compliance'), value: `${(diagnostic.protein_compliance_pct || 0).toFixed(0)}%` },
+    { label: t('metric_calories'), value: presentWeeklyDiagnosticMetric(diagnostic.calorie_avg_real, 0) },
+    { label: t('metric_protein_compliance'), value: presentWeeklyDiagnosticMetric(diagnostic.protein_compliance_pct, 0, '%') },
   ]
 
   return (

@@ -3,7 +3,7 @@ import { immutableInvocation, type AiPromptInvocation } from './types'
 export interface WeeklyDiagnosticPromptInput {
   profile: { objective?: string | null; tdee?: number | null; calorie_goal?: number | null; protein_goal?: number | null; fitness_level?: string | null; fitness_score?: number | null; current_weight?: number | null }
   sessionsPlanned: number; sessionsDone: number; adherencePct: number; trainingVolumeTotal: number
-  calorieAvgReal: number; calorieAvgTarget: number; proteinAvgG: number; proteinCompliancePct: number
+  calorieAvgReal: number | null; calorieAvgTarget: number; proteinAvgG: number | null; proteinCompliancePct: number | null
   daysLogged: number; weightDeltaKg: number; coherenceFlags: readonly string[]
   previousDiagnostic?: { score_semaine?: number | null; applied_changes?: boolean | null; objectif_semaine_prochaine?: string | null } | null
 }
@@ -11,6 +11,10 @@ export interface WeeklyDiagnosticPromptInput {
 export function buildWeeklyDiagnosticInvocation(input: WeeklyDiagnosticPromptInput): AiPromptInvocation {
   const { profile, sessionsPlanned, sessionsDone, adherencePct, trainingVolumeTotal, calorieAvgReal, calorieAvgTarget, proteinAvgG, proteinCompliancePct, daysLogged, weightDeltaKg, coherenceFlags } = input
   const prevDiagRes = { data: input.previousDiagnostic }
+  const caloriesReal = calorieAvgReal === null ? '?' : calorieAvgReal.toFixed(0)
+  const calorieGap = calorieAvgReal === null ? '?' : (calorieAvgReal - calorieAvgTarget).toFixed(0)
+  const proteinReal = proteinAvgG === null ? '?' : proteinAvgG.toFixed(0)
+  const proteinCompliance = proteinCompliancePct === null ? '?' : proteinCompliancePct.toFixed(0)
     const systemPrompt = `Tu es le coach IA personnel de l'utilisateur MoovX.
 Tu analyses sa semaine d'entrainement et de nutrition pour produire un diagnostic hebdomadaire actionnable.
 
@@ -51,10 +55,10 @@ Volume total (tonnage): ${trainingVolumeTotal.toFixed(0)} kg
 </training_week>
 
 <nutrition_week>
-Calories moyennes réelles: ${calorieAvgReal.toFixed(0)} kcal/jour
+Calories moyennes réelles: ${caloriesReal} kcal/jour
 Target: ${calorieAvgTarget} kcal/jour
-Écart moyen: ${(calorieAvgReal - calorieAvgTarget).toFixed(0)} kcal/jour
-Protéines moyennes: ${proteinAvgG.toFixed(0)}g (compliance: ${proteinCompliancePct.toFixed(0)}%)
+Écart moyen: ${calorieGap} kcal/jour
+Protéines moyennes: ${proteinReal}g (compliance: ${proteinCompliance}%)
 Jours loggés: ${daysLogged}/7
 </nutrition_week>
 

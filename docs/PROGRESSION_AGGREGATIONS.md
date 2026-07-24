@@ -68,6 +68,13 @@ Les autres calculs restent en place lorsqu'une divergence existe sur la source,
 la fenêtre, l'arrondi ou le traitement de l'absence. Ils seront raccordés après
 la création des read models, pas par substitution implicite.
 
+Le diagnostic hebdomadaire utilise une frontière spécialisée,
+`lib/weekly-diagnostic/nutrition-aggregation.ts`, documentée dans
+[`NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md`](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md).
+Elle réutilise les primitives calendaires de ce noyau, mais ne remplace pas
+`aggregateNutritionByDate` : sa projection, sa semaine Zurich, son dénominateur
+par jours renseignés et son payload IA constituent un contrat distinct.
+
 La [matrice d'autorité RC1](PROGRESSION_AGGREGATION_AUTHORITY.md) classe ces
 variantes et la garde `npm run progression:authority:check` empêche le retour
 des duplications de formules couvertes dans les composants et hooks.

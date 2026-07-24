@@ -12,6 +12,11 @@ vi.mock('@/lib/ai/providers/anthropic', async importOriginal => ({
 import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
 import { validDiagnosticOutput } from '../fixtures/ai-output-schemas'
 
+const DIAGNOSTIC_CONTEXT = {
+  correlationId: 'diag-correlation',
+  now: () => new Date('2026-07-24T12:00:00.000Z'),
+}
+
 function success(tokens?: { inputTokens: number; outputTokens: number }) {
   return {
     ok: true as const, output: 'tool' as const, value: structuredClone(validDiagnosticOutput),
@@ -23,7 +28,11 @@ function failure(code: 'provider_refused' | 'network_error' | 'invalid_output' |
   return { ok: false as const, error: { code, retryable: code === 'network_error' || code === 'quota_exceeded' }, metadata: { correlationId: 'diag-correlation', requestedModel: 'claude-opus-4-8' } }
 }
 
-function createDatabase(options?: { insertError?: boolean; pushSubscriptions?: boolean }) {
+function createDatabase(options?: {
+  insertError?: boolean
+  pushSubscriptions?: boolean
+  foodLogs?: Array<Record<string, unknown>>
+}) {
   const events: string[] = []
   const inserted: Array<Record<string, unknown>> = []
   let weeklyReads = 0
@@ -31,7 +40,12 @@ function createDatabase(options?: { insertError?: boolean; pushSubscriptions?: b
     let operation: 'read' | 'insert' | 'update' = 'read'
     let payload: Record<string, unknown> | undefined
     const result = () => {
-      if (table === 'daily_food_logs') return { data: [{ date: '2026-07-13', calories: 1900, protein: 140, carbs: 200, fat: 60 }], error: null }
+      if (table === 'daily_food_logs') {
+        return {
+          data: options?.foodLogs ?? [{ date: '2026-07-13', calories: 1900, protein: 140, carbs: 200, fat: 60 }],
+          error: null,
+        }
+      }
       if (table === 'weight_logs') return { data: [{ date: '2026-07-13', poids: 75 }, { date: '2026-07-19', poids: 74.5 }], error: null }
       if (table === 'workout_sessions') return { data: [], error: null }
       if (table === 'push_subscriptions') return { data: options?.pushSubscriptions ? [{ id: 'subscription-one', subscription: { endpoint: 'https://push.test' } }] : [], error: null }
@@ -75,7 +89,7 @@ beforeEach(() => {
 describe('weekly diagnostic shared generator', () => {
   it('preserves the prompt contract, validates once, persists, schedules and returns metadata', async () => {
     const database = createDatabase()
-    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, { correlationId: 'diag-correlation' })
+    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
     expect(result).toMatchObject({ diagnostic_id: 'diag-synthetic', providerModel: 'claude-opus-4-8', tokens: { inputTokens: 80, outputTokens: 20 } })
     const [request, context] = mocks.generate.mock.calls[0]
     expect(request).toMatchObject({ output: 'tool', model: 'claude-opus-4-8', maxTokens: 2048, forcedTool: 'weekly_diagnostic_output', temperature: undefined })
@@ -88,8 +102,44 @@ describe('weekly diagnostic shared generator', () => {
   it('keeps unknown tokens distinct from zero in persistence', async () => {
     mocks.generate.mockResolvedValue(success())
     const database = createDatabase()
-    await generateWeeklyDiagnostic('synthetic-user', database.client as never, { correlationId: 'diag-correlation' })
+    await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
     expect(database.inserted[0]).toMatchObject({ ai_tokens_used: null })
+  })
+
+  it('keeps unknown Nutrition metrics explicit in persistence and the AI payload', async () => {
+    const database = createDatabase({
+      foodLogs: [{
+        date: '2026-07-13',
+        calories: null,
+        protein: undefined,
+        carbs: null,
+        fat: null,
+      }],
+    })
+    await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
+
+    expect(database.inserted[0]).toMatchObject({
+      calorie_avg_real: null,
+      protein_avg_g: null,
+      protein_compliance_pct: null,
+    })
+    const [request] = mocks.generate.mock.calls[0]
+    expect(request.messages[0].content[0].text).toContain('Calories moyennes réelles: ?')
+    expect(request.messages[0].content[0].text).toContain('Protéines moyennes: ?')
+  })
+
+  it('excludes an invalid Nutrition day without lowering valid-day averages', async () => {
+    const database = createDatabase({
+      foodLogs: [
+        { date: '2026-07-13', calories: 1800, protein: 120, carbs: 200, fat: 60 },
+        { date: '2026-07-14', calories: 'invalid', protein: null, carbs: 200, fat: 60 },
+      ],
+    })
+    await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
+    expect(database.inserted[0]).toMatchObject({
+      calorie_avg_real: 1800,
+      protein_avg_g: 120,
+    })
   })
 
   it.each([
@@ -101,7 +151,7 @@ describe('weekly diagnostic shared generator', () => {
   ] as const)('fails closed after %s without persistence or notification', async (code, error, reasonCode) => {
     mocks.generate.mockResolvedValue(failure(code))
     const database = createDatabase()
-    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, { correlationId: 'diag-correlation' })
+    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
     expect(result).toMatchObject({ error, reasonCode })
     expect(database.inserted).toHaveLength(0)
     expect(mocks.sendNotification).not.toHaveBeenCalled()
@@ -109,7 +159,7 @@ describe('weekly diagnostic shared generator', () => {
 
   it('expurgates persistence failures and never notifies', async () => {
     const database = createDatabase({ insertError: true })
-    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, { correlationId: 'diag-correlation' })
+    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
     expect(result).toMatchObject({ error: 'Erreur sauvegarde', reasonCode: 'persistence_failed' })
     expect(JSON.stringify(result)).not.toContain('private sql detail')
     expect(mocks.sendNotification).not.toHaveBeenCalled()
@@ -121,7 +171,7 @@ describe('weekly diagnostic shared generator', () => {
     mocks.sendNotification.mockRejectedValue(new Error('private push detail'))
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const database = createDatabase({ pushSubscriptions: true })
-    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, { correlationId: 'diag-correlation' })
+    const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
     expect(result).toMatchObject({ diagnostic_id: 'diag-synthetic' })
     await vi.waitFor(() => expect(mocks.sendNotification).toHaveBeenCalledOnce())
     expect(log.mock.calls.flat().join(' ')).not.toContain('private push detail')

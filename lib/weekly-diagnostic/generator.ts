@@ -15,6 +15,10 @@ import { createAiOutputValidator, weeklyDiagnosticOutputSchema } from '../ai/sch
 import type { AiRecordedTokens } from '../ai/usage/types'
 import { getAnthropicMessagesUrl } from '../anthropic/chat-transport'
 import { legacyTonnage } from '../progression'
+import {
+  aggregateWeeklyDiagnosticNutrition,
+  previousCompleteZurichWeek,
+} from './nutrition-aggregation'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -34,6 +38,7 @@ export interface DiagnosticResult {
 export interface WeeklyDiagnosticGenerationContext {
   correlationId: string
   signal?: AbortSignal
+  now?: () => Date
 }
 
 export async function generateWeeklyDiagnostic(
@@ -50,46 +55,9 @@ export async function generateWeeklyDiagnostic(
     // 1. WEEK BOUNDARIES — calcul en TZ Europe/Zurich (lundi 00:00 → dimanche 23:59)
     // Fix bug : les anciens calculs getDay()/setHours() + toISOString() ramenaient au dimanche
     // car minuit local en TZ positive = 22h/23h UTC du jour précédent.
-    const now = new Date()
-
-    // Extraire les composants calendaires en TZ Geneva (gère été/hiver automatiquement)
-    const tzFmt = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Europe/Zurich',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      weekday: 'short',
-    })
-    const tzParts = tzFmt.formatToParts(now)
-    const tzYear = parseInt(tzParts.find(p => p.type === 'year')!.value)
-    const tzMonth = parseInt(tzParts.find(p => p.type === 'month')!.value)
-    const tzDay = parseInt(tzParts.find(p => p.type === 'day')!.value)
-    const tzWeekday = tzParts.find(p => p.type === 'weekday')!.value
-    const weekdayMap: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 }
-    const dayOfWeek = weekdayMap[tzWeekday]
-    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-
-    // weekStartStr : string YYYY-MM-DD du lundi Geneva (pour colonne `date`)
-    const monday = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay))
-    monday.setUTCDate(monday.getUTCDate() - daysSinceMonday)
-    // Reculer d'1 semaine : cron quotidien individualisé → toujours analyser
-    // la dernière semaine complète lundi→dimanche révolue, pas la courante.
-    monday.setUTCDate(monday.getUTCDate() - 7)
-    const weekStartStr = monday.toISOString().slice(0, 10)
-
-    // weekStart : instant absolu du lundi 00:00 Geneva (pour filter completed_at timestamptz)
-    const offsetFmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Europe/Zurich',
-      timeZoneName: 'longOffset',
-    })
-    const offsetStr = offsetFmt.formatToParts(now).find(p => p.type === 'timeZoneName')!.value
-    const offsetMatch = offsetStr.match(/GMT([+-]\d{2}:\d{2})/)
-    const offset = offsetMatch ? offsetMatch[1] : '+00:00'
-    const weekStart = new Date(`${weekStartStr}T00:00:00.000${offset}`)
-
-    const weekEnd = new Date(weekStart)
-    weekEnd.setUTCDate(weekStart.getUTCDate() + 7)
-    const weekEndStr = weekEnd.toISOString().slice(0, 10)
+    const week = previousCompleteZurichWeek(context.now?.() ?? new Date())
+    const weekStartStr = week.startInclusive
+    const weekEndStr = week.endExclusive
 
     // 2. IDEMPOTENCY
     const { data: existing } = await supabase
@@ -159,23 +127,15 @@ export async function generateWeeklyDiagnostic(
       ? Math.min(100, (sessionsDone / sessionsPlanned) * 100)
       : 0
 
-    const foodByDate: Record<string, { kcal: number; prot: number }> = {}
-    for (const log of (foodLogsRes.data || [])) {
-      const d = log.date
-      if (!foodByDate[d]) foodByDate[d] = { kcal: 0, prot: 0 }
-      foodByDate[d].kcal += Number(log.calories || 0)
-      foodByDate[d].prot += Number(log.protein || 0)
-    }
-    const daysLogged = Object.keys(foodByDate).length
-    const totalKcal = Object.values(foodByDate).reduce((s, d) => s + d.kcal, 0)
-    const totalProt = Object.values(foodByDate).reduce((s, d) => s + d.prot, 0)
-    const calorieAvgReal = daysLogged > 0 ? totalKcal / daysLogged : 0
-    const proteinAvgG = daysLogged > 0 ? totalProt / daysLogged : 0
+    const nutrition = aggregateWeeklyDiagnosticNutrition(foodLogsRes.data ?? [], week)
+    const daysLogged = nutrition.daysLogged
+    const calorieAvgReal = nutrition.calories.average
+    const proteinAvgG = nutrition.protein.average
     const calorieAvgTarget = Number(profile.calorie_goal || 0)
     const proteinGoal = Number(profile.protein_goal || 0)
-    const proteinCompliancePct = proteinGoal > 0
+    const proteinCompliancePct = proteinAvgG !== null && proteinGoal > 0
       ? (proteinAvgG / proteinGoal) * 100
-      : 0
+      : null
 
     const weightLogs = weightLogsRes.data || []
     const weightDeltaKg = weightLogs.length >= 2
@@ -190,10 +150,23 @@ export async function generateWeeklyDiagnostic(
     if (daysLogged < 3) {
       coherenceFlags.push(`Seulement ${daysLogged}/7 jours de nutrition loggés — données IA incomplètes`)
     }
+    if (nutrition.calories.average === null) {
+      coherenceFlags.push('Calories moyennes indisponibles — valeurs absentes ou invalides')
+    }
+    if (nutrition.protein.average === null) {
+      coherenceFlags.push('Protéines moyennes indisponibles — valeurs absentes ou invalides')
+    }
+    if (nutrition.issues.some(issue => issue.code.startsWith('invalid_'))) {
+      coherenceFlags.push('Certaines lignes nutrition invalides ont été exclues des moyennes')
+    }
     if (profile.objective?.toLowerCase().includes('perdre') && weightDeltaKg > 0.5) {
       coherenceFlags.push(`Objectif perte de poids mais +${weightDeltaKg.toFixed(1)}kg cette semaine`)
     }
-    if (profile.objective?.toLowerCase().includes('muscle') && calorieAvgReal < calorieAvgTarget * 0.9) {
+    if (
+      profile.objective?.toLowerCase().includes('muscle') &&
+      calorieAvgReal !== null &&
+      calorieAvgReal < calorieAvgTarget * 0.9
+    ) {
       coherenceFlags.push('Objectif prise muscle mais déficit calorique moyen')
     }
 

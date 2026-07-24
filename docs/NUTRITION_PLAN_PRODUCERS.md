@@ -74,6 +74,12 @@ Aucun producteur de plan Nutrition dans un cron, aucune copie entre ces deux
 tables et aucune activation de `client_meal_plans` n'ont été trouvés. Les
 routes IA produisent le JSON mais n'écrivent pas directement ces tables.
 
+Le [générateur du diagnostic hebdomadaire](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)
+ne lit aucun plan avant ce producteur : les objectifs proviennent de
+`profiles` et la consommation de `daily_food_logs`. Les deux accès
+`meal_plans` du détail sont donc uniquement l'ordre de mutation décrit dans le
+tableau. Aucun reader `NutritionPlanEnvelopeV1` n'est applicable à ce flux.
+
 ## Formes persistées et attentes des consommateurs
 
 Deux formes de semaine restent distinctes :

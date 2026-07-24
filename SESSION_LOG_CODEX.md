@@ -11145,3 +11145,146 @@ avec son écriture legacy et doit être traité séparément.
 
 **Prochaine action :** caractériser puis raccorder la lecture Nutrition
 read-only du diagnostic hebdomadaire, sans migrer ses écritures.
+
+## Entrée — 2026-07-24 — Diagnostic hebdomadaire, aucune migration de plan applicable
+
+**Contexte Git :** branche `main`, commit de départ et de fin `79dcc92`.
+La sauvegarde distante était synchronisée au départ. Aucun commit ou push n'a
+été créé et l'index reste vide.
+
+**Travail effectué :** traçage de `HomeTab` jusqu'au générateur partagé,
+inventaire complet des lectures manuelles et cron, comparaison avec
+`NutritionPlanEnvelopeV1` et les readers existants, vérification distante
+read-only du schéma puis documentation de la conclusion « aucune migration
+applicable ».
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Conclusion d'architecture :** le diagnostic ne lit ni `meal_plans`, ni
+`client_meal_plans`, ni `meal_tracking`, ni `saved_meals`. Les objectifs
+viennent de `profiles`; la consommation vient de `daily_food_logs`. Les deux
+accès `meal_plans` du détail diagnostic sont exclusivement le `update` puis
+l'`insert` de régénération. Ajouter un reader de plan créerait une requête et
+une autorité nouvelles; l'utiliser comme garde serait une dépendance morte et
+l'utiliser pour les objectifs modifierait le diagnostic visible.
+
+**Flux et requêtes :** après le contrôle d'idempotence
+`weekly_diagnostics`, cinq lectures partent en parallèle : profil, journal
+Nutrition, poids, séances et diagnostic précédent. `workout_sets` ajoute une
+lecture conditionnelle lorsque des séances existent. Le générateur conserve
+donc une lecture sur arrêt idempotent, six lectures avant IA sans séance et
+sept avec séries. Le push best effort post-persistance reste séparé. Aucun
+cache, polling, refresh ou compteur React n'est ajouté.
+
+**Date et calcul :** la dernière semaine complète est calculée en
+`Europe/Zurich`, du lundi inclus au lundi suivant exclu pour journal et
+séances. La lecture poids conserve sa seule borne basse historique. La semaine
+vide produit zéro jour et les moyennes historiques à zéro; une semaine
+partielle moyenne les jours renseignés; une semaine complète moyenne sept
+jours. La conversion legacy `Number(value || 0)` reste explicitement
+caractérisée et n'est pas attribuée à l'enveloppe de plan.
+
+**Schéma vérifié :** sur l'owner anonymisé `…b8df580a` et la fenêtre
+`2026-07-13` à `2026-07-20`, toutes les projections existantes ont réussi :
+profil de 78 colonnes avec les huit champs requis, 53 journaux, aucun poids,
+cinq séances, 108 séries complétées et un diagnostic précédent. La projection
+de plan aliasée existe mais ne fait pas partie du flux. Aucun appel distant
+d'écriture n'a été exécuté.
+
+**Garde ajoutée :** la suite statique existante vérifie seulement les sources
+`profiles`/`daily_food_logs`, l'absence des quatre tables de plan/suivi dans le
+générateur et le maintien des deux accès `meal_plans` du détail comme
+mutations. Aucun fichier runtime, projection ou calcul n'est figé davantage.
+
+**Écritures et comportement :** générateur, route, service, UI, props,
+callbacks, calculs, prompt, IA, insert `weekly_diagnostics`, update profil,
+push et régénération `meal_plans` sont inchangés. Requêtes de plan 0 → 0;
+requêtes du générateur inchangées.
+
+**Tests exécutés :** diagnostic ciblé 4 fichiers/28 tests verts; gardes
+statiques concernées 2 fichiers/10 tests verts; passage combiné initial
+4 fichiers/23 tests verts. TypeScript, les 161 liens locaux et
+`git diff --check` sont verts.
+
+**Dette restante :** les deux divergences historiques de totaux maintiennent
+la Phase 4 `partial`. L'agrégation `daily_food_logs` du diagnostic transforme
+encore les inconnues en zéro; toute correction changerait les diagnostics et
+doit être caractérisée séparément.
+
+**Prochaine action :** caractériser séparément l'agrégation
+`daily_food_logs` du diagnostic hebdomadaire, notamment sa conversion legacy
+des inconnues en zéro, sans l'assimiler à une lecture de plan ni migrer ses
+écritures.
+
+## Entrée — 2026-07-24 — Agrégation Nutrition du diagnostic sécurisée
+
+**Contexte Git :** branche `main`, commit de départ et de fin `79dcc92`. Le
+chantier documentaire précédent était présent hors index au départ. Aucun
+commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** le générateur groupait chaque date dans un objet initialisé
+à zéro, puis appliquait `Number(log.calories || 0)` et
+`Number(log.protein || 0)`. `null`, `undefined`, champ absent et chaîne vide
+devenaient donc zéro; une chaîne invalide produisait `NaN`; négatifs et
+infinis n'étaient pas refusés. Toute date avec une ligne entrait dans le
+dénominateur commun, ce qui abaissait ou contaminait les moyennes.
+
+**Travail effectué :** extraction d'une frontière pure spécialisée pour la
+dernière semaine complète Zurich, validation calories/protéines et agrégation
+indépendante par métrique. Le générateur, le prompt et le détail diagnostic
+présentent désormais explicitement une inconnue, sans changer la requête, les
+écritures ou les semaines valides.
+
+**Règles retenues :** zéro, nombre fini positif et chaîne numérique non vide
+sont connus; `null`, `undefined`, champ absent et chaîne vide sont inconnus;
+texte non numérique, `NaN`, `Infinity`, type incompatible et négatif sont
+invalides. Une date invalide/hors fenêtre exclut la ligne. Une inconnue ou
+invalide exclut tout le jour pour cette métrique; l'autre métrique reste
+indépendante. Les doublons valides du jour sont sommés. Sans jour connu, la
+moyenne vaut `null`.
+
+**Semaines et rendu :** vide = `unavailable`, zéro jour, moyennes `null`;
+partielle = moyenne de chaque métrique sur ses jours entièrement connus;
+complète = sept jours connus pour les deux métriques, sans issue. Le payload
+IA affiche `?`, la persistance nullable reçoit `null` sans changement de forme
+et le détail affiche `—`. Les semaines valides gardent exactement nombres,
+golden de prompt et rendu.
+
+**Requêtes et schéma :** `daily_food_logs` reste une collection owner-scoped
+unique, projection `date, calories, protein, carbs, fat`, fenêtre semi-ouverte
+`[lundi précédent, lundi courant)`, sans ordre, limite ou single. Requêtes
+avant/après 1 → 1. Les 53 lignes runtime anonymisées exposaient cinq clés :
+date chaîne et quatre nutriments nombres, sans négatif ou non-fini. Le schéma
+rend calories/date non null et les trois macros nullables.
+
+**Comparaison :** Home jour, mini-graphe Home, onglet Nutrition et Analytics
+gardent leurs owners, dates, limites, refresh et sémantiques distinctes.
+`carbs`, `fat`, `meal_type`, quantité et portions ne participent toujours pas
+au diagnostic. Aucune frontière commune n'est forcée.
+
+**Écritures :** insert `weekly_diagnostics`, update profil, mutations
+`meal_plans`, RPC, payloads de sauvegarde, logique Training/poids et producteurs
+de plans sont inchangés. Seules les valeurs calculées fausses deviennent
+`null`; la forme de l'insert reste identique.
+
+**Tests exécutés :** caractérisation legacy avant correction 1 fichier/3
+tests verts; attente helper rouge car module absent; intégration rouge 2
+échecs attendus et 9 tests verts. Après correction : ciblés 5 fichiers/51
+tests, diagnostic élargi 8/70, goldens IA 2/28, Nutrition/Home/client-detail
+44/348 et gardes statiques 84/318 verts. La garde construction Supabase est
+repassée à 7/7 après préservation de sa ligne historique. Première suite
+complète : 1 échec mécanique sur 2 112 tests; suite finale : 259 fichiers,
+2 109 tests réussis et 3 `todo`. TypeScript, les 169 liens locaux et
+`git diff --check` sont verts.
+
+**Dette ESLint :** helper et tests nouveaux 0 erreur / 0 avertissement avant
+et après; générateur et prompt 0/0. Le détail historique conserve 4 erreurs
+`no-explicit-any` / 0 avertissement déjà présentes; aucune dette n'est ajoutée.
+
+**État roadmap :** aucune case RC1 cochée. Phase 4 reste `partial` à cause des
+deux divergences historiques de totaux, RC1 reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** caractériser les conversions `daily_food_logs`
+restantes du mini-graphe Home et d'Analytics, sans les unifier ni toucher au
+résumé Home.

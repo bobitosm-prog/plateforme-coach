@@ -14,6 +14,11 @@ ainsi que le
 [contrôle de génération initiale](NUTRITION_INITIAL_GENERATION_READ.md)
 l'utilisent désormais ; aucun producteur n'est raccordé.
 
+Le
+[diagnostic hebdomadaire](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)
+n'est pas un consommateur supplémentaire : il ne lit aucun plan. Ses objectifs
+viennent de `profiles` et sa consommation de `daily_food_logs`.
+
 ## API publique
 
 | API | Contrat |
@@ -95,6 +100,8 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 
 - Aucun writer ne produit encore `NutritionPlanEnvelopeV1`.
 - Cinq frontières runtime, représentant six lectures de plan, l'utilisent.
+- Le diagnostic hebdomadaire est caractérisé « aucune migration applicable » :
+  aucune requête de plan ne lui est ajoutée.
 - Les colonnes SQL futures `week_start` et `status` ne sont pas créées.
 - Le contrôle distant est limité aux projections read-only documentées ; aucun
   backfill ni aucune écriture distante n'a été réalisé.

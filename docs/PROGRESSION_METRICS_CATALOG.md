@@ -236,9 +236,12 @@ JavaScript, puis affichent en locale : risque de décalage d'un jour.
   `abs(calories-calorieGoal) <= 100`, après arrondi des calories à l'entier
   (`AnalyticsSection.tsx:182-190`). Zéro loggé et absence de jour sont
   différents car les jours absents ne figurent pas dans le tableau.
-- Moyennes diagnostic : moyenne calories/protéines sur les **jours ayant au
-  moins un log**, pas sur sept jours ; absence donne zéro. Conformité protéines
-  `avg/goal×100`, non plafonnée (`generator.ts:139-155`).
+- Moyennes diagnostic : moyenne calories/protéines sur les jours où la
+  métrique est entièrement connue, pas sur sept jours. Une inconnue ou une
+  valeur invalide exclut ce jour pour la métrique concernée; aucune valeur
+  connue donne `null`, jamais zéro. Conformité protéines `avg/goal×100`, non
+  plafonnée lorsqu'elle est calculable
+  ([contrat](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)).
 - Adhérence plan alimentaire coach : nombre de couples date/type de repas
   marqués dans `weeklyTracking` divisé par les repas planifiés passés
   (`app/client/[id]/components/ClientNutrition.tsx:306`). Elle ne mesure ni
