@@ -9,6 +9,7 @@ variables d'environnement. Le
 [consommateur dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et la
 [lecture du plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md)
 ainsi que le [résumé Nutrition de Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
+et les [deux lectures du détail client](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md)
 l'utilisent désormais ; aucun producteur n'est raccordé.
 
 ## API publique
@@ -91,8 +92,8 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 ## Limites restantes
 
 - Aucun writer ne produit encore `NutritionPlanEnvelopeV1`.
-- Trois consommateurs read-only l'utilisent ; les lecteurs du détail client
-  restent legacy.
+- Quatre frontières runtime, représentant cinq lectures de plan, l'utilisent.
 - Les colonnes SQL futures `week_start` et `status` ne sont pas créées.
-- Aucun backfill ou contrôle distant n'a été réalisé.
+- Le contrôle distant est limité aux projections read-only documentées ; aucun
+  backfill ni aucune écriture distante n'a été réalisé.
 - La priorité produit entre plan personnel et plan coach reste inchangée.

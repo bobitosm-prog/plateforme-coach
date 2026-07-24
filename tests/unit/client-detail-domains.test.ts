@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseClient } from '../../lib/supabase/types'
 import { loadClientDetailNutrition, loadClientDetailProfile, loadClientDetailProgression, loadClientDetailTraining, saveClientDetailProgram, updateClientDetailProfile } from '../../lib/coaching/client-detail'
+import { LEGACY_AI_WEEK, LEGACY_COACH_WEEK } from '../fixtures/nutrition-plan-envelope'
 
 type TableResult = { data?: unknown; single?: unknown; error?: { code?: string; message?: string } | null }
 
@@ -63,13 +64,55 @@ describe('client detail domain boundaries', () => {
 
   it('keeps assigned, personal and tracking Nutrition formats distinct', async () => {
     const db = database({
-      client_meal_plans: { single: { id: 'assigned', plan: { lundi: {} }, calorie_target: 2000 } },
-      meal_plans: { single: { id: 'personal', plan_data: { lundi: {} }, is_active: true, created_at: '2026-01-01' } },
+      client_meal_plans: { single: { id: 'assigned', client_id: 'client-1', coach_id: 'coach-1', calorie_target: 2283, protein_target: 134, carb_target: 266, fat_target: 76, plan: LEGACY_COACH_WEEK, created_at: '2026-01-01', updated_at: '2026-01-01' } },
+      meal_plans: { single: { id: 'personal', user_id: 'client-1', created_by: null, name: 'Personnel', plan: LEGACY_AI_WEEK, active: true, created_at: '2026-01-01' } },
       meal_tracking: { data: [{ date: '2026-01-05', meal_type: 'Déjeuner', is_completed: true }] },
     })
     const result = await loadClientDetailNutrition(db.client, scope, '2026-01-05')
     expect(result).toMatchObject({ status: 'success', data: { assignedPlan: { id: 'assigned' }, activePlan: { id: 'personal' } } })
-    if (result.status === 'success') expect([...result.data.weeklyTracking['2026-01-05']]).toEqual(['Déjeuner'])
+    if (result.status === 'success') {
+      expect(result.data.assignedPlan).toMatchObject({
+        calorie_target: 2283,
+        protein_target: 134,
+        carb_target: 266,
+        fat_target: 76,
+      })
+      expect([...result.data.weeklyTracking['2026-01-05']]).toEqual(['Déjeuner'])
+    }
+    expect(db.from.mock.calls.map(call => call[0])).toEqual([
+      'client_meal_plans',
+      'meal_plans',
+      'meal_tracking',
+    ])
+    expect(db.calls.filter(call => call.method === 'limit').map(call => [call.table, call.args[0]]))
+      .toEqual([['client_meal_plans', 1], ['meal_plans', 1], ['meal_tracking', 200]])
+  })
+
+  it('keeps not_found distinct from invalid or unavailable Nutrition plans', async () => {
+    const absent = database({
+      client_meal_plans: { single: null },
+      meal_plans: { single: null },
+      meal_tracking: { data: [] },
+    })
+    expect(await loadClientDetailNutrition(absent.client, scope, '2026-01-05'))
+      .toMatchObject({ status: 'success', data: { assignedPlan: null, activePlan: null } })
+
+    const invalid = database({
+      client_meal_plans: { single: { id: 'assigned', client_id: 'client-1', coach_id: 'coach-1', plan: { unknown: true }, created_at: '2026-01-01', updated_at: '2026-01-01' } },
+      meal_plans: { single: null },
+      meal_tracking: { data: [] },
+    })
+    expect(await loadClientDetailNutrition(invalid.client, scope, '2026-01-05'))
+      .toEqual({ status: 'unavailable', source: 'nutrition' })
+
+    const failure = database({
+      client_meal_plans: { error: { code: 'PGRST000', message: 'private detail' } },
+      meal_plans: { single: null },
+      meal_tracking: { data: [] },
+    })
+    const result = await loadClientDetailNutrition(failure.client, scope, '2026-01-05')
+    expect(result).toEqual({ status: 'unavailable', source: 'nutrition' })
+    expect(JSON.stringify(result)).not.toContain('private detail')
   })
 
   it('builds progression histories separately and signs photos', async () => {
@@ -102,6 +145,6 @@ describe('client detail domain boundaries', () => {
     const files = ['types.ts', 'profile.ts', 'training.ts', 'nutrition.ts', 'progression.ts', 'index.ts']
     const source = files.map(file => readFileSync(new URL(`../../lib/coaching/client-detail/${file}`, import.meta.url), 'utf8')).join('\n')
     expect(source).not.toMatch(/from ['"](?:react|next|@\/app)/)
-    expect(source).not.toMatch(/createClient|service_role|select\(['"]\*['"]|:\s*any\b/)
+    expect(source).not.toMatch(/\bcreateClient\(|service_role|select\(['"]\*['"]|:\s*any\b/)
   })
 })

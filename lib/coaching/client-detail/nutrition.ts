@@ -1,4 +1,7 @@
 import type { DatabaseClient, Json } from '@/lib/supabase/types'
+import { createActivePersonalMealPlanReader } from '@/lib/nutrition/personal-meal-plan-reader'
+import { createNutritionPlanRepository } from '@/lib/repositories/nutrition'
+import { createClientDetailAssignedPlanReader } from './nutrition-plan-reader'
 import type { ClientDetailLoadResult, ClientDetailMutationResult, ClientDetailScope, LegacyAssignedMealPlan } from './types'
 
 export interface ClientDetailNutritionData {
@@ -23,16 +26,21 @@ export async function saveClientDetailMealPlan(client: DatabaseClient, scope: Cl
 }
 
 export async function loadClientDetailNutrition(client: DatabaseClient, scope: ClientDetailScope, mondayDate: string): Promise<ClientDetailLoadResult<ClientDetailNutritionData>> {
+  const repository = createNutritionPlanRepository(client)
+  const assignedReader = createClientDetailAssignedPlanReader(repository)
+  const personalReader = createActivePersonalMealPlanReader(repository)
   const [assigned, active, tracking] = await Promise.all([
-    client.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', scope.coachUserId).eq('client_id', scope.clientUserId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    client.from('meal_plans').select('id,created_at,plan_data,is_active').eq('user_id', scope.clientUserId).eq('is_active' as never, true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    assignedReader.load(scope),
+    personalReader.load(scope.clientUserId),
     client.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', scope.clientUserId).gte('date', mondayDate).eq('is_completed' as never, true).limit(200),
   ])
-  if (assigned.error || active.error || tracking.error) {
+  if (
+    (assigned.status !== 'ready' && assigned.status !== 'absent') ||
+    (active.status !== 'ready' && active.status !== 'absent') ||
+    tracking.error
+  ) {
     return { status: 'unavailable', source: 'nutrition' }
   }
-  const assignedData = assigned.data as unknown as LegacyAssignedMealPlan | null
-  const activeData = active.data as unknown as { id: string; created_at: string | null; plan_data: Json; is_active: boolean | null } | null
   const trackingData = tracking.data as unknown as readonly { date: string; meal_type: string | null; is_completed: boolean | null }[] | null
   const weeklyTracking: Record<string, Set<string>> = {}
   for (const row of trackingData ?? []) {
@@ -43,8 +51,15 @@ export async function loadClientDetailNutrition(client: DatabaseClient, scope: C
   return {
     status: 'success',
     data: {
-      assignedPlan: assignedData,
-      activePlan: activeData,
+      assignedPlan: assigned.status === 'ready' ? assigned.plan : null,
+      activePlan: active.status === 'ready'
+        ? {
+          id: active.plan.id,
+          created_at: active.plan.created_at,
+          plan_data: active.plan.plan_data as Json,
+          is_active: active.plan.is_active,
+        }
+        : null,
       weeklyTracking,
     },
   }

@@ -11008,3 +11008,66 @@ réussis et 3 `todo`. TypeScript, ESLint ciblé et `git diff --check` verts.
 **Prochaine action :** caractériser puis raccorder la double lecture au
 contrôle Nutrition read-only de génération initiale, sans migrer ses
 écritures.
+
+## Entrée — 2026-07-24 — Vérification runtime et préservation des cibles client-detail
+
+**Contexte Git :** branche `main`, commit de départ et de fin `b75d5a0`.
+Le chantier client-detail était seul présent hors index au début. Aucun commit
+n'a été créé et l'index reste vide.
+
+**Travail effectué :** reprise du raccordement read-only du détail client,
+inventaire de tous ses consommateurs Nutrition, contrôle distant anonymisé des
+trois tables du loader, ajout d'une projection spécialisée pour le plan coach
+et correction du reader afin de préserver les quatre cibles SQL legacy.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Schéma vérifié :** `client_meal_plans` expose les identités, `week_start`,
+les quatre cibles, `plan`, `created_at` et `updated_at`; `meal_plans` expose
+`plan_data/is_active` et ses colonnes legacy; `meal_tracking` expose
+`date/meal_type/is_completed`. Les projections finales ont été exécutées en
+lecture seule. Les plans anonymisés `…c03a84c1` et `…fb42f326` étaient
+legacy français sur sept jours, avec owners conformes.
+
+**Décisions prises :** seules les deux lectures de plan réutilisent les
+readers canoniques. Profil, tracking initial/pollé, libellés favoris et
+catalogues IA gardent leurs frontières car owner, date, filtre, fraîcheur ou
+sémantique d'erreur diffèrent. Une cible canonique connue est prioritaire;
+sinon une cible runtime legacy valide est conservée. L'absence reste `null` et
+une valeur négative ou non finie ferme la lecture.
+
+**Correction de caractérisation :** l'entrée précédente indiquait qu'une
+forme legacy perdait ses cibles et retombait sur les défauts du contrôleur.
+Le test de caractérisation a démontré trois échecs sur ce point. Le
+raccordement final conserve les cibles déployées et préserve donc le rendu
+historique.
+
+**Requêtes :** chargement Nutrition initial 3 → 3; lectures de plan 2 → 2;
+tracking initial 1 → 1; polling 30 secondes inchangé; plans triés
+`created_at DESC`, limite 1 et `maybeSingle`; tracking limité à 200. Aucune
+requête de relation, cache ou seconde source n'a été ajoutée.
+
+**Écritures :** `saveClientDetailMealPlan`, ses `update/insert`, son RPC
+profil, le producteur IA `meal_plans.insert`, leurs payloads et mutations React
+sont inchangés. Aucun appel distant d'écriture n'a été réalisé.
+
+**Tests exécutés :** caractérisation rouge 2 fichiers, 3 échecs attendus et
+11 réussites; après correction client-detail 6 fichiers/31 tests, ensemble
+Nutrition concerné 33/256, gardes statiques 84/317, non-régression Home/Mes
+repas 4/17, suite complète 255 fichiers avec 2 067 tests réussis et 3 `todo`.
+TypeScript et `git diff --check` sont verts. Les 168 liens locaux des documents
+modifiés sont valides.
+
+**Dette ESLint :** nouvelles frontières, repository et tests 0 erreur /
+0 avertissement avant et après. Le contrôleur historique, non modifié, reste à
+13 erreurs / 0 avertissement.
+
+**Risques ou dette restante :** aucun writer ne produit encore
+`NutritionPlanEnvelopeV1`; les deux divergences de totaux restent visibles.
+Le contrôle read-only de génération initiale cohabite encore avec ses
+écritures legacy et doit être traité séparément.
+
+**Prochaine action :** caractériser puis raccorder la double lecture au
+contrôle Nutrition read-only de génération initiale, sans migrer ses
+écritures.

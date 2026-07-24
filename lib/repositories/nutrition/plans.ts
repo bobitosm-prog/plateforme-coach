@@ -4,11 +4,18 @@ import { createCoachClientRelationRepository } from '@/lib/repositories/coach-cl
 
 export const PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,plan:plan_data,active:is_active,created_at' as const
 export const ASSIGNED_MEAL_PLAN_PROJECTION = 'id,client_id,coach_id,plan,created_at,updated_at' as const
+export const CLIENT_DETAIL_ASSIGNED_MEAL_PLAN_PROJECTION = 'id,client_id,coach_id,calorie_target,protein_target,carb_target,fat_target,plan,created_at,updated_at' as const
 
 export type PersonalMealPlanRow = Pick<Tables<'meal_plans'>,
   'id' | 'user_id' | 'created_by' | 'name' | 'plan' | 'active' | 'created_at'>
 export type AssignedMealPlanRow = Pick<Tables<'client_meal_plans'>,
   'id' | 'client_id' | 'coach_id' | 'plan' | 'created_at' | 'updated_at'>
+export type ClientDetailAssignedMealPlanRow = AssignedMealPlanRow & {
+  readonly calorie_target: number | null
+  readonly protein_target: number | null
+  readonly carb_target: number | null
+  readonly fat_target: number | null
+}
 
 // The deployed runtime schema still exposes the legacy activation column.
 const DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN = 'is_active' as never
@@ -49,12 +56,14 @@ export function createNutritionPlanRepository(client: DatabaseClient) {
     async findLatestAssignedPlanForCoachClient(
       coachUserId: string,
       clientUserId: string,
-    ): Promise<RepositoryResult<AssignedMealPlanRow>> {
-      const { data, error } = await client.from('client_meal_plans').select(ASSIGNED_MEAL_PLAN_PROJECTION)
+    ): Promise<RepositoryResult<ClientDetailAssignedMealPlanRow>> {
+      const { data, error } = await client.from('client_meal_plans').select(CLIENT_DETAIL_ASSIGNED_MEAL_PLAN_PROJECTION)
         .eq('coach_id', coachUserId).eq('client_id', clientUserId)
         .order('created_at', { ascending: false }).limit(1).maybeSingle()
       if (error) return repositoryFailure(error)
-      return data ? { ok: true, data } : { ok: false, kind: 'not_found' }
+      return data
+        ? { ok: true, data: data as unknown as ClientDetailAssignedMealPlanRow }
+        : { ok: false, kind: 'not_found' }
     },
 
     async findLatestAssignmentForActiveCoachClient(

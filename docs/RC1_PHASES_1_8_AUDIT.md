@@ -86,7 +86,7 @@ donnée distante.
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md) et [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md). |
+| Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md) et [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md). |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
 | Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
@@ -156,11 +156,12 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis raccorder la double lecture aux lectures Nutrition read-only
-du détail client coach, sans migrer d'écriture. Les raccordements
+Caractériser puis raccorder la double lecture au contrôle Nutrition read-only
+de génération initiale, sans migrer ses écritures. Les raccordements
 [dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et
 [plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), la
 [lecture Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md), la
+[lecture du détail client](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), la
 [frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) ne requalifient
 aucune preuve historique.

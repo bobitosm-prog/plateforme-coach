@@ -27,11 +27,11 @@ rapide de client ou démontage.
   est équivalent. La lecture personnelle conserve explicitement le tri legacy
   `created_at DESC` et la limite 10 plutôt que le tri repository `updated_at`;
   `workout_sessions` et `completed_sessions` ne sont jamais fusionnés.
-- **Nutrition** (`nutrition.ts`) : plan coach, plan personnel IA et suivi repas
-  hebdomadaire, puis sauvegarde parallèle plan/objectifs conservant l'échec
-  partiel historique. Les champs legacy `plan_data`, `is_active`,
-  `is_completed` et les cibles macros restent explicitement isolés, car ils
-  divergent encore des types canoniques documentés.
+- **Nutrition** (`nutrition.ts`) : les lectures plan coach et plan personnel
+  IA passent par la [double lecture canonique](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md),
+  tandis que profil, suivi repas, libellés favoris et catalogues IA restent
+  séparés car leurs contrats diffèrent. La sauvegarde parallèle
+  plan/objectifs conserve exactement son échec partiel historique.
 - **Progression** (`progression.ts`) : 90 poids, 10 mensurations, 20 photos
   signées et 50 marqueurs de complétion du coach actif. Le read model
   Progression assure le tri sans transformer absence ou panne en zéro.
@@ -67,8 +67,8 @@ La progression reste non bloquante.
 Les limites, tris et formes visibles restent : 100 séances, 10 programmes
 personnels, 90 poids, 10 mensurations, 20 photos, 50 complétions et 200 lignes
 de suivi repas. La progression conserve son chargement non bloquant après le
-profil, Training et Nutrition. Les valeurs Nutrition legacy, les deux
-historiques Training, les notifications et le contrat UI ne sont pas
+profil, Training et Nutrition. Les valeurs Nutrition legacy présentées par les
+readers, les deux historiques Training, les notifications et le contrat UI ne sont pas
 normalisés ou fusionnés.
 
 ## Dette reportée
@@ -76,7 +76,7 @@ normalisés ou fusionnés.
 Le contrôleur conserve les actions profil/programme/nutrition, les éditeurs
 temporaires, 12 occurrences historiques de `any` sur les formes distantes
 legacy et une erreur historique `set-state-in-effect`. Le client navigateur
-partagé et les lectures IA de colonnes Nutrition
+partagé et les écritures IA de colonnes Nutrition
 divergentes restent bornés aux frontières existantes. Les notes sont toujours
 autosauvegardées après trois secondes et le suivi hebdomadaire reste interrogé
 toutes les trente secondes. Ces comportements n'ont pas été modifiés.

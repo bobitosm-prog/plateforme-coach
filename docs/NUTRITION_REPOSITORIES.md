@@ -11,7 +11,7 @@ sans les convertir prématurément.
 | Factory | Méthodes | Scope explicite |
 |---|---|---|
 | `createNutritionCatalogRepository` | `listGlobalFoods`, `listCommunityFoods`, `findCommunityFoodById`, `listCustomFoodsForOwner`, `findCustomFoodByIdForOwner` | catalogue global ou `user_id` owner |
-| `createNutritionPlanRepository` | `listPersonalPlansForOwner`, `findActivePersonalPlanForOwner`, `listAssignedPlansForClient`, `findLatestAssignmentForActiveCoachClient` | owner, client, ou couple coach/client avec relation `status = active` vérifiée avant lecture |
+| `createNutritionPlanRepository` | `listPersonalPlansForOwner`, `findActivePersonalPlanForOwner`, `listAssignedPlansForClient`, `findLatestAssignedPlanForCoachClient`, `findLatestAssignmentForActiveCoachClient` | owner, client, couple coach/client déjà autorisé, ou couple avec relation `status = active` vérifiée avant lecture |
 | `createNutritionJournalRepository` | `listDailyFoodLogsForOwner`, `listLegacyMealLogsForOwner`, `listMealCompletionsForOwner`, `listWaterIntakeForOwner` | `user_id` owner, plage de dates et limite bornée |
 | `createNutritionRecipeRepository` | `listRecipesForOwner`, `listPublicRecipes`, `findRecipeByIdForOwner`, `listSavedMealsForOwner`, `findSavedMealByIdForOwner` | owner ou catalogue public |
 
@@ -52,8 +52,9 @@ schéma démontré.
 
 ## Limites de schéma
 
-Seules les colonnes de `lib/supabase/database.types.ts` sont projetées. Les
-colonnes runtime documentées mais absentes des types ne sont pas inventées :
+Les colonnes runtime absentes de `lib/supabase/database.types.ts` ne sont
+utilisées qu'après vérification read-only du schéma déployé et restent
+aliasées ou isolées à la frontière repository :
 
 - `meal_plans.plan_data`, `is_active` ;
 - cibles et `week_start` de `client_meal_plans` ;
@@ -62,6 +63,10 @@ colonnes runtime documentées mais absentes des types ne sont pas inventées :
 - variantes `energy_kcal`, `proteins`, `carbohydrates` et `*_per_100g` absentes
   des tables concernées dans les types générés.
 
+Le contrôle du 24 juillet 2026 a confirmé `plan_data/is_active`, les quatre
+cibles de `client_meal_plans` et `meal_tracking.is_completed`. Il n'a réalisé
+aucune écriture ni recopié de payload utilisateur dans la documentation.
+
 La vérification `coach_clients.status = active` protège la méthode spécialisée,
 mais ne corrige pas les policies historiques des autres lectures.
 `useNutritionPlans` utilise désormais `findActivePersonalPlanForOwner` par la
@@ -69,14 +74,21 @@ mais ne corrige pas les policies historiques des autres lectures.
 [résumé Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md). Les autres consommateurs
 directs restent legacy.
 
+Le [détail client coach](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md) utilise la
+méthode directe coach/client uniquement après que `loadClientDetailProfile`
+a dérivé le coach authentifié et validé la relation active. Cette méthode
+n'ajoute donc aucune requête de relation et conserve les trois lectures
+initiales du domaine Nutrition.
+
 Les écritures legacy et leurs divergences avec ces projections read-only sont
 caractérisées dans
 [NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Les repositories
-restent volontairement inchangés : ajouter `plan_data`, `is_active`,
-`week_start` ou les cibles absentes des types inventerait des colonnes.
+de plans utilisent des aliases PostgREST pour `plan_data/is_active`. La
+projection client-detail conserve les quatre cibles runtime vérifiées, mais
+n'ajoute pas `week_start`, inutile au rendu actuel.
 
 [L'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) fixe la cible :
-`plan`/`active` sont canoniques pour `meal_plans`; objectifs et totaux vivent
+`plan`/`active` restent les noms canoniques présentés au code ; objectifs et totaux vivent
 dans l'enveloppe JSON avec provenance; `week_start` et le statut d'une
 affectation nécessitent une migration additive future. Tant que cette
 migration n'existe pas, aucune colonne runtime absente ne rejoint les
@@ -87,6 +99,6 @@ Les repositories ne dépendent pas de la
 [premier consommateur](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) adapte le
 `RepositoryResult<{plan}>` après la lecture. Le
 [second raccordement](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md) utilise la
-projection canonique typée `meal_plans.plan/active`, sans simuler
-`plan_data/is_active`; le [raccordement Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
+projection canonique aliasée `meal_plans.plan/active`; le
+[raccordement Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
 réutilise exactement cette méthode avec son cycle de fraîcheur propre.

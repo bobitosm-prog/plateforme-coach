@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseClient } from '../../lib/supabase/types'
 import {
   ASSIGNED_MEAL_PLAN_PROJECTION,
+  CLIENT_DETAIL_ASSIGNED_MEAL_PLAN_PROJECTION,
   COMMUNITY_FOOD_PROJECTION,
   CUSTOM_FOOD_PROJECTION,
   DAILY_FOOD_LOG_PROJECTION,
@@ -112,7 +113,14 @@ describe('Nutrition repositories', () => {
   })
 
   it('finds the latest assigned plan for an already-authorized coach/client scope', async () => {
-    const row = { id: 'assigned-id', plan: { legacy: true } }
+    const row = {
+      id: 'assigned-id',
+      plan: { legacy: true },
+      calorie_target: 2283,
+      protein_target: 134,
+      carb_target: 266,
+      fat_target: 76,
+    }
     const mock = clientWithResults({ data: row, error: null })
     const result = await createNutritionPlanRepository(mock.client)
       .findLatestAssignedPlanForCoachClient('coach-id', 'client-id')
@@ -120,7 +128,7 @@ describe('Nutrition repositories', () => {
     expect(result).toEqual({ ok: true, data: row })
     expect(callsFor(mock, 'select')).toContainEqual({
       table: 'client_meal_plans',
-      args: [ASSIGNED_MEAL_PLAN_PROJECTION],
+      args: [CLIENT_DETAIL_ASSIGNED_MEAL_PLAN_PROJECTION],
     })
     expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
       ['coach_id', 'coach-id'],
