@@ -10725,3 +10725,43 @@ possibles avant validation complète N → 0 ; accès `use_count` dans le flux
 
 **Prochaine action :** caractériser les producteurs de totaux déclarés des
 plans `meal_plans` et `client_meal_plans` avant de décider leur versionnement.
+
+## Entrée — 2026-07-24 — Producteurs de plans Nutrition caractérisés
+
+**Travail effectué :** recoupement des migrations, types générés,
+repositories, hooks, composants et services ; inventaire de sept producteurs
+vers `meal_plans` ou `client_meal_plans` ; fixtures synthétiques et tests des
+payloads, formes JSON, alias, jours, zéros, absences et divergences.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial` et son critère
+de concordance reste `unmet`.
+
+**Décisions prises :** aucun producteur de plan n'est migré. Le snapshot v1
+reste réutilisable au niveau aliment, mais aucune enveloppe v2 n'est créée.
+Les colonnes runtime ne sont pas ajoutées aux repositories ou aux types.
+
+**Problèmes rencontrés :** les migrations et types générés exposent
+`meal_plans.plan/active`, tandis que les producteurs utilisent
+`plan_data/is_active` et des totaux absents. `client_meal_plans` présente la
+même divergence pour `week_start` et les objectifs. Un total peut représenter
+une cible, le lundi ou un calcul journalier selon le producteur.
+
+**Risques ou dette restante :** les policies historiques coach ne prouvent pas
+toujours une relation active ; le parseur convertit plusieurs inconnues en
+zéro ; un jour IA vide et un jour coach vide ne sont pas traités pareil. Les
+deux divergences historiques restent inchangées.
+
+**Tests exécutés :** 15 tests dédiés de payloads exacts, formes coach/IA,
+zéro/inconnu, alias, sept jours, jours vides, concordance, divergence, schéma,
+projections et producteurs ; 50 tests Nutrition ciblés ; suite complète
+241 fichiers, 1 977 tests réussis et 3 `todo` ; TypeScript, ESLint ciblé,
+liens et `git diff --check` verts.
+
+**Mesures :** 7 producteurs persistants caractérisés ; 2 tables ; 2 formes de
+semaine ; 0 producteur migré ; 0 snapshot v2 créé.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** décider et aligner le contrat de persistance
+`meal_plans.plan/active` contre `plan_data/is_active`, puis les colonnes
+runtime de `client_meal_plans`, avant toute migration de producteur.

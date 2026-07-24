@@ -183,3 +183,11 @@ frontière pure et migre la lecture des repas sauvegardés. Les producteurs
 persistants restent différés tant que le contrat de colonnes et le traitement
 UI des conflits ne sont pas démontrés. Aucune valeur déjà perdue n'est
 reconstruite.
+
+Les producteurs de plans font maintenant l'objet d'une
+[caractérisation dédiée](NUTRITION_PLAN_PRODUCERS.md). Elle confirme qu'un
+« total » de plan peut être un objectif déclaré, le total du lundi ou un total
+journalier recalculé. Leur versionnement reste donc différé jusqu'à
+l'alignement de `plan/active` avec `plan_data/is_active` et des colonnes
+runtime de `client_meal_plans`; aucune fixture de comparaison n'est
+requalifiée.

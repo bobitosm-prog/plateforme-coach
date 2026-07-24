@@ -65,3 +65,9 @@ colonnes runtime documentées mais absentes des types ne sont pas inventées :
 La vérification `coach_clients.status = active` protège la méthode spécialisée,
 mais ne corrige pas les policies historiques des autres lectures. Aucun
 consommateur n'est migré dans cette tranche.
+
+Les écritures legacy et leurs divergences avec ces projections read-only sont
+caractérisées dans
+[NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Les repositories
+restent volontairement inchangés : ajouter `plan_data`, `is_active`,
+`week_start` ou les cibles absentes des types inventerait des colonnes.

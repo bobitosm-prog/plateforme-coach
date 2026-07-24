@@ -150,3 +150,10 @@ concurrence.
 La prochaine tranche minimale est de caractériser les producteurs de totaux
 déclarés des plans `meal_plans` et `client_meal_plans` avant de décider leur
 versionnement.
+
+Cette caractérisation est désormais consignée dans
+[NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Elle conclut à un
+report de la migration : les enveloppes runtime et le schéma généré ne
+concordent pas, et les colonnes présentées comme des totaux représentent selon
+le producteur une cible, le lundi, ou un calcul journalier. Le snapshot v1
+reste réutilisable au niveau aliment, sans justifier un snapshot de plan v2.

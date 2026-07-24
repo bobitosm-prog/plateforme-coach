@@ -131,6 +131,12 @@ Priorité d'affichage actuelle : `NutritionTab` préfère le plan personnel acti
 au plan coach. Le loader dashboard ne charge que le plan coach. Cette différence
 est un comportement legacy, pas une règle métier validée.
 
+La matrice exhaustive des producteurs, payloads et provenances de totaux est
+disponible dans
+[NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Elle confirme que
+les colonnes runtime de `meal_plans` et `client_meal_plans` ne peuvent pas être
+versionnées honnêtement avant alignement avec le schéma généré.
+
 ## Repas, journaux et journées
 
 - Les clés persistées de repas sont surtout `petit_dejeuner`, `dejeuner`,

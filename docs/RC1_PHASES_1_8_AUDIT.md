@@ -156,6 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser les producteurs de totaux déclarés des plans `meal_plans` et
-`client_meal_plans` avant de décider leur versionnement, sans requalifier les
-preuves historiques.
+Décider et aligner le contrat de persistance `meal_plans.plan/active` contre
+`plan_data/is_active`, puis les colonnes runtime de `client_meal_plans`, avant
+toute migration de producteur. La
+[caractérisation des producteurs](NUTRITION_PLAN_PRODUCERS.md) interdit de
+requalifier les preuves historiques : les valeurs observées mélangent
+objectifs, total du lundi et totaux journaliers.
