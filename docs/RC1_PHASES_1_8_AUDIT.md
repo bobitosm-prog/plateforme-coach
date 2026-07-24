@@ -156,10 +156,11 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis raccorder la double lecture à la lecture personnelle
-read-only de `HomeTab`, sans migrer d'écriture. Les raccordements
+Caractériser puis raccorder la double lecture aux lectures Nutrition read-only
+du détail client coach, sans migrer d'écriture. Les raccordements
 [dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et
 [plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), la
+[lecture Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md), la
 [frontière pure](NUTRITION_PLAN_ENVELOPE.md) et
 [l'ADR 0007](adr/0007-nutrition-plan-persistence-contract.md) ne requalifient
 aucune preuve historique.

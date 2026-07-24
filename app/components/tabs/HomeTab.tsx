@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -38,6 +38,9 @@ import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
 import { legacyTonnage } from '../../../lib/progression'
+import { readHomeNutritionSummary } from '../../../lib/nutrition/home-nutrition-summary'
+import { createActivePersonalMealPlanReader } from '../../../lib/nutrition/personal-meal-plan-reader'
+import { createNutritionPlanRepository } from '../../../lib/repositories/nutrition'
 
 /**
  * Get daily quote index — deterministic per day of year.
@@ -100,6 +103,10 @@ export default function HomeTab({
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [consumedKcal, setConsumedKcal] = useState(0)
+  const homeNutritionRequest = useRef(0)
+  const personalPlanReader = useMemo(() => createActivePersonalMealPlanReader(
+    createNutritionPlanRepository(supabase),
+  ), [supabase])
   const calorieGoal = profile?.calorie_goal || 2000
   const [waterToday, setWaterToday] = useState(0)
 
@@ -159,27 +166,28 @@ export default function HomeTab({
   useEffect(() => {
     if (!session?.user?.id) return
     const uid = session.user.id
+    const currentRequest = ++homeNutritionRequest.current
     const todayDate = new Date().toISOString().split('T')[0]
     const dayKey = todayNutritionKey()
 
     Promise.all([
       supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20),
-      supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      personalPlanReader.load(uid),
       supabase.from('daily_food_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
-    ]).then(([trackingRes, planRes, logsRes]) => {
-      let planKcal = 0
-      const completedTypes = new Set((trackingRes.data || []).map((r: any) => r.meal_type))
-      const dayData = planRes.data?.plan_data?.[dayKey]
-      if (dayData?.repas && completedTypes.size > 0) {
-        for (const [mealType, foods] of Object.entries(dayData.repas)) {
-          if (!completedTypes.has(mealType) || !Array.isArray(foods)) continue
-          for (const f of foods as any[]) planKcal += f.kcal || 0
-        }
+    ]).then(([trackingRes, plan, logsRes]) => {
+      if (currentRequest !== homeNutritionRequest.current) return
+      const summary = readHomeNutritionSummary(
+        plan,
+        trackingRes.data ?? [],
+        logsRes.data ?? [],
+        dayKey,
+      )
+      if (summary.status === 'ready' || summary.status === 'absent') {
+        setConsumedKcal(summary.consumedKcal)
       }
-      const logsKcal = (logsRes.data || []).reduce((s: number, l: any) => s + (l.calories || 0), 0)
-      setConsumedKcal(planKcal + logsKcal)
     })
-  }, [session?.user?.id, homeRefreshKey])
+    return () => { homeNutritionRequest.current += 1 }
+  }, [homeRefreshKey, personalPlanReader, session?.user?.id, supabase])
 
   // Fetch water
   useEffect(() => {

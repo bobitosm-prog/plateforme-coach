@@ -2,6 +2,7 @@ import {
   isNutritionPlanDisplaySafe,
   presentNutritionPlanForLegacyUi,
   readMealPlanRow,
+  type NutritionPlanEnvelopeV1,
   type NutritionPlanWarningCode,
 } from '@/lib/nutrition/plan-envelope'
 import type { PersonalMealPlanRow } from '@/lib/repositories/nutrition/plans'
@@ -23,6 +24,7 @@ export type ActivePersonalMealPlanReadResult =
   | {
     readonly status: 'ready'
     readonly plan: LegacyActiveMealPlan
+    readonly envelope: NutritionPlanEnvelopeV1
     readonly source: 'canonical' | 'legacy_converted'
     readonly warnings: readonly NutritionPlanWarningCode[]
   }
@@ -107,6 +109,7 @@ export function createActivePersonalMealPlanReader(port: ActivePersonalMealPlanP
           is_active: true,
           created_at: read.authority.createdAt,
         },
+        envelope: read.envelope,
         source: read.status,
         warnings: read.warnings,
       }

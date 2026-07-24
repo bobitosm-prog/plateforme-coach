@@ -10,8 +10,9 @@ contre les réponses obsolètes et réessayable via `reload`. Le hook contient
 aussi une mutation de complétion, mais celle-ci reste strictement hors de la
 frontière extraite.
 
-`HomeTab`, `lib/coaching/client-detail/nutrition.ts` et les autres lecteurs
-directs ne sont pas migrés dans cette tranche.
+Le [résumé Nutrition de `HomeTab`](NUTRITION_HOME_PLAN_DOUBLE_READ.md) est
+désormais raccordé séparément. `lib/coaching/client-detail/nutrition.ts` et
+les autres lecteurs directs ne sont pas migrés.
 
 ## Contrat caractérisé
 
@@ -76,7 +77,6 @@ la mutation ne changent pas.
 
 Restent à migrer :
 
-- la lecture personnelle directe de `HomeTab` ;
 - les lectures personnelle et coach du détail client ;
 - les autres consommateurs inventoriés qui lisent encore un document brut ;
 - tous les producteurs, activations et écritures.

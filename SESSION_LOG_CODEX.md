@@ -10922,3 +10922,47 @@ communs 1 → 2 ; écritures et `upsert meal_tracking` 1 → 1.
 
 **Prochaine action :** caractériser puis raccorder la double lecture à la
 lecture personnelle read-only de `HomeTab`, sans migrer d'écriture.
+
+## Entrée — 2026-07-24 — Lecture personnelle Home raccordée
+
+**Travail effectué :** inventaire du chemin Nutrition de `HomeTab`, preuve
+qu'aucune prop ni donnée dashboard/useNutritionPlans ne fournit le même owner
+avec le même cycle de fraîcheur, puis raccordement de son unique lecture
+personnelle au repository et au lecteur commun. Le calcul du résumé consomme
+désormais l'enveloppe validée.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** la requête reste nécessaire : `useNutritionPlans`
+n'est monté qu'avec l'onglet Nutrition et `coachMealPlan` appartient à
+`client_meal_plans`. Les trois lectures parallèles Home et le
+`homeRefreshKey` sont conservés. Une garde request/cleanup neutralise les
+réponses obsolètes.
+
+**Problèmes rencontrés :** le calcul historique parcourait directement
+`plan_data[day].repas` et transformait une calorie absente en zéro. Le calcul
+pur utilise les repas de l'enveloppe, refuse les valeurs invalides et conserve
+la valeur visible précédente lorsque le plan est conflictuel, invalide,
+unsupported ou indisponible.
+
+**Risques ou dette restante :** les erreurs de `meal_tracking` et
+`daily_food_logs` gardent leur comportement legacy de collection vide. Le
+détail client et d'autres lecteurs restent directs. Aucun producteur,
+activation ou writer n'est migré ; les deux divergences historiques restent.
+
+**Tests exécutés :** 89 tests ciblés Home canonique/legacy/absence, erreurs discriminées,
+calcul, zéro/inconnu, déterminisme, immutabilité, requêtes, lifecycle obsolète,
+rendu et absence d'écriture ; tests lecteur personnel, repository, dashboard
+et frontières Nutrition ciblés verts ; suite complète 250 fichiers,
+2 038 tests réussis et 3 `todo` ; TypeScript et ESLint des nouvelles
+frontières verts. Dette `HomeTab` : 40 erreurs/43 avertissements → 37/42.
+
+**Mesures avant/après :** requêtes résumé Home 3 → 3 ; requêtes
+`meal_plans` 1 → 1 ; projection `plan_data` → projection canonique typée
+`plan/active` ; consommateurs communs 2 → 3 ; écritures 0 → 0.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis raccorder la double lecture aux
+lectures Nutrition read-only du détail client coach, sans migrer d'écriture.

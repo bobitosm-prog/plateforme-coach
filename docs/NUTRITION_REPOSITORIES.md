@@ -65,8 +65,9 @@ colonnes runtime documentées mais absentes des types ne sont pas inventées :
 La vérification `coach_clients.status = active` protège la méthode spécialisée,
 mais ne corrige pas les policies historiques des autres lectures.
 `useNutritionPlans` utilise désormais `findActivePersonalPlanForOwner` par la
-[frontière personnelle](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md). Les autres
-consommateurs directs restent legacy.
+[frontière personnelle](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), tout comme le
+[résumé Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md). Les autres consommateurs
+directs restent legacy.
 
 Les écritures legacy et leurs divergences avec ces projections read-only sont
 caractérisées dans
@@ -87,4 +88,5 @@ Les repositories ne dépendent pas de la
 `RepositoryResult<{plan}>` après la lecture. Le
 [second raccordement](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md) utilise la
 projection canonique typée `meal_plans.plan/active`, sans simuler
-`plan_data/is_active`.
+`plan_data/is_active`; le [raccordement Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
+réutilise exactement cette méthode avec son cycle de fraîcheur propre.

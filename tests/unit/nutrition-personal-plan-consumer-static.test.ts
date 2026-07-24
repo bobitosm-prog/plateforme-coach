@@ -42,7 +42,7 @@ describe('personal nutrition plan consumer boundary', () => {
     expect(hook).not.toMatch(/from\(['"]meal_plans['"]\)[\s\S]*(?:insert|update|upsert|delete)/)
   })
 
-  it('migrates exactly one personal runtime consumer', () => {
+  it('keeps the two explicitly migrated personal runtime consumers bounded', () => {
     const files = [
       'app/hooks/nutrition/useNutritionPlans.ts',
       'app/components/tabs/HomeTab.tsx',
@@ -50,6 +50,9 @@ describe('personal nutrition plan consumer boundary', () => {
     ]
     const migrated = files.filter(file =>
       readFileSync(file, 'utf8').includes('personal-meal-plan-reader'))
-    expect(migrated).toEqual(['app/hooks/nutrition/useNutritionPlans.ts'])
+    expect(migrated).toEqual([
+      'app/hooks/nutrition/useNutritionPlans.ts',
+      'app/components/tabs/HomeTab.tsx',
+    ])
   })
 })

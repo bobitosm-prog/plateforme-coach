@@ -18,10 +18,11 @@ Ce choix minimise le rayon d'impact :
 - rollback limité au retrait de `readLatestCoachMealPlan(mealPlan)`.
 
 La [lecture personnelle de `useNutritionPlans`](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md)
-est désormais le second raccordement. Le détail client coach, `HomeTab` et
-les autres lectures directes restent explicitement non migrés.
+est désormais le second raccordement et le
+[résumé Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md) le troisième. Le détail
+client coach et les autres lectures directes restent explicitement non migrés.
 
-| Candidat | Décision | Motif |
+| Candidat lors du premier raccordement | Décision initiale | Motif |
 |---|---|---|
 | `useNutritionPlans` | différé | combine lecture, cache/lifecycle et mutation `meal_tracking`; projection legacy `plan_data/is_active` |
 | `lib/coaching/client-detail/nutrition.ts` | différé | charge plans personnel et coach et contient la sauvegarde coach dans le même domaine |
@@ -107,8 +108,6 @@ frontière isolée. La requête, le cache et l'UI ne changent pas.
 
 Restent non migrés :
 
-- la lecture personnelle directe de `HomeTab`;
-- la lecture Nutrition de `HomeTab`;
 - `lib/coaching/client-detail/nutrition.ts`;
 - les producteurs préférences, onboarding, diagnostic, coach IA et édition
   coach ;
