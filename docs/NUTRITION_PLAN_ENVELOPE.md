@@ -10,6 +10,8 @@ variables d'environnement. Le
 [lecture du plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md)
 ainsi que le [résumé Nutrition de Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
 et les [deux lectures du détail client](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md)
+ainsi que le
+[contrôle de génération initiale](NUTRITION_INITIAL_GENERATION_READ.md)
 l'utilisent désormais ; aucun producteur n'est raccordé.
 
 ## API publique
@@ -92,7 +94,7 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 ## Limites restantes
 
 - Aucun writer ne produit encore `NutritionPlanEnvelopeV1`.
-- Quatre frontières runtime, représentant cinq lectures de plan, l'utilisent.
+- Cinq frontières runtime, représentant six lectures de plan, l'utilisent.
 - Les colonnes SQL futures `week_start` et `status` ne sont pas créées.
 - Le contrôle distant est limité aux projections read-only documentées ; aucun
   backfill ni aucune écriture distante n'a été réalisé.

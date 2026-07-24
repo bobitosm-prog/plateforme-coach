@@ -156,8 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser puis raccorder la double lecture au contrôle Nutrition read-only
-de génération initiale, sans migrer ses écritures. Les raccordements
+Caractériser puis raccorder la lecture Nutrition read-only du diagnostic
+hebdomadaire, sans migrer ses écritures. Le
+[contrôle de génération initiale](NUTRITION_INITIAL_GENERATION_READ.md) et les raccordements
 [dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et
 [plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), la
 [lecture Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md), la

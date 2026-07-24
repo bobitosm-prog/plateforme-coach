@@ -11071,3 +11071,77 @@ Le contrôle read-only de génération initiale cohabite encore avec ses
 **Prochaine action :** caractériser puis raccorder la double lecture au
 contrôle Nutrition read-only de génération initiale, sans migrer ses
 écritures.
+
+## Entrée — 2026-07-24 — Contrôle Nutrition de génération initiale raccordé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `6bd32ba`.
+`origin/main` est restée à `e61b532` et la sauvegarde distante n'a pas été
+modifiée. Aucun commit n'a été créé et l'index reste vide.
+
+**Travail effectué :** traçage de `DashboardClientIsland` jusqu'au contrôle
+`meal_plans` de `useInitialGeneration`, caractérisation exécutable avant
+modification, vérification distante anonymisée du schéma, ajout d'une méthode
+repository conservant la collection `limit(1)` non triée et raccordement au
+reader personnel puis à une décision pure de présence.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Schéma vérifié :** la projection historique `meal_plans(id)` et la
+projection finale
+`id,user_id,created_by,plan:plan_data,active:is_active,created_at` réussissent
+sur une ligne active owner-scoped anonymisée `…47ad21ff`. Les champs
+`custom_programs.id/user_id/is_active` utilisés par le contrôle Training et
+`profiles.id/needs_initial_generation` utilisé en amont sont également
+présents. Le document observé est une semaine legacy française sur sept
+jours. Aucune écriture distante n'a été exécutée.
+
+**Décisions prises :** `findActivePersonalPlanForOwner` n'est pas réutilisé
+directement, car son tri `created_at DESC` et son `maybeSingle` changeraient
+le contrat. `findFirstActivePersonalPlanForOwner` conserve owner, activation,
+absence d'ordre, limite 1 et retour collection. Le reader canonique classe le
+document, puis le contrôle garde la décision historique : canonical,
+legacy, conflict, invalid et unsupported comptent comme ligne présente ;
+not_found et failure au premier chargement déclenchent le fallback.
+
+**Cycle de vie :** aucun cache, polling ou refresh ajouté. `startedRef`
+conserve une lecture par montage ; les deux contrôles Nutrition puis Training
+restent séquentiels ; le cleanup ne neutralise que le rendu React obsolète et
+ne bloque aucune écriture. Une panne après valeur conserve la présence
+précédente dans la frontière pure ; une réponse déclarée obsolète est ignorée.
+
+**Requêtes avant/après :** contrôles initiaux 2 → 2 ; `meal_plans` 1 → 1 ;
+`custom_programs` 1 → 1. La projection Nutrition passe de `id` à la projection
+canonique aliasée vérifiée ; owner, filtre `is_active = true`, absence de tri,
+limite 1 et absence de `single/maybeSingle` restent identiques. Le chargement
+profil existant reste en amont et aucune lecture de `client_meal_plans`,
+`meal_tracking` ou `saved_meals` n'est ajoutée.
+
+**Écritures et rendu :** `generate-meal-plan`, la lecture SSE,
+`meal_plans.update/insert`, leurs payloads, le producteur IA, les mutations
+Training, `updateProfile`, l'API du hook, les props, callbacks, étapes et
+libellés de bannière sont inchangés. La comparaison locale avec
+`origin/main@e61b532` confirme le contrôle déployé de référence.
+
+**Tests exécutés :** caractérisation pré-correction 1 fichier/5 tests verts ;
+attentes de raccordement rouges sur 2 fichiers avec le module et la méthode
+absents, puis 12 tests existants verts ; ciblés après correction 5
+fichiers/41 tests verts ; ensemble Nutrition, Home, Mes repas et client-detail
+42 fichiers/326 tests verts ; gardes statiques 84 fichiers/317 tests verts ;
+suite complète 257 fichiers, 2 085 tests réussis et 3 `todo`. Factories
+Supabase `4 canonical / 53 legacy / 57 total`, autorité progression
+`696 audités / 2 legacy intentionnels`, i18n `2 188 clés × 3 langues` et
+TypeScript sont verts.
+
+**Dette ESLint :** nouvelles frontières, repository et tests 0 erreur /
+0 avertissement avant et après. Le hook historique, modifié uniquement sur sa
+lecture, conserve 2 erreurs `no-explicit-any` / 0 avertissement déjà présentes
+sur le client injecté et le buffer SSE ; aucune dette n'est ajoutée.
+
+**Risques ou dette restante :** aucun writer ne produit encore
+`NutritionPlanEnvelopeV1`; les deux divergences historiques de totaux restent
+visibles. Le contrôle read-only du diagnostic hebdomadaire cohabite encore
+avec son écriture legacy et doit être traité séparément.
+
+**Prochaine action :** caractériser puis raccorder la lecture Nutrition
+read-only du diagnostic hebdomadaire, sans migrer ses écritures.

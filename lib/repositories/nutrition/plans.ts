@@ -47,6 +47,17 @@ export function createNutritionPlanRepository(client: DatabaseClient) {
         : { ok: false, kind: 'not_found' }
     },
 
+    async findFirstActivePersonalPlanForOwner(ownerUserId: string): Promise<RepositoryResult<PersonalMealPlanRow>> {
+      const { data, error } = await client.from('meal_plans').select(PERSONAL_MEAL_PLAN_PROJECTION)
+        .eq('user_id', ownerUserId).eq(DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN, true)
+        .limit(1)
+      if (error) return repositoryFailure(error)
+      const first = data?.[0]
+      return first
+        ? { ok: true, data: first as unknown as PersonalMealPlanRow }
+        : { ok: false, kind: 'not_found' }
+    },
+
     async listAssignedPlansForClient(clientUserId: string, options: { limit?: number } = {}): Promise<RepositoryResult<AssignedMealPlanRow[]>> {
       const { data, error } = await client.from('client_meal_plans').select(ASSIGNED_MEAL_PLAN_PROJECTION)
         .eq('client_id', clientUserId).order('updated_at', { ascending: false }).limit(boundedLimit(options.limit))

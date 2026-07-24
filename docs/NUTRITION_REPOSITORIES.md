@@ -11,7 +11,7 @@ sans les convertir prématurément.
 | Factory | Méthodes | Scope explicite |
 |---|---|---|
 | `createNutritionCatalogRepository` | `listGlobalFoods`, `listCommunityFoods`, `findCommunityFoodById`, `listCustomFoodsForOwner`, `findCustomFoodByIdForOwner` | catalogue global ou `user_id` owner |
-| `createNutritionPlanRepository` | `listPersonalPlansForOwner`, `findActivePersonalPlanForOwner`, `listAssignedPlansForClient`, `findLatestAssignedPlanForCoachClient`, `findLatestAssignmentForActiveCoachClient` | owner, client, couple coach/client déjà autorisé, ou couple avec relation `status = active` vérifiée avant lecture |
+| `createNutritionPlanRepository` | `listPersonalPlansForOwner`, `findActivePersonalPlanForOwner`, `findFirstActivePersonalPlanForOwner`, `listAssignedPlansForClient`, `findLatestAssignedPlanForCoachClient`, `findLatestAssignmentForActiveCoachClient` | owner, client, couple coach/client déjà autorisé, ou couple avec relation `status = active` vérifiée avant lecture |
 | `createNutritionJournalRepository` | `listDailyFoodLogsForOwner`, `listLegacyMealLogsForOwner`, `listMealCompletionsForOwner`, `listWaterIntakeForOwner` | `user_id` owner, plage de dates et limite bornée |
 | `createNutritionRecipeRepository` | `listRecipesForOwner`, `listPublicRecipes`, `findRecipeByIdForOwner`, `listSavedMealsForOwner`, `findSavedMealByIdForOwner` | owner ou catalogue public |
 
@@ -73,6 +73,12 @@ mais ne corrige pas les policies historiques des autres lectures.
 [frontière personnelle](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), tout comme le
 [résumé Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md). Les autres consommateurs
 directs restent legacy.
+
+Le [contrôle de génération initiale](NUTRITION_INITIAL_GENERATION_READ.md)
+utilise la méthode spécialisée `findFirstActivePersonalPlanForOwner`. Elle
+préserve volontairement la collection non triée, `limit(1)` et l'absence de
+`single/maybeSingle` du contrôle déployé ; la méthode active utilisée par les
+écrans garde sa sémantique distincte.
 
 Le [détail client coach](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md) utilise la
 méthode directe coach/client uniquement après que `loadClientDetailProfile`

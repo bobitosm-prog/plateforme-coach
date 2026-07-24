@@ -104,6 +104,46 @@ describe('Nutrition repositories', () => {
     expect(callsFor(mock, 'maybeSingle')).toHaveLength(1)
   })
 
+  it('preserves the initial-generation first-active existence query semantics', async () => {
+    const row = { id: 'plan-id', plan: { lundi: { meals: [] } } }
+    const mock = clientWithResults({ data: [row], error: null })
+    const result = await createNutritionPlanRepository(mock.client)
+      .findFirstActivePersonalPlanForOwner('owner-id')
+
+    expect(result).toEqual({ ok: true, data: row })
+    expect(callsFor(mock, 'select')).toEqual([
+      { table: 'meal_plans', args: [PERSONAL_MEAL_PLAN_PROJECTION] },
+    ])
+    expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
+      ['user_id', 'owner-id'], ['is_active', true],
+    ])
+    expect(callsFor(mock, 'limit')).toEqual([
+      { table: 'meal_plans', args: [1] },
+    ])
+    expect(callsFor(mock, 'order')).toHaveLength(0)
+    expect(callsFor(mock, 'maybeSingle')).toHaveLength(0)
+  })
+
+  it('distinguishes initial-generation absence from an expurgated failure', async () => {
+    const absent = clientWithResults({ data: [], error: null })
+    await expect(createNutritionPlanRepository(absent.client)
+      .findFirstActivePersonalPlanForOwner('owner-id'))
+      .resolves.toEqual({ ok: false, kind: 'not_found' })
+
+    const failed = clientWithResults({
+      data: null,
+      error: { code: '42501', message: 'private plan payload' },
+    })
+    const result = await createNutritionPlanRepository(failed.client)
+      .findFirstActivePersonalPlanForOwner('owner-id')
+    expect(result).toEqual({
+      ok: false,
+      kind: 'failure',
+      error: { kind: 'forbidden', contextCode: '42501' },
+    })
+    expect(JSON.stringify(result)).not.toContain('private plan payload')
+  })
+
   it('lists assigned plans by client scope with a stable bound', async () => {
     const mock = clientWithResults({ data: [], error: null })
     await createNutritionPlanRepository(mock.client).listAssignedPlansForClient('client-session-id', { limit: 500 })

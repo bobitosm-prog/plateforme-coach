@@ -7,6 +7,12 @@ import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profi
 import { cache } from '@/lib/cache'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { reportError } from '@/lib/client-error-reporter'
+import { createNutritionPlanRepository } from '@/lib/repositories/nutrition'
+import { createActivePersonalMealPlanReader } from '@/lib/nutrition/personal-meal-plan-reader'
+import {
+  createInitialGenerationMealPlanControl,
+  settleInitialGenerationMealPlanControl,
+} from '@/lib/nutrition/initial-generation-meal-plan-control'
 
 /**
  * Generation step for UI progress display.
@@ -54,13 +60,17 @@ export default function useInitialGeneration(
       let hasMeal = false
       let hasProgram = false
       try {
-        const { data: existingMeal } = await supabase
-          .from('meal_plans')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .limit(1)
-        hasMeal = (existingMeal?.length ?? 0) > 0
+        const planRepository = createNutritionPlanRepository(supabase)
+        const personalPlanReader = createActivePersonalMealPlanReader({
+          findActivePersonalPlanForOwner: ownerUserId =>
+            planRepository.findFirstActivePersonalPlanForOwner(ownerUserId),
+        })
+        const mealRead = await personalPlanReader.load(userId as string)
+        hasMeal = settleInitialGenerationMealPlanControl(
+          createInitialGenerationMealPlanControl(),
+          mealRead,
+          true,
+        ).hasActivePlan
 
         const { data: existingProg } = await supabase
           .from('custom_programs')
