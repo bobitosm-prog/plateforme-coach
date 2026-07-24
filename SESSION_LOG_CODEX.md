@@ -10966,3 +10966,45 @@ frontières verts. Dette `HomeTab` : 40 erreurs/43 avertissements → 37/42.
 
 **Prochaine action :** caractériser puis raccorder la double lecture aux
 lectures Nutrition read-only du détail client coach, sans migrer d'écriture.
+
+## Entrée — 2026-07-24 — Lectures Nutrition du détail client raccordées
+
+**Travail effectué :** caractérisation du flux `ClientNutrition` jusqu'aux
+trois requêtes de `loadClientDetailNutrition`, création d'un reader
+d'affectation coach/client, raccordement du reader personnel existant et
+présentation explicite des deux contrats UI legacy.
+
+**Tâches cochées :** aucune case RC1. La Phase 4 reste `partial`, RC1 reste à
+0/38 et la Phase 9 reste inactive.
+
+**Décisions prises :** le repository direct coach/client est utilisé après la
+preuve de relation active du loader profil ; il évite une quatrième requête.
+Les deux plans gardent `created_at DESC`, limite 1 et `maybeSingle`. Le
+tracking reste la troisième lecture indépendante.
+
+**Problèmes rencontrés :** les anciennes projections demandaient
+`plan_data/is_active` et quatre cibles absentes des types générés. Les cibles
+canoniques viennent désormais de l'enveloppe ; une forme legacy sans
+provenance conserve `null`, puis les défauts historiques du contrôleur.
+
+**Risques ou dette restante :** les writes `client_meal_plans`, le RPC profil,
+le producteur IA et leurs échecs partiels sont inchangés. Les contrôles de
+génération initiale et de diagnostic hebdomadaire restent des lecteurs directs
+cohabitant avec des écritures. Deux divergences de totaux restent visibles.
+
+**Tests exécutés :** 119 tests ciblés dans 14 fichiers sur readers,
+repository, loader, autorité, canonique/legacy/absence/conflit/invalide/
+unsupported/panne, projection incomplète, immutabilité, rendu, stale response
+et gardes d'écriture verts. Suite complète : 252 fichiers, 2 050 tests
+réussis et 3 `todo`. TypeScript, ESLint ciblé et `git diff --check` verts.
+
+**Mesures avant/après :** requêtes Nutrition initiales 3 → 3 ; lectures plan
+2 → 2 ; projections legacy fictives → projections `plan/active` typées ;
+écritures 2 + 1 RPC → inchangées. Dette ESLint des frontières domaine
+0/0 → 0/0 ; contrôleur historique inchangé à 13 erreurs/0 avertissement.
+
+**Temps passé :** tranche RC1 bornée.
+
+**Prochaine action :** caractériser puis raccorder la double lecture au
+contrôle Nutrition read-only de génération initiale, sans migrer ses
+écritures.

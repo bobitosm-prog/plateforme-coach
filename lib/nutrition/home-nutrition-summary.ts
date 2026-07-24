@@ -35,6 +35,17 @@ export type HomeNutritionSummaryResult =
     { readonly status: 'conflict' | 'invalid' | 'legacy_unsupported' | 'failure' }
   >
 
+export function settleHomeNutritionSummary(
+  previousConsumedKcal: number,
+  summary: HomeNutritionSummaryResult,
+  isCurrentRequest: boolean,
+): number {
+  if (!isCurrentRequest) return previousConsumedKcal
+  return summary.status === 'ready' || summary.status === 'absent'
+    ? summary.consumedKcal
+    : previousConsumedKcal
+}
+
 function sumLogs(logs: readonly HomeCalorieLog[]): number | null {
   let total = 0
   for (const log of logs) {

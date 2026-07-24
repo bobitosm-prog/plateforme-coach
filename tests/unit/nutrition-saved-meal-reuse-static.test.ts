@@ -36,7 +36,7 @@ describe('saved meal reuse architecture', () => {
   it('guards double submission, stale responses, and accessible retry UI', () => {
     expect(producer).toContain('savedMealReuseInFlight.current')
     expect(producer).toContain('request !== savedMealReuseRequest.current')
-    expect(overlay).toContain('disabled={props.savedMealReusing}')
+    expect(overlay).toContain('disabled={props.reusing}')
     expect(overlay).toContain('<SavedMealWriteAlert message={props.savedMealError} />')
   })
 })

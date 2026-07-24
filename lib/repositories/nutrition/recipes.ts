@@ -2,7 +2,7 @@ import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/res
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 
 export const RECIPE_PROJECTION = 'id,user_id,title,description,category,prep_time_min,cook_time_min,servings,calories_per_serving,proteins_per_serving,carbs_per_serving,fat_per_serving,ingredients,instructions,tags,image_url,is_favorite,is_public,source,created_at' as const
-export const SAVED_MEAL_PROJECTION = 'id,user_id,name,meal_type,foods,total_calories,total_protein,total_carbs,total_fat,created_at' as const
+export const SAVED_MEAL_PROJECTION = 'id,user_id,name,meal_type,foods,total_calories,total_protein:total_proteins,total_carbs,total_fat:total_fats,created_at' as const
 
 export type RecipeRow = Pick<Tables<'recipes'>,
   'id' | 'user_id' | 'title' | 'description' | 'category' | 'prep_time_min' | 'cook_time_min' | 'servings' |
@@ -44,14 +44,18 @@ export function createNutritionRecipeRepository(client: DatabaseClient) {
     async listSavedMealsForOwner(ownerUserId: string, options: { limit?: number } = {}): Promise<RepositoryResult<SavedMealRow[]>> {
       const { data, error } = await client.from('saved_meals').select(SAVED_MEAL_PROJECTION)
         .eq('user_id', ownerUserId).order('created_at', { ascending: false }).limit(boundedLimit(options.limit))
-      return error ? repositoryFailure(error) : { ok: true, data: data ?? [] }
+      return error
+        ? repositoryFailure(error)
+        : { ok: true, data: (data ?? []) as unknown as SavedMealRow[] }
     },
 
     async findSavedMealByIdForOwner(mealId: string, ownerUserId: string): Promise<RepositoryResult<SavedMealRow>> {
       const { data, error } = await client.from('saved_meals').select(SAVED_MEAL_PROJECTION)
         .eq('id', mealId).eq('user_id', ownerUserId).maybeSingle()
       if (error) return repositoryFailure(error)
-      return data ? { ok: true, data } : { ok: false, kind: 'not_found' }
+      return data
+        ? { ok: true, data: data as unknown as SavedMealRow }
+        : { ok: false, kind: 'not_found' }
     },
   }
 }

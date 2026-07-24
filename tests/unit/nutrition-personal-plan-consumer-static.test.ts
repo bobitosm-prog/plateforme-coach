@@ -6,15 +6,17 @@ const repository = readFileSync('lib/repositories/nutrition/plans.ts', 'utf8')
 const nutritionTab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 
 describe('personal nutrition plan consumer boundary', () => {
-  it('uses the common bounded owner-scoped reader with canonical SQL columns', () => {
+  it('uses the common bounded owner-scoped reader with a canonical aliased row', () => {
     expect(hook).toContain('createActivePersonalMealPlanReader(')
     expect(hook).toContain('personalPlanReader.load(userId)')
     expect(hook).not.toContain("from('meal_plans')")
     expect(hook).not.toMatch(/plan_data|is_active/)
     expect(repository).toContain(
-      "PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,name,plan,active,created_at'",
+      "PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,plan:plan_data,active:is_active,created_at'",
     )
-    expect(repository).toContain(".eq('user_id', ownerUserId).eq('active', true)")
+    expect(repository).toContain(
+      ".eq('user_id', ownerUserId).eq(DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN, true)",
+    )
     expect(repository).toContain(".order('created_at', { ascending: false }).limit(1).maybeSingle()")
     expect(repository).not.toMatch(/select\(['"]\*['"]/)
   })
@@ -42,7 +44,7 @@ describe('personal nutrition plan consumer boundary', () => {
     expect(hook).not.toMatch(/from\(['"]meal_plans['"]\)[\s\S]*(?:insert|update|upsert|delete)/)
   })
 
-  it('keeps the two explicitly migrated personal runtime consumers bounded', () => {
+  it('keeps the three explicitly migrated personal runtime consumers bounded', () => {
     const files = [
       'app/hooks/nutrition/useNutritionPlans.ts',
       'app/components/tabs/HomeTab.tsx',
@@ -53,6 +55,7 @@ describe('personal nutrition plan consumer boundary', () => {
     expect(migrated).toEqual([
       'app/hooks/nutrition/useNutritionPlans.ts',
       'app/components/tabs/HomeTab.tsx',
+      'lib/coaching/client-detail/nutrition.ts',
     ])
   })
 })

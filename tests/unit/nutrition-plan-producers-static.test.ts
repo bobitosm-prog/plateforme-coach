@@ -16,12 +16,14 @@ function tableBlock(table: string, nextTable: string): string {
 }
 
 describe('Nutrition plan generated contracts', () => {
-  it('keeps meal_plans limited to plan/active in generated types and repositories', () => {
+  it('keeps generated types canonical and aliases the deployed runtime row at the repository boundary', () => {
     const block = tableBlock('meal_plans', 'meal_tracking')
     expect(block).toContain('plan: Json')
     expect(block).toContain('active: boolean | null')
     expect(block).not.toMatch(/plan_data|is_active|total_calories|protein_g|carbs_g|fat_g|objective/)
-    expect(repositories).toContain("'id,user_id,created_by,name,plan,active,created_at'")
+    expect(repositories).toContain(
+      "'id,user_id,created_by,plan:plan_data,active:is_active,created_at'",
+    )
   })
 
   it('keeps client_meal_plans limited to plan and identities', () => {

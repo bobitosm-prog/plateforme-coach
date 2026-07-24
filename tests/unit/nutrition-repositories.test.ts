@@ -93,7 +93,7 @@ describe('Nutrition repositories', () => {
     expect((result.ok && result.data.plan)).toBe(rawPlan)
     expect(callsFor(mock, 'select')).toContainEqual({ table: 'meal_plans', args: [PERSONAL_MEAL_PLAN_PROJECTION] })
     expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
-      ['user_id', 'owner-id'], ['active', true],
+      ['user_id', 'owner-id'], ['is_active', true],
     ])
     expect(callsFor(mock, 'order')).toContainEqual({
       table: 'meal_plans',
@@ -109,6 +109,32 @@ describe('Nutrition repositories', () => {
     expect(callsFor(mock, 'select')).toContainEqual({ table: 'client_meal_plans', args: [ASSIGNED_MEAL_PLAN_PROJECTION] })
     expect(callsFor(mock, 'eq')).toContainEqual({ table: 'client_meal_plans', args: ['client_id', 'client-session-id'] })
     expect(callsFor(mock, 'limit')).toContainEqual({ table: 'client_meal_plans', args: [100] })
+  })
+
+  it('finds the latest assigned plan for an already-authorized coach/client scope', async () => {
+    const row = { id: 'assigned-id', plan: { legacy: true } }
+    const mock = clientWithResults({ data: row, error: null })
+    const result = await createNutritionPlanRepository(mock.client)
+      .findLatestAssignedPlanForCoachClient('coach-id', 'client-id')
+
+    expect(result).toEqual({ ok: true, data: row })
+    expect(callsFor(mock, 'select')).toContainEqual({
+      table: 'client_meal_plans',
+      args: [ASSIGNED_MEAL_PLAN_PROJECTION],
+    })
+    expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
+      ['coach_id', 'coach-id'],
+      ['client_id', 'client-id'],
+    ])
+    expect(callsFor(mock, 'order')).toContainEqual({
+      table: 'client_meal_plans',
+      args: ['created_at', { ascending: false }],
+    })
+    expect(callsFor(mock, 'limit')).toContainEqual({
+      table: 'client_meal_plans',
+      args: [1],
+    })
+    expect(callsFor(mock, 'maybeSingle')).toHaveLength(1)
   })
 
   it('checks the active coach/client relation before reading an assignment', async () => {
@@ -174,6 +200,25 @@ describe('Nutrition repositories', () => {
     ])
     expect(callsFor(mock, 'eq')).toContainEqual({ table: 'recipes', args: ['is_public', true] })
     expect(callsFor(mock, 'eq')).toContainEqual({ table: 'saved_meals', args: ['user_id', 'owner-id'] })
+  })
+
+  it('aliases the deployed plural saved-meal totals without changing owner scope', async () => {
+    const deployedRow = {
+      id: 'saved-meal-id',
+      user_id: 'owner-id',
+      total_protein: 30,
+      total_fat: 12,
+    }
+    const mock = clientWithResults({ data: [deployedRow], error: null })
+    const result = await createNutritionRecipeRepository(mock.client)
+      .listSavedMealsForOwner('owner-id')
+
+    expect(result).toEqual({ ok: true, data: [deployedRow] })
+    expect(SAVED_MEAL_PROJECTION).toContain('total_protein:total_proteins')
+    expect(SAVED_MEAL_PROJECTION).toContain('total_fat:total_fats')
+    expect(callsFor(mock, 'eq')).toEqual([
+      { table: 'saved_meals', args: ['user_id', 'owner-id'] },
+    ])
   })
 
   it('expurgates raw Supabase errors', async () => {

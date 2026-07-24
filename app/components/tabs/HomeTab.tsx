@@ -38,7 +38,7 @@ import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
 import { legacyTonnage } from '../../../lib/progression'
-import { readHomeNutritionSummary } from '../../../lib/nutrition/home-nutrition-summary'
+import { readHomeNutritionSummary, settleHomeNutritionSummary } from '../../../lib/nutrition/home-nutrition-summary'
 import { createActivePersonalMealPlanReader } from '../../../lib/nutrition/personal-meal-plan-reader'
 import { createNutritionPlanRepository } from '../../../lib/repositories/nutrition'
 
@@ -182,9 +182,7 @@ export default function HomeTab({
         logsRes.data ?? [],
         dayKey,
       )
-      if (summary.status === 'ready' || summary.status === 'absent') {
-        setConsumedKcal(summary.consumedKcal)
-      }
+      setConsumedKcal(previous => settleHomeNutritionSummary(previous, summary, true))
     })
     return () => { homeNutritionRequest.current += 1 }
   }, [homeRefreshKey, personalPlanReader, session?.user?.id, supabase])

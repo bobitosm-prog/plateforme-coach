@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { readHomeNutritionSummary } from '@/lib/nutrition/home-nutrition-summary'
+import {
+  readHomeNutritionSummary,
+  settleHomeNutritionSummary,
+} from '@/lib/nutrition/home-nutrition-summary'
 import {
   createActivePersonalMealPlanReader,
   type ActivePersonalMealPlanReadResult,
@@ -62,6 +65,50 @@ describe('Home nutrition summary', () => {
       [{ calories: 0 }, { calories: 42 }],
       'lundi',
     )).toEqual({ status: 'absent', consumedKcal: 42 })
+  })
+
+  it('publishes canonical and legacy_converted results on first load', async () => {
+    const canonical = readHomeNutritionSummary(
+      await readyResult(canonicalAiPlan()),
+      [],
+      [{ calories: 1810 }],
+      'lundi',
+    )
+    const legacy = readHomeNutritionSummary(
+      await readyResult(LEGACY_AI_WEEK),
+      [],
+      [{ calories: 1810 }],
+      'lundi',
+    )
+
+    expect(settleHomeNutritionSummary(0, canonical, true)).toBe(1810)
+    expect(settleHomeNutritionSummary(0, legacy, true)).toBe(1810)
+  })
+
+  it('preserves a visible value after an error and keeps the empty first-load value', () => {
+    const failure = {
+      status: 'failure',
+      error: { code: 'repository_failure', repositoryKind: 'unavailable' },
+    } as const
+
+    expect(settleHomeNutritionSummary(1810, failure, true)).toBe(1810)
+    expect(settleHomeNutritionSummary(0, failure, true)).toBe(0)
+  })
+
+  it('ignores an obsolete response arriving after a valid response', () => {
+    const valid = {
+      status: 'ready',
+      consumedKcal: 1810,
+      planSource: 'canonical',
+    } as const
+    const obsolete = {
+      status: 'ready',
+      consumedKcal: 900,
+      planSource: 'legacy_converted',
+    } as const
+
+    const displayed = settleHomeNutritionSummary(0, valid, true)
+    expect(settleHomeNutritionSummary(displayed, obsolete, false)).toBe(1810)
   })
 
   it('preserves every recoverable reader error instead of treating it as absence', () => {
