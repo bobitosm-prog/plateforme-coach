@@ -10160,3 +10160,118 @@ Diagnostiquer le dépassement reproductible du budget INP client (48 ms contre
 ### Prochaine action unique
 
 Étudier puis déployer un stockage/CDN média.
+
+## Entrée — 2026-07-24 — Étude stockage/CDN média, approbation requise
+
+- Le jalon A cartographie Vercel/CDN, 148 médias locaux publics pour
+  165 143 262 octets, quatre buckets Supabase supposés par le code, leurs
+  producteurs/consommateurs, signatures et divergences. Aucun dashboard,
+  bucket ou média distant n’a été consulté.
+- Les preuves locales confirment type MIME et Range `206`, mais pas les
+  headers du domaine de production. La configuration versionnée ne crée aucun
+  bucket/policy Storage et désactive Storage localement : région, policies,
+  caractère public effectif et quotas distants restent inconnus.
+- L’étude compare Vercel statique, Supabase Storage/Smart CDN et Cloudflare
+  R2 aux tarifs officiels du 24 juillet 2026, avec hypothèses distinctes à
+  10/100/1 000 Go mensuels. La recommandation proposée est R2 public en
+  juridiction UE et Supabase privé, sans déplacer de privé dans le premier lot.
+- L’ADR 0006 reste `proposed`. Le runbook borne canary, posters, lots,
+  dual-read public, SHA-256, reprise idempotente et rollback local. La frontière
+  pure `lib/media/delivery/` ajoute manifest, nommage, résolveur, politiques et
+  dry-run sans modifier un consommateur runtime.
+- `exercise-videos` expose actuellement une URL publique pour du feedback ;
+  `progress-photos` possède un consommateur public legacy ; les signatures
+  privées sont surtout créées côté client. Ces dettes ne sont pas corrigées
+  silencieusement.
+- Aucun bucket, compte, abonnement, DNS, credential, upload, migration, RLS,
+  route ou baseline n’est modifié. La tâche roadmap reste décochée en attente
+  de l’accord explicite fournisseur/coût/région/public-privé/rollback.
+
+### Prochaine action unique
+
+Obtenir l’autorisation explicite du jalon B ou ajuster le choix proposé.
+
+## Entrée — 2026-07-24 — Jalon B CDN arrêté avant mutation
+
+- L’autorisation reçue borne Cloudflare R2 Standard au bucket
+  `moovx-public-media-prod`, juridiction `eu`, hint `weur`, domaine
+  `media.moovx.ch`, un canary synthétique puis 17 posters (216 510 octets).
+- L’authentification OAuth temporaire réussit. La première opération en lecture
+  seule, liste des buckets R2, échoue avec le code Cloudflare `10042` :
+  R2 n’est pas activé et doit l’être depuis le dashboard.
+- La condition d’arrêt carte/abonnement/plan s’applique avant de pouvoir
+  vérifier zone, tarifs du compte, compatibilité `eu`/`weur` ou disponibilité
+  du nom. Aucun contournement et aucune création automatique ne sont tentés.
+- Aucun bucket, objet, domaine, DNS, CORS, token R2, abonnement, carte ou plan
+  n’est créé ou modifié. Aucun canary ou poster n’est uploadé. `r2.dev` n’est
+  jamais activé.
+- La session OAuth Wrangler est révoquée et son cache temporaire supprimé. Le
+  staging reste vide ; les changements concurrents restent hors périmètre.
+- La tâche roadmap reste décochée. Le rapport
+  `docs/MEDIA_STORAGE_CDN_DEPLOYMENT.md` distingue preuves et inconnues.
+
+### Prochaine action unique
+
+Vérifier dans le dashboard les conditions exactes d’activation de R2 Standard,
+puis demander une autorisation distincte si une carte, un abonnement payant ou
+un changement de plan est requis.
+
+## Entrée — 2026-07-24 — Incompatibilité juridiction UE et hint R2
+
+- L’utilisateur confirme l’activation de R2 Standard sans frais fixes, avec
+  10 Go, 1 million Class A et 10 millions Class B inclus ; les dépassements
+  restent facturés.
+- La liste R2 est vide, le nom `moovx-public-media-prod` est disponible et la
+  zone `moovx.ch` est active dans le même compte Cloudflare.
+- La commande exacte avec `--jurisdiction eu --location weur` est refusée par
+  Wrangler 4.114.0 avant création : « Provide either a jurisdiction or
+  location hint - not both. »
+- Conformément à la condition d’arrêt, aucun essai `eu` seul, `weur` seul ou
+  automatique n’est lancé. Aucun bucket, objet, domaine, DNS, CORS, token,
+  canary ou poster n’est créé.
+- La session OAuth est révoquée et le cache CLI temporaire supprimé. La tâche
+  roadmap reste décochée.
+
+### Prochaine action unique
+
+Obtenir l’autorisation explicite de créer le bucket avec `jurisdiction=eu`
+sans location hint ; ne pas retenir `weur` seul, qui ne garantit pas la
+juridiction UE obligatoire.
+
+## Entrée — 2026-07-24 — Jalon B stockage/CDN média déployé
+
+- L'utilisateur autorise finalement R2 Standard avec juridiction `eu` et sans
+  location hint. Le bucket `moovx-public-media-prod` est créé dans cette
+  juridiction ; Cloudflare retourne la location informative `EEUR`, la classe
+  Standard et 18 objets pour environ 220 kB.
+- `media.moovx.ch` est attaché à la zone active `moovx.ch` du même compte.
+  Ownership et TLS sont actifs. Le domaine public R2 géré reste désactivé.
+- Le CORS est borné à `https://moovx.ch` et `https://app.moovx.ch`, aux
+  méthodes GET/HEAD et au header Range. Aucun wildcard, listing ou média privé
+  n'est exposé.
+- Le canary synthétique de 2 218 octets est chargé sous une clé SHA-256
+  versionnée. GET 200, HEAD 200, Range 206, MIME, SHA-256, CORS, TLS, MISS puis
+  HIT sont vérifiés. La suppression du canary, le détachement du domaine, le
+  fallback local, le rattachement TLS et le ré-upload identique démontrent le
+  rollback.
+- Seuls les 17 posters autorisés, soit 216 510 octets, sont ensuite chargés.
+  Chaque objet est vérifié publiquement par taille, SHA-256, MIME et cache
+  immuable. La liste distante contient exactement ces posters et le canary.
+- Le manifest local accepte uniquement ces 17 clés versionnées. Les cinq
+  consommateurs de posters utilisent le CDN avec le chemin local transmis à
+  `DeferredVideo` comme secours. Tous les originaux restent présents.
+- Tests ciblés 22/22, suite complète 222 fichiers/1 844 tests/3 `todo`,
+  TypeScript, ESLint ciblé et build Webpack hermétique de 88 pages passent.
+  Les E2E coach/client passent 4/4 et default-coach 1/1. Le contrôle performance
+  BUILD_ID `0bvylxtGKvQJvAuDb22Sr` passe 79/79 sans modifier baseline ou budget.
+- Aucun autre média, donnée privée, migration, RLS, contrat Supabase ou coût
+  fixe n'est ajouté. La diffusion publique ne conserve aucun credential ;
+  l'OAuth temporaire est révoqué et son cache supprimé au nettoyage final.
+  Les dépassements de stockage et d'opérations R2 restent facturables et sont
+  à surveiller via R2 Metrics et Billing/Usage.
+- La tâche stockage/CDN est cochée. Les changements concurrents restent hors
+  staging et hors périmètre.
+
+### Prochaine action unique
+
+Réduire et auto-héberger les polices nécessaires.

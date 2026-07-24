@@ -137,3 +137,7 @@ zéro lecteur, poster, requête ou octet poster dans le parcours canonique, avec
 la même médiane de 32 ms en normal, posters bloqués et cache préchauffé. Deux
 contrôles finaux consécutifs passent 79/79. Aucun seuil média spécifique,
 budget ou artefact de référence n’est modifié.
+
+L’[étude stockage/CDN](./MEDIA_STORAGE_CDN_STUDY.md) ne modifie aucun seuil.
+Après un déploiement explicitement approuvé, le canary puis chaque lot devront
+passer les 79 contrôles existants avant activation et après rollback simulé.

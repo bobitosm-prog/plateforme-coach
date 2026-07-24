@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
-import { resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
+import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
 import DeferredVideo from '../media/DeferredVideo'
 import { AnimatePresence, motion } from 'framer-motion'
 import { RailOverlay } from '../ui/RailOverlay'
@@ -96,7 +96,8 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
                   controls={false}
                   loop
                   muted
-                  poster={resolveLocalExerciseVideoPoster(exercise.video_url)}
+                  poster={resolveExerciseVideoPoster(exercise.video_url)}
+                  posterFallback={resolveLocalExerciseVideoPoster(exercise.video_url)}
                   src={`${exercise.video_url}?v=2`}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />

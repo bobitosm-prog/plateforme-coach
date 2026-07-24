@@ -11,6 +11,7 @@ import {
 } from '../../lib/media/deferred-video'
 import {
   LOCAL_EXERCISE_VIDEO_POSTERS,
+  resolveExerciseVideoPoster,
   resolveLocalExerciseVideoPoster,
 } from '../../lib/media/exercise-video-posters'
 
@@ -89,12 +90,16 @@ describe('exercise video posters', () => {
     expect(Object.keys(LOCAL_EXERCISE_VIDEO_POSTERS)).toHaveLength(17)
     for (const [video, poster] of Object.entries(LOCAL_EXERCISE_VIDEO_POSTERS)) {
       expect(resolveLocalExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toBe(poster)
+      expect(resolveExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toMatch(
+        /^https:\/\/media\.moovx\.ch\/images\/video-posters\/.+\.[a-f0-9]{16}\.webp$/,
+      )
       expect(poster).toMatch(/^\/images\/video-posters\/.+\.webp$/)
     }
   })
 
   it('fails closed for remote, unknown and protected video names', () => {
     expect(resolveLocalExerciseVideoPoster('https://example.invalid/video.mp4')).toBeNull()
+    expect(resolveExerciseVideoPoster('https://example.invalid/video.mp4')).toBeNull()
     expect(resolveLocalExerciseVideoPoster('/videos/exercises/unknown.mp4')).toBeNull()
     expect(resolveLocalExerciseVideoPoster('/videos/exercises/developpe-couche-barre.mp4')).toBeNull()
   })

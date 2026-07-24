@@ -179,4 +179,11 @@ réponse statique froide, le corps PNG servi pour le logo passe exactement de
 parcours initiaux ; `preload="none"` est couvert statiquement sans capturer
 leur URL utilisateur.
 
-La prochaine tranche unique est d’étudier puis déployer un stockage/CDN média.
+L’[étude stockage/CDN](./MEDIA_STORAGE_CDN_STUDY.md) recoupe cet inventaire :
+165 143 262 octets publics sont éligibles au maximum, tandis que tous les
+uploads utilisateur restent exclus. L’ADR accepté conserve les chemins locaux
+comme rollback et exige un nom versionné par SHA-256 avant cache immuable.
+Le jalon B a depuis chargé uniquement un canary et les 17 posters
+(216 510 octets) sur R2 `eu`. Le [rapport de déploiement](./MEDIA_STORAGE_CDN_DEPLOYMENT.md)
+prouve les hashes, le cache, le fallback et le rollback ; les 131 autres
+médias publics et tous les médias privés restent exclus.

@@ -1,3 +1,5 @@
+import { createMediaUrlResolver, PUBLIC_POSTER_MANIFEST } from './delivery'
+
 const LOCAL_EXERCISE_POSTERS = Object.freeze<Record<string, string>>({
   'arnold-press.mp4': '/images/video-posters/arnold-press.webp',
   'developpe-militaire-barre-debout.mp4': '/images/video-posters/developpe-militaire-barre-debout.webp',
@@ -18,10 +20,30 @@ const LOCAL_EXERCISE_POSTERS = Object.freeze<Record<string, string>>({
   'tractions-pronation.mp4': '/images/video-posters/tractions-pronation.webp',
 })
 
+const CDN_RESOLVER = createMediaUrlResolver({
+  mode: 'cdn',
+  publicBaseUrl: 'https://media.moovx.ch',
+})
+
+const CDN_POSTERS = Object.freeze(Object.fromEntries(PUBLIC_POSTER_MANIFEST.map(entry => {
+  const location = CDN_RESOLVER.resolve(entry)
+  return [
+    entry.logicalPath.split('/').at(-1),
+    location.kind === 'public' ? location.url : null,
+  ]
+})))
+
 export function resolveLocalExerciseVideoPoster(videoUrl: string | null | undefined): string | null {
   if (!videoUrl?.startsWith('/videos/exercises/')) return null
   const filename = videoUrl.split('?')[0]?.split('/').at(-1)
   return filename ? LOCAL_EXERCISE_POSTERS[filename] ?? null : null
+}
+
+export function resolveExerciseVideoPoster(videoUrl: string | null | undefined): string | null {
+  const local = resolveLocalExerciseVideoPoster(videoUrl)
+  if (!local) return null
+  const filename = local.split('/').at(-1)
+  return filename ? CDN_POSTERS[filename] ?? local : local
 }
 
 export const LOCAL_EXERCISE_VIDEO_POSTERS = LOCAL_EXERCISE_POSTERS

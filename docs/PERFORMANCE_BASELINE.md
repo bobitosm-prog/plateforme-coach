@@ -226,3 +226,8 @@ une petite plage 206 de 13 261 octets ; aucune ne retransfère la vidéo complè
 Ce contrôle n’écrase ni ne redéfinit la baseline versionnée : il caractérise
 un parcours média secondaire. Les diagnostics restent opt-in, expurgés et
 temporaires. Aucun budget, baseline ou comportement applicatif n’est modifié.
+
+Le [jalon stockage/CDN](./MEDIA_STORAGE_CDN_DEPLOYMENT.md) a ensuite migré
+uniquement le canary approuvé et les 17 posters, avec fallback local. Un
+contrôle production hermétique sous BUILD_ID `0bvylxtGKvQJvAuDb22Sr` passe
+79/79 : il ne remplace ni la baseline versionnée ni ses budgets.

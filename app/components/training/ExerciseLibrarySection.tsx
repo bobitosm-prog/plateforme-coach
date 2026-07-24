@@ -16,7 +16,7 @@ import { fonts, colors, btnPrimary, Z_MODAL } from '../../../lib/design-tokens'
 import { RailOverlay } from '../ui/RailOverlay'
 import SectionTitle from '../ui/SectionTitle'
 import DeferredVideo from '../media/DeferredVideo'
-import { resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
+import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
 
 // Mix of DB values + UI aliases (Jambes aggregates quads/hamstrings/glutes/calves)
 const MUSCLE_FILTER_VALUES = ['Pectoraux', 'Dos', '\u00c9paules', 'Biceps', 'Triceps', 'Jambes', 'Abdos', 'Fessiers', 'Mollets']
@@ -130,7 +130,7 @@ export default function ExerciseLibrarySection({ exercisesCache, activeCustomPro
               <span style={{ ...sectionHeader, fontSize: 16 }}>{libDetail.name}</span>
               <button aria-label={t('close')} onClick={() => setLibDetail(null)} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: `1px solid ${colors.divider}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} color={colors.text} /></button>
             </div>
-            {libDetail.video_url && <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 16px', borderRadius: 12, overflow: 'hidden', background: colors.surfaceHigh }}><DeferredVideo activation="mount" ariaLabel={`${getExerciseName(libDetail, locale)} — démonstration`} autoPlay loop muted poster={resolveLocalExerciseVideoPoster(libDetail.video_url)} src={libDetail.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>}
+            {libDetail.video_url && <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 16px', borderRadius: 12, overflow: 'hidden', background: colors.surfaceHigh }}><DeferredVideo activation="mount" ariaLabel={`${getExerciseName(libDetail, locale)} — démonstration`} autoPlay loop muted poster={resolveExerciseVideoPoster(libDetail.video_url)} posterFallback={resolveLocalExerciseVideoPoster(libDetail.video_url)} src={libDetail.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>}
             {!libDetail.video_url && libDetail.gif_url && <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 16px', borderRadius: 12, overflow: 'hidden', background: colors.surfaceHigh }}><img src={libDetail.gif_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
               {libDetail.muscle_group && <span style={{ fontSize: 10, fontFamily: fonts.alt, fontWeight: 700, color: colors.gold, background: 'rgba(230,195,100,0.12)', padding: '3px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{getMuscleLabel(libDetail.muscle_group, locale, tMuscle)}</span>}

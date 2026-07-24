@@ -159,4 +159,8 @@ nouveau transfert complet de 1 127 373 octets.
 - Le warning `getSession()` et le feedback 500 observés par le harnais sont
   historiques et hors périmètre.
 
-La prochaine étape unique est d’étudier puis déployer un stockage/CDN média.
+Le [jalon stockage/CDN](./MEDIA_STORAGE_CDN_DEPLOYMENT.md) confirme désormais
+sur un canary versionné `206`, `Accept-Ranges: bytes`, `Content-Range`, le type
+réel, `MISS` puis `HIT` et le cache immuable. Les 17 posters utilisent le
+domaine CDN avec leur chemin local conservé comme fallback ; aucun original
+n'est supprimé.

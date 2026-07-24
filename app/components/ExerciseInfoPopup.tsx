@@ -8,7 +8,7 @@ import {
 import { getExerciseName, getExerciseDescription, getExerciseTips } from '../../lib/i18n-exercise'
 import { RailOverlay } from './ui/RailOverlay'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
-import { resolveLocalExerciseVideoPoster } from '../../lib/media/exercise-video-posters'
+import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../lib/media/exercise-video-posters'
 import DeferredVideo from './media/DeferredVideo'
 
 interface ExerciseInfo {
@@ -101,7 +101,8 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
                 controls={false}
                 loop
                 muted
-                poster={resolveLocalExerciseVideoPoster(info.video_url)}
+                poster={resolveExerciseVideoPoster(info.video_url)}
+                posterFallback={resolveLocalExerciseVideoPoster(info.video_url)}
                 src={`${info.video_url}?v=2`}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />

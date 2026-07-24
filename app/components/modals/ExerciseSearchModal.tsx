@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { X, Search, Dumbbell } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
-import { resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
+import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
 import DeferredVideo from '../media/DeferredVideo'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
@@ -256,7 +256,8 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     controls={false}
                     loop
                     muted
-                    poster={resolveLocalExerciseVideoPoster(selectedExDb.video_url)}
+                    poster={resolveExerciseVideoPoster(selectedExDb.video_url)}
+                    posterFallback={resolveLocalExerciseVideoPoster(selectedExDb.video_url)}
                     src={`${selectedExDb.video_url}?v=2`}
                     style={{ width: '100%', height: 'auto', display: 'block' }}
                   />

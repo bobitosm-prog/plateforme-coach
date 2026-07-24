@@ -13,6 +13,7 @@ interface DeferredVideoProps {
   readonly ariaLabel: string
   readonly activation: 'mount' | 'user'
   readonly poster?: string | null
+  readonly posterFallback?: string | null
   readonly autoPlay?: boolean
   readonly controls?: boolean
   readonly loop?: boolean
@@ -27,6 +28,7 @@ export default function DeferredVideo({
   ariaLabel,
   activation,
   poster,
+  posterFallback,
   autoPlay = false,
   controls = true,
   loop = false,
@@ -40,6 +42,16 @@ export default function DeferredVideo({
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>(
     activation === 'mount' ? 'loading' : 'idle',
   )
+  const [failedPoster, setFailedPoster] = useState<string | null>(null)
+  const resolvedPoster = failedPoster === poster ? posterFallback : poster
+
+  useEffect(() => {
+    if (!poster || !posterFallback || poster === posterFallback) return
+    const probe = new Image()
+    probe.onerror = () => setFailedPoster(poster)
+    probe.src = poster
+    return () => { probe.onerror = null }
+  }, [poster, posterFallback])
 
   useEffect(() => {
     const video = videoRef.current
@@ -73,7 +85,7 @@ export default function DeferredVideo({
         style={{
           ...style,
           alignItems: 'center',
-          background: poster ? `center / cover no-repeat url("${poster}")` : '#000',
+          background: resolvedPoster ? `center / cover no-repeat url("${resolvedPoster}")` : '#000',
           border: 0,
           color: '#fff',
           cursor: 'pointer',
@@ -105,7 +117,7 @@ export default function DeferredVideo({
         setStatus('error')
       }}
       playsInline={playsInline}
-      poster={poster ?? undefined}
+      poster={resolvedPoster ?? undefined}
       preload="none"
       style={style}
     />
