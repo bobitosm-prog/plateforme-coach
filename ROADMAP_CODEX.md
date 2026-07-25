@@ -460,7 +460,15 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; aucune préproduction représentative n'est disponible. Le [runbook opératoire](docs/PHASE_6_PREPRODUCTION_RECONCILIATION.md) isole Supabase staging, Vercel Preview et Stripe test, recommande un seed synthétique déterministe et définit les commandes/contrôles sans les exécuter. Une preuve Nutrition reste secondaire et ne remplace pas la réconciliation Stripe/base exigée par cette Phase 6**
+**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; la cible
+Supabase Free/Nano est fonctionnellement suffisante et le [runbook
+opératoire](docs/PHASE_6_PREPRODUCTION_RECONCILIATION.md) dispose désormais
+d'un garde local et d'une configuration cron environment-scoped. Les quatre
+migrations cron historiques restent immuables; staging doit les rejouer avec
+`pg_cron` absent, puis créer les jobs explicitement vers l'alias Preview.
+La création attend encore la confirmation Dashboard `0 USD`, puis une
+autorisation opérateur distincte. Aucune preuve de réconciliation
+Stripe/base n'est encore exécutée; Nutrition reste secondaire.**
 
 ### Pourquoi
 

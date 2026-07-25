@@ -33,7 +33,7 @@ inspectés. Aucun secret n'a été affiché ou archivé.
 | Vercel lié | projet `plateforme-coach`, `prj_WI7LdZkzqU2SlXUCPCfBaASO52NJ` | lien local présent | cible locale déclarée `production` | aucune branche preview isolée ni source de données preview identifiée | non exploitable |
 | fichier Vercel temporaire | même host Supabase et mêmes classes de clés live | présent | oui ou indifférenciable de la production | aucune isolation démontrée | exclu |
 | Supabase local canonique | `plateforme-coach`, API `127.0.0.1:55321`, PostgreSQL `127.0.0.1:55322` | sain, contrat de migrations courant | non | schéma historique local et données synthétiques/incomplètes | contrôle local seulement, pas préproduction |
-| projet Supabase staging | aucun identifiant | absent | non démontré | aucune | indisponible |
+| projet Supabase staging | cible `moovx-staging`, organisation `mlasmyrpaaqnhuuhuzma` | absent | cible Free/Nano validée localement, création non autorisée | suffisante en capacité pour le seed minimal | attente de la confirmation Dashboard `0 USD` |
 | snapshot anonymisé restauré | aucun fichier, manifeste ou empreinte | absent | non | aucune | indisponible |
 
 La commande locale `supabase:local:status` a actualisé automatiquement
@@ -191,13 +191,19 @@ explicite :
 6. un stockage sécurisé hors Git pour les secrets et rapports bruts ;
 7. une archive expurgée versionnable avec empreinte SHA-256.
 
-Un projet Supabase supplémentaire peut entraîner un coût. Au 25 juillet 2026,
-la [tarification Supabase](https://supabase.com/pricing) annonce les projets
-additionnels Pro à partir de 10 USD/mois; le plan réel doit être vérifié avant
-création. Vercel Preview consomme les quotas du plan Vercel courant. Stripe
-test/sandbox ne déplace pas d'argent réel, mais exige Stripe CLI et la
-configuration Connect test. Dépendances opérateur : Node.js, `psql`, Supabase
-CLI, Vercel CLI, Stripe CLI et un secret store.
+L'organisation `mlasmyrpaaqnhuuhuzma` est confirmée `free` par le Management
+API. Elle contient `CoachPlatform` (`ACTIVE_HEALTHY`, production interdite) et
+`MyPulse` (`INACTIVE`). Un Nano est fonctionnellement suffisant : la Phase 6
+n'impose aucun débit ou test de charge, et ses quotas Postgres/Auth/Storage/
+Functions dépassent largement le seed déterministe. La
+[tarification Supabase](https://supabase.com/pricing) annonce Nano à `0 USD`
+et deux projets Free actifs, mais le compteur de slot restant n'est pas exposé
+par la CLI/API. Le dialogue Dashboard doit encore confirmer explicitement
+`0 USD`, aucun upgrade et que `MyPulse` ne consomme pas le slot actif.
+Vercel Preview consomme les quotas du plan Vercel courant. Stripe test/sandbox
+ne déplace pas d'argent réel, mais exige Stripe CLI et la configuration
+Connect test. Dépendances opérateur : Node.js, `psql`, Supabase CLI, Vercel
+CLI, Stripe CLI et un secret store.
 
 ## Variables nécessaires
 
@@ -338,10 +344,10 @@ export SUPABASE_STAGING_PROJECT_REF=<new-staging-project-ref>
 export SUPABASE_DB_PASSWORD=<loaded-from-secret-store>
 
 npx supabase projects create moovx-staging \
-  --org-id "$SUPABASE_ORG_ID" \
+  --org-id mlasmyrpaaqnhuuhuzma \
   --region eu-central-1 \
   --db-password "$SUPABASE_DB_PASSWORD" \
-  --size micro
+  --size nano
 
 npx supabase link --project-ref "$SUPABASE_STAGING_PROJECT_REF"
 ```
@@ -353,20 +359,21 @@ toute autre commande.
 
 ### 2. Valider anti-production avant toute mutation
 
-Le chantier d'implémentation doit d'abord fournir
-`scripts/preproduction/assert-environment.mjs`. Commande obligatoire :
+Le garde `scripts/preproduction/assert-environment.mjs` existe et refuse toute
+organisation, taille, région, project ref ou variable non autorisée. Commande
+obligatoire :
 
 ```bash
+MOOVX_ENVIRONMENT=staging \
 node scripts/preproduction/assert-environment.mjs \
+  --mode pre-create \
   --manifest "$MOOVX_STAGING_MANIFEST" \
-  --require-environment staging \
-  --deny-project-ref njlzossopgknanhkzcbk \
-  --deny-host app.moovx.ch \
-  --require-stripe-mode test
 ```
 
-Le script n'existe pas encore. Aucune commande distante suivante ne peut être
-autorisée avant que ses tests fail-closed soient verts.
+Il protège aussi les cinq références production conservées dans quatre
+migrations cron historiques par nom, nombre et SHA-256 exacts. Toute nouvelle
+référence ou modification de ces fichiers échoue. Sa sortie exige
+`requiresPgCronAbsentDuringHistoricalReplay=true`.
 
 ### 3. Appliquer le schéma
 
@@ -397,6 +404,33 @@ Ce runner reste à implémenter et doit enregistrer la liste, l'ordre et les
 SHA-256 des migrations. `supabase db reset --linked` est interdit dans ce
 runbook, même si Supabase le prévoit pour un staging jetable, car il détruit
 le schéma distant.
+
+Quatre migrations déjà appliquées en production contiennent historiquement
+`app.moovx.ch` et des placeholders de secret. Elles restent strictement
+immuables :
+
+- `20260529120000_schedule_weekly_diagnostic_cron.sql`;
+- `20260529140000_update_weekly_diagnostic_cron_to_daily.sql`;
+- `20260531110137_schedule_training_regen_cron.sql`;
+- `20260613_streak_reminder.sql`.
+
+Le replay staging doit vérifier par lecture de métadonnées que `pg_cron` est
+absent. Les blocs historiques deviennent alors des no-op; les autres schémas,
+notamment `profiles.last_streak_reminder_at`, sont appliqués normalement. Si
+`pg_cron` est présent, le runner s'arrête avant la première migration.
+
+La nouvelle migration
+`20260725190000_configure_environment_scoped_cron.sql` ne touche aucun job à
+son application. Elle crée seulement une frontière privée qui :
+
+- refuse environnement inconnu, URL absente, HTTP, local ou host production
+  en staging;
+- n'accepte la production que pour `https://app.moovx.ch` explicitement;
+- stocke le bearer dans Supabase Vault, jamais dans Git ou `cron.job`;
+- remplace les quatre noms historiques de manière idempotente uniquement
+  lorsqu'un opérateur l'appelle.
+
+Voir [la frontière cron environment-scoped](SUPABASE_ENVIRONMENT_SCOPED_CRON.md).
 
 ### 4. Créer les objets Stripe test
 
@@ -522,21 +556,27 @@ Stripe continue de viser cet alias et ne doit pas être recréé.
 ### 8. Valider l'environnement déployé
 
 ```bash
+MOOVX_ENVIRONMENT=staging \
 node scripts/preproduction/assert-environment.mjs \
   --manifest "$MOOVX_STAGING_MANIFEST" \
-  --preview-url "$MOOVX_PREVIEW_URL" \
-  --require-environment staging \
-  --deny-project-ref njlzossopgknanhkzcbk \
-  --deny-host app.moovx.ch \
-  --require-stripe-mode test \
-  --require-webhook-livemode false
+  --mode pre-create
+
+MOOVX_ENVIRONMENT=staging \
+MOOVX_CRON_BASE_URL="$MOOVX_PREVIEW_URL" \
+CRON_SECRET=<loaded-from-secret-store> \
+psql "$SUPABASE_STAGING_DB_URL" \
+  -X -v ON_ERROR_STOP=1 \
+  -f scripts/preproduction/configure-cron-jobs.sql
 
 node scripts/preproduction/smoke-readonly.mjs \
   --manifest "$MOOVX_STAGING_MANIFEST"
 ```
 
-Le smoke test vérifie projet ref, schéma, volumes, modes Stripe et webhooks,
-sans mutation. Toute valeur manquante ou inconnue arrête l'exécution.
+Le runner cron crée les extensions et les quatre jobs dans une transaction
+unique. Une URL/variable invalide annule aussi les extensions; aucune création
+partielle ne subsiste. Le smoke test vérifie ensuite project ref, schéma,
+volumes, modes Stripe et webhooks, sans mutation. Toute valeur manquante ou
+inconnue arrête l'exécution.
 
 ### 9. Exécuter Billing puis Nutrition en lecture seule
 

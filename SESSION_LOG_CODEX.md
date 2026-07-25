@@ -12277,3 +12277,49 @@ immédiatement à HEAD, sans diff conservé.
 test, ou autoriser explicitement la création des ressources et le chargement
 du seed synthétique déterministe. Aucune ressource ne sera créée avant cette
 autorisation.
+
+## Entrée — 2026-07-25 — Crons Phase 6 sécurisés localement
+
+**Contexte Git :** branche `main`, HEAD `578d8be`. Aucun commit, push, projet,
+link, migration distante, donnée métier ou secret distant n'est créé ou
+consulté; l'index reste vide.
+
+**Diagnostic :** quatre migrations historiques déjà appliquées en production
+créent ou remplacent quatre jobs `pg_cron`. Leur état final est weekly
+diagnostic quotidien à 18h UTC, training regen quotidien à 17h UTC et les
+deux rappels streak à 16h/17h UTC. Elles contiennent cinq occurrences de
+`app.moovx.ch` et des placeholders de `CRON_SECRET`. Les logs historiques
+confirment les jobs production et une rotation du bearer via
+`cron.alter_job`; modifier rétroactivement ces fichiers compromettrait leur
+immutabilité.
+
+**Décision :** stratégie C. Les quatre migrations restent inchangées et sont
+allowlistées par SHA-256 exact. Staging doit les rejouer avec `pg_cron`
+absent, donc sans créer de job. La migration corrective
+`20260725190000_configure_environment_scoped_cron.sql` ajoute uniquement une
+fonction privée sans effet automatique. Un runner opérateur transactionnel
+active ensuite `pg_net`, Vault et `pg_cron`, valide l'environnement et l'URL,
+stocke le bearer dans Vault, puis remplace les quatre jobs vers l'alias
+Preview.
+
+**Fail-closed :** production n'est acceptée que pour
+`https://app.moovx.ch`; staging exige l'alias exact `*.vercel.app`. Unknown,
+URL/secret absent, HTTP, local, domaine MoovX en staging, extension absente ou
+nouvelle référence production échouent. Une erreur annule également
+l'activation des extensions. Les commandes `cron.job` ne contiennent ni
+secret ni domaine.
+
+**Validations :** les tests ciblés du garde et de la configuration cron
+passent. Le dry-run SQL local, entièrement transactionnel, configure deux
+fois staging et obtient exactement quatre jobs distincts, zéro URL
+`app.moovx.ch`, zéro domaine `moovx.ch`, les quatre fréquences historiques et
+l'alias Preview attendu. Le `ROLLBACK` laisse `pg_cron` et le schéma
+`private` absents. ESLint, syntaxe Node, recherche de secrets, liens et
+`git diff --check` sont exécutés avant clôture.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked`; RC1 reste à
+0/38 et Phase 9 inactive.
+
+**Prochaine action :** obtenir dans le Dashboard la confirmation explicite
+que le deuxième projet Free/Nano coûte `0 USD`, puis demander une autorisation
+distincte avant `supabase projects create`.
