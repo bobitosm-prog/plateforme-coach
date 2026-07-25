@@ -47,6 +47,19 @@ describe('AnalyticsSection pure legacy calculations', () => {
     expect(buildLegacyWaterSeries([{ date: '2026-03-31', ml: 1499.6 }])).toEqual([{ date: '2026-03-31', litres: 1.5 }])
   })
 
+  it('preserves unknown Analytics nutrition metrics as chart and CSV gaps', () => {
+    const nutrition = [{ date: '2026-03-31', calories: null, protein: 10, carbs: null, fat: 4 }]
+    expect(buildLegacyCalorieSeries(nutrition, 1000)).toEqual([
+      { date: '2026-03-31', calories: null, inTarget: null },
+    ])
+    expect(buildLegacyMacroSeries(nutrition)).toEqual([
+      { date: '2026-03-31', protein: 10, carbs: null, fat: 4 },
+    ])
+    expect(buildLegacyAnalyticsCsvRows({ weights: [], calories: nutrition, water: [] })).toEqual([
+      ['2026-03-31', null, null, 10, null, 4, null],
+    ])
+  })
+
   it('builds 30-day summary and the exact sparse CSV rows deterministically', () => {
     expect(buildLegacyAnalyticsSummary({
       weights: [{ date: '2026-03-03', weight: 82 }, { date: '2026-03-31', weight: 80.5 }],

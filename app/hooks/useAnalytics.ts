@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createAnalyticsReadModel, estimatedOneRepMax, groupMixedLocalUtcLegacyWeeklyTonnage, LatestAnalyticsReadCoordinator, type AnalyticsPersonalRecord, type AnalyticsReadPort } from '../../lib/progression'
+import { createAnalyticsReadModel, estimatedOneRepMax, groupMixedLocalUtcLegacyWeeklyTonnage, LatestAnalyticsReadCoordinator, settleAnalyticsNutritionDays, type AnalyticsNutritionDay, type AnalyticsPersonalRecord, type AnalyticsReadPort } from '../../lib/progression'
 import { createNutritionJournalRepository } from '../../lib/repositories/nutrition'
 import type { DatabaseClient } from '../../lib/supabase/types'
 
@@ -11,7 +11,7 @@ interface UseAnalyticsParams {
 
 export default function useAnalytics({ supabase }: UseAnalyticsParams) {
   const [personalRecords, setPersonalRecords] = useState<AnalyticsPersonalRecord[]>([])
-  const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([])
+  const [weeklyCalories, setWeeklyCalories] = useState<AnalyticsNutritionDay[]>([])
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
   const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
   const [weightHistoryFull, setWeightHistoryFull] = useState<{ date: string; poids: number }[]>([])
@@ -31,13 +31,18 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
     if (!requestCoordinator.current.isCurrent(request)) return
     if (!result.data) {
       setPersonalRecords([])
-      setWeeklyCalories([])
       setWeeklyWater([])
       setWeightHistoryFull([])
       return
     }
     setPersonalRecords([...result.data.personalRecords])
-    setWeeklyCalories([...result.data.weeklyCalories])
+    setWeeklyCalories(previous => [...settleAnalyticsNutritionDays(
+      previous,
+      result.data.nutritionStatus === 'failure'
+        ? { status: 'failure' }
+        : { status: 'ready', days: result.data.weeklyCalories },
+      true,
+    )])
     setWeeklyWater([...result.data.weeklyWater])
     if (legacyWeeklyVolume) setWeeklyVolume([...legacyWeeklyVolume])
     setWeightHistoryFull(result.data.weightHistoryFull.map(item => ({ date: item.date, poids: item.weight })))

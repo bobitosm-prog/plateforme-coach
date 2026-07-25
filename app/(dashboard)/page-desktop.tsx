@@ -15,7 +15,7 @@ import { colors, fonts } from '../../lib/design-tokens'
 import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHeatMap'
 import { getLevelFromXP, getLevelTitle } from '../../lib/gamification'
 import { getRestSeconds } from '../../lib/utils/exercise'
-import { legacyTonnage } from '../../lib/progression'
+import { legacyTonnage, type AnalyticsNutritionDay } from '../../lib/progression'
 
 /* ═══════════════════════════════════════════════════
    TYPES
@@ -31,7 +31,7 @@ interface DesktopDashboardProps {
   personalRecords: any[]
   weightHistory: { date: string; poids: number }[]
   progressPhotos: any[]; measurements: any[]
-  weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
+  weeklyCalories: AnalyticsNutritionDay[]
   weeklyVolume: { week: string; volume: number }[]
   scheduledSessions: any[]; completedSessions: number
   calorieGoal: number

@@ -30,6 +30,7 @@ describe('progression read models', () => {
     const result = await createAnalyticsReadModel(reader).load(context)
     expect(result).toMatchObject({ status: 'success', data: {
       weeklyCalories: [{ date: '2026-01-02', calories: 100 }],
+      nutritionStatus: 'complete',
       weeklyWater: [{ date: '2026-01-02', ml: 500 }],
       weeklyVolume: [{ week: '2025-12-29', volume: 500 }],
       weightHistoryFull: [{ date: '2026-01-01', weight: 80 }, { date: '2026-01-02', weight: 81 }],
@@ -51,11 +52,18 @@ describe('progression read models', () => {
     expect(await createAnalyticsReadModel(failedPort).load(context)).toEqual({ status: 'failure', data: null, sources: ['records', 'nutrition', 'water', 'weights', 'training_sets'] })
   })
 
-  it('keeps zero-fallback legacy totals explicit while canonical functions remain strict', async () => {
+  it('keeps real zeros while preserving nullable Analytics metrics as unknown', async () => {
     const result = await createAnalyticsReadModel(port({
       listNutrition: vi.fn(async () => ok([{ date: '2026-01-02', calories: null, protein: 0, carbs: null, fat: 0 }])),
     })).load(context)
-    expect(result).toMatchObject({ status: 'success', data: { weeklyCalories: [{ calories: 0, protein: 0, carbs: 0, fat: 0 }] } })
+    expect(result).toMatchObject({
+      status: 'partial',
+      sources: ['nutrition'],
+      data: {
+        nutritionStatus: 'partial',
+        weeklyCalories: [{ calories: null, protein: 0, carbs: null, fat: 0 }],
+      },
+    })
   })
 
   it('distinguishes confirmed absence from a read failure', async () => {
@@ -64,7 +72,7 @@ describe('progression read models', () => {
       listWater: vi.fn(async () => ok([])), listWeights: vi.fn(async () => ok([])),
       listCompletedSets: vi.fn(async () => ok([])),
     })
-    expect(await createAnalyticsReadModel(empty).load(context)).toMatchObject({ status: 'unavailable', data: { personalRecords: [], weeklyCalories: [] }, sources: [] })
+    expect(await createAnalyticsReadModel(empty).load(context)).toMatchObject({ status: 'unavailable', data: { personalRecords: [], weeklyCalories: [], nutritionStatus: 'empty' }, sources: [] })
   })
 
   it('builds summary and separate histories immutably', () => {

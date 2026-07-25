@@ -1,6 +1,6 @@
 import {
   addCalendarDays,
-  aggregateLegacyNutritionByDate,
+  aggregateAnalyticsNutritionByDate,
   aggregateLegacyWaterByDate,
   calendarDateAt,
   groupLegacyWeeklyTonnage,
@@ -19,7 +19,7 @@ import type {
 } from './types'
 
 const EMPTY_MODEL: AnalyticsReadModel = {
-  personalRecords: [], weeklyCalories: [], weeklyWater: [], weeklyVolume: [], weightHistoryFull: [],
+  personalRecords: [], weeklyCalories: [], nutritionStatus: 'empty', weeklyWater: [], weeklyVolume: [], weightHistoryFull: [],
 }
 
 export class LatestAnalyticsReadCoordinator {
@@ -76,11 +76,18 @@ export function createAnalyticsReadModel(port: AnalyticsReadPort) {
 
       const sortedWeights = weights.ok ? sortWeights(weights.data) : null
       const weeklyVolume = sets.ok ? groupLegacyWeeklyTonnage({ sets: sets.data, timeZone: context.timeZone }) : null
-      const validNutrition = nutrition.ok && nutrition.data.every(row => typeof row.date === 'string')
+      const nutritionAggregation = nutrition.ok
+        ? aggregateAnalyticsNutritionByDate(nutrition.data)
+        : null
       const validWater = water.ok && water.data.every(row => typeof row.date === 'string')
       const data = emptyWith({
         personalRecords: records.ok ? [...records.data] : [],
-        weeklyCalories: validNutrition ? aggregateLegacyNutritionByDate(nutrition.data as readonly (typeof nutrition.data[number] & { date: string })[]) : [],
+        weeklyCalories: nutritionAggregation?.days ?? [],
+        nutritionStatus: !nutrition.ok
+          ? 'failure'
+          : nutritionAggregation?.status === 'unavailable'
+            ? 'empty'
+            : nutritionAggregation?.status ?? 'invalid',
         weeklyWater: validWater ? aggregateLegacyWaterByDate(water.data as readonly (typeof water.data[number] & { date: string })[]) : [],
         weightHistoryFull: sortedWeights?.status === 'complete' ? sortedWeights.value : [],
         weeklyVolume: weeklyVolume?.status === 'complete' ? weeklyVolume.value : [],
@@ -88,7 +95,10 @@ export function createAnalyticsReadModel(port: AnalyticsReadPort) {
       const derivedFailures: AnalyticsReadSource[] = []
       if (weights.ok && sortedWeights?.status === 'invalid') derivedFailures.push('weights')
       if (sets.ok && weeklyVolume?.status === 'invalid') derivedFailures.push('training_sets')
-      if (nutrition.ok && !validNutrition) derivedFailures.push('nutrition')
+      if (
+        nutritionAggregation?.status === 'partial' ||
+        nutritionAggregation?.status === 'invalid'
+      ) derivedFailures.push('nutrition')
       if (water.ok && !validWater) derivedFailures.push('water')
       const sources = [...new Set([...failedSources, ...derivedFailures])]
       const hasData = data.personalRecords.length + data.weeklyCalories.length + data.weeklyWater.length + data.weeklyVolume.length + data.weightHistoryFull.length > 0

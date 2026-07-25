@@ -26,7 +26,7 @@ import {
   buildLegacyWaterSeries,
   buildLegacyWeightSeries,
   percentageChangeLegacy,
-  type AnalyticsPersonalRecord,
+  type AnalyticsNutritionDay, type AnalyticsPersonalRecord,
   type AnalyticsWeightPeriod,
   type AnalyticsWorkoutSession,
 } from '../../lib/progression'
@@ -35,7 +35,7 @@ const LIGHT_BLUE = '#7DD3FC'
 
 interface AnalyticsSectionProps {
   personalRecords: AnalyticsPersonalRecord[]
-  weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
+  weeklyCalories: AnalyticsNutritionDay[]
   weeklyWater: { date: string; ml: number }[]
   weeklyVolume: { week: string; volume: number }[]
   weightHistoryFull: { date: string; poids: number }[]
@@ -245,7 +245,7 @@ export default function AnalyticsSection({
               <ReferenceLine y={calorieGoal} stroke={colors.success} strokeDasharray="6 4" label={{ value: `${calorieGoal}`, fill: colors.success, fontSize: 10, position: 'right' }} />
               <Bar dataKey="calories" radius={[2, 2, 0, 0]} name={t('caloriesName')}>
                 {calData.map((entry, i) => (
-                  <Cell key={i} fill={entry.inTarget ? colors.success : colors.error} fillOpacity={0.7} />
+                  <Cell key={i} fill={entry.inTarget === null ? colors.textMuted : entry.inTarget ? colors.success : colors.error} fillOpacity={0.7} />
                 ))}
               </Bar>
             </BarChart>

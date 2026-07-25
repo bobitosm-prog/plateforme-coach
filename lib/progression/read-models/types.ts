@@ -1,3 +1,4 @@
+import type { AnalyticsNutritionDay } from '../analytics-nutrition'
 import type { DatedTrainingSet, DatedWeight, ProgressionClock } from '..'
 
 export type ProgressionReadFailureKind = 'unauthorized' | 'unavailable' | 'failure'
@@ -36,7 +37,8 @@ export interface AnalyticsReadContext {
 
 export interface AnalyticsReadModel {
   readonly personalRecords: readonly AnalyticsPersonalRecord[]
-  readonly weeklyCalories: readonly { date: string; calories: number; protein: number; carbs: number; fat: number }[]
+  readonly weeklyCalories: readonly AnalyticsNutritionDay[]
+  readonly nutritionStatus: 'complete' | 'partial' | 'empty' | 'invalid' | 'failure'
   readonly weeklyWater: readonly { date: string; ml: number }[]
   readonly weeklyVolume: readonly { week: string; volume: number }[]
   readonly weightHistoryFull: readonly DatedWeight[]

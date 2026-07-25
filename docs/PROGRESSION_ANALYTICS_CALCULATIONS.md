@@ -65,6 +65,66 @@ année avant de choisir une clé locale canonique.
 - `workout_sessions`, `completed_sessions` et `scheduled_sessions` ne sont ni
   fusionnés ni dédupliqués.
 
+## Agrégation Nutrition Analytics — C02
+
+Le flux est :
+
+```text
+ProgressTab
+→ AnalyticsSection
+→ useAnalytics.fetchAnalyticsData
+→ createAnalyticsReadModel
+→ createNutritionJournalRepository.listDailyFoodLogsForOwner
+→ daily_food_logs
+→ aggregateAnalyticsNutritionByDate
+→ présentateurs calories/macros/CSV
+→ graphiques Recharts
+```
+
+La lecture conserve exactement une requête owner-scoped :
+`DAILY_FOOD_LOG_PROJECTION`, `user_id = owner`, `date >= J-7`, ordre
+`date DESC` puis `created_at DESC`, `limit 100`, collection. `J-7` est calculé
+avec `calendarDateAt` dans le timezone résolu par le navigateur. Il n'existe
+pas de borne haute supplémentaire. Le chargement suit le refresh Analytics du
+dashboard; `LatestAnalyticsReadCoordinator` neutralise les réponses
+obsolètes.
+
+La vérification read-only du backend déployé a accepté la projection complète
+`id,user_id,date,meal_type,food_id,custom_name,quantity_g,calories,protein,carbs,fat,created_at`.
+Les quatre comptages `IS NULL` observés valaient zéro. Le schéma généré rend
+néanmoins `protein`, `carbs` et `fat` nullables; la correction protège donc le
+contrat, même si la fixture distante courante ne déclenche pas le cas.
+
+Avant C02, `aggregateLegacyNutritionByDate` appliquait `value || 0`.
+`null`, `undefined`, champ absent et `NaN` devenaient zéro; les chaînes
+étaient concaténées à l'accumulateur; infinis et négatifs traversaient. Une
+erreur de lecture produisait le même tableau vide que l'absence confirmée au
+niveau de l'état visible.
+
+Après C02 :
+
+- nombre fini non négatif et chaîne numérique non vide : connu;
+- zéro explicite : connu et affiché comme zéro;
+- `null`, `undefined`, champ absent, chaîne vide : inconnu;
+- texte non numérique, `NaN`, infini, négatif, type incompatible : invalide;
+- une inconnue/invalide annule seulement la métrique concernée du jour;
+- les autres métriques valides du jour restent exploitables;
+- un jour sans ligne n'est pas créé;
+- période vide confirmée : `nutritionStatus = empty`, série `[]`;
+- panne : `nutritionStatus = failure`, série visible précédente conservée;
+- donnée partielle/invalide : valeur `null`, lacune graphique et cellule CSV
+  vide, jamais zéro synthétique.
+
+Analytics calcule des sommes par date et aucune moyenne Nutrition. Il n'existe
+donc ni dénominateur ni jour absent ajouté au calcul. Les sorties valides,
+arrondis, couleurs, cartes, noms de props et cadence de refresh sont
+inchangés; seule la nullabilité interne des quatre métriques est élargie.
+
+Le helper du diagnostic hebdomadaire n'est pas partagé. Celui-ci agrège la
+semaine précédente complète Europe/Zurich et calcule des moyennes destinées à
+l'IA; Analytics utilise une fenêtre glissante locale, des sommes journalières,
+un plafond de 100 lignes et des graphiques/CSV.
+
 ## Calculs non migrés
 
 - Le mapping `exercise_id → muscle_group` reste un effet de chargement dans

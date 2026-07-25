@@ -11346,3 +11346,64 @@ et Phase 9 inactive.
 **Prochaine action :** caractériser puis corriger C02, l'agrégation
 `daily_food_logs` d'Analytics, avec une sortie zéro/inconnue/invalide explicite
 et sans toucher au résumé Home ni aux écritures.
+
+## Entrée — 2026-07-25 — C02 Analytics Nutrition sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `f511fd2`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `createAnalyticsReadModel` appelait
+`aggregateLegacyNutritionByDate`, qui initialisait quatre totaux à zéro puis
+additionnait chaque champ avec `value || 0`. `null`, `undefined`, champ absent
+et `NaN` devenaient zéro; les chaînes étaient concaténées; infinis et négatifs
+traversaient. La panne Supabase était distinguée dans le read model, mais
+`useAnalytics` remplaçait malgré tout la série visible par `[]` lors d'un
+échec total.
+
+**Flux :** `ProgressTab → AnalyticsSection → useAnalytics →
+createAnalyticsReadModel → createNutritionJournalRepository →
+daily_food_logs → aggregateAnalyticsNutritionByDate → présentateurs →
+graphiques/CSV`. Le helper du diagnostic n'est pas réutilisé : il utilise la
+semaine précédente complète Zurich, produit des moyennes pour l'IA et possède
+un autre contrat de jours absents.
+
+**Règles :** zéro et nombre fini non négatif connus; chaîne numérique non vide
+convertie; `null`, `undefined`, absent et chaîne vide inconnus; texte non
+numérique, `NaN`, infini, négatif et type incompatible invalides. Une
+inconnue/invalide rend seulement cette métrique du jour `null`; les autres
+sommes du jour restent visibles. Aucun jour sans log n'est synthétisé et
+Analytics ne calcule aucune moyenne Nutrition.
+
+**Rendu et erreurs :** données valides et arrondis inchangés. Une métrique
+inconnue devient une lacune du graphique et une cellule CSV vide. Une période
+vide confirmée remplace la série par `[]`; une panne conserve la série
+précédente; le coordinateur de réponses obsolètes reste inchangé.
+
+**Requête et schéma :** 1 → 1 lecture owner-scoped, projection journal
+inchangée, `date >= J-7` calculé dans le timezone navigateur, ordre
+`date DESC, created_at DESC`, `limit 100`, collection. La projection complète
+a réussi sur le backend déployé; les quatre comptages nulls observés valent
+zéro, tandis que les trois macros restent nullables dans les types générés.
+Aucune lecture ou écriture distante supplémentaire n'a été exécutée.
+
+**Écritures et périmètre :** aucun insert, update, upsert, delete, RPC,
+payload, mutation, résumé Home ou agrégateur diagnostic n'a changé. C01 et
+C03–C10 restent hors chantier.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/6 tests verts;
+attentes corrigées rouges car le module n'existait pas. Après correction :
+Analytics/agrégations 7 fichiers/42 tests; Home/diagnostic 6/45; ensemble
+Nutrition 48/374; gardes statiques 86/324; garde construction Supabase 1/7.
+La première suite complète a trouvé un seul déplacement mécanique de baseline
+`createBrowserClient` (ligne 95 → 96), corrigé sans changement runtime. Suite
+finale : 263 fichiers, 2 136 tests réussis et 3 `todo`. TypeScript est vert;
+ESLint des quatre nouveaux fichiers et des quatre frontières modifiées est à
+0 erreur/0 avertissement; 161 liens locaux sont valides; `git diff --check`
+est vert.
+
+**État roadmap :** C02 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 13 et C à 9. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter C01, le mini-graphe calories Home, sans toucher
+au résumé Home figé.

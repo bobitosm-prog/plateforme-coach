@@ -1,4 +1,5 @@
 import type { AnalyticsPersonalRecord } from './read-models'
+import type { AnalyticsNutritionDay } from './analytics-nutrition'
 import type { DatedWeight } from './body'
 import type { ProgressionClock } from './types'
 
@@ -6,6 +7,7 @@ export type AnalyticsWeightPeriod = '30j' | '60j' | '90j' | 'tout'
 
 const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(new Date(value).getTime())
 const validAmount = (value: number) => Number.isFinite(value) && value >= 0
+const validOptionalAmount = (value: number | null) => value === null || validAmount(value)
 
 export function buildLegacyWeightSeries(input: {
   readonly weights: readonly DatedWeight[]
@@ -23,14 +25,23 @@ export function buildLegacyWeightSeries(input: {
   })
 }
 
-export function buildLegacyCalorieSeries(entries: readonly { readonly date: string; readonly calories: number }[], goal: number) {
-  if (!validAmount(goal) || entries.some(entry => !validDate(entry.date) || !validAmount(entry.calories))) return []
-  return entries.map(entry => ({ date: entry.date, calories: Math.round(entry.calories), inTarget: Math.abs(entry.calories - goal) <= 100 }))
+export function buildLegacyCalorieSeries(entries: readonly Pick<AnalyticsNutritionDay, 'date' | 'calories'>[], goal: number) {
+  if (!validAmount(goal) || entries.some(entry => !validDate(entry.date) || !validOptionalAmount(entry.calories))) return []
+  return entries.map(entry => ({
+    date: entry.date,
+    calories: entry.calories === null ? null : Math.round(entry.calories),
+    inTarget: entry.calories === null ? null : Math.abs(entry.calories - goal) <= 100,
+  }))
 }
 
-export function buildLegacyMacroSeries(entries: readonly { readonly date: string; readonly protein: number; readonly carbs: number; readonly fat: number }[]) {
-  if (entries.some(entry => !validDate(entry.date) || ![entry.protein, entry.carbs, entry.fat].every(validAmount))) return []
-  return entries.map(entry => ({ date: entry.date, protein: Math.round(entry.protein), carbs: Math.round(entry.carbs), fat: Math.round(entry.fat) }))
+export function buildLegacyMacroSeries(entries: readonly Pick<AnalyticsNutritionDay, 'date' | 'protein' | 'carbs' | 'fat'>[]) {
+  if (entries.some(entry => !validDate(entry.date) || ![entry.protein, entry.carbs, entry.fat].every(validOptionalAmount))) return []
+  return entries.map(entry => ({
+    date: entry.date,
+    protein: entry.protein === null ? null : Math.round(entry.protein),
+    carbs: entry.carbs === null ? null : Math.round(entry.carbs),
+    fat: entry.fat === null ? null : Math.round(entry.fat),
+  }))
 }
 
 export function buildLegacyWaterSeries(entries: readonly { readonly date: string; readonly ml: number }[]) {
@@ -56,11 +67,11 @@ export function buildLegacyAnalyticsSummary(input: {
 
 export function buildLegacyAnalyticsCsvRows(input: {
   readonly weights: readonly DatedWeight[]
-  readonly calories: readonly { readonly date: string; readonly calories: number; readonly protein: number; readonly carbs: number; readonly fat: number }[]
+  readonly calories: readonly AnalyticsNutritionDay[]
   readonly water: readonly { readonly date: string; readonly ml: number }[]
 }): readonly (readonly (string | number | null)[])[] {
   if (input.weights.some(value => !validDate(value.date) || !validAmount(value.weight))
-    || input.calories.some(value => !validDate(value.date) || ![value.calories, value.protein, value.carbs, value.fat].every(validAmount))
+    || input.calories.some(value => !validDate(value.date) || ![value.calories, value.protein, value.carbs, value.fat].every(validOptionalAmount))
     || input.water.some(value => !validDate(value.date) || !validAmount(value.ml))) return []
   const dates = new Set<string>()
   input.weights.forEach(value => dates.add(value.date))

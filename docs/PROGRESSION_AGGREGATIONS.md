@@ -64,6 +64,15 @@ dashboard réutilisent maintenant les mêmes autorités Epley/tonnage. Les
 lectures, filtres, props, textes, formes de sortie et valeurs visibles ne
 changent pas.
 
+L'agrégation Nutrition Analytics utilise désormais
+`aggregateAnalyticsNutritionByDate`, documentée dans
+[les calculs Analytics](PROGRESSION_ANALYTICS_CALCULATIONS.md#agrégation-nutrition-analytics--c02).
+Elle remplace uniquement le consommateur runtime C02. La fonction
+`aggregateLegacyNutritionByDate` reste disponible pour caractériser le
+comportement historique, mais n'alimente plus le read model Analytics.
+L'agrégateur du diagnostic reste séparé en raison de sa fenêtre, de ses
+moyennes et de son contrat IA différents.
+
 Les autres calculs restent en place lorsqu'une divergence existe sur la source,
 la fenêtre, l'arrondi ou le traitement de l'absence. Ils seront raccordés après
 la création des read models, pas par substitution implicite.

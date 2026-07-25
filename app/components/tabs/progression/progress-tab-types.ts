@@ -1,6 +1,6 @@
 import type { Locale } from 'date-fns'
 import type React from 'react'
-import type { AnalyticsPersonalRecord, AnalyticsWorkoutSession } from '../../../../lib/progression'
+import type { AnalyticsNutritionDay, AnalyticsPersonalRecord, AnalyticsWorkoutSession } from '../../../../lib/progression'
 
 export interface ProgressWeight { readonly date: string; readonly poids: number }
 export interface ProgressMeasurement { readonly date?: string | null; readonly waist?: number | null; readonly hips?: number | null; readonly chest?: number | null; readonly left_arm?: number | null; readonly right_arm?: number | null; readonly left_thigh?: number | null; readonly right_thigh?: number | null; readonly body_fat?: number | null; readonly [key: string]: string | number | null | undefined }
@@ -27,7 +27,7 @@ export interface ProgressTabPublicProps {
   readonly profile: ProgressProfile | null
   readonly coachId: string | null
   readonly personalRecords: AnalyticsPersonalRecord[]
-  readonly weeklyCalories: { date: string; calories: number; protein: number; carbs: number; fat: number }[]
+  readonly weeklyCalories: AnalyticsNutritionDay[]
   readonly weeklyWater: { date: string; ml: number }[]
   readonly weeklyVolume: { week: string; volume: number }[]
   readonly weightHistoryFull: ProgressWeight[]
