@@ -11543,3 +11543,79 @@ inactive.
 **Prochaine action :** traiter uniquement C03, l'agrégation du journal
 Nutrition du jour dans le dashboard desktop, sans toucher à C04 ni aux
 surfaces Home figées.
+
+## Entrée — 2026-07-25 — C03 journal Nutrition desktop du jour sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `e209b7b`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `DesktopDashboard` lisait le journal du jour avec
+`select('*')`, ignorait le champ `error`, puis initialisait quatre sommes à
+zéro et additionnait `calories/protein/carbs/fat` avec `value || 0`.
+`null`, `undefined`, champ absent, chaîne vide et `NaN` devenaient donc zéro;
+les chaînes pouvaient être concaténées, tandis qu'infini et négatif
+traversaient. Sans compteur ni cleanup, une réponse d'un ancien owner pouvait
+en outre remplacer l'état courant.
+
+**Flux avant/après :** avant :
+`DesktopDashboard → lecture directe daily_food_logs → quatre sommes || 0 →
+nutritionToday/todayFoodLogs → DashboardView/NutritionView → anneaux,
+totaux et accordéon`. Après :
+`DesktopDashboard → même lecture →
+readDesktopNutritionDayResponse → aggregateDesktopNutritionDay →
+nutritionDay → mêmes surfaces`. Le repository journal, Analytics et le
+diagnostic ne sont pas réutilisés : leurs projections, fenêtres, tris,
+limites, jours absents et contrats de fraîcheur divergent.
+
+**Règles :** nombre fini non négatif et zéro connus; chaîne numérique non vide
+convertie; `null`, `undefined`, absent et chaîne vide inconnus; texte non
+numérique, `NaN`, infini, négatif et type incompatible invalides. Une
+inconnue/invalide rend uniquement la métrique concernée `null`; les autres
+métriques du jour restent exploitables. Owner ou date inattendu exclut la
+ligne sans produire une fausse journée vide. Les totaux valides conservent
+l'arrondi final historique.
+
+**Rendu et cycle :** une collection vide confirmée produit le journal vide
+historique et quatre vrais zéros. Une métrique inconnue/invalide affiche `—`
+et aucun arc de progression, sans restructurer les jauges. Au premier
+chargement, le journal affiche son chargement; une première panne affiche
+« Journal indisponible » et des métriques inconnues. Après une valeur
+confirmée, une panne la conserve. Le compteur et le cleanup neutralisent les
+réponses obsolètes.
+
+**Requête et schéma :** 1 → 1 lecture C03 dans un effet qui reste à 9 lectures
+au total, owner `session.user.id`, égalité sur le jour UTC
+`toISOString().split('T')[0]`, ordre `created_at ASC`, sans limite,
+collection, sans cache ni polling. Seule la projection large `*` devient la
+projection minimale validée
+`id,user_id,date,meal_type,custom_name,quantity_g,calories,protein,carbs,fat,created_at`.
+La projection répond en 200 sur PostgREST déployé. L'OpenAPI courante décrit
+ces colonnes comme non nullables; les types générés locaux gardent
+`protein/carbs/fat` nullables, tolérés explicitement.
+
+**Périmètre :** C04 garde byte-for-byte sa requête sept jours et son
+comportement legacy. Le résumé Home, son mini-graphe, `EnergyCard`,
+`NutritionCard`, Analytics et le diagnostic restent hors diff. Aucun insert,
+update, upsert, delete, RPC, payload, mutation React ou producteur IA n'a
+changé.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/5 tests verts;
+les attentes corrigées étaient rouges car la frontière n'existait pas et les
+gardes constataient encore l'agrégation legacy. Après correction : C03 seul
+3 fichiers/25 tests; ciblés C03/Home/Analytics/diagnostic et garde
+d'inventaire 17/120; agrégations autoritaires
+`status=ok, auditedConsumers=699, intentionalLegacy=2`; suite complète
+271 fichiers, 2 196 tests réussis et 3 `todo`. TypeScript est vert. Les 165
+liens locaux contrôlés sont valides.
+
+**Dette ESLint :** `page-desktop.tsx` passe de 61 erreurs/25 avertissements
+historiques à 57/25 grâce au retrait de quatre `any` dans C03. La nouvelle
+frontière et ses trois tests sont à 0 erreur/0 avertissement; aucune nouvelle
+règle n'est en dette. `git diff --check` est vert.
+
+**État roadmap :** C03 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 16 et C à 6. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C04, le graphe Nutrition desktop
+sept jours, sans rouvrir C03 ni les surfaces Home figées.

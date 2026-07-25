@@ -73,6 +73,14 @@ comportement historique, mais n'alimente plus le read model Analytics.
 L'agrégateur du diagnostic reste séparé en raison de sa fenêtre, de ses
 moyennes et de son contrat IA différents.
 
+Le journal Nutrition desktop du jour utilise une autre frontière spécialisée,
+`lib/nutrition/desktop-nutrition-day.ts`, documentée dans
+[`NUTRITION_DESKTOP_DAY_JOURNAL.md`](NUTRITION_DESKTOP_DAY_JOURNAL.md).
+Elle contrôle un owner et une date UTC uniques, conserve les lignes pour
+l'accordéon, arrondit les totaux finaux comme l'UI historique et possède un
+cycle de panne/valeur visible propre. Elle ne remplace ni l'agrégation
+multi-date Analytics, ni les moyennes du diagnostic, ni C04.
+
 Les autres calculs restent en place lorsqu'une divergence existe sur la source,
 la fenêtre, l'arrondi ou le traitement de l'absence. Ils seront raccordés après
 la création des read models, pas par substitution implicite.

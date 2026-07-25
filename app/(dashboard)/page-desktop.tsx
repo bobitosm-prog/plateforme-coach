@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Home, Dumbbell, BarChart3, UtensilsCrossed, Target, User, Settings,
   ChevronRight, ChevronLeft, ChevronDown, LogOut, Play, Plus,
@@ -16,6 +16,15 @@ import MuscleHeatMap, { calculateMuscleStatus } from '../components/ui/MuscleHea
 import { getLevelFromXP, getLevelTitle } from '../../lib/gamification'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { legacyTonnage, type AnalyticsNutritionDay } from '../../lib/progression'
+import {
+  DESKTOP_NUTRITION_DAY_PROJECTION,
+  presentDesktopNutritionMetric,
+  readDesktopNutritionDayResponse,
+  settleDesktopNutritionDay,
+  sumDesktopNutritionMetric,
+  type DesktopNutritionDayRow,
+  type DesktopNutritionDayState,
+} from '../../lib/nutrition/desktop-nutrition-day'
 
 /* ═══════════════════════════════════════════════════
    TYPES
@@ -90,14 +99,16 @@ function getDailyQuote(o?: string): string {
    SHARED UI
    ═══════════════════════════════════════════════════ */
 function Ring({ value, max, size = 100, stroke = 8, color = GOLD, label, sublabel, labelSize, sublabelSize }: {
-  value: number; max: number; size?: number; stroke?: number; color?: string; label?: string; sublabel?: string; labelSize?: number; sublabelSize?: number
+  value: number | null; max: number; size?: number; stroke?: number; color?: string; label?: string; sublabel?: string; labelSize?: number; sublabelSize?: number
 }) {
-  const r = (size - stroke) / 2, circ = 2 * Math.PI * r, offset = circ * (1 - Math.min(value / (max || 1), 1))
+  const r = (size - stroke) / 2
+  const circ = 2 * Math.PI * r
+  const offset = value === null ? circ : circ * (1 - Math.min(value / (max || 1), 1))
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
+        {value !== null && <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />}
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {label && <span style={{ fontFamily: HEADLINE, fontSize: labelSize || size * 0.28, fontWeight: 800, color: TEXT }}>{label}</span>}
@@ -185,7 +196,11 @@ export default function DesktopDashboard({
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard')
   const [weeklyData, setWeeklyData] = useState<any[]>([])
   const [recentSessions, setRecentSessions] = useState<any[]>([])
-  const [nutritionToday, setNutritionToday] = useState({ calories: 0, proteins: 0, carbs: 0, fats: 0 })
+  const [nutritionDay, setNutritionDay] = useState<DesktopNutritionDayState>({
+    status: 'loading',
+    value: null,
+  })
+  const desktopNutritionRequest = useRef(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekCalories, setWeekCalories] = useState(0)
@@ -195,13 +210,26 @@ export default function DesktopDashboard({
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [prevWeight, setPrevWeight] = useState<number | null>(null)
   const [allBadges, setAllBadges] = useState<any[]>([])
-  const [todayFoodLogs, setTodayFoodLogs] = useState<any[]>([])
+  const nutritionToday = nutritionDay.value?.totals ?? {
+    calories: null,
+    proteins: null,
+    carbs: null,
+    fats: null,
+  }
+  const todayFoodLogs = nutritionDay.value?.rows ?? []
+  const nutritionDayHasValue = nutritionDay.value !== null
 
   useEffect(() => {
     if (!session?.user?.id) return
     const uid = session.user.id
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+    const nutritionRequest = ++desktopNutritionRequest.current
+    Promise.resolve().then(() => {
+      if (nutritionRequest === desktopNutritionRequest.current) {
+        setNutritionDay({ status: 'loading', value: null })
+      }
+    })
 
     supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid)
       .gte('created_at', weekAgo).order('created_at', { ascending: true })
@@ -224,13 +252,24 @@ export default function DesktopDashboard({
     supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(10)
       .then(({ data }: any) => { if (data) setRecentSessions(data) })
 
-    supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).order('created_at', { ascending: true })
-      .then(({ data }: any) => {
-        if (!data) return
-        let c = 0, p = 0, ca = 0, f = 0
-        data.forEach((x: any) => { c += x.calories || 0; p += x.protein || 0; ca += x.carbs || 0; f += x.fat || 0 })
-        setNutritionToday({ calories: Math.round(c), proteins: Math.round(p), carbs: Math.round(ca), fats: Math.round(f) })
-        setTodayFoodLogs(data)
+    supabase.from('daily_food_logs').select(DESKTOP_NUTRITION_DAY_PROJECTION)
+      .eq('user_id', uid).eq('date', today).order('created_at', { ascending: true })
+      .then(({ data, error }: { data: DesktopNutritionDayRow[] | null; error: unknown }) => {
+        if (nutritionRequest !== desktopNutritionRequest.current) return
+        const result = readDesktopNutritionDayResponse(data, error, uid, today)
+        setNutritionDay(previous => settleDesktopNutritionDay(
+          previous,
+          result,
+          true,
+        ))
+      })
+      .catch(() => {
+        if (nutritionRequest !== desktopNutritionRequest.current) return
+        setNutritionDay(previous => settleDesktopNutritionDay(
+          previous,
+          { status: 'failure' },
+          true,
+        ))
       })
 
     supabase.from('personal_records').select('id').eq('user_id', uid).gte('achieved_at', weekAgo)
@@ -251,6 +290,7 @@ export default function DesktopDashboard({
 
     supabase.from('weight_logs').select('poids, date').eq('user_id', uid).order('date', { ascending: false }).limit(2)
       .then(({ data }: any) => { if (data?.[1]) setPrevWeight(data[1].poids) })
+    return () => { desktopNutritionRequest.current += 1 }
   }, [session?.user?.id])
 
   // Computed
@@ -373,7 +413,7 @@ export default function DesktopDashboard({
           {activeNav === 'dashboard' && <DashboardView {...{ weeklyData, weekSessions, weekCalories, weekVolume, weeklyGoalPct, newRecords, todaySessionInfo, todaySessionDone, strengthGains, currentWeight, weightChange, bodyFat, objective, streak, nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, muscleStatus, recentSessions, badges, levelInfo, levelTitle, xpData, onNavigate, startProgramWorkout, coachProgram, todayKey, colors }} />}
           {activeNav === 'workouts' && <TrainingView {...{ todaySessionInfo, todaySessionDone, weekProgram, todayKey, recentSessions, personalRecords, strengthGains, weeklyVolume, weeklyData, startProgramWorkout, coachProgram, onNavigate }} />}
           {activeNav === 'analytics' && <ProgressView {...{ weightHistory, currentWeight, goalWeight, bodyFat, bmi, streak, strengthGains, personalRecords, progressPhotos, supabase, session }} />}
-          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }} />}
+          {activeNav === 'nutrition' && <NutritionView {...{ nutritionToday, nutritionDayHasValue, nutritionDayStatus: nutritionDay.status, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }} />}
           {activeNav === 'goals' && <GoalsView {...{ objective, objectiveLabel, currentWeight, goalWeight, weekSessions, streak, completedSessions, allBadges, levelInfo, levelTitle, xpData }} />}
           {activeNav === 'profile' && <ProfileView {...{ profile, avatarUrl, displayName, currentWeight, goalWeight, bodyFat, bmi, completedSessions, streak, onNavigate, setModal }} />}
           {activeNav === 'settings' && <SettingsView {...{ profile, onNavigate, setModal }} />}
@@ -483,13 +523,13 @@ function DashboardView({ weeklyData, weekSessions, weekCalories, weekVolume, wee
       {/* ROW 3: Nutrition + Recovery + History */}
       <Card span={5} style={{ minHeight: 240 }}>
         <CardTitle title="Nutrition du Jour" />
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Ring value={nutritionToday.calories} max={calorieGoal} size={100} stroke={9} color={GOLD} label={`${nutritionToday.calories}`} sublabel={`/ ${calorieGoal} kcal`} labelSize={22} sublabelSize={9} /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><Ring value={nutritionToday.calories} max={calorieGoal} size={100} stroke={9} color={GOLD} label={presentDesktopNutritionMetric(nutritionToday.calories)} sublabel={`/ ${calorieGoal} kcal`} labelSize={22} sublabelSize={9} /></div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 16 }}>
           {[{ l: 'Prot', v: nutritionToday.proteins, m: proteinGoal, c: '#3b82f6' }, { l: 'Gluc', v: nutritionToday.carbs, m: carbsGoal, c: '#f59e0b' }, { l: 'Lip', v: nutritionToday.fats, m: fatsGoal, c: '#10b981' }].map(n => (
             <div key={n.l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <Ring value={n.v} max={n.m} size={48} stroke={4} color={n.c} label={`${n.v}`} labelSize={13} />
+              <Ring value={n.v} max={n.m} size={48} stroke={4} color={n.c} label={presentDesktopNutritionMetric(n.v)} labelSize={13} />
               <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED, textTransform: 'uppercase' }}>{n.l}</span>
-              <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED }}>{n.v}/{n.m}g</span>
+              <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED }}>{presentDesktopNutritionMetric(n.v)}/{n.m}g</span>
             </div>
           ))}
         </div>
@@ -689,7 +729,7 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
 /* ═══════════════════════════════════════════════════
    PAGE: NUTRITION
    ═══════════════════════════════════════════════════ */
-function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }: any) {
+function NutritionView({ nutritionToday, nutritionDayHasValue, nutritionDayStatus, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }: any) {
   const [openMeals, setOpenMeals] = useState<string[]>([])
   const [weekChart, setWeekChart] = useState<{ day: string; calories: number }[]>([])
 
@@ -737,9 +777,14 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
       <Card span={8}>
         <CardTitle title="Journal du Jour" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {mealTypes.map(mt => {
+          {!nutritionDayHasValue ? (
+            <div style={{ fontFamily: BODY, fontSize: 12, color: MUTED, fontStyle: 'italic', padding: '18px 0', textAlign: 'center' }}>
+              {nutritionDayStatus === 'loading' ? 'Chargement du journal…' : 'Journal indisponible'}
+            </div>
+          ) : mealTypes.map(mt => {
             const foods = logsByMeal[mt.id] || []
-            const mealCals = foods.reduce((s: number, f: any) => s + (f.calories || 0), 0)
+            const mealCals = sumDesktopNutritionMetric(foods, 'calories')
+            const mealCaloriesLabel = presentDesktopNutritionMetric(mealCals)
             const isOpen = openMeals.includes(mt.id)
             return (
               <div key={mt.id} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: `1px solid ${isOpen ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.04)'}`, transition: 'border-color 200ms' }}>
@@ -748,9 +793,9 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
                   <span style={{ fontSize: 18 }}>{mt.icon}</span>
                   <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.1em', flex: 1 }}>{mt.label}</span>
                   <span style={{ fontFamily: BODY, fontSize: 10, color: MUTED }}>
-                    {foods.length > 0 ? `${foods.length} aliment${foods.length > 1 ? 's' : ''} · ${mealCals} kcal` : 'Vide'}
+                    {foods.length > 0 ? `${foods.length} aliment${foods.length > 1 ? 's' : ''} · ${mealCaloriesLabel} kcal` : 'Vide'}
                   </span>
-                  {foods.length > 0 && <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD }}>{mealCals}</span>}
+                  {foods.length > 0 && <span style={{ fontFamily: HEADLINE, fontSize: 12, fontWeight: 700, color: GOLD }}>{mealCaloriesLabel}</span>}
                   <ChevronDown size={14} color={MUTED} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms', flexShrink: 0 }} />
                 </button>
                 {/* Accordion body */}
@@ -760,9 +805,9 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
                       <div key={f.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < foods.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: BODY, fontSize: 13, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.custom_name || f.food_name || 'Aliment'}</div>
-                          <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginTop: 2 }}>P:{f.protein || 0}g · G:{f.carbs || 0}g · L:{f.fat || 0}g{f.quantity_g ? ` · ${f.quantity_g}g` : ''}</div>
+                          <div style={{ fontFamily: BODY, fontSize: 10, color: MUTED, marginTop: 2 }}>P:{presentDesktopNutritionMetric(f.protein)}g · G:{presentDesktopNutritionMetric(f.carbs)}g · L:{presentDesktopNutritionMetric(f.fat)}g{f.quantity_g ? ` · ${f.quantity_g}g` : ''}</div>
                         </div>
-                        <span style={{ fontFamily: HEADLINE, fontSize: 13, fontWeight: 700, color: GOLD, flexShrink: 0, marginLeft: 12 }}>{f.calories || 0} kcal</span>
+                        <span style={{ fontFamily: HEADLINE, fontSize: 13, fontWeight: 700, color: GOLD, flexShrink: 0, marginLeft: 12 }}>{presentDesktopNutritionMetric(f.calories)} kcal</span>
                       </div>
                     )) : <div style={{ fontFamily: BODY, fontSize: 12, color: MUTED, fontStyle: 'italic', padding: '10px 0' }}>Aucun aliment enregistre</div>}
                   </div>
@@ -777,14 +822,14 @@ function NutritionView({ nutritionToday, calorieGoal, proteinGoal, carbsGoal, fa
       <Card span={4} style={{ minHeight: 300 }}>
         <CardTitle title="Macros du Jour" />
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <Ring value={nutritionToday.calories} max={calorieGoal} size={130} stroke={12} color={GOLD} label={`${nutritionToday.calories}`} sublabel={`/ ${calorieGoal} kcal`} labelSize={26} sublabelSize={10} />
+          <Ring value={nutritionToday.calories} max={calorieGoal} size={130} stroke={12} color={GOLD} label={presentDesktopNutritionMetric(nutritionToday.calories)} sublabel={`/ ${calorieGoal} kcal`} labelSize={26} sublabelSize={10} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
           {[{ l: 'Proteines', v: nutritionToday.proteins, m: proteinGoal, c: '#3b82f6' }, { l: 'Glucides', v: nutritionToday.carbs, m: carbsGoal, c: '#f59e0b' }, { l: 'Lipides', v: nutritionToday.fats, m: fatsGoal, c: '#10b981' }].map(n => (
             <div key={n.l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <Ring value={n.v} max={n.m} size={56} stroke={5} color={n.c} label={`${n.v}`} labelSize={14} />
+              <Ring value={n.v} max={n.m} size={56} stroke={5} color={n.c} label={presentDesktopNutritionMetric(n.v)} labelSize={14} />
               <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED, textTransform: 'uppercase' }}>{n.l}</span>
-              <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED }}>{n.v}/{n.m}g</span>
+              <span style={{ fontFamily: BODY, fontSize: 9, color: MUTED }}>{presentDesktopNutritionMetric(n.v)}/{n.m}g</span>
             </div>
           ))}
         </div>

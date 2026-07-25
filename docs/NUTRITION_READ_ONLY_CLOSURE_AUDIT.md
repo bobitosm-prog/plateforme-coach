@@ -12,19 +12,19 @@ Le domaine Nutrition read-only **n'est pas encore clôturable**.
 
 Les lectures de plans sont clôturables : elles passent par les readers
 spécialisés déjà validés, ou sont des écritures hors périmètre. En revanche,
-sept consommateurs read-only conservent une sémantique legacy qui peut
+six consommateurs read-only conservent une sémantique legacy qui peut
 transformer une panne, une inconnue ou une donnée nullable en zéro/absence.
 Le backend observé ne contient actuellement aucune macro nulle dans
-`daily_food_logs`; il n'y a donc pas de régression de données visible à
-corriger pendant cet audit. Le contrat déployé autorise néanmoins
+`daily_food_logs`; il n'y avait donc pas de régression de données visible lors
+de l'audit initial. Les types générés autorisent néanmoins
 `protein/carbs/fat = null`, ce qui rend la dette exécutable et empêche une
-clôture honnête.
+clôture honnête tant que les consommateurs restants ne la traitent pas.
 
 ## Catégories
 
-- **A — raccordé à une frontière canonique : 15**
+- **A — raccordé à une frontière canonique : 16**
 - **B — volontairement non raccordable : 7**
-- **C — restant à migrer : 7**
+- **C — restant à migrer : 6**
 - **D — écriture/producteur hors périmètre : 6**
 - **E — faux positif, capacité inutilisée ou documentation/test : 5**
 - **Total : 40 lignes**
@@ -59,6 +59,7 @@ requête/cleanup neutralisant les réponses obsolètes.
 | A13 | A | `useAnalytics/createAnalyticsReadModel` | `daily_food_logs`, owner | projection journal; `date >= J-7 local`; `date DESC, created_at DESC`; `limit 100`; coll. | refresh Analytics; compteur courant; erreur conserve la série visible | `aggregateAnalyticsNutritionByDate`; sommes journalières null-aware; C02 raccordé |
 | A14 | A | `HomeTab`, mini-graphe calories | `daily_food_logs`, owner session | calories/date; `date >= UTC J-7`; sans ordre; `limit 200`; coll. | montage/retour Home; compteur + cleanup; panne conserve la série | `aggregateHomeCalorieMiniGraph`; zéro/absence/invalide distincts; C01 raccordé |
 | A15 | A | `HomeTab`, transport du résumé consommé | `meal_tracking` + `daily_food_logs`, même owner qu'A02 | projections/filtres/limites A02; 2 coll. dans les 3 lectures Home | UTC aujourd'hui; montage/retour Home; compteur + cleanup; pannes sourcées | `classifyHomeNutritionCollectionRead → readHomeNutritionSummaryFromReads`; C09 raccordé |
+| A16 | A | desktop `DesktopDashboard`, journal du jour | `daily_food_logs`, owner session | projection minimale validée; jour UTC exact; `created_at ASC`; sans limite; coll. | montage/changement owner; compteur + cleanup; panne conserve la valeur | `aggregateDesktopNutritionDay`; zéro/inconnue/invalide distincts; C03 raccordé |
 | B01 | B | `useNutritionPlans`, repas terminés | `meal_tracking`, owner + jour | `meal_type`; jour exact; complété; `limit 50`; coll. | même cycle A04, courant; erreur explicite | état de conformité, pas contenu de plan |
 | B02 | B | `checkAndUnlockBadges`, compte repas/scan | `daily_food_logs`, owner | `count exact head`; tout historique; scan ajoute `food_id not null` | à l'évaluation badge; panne devient 0 legacy | compteur gamification, aucune conversion macro |
 | B03 | B | `checkAndUnlockBadges`, streak Nutrition | `daily_food_logs`, owner | `date`; `date DESC`; `limit 100`; coll. | à l'évaluation; date SQL; absence = 0 | série de dates, incompatible avec journal/Analytics |
@@ -66,7 +67,6 @@ requête/cleanup neutralisant les réponses obsolètes.
 | B05 | B | `loadClientDetailProfile` | vue `active_related_profiles`, owner client autorisé par relation coach | projection objectifs/préférences; `id`; `ms` | chargement détail; relation active vérifiée; erreur distincte | vue d'autorisation transverse, non remplaçable par `profiles` |
 | B06 | B | `POST /api/chat-ai` | `profiles`, owner authentifié | profil + quatre objectifs; `id`; `single` | une lecture par requête IA; profil absent toléré par prompt legacy | contexte IA serveur, cycle différent de l'UI |
 | B07 | B | repositories Nutrition sans appel actif | `meal_plans`, `client_meal_plans`, `meal_tracking`, `saved_meals`, `meal_logs` | listes/find owner-scoped bornés et triés | aucune exécution tant qu'aucun consommateur ne les appelle | capacités réutilisables, pas des migrations à forcer |
-| C03 | C | desktop `DesktopDashboard` journal du jour | `daily_food_logs`, owner session | `select('*')`; jour UTC exact; `created_at ASC`; coll. | montage desktop; aucun cleanup; erreur conserve/masque état | quatre sommes `|| 0`; projection large non canonique |
 | C04 | C | desktop `NutritionView`, graphe 7 jours | `daily_food_logs`, owner session | date/calories; `date >= J-6`; `date ASC`; coll. sans limite | effet dépend aussi des logs du jour; erreur devient sept zéros | `data || []`, `r.calories || 0`, jour absent = 0 |
 | C05 | C | `NutritionTab.getDailyLogsMacros` et objectifs | lignes A03 + profil dashboard | aucune requête propre; macros lues du journal; objectifs profil | chaque rendu; journal distingue l'erreur mais rendu additionne null à 0 | macros `|| 0`; objectifs absents deviennent 2000/140/200/60 |
 | C06 | C | `NutritionTab`, sous-onglet « Mes repas » | `saved_meals`, owner | `select('*')`; `created_at DESC`; coll. sans limite | à l'ouverture du sous-onglet; aucun compteur/cleanup | erreur Supabase transformée en liste vide, doublon sémantique de A05 |
@@ -98,7 +98,7 @@ Les accès directs suivants ne doivent pas être raccordés à
 - objectifs de `profiles` et de `active_related_profiles`;
 - consommation spécialisée du diagnostic hebdomadaire.
 
-« Justifiée » ne signifie pas « sans dette ». Les sept lignes C restantes
+« Justifiée » ne signifie pas « sans dette ». Les six lignes C restantes
 restent directes ou
 legacy pour une raison fonctionnelle identifiable, mais doivent recevoir une
 sémantique explicite avant clôture.
@@ -122,7 +122,8 @@ même lorsqu'ils divergent des types générés. Aucune nouvelle projection n'a
 
 Sur les données déployées observées, les comptages globaux
 `daily_food_logs.protein IS NULL`, `carbs IS NULL` et `fat IS NULL` valent
-tous zéro. Les types générés conservent néanmoins ces trois colonnes
+zéro. L'OpenAPI déployée décrit les colonnes du journal du jour comme non
+nullables, tandis que les types générés conservent ces trois macros
 nullables; `profiles.calorie_goal/protein_goal/carbs_goal/fat_goal` et les
 totaux de `saved_meals` sont eux aussi nullables.
 
@@ -130,7 +131,7 @@ totaux de `saved_meals` sont eux aussi nullables.
 
 | Conversion | Emplacements | Conséquence |
 |---|---|---|
-| `x || 0` sur macros nullables | C03, C05 | inconnue assimilée à consommation nulle |
+| `x || 0` sur macros nullables | C05 | inconnue assimilée à consommation nulle |
 | `data || []` / `data ?? []` sans tester `error` | C04, C06, C10 | panne assimilée à absence ou série nulle |
 | objectif nullable `|| 0` | C07, C08 | cible inconnue assimilée à cible nulle |
 | objectifs UI codés en fallback | C05 | absence de profil affichée comme objectifs plausibles |
@@ -139,7 +140,7 @@ totaux de `saved_meals` sont eux aussi nullables.
 Les chaînes numériques ne sont pas produites par PostgREST pour les colonnes
 numériques vérifiées. Elles peuvent encore exister dans les JSON de plans et
 de repas sauvegardés, déjà traités par leurs readers/snapshots. `NaN`,
-`Infinity` et les négatifs ne sont pas validés dans C03–C05/C07; le backend
+`Infinity` et les négatifs ne sont pas validés dans C04/C05/C07; le backend
 JSON ne sérialise pas `NaN`/`Infinity`, mais les valeurs négatives restent un
 cas de contrat non protégé.
 
@@ -159,13 +160,11 @@ ces contrats restent couverts par leurs tests métier existants.
 
 ## Ordre de traitement restant
 
-1. C03 dashboard desktop : distinguer les inconnues des zéros dans le journal
-   du jour sans toucher à C04.
-2. C04 dashboard desktop : retirer les doubles lectures ou aligner leur
+1. C04 dashboard desktop : retirer les doubles lectures ou aligner leur
    sémantique sans changer le nombre global de requêtes sans justification.
-3. C05/C06 NutritionTab : distinguer macros/repas absents des pannes et retirer
+2. C05/C06 NutritionTab : distinguer macros/repas absents des pannes et retirer
    les objectifs plausibles inventés.
-4. C07 badges, C08 diagnostic objectifs et C10 coach analytics : rendre les
+3. C07 badges, C08 diagnostic objectifs et C10 coach analytics : rendre les
    pannes/inconnues non récompensables et non interprétables comme zéro.
 
 Chaque étape nécessite sa propre caractérisation avant modification. Aucune
@@ -222,3 +221,26 @@ filtres, limites, `Promise.all`, `homeRefreshKey`, compteur et cleanup sont
 inchangés. Si les deux collections réussissent, la frontière délègue les
 données telles quelles à `readHomeNutritionSummary`; son calcul n'a pas été
 modifié. Le mini-graphe C01, `EnergyCard` et `NutritionCard` restent hors diff.
+
+## C03 — clôturé le 25 juillet 2026
+
+C03 utilise désormais `aggregateDesktopNutritionDay` selon le contrat
+[`NUTRITION_DESKTOP_DAY_JOURNAL.md`](NUTRITION_DESKTOP_DAY_JOURNAL.md). Un
+nombre fini non négatif, y compris zéro, est connu; une chaîne numérique non
+vide est convertie. `null`, `undefined`, champ absent et chaîne vide restent
+inconnus. Texte non numérique, `NaN`, infini, négatif ou type incompatible
+sont invalides. Une macro inconnue ou invalide ne contamine pas les autres
+métriques valides de la même journée.
+
+La lecture reste unique et owner-scoped, sur le jour UTC exact, ordonnée par
+`created_at ASC`, sans limite. `select('*')` est remplacé par la projection
+déployée minimale
+`id,user_id,date,meal_type,custom_name,quantity_g,calories,protein,carbs,fat,created_at`.
+Une collection vide confirmée conserve le journal vide historique et ses
+totaux connus à zéro. Une panne conserve la dernière valeur confirmée; sans
+valeur précédente, le journal affiche un état indisponible. Le compteur et le
+cleanup neutralisent les réponses obsolètes.
+
+Le graphe sept jours C04 garde sa requête, sa projection, son cycle de
+fraîcheur et son comportement legacy. Les écritures, les surfaces Home et les
+résultats rendus pour toute donnée valide restent inchangés.
