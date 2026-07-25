@@ -12006,3 +12006,97 @@ reste à 0/38 et Phase 9 inactive.
 
 **Prochaine action :** traiter uniquement C10, l'adhérence repas Nutrition de
 `useCoachAnalytics`, sans rouvrir C01 à C09 ni les surfaces Home figées.
+
+## Entrée — 2026-07-25 — C10 adhérence repas Analytics coach sécurisée
+
+**Contexte Git :** branche `main`, commit de départ et de fin `d5f005f`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `useCoachAnalytics` itérait sur
+`mealsRes.data || []`, ne contrôlait ni l'erreur Supabase ni le rejet réseau,
+puis calculait chaque client avec
+`Math.round(((mealsByClient.get(clientId) || 0) / 28) * 100)`. Une panne,
+`data = null`, une collection réellement vide et un client sans ligne
+devenaient donc tous `0%`. Le hook ne possédait ni compteur de requête, ni
+cleanup, ni séparation de scope lors d'un changement de coach.
+
+**Flux avant/après :** avant :
+`CoachAnalytics → useCoachAnalytics → relations actives → profils liés →
+trois lectures parallèles → meal_tracking.data || [] → Map de complétions →
+/28 → rendu %`. Après : même flux et mêmes requêtes, avec
+`settleCoachMealTrackingRead → aggregateCoachMealAdherence` puis un statut
+owner-scoped `known/no_tracking/invalid/unavailable/stale`. Le composant rend
+`—` uniquement quand le pourcentage n'est pas calculable.
+
+**Formule préservée :** le numérateur reste le nombre de lignes
+`is_completed === true`; le dénominateur reste 28 (`7 × 4`) et l'arrondi reste
+`Math.round`. Une ligne valide `false` rend le calcul connu et affiche un vrai
+`0%`. Une collection vide ou un client sans ligne est `no_tracking` et affiche
+`—`. Les doublons valides continuent à compter séparément, car la projection
+historique ne contient aucun identifiant de déduplication. Un dénominateur
+inférieur ou égal à zéro est explicitement non calculable, même si le runtime
+utilise toujours 28.
+
+**Transport et cycle :** erreur Supabase, rejet réseau et `data = null` sans
+erreur sont `failure`, jamais `[]`. Au premier chargement, l'adhérence est
+indisponible; après une valeur confirmée du même coach, la dernière valeur
+reste visible avec statut `stale`. Le compteur de requête et le cleanup
+ignorent les réponses obsolètes. Un changement de coach annule les lectures,
+vide clients/KPI et supprime la confirmation de l'ancien scope avant le
+nouveau chargement. Les métriques séances, poids, streak et statut continuent
+d'être recalculées si seule la lecture repas échoue.
+
+**Scope, période et requêtes :** le chemin complet reste cinq lectures :
+relations actives, profils de `active_related_profiles`, puis
+`completed_sessions`, `weight_logs` et `meal_tracking` en parallèle. C10 reste
+une seule requête groupée pour au plus 100 profils liés :
+`select('user_id, date, is_completed').in('user_id', clientIds)
+.gte('date', fetch7d)`, sans tri, limite ou borne haute. `fetch7d` conserve le
+calcul historique date locale moins sept jours puis `toISOString`. Les trois
+appels `.from`, l'unique accès `meal_tracking` et l'absence de mutation sont
+identiques avant/après.
+
+**Schéma runtime :** la projection distante étendue
+`meal_tracking(user_id,date,meal_type,is_completed)` répond HTTP 200.
+L'OpenAPI déployée confirme UUID/date/texte/booléen, `date` et `meal_type`
+requis, `is_completed` booléen par défaut `false`, aucune colonne `client_id`
+et aucune colonne `completed`. Les types générés sont en retard et exposent
+encore `completed: boolean | null`; aucune nouvelle projection n'est
+introduite. Le scope est dérivé des relations actives et la RLS coach/client,
+pas d'une relation PostgREST embarquée.
+
+**Choix de frontière :** le repository journal, le détail client,
+`useNutritionPlans`, Home et Progression diffèrent par owner, fenêtre,
+projection, limite, granularité ou cycle de fraîcheur. C10 reçoit donc un read
+model pur minimal dans `lib/coaching/dashboard`, sans requête ni repository
+artificiel.
+
+**Périmètre :** cartes, autres métriques coach, filtres, tris, callbacks,
+résultats valides, détail client coach et C01 à C09 sont inchangés. Aucun
+insert, update, upsert, delete, RPC, payload, mutation `meal_tracking`,
+invitation ou attribution coach n'a changé.
+
+**Tests et validations :** caractérisation legacy pré-correction 1 fichier/4
+tests verts; les attentes de correction étaient rouges avec module absent et
+3 gardes statiques sur 5 en échec. Après correction : C10, relations et
+inventaire 6 fichiers/32 tests; non-régression C01 à C09 et détail client
+38/314; gardes statiques 94/357. Agrégations autoritaires :
+`status=ok, auditedConsumers=706, intentionalLegacy=2`; constructions
+Supabase : `status=ok, canonical=4, legacy=53, total=57`; parité i18n :
+2 192 clés × 3 langues. Suite complète : 292 fichiers, 2 383 tests réussis
+et 3 `todo`. TypeScript est vert; les 745 liens locaux sont valides et
+`git diff --check` est vert.
+
+**Dette ESLint :** tous les nouveaux fichiers C10 et le hook modifié sont à
+0 erreur/0 avertissement. La dette combinée des fichiers TypeScript modifiés
+reste identique avant/après à 0 erreur/1 avertissement : l'import historique
+`BG_BASE` inutilisé dans `CoachAnalytics.tsx`.
+
+**État roadmap :** C10 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 22 et C à 0, avec B=7, D=6 et E=5. Le domaine Nutrition read-only
+est clôturable. Phase 4 reste `partial` à cause des deux divergences
+historiques de concordance, RC1 reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** caractériser uniquement la décision Phase 4 applicable
+aux preuves historiques `600 → 500 kcal` et `0 → 18 g`, sans rouvrir C01 à
+C10, sans backfill implicite et sans cocher RC1.

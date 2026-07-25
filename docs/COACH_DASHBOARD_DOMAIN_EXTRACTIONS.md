@@ -19,6 +19,9 @@ crée de client Supabase ou n'utilise `service_role`. Le calcul historique « à
 risque » reste dans le hook car il effectue encore une lecture séquentielle de
 `workout_sessions` par client; il constitue une dette de la prochaine réduction
 de façade. `useCoachAnalytics` conserve également ses trois lectures dédiées.
+Sa lecture Nutrition groupée passe désormais par le
+[read model d'adhérence repas](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md),
+sans changer les deux autres métriques ni le nombre de requêtes.
 
 Mesures : `useCoachDashboard` passe de 731 à 683 lignes. La lecture des sessions
 complétées quitte le hook. La projection legacy `payments.paid_at` reste à sa

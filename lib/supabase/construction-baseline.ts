@@ -40,7 +40,7 @@ export const LEGACY_SUPABASE_CONSTRUCTIONS = [
   'app/client/[id]/hooks/useClientDetailController.ts:13:18:createBrowserClient',
   'app/coach/components/CoachProfile.tsx:12:18:createBrowserClient',
   'app/coach/components/CoachPrograms.tsx:20:18:createBrowserClient',
-  'app/coach/hooks/useCoachAnalytics.ts:8:18:createBrowserClient',
+  'app/coach/hooks/useCoachAnalytics.ts:16:18:createBrowserClient',
   'app/coach/hooks/useCoachDashboardController.ts:13:18:createBrowserClient',
   'app/components/AnalyticsSection.tsx:95:16:createBrowserClient',
   'app/components/Paywall.tsx:24:18:createBrowserClient',

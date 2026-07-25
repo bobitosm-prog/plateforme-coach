@@ -222,7 +222,7 @@ export default function CoachAnalytics({ coachId }: Props) {
                     <Scale size={12} color={TEXT_DIM} />{formatWeightDelta(c.weightDelta7d)}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: FONT_BODY, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>
-                    <Utensils size={12} color={TEXT_DIM} />{c.mealAdherence7d}%
+                    <Utensils size={12} color={TEXT_DIM} />{c.mealAdherence7d === null ? '—' : `${c.mealAdherence7d}%`}
                   </span>
                 </div>
               </div>

@@ -8,23 +8,24 @@
 
 ## Verdict
 
-Le domaine Nutrition read-only **n'est pas encore clôturable**.
+Le domaine Nutrition read-only est **clôturable**.
 
 Les lectures de plans sont clôturables : elles passent par les readers
-spécialisés déjà validés, ou sont des écritures hors périmètre. En revanche,
-un consommateur read-only conserve une sémantique legacy qui peut
-transformer une panne, une inconnue ou une donnée nullable en zéro/absence.
+spécialisés déjà validés, ou sont des écritures hors périmètre. Les dix
+consommateurs initialement classés C distinguent désormais panne, inconnue,
+donnée invalide et état vide selon leur contrat propre.
 Le backend observé ne contient actuellement aucune macro nulle dans
 `daily_food_logs`; il n'y avait donc pas de régression de données visible lors
 de l'audit initial. Les types générés autorisent néanmoins
-`protein/carbs/fat = null`, ce qui rend la dette exécutable et empêche une
-clôture honnête tant que les consommateurs restants ne la traitent pas.
+`protein/carbs/fat = null`, ce qui justifiait la dette exécutable désormais
+traitée. Les deux divergences historiques de concordance restent une dette
+distincte de Phase 4; elles ne constituent pas un consommateur C.
 
 ## Catégories
 
-- **A — raccordé à une frontière canonique : 21**
+- **A — raccordé à une frontière canonique : 22**
 - **B — volontairement non raccordable : 7**
-- **C — restant à migrer : 1**
+- **C — restant à migrer : 0**
 - **D — écriture/producteur hors périmètre : 6**
 - **E — faux positif, capacité inutilisée ou documentation/test : 5**
 - **Total : 40 lignes**
@@ -65,6 +66,7 @@ requête/cleanup neutralisant les réponses obsolètes.
 | A19 | A | `NutritionTab`, sous-onglet « Mes repas » | `saved_meals`, owner prop | `select('*')`; `created_at DESC`; coll. sans limite | à chaque entrée; compteur + cleanup; erreur conserve la liste du même owner | `settleSavedMealsLibraryRead`; vide/erreur/obsolète/owner distincts; C06 raccordé |
 | A20 | A | badges `macros_on_target` | `profiles` + `daily_food_logs`, owner évalué | cible `single`; logs date/calories `date DESC`; `limit 200`; 1 puis 1 coll. | profil/fin de séance; sans fenêtre ni timezone; compteur owner-scoped; panne/obsolète non récompensables | `getMacrosOnTargetBadgeReader → calculateMacrosOnTargetBadge`; C07 raccordé |
 | A21 | A | `generateWeeklyDiagnostic`, objectifs Nutrition | `profiles`, owner diagnostic | `select('*')`; `id`; `single`; même lecture profil partagée | génération serveur one-shot; erreur/rejet arrêtent avant IA/écritures | `resolveWeeklyDiagnosticNutritionGoals`; cible absente/invalide distincte de zéro; C08 raccordé |
+| A22 | A | `useCoachAnalytics`, adhérence repas | `meal_tracking`, owners `clientIds` issus des relations actives | user/date/état; `IN clients`; `date >= J-7`; coll. sans ordre/limite | refresh coach; compteur + cleanup; panne conserve la valeur du même coach | `settleCoachMealTrackingRead → aggregateCoachMealAdherence`; vide/sans suivi distinct de 0 %; C10 raccordé |
 | B01 | B | `useNutritionPlans`, repas terminés | `meal_tracking`, owner + jour | `meal_type`; jour exact; complété; `limit 50`; coll. | même cycle A04, courant; erreur explicite | état de conformité, pas contenu de plan |
 | B02 | B | `checkAndUnlockBadges`, compte repas/scan | `daily_food_logs`, owner | `count exact head`; tout historique; scan ajoute `food_id not null` | à l'évaluation badge; panne devient 0 legacy | compteur gamification, aucune conversion macro |
 | B03 | B | `checkAndUnlockBadges`, streak Nutrition | `daily_food_logs`, owner | `date`; `date DESC`; `limit 100`; coll. | à l'évaluation; date SQL; absence = 0 | série de dates, incompatible avec journal/Analytics |
@@ -72,7 +74,6 @@ requête/cleanup neutralisant les réponses obsolètes.
 | B05 | B | `loadClientDetailProfile` | vue `active_related_profiles`, owner client autorisé par relation coach | projection objectifs/préférences; `id`; `ms` | chargement détail; relation active vérifiée; erreur distincte | vue d'autorisation transverse, non remplaçable par `profiles` |
 | B06 | B | `POST /api/chat-ai` | `profiles`, owner authentifié | profil + quatre objectifs; `id`; `single` | une lecture par requête IA; profil absent toléré par prompt legacy | contexte IA serveur, cycle différent de l'UI |
 | B07 | B | repositories Nutrition sans appel actif | `meal_plans`, `client_meal_plans`, `meal_tracking`, `saved_meals`, `meal_logs` | listes/find owner-scoped bornés et triés | aucune exécution tant qu'aucun consommateur ne les appelle | capacités réutilisables, pas des migrations à forcer |
-| C10 | C | `useCoachAnalytics`, adhérence repas | `meal_tracking`, owners `clientIds` issus des relations | user/date/état; `IN clients`; `date >= J-7`; coll. sans limite | refresh coach; aucun compteur; erreur ignorée | panne devient 0 repas et 0 % d'adhérence pour tous |
 | D01 | D | génération initiale, préférences, détail diagnostic, IA coach | `meal_plans` | `update is_active` puis `insert` legacy | déclenchements explicites | producteurs/écritures figés |
 | D02 | D | détail client, onboarding photo, AbsCalculator | `client_meal_plans` | insert/update/upsert; parfois `.select('id')` après mutation | actions coach/onboarding | écriture; le `select` de retour n'est pas une lecture autonome |
 | D03 | D | journal, photo, import, copie, FoodSearch, scanner | `daily_food_logs` | insert/update/delete multiples | mutations utilisateur | payloads hors périmètre |
@@ -98,9 +99,9 @@ Les accès directs suivants ne doivent pas être raccordés à
 - objectifs de `profiles` et de `active_related_profiles`;
 - consommation spécialisée du diagnostic hebdomadaire.
 
-« Justifiée » ne signifie pas « sans dette ». La ligne C restante reste
-directe ou legacy pour une raison fonctionnelle identifiable, mais doit recevoir une
-sémantique explicite avant clôture.
+« Justifiée » ne signifie pas « sémantique partagée ». Les lectures directes
+restantes possèdent un owner, une fenêtre ou un contrat distinct documenté;
+aucune ligne C ne reste à migrer.
 
 ## Schéma runtime vérifié
 
@@ -128,9 +129,9 @@ totaux de `saved_meals` sont eux aussi nullables.
 
 ## Conversions restantes
 
-| Conversion | Emplacements | Conséquence |
-|---|---|---|
-| `data || []` / `data ?? []` sans tester `error` | C10 | panne assimilée à absence ou série nulle |
+Aucune conversion silencieuse identifiée dans les lignes C ne reste. Les
+fallbacks des lignes B portent des compteurs gamification fail-closed ou des
+capacités non exécutées et restent justifiés par leur propre contrat.
 
 Les chaînes numériques ne sont pas produites par PostgREST pour les colonnes
 numériques vérifiées. Elles peuvent encore exister dans les JSON de plans et
@@ -154,11 +155,24 @@ ces contrats restent couverts par leurs tests métier existants.
 
 ## Ordre de traitement restant
 
-1. C10 coach analytics : rendre les pannes/inconnues non interprétables comme
-   zéro repas ou 0 % d'adhérence.
+Aucune migration read-only Nutrition ne reste. La prochaine dette Phase 4 est
+la décision documentée sur les deux divergences historiques de concordance;
+elle ne doit pas rouvrir les consommateurs A ni introduire de backfill implicite.
 
-Chaque étape nécessite sa propre caractérisation avant modification. Aucune
-écriture Nutrition ne doit être incluse.
+## C10 — clôturé le 25 juillet 2026
+
+C10 utilise désormais
+[`settleCoachMealTrackingRead` et `aggregateCoachMealAdherence`](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md).
+La requête groupée, les owners dérivés des relations actives, la projection
+runtime, la borne basse inclusive, l'absence de tri/limite et le dénominateur
+historique 28 sont inchangés.
+
+Une collection vide réussie et un client sans ligne sont `no_tracking` et
+affichent `—`; au moins une ligne valide `false` reste calculable et affiche
+un vrai `0%`. Une panne au premier chargement est indisponible, une panne
+ultérieure conserve la dernière valeur du même coach, et une réponse obsolète
+est ignorée. Les autres métriques coach restent exploitables. Aucune écriture
+Nutrition ou coach n'a changé.
 
 ## C08 — clôturé le 25 juillet 2026
 

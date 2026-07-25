@@ -86,7 +86,7 @@ donnée distante.
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [objectifs du diagnostic sécurisés](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md), [journal desktop du jour sécurisé](NUTRITION_DESKTOP_DAY_JOURNAL.md), [graphe desktop sept jours sécurisé](NUTRITION_DESKTOP_WEEK_GRAPH.md), [résumé `NutritionTab` sécurisé](NUTRITION_TAB_SUMMARY.md), [lecture « Mes repas » sécurisée](NUTRITION_SAVED_MEALS_LIBRARY.md), [badge `macros_on_target` sécurisé](NUTRITION_MACROS_ON_TARGET_BADGE.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01, C02, C03, C04, C05, C06, C07, C08 et C09 sont sécurisés, mais C10 transforme encore potentiellement une panne en zéro repas/adhérence. |
+| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [objectifs du diagnostic sécurisés](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md), [journal desktop du jour sécurisé](NUTRITION_DESKTOP_DAY_JOURNAL.md), [graphe desktop sept jours sécurisé](NUTRITION_DESKTOP_WEEK_GRAPH.md), [résumé `NutritionTab` sécurisé](NUTRITION_TAB_SUMMARY.md), [lecture « Mes repas » sécurisée](NUTRITION_SAVED_MEALS_LIBRARY.md), [badge `macros_on_target` sécurisé](NUTRITION_MACROS_ON_TARGET_BADGE.md), [adhérence Analytics coach sécurisée](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 à C10 sont sécurisés et le domaine read-only est clôturable; l'état reste `partial` uniquement parce que deux preuves historiques de concordance demeurent divergentes. |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
 | Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
@@ -156,15 +156,13 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Traiter uniquement la ligne C10, l'adhérence Nutrition de `useCoachAnalytics`,
-identifiée dans
-l'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md),
-sans rouvrir C01 à C09 ni les surfaces Home figées. C01 à C09 distinguent
-désormais les inconnues ou pannes de leurs états vides réels. Le
-[diagnostic hebdomadaire](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)
-conclut qu'aucune migration vers `NutritionPlanEnvelopeV1` n'est applicable et
-distingue désormais zéro, inconnue et invalide dans son agrégation et ses
-[objectifs Nutrition](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md).
+Caractériser uniquement la décision Phase 4 applicable aux deux preuves
+historiques divergentes `600 → 500 kcal` et `0 → 18 g`, sans rouvrir C01 à C10,
+sans backfill implicite et sans cocher RC1.
+L'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md)
+est désormais clôturable et
+l'[adhérence Analytics coach](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md)
+distingue panne, absence de suivi, invalide et vrai 0 %.
 Le [contrôle de génération initiale](NUTRITION_INITIAL_GENERATION_READ.md) et les raccordements
 [dashboard coach](NUTRITION_PLAN_DOUBLE_READ_CONSUMER.md) et
 [plan personnel actif](NUTRITION_PERSONAL_PLAN_DOUBLE_READ.md), la
