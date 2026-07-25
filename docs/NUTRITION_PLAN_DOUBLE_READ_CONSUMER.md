@@ -113,4 +113,6 @@ Restent non migrés :
   coach ;
 - toutes les écritures et désactivations.
 
-La Phase 4 reste `partial`; les deux divergences historiques restent visibles.
+Les deux divergences historiques restent visibles, mais la
+[décision métier](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) les accepte comme
+exceptions sans backfill; la Phase 4 est désormais techniquement `met`.

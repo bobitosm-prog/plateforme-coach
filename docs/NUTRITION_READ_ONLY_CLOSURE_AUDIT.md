@@ -18,8 +18,9 @@ Le backend observé ne contient actuellement aucune macro nulle dans
 `daily_food_logs`; il n'y avait donc pas de régression de données visible lors
 de l'audit initial. Les types générés autorisent néanmoins
 `protein/carbs/fat = null`, ce qui justifiait la dette exécutable désormais
-traitée. Les deux divergences historiques de concordance restent une dette
-distincte de Phase 4; elles ne constituent pas un consommateur C.
+traitée. Les deux divergences historiques de concordance sont des exceptions
+métier acceptées, distinctes de cet audit; elles ne constituent pas un
+consommateur C et ne bloquent plus la Phase 4.
 
 ## Catégories
 
@@ -155,9 +156,10 @@ ces contrats restent couverts par leurs tests métier existants.
 
 ## Ordre de traitement restant
 
-Aucune migration read-only Nutrition ne reste. La prochaine dette Phase 4 est
-la décision documentée sur les deux divergences historiques de concordance;
-elle ne doit pas rouvrir les consommateurs A ni introduire de backfill implicite.
+Aucune migration read-only Nutrition ne reste. Les deux divergences
+historiques sont acceptées sans backfill. Le chantier futur d'autorité
+versionnée des totaux de plan reste distinct et ne doit pas rouvrir les
+consommateurs A.
 
 ## C10 — clôturé le 25 juillet 2026
 

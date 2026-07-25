@@ -118,5 +118,6 @@ restent inchangés. Les appels `generate-meal-plan`, la consommation SSE,
 `meal_plans.update`, `meal_plans.insert`, la génération Training et
 `updateProfile` n'ont pas été déplacés ou modifiés.
 
-La Phase 4 reste `partial` à cause des deux divergences historiques de totaux.
-RC1 reste à 0/38 et la Phase 9 inactive.
+La [décision métier ultérieure](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md)
+accepte les deux divergences historiques sans backfill et clôt techniquement
+la Phase 4. RC1 reste à 0/38 et la Phase 9 inactive.

@@ -12166,3 +12166,42 @@ les deux divergences comme exceptions documentées au critère Phase 4 et
 désigner séparément l'autorité future des totaux de plan. Aucune nouvelle
 décision de valeur n'est requise pour 0/18 : l'historique est irrécupérable et
 le chemin futur est déjà sécurisé.
+
+## Entrée — 2026-07-25 — Décision métier Phase 4 enregistrée
+
+**Contexte Git :** branche `main`, commit de départ et de fin `0e722db`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Décision 600/500 :** la paire est une exception historique acceptée. Aucun
+backfill ni aucune réécriture n'est autorisé. Le futur contrat de plan devra,
+dans un chantier distinct, versionner et séparer l'objectif calorique demandé
+du total recalculé depuis les aliments; ces deux autorités ne devront plus
+partager un champ ambigu sans provenance.
+
+**Décision 0/18 :** la paire est une perte historique non récupérable. Aucun
+backfill n'est autorisé sans source externe fiable. Les alias et le snapshot
+v1 sont l'autorité prospective : un vrai zéro reste zéro, un conflit d'alias
+est refusé et une valeur perdue n'est jamais reconstruite.
+
+**Conséquence roadmap :** les fixtures conservent leurs valeurs et leur statut
+`divergent`, mais deviennent deux exceptions métier explicites au critère de
+concordance. Phase 4 passe de `partial` à `met`, avec 4/4 critères satisfaits.
+L'audit RC1 compte désormais 34 critères `met`, 1 `unmet` et 1 `blocked`.
+RC1 reste à 0/38, désormais bloquée par les Phases 6 et 8; Phase 9 reste
+inactive. Le domaine Nutrition read-only reste A=22, B=7, C=0, D=6 et E=5.
+
+**Périmètre :** seules la roadmap, le journal et les documentations Nutrition/
+RC1 concernées sont alignés. Aucun runtime, test attendu, fixture, schéma,
+donnée, migration, rendu, requête, insert, update, upsert, delete, RPC,
+payload ou producteur IA n'est modifié.
+
+**Validations :** les caractérisations existantes de concordance, producteurs,
+snapshots, persistance, réutilisation, sélection et rendu passent avec
+10 fichiers et 95 tests réussis. Tous les liens locaux des documents modifiés
+sont valides et `git diff --check` est vert. Aucun contrôle TypeScript ou
+ESLint n'est requis, aucun fichier TypeScript ou JavaScript n'ayant changé.
+
+**Prochaine action :** traiter le premier blocage RC1 applicable, la preuve de
+réconciliation sans divergence en préproduction de Phase 6. La conception de
+l'autorité versionnée des futurs totaux de plan reste un chantier Nutrition
+distinct, sans rouvrir la Phase 4.

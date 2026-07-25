@@ -81,6 +81,7 @@ Restent à migrer :
 - les autres consommateurs inventoriés qui lisent encore un document brut ;
 - tous les producteurs, activations et écritures.
 
-La Phase 4 reste `partial`. Ce raccordement améliore la cohérence des lectures,
-mais ne résout ni les producteurs legacy ni les deux divergences historiques
-de totaux.
+Ce raccordement améliore la cohérence des lectures sans résoudre les
+producteurs legacy. La [décision métier ultérieure](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md)
+accepte les deux divergences historiques sans backfill et clôt techniquement
+la Phase 4; l'autorité future des totaux reste un chantier distinct.

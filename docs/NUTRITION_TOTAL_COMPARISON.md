@@ -109,8 +109,10 @@ la fibre absente des deux cas partiels d'apparaître comme un zéro comparable.
 Depuis le 24 juillet 2026, les trois producteurs sûrs de `saved_meals`
 utilisent le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md). Cela empêche une
 nouvelle perte silencieuse d'alias dans ces écritures, sans modifier les douze
-preuves. Les deux divergences historiques restent donc `divergent` et le
-critère global de concordance reste non satisfait.
+preuves. Les deux divergences historiques restent donc `divergent`. La
+[décision métier Phase 4](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) les
+accepte comme exceptions historiques sans backfill : elles ne bloquent plus
+la clôture technique, sans être requalifiées.
 
 La réutilisation de ces snapshots vers `daily_food_logs` valide désormais les
 alias avant de produire le lot complet. Elle conserve une macro inconnue à
@@ -173,8 +175,9 @@ Les tests de concordance figent :
   restent indisponibles.
 - Les arrondis déjà persistés sont irréversibles sans source plus précise.
 - Les consommateurs continuent d'utiliser leurs calculateurs actuels.
-- Deux cas pleinement comparables restent divergents ; la définition de
-  terminé Phase 4 demeure donc non satisfaite.
+- Deux cas pleinement comparables restent divergents, mais constituent des
+  exceptions historiques explicitement acceptées. La Phase 4 est
+  techniquement clôturée sans modifier ces preuves.
 
 La correction minimale suivante consiste à versionner la provenance des
 totaux déclarés et à préserver les alias au moment de produire le snapshot

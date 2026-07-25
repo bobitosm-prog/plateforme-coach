@@ -14,17 +14,22 @@ ni deux valeurs à migrer ensemble.
   comparaison. Lorsque `proteins: 18` n'est plus présent, aucune lecture ne
   peut reconstruire cette valeur depuis `protein: 0`.
 
-**Recommandation immédiate : option E pour les deux preuves historiques.**
+**Décision métier MoovX : option E pour les deux preuves historiques.**
 Elles restent divergentes et documentées, sans changement de runtime ni
-backfill. Pour les futurs plans seulement, une décision produit séparée devra
-désigner et versionner la provenance du total avant toute option B.
+backfill. Pour les futurs plans seulement, un chantier séparé doit désigner
+et versionner la provenance du total avant toute option B :
+
+1. objectif calorique demandé ;
+2. total recalculé depuis les aliments.
+
+Ces valeurs ne doivent plus partager un champ ambigu sans provenance.
 La perte future d'alias des repas sauvegardés est déjà empêchée par le
 snapshot v1 ; cela ne répare pas les objets historiques.
 
-La Phase 4 reste donc `partial`. Son critère littéral « anciennes/nouvelles
-métriques concordantes » demeure `unmet` tant qu'une autorité métier n'accepte
-pas explicitement soit la divergence documentée comme critère de clôture, soit
-une règle versionnée pour les totaux de plan. Aucune case RC1 n'est cochée.
+La décision métier accepte ces deux divergences comme exceptions historiques
+au critère de concordance. Elles ne bloquent donc plus la clôture technique :
+la Phase 4 passe à `met`. Les fixtures et leurs statuts restent inchangés et
+aucune case RC1 n'est cochée.
 
 ## Origine et portée des preuves
 
@@ -137,10 +142,10 @@ comparaisons et consommateurs aval.
 | D — corriger seulement le rendu | masque une source sans corriger la provenance | élevé; surfaces et exports pourraient diverger | non | snapshots UI à changer; stockage inchangé | moyenne |
 | E — documentation uniquement | aucun changement visible | faible; divergence reste explicite | non | attentes actuelles inchangées | totale |
 
-**Recommandation : E maintenant.** Si une évolution produit est souhaitée,
-la prochaine décision doit porter uniquement sur B et définir, par producteur
-et niveau (`objectif`, `jour`, `plan`), l'autorité et sa version. C et D ne
-sont pas justifiées par les preuves actuelles.
+**Décision : E pour l'historique.** Le futur chantier distinct applique B et
+doit définir, par producteur et niveau (`objectif`, `jour`, `plan`), l'autorité,
+sa version et deux champs/provenances séparés. C et D sont explicitement
+refusées.
 
 ## Divergence 0 → 18 g
 
@@ -223,10 +228,11 @@ ligne déjà appauvrie, afficher 18 g serait une invention. Pour les nouvelles
 | D — corriger seulement le rendu | alias présent peut être lu; valeur absente reste impossible à recréer | élevé si 18 est forcé; incohérent avec les vrais zéros | non | UI changerait sans preuve | moyenne |
 | E — documentation uniquement | aucun changement visible | faible; irréversibilité explicitée | non | attentes actuelles inchangées | totale |
 
-**Recommandation : E pour la preuve historique et maintien de B déjà réalisé
-pour les futurs snapshots.** Aucun backfill n'est possible sans source
-autoritaire externe associée à chaque aliment. D ne peut réparer une donnée
-absente et ne doit jamais coder 18 en dur.
+**Décision : E pour la preuve historique et B déjà réalisé comme autorité
+prospective par les alias et le snapshot v1.** Aucun backfill n'est autorisé
+sans source externe fiable associée à chaque aliment. Un vrai zéro reste zéro,
+un conflit d'alias reste refusé et une donnée perdue n'est jamais reconstruite.
+D ne peut réparer une donnée absente et ne doit jamais coder 18 en dur.
 
 ## Décision commune et clôture
 
@@ -241,10 +247,10 @@ Les divergences ne doivent pas être regroupées dans une migration :
 | backfill honnête | non démontré | impossible sans source externe |
 
 Le domaine Nutrition read-only reste clôturable (A=22, B=7, C=0, D=6,
-E=5). La Phase 4, elle, ne peut pas être déclarée terminée par une simple
-modification documentaire : le critère de concordance demeure littéralement
-faux sur deux preuves protégées. La prochaine étape unique est d'obtenir une
-décision métier explicite sur l'autorité des totaux de plan et sur
-l'acceptation des divergences historiques comme exception documentée au
-critère Phase 4. La preuve 0/18 ne requiert aucune décision de valeur ni
-action runtime supplémentaire.
+E=5). La décision métier accepte explicitement les deux preuves protégées
+comme exceptions historiques : la Phase 4 est techniquement `met`, sans
+requalifier les fixtures ni réécrire de donnée.
+
+Le chantier suivant est distinct de la Phase 4 clôturée : concevoir l'autorité
+versionnée des futurs totaux de plan avec un objectif demandé et un total
+recalculé séparés. La preuve 0/18 ne requiert aucune action supplémentaire.

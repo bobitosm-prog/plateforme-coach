@@ -145,7 +145,9 @@ concurrence.
 - Les plans, recettes, journaux, imports et sorties IA restent non versionnés.
 - Les copies de journal et imports de plans, distincts de la réutilisation
   `saved_meals`, conservent encore leurs adaptateurs legacy.
-- La Phase 4 reste `partial`.
+- La [décision métier ultérieure](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md)
+  accepte les deux divergences historiques sans backfill; la Phase 4 est
+  désormais techniquement `met`.
 
 La prochaine tranche minimale est de caractériser les producteurs de totaux
 déclarés des plans `meal_plans` et `client_meal_plans` avant de décider leur

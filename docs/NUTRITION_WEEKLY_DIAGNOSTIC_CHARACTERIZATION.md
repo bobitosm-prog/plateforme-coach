@@ -178,4 +178,6 @@ La garde statique des producteurs Nutrition vérifie que
 accès `meal_plans` du détail restent des mutations historiques. Elle ne fige
 ni les projections des autres domaines, ni le calcul, ni le fournisseur IA.
 
-La Phase 4 reste `partial`, RC1 reste à 0/38 et la Phase 9 reste inactive.
+La [décision métier ultérieure](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md)
+clôt techniquement la Phase 4 sans modifier ce flux. RC1 reste à 0/38 et la
+Phase 9 reste inactive.

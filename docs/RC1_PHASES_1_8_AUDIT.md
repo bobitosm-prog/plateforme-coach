@@ -8,7 +8,7 @@
 
 Les checklists des Phases 1 à 8 totalisent **124/124 tâches cochées**. Ce
 compteur ne prouve pas leurs définitions de terminé. Sur 36 critères de sortie,
-l'audit classe **33 `met`, 0 `partial`, 2 `unmet`, 1 `blocked` et
+l'audit classe **34 `met`, 0 `partial`, 1 `unmet`, 1 `blocked` et
 0 `not_applicable`**.
 
 | Phase | Checklist | Critères (`met/partial/unmet/blocked/n/a`) | Statut |
@@ -16,15 +16,16 @@ l'audit classe **33 `met`, 0 `partial`, 2 `unmet`, 1 `blocked` et
 | 1 — Stabilisation et sécurité | 15/15 | 4/0/0/0/0 | `met` |
 | 2 — Filet de sécurité | 18/18 | 5/0/0/0/0 | `met` |
 | 3 — Training | 27/27 | 6/0/0/0/0 | `met` |
-| 4 — Nutrition et progression | 16/16 | 3/0/1/0/0 | `partial` |
+| 4 — Nutrition et progression | 16/16 | 4/0/0/0/0 | `met` |
 | 5 — Coaching et messagerie | 12/12 | 4/0/0/0/0 | `met` |
 | 6 — Billing | 10/10 | 3/0/0/1/0 | `blocked` |
 | 7 — Plateforme IA | 13/13 | 4/0/0/0/0 | `met` |
 | 8 — React et performance | 13/13 | 4/0/1/0/0 | `partial` |
 
-La validation RC1 « Phases 1 à 8 terminées à 100 % » reste impossible. Le
-premier critère non satisfait est désormais en Phase 4 ; le blocage externe le
-plus net est la preuve de préproduction exigée en Phase 6.
+La validation RC1 « Phases 1 à 8 terminées à 100 % » reste impossible. La
+Phase 4 est désormais techniquement clôturée par décision métier. Le blocage
+externe le plus net est la preuve de préproduction exigée en Phase 6 et le
+critère encore non satisfait se situe en Phase 8.
 
 ## Méthode reproductible
 
@@ -82,14 +83,14 @@ Le modèle et les adaptateurs sont couverts par
 sont `met`; la stabilité vaut pour les fixtures versionnées, non pour toute
 donnée distante.
 
-## Phase 4 — `partial`
+## Phase 4 — `met`
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [décision des divergences historiques](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [objectifs du diagnostic sécurisés](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md), [journal desktop du jour sécurisé](NUTRITION_DESKTOP_DAY_JOURNAL.md), [graphe desktop sept jours sécurisé](NUTRITION_DESKTOP_WEEK_GRAPH.md), [résumé `NutritionTab` sécurisé](NUTRITION_TAB_SUMMARY.md), [lecture « Mes repas » sécurisée](NUTRITION_SAVED_MEALS_LIBRARY.md), [badge `macros_on_target` sécurisé](NUTRITION_MACROS_ON_TARGET_BADGE.md), [adhérence Analytics coach sécurisée](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 à C10 sont sécurisés et le domaine read-only est clôturable; l'état reste `partial` parce que les preuves historiques ne portent pas une autorité permettant de les rendre concordantes honnêtement. |
+| Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [décision métier des divergences historiques](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 à C10 sont sécurisés, le domaine read-only est clôturable et les deux exceptions sont bornées sans backfill. |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
-| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. La [matrice de décision](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) conclut à deux causes indépendantes : provenance non versionnée des totaux 600/500, alias déjà perdu pour 0/18. Elle recommande documentation seule pour l'historique, aucun backfill, et une décision produit séparée avant toute règle future de total. Le snapshot v1 sécurise prospectivement `saved_meals`; les deux preuves restent honnêtement divergentes. |
+| Anciennes/nouvelles métriques concordantes ou exception métier acceptée | `met` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. La [décision métier](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) accepte les deux statuts `divergent` comme exceptions historiques, interdit leur backfill et fait du snapshot v1 l'autorité prospective des alias. La future autorité séparée objectif/recalcul de plan est hors clôture Phase 4. |
 
 ## Phase 5 — `met`
 
@@ -148,20 +149,18 @@ une métrique terrain.
 
 - La roadmap Phases 1–9 contient 138 tâches, dont 124 cochées : **≈89,855 %**.
 - Les 38 cases RC1 et les 14 tâches Phase 9 restent décochées.
-- Le statut Phase 2 passe à `met` grâce à une garde fail-closed reproductible ;
-  les Phases 4, 6 et 8 restent non satisfaites.
+- Les Phases 2 et 4 sont `met`; la décision métier clôt techniquement les deux
+  exceptions Nutrition sans modifier leurs preuves.
 - Aucun item n'est compté deux fois dans les tableaux de phases.
-- RC1 reste bloquée par les preuves manquantes/contradictoires des Phases 4, 6
+- RC1 reste bloquée par les preuves manquantes/contradictoires des Phases 6
   et 8.
 
 ## Recommandation unique
 
-Faire valider par l'autorité métier l'acceptation des deux divergences
-historiques comme exceptions documentées au critère Phase 4 et, séparément,
-l'autorité future des totaux de plan (objectif, jour recalculé ou plan).
-La [matrice de décision](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) exclut tout
-backfill implicite et toute reconstruction de 18 g. Ne rouvrir ni C01 à C10,
-ni le runtime read-only, et ne cocher aucune case RC1 avant cette validation.
+Traiter le premier blocage RC1 encore applicable en Phase 6 : obtenir une
+preuve de réconciliation sans divergence en préproduction. La conception de
+l'autorité versionnée des futurs totaux de plan reste un chantier Nutrition
+distinct, sans rouvrir la Phase 4, C01 à C10 ou les preuves historiques.
 L'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md)
 est désormais clôturable et
 l'[adhérence Analytics coach](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md)

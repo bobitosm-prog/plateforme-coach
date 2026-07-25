@@ -101,4 +101,6 @@ le cycle de rafraîchissement et le rendu ne changent pas.
 
 Restent à raccorder les lectures du détail client coach et les autres
 consommateurs directs inventoriés. Tous les producteurs, activations et
-écritures restent legacy. La Phase 4 demeure `partial`.
+écritures restent legacy dans cette tranche. La
+[décision métier ultérieure](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) clôt
+techniquement la Phase 4 sans modifier ces écritures.

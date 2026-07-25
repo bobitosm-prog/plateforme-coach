@@ -147,6 +147,7 @@ complété les jours, et le plan manuel persiste les valeurs d'éditeur.
 | Déclarer les colonnes de total comme sommes | refusé | certaines sont des objectifs, une autre représente lundi |
 | Créer une enveloppe de plan | contrat accepté, implémentation différée | l'ADR 0007 définit `NutritionPlanEnvelopeV1`; aucun producteur ne l'écrit encore |
 | Réécrire les deux divergences historiques | interdit | elles restent des preuves réelles |
+| Autorité des futurs totaux | chantier distinct requis | la [décision métier Phase 4](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) impose de versionner et séparer l'objectif calorique demandé du total recalculé depuis les aliments |
 
 ## Prochaine étape
 

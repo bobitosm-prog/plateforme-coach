@@ -151,4 +151,5 @@ ne changent pas.
 Les lectures directes de profil, tracking, libellés favoris et catalogues IA
 restent séparées : leurs owners, dates, filtres, cycles de fraîcheur ou
 sémantiques d'erreur ne sont pas équivalents aux readers de plan. Aucun writer
-ne produit encore `NutritionPlanEnvelopeV1`; la Phase 4 demeure `partial`.
+ne produit encore `NutritionPlanEnvelopeV1`; ce futur versionnement reste un
+chantier distinct de la [Phase 4 techniquement clôturée](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md).
