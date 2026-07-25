@@ -2261,6 +2261,8 @@
     },
     "chrome": {
       "calorieGoal": "Goal {kcal} kcal/day",
+      "goalToDefine": "Goal to define",
+      "dataUnavailable": "Data unavailable",
       "hydration": "HYDRATION",
       "addWater250": "+250ML",
       "addWater500": "+500ML",

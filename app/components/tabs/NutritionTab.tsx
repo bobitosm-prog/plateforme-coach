@@ -40,6 +40,11 @@ import {
   fonts, colors, todayNutritionKey, subtitleStyle, bodyStyle,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
+import {
+  nutritionTabRemaining,
+  presentNutritionTabMetric,
+  readNutritionTabSummary,
+} from '../../../lib/nutrition/nutrition-tab-summary'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
 const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 const addDays = (date: string, days: number) => { const value = new Date(`${date}T00:00:00`); value.setDate(value.getDate() + days); return value.toISOString().split('T')[0] }
@@ -115,10 +120,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
   const journal = useNutritionJournal({ supabase, userId, selectedDate })
   const plans = useNutritionPlans({ supabase, userId, date: today })
-  const { dailyLogs, setDailyLogs, daysWithMeals, setDaysWithMeals, waterToday, reload: fetchDailyLogs } = journal
+  const { dailyLogs, setDailyLogs, daysWithMeals, setDaysWithMeals, waterToday, state: journalState, reload: fetchDailyLogs } = journal
   const { activePersonalPlan: activeMealPlan, loading: loadingPlan, reload: fetchActiveMealPlan } = plans
   const addWater = (ml: number) => journal.addWater(ml, today)
   const [subTab, setSubTab] = useState<SubTab>('today')
+  const nutritionSummary = readNutritionTabSummary({
+    rows: dailyLogs,
+    journalState,
+    ownerUserId: userId,
+    selectedDate,
+    profile,
+  })
+  const displayedLogs = nutritionSummary.consumption.value
+    ? dailyLogs.filter(log => log.user_id === userId && log.date === selectedDate)
+    : []
+  const displayedCalorieGoal = nutritionSummary.goals.values.kcal
 
   useEffect(() => {
     // Auto-scroll calendar to today
@@ -279,12 +295,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     fetchDailyLogs()
   }
 
-  function getDailyLogsMacros() {
-    const r = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const l of dailyLogs) { r.kcal += l.calories || 0; r.protein += l.protein || 0; r.carbs += l.carbs || 0; r.fat += l.fat || 0 }
-    return r
-  }
-
   function getMealRecommendation(mealType: MealKey) {
     const todayPlan = getTodayPlanData()
     if (!todayPlan) return null
@@ -352,7 +362,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           NUTRITION
         </div>
         <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
-          {nt('chrome.calorieGoal', { kcal: profile?.calorie_goal || 2000 })}
+          {displayedCalorieGoal === null
+            ? nt('chrome.goalToDefine')
+            : nt('chrome.calorieGoal', { kcal: displayedCalorieGoal })}
         </div>
       </div>
 
@@ -403,12 +415,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && (() => {
-        const consumed = getDailyLogsMacros()
-        const targetKcal = profile?.calorie_goal || 2000
-        const targetP = profile?.protein_goal || 140
-        const targetG = profile?.carbs_goal || 200
-        const targetL = profile?.fat_goal || 60
-        const remaining = Math.max(0, targetKcal - consumed.kcal)
+        const consumed = nutritionSummary.consumption.value?.values ?? {
+          kcal: null,
+          protein: null,
+          carbs: null,
+          fat: null,
+        }
+        const targets = nutritionSummary.goals.values
+        const remaining = nutritionTabRemaining(consumed.kcal, targets.kcal)
 
         const waterGoal = profile?.water_goal || 3000
         const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
@@ -416,9 +430,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         return (
           <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
             <NutritionCalendarSection calendarDays={calendarDays} selectedDate={selectedDate} today={today} daysWithMeals={daysWithMeals} locale={locale} scrollRef={calScrollRef} todayLabel={nt('chrome.today')} futureDateLabel={nt('chrome.futureDate')} onSelectDate={setSelectedDate} />
-            <NutritionSummarySection consumed={consumed} targets={{ kcal: targetKcal, protein: targetP, carbs: targetG, fat: targetL }} waterMl={waterToday} waterGoalMl={waterGoal} canAddWater={selectedDate === today} remainingLabel={nt('chrome.remaining', { count: remaining })} macroLabels={{ protein: nt('macrosLong.prot'), carbs: nt('macrosLong.gluc'), fat: nt('macrosLong.lip') }} water250Label={nt('chrome.addWater250')} water500Label={nt('chrome.addWater500')} onAddWater={addWater} />
+            <NutritionSummarySection consumed={consumed} targets={targets} waterMl={waterToday} waterGoalMl={waterGoal} canAddWater={selectedDate === today} remainingLabel={remaining === null ? nt('chrome.dataUnavailable') : nt('chrome.remaining', { count: remaining })} macroLabels={{ protein: nt('macrosLong.prot'), carbs: nt('macrosLong.gluc'), fat: nt('macrosLong.lip') }} water250Label={nt('chrome.addWater250')} water500Label={nt('chrome.addWater500')} onAddWater={addWater} />
 
-            <NutritionJournalMealsSection mealOrder={MEAL_ORDER} mealLabels={MEAL_LABELS} mealIcons={MEAL_ICONS} logs={dailyLogs as NutritionJournalLog[]} recommendations={Object.fromEntries(MEAL_ORDER.map(meal => [meal, getMealRecommendation(meal)]))} selectedPlanDay={nutritionDay} todayPlanDay={todayKey} isInvited={isInvited} openMenu={mealMenuOpen} editingFoodId={editingFoodId} editQuantity={editQty} labels={{ noFood: nt('chrome.noFoodAdded'), recommended: value => nt('chrome.recommended', { kcal: value.kcal, p: Math.round(value.protein), c: Math.round(value.carbs), f: Math.round(value.fat) }), consumed: value => `Consommé : ${value.kcal} kcal · P:${Math.round(value.protein)}g · G:${Math.round(value.carbs)}g · L:${Math.round(value.fat)}g`, save: nt('mealMenu.saveMeal'), copy: nt('mealMenu.copyToDay'), clear: nt('mealMenu.clearMeal'), replace: nt('mealMenu.replace'), remove: nt('mealMenu.delete'), import: nt('actions.import'), add: nt('chrome.add'), todayOnly: 'Disponible uniquement pour aujourd\'hui' }} onOpenMenu={setMealMenuOpen} onStartSave={(meal, logs) => { setMealMenuOpen(null); setSavedMealError(null); setSaveMealData({ mealType: meal, foods: logs.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) }); setSaveMealName(''); setSaveMealType(meal); setShowSaveMealPopup(true) }} onStartCopy={(meal, logs) => { setMealMenuOpen(null); setCopyMealData({ mealType: meal, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(meal); setShowCopyMealPopup(true) }} onClear={clearMeal} onStartEditQuantity={log => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} onEditQuantity={setEditQty} onSaveQuantity={updateFoodQuantity} onCancelQuantity={() => setEditingFoodId(null)} onReplace={log => { setSwappingFoodId(log.id); setShowFoodSearch(log.meal_type) }} onDelete={deleteDailyLog} onImport={setImportingMeal} onAdd={setShowFoodSearch} onPhoto={meal => { setPhotoMealTarget(meal); setShowPhotoCapture(true) }} onSavedMeals={openSavedMealSelection} />
+            <NutritionJournalMealsSection mealOrder={MEAL_ORDER} mealLabels={MEAL_LABELS} mealIcons={MEAL_ICONS} logs={displayedLogs as NutritionJournalLog[]} recommendations={Object.fromEntries(MEAL_ORDER.map(meal => [meal, getMealRecommendation(meal)]))} selectedPlanDay={nutritionDay} todayPlanDay={todayKey} isInvited={isInvited} openMenu={mealMenuOpen} editingFoodId={editingFoodId} editQuantity={editQty} labels={{ noFood: nt('chrome.noFoodAdded'), recommended: value => nt('chrome.recommended', { kcal: value.kcal, p: Math.round(value.protein), c: Math.round(value.carbs), f: Math.round(value.fat) }), consumed: value => `Consommé : ${presentNutritionTabMetric(value.kcal)} kcal · P:${presentNutritionTabMetric(value.protein, { rounded: true })}g · G:${presentNutritionTabMetric(value.carbs, { rounded: true })}g · L:${presentNutritionTabMetric(value.fat, { rounded: true })}g`, save: nt('mealMenu.saveMeal'), copy: nt('mealMenu.copyToDay'), clear: nt('mealMenu.clearMeal'), replace: nt('mealMenu.replace'), remove: nt('mealMenu.delete'), import: nt('actions.import'), add: nt('chrome.add'), todayOnly: 'Disponible uniquement pour aujourd\'hui' }} onOpenMenu={setMealMenuOpen} onStartSave={(meal, logs) => { setMealMenuOpen(null); setSavedMealError(null); setSaveMealData({ mealType: meal, foods: logs.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) }); setSaveMealName(''); setSaveMealType(meal); setShowSaveMealPopup(true) }} onStartCopy={(meal, logs) => { setMealMenuOpen(null); setCopyMealData({ mealType: meal, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(meal); setShowCopyMealPopup(true) }} onClear={clearMeal} onStartEditQuantity={log => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} onEditQuantity={setEditQty} onSaveQuantity={updateFoodQuantity} onCancelQuantity={() => setEditingFoodId(null)} onReplace={log => { setSwappingFoodId(log.id); setShowFoodSearch(log.meal_type) }} onDelete={deleteDailyLog} onImport={setImportingMeal} onAdd={setShowFoodSearch} onPhoto={meal => { setPhotoMealTarget(meal); setShowPhotoCapture(true) }} onSavedMeals={openSavedMealSelection} />
 
             {/* Import confirmation modal */}
             {importingMeal && (() => {

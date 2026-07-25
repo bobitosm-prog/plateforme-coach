@@ -11696,3 +11696,71 @@ inactive.
 
 **Prochaine action :** traiter uniquement C05, les macros et objectifs rendus
 par `NutritionTab`, sans rouvrir C03/C04 ni les surfaces Home figées.
+
+## Entrée — 2026-07-25 — C05 résumé calories/macros de NutritionTab sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `39dea5c`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `NutritionTab.getDailyLogsMacros` additionnait
+`calories/protein/carbs/fat` avec `value || 0`, puis le résumé et les lignes
+repas répétaient des fallbacks zéro. `null`, `undefined`, champ absent, chaîne
+vide et `NaN` devenaient ainsi une consommation nulle; une chaîne numérique
+pouvait concaténer; infini et négatif traversaient. Les objectifs utilisaient
+les fallbacks `2000/140/200/60`, qui remplaçaient absence, invalidité et zéro
+réel par des cibles plausibles.
+
+**Flux avant/après :** avant :
+`DashboardClientIsland → profile/useNutritionJournal → NutritionTab →
+getDailyLogsMacros/objectifs || fallback → sections résumé/journal`. Après :
+`DashboardClientIsland → mêmes profile/useNutritionJournal →
+readNutritionTabSummary → aggregateNutritionTabConsumption +
+resolveNutritionTabGoals → mêmes sections`. Les helpers desktop, Analytics,
+Home et diagnostic ne sont pas réutilisés car owner, fenêtre, granularité,
+cycle de fraîcheur ou contrat UI diffèrent.
+
+**Règles :** nombre fini non négatif et chaîne numérique non vide connus;
+zéro conservé; `null`, `undefined`, absent et chaîne vide inconnus; chaîne non
+numérique, `NaN`, infini, négatif ou autre type invalides. Chaque métrique est
+indépendante. Une collection vide confirmée produit quatre zéros connus. Une
+première panne reste indisponible; après une valeur confirmée, la panne
+conserve cette valeur. Une ancienne date/owner n'est pas rendue. Une cible
+absente/invalide affiche « Objectif à définir »/`—`; aucun pourcentage ou
+reste n'est inventé.
+
+**Requêtes et schéma :** C05 reste à 0 requête propre. Le journal conserve
+exactement ses 3 requêtes parallèles, owner, jour UTC, projections, ordre,
+limites, refresh, compteur et cleanup. Les objectifs conservent la lecture
+`profiles` du loader dashboard. Les projections déployées répondent HTTP 200.
+Une ligne réelle de profil expose une cible calorique numérique et trois
+cibles macro `null`; l'OpenAPI les annonce pourtant non nullables, tandis que
+les types générés locaux les déclarent nullables. Les macros du journal
+observées sont numériques; les types gardent les trois macros nullables.
+
+**Périmètre :** props publiques et callbacks de `NutritionTab`, rendu des
+données valides, C03, C04, Home, Analytics et diagnostic sont préservés.
+Aucun insert, update, upsert, delete, RPC, payload, mutation React ou
+producteur IA n'a changé.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/5 tests verts;
+les attentes corrigées étaient rouges avec module absent, fallback statique
+et rendu `NaN`. Après correction : C05 4 fichiers/36 tests; ciblés
+Nutrition/Home/Analytics/diagnostic 68 fichiers/528 tests; agrégations
+autoritaires `status=ok, auditedConsumers=701, intentionalLegacy=2`;
+constructions Supabase
+`status=ok, canonical=4, legacy=53, total=57`; parité i18n 2 190 clés × 3
+langues; suite complète 278 fichiers, 2 260 tests réussis et 3 `todo`.
+TypeScript est vert.
+
+**Dette ESLint :** `NutritionTab.tsx` passe de 17 à 15 erreurs historiques et
+conserve 3 avertissements. La nouvelle frontière, les deux sections et les
+quatre tests C05 sont à 0 erreur/0 avertissement. Les 171 liens locaux
+contrôlés sont valides et `git diff --check` est vert.
+
+**État roadmap :** C05 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 18 et C à 4. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C06, la lecture du sous-onglet
+« Mes repas » de `NutritionTab`, sans rouvrir C03/C04/C05 ni les surfaces
+Home figées.

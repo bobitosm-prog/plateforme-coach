@@ -15,7 +15,7 @@ fausses et sans transformer une valeur absente en zéro canonique.
 
 | Frontière active | Format | Calcul observé | Limite conservée |
 |---|---|---|---|
-| `NutritionTab.getDailyLogsMacros` et `NutritionJournalMealsSection` | `daily_food_logs.calories/protein/carbs/fat` | somme des montants persistés avec fallback zéro | fibres absentes ; `null`/absent devient zéro à l'affichage |
+| `NutritionTab` via `readNutritionTabSummary` et `NutritionJournalMealsSection` | `daily_food_logs.calories/protein/carbs/fat` | somme par métrique des montants finis non négatifs | fibres absentes ; `null`/absent/invalide devient une lacune à l'affichage |
 | `useFoodLog`, `FoodSearch`, `BarcodeScanner` | catalogue/custom par 100 g | multiplication par quantité puis arrondi par aliment | arrondi kcal à l'unité et macros au dixième avant agrégation |
 | `parseMealPlan` puis `computeDayTotals` | coach `kcal/prot/carb/fat` et IA `calories/proteines/glucides/lipides` | coercition tolérante puis somme repas/journée | valeur absente ou invalide coercée à zéro ; fibres non représentées |
 | `NutritionSavedMealsSection` | aliments sauvegardés singuliers `calories/protein/carbs/fat` | somme puis arrondi d'affichage | certains producteurs enregistrent `proteins/fats`, invisibles pour ce calcul |
