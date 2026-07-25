@@ -106,3 +106,10 @@ Elles ne sont jamais recopiées dans l'enveloppe.
 - Le contrôle distant est limité aux projections read-only documentées ; aucun
   backfill ni aucune écriture distante n'a été réalisé.
 - La priorité produit entre plan personnel et plan coach reste inchangée.
+
+L'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md)
+confirme qu'aucun autre consommateur de plan ne doit être raccordé à
+l'enveloppe. Les dix consommateurs encore classés à migrer concernent le
+journal, les objectifs, les erreurs de transport ou des agrégations
+spécialisées. Leur imposer `NutritionPlanEnvelopeV1` ajouterait une autorité
+sans rapport avec leurs données.

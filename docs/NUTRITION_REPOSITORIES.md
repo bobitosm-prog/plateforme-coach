@@ -108,3 +108,23 @@ Les repositories ne dépendent pas de la
 projection canonique aliasée `meal_plans.plan/active`; le
 [raccordement Home](NUTRITION_HOME_PLAN_DOUBLE_READ.md)
 réutilise exactement cette méthode avec son cycle de fraîcheur propre.
+
+## Audit de clôture read-only
+
+L'[inventaire exécutable](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md) recense 40
+consommateurs logiques dans les catégories A–E. Il confirme :
+
+- aucune lecture `meal_plans` hors `createNutritionPlanRepository`;
+- deux lecteurs déployés seulement pour `client_meal_plans` : le repository
+  coach/client et le loader dashboard dont le contrat de fraîcheur diffère;
+- six fichiers exécutables lisant `daily_food_logs`, cinq `meal_tracking` et
+  deux `saved_meals`;
+- aucune RPC Nutrition read-only;
+- dix consommateurs encore à migrer pour distinguer panne, absence, inconnue
+  et zéro, sans ajouter de méthode repository par simple déduplication.
+
+La garde
+`tests/unit/nutrition-read-only-closure-static.test.ts` protège cet inventaire
+sans figer projections, tris ou limites des lectures non-plan. Les méthodes
+repository sans appel runtime restent des capacités, pas une invitation à
+modifier un cycle de fraîcheur existant.

@@ -11288,3 +11288,61 @@ deux divergences historiques de totaux, RC1 reste à 0/38 et Phase 9 inactive.
 **Prochaine action :** caractériser les conversions `daily_food_logs`
 restantes du mini-graphe Home et d'Analytics, sans les unifier ni toucher au
 résumé Home.
+
+## Entrée — 2026-07-24 — Audit de clôture Nutrition read-only
+
+**Contexte Git :** branche `main`, commit de départ et de fin `8e5dd4a`.
+`backup/moovx-continu` était synchronisée au départ et `origin/main` est
+restée inchangée. Aucun commit ou push n'a été créé; l'index reste vide.
+
+**Périmètre :** inventaire exécutable de `meal_plans`,
+`client_meal_plans`, `daily_food_logs`, `meal_tracking`, `saved_meals`, des
+objectifs Nutrition de `profiles` et des vues/RPC associées. Les occurrences
+de tests, fixtures, documentation, capacités repository sans appel et
+`select()` retourné par une mutation sont distinguées des lectures runtime.
+
+**Résultat :** 40 consommateurs logiques classés exactement : A raccordé 12,
+B volontairement distinct 7, C restant à migrer 10, D écriture/producteur 6,
+E faux positif ou capacité inactive 5. Les lectures de plans sont clôturables;
+le domaine read-only complet ne l'est pas tant que C01–C10 peuvent confondre
+panne/inconnue avec zéro ou absence.
+
+**Schéma déployé :** six projections read-only ont réussi pour journal,
+tracking, repas sauvegardés, plans personnels, plans coach et objectifs
+profil. Les alias runtime déjà connus sont confirmés. Les comptages globaux
+des macros nulles dans `daily_food_logs` valent actuellement 0/0/0 pour
+protéines/glucides/lipides; les trois colonnes et les quatre objectifs profil
+restent nullables dans le contrat. Aucune écriture distante n'a été exécutée.
+
+**Décisions :** aucune régression de données visible n'est démontrée sur le
+backend observé, donc aucun runtime n'est modifié. Les dix dettes sont
+documentées plutôt que masquées : mini-graphe Home, Analytics, deux lectures
+desktop, résumé journal Nutrition, liste Mes repas, badge macros, objectifs
+diagnostic, erreurs des lectures Home et adhérence coach. Le résumé Home
+canonique reste figé.
+
+**Garde :** une garde statique reconstruit les fichiers de lectures
+exécutables. Elle interdit une lecture personnelle de plan hors repository,
+maintient explicites les deux readers coach déployés, inventorie journal,
+tracking et repas sauvegardés, et exclut correctement les `select()` de retour
+après mutation.
+
+**Écritures et requêtes :** aucune requête, projection, limite, owner, date,
+cache, polling, callback, prop, mutation ou payload runtime n'a changé.
+Toutes les écritures Nutrition restent strictement identiques.
+
+**Validations :** garde seule 1 fichier/4 tests; ciblés principaux 7/76;
+ensemble Nutrition/Home/client-detail/diagnostic 45/352; gardes statiques
+85/322; suite complète 260 fichiers, 2 113 tests réussis et 3 `todo`.
+TypeScript est vert. Les six Markdown modifiés/nouveaux totalisent 177 liens
+locaux valides. `git diff --check` est vert.
+
+**Dette ESLint :** la première exécution de la nouvelle garde a révélé 0
+erreur/1 avertissement local (`const` utilisé comme type); après correction,
+elle est à 0 erreur/0 avertissement. Aucun fichier runtime n'étant modifié, la
+dette historique reste identique. Phase 4 reste `partial`, RC1 reste à 0/38
+et Phase 9 inactive.
+
+**Prochaine action :** caractériser puis corriger C02, l'agrégation
+`daily_food_logs` d'Analytics, avec une sortie zéro/inconnue/invalide explicite
+et sans toucher au résumé Home ni aux écritures.

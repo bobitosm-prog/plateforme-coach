@@ -86,7 +86,7 @@ donnée distante.
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `met` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md) et [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md). |
+| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). Les readers de plan sont bornés, mais 10 consommateurs journal/objectifs transforment encore potentiellement panne ou inconnue en zéro/absence. |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
 | Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
@@ -156,8 +156,9 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser les conversions `daily_food_logs` restantes du mini-graphe Home
-et d'Analytics, sans les unifier ni toucher au résumé Home. Le
+Traiter d'abord l'agrégation `daily_food_logs` d'Analytics identifiée C02 dans
+l'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md),
+avec caractérisation zéro/inconnue/invalide et sans toucher au résumé Home. Le
 [diagnostic hebdomadaire](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)
 conclut qu'aucune migration vers `NutritionPlanEnvelopeV1` n'est applicable et
 distingue désormais zéro, inconnue et invalide dans sa propre agrégation.
