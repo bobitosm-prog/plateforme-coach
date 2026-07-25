@@ -108,7 +108,7 @@ Les quatre critères sont `met`, avec une preuve locale.
 |---|---|---|
 | Chaque événement Stripe supporté testé | `met` | [`BILLING_WEBHOOK_HANDLERS.md`](BILLING_WEBHOOK_HANDLERS.md) et suites listées dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 | Replay sans double mutation | `met` | [`BILLING_WEBHOOK_ORDERING.md`](BILLING_WEBHOOK_ORDERING.md), tests unitaires et concurrence locale. |
-| Aucune divergence en préproduction | `blocked` | [`BILLING_RECONCILIATION.md`](BILLING_RECONCILIATION.md) ne fournit qu'un service read-only et annonce une commande admin future ; aucune exécution préproduction n'est consignée. |
+| Aucune divergence en préproduction | `blocked` | [`BILLING_RECONCILIATION.md`](BILLING_RECONCILIATION.md) ne fournit qu'un service read-only. Le [runbook](PHASE_6_PREPRODUCTION_RECONCILIATION.md) démontre l'absence de cible représentative, recommande un seed synthétique déterministe et spécifie isolation, commandes, rapports et autorisations. Aucune ressource ou preuve n'est encore créée; la preuve Nutrition secondaire ne remplace pas Stripe/base. |
 | Routes sans métier substantiel | `met` | Inventaire `451 → 312` lignes et six adaptateurs dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 
 ## Phase 7 — `met`
@@ -157,10 +157,12 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Traiter le premier blocage RC1 encore applicable en Phase 6 : obtenir une
-preuve de réconciliation sans divergence en préproduction. La conception de
-l'autorité versionnée des futurs totaux de plan reste un chantier Nutrition
-distinct, sans rouvrir la Phase 4, C01 à C10 ou les preuves historiques.
+Identifier un projet Supabase staging existant avec Stripe test, ou autoriser
+explicitement leur création et le chargement du seed synthétique déterministe
+du [runbook Phase 6](PHASE_6_PREPRODUCTION_RECONCILIATION.md).
+La conception de l'autorité versionnée des futurs totaux de plan reste un
+chantier Nutrition distinct, sans rouvrir la Phase 4, C01 à C10 ou les preuves
+historiques.
 L'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md)
 est désormais clôturable et
 l'[adhérence Analytics coach](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md)

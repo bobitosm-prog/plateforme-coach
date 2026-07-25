@@ -4,6 +4,14 @@
 
 Premier service read-only disponible depuis le 17 juillet 2026. Il complète le [modèle Billing](BILLING_DOMAIN_MODEL.md), les [contrats Stripe](BILLING_STRIPE_CONTRACTS.md) et les [handlers webhook](BILLING_WEBHOOK_HANDLERS.md).
 
+L'[audit d'environnement Phase 6](PHASE_6_PREPRODUCTION_RECONCILIATION.md)
+confirme qu'aucune préproduction représentative n'est actuellement
+identifiable depuis le workspace. Le service n'a donc pas été exécuté contre
+Stripe/base staging et la Phase 6 reste `blocked`. Une réconciliation
+Nutrition ne peut pas remplacer cette preuve Billing. Le même document
+spécifie désormais le runner opérateur cible, le seed Stripe test et le format
+de preuve, sans créer de ressource.
+
 ## Objectif et frontière
 
 [`lib/billing/reconciliation`](../lib/billing/reconciliation) compare un snapshot local borné à des autorités Stripe relues via un port injectable. Le rapport est uniquement diagnostique :
@@ -14,7 +22,10 @@ Premier service read-only disponible depuis le 17 juillet 2026. Il complète le 
 - aucune écriture, réparation, replay ou suppression n'est exécutée ;
 - aucune migration n'est requise.
 
-Une future commande admin devra authentifier l'administrateur avant de créer le client service-role et le client Stripe. Le service ne doit jamais être importé dans une interface navigateur.
+Une future commande serveur devra vérifier explicitement une cible staging,
+refuser Stripe live et créer ses clients après validation de l'environnement.
+Le service ne doit jamais être importé dans une interface navigateur. Aucune
+route publique n'est requise pour archiver une preuve opérateur expurgée.
 
 ## Écarts détectés
 

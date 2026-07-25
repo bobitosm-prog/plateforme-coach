@@ -12205,3 +12205,75 @@ ESLint n'est requis, aucun fichier TypeScript ou JavaScript n'ayant changé.
 réconciliation sans divergence en préproduction de Phase 6. La conception de
 l'autorité versionnée des futurs totaux de plan reste un chantier Nutrition
 distinct, sans rouvrir la Phase 4.
+
+## Entrée — 2026-07-25 — Préproduction Phase 6 indisponible
+
+**Contexte Git :** branche `main`, commit de départ et de fin `2574322`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Décalage de périmètre :** la Phase 6 officielle est Billing/subscriptions et
+exige une réconciliation Stripe/base. La demande de preuve reçue décrit une
+réconciliation Nutrition legacy/canonique. Cette dernière peut devenir un
+contrôle distinct, mais ne satisfait pas le critère Billing et ne permet pas
+de marquer la Phase 6 `met`.
+
+**Environnements :** la seule cible distante identifiable est le projet
+Supabase `njlzossopgknanhkzcbk`, associé à `VERCEL_ENV=production`,
+`app.moovx.ch` et des clés Stripe live. Elle a été exclue et aucune donnée
+métier distante n'a été lue pendant ce chantier. Aucun projet staging, branche
+preview isolée ou snapshot anonymisé restauré n'a été trouvé.
+
+La pile Supabase locale `plateforme-coach` est saine et non-production, mais
+elle n'est pas représentative. Une mesure SQL en transaction read-only trouve
+0 `meal_plans`, 0 `client_meal_plans`, 0 `saved_meals`, 9
+`daily_food_logs`, 0 `meal_tracking` et 61 profils, dont 36 avec au moins un
+objectif Nutrition. Elle expose en outre `meal_plans.plan/active` et
+`meal_tracking.completed`, contrairement aux projections runtime déjà
+documentées.
+
+**Outils :** les repositories/readers/agrégateurs Nutrition et leurs fixtures
+existent, mais aucun runner multi-owner, manifeste staging, snapshot anonymisé
+ou rapport archivable de réconciliation Nutrition n'existe. Le service
+Billing est read-only, expurgé et fail-closed sur les erreurs Supabase, mais
+il n'a ni runner opérateur ni environnement Stripe test/staging disponible.
+
+**Décision :** aucune réconciliation distante n'est exécutée, aucune preuve
+n'est simulée et Phase 6 reste `blocked`. Aucun runtime, fixture, test attendu,
+schéma, donnée, migration, écriture, restauration, reset, seed, route ou secret
+n'est modifié. `supabase/.temp/cli-latest` reste hors périmètre.
+
+**Plan minimal :** le runbook isole un projet Supabase staging, une Preview
+Vercel liée uniquement à `phase-6-staging`, un alias non-production stable et
+Stripe test/sandbox. L'option retenue est un seed synthétique déterministe :
+9 profils, 1 relation coach/client, 3 subscriptions Stripe test, 1 Connect,
+2 webhooks/paiements, 6 plans personnels, 2 plans coach, 4 repas sauvegardés,
+14 logs et 7 suivis. Elle couvre les statuts Nutrition demandés sans donnée
+réelle. Un snapshot production anonymisé est rejeté comme chemin minimal :
+plus risqué, moins reproductible et incapable de réutiliser les IDs Stripe
+live dans le sandbox.
+
+Les commandes Supabase, Vercel et Stripe sont spécifiées mais non exécutées.
+Elles sont précédées d'un garde anti-production, séparent credentials de seed
+et rôle read-only, puis archivent deux rapports expurgés. La Phase 6 ne peut
+devenir `met` qu'après un rapport Billing complet, non partiel, non tronqué et
+sans issue; Nutrition reste une preuve secondaire.
+
+**Validations :** les tests de concordance, snapshots, repositories/readers et
+gardes statiques Nutrition, ainsi que la réconciliation Billing, passent avec
+15 fichiers et 146 tests. Les gardes d'agrégation
+(`auditedConsumers=706`, `intentionalLegacy=2`), de constructions Supabase
+(`canonical=4`, `legacy=53`, `total=57`) et la parité i18n (2 192 clés ×
+3 langues) sont vertes. Les liens des documents modifiés sont valides, la
+recherche de secrets ajoutés ne remonte aucun motif et `git diff --check`
+passe. Aucun contrôle TypeScript ou ESLint n'est requis car seuls des Markdown
+sont modifiés. `supabase:local:status` a actualisé automatiquement
+`supabase/.temp/cli-latest`; ce fichier n'a pas été inspecté et a été restauré
+immédiatement à HEAD, sans diff conservé.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked`; RC1 reste à
+0/38; Phase 9 reste inactive.
+
+**Prochaine action :** identifier un Supabase staging existant avec Stripe
+test, ou autoriser explicitement la création des ressources et le chargement
+du seed synthétique déterministe. Aucune ressource ne sera créée avant cette
+autorisation.

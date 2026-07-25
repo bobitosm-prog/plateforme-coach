@@ -1,0 +1,694 @@
+# Phase 6 — préproduction et réconciliation
+
+## Verdict
+
+**Statut : `blocked`.**
+
+Aucune préproduction exploitable, représentative et démontrée non-production
+n'est disponible dans le workspace. Aucune réconciliation distante n'a donc
+été exécutée et aucune preuve de sortie n'est fabriquée.
+
+Un second écart de périmètre est déterminant :
+
+- la Phase 6 de [`ROADMAP_CODEX.md`](../ROADMAP_CODEX.md) est le domaine
+  **Billing et subscriptions** ;
+- son critère de sortie exige une réconciliation **Stripe/base** sans
+  divergence en préproduction ;
+- la demande analysée décrit une réconciliation **Nutrition** entre sources
+  legacy et frontières canoniques.
+
+Une preuve Nutrition, même parfaite, ne peut pas satisfaire à elle seule le
+critère Billing de Phase 6. Elle reste utile comme contrôle distinct, mais ne
+doit pas faire passer la Phase 6 à `met`.
+
+## Environnements réellement identifiés
+
+Les fichiers d'environnement sont ignorés par Git. Seuls les noms de
+variables, les identifiants non sensibles et les classes de clés ont été
+inspectés. Aucun secret n'a été affiché ou archivé.
+
+| Environnement | Identifiant non sensible | État | Production ? | Représentativité | Décision |
+|---|---|---|---|---|---|
+| Supabase distant configuré | projet `njlzossopgknanhkzcbk` | credentials présents dans `.env`/`.env.local` | **oui** : `VERCEL_ENV=production`, application `app.moovx.ch`, clés Stripe `live` | données runtime réelles, mais production | exclu ; aucune lecture métier exécutée |
+| Vercel lié | projet `plateforme-coach`, `prj_WI7LdZkzqU2SlXUCPCfBaASO52NJ` | lien local présent | cible locale déclarée `production` | aucune branche preview isolée ni source de données preview identifiée | non exploitable |
+| fichier Vercel temporaire | même host Supabase et mêmes classes de clés live | présent | oui ou indifférenciable de la production | aucune isolation démontrée | exclu |
+| Supabase local canonique | `plateforme-coach`, API `127.0.0.1:55321`, PostgreSQL `127.0.0.1:55322` | sain, contrat de migrations courant | non | schéma historique local et données synthétiques/incomplètes | contrôle local seulement, pas préproduction |
+| projet Supabase staging | aucun identifiant | absent | non démontré | aucune | indisponible |
+| snapshot anonymisé restauré | aucun fichier, manifeste ou empreinte | absent | non | aucune | indisponible |
+
+La commande locale `supabase:local:status` a actualisé automatiquement
+`supabase/.temp/cli-latest`. Le fichier n'a pas été inspecté et a été restauré
+immédiatement à sa version HEAD. Il ne conserve aucun diff et reste hors
+périmètre du chantier.
+
+## Mesure read-only de l'environnement local
+
+La seule base non-production disponible a été mesurée dans une transaction
+`BEGIN READ ONLY`. Aucun identifiant ni contenu de ligne n'a été affiché.
+
+| Source | Lignes | Owners distincts ou profils ciblés |
+|---|---:|---:|
+| `meal_plans` | 0 | 0 |
+| `client_meal_plans` | 0 | 0 |
+| `saved_meals` | 0 | 0 |
+| `daily_food_logs` | 9 | 9 |
+| `meal_tracking` | 0 | 0 |
+| `profiles` | 61 | 36 avec au moins un objectif Nutrition |
+
+Cette base ne peut pas satisfaire le critère « nombre d'éléments contrôlés non
+nul » pour les plans personnels, plans coach, repas sauvegardés et tracking.
+Elle ne représente pas non plus le schéma runtime :
+
+- local : `meal_plans.plan/active`; runtime observé :
+  `plan_data/is_active` et colonnes de totaux ;
+- local : `meal_tracking.completed`; runtime observé : `is_completed`;
+- les types et migrations locaux restent en retard sur plusieurs projections
+  déployées déjà documentées.
+
+Un succès local aurait donc comparé un contrat différent et ne constituerait
+pas une preuve de préproduction.
+
+## Inventaire des outils existants
+
+### Nutrition
+
+Le dépôt contient les briques pures et leurs tests :
+
+- repositories Nutrition ;
+- `NutritionPlanEnvelopeV1` et adaptateurs legacy ;
+- `createActivePersonalMealPlanReader` ;
+- `createClientDetailAssignedPlanReader` ;
+- readers de repas sauvegardés et snapshot v1 ;
+- agrégateurs Home, Analytics, desktop, diagnostic et coach ;
+- resolvers d'objectifs ;
+- douze fixtures de concordance et fixtures d'enveloppe/producteurs.
+
+Il ne contient cependant :
+
+- aucun runner de réconciliation Nutrition multi-owner ;
+- aucun format de rapport Nutrition archivable ;
+- aucun manifeste de préproduction ;
+- aucun snapshot de données anonymisées ;
+- aucune commande qui compare les mêmes lignes legacy et canoniques sur un
+  environnement distant.
+
+Les tests existants prouvent les contrats sur fixtures synthétiques. Ils ne
+prouvent ni le volume, ni le schéma, ni les données d'une préproduction.
+
+### Billing, Phase 6 officielle
+
+[`lib/billing/reconciliation`](../lib/billing/reconciliation) fournit un
+service read-only :
+
+- trois lectures Supabase parallèles ;
+- uniquement des opérations Stripe `retrieve*`/`list*` ;
+- erreurs de base levées, jamais transformées en snapshot vide ;
+- indisponibilité Stripe signalée par `partial: true` ;
+- références d'entités hachées ;
+- limites 1–500 lignes et 1–500 issues ;
+- aucun port de mutation, route publique ou commande admin.
+
+Il manque encore le runner serveur authentifié, la cible staging, les
+credentials Stripe test associés et l'archive d'un rapport réel. Le service
+ne peut donc pas être exécuté en préproduction depuis le dépôt seul.
+
+### Outils Supabase locaux
+
+`npm run supabase:local:*` refuse toute URL non locale et les variables
+`SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN` ou `SUPABASE_DB_URL`. Ces
+gardes empêchent de transformer accidentellement un reset local en opération
+distante. Elles ne savent ni restaurer un snapshot anonymisé représentatif, ni
+exécuter une réconciliation hébergée.
+
+## Audit de sécurité des outils
+
+| Risque | Résultat |
+|---|---|
+| production ciblée par défaut | aucun runner de réconciliation exécutable ; les scripts locaux refusent le distant |
+| écriture sans confirmation | aucune mutation dans le service Billing ; aucun runner Nutrition |
+| secret exposé | rapports Billing expurgés ; aucun secret affiché pendant l'audit |
+| erreur transformée en succès | repository Billing lève les erreurs ; Stripe indisponible rend le rapport partiel |
+| lignes divergentes ignorées | bornes et troncature sont explicites ; aucun rapport Nutrition n'existe encore |
+| exceptions historiques trop larges | fixtures 600/500 et 0/18 protégées par nom, valeurs, statut et SHA ; aucune allowlist runtime n'existe |
+| inconnue transformée en zéro | frontières Nutrition ciblées couvertes par leurs tests ; aucune exécution de données distante |
+| owner mélangé | readers owner-scoped existants ; aucun orchestrateur multi-owner de preuve |
+
+## Architecture d'isolation proposée
+
+```text
+branche Git phase-6-staging
+  → Vercel Preview, variables limitées à cette branche
+      → Supabase moovx-staging, projet et base distincts
+      → Stripe sandbox/test, customers/subscriptions/Connect distincts
+      → webhooks test vers l'URL Preview
+
+opérateur autorisé
+  → garde anti-production fail-closed
+  → migration + seed synthétique staging
+  → runner Billing read-only
+  → runner Nutrition read-only
+  → rapports expurgés + empreintes
+  → nettoyage du namespace de seed ou suppression autorisée des ressources
+```
+
+### Frontières obligatoires
+
+| Frontière | Garantie |
+|---|---|
+| Supabase | projet ref différent de `njlzossopgknanhkzcbk`; aucune branche `--with-data`; aucun bucket, base ou secret production |
+| Vercel | Preview liée uniquement à la branche `phase-6-staging`; aucune variable héritée implicitement de Production |
+| Stripe | sandbox ou test mode; clés `sk_test_*`/`pk_test_*`; objets et webhooks `livemode=false`; aucun compte Connect live |
+| secrets | valeurs dans un secret store ou fichiers `0600` hors dépôt; seuls les noms et classes sont documentés |
+| runners | credentials read-only séparés des credentials de seed; aucun port `insert/update/upsert/delete/rpc` |
+| rapports | références hachées, volumes et codes; aucun e-mail, UUID brut, payload alimentaire, token ou URL signée |
+| arrêt | variable manquante, cible inconnue, host/ref interdit, clé live, rapport partiel/tronqué ou famille vide provoque un échec non nul |
+
+Le garde préalable doit comparer les valeurs effectives, pas seulement leur
+nom. Il refuse au minimum :
+
+- project ref de production ;
+- hosts `app.moovx.ch`, `moovx.ch` et
+  `njlzossopgknanhkzcbk.supabase.co`;
+- `VERCEL_ENV=production` ou déploiement `--prod`;
+- clé Stripe contenant `_live_`;
+- webhook Stripe avec `livemode=true`;
+- URL locale en tant que preuve hébergée ;
+- fallback vers `.env`, `.env.local` ou `.env.vercel.tmp`;
+- absence du manifeste signé/empreinté de staging.
+
+## Ressources à créer
+
+Chaque création ou configuration ci-dessous nécessite une autorisation
+explicite :
+
+1. un projet Supabase `moovx-staging` dans une région européenne compatible ;
+2. une branche Preview Vercel `phase-6-staging` sur le projet existant, sans
+   domaine production ;
+3. un sandbox Stripe, ou le mode test isolé, avec deux customers, trois
+   subscriptions, un compte Connect test complet et un endpoint webhook test ;
+4. un rôle SQL de seed temporaire et un rôle de réconciliation `SELECT` seul ;
+5. un namespace de données déterministes ;
+6. un stockage sécurisé hors Git pour les secrets et rapports bruts ;
+7. une archive expurgée versionnable avec empreinte SHA-256.
+
+Un projet Supabase supplémentaire peut entraîner un coût. Au 25 juillet 2026,
+la [tarification Supabase](https://supabase.com/pricing) annonce les projets
+additionnels Pro à partir de 10 USD/mois; le plan réel doit être vérifié avant
+création. Vercel Preview consomme les quotas du plan Vercel courant. Stripe
+test/sandbox ne déplace pas d'argent réel, mais exige Stripe CLI et la
+configuration Connect test. Dépendances opérateur : Node.js, `psql`, Supabase
+CLI, Vercel CLI, Stripe CLI et un secret store.
+
+## Variables nécessaires
+
+Aucune valeur ne doit être ajoutée au dépôt.
+
+### Contrôle et manifeste
+
+- `MOOVX_ENVIRONMENT`
+- `MOOVX_STAGING_MANIFEST`
+- `MOOVX_PRODUCTION_SUPABASE_PROJECT_REF`
+- `MOOVX_PRODUCTION_APP_HOST`
+- `MOOVX_REPORT_HASH_SALT`
+- `MOOVX_REPORT_OUTPUT_DIR`
+
+### Supabase staging
+
+- `SUPABASE_STAGING_PROJECT_REF`
+- `SUPABASE_STAGING_DB_PASSWORD`
+- `SUPABASE_DB_PASSWORD`
+- `SUPABASE_STAGING_DB_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `MOOVX_RECONCILIATION_DB_URL`
+
+`SUPABASE_SERVICE_ROLE_KEY` est réservé aux routes serveur staging et au seed
+autorisé. Les runners de preuve doivent utiliser
+`MOOVX_RECONCILIATION_DB_URL`, associé à un rôle SQL `SELECT` seul.
+
+### Vercel Preview
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `MOOVX_PREVIEW_DEPLOYMENT`
+- `MOOVX_STAGING_ALIAS`
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_SITE_URL`
+- les identifiants de prix Stripe test déjà requis par l'application
+
+### Stripe test
+
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_PRICE_CLIENT_MONTHLY`
+- `NEXT_PUBLIC_PRICE_CLIENT_YEARLY`
+- `NEXT_PUBLIC_PRICE_CLIENT_LIFETIME`
+- `NEXT_PUBLIC_PRICE_COACH_MONTHLY`
+- `STRIPE_RECONCILIATION_KEY`
+
+Le garde exige `sk_test_*` ou un credential sandbox équivalent,
+`pk_test_*`, et des webhooks `livemode=false`.
+
+## Données minimales représentatives
+
+### Manifest synthétique recommandé
+
+Le seed crée exactement neuf identités Auth/profils, toutes reconnaissables
+par un namespace aléatoire d'exécution et supprimables :
+
+| Donnée | Volume minimal | Cas |
+|---|---:|---|
+| profils/Auth | 9 | 1 admin, 1 coach, 7 clients |
+| `coach_clients` | 1 | relation coach/client active |
+| customers Stripe test | 3 | active, `past_due`, canceled |
+| subscriptions Stripe test | 3 | statuts identiques aux profils locaux |
+| compte Connect test | 1 | charges/payouts/details complets |
+| webhooks locaux | 2 | checkout et invoice réussis, claims complets |
+| paiements locaux | 2 | IDs d'événement uniques et autorités Stripe cohérentes |
+| `meal_plans` | 6 | canonical, legacy, conflit à deux lignes, invalid, version unsupported |
+| `client_meal_plans` | 2 | plan coach valide et cas legacy |
+| `saved_meals` | 4 | snapshot canonical, alias legacy pluriel, vrai zéro, conflit d'alias |
+| `daily_food_logs` | 14 | deux jours par client, zéros réels et macros connues |
+| `meal_tracking` | 7 | suivi connu complet/incomplet |
+| profils avec objectifs | 7 | objectifs complets, nullables et un cas invalide isolé |
+
+Les sept clients couvrent les résultats Nutrition :
+
+1. `canonical`;
+2. `legacy_converted`;
+3. `not_found`;
+4. `conflict`;
+5. `invalid`;
+6. `legacy_unsupported`;
+7. valeurs valides de contrôle pour agrégations journalières/hebdomadaires.
+
+`failure` ne doit pas être créé en corrompant staging. Il est prouvé par un
+test de transport contrôlé du runner : port de lecture injecté en échec, puis
+vérification que le rapport échoue et n'enregistre pas `not_found` ou une
+collection vide. Le rapport staging de succès doit compter zéro `failure`.
+
+Les exceptions 600/500 kcal et 0/18 g restent des fixtures contrôlées. Elles
+ne sont pas injectées dans le seed de succès et ne peuvent être allowlistées
+que si nom, source, valeurs, statut et empreinte correspondent exactement à
+la [décision Phase 4](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md).
+
+## Options de données
+
+| Critère | A — seed synthétique déterministe | B — snapshot production anonymisé |
+|---|---|---|
+| couverture | volontairement complète sur les contrats Billing et statuts Nutrition | forte diversité runtime, mais couverture des cas rares non garantie |
+| Stripe | objets test cohérents créés dans le sandbox | IDs live inutilisables en test; seed Stripe toujours nécessaire |
+| risque | faible, données fictives | élevé : santé, identité et paiement même après anonymisation |
+| confidentialité | aucun utilisateur réel | DPIA/revue sécurité et preuve d'anonymisation nécessaires |
+| complexité initiale | moyenne : seed DB + Stripe + cleanup | élevée : export, transformation FK/Auth/JSON, validation de non-réidentification |
+| maintenance | manifeste versionné avec schéma | pipeline à réviser à chaque évolution du schéma production |
+| reproductibilité | élevée, volumes et statuts exacts | moyenne, dépend de la date et du contenu du snapshot |
+| durée estimée | 3–5 jours d'implémentation, puis moins d'une heure par preuve | 5–10 jours hors validation juridique/sécurité, puis 1–2 heures par restauration |
+| réversibilité | suppression du namespace ou du projet | suppression possible, mais copies intermédiaires et traces à contrôler |
+| capacité à satisfaire Phase 6 | oui, avec Stripe test et rapport Billing sans issue | pas seule; exige encore Stripe test synthétique |
+
+**Option recommandée : A, seed synthétique déterministe.**
+
+C'est l'option minimale qui peut réellement produire un rapport Billing
+Stripe/base sans divergence, couvrir les états Nutrition demandés, éviter les
+données sensibles et être rejouée après suppression complète. L'option B ne
+doit être envisagée qu'ensuite pour un audit de réalisme séparé, après
+autorisation données/sécurité; elle n'est pas requise pour clôturer Phase 6.
+Sa représentativité est **structurelle et comportementale** : schéma staging,
+vraies APIs Stripe test, vrais webhooks signés, owners/RLS et frontières
+applicatives. Elle ne prétend pas reproduire la distribution statistique des
+données production.
+
+## Plan d'exécution minimal reproductible
+
+Ce plan nécessite une validation explicite avant toute création de ressource,
+configuration, restauration ou écriture. Les commandes suivantes sont
+**spécifiées mais n'ont pas été exécutées**.
+
+### 1. Créer ou désigner la préproduction
+
+```bash
+export MOOVX_ENVIRONMENT=staging
+export MOOVX_STAGING_MANIFEST=/secure/moovx/staging/manifest.json
+export SUPABASE_ORG_ID=<supabase-org-id>
+export SUPABASE_STAGING_PROJECT_REF=<new-staging-project-ref>
+export SUPABASE_DB_PASSWORD=<loaded-from-secret-store>
+
+npx supabase projects create moovx-staging \
+  --org-id "$SUPABASE_ORG_ID" \
+  --region eu-central-1 \
+  --db-password "$SUPABASE_DB_PASSWORD" \
+  --size micro
+
+npx supabase link --project-ref "$SUPABASE_STAGING_PROJECT_REF"
+```
+
+`projects create` et `link` sont confirmés par la
+[référence CLI Supabase](https://supabase.com/docs/reference/cli/supabase-seed).
+Le project ref retourné doit être copié dans le manifeste puis validé avant
+toute autre commande.
+
+### 2. Valider anti-production avant toute mutation
+
+Le chantier d'implémentation doit d'abord fournir
+`scripts/preproduction/assert-environment.mjs`. Commande obligatoire :
+
+```bash
+node scripts/preproduction/assert-environment.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --require-environment staging \
+  --deny-project-ref njlzossopgknanhkzcbk \
+  --deny-host app.moovx.ch \
+  --require-stripe-mode test
+```
+
+Le script n'existe pas encore. Aucune commande distante suivante ne peut être
+autorisée avant que ses tests fail-closed soient verts.
+
+### 3. Appliquer le schéma
+
+Les migrations historiques comportent des versions de date dupliquées et
+`supabase/config.toml` désactive le gestionnaire standard. Le `db push`
+officiel doit seulement servir de diagnostic initial :
+
+```bash
+npx supabase db push --linked --include-all --dry-run
+```
+
+Supabase documente le
+[`--dry-run` avant db push](https://supabase.com/docs/reference/cli/init).
+La commande d'application retenue doit reproduire l'ordre lexical du reset
+local via un runner dédié, transaction par fichier et `ON_ERROR_STOP` :
+
+```bash
+node scripts/preproduction/apply-migrations.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --dry-run
+
+node scripts/preproduction/apply-migrations.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --apply
+```
+
+Ce runner reste à implémenter et doit enregistrer la liste, l'ordre et les
+SHA-256 des migrations. `supabase db reset --linked` est interdit dans ce
+runbook, même si Supabase le prévoit pour un staging jetable, car il détruit
+le schéma distant.
+
+### 4. Créer les objets Stripe test
+
+Après authentification explicite dans le sandbox/test account :
+
+```bash
+stripe login
+
+node scripts/preproduction/seed-stripe-test.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --output /secure/moovx/staging/stripe-seed.json
+```
+
+Le seeder à implémenter crée les customers, prices/subscriptions et le compte
+Connect test avec une clé test chargée depuis le secret store. Stripe fournit
+des [tokens Connect de test](https://docs.stripe.com/connect/testing); aucune
+identité ou carte réelle n'est utilisée.
+
+Le compte Connect est contrôlé par lecture API dans la réconciliation. Le
+runtime actuel n'expose qu'un endpoint et un secret
+`POST /api/stripe/webhook`; il ne supporte pas un second secret Connect.
+Aucun webhook Connected accounts séparé n'est donc créé dans ce plan minimal.
+En ajouter un serait un changement runtime distinct, non requis pour la preuve
+de réconciliation Connect actuelle.
+
+### 5. Charger le seed Supabase
+
+```bash
+node scripts/preproduction/seed-supabase.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --stripe-seed /secure/moovx/staging/stripe-seed.json \
+  --apply
+
+node scripts/preproduction/verify-seed.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --expect-profile-count 9 \
+  --expect-meal-plan-count 6 \
+  --expect-client-plan-count 2 \
+  --expect-saved-meal-count 4 \
+  --expect-food-log-count 14 \
+  --expect-tracking-count 7
+```
+
+Le seed est transactionnel pour les tables SQL, idempotent par namespace et
+échoue si une ligne hors namespace serait modifiée. Les IDs Stripe test sont
+lus depuis l'artefact sécurisé, jamais codés en dur ou versionnés.
+
+### 6. Configurer Vercel Preview
+
+```bash
+npx vercel link --yes \
+  --project plateforme-coach \
+  --scope "$VERCEL_SCOPE"
+
+npx vercel env add NEXT_PUBLIC_SUPABASE_URL preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_SUPABASE_URL
+npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/NEXT_PUBLIC_SUPABASE_ANON_KEY
+npx vercel env add SUPABASE_SERVICE_ROLE_KEY preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/SUPABASE_SERVICE_ROLE_KEY
+npx vercel env add STRIPE_SECRET_KEY preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/STRIPE_SECRET_KEY
+npx vercel env add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+npx vercel env add NEXT_PUBLIC_PRICE_CLIENT_MONTHLY preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_PRICE_CLIENT_MONTHLY
+npx vercel env add NEXT_PUBLIC_PRICE_CLIENT_YEARLY preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_PRICE_CLIENT_YEARLY
+npx vercel env add NEXT_PUBLIC_PRICE_CLIENT_LIFETIME preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_PRICE_CLIENT_LIFETIME
+npx vercel env add NEXT_PUBLIC_PRICE_COACH_MONTHLY preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_PRICE_COACH_MONTHLY
+
+npx vercel pull --environment=preview --git-branch=phase-6-staging
+npx vercel deploy --yes > /secure/moovx/staging/vercel-deployment-url
+
+export MOOVX_PREVIEW_DEPLOYMENT=<copied-from-vercel-deployment-url>
+export MOOVX_STAGING_ALIAS=<dedicated-non-production-alias>
+npx vercel alias set "$MOOVX_PREVIEW_DEPLOYMENT" "$MOOVX_STAGING_ALIAS"
+```
+
+Vercel documente les
+[variables Preview liées à une branche](https://vercel.com/docs/environment-variables/manage-across-environments),
+[`vercel pull --environment=preview --git-branch`](https://vercel.com/docs/cli/pull)
+et le fait qu'un déploiement sans `--prod` est une
+[Preview](https://vercel.com/docs/deployments/environments).
+L'[alias Vercel](https://vercel.com/docs/cli/alias) fournit une URL staging
+stable sans utiliser les domaines MoovX de production.
+Les autres variables applicatives strictement nécessaires doivent être
+ajoutées individuellement; aucune variable Production ne doit être copiée en
+bloc.
+
+### 7. Configurer le webhook test et finaliser la Preview
+
+Après consignation de l'alias Preview stable dans le manifeste :
+
+```bash
+export MOOVX_PREVIEW_URL="https://$MOOVX_STAGING_ALIAS"
+
+node scripts/preproduction/configure-stripe-webhooks.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --account-url "$MOOVX_PREVIEW_URL/api/stripe/webhook" \
+  --output /secure/moovx/staging/stripe-webhook.json
+
+npx vercel env add STRIPE_WEBHOOK_SECRET preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/STRIPE_WEBHOOK_SECRET
+npx vercel env add NEXT_PUBLIC_APP_URL preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_APP_URL
+npx vercel env add NEXT_PUBLIC_SITE_URL preview phase-6-staging \
+  < /secure/moovx/staging/NEXT_PUBLIC_SITE_URL
+
+npx vercel deploy --yes > /secure/moovx/staging/vercel-deployment-url-final
+export MOOVX_PREVIEW_DEPLOYMENT=<copied-from-vercel-deployment-url-final>
+npx vercel alias set "$MOOVX_PREVIEW_DEPLOYMENT" "$MOOVX_STAGING_ALIAS"
+```
+
+Le script vérifie `livemode=false` et inscrit uniquement les événements
+supportés par le webhook MoovX. Stripe documente la création d'un
+[endpoint webhook test](https://docs.stripe.com/api/webhook_endpoints/create?lang=curl).
+Le manifeste enregistre le nouveau deployment ID et l'alias stable. L'endpoint
+Stripe continue de viser cet alias et ne doit pas être recréé.
+
+### 8. Valider l'environnement déployé
+
+```bash
+node scripts/preproduction/assert-environment.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --preview-url "$MOOVX_PREVIEW_URL" \
+  --require-environment staging \
+  --deny-project-ref njlzossopgknanhkzcbk \
+  --deny-host app.moovx.ch \
+  --require-stripe-mode test \
+  --require-webhook-livemode false
+
+node scripts/preproduction/smoke-readonly.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST"
+```
+
+Le smoke test vérifie projet ref, schéma, volumes, modes Stripe et webhooks,
+sans mutation. Toute valeur manquante ou inconnue arrête l'exécution.
+
+### 9. Exécuter Billing puis Nutrition en lecture seule
+
+```bash
+MOOVX_RECONCILIATION_ENV=staging \
+npm run billing:reconcile:preproduction -- \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --output /secure/moovx/staging/billing-reconciliation.json
+
+MOOVX_RECONCILIATION_ENV=staging \
+npm run nutrition:reconcile:preproduction -- \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --limit-owners 25 \
+  --output /secure/moovx/staging/nutrition-reconciliation.json
+```
+
+Ces scripts npm et leurs runners restent à implémenter. Billing enveloppe le
+service existant; Nutrition orchestre les readers/repositories actuels sans
+ajouter de requête au runtime applicatif.
+
+### 10. Archiver la preuve expurgée
+
+```bash
+node scripts/preproduction/sanitize-reconciliation-report.mjs \
+  --billing /secure/moovx/staging/billing-reconciliation.json \
+  --nutrition /secure/moovx/staging/nutrition-reconciliation.json \
+  --output artifacts/reconciliation/phase-6-summary.json
+
+node scripts/preproduction/assert-report-safe.mjs \
+  artifacts/reconciliation/phase-6-summary.json
+
+shasum -a 256 artifacts/reconciliation/phase-6-summary.json \
+  > artifacts/reconciliation/phase-6-summary.sha256
+```
+
+Seuls le résumé expurgé et son empreinte sont versionnables. Les rapports
+bruts restent dans le stockage sécurisé et suivent sa rétention.
+
+### 11. Nettoyer ou conserver staging
+
+Pour un staging persistant, supprimer uniquement le namespace du seed :
+
+```bash
+node scripts/preproduction/cleanup-seed.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --namespace "$MOOVX_SEED_NAMESPACE" \
+  --apply
+```
+
+La suppression d'un webhook, déploiement ou projet est une action destructive
+séparée qui exige une nouvelle autorisation :
+
+```bash
+node scripts/preproduction/delete-stripe-test-fixtures.mjs \
+  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --apply
+
+npx vercel remove "$MOOVX_PREVIEW_DEPLOYMENT" --yes
+npx supabase projects delete "$SUPABASE_STAGING_PROJECT_REF"
+```
+
+La suppression du projet ne doit jamais faire partie du chemin de succès par
+défaut.
+
+## Format de preuve archivable
+
+Pour chaque owner anonymisé, le runner Nutrition devra lire une fois les
+sources runtime puis les transmettre aux frontières existantes. Le rapport
+doit contenir :
+
+- SHA du commit et identifiant non sensible de l'environnement ;
+- empreinte du manifeste/snapshot ;
+- date, bornes et volumes exacts ;
+- compte par statut `canonical`, `legacy_converted`, `not_found`, `conflict`,
+  `invalid`, `legacy_unsupported`, `failure`;
+- pour chaque divergence : référence stable hachée, source, champ, deux
+  valeurs, classification et cause ;
+- allowlist exacte des exceptions 600/500 kcal et 0/18 g ;
+- compte des erreurs de lecture, parsing et validation ;
+- `readOnly: true`, `truncated: false` et `secretsScanned: true`.
+
+L'archive versionnable ne doit contenir ni owner brut, ni e-mail, ni token,
+ni clé, ni URL signée, ni payload alimentaire complet. Les valeurs minimales
+nécessaires à une divergence peuvent être conservées derrière une référence
+hachée.
+
+## Critères de succès Phase 6
+
+La Phase 6 devient `met` uniquement si :
+
+1. projet Supabase, URL Preview et Stripe sont confirmés non-production ;
+2. clés Stripe test/sandbox et webhooks `livemode=false` sont prouvés ;
+3. migrations et seed correspondent à leurs manifestes/empreintes ;
+4. volumes Billing minimaux et neuf profils synthétiques sont présents ;
+5. rapport Billing complet, `readOnly=true`, `partial=false`,
+   `truncated=false`, sans issue ;
+6. aucune erreur Supabase/Stripe, parsing ou validation n'est masquée ;
+7. commandes et SHA du commit sont archivés ;
+8. rapport expurgé et SHA-256 sont versionnés sans secret ni donnée sensible ;
+9. tests/gardes des runners sont verts ;
+10. aucune ressource ou donnée production n'a été lue ou écrite.
+
+La réconciliation Nutrition secondaire doit en plus garantir :
+
+- volumes obligatoires non nuls ;
+- aucune inconnue transformée en zéro ;
+- aucun croisement d'owner ;
+- aucun conflit d'alias accepté ;
+- zéro divergence non autorisée ;
+- seules les deux exceptions Phase 4 exactes éventuellement allowlistées.
+
+Une preuve Nutrition seule ne suffit jamais à clôturer Phase 6.
+
+## Actions soumises à autorisation explicite
+
+| Action | Autorisation requise |
+|---|---|
+| créer/lier/supprimer le projet Supabase staging | oui |
+| créer les rôles SQL ou appliquer les migrations | oui |
+| charger ou nettoyer le seed | oui |
+| créer/modifier des variables Vercel | oui |
+| créer un déploiement Preview | oui |
+| créer/modifier/supprimer customers, subscriptions, Connect ou prices Stripe test | oui |
+| créer/modifier/supprimer les endpoints webhook test | oui |
+| restaurer un snapshot, même anonymisé | oui, plus revue données/sécurité |
+| exécuter les runners read-only après configuration | oui, validation de cible |
+| archiver le rapport expurgé dans Git | oui, après scan de secrets |
+| toute écriture ou suppression distante | oui, avec cibles et rollback exacts |
+
+## Commandes exécutées pendant cet audit
+
+Toutes les commandes ayant touché des données étaient read-only :
+
+```bash
+npm run supabase:local:status
+
+psql postgresql://postgres:postgres@127.0.0.1:55322/postgres \
+  -v ON_ERROR_STOP=1 -X -A -F '|' \
+  -c "BEGIN READ ONLY; SELECT ... count(*) ...; COMMIT;"
+```
+
+Les recherches statiques ont utilisé `rg`, `sed`, `git status`,
+`git rev-parse` et un lecteur local qui n'affichait que les noms de variables,
+hosts, modes test/live et identifiants Vercel non sensibles.
+
+Aucune commande Supabase distante, Stripe, Vercel, mutation, restauration,
+reset, seed, création de ressource, requête de données production, commit ou
+push n'a été exécutée.
+
+## Prochaine étape unique
+
+Identifier un projet Supabase staging existant et son environnement Stripe
+test, ou autoriser explicitement leur création et le chargement du seed
+synthétique déterministe recommandé. Sans cette décision externe, la Phase 6
+reste `blocked`.

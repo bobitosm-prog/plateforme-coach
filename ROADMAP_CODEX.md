@@ -460,7 +460,7 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : checklist terminée — 10 tâches sur 10 ; définition de terminé bloquée en audit RC1 par l'absence de preuve de réconciliation sans divergence en préproduction**
+**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; aucune préproduction représentative n'est disponible. Le [runbook opératoire](docs/PHASE_6_PREPRODUCTION_RECONCILIATION.md) isole Supabase staging, Vercel Preview et Stripe test, recommande un seed synthétique déterministe et définit les commandes/contrôles sans les exécuter. Une preuve Nutrition reste secondaire et ne remplace pas la réconciliation Stripe/base exigée par cette Phase 6**
 
 ### Pourquoi
 
