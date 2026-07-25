@@ -25,12 +25,12 @@ describe('desktop nutrition day runtime boundary', () => {
     expect(desktop).toContain('readDesktopNutritionDayResponse(data, error, uid, today)')
   })
 
-  it('removes the legacy false-zero aggregation without touching C04', () => {
+  it('keeps C03 free of its legacy false-zero aggregation after C04 is secured', () => {
     expect(desktop).not.toContain(
       'data.forEach((x: any) => { c += x.calories || 0; p += x.protein || 0; ca += x.carbs || 0; f += x.fat || 0 })',
     )
     expect(desktop).toContain(
-      ';(data || []).forEach((r: any) => { byDate[r.date] = (byDate[r.date] || 0) + (r.calories || 0) })',
+      'readDesktopNutritionWeekResponse(data, error, window)',
     )
   })
 })

@@ -11619,3 +11619,80 @@ inactive.
 
 **Prochaine action :** traiter uniquement C04, le graphe Nutrition desktop
 sept jours, sans rouvrir C03 ni les surfaces Home figées.
+
+## Entrée — 2026-07-25 — C04 graphe Nutrition desktop sept jours sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `3fdf8cb`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** l'effet autonome de `NutritionView` ignorait `error`,
+remplaçait `data` absent par `[]`, initialisait chaque date à zéro puis
+additionnait `r.calories || 0`. Une panne, un jour absent, `null`,
+`undefined`, champ absent, chaîne vide et `NaN` devenaient donc la même barre
+zéro; les chaînes pouvaient être concaténées et infini/négatif traversaient.
+L'effet n'avait ni compteur ni cleanup, donc une réponse obsolète pouvait
+remplacer la série courante.
+
+**Flux avant/après :** avant :
+`DesktopDashboard → NutritionView → daily_food_logs → data || [] →
+byDate/r.calories || 0 → weekChart → Recharts BarChart`. Après :
+`DesktopDashboard → NutritionView → même lecture →
+readDesktopNutritionWeekResponse → aggregateDesktopNutritionWeek →
+weekChartState → même BarChart`. Les frontières C03, Analytics, Home et
+diagnostic ne sont pas réutilisées, car leurs fenêtres, granularités,
+timezones, jours synthétisés, limites et cycles de fraîcheur diffèrent.
+
+**Fenêtre et règles :** sept clés UTC inclusives J−6…J, avec libellés de jour
+historiques dans le timezone navigateur. Nombre fini non négatif et zéro
+connus; chaîne numérique non vide convertie; `null`, `undefined`, absent et
+chaîne vide inconnus; texte non numérique, `NaN`, infini, négatif et type
+incompatible invalides. Plusieurs valeurs valides d'un jour sont additionnées
+puis arrondies comme avant. Jour absent, inconnu ou invalide devient une
+lacune `null`; une ligne hors fenêtre ou à date invalide est exclue et
+signalée.
+
+**Rendu et cycle :** une collection vide confirmée produit sept lacunes et
+non sept zéros. Une période partielle garde les barres connues; une période
+complète valide est byte-for-byte équivalente dans les valeurs rendues. Au
+premier chargement, le graphe affiche son chargement; une première panne
+affiche « Graphique indisponible ». Après une série visible, une panne la
+conserve. Le compteur et le cleanup neutralisent les réponses obsolètes et
+interdisent de conserver la série d'un autre owner.
+
+**Requête et schéma :** 1 → 1 lecture par exécution C04; les deux accès
+`daily_food_logs` desktop C03/C04 et le nombre total de requêtes déclenchées
+restent inchangés. Owner `session.user.id`, borne basse inclusive
+`date >= UTC J−6`, absence historique de borne haute, `date ASC`, aucune
+limite, collection et dépendances `[session.user.id, todayFoodLogs]` sont
+préservés. La projection reste exactement `date, calories`; seul son nom de
+constante matérialise le contrat. La vérification distante répond en HTTP 200.
+L'OpenAPI déployée confirme `date` en `string/date` non nullable et `calories`
+en `number/numeric` non nullable; les formes observées sont chaîne/nombre.
+
+**Périmètre :** la requête, le reader, l'état et le rendu C03 sont inchangés;
+sa garde statique a seulement cessé d'exiger le code legacy C04. Home,
+mini-graphe Home, résumé Home, Analytics et diagnostic restent hors diff.
+Aucun insert, update, upsert, delete, RPC, payload, mutation React ou
+producteur IA n'a changé.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/5 tests verts;
+les attentes corrigées étaient rouges avec module absent et trois gardes
+constatant encore le code legacy. Après correction : C04 3 fichiers/28 tests;
+C04/C03/Home/Analytics/diagnostic et garde d'inventaire 20/148; agrégations
+autoritaires `status=ok, auditedConsumers=700, intentionalLegacy=2`;
+constructions Supabase
+`status=ok, canonical=4, legacy=53, total=57`; suite complète 274 fichiers,
+2 224 tests réussis et 3 `todo`. TypeScript est vert.
+
+**Dette ESLint :** `page-desktop.tsx` passe de 57 erreurs/25 avertissements
+historiques à 55/25 grâce au retrait des deux `any` de C04. La nouvelle
+frontière et les quatre tests nouveaux/modifiés sont à 0 erreur/0
+avertissement; aucune nouvelle règle n'est en dette. Les 170 liens locaux
+contrôlés sont valides et `git diff --check` est vert.
+
+**État roadmap :** C04 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 17 et C à 5. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C05, les macros et objectifs rendus
+par `NutritionTab`, sans rouvrir C03/C04 ni les surfaces Home figées.

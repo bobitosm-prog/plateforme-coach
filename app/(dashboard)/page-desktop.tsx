@@ -25,6 +25,14 @@ import {
   type DesktopNutritionDayRow,
   type DesktopNutritionDayState,
 } from '../../lib/nutrition/desktop-nutrition-day'
+import {
+  DESKTOP_NUTRITION_WEEK_PROJECTION,
+  createDesktopNutritionWeekWindow,
+  readDesktopNutritionWeekResponse,
+  settleDesktopNutritionWeek,
+  type DesktopNutritionWeekRow,
+  type DesktopNutritionWeekState,
+} from '../../lib/nutrition/desktop-nutrition-week'
 
 /* ═══════════════════════════════════════════════════
    TYPES
@@ -731,7 +739,14 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
    ═══════════════════════════════════════════════════ */
 function NutritionView({ nutritionToday, nutritionDayHasValue, nutritionDayStatus, calorieGoal, proteinGoal, carbsGoal, fatsGoal, todayFoodLogs, weeklyCalories, onNavigate, setModal, supabase, session }: any) {
   const [openMeals, setOpenMeals] = useState<string[]>([])
-  const [weekChart, setWeekChart] = useState<{ day: string; calories: number }[]>([])
+  const [weekChartState, setWeekChartState] = useState<DesktopNutritionWeekState>({
+    status: 'loading',
+    value: null,
+    ownerUserId: null,
+  })
+  const desktopNutritionWeekRequest = useRef(0)
+  const weekChart = weekChartState.value?.points ?? []
+  const weekChartHasValue = weekChartState.value !== null
 
   const mealTypes = [
     { id: 'breakfast', label: 'Petit-dejeuner', icon: '🥣' },
@@ -756,19 +771,41 @@ function NutritionView({ nutritionToday, nutritionDayHasValue, nutritionDayStatu
   useEffect(() => {
     if (!session?.user?.id) return
     const uid = session.user.id
-    const startDate = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_food_logs').select('date, calories').eq('user_id', uid).gte('date', startDate).order('date')
-      .then(({ data }: any) => {
-        const byDate: Record<string, number> = {}
-        ;(data || []).forEach((r: any) => { byDate[r.date] = (byDate[r.date] || 0) + (r.calories || 0) })
-        const chart: { day: string; calories: number }[] = []
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(Date.now() - i * 86400000)
-          const ds = d.toISOString().split('T')[0]
-          chart.push({ day: d.toLocaleDateString('fr-FR', { weekday: 'short' }).toUpperCase(), calories: Math.round(byDate[ds] || 0) })
-        }
-        setWeekChart(chart)
+    const window = createDesktopNutritionWeekWindow(new Date())
+    const startDate = window.startInclusive
+    const request = ++desktopNutritionWeekRequest.current
+    Promise.resolve().then(() => {
+      if (request === desktopNutritionWeekRequest.current) {
+        setWeekChartState(previous => ({
+          status: 'loading',
+          value: previous.ownerUserId === uid ? previous.value : null,
+          ownerUserId: uid,
+        }))
+      }
+    })
+    supabase.from('daily_food_logs').select(DESKTOP_NUTRITION_WEEK_PROJECTION).eq('user_id', uid).gte('date', startDate).order('date')
+      .then(({ data, error }: { data: DesktopNutritionWeekRow[] | null; error: unknown }) => {
+        if (request !== desktopNutritionWeekRequest.current) return
+        const result = readDesktopNutritionWeekResponse(data, error, window)
+        setWeekChartState(previous => settleDesktopNutritionWeek(
+          previous,
+          result,
+          true,
+          uid,
+        ))
       })
+      .catch(() => {
+        if (request !== desktopNutritionWeekRequest.current) return
+        setWeekChartState(previous => settleDesktopNutritionWeek(
+          previous,
+          { status: 'failure' },
+          true,
+          uid,
+        ))
+      })
+    return () => {
+      desktopNutritionWeekRequest.current += 1
+    }
   }, [session?.user?.id, todayFoodLogs])
 
   return (
@@ -837,8 +874,13 @@ function NutritionView({ nutritionToday, nutritionDayHasValue, nutritionDayStatu
       {/* Weekly calories chart — self-fetched */}
       <Card span={12} style={{ minHeight: 220 }}>
         <CardTitle title="Calories Hebdomadaires" />
-        <SizedContainer hasSize={true} height={170}>
-            <BarChart data={weekChart.length > 0 ? weekChart : [{ day: '-', calories: 0 }]} barSize={32}>
+        {!weekChartHasValue ? (
+          <div style={{ height: 170, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BODY, fontSize: 12, color: MUTED, fontStyle: 'italic' }}>
+            {weekChartState.status === 'loading' ? 'Chargement du graphique…' : 'Graphique indisponible'}
+          </div>
+        ) : (
+          <SizedContainer hasSize={true} height={170}>
+            <BarChart data={weekChart} barSize={32}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(201,168,76,0.08)" />
               <XAxis dataKey="day" tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: MUTED, fontSize: 10, fontFamily: BODY }} axisLine={false} tickLine={false} width={40} />
@@ -846,7 +888,8 @@ function NutritionView({ nutritionToday, nutritionDayHasValue, nutritionDayStatu
               <ReferenceLine y={calorieGoal} stroke={GOLD} strokeDasharray="6 4" strokeWidth={1} label={{ value: `Obj: ${calorieGoal}`, fill: MUTED, fontSize: 9, position: 'right' }} />
               <Bar dataKey="calories" name="Calories" fill={GOLD} radius={[6, 6, 0, 0]} />
             </BarChart>
-        </SizedContainer>
+          </SizedContainer>
+        )}
       </Card>
     </div>
   )

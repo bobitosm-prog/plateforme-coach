@@ -70,9 +70,11 @@ première panne affiche « Journal indisponible » et des métriques `—`. Apr�
 une valeur confirmée, une panne conserve cette valeur. Une réponse obsolète
 ne remplace jamais l'état courant.
 
-## Hors périmètre
+## Frontière voisine
 
-C04, la lecture hebdomadaire autonome située dans `NutritionView`, reste
-strictement inchangée : `date,calories`, `date >= UTC J-6`, `date ASC`, sans
-limite, avec ses sept zéros legacy. Les objectifs, callbacks d'ajout, modales,
-écritures/imports, Home, Analytics et diagnostic ne changent pas.
+C04, la lecture hebdomadaire autonome située dans `NutritionView`, possède
+désormais son contrat distinct dans
+[`NUTRITION_DESKTOP_WEEK_GRAPH.md`](NUTRITION_DESKTOP_WEEK_GRAPH.md). Elle ne
+réutilise pas C03 et n'en modifie ni la requête, ni le reader, ni l'état, ni le
+rendu. Les objectifs, callbacks d'ajout, modales, écritures/imports, Home,
+Analytics et diagnostic ne changent pas.

@@ -81,6 +81,14 @@ l'accordéon, arrondit les totaux finaux comme l'UI historique et possède un
 cycle de panne/valeur visible propre. Elle ne remplace ni l'agrégation
 multi-date Analytics, ni les moyennes du diagnostic, ni C04.
 
+Le graphe Nutrition desktop sept jours C04 utilise
+`lib/nutrition/desktop-nutrition-week.ts`, documenté dans
+[`NUTRITION_DESKTOP_WEEK_GRAPH.md`](NUTRITION_DESKTOP_WEEK_GRAPH.md). Sa
+fenêtre J−6…J et ses clés sont UTC, ses libellés restent locaux, les sept
+emplacements sont synthétisés avec des lacunes nullables et sa requête conserve
+la dépendance de refresh au journal du jour. Ce contrat n'est donc pas celui
+du journal C03, d'Analytics, de Home ou du diagnostic.
+
 Les autres calculs restent en place lorsqu'une divergence existe sur la source,
 la fenêtre, l'arrondi ou le traitement de l'absence. Ils seront raccordés après
 la création des read models, pas par substitution implicite.
