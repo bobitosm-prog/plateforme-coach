@@ -39,6 +39,12 @@ import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../
 import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
 import { legacyTonnage } from '../../../lib/progression'
 import { readHomeNutritionSummary, settleHomeNutritionSummary } from '../../../lib/nutrition/home-nutrition-summary'
+import {
+  aggregateHomeCalorieMiniGraph,
+  settleHomeCalorieMiniGraph,
+  type HomeCalorieMiniGraphPoint,
+  type HomeCalorieMiniGraphRow,
+} from '../../../lib/nutrition/home-calorie-mini-graph'
 import { createActivePersonalMealPlanReader } from '../../../lib/nutrition/personal-meal-plan-reader'
 import { createNutritionPlanRepository } from '../../../lib/repositories/nutrition'
 
@@ -112,7 +118,10 @@ export default function HomeTab({
 
   // Mini analytics state
   const [weightData, setWeightData] = useState<{ date: string; poids: number }[]>([])
-  const [caloriesWeekData, setCaloriesWeekData] = useState<{ day: string; calories: number }[]>([])
+  const [caloriesWeekData, setCaloriesWeekData] = useState<
+    Array<HomeCalorieMiniGraphPoint & { day: string }>
+  >([])
+  const homeCalorieGraphRequest = useRef(0)
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
@@ -227,6 +236,9 @@ export default function HomeTab({
     const now = new Date()
     const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000).toISOString().split('T')[0]
     const oneWeekAgo = new Date(now.getTime() - 7 * 86400000).toISOString()
+    const calorieGraphRequest = ++homeCalorieGraphRequest.current
+    const calorieGraphStart = new Date(now.getTime() - 7 * 86400000).toISOString().split('T')[0]
+    const calorieGraphEnd = now.toISOString().split('T')[0]
 
     // Weight 14 days
     supabase.from('weight_logs').select('date, poids').eq('user_id', userId)
@@ -236,17 +248,34 @@ export default function HomeTab({
     // Calories 7 days (from daily_food_logs)
     supabase.from('daily_food_logs').select('calories, date').eq('user_id', userId)
       .gte('date', new Date(now.getTime() - 7 * 86400000).toISOString().split('T')[0]).limit(200)
-      .then(({ data }: any) => {
-        const calByDay: Record<string, number> = {}
-        ;(data || []).forEach((m: any) => {
-          const day = m.date || ''
-          calByDay[day] = (calByDay[day] || 0) + (m.calories || 0)
+      .then(({ data, error }: {
+        data: HomeCalorieMiniGraphRow[] | null
+        error: unknown
+      }) => {
+        const isCurrentRequest = calorieGraphRequest === homeCalorieGraphRequest.current
+        if (!isCurrentRequest) return
+        setCaloriesWeekData(previous => {
+          if (error) {
+            return settleHomeCalorieMiniGraph(previous, { status: 'failure' }, isCurrentRequest)
+          }
+          const aggregation = aggregateHomeCalorieMiniGraph(data ?? [], {
+            startInclusive: calorieGraphStart,
+            endInclusive: calorieGraphEnd,
+          })
+          const points = aggregation.points.map(point => ({
+            ...point,
+            day: new Date(point.date + 'T12:00:00').toLocaleDateString(
+              locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',
+              { weekday: 'short' },
+            ),
+            calories: point.calories === null ? null : Math.round(point.calories),
+          }))
+          return settleHomeCalorieMiniGraph(
+            previous,
+            { status: 'ready', points },
+            isCurrentRequest,
+          )
         })
-        const days = Object.entries(calByDay).sort(([a], [b]) => a.localeCompare(b))
-        setCaloriesWeekData(days.map(([day, calories]) => ({
-          day: new Date(day + 'T12:00:00').toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }),
-          calories: Math.round(calories as number),
-        })))
       })
 
     // Volume & sessions this week
@@ -329,6 +358,7 @@ export default function HomeTab({
     const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
     supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', userId).gte('date', weekAgo).order('date')
       .then(({ data }: any) => setLast7Checkins(data || []))
+    return () => { homeCalorieGraphRequest.current += 1 }
   }, [session?.user?.id, homeRefreshKey])
 
   // Mount-only: load checkin mood/note/sleep (re-fetching would trigger autosave)

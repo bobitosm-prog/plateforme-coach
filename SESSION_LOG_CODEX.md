@@ -11407,3 +11407,70 @@ inactive.
 
 **Prochaine action :** traiter C01, le mini-graphe calories Home, sans toucher
 au résumé Home figé.
+
+## Entrée — 2026-07-25 — C01 mini-graphe calories Home sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `6f0e0d0`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** l'effet mini analytics de `HomeTab` ignorait `error` dans
+la réponse `daily_food_logs`, remplaçait une panne par `(data || [])`, puis
+additionnait chaque ligne avec `(m.calories || 0)`. Une collection absente,
+`null`, `undefined` et `NaN` devenaient donc vide/zéro; les chaînes pouvaient
+être concaténées, tandis qu'infini et négatif traversaient. L'effet ne
+possédait ni compteur propre ni cleanup, donc une réponse ancienne pouvait
+écraser une réponse plus récente.
+
+**Flux :** `HomeTab → effet mini analytics → lecture directe
+daily_food_logs → aggregateHomeCalorieMiniGraph → caloriesWeekData →
+EnergyCard → sparkline SVG`. Il n'existe pas de hook/repository intermédiaire.
+Le repository journal n'est pas réutilisé : il projette le journal complet,
+impose deux tris et une autre limite. Les agrégateurs Analytics et diagnostic
+ont respectivement une fenêtre locale sans jours synthétisés et une semaine
+précédente Zurich avec moyennes IA; le résumé Home ne couvre que le jour
+courant avec plan et complétions.
+
+**Règles :** nombre fini non négatif ou chaîne numérique non vide connu; zéro
+réel connu; `null`, `undefined`, absent ou chaîne vide inconnu; texte non
+numérique, `NaN`, infini, négatif ou type incompatible invalide. J−7…J
+représente huit dates UTC inclusives. Jour absent et inconnu deviennent une
+lacune; ligne invalide ignorée; une valeur valide du même jour reste
+exploitable. Une collection vide confirmée produit huit lacunes. Une panne
+conserve la série visible et le compteur avec cleanup ignore la réponse
+obsolète.
+
+**Requête et schéma :** 1 → 1 lecture C01 owner-scoped, projection
+`calories,date`, `date >= UTC J-7`, aucun ordre, `limit 200`, collection,
+montage et retour Home via `homeRefreshKey`, sans cache additionnel ni
+polling. L'OpenAPI déployée confirme `date` (`date`) et `calories`
+(`numeric`) non nullables; la projection distante répond en 200 avec des
+formes `string/number`. Aucune projection SQL n'a changé.
+
+**Rendu et périmètre :** les segments connus gardent la sparkline historique;
+les lacunes coupent la polyline et un zéro isolé reste visible. Les noms de
+props et callbacks sont conservés; `weekData.calories` accepte `null` pour
+exprimer la lacune. Le bloc `readHomeNutritionSummary`, ses trois requêtes,
+`consumedKcal`, le cercle d'`EnergyCard` et `NutritionCard` sont inchangés.
+Aucun insert, update, upsert, delete, RPC, payload, mutation ou producteur IA
+n'a changé.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/3 tests verts;
+test attendu rouge car le nouveau module n'existait pas. Après correction :
+ciblés Home 12 fichiers/61 tests; Analytics/diagnostic 7/58; Nutrition
+50/385; gardes statiques 87/326; agrégations autoritaires
+`status=ok, auditedConsumers=698, intentionalLegacy=2`; constructions
+Supabase `status=ok, canonical=4, legacy=53, total=57`; suite complète
+266 fichiers, 2 156 tests réussis et 3 `todo`. TypeScript est vert.
+
+**Dette ESLint :** `HomeTab` passe de 37 erreurs/42 avertissements historiques
+à 35/42 grâce au retrait des deux `any` de C01. Le helper, `EnergyCard` et les
+trois nouveaux tests sont à 0 erreur/0 avertissement. La vérification des
+158 liens locaux sur six Markdown et `git diff --check` sont verts.
+
+**État roadmap :** C01 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 14 et C à 8. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C09, les erreurs de transport des
+collections `meal_tracking` et `daily_food_logs` du résumé Home, sans changer
+ses calculs, ses cartes ni ses trois requêtes.

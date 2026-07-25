@@ -86,7 +86,7 @@ donnée distante.
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C02 Analytics est sécurisé, mais 9 consommateurs journal/objectifs transforment encore potentiellement panne ou inconnue en zéro/absence. |
+| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 Home et C02 Analytics sont sécurisés, mais 8 consommateurs journal/objectifs transforment encore potentiellement panne ou inconnue en zéro/absence. |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
 | Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
@@ -156,10 +156,12 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Traiter C01, le mini-graphe `daily_food_logs` de Home identifié dans
+Traiter C09, les erreurs de transport des deux collections consommées par le
+résumé Home identifié dans
 l'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md),
-sans toucher au résumé Home figé. C02 Analytics distingue désormais
-zéro/inconnue/invalide et conserve la série visible sur panne. Le
+sans modifier ses calculs, ses cartes ni ses trois requêtes. C01 Home et C02
+Analytics distinguent désormais zéro/inconnue/invalide et conservent la série
+visible sur panne. Le
 [diagnostic hebdomadaire](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md)
 conclut qu'aucune migration vers `NutritionPlanEnvelopeV1` n'est applicable et
 distingue désormais zéro, inconnue et invalide dans sa propre agrégation.

@@ -73,6 +73,11 @@ Le contrat public de `HomeTab`, ses props et ses composants restent inchangés.
 `consumedKcal`. Streak, entraînement, progression, calendrier, eau, check-in,
 responsive et callbacks sont hors de la frontière.
 
+La sparkline hebdomadaire de `EnergyCard` est un flux séparé documenté dans
+[`NUTRITION_HOME_CALORIE_MINI_GRAPH.md`](NUTRITION_HOME_CALORIE_MINI_GRAPH.md).
+Son raccordement C01 ne modifie ni ce reader de plan, ni
+`readHomeNutritionSummary`, ni les trois requêtes du résumé.
+
 Aucune écriture Nutrition n'est ajoutée ou migrée. Les mutations eau et
 check-in préexistantes dans `HomeTab` sont inchangées.
 

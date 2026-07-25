@@ -29,7 +29,7 @@ const cardStyle: React.CSSProperties = {
 interface EnergyCardProps {
   consumedKcal: number
   calorieGoal: number
-  weekData: Array<{ day: string; calories: number }>
+  weekData: Array<{ day: string; calories: number | null }>
 }
 
 export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: EnergyCardProps) {
@@ -41,13 +41,23 @@ export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: Ener
   const circ = 2 * Math.PI * r
 
   // Sparkline points
-  const hasData = weekData.some(d => d.calories > 0)
-  const maxCal = Math.max(1, ...weekData.map(d => d.calories))
-  const sparkPoints = weekData.map((d, i) => {
-    const x = weekData.length > 1 ? (i / (weekData.length - 1)) * 100 : 50
-    const y = 38 - (d.calories / maxCal) * 34
-    return `${x},${y}`
-  }).join(' ')
+  const knownData = weekData.filter(
+    (point): point is { day: string; calories: number } => point.calories !== null,
+  )
+  const hasData = knownData.length > 0
+  const maxCal = Math.max(1, ...knownData.map(d => d.calories))
+  const sparkSegments: string[][] = []
+  weekData.forEach((point, index) => {
+    if (point.calories === null) return
+    const previousIsKnown = index > 0 && weekData[index - 1]?.calories !== null
+    const segment = previousIsKnown
+      ? sparkSegments[sparkSegments.length - 1]
+      : undefined
+    const x = weekData.length > 1 ? (index / (weekData.length - 1)) * 100 : 50
+    const y = 38 - (point.calories / maxCal) * 34
+    if (segment) segment.push(`${x},${y}`)
+    else sparkSegments.push([`${x},${y}`])
+  })
 
   return (
     <div style={cardStyle}>
@@ -94,14 +104,27 @@ export default function EnergyCard({ consumedKcal, calorieGoal, weekData }: Ener
       {/* Sparkline */}
       {hasData && (
         <svg viewBox="0 0 100 40" width="100%" height={40} preserveAspectRatio="none">
-          <polyline
-            points={sparkPoints}
-            fill="none"
-            stroke={GOLD}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {sparkSegments.map((segment, index) => (
+            segment.length === 1 ? (
+              <circle
+                key={`${segment[0]}-${index}`}
+                cx={segment[0]?.split(',')[0]}
+                cy={segment[0]?.split(',')[1]}
+                r="1.5"
+                fill={GOLD}
+              />
+            ) : (
+              <polyline
+                key={`${segment[0]}-${index}`}
+                points={segment.join(' ')}
+                fill="none"
+                stroke={GOLD}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )
+          ))}
         </svg>
       )}
     </div>
