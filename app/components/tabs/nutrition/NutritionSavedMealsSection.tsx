@@ -2,10 +2,11 @@ import { Pencil, Trash2 } from 'lucide-react'
 
 import { bodyStyle, cardStyle, colors, fonts, mutedStyle } from '@/lib/design-tokens'
 import { readSavedMealFoodValues } from '@/lib/nutrition/saved-meal-snapshot'
+import type { SavedMealsLibraryStatus } from '@/lib/nutrition/saved-meals-library'
 import SectionTitle from '@/app/components/ui/SectionTitle'
 
 export interface NutritionSavedMealFood { calories?: number; protein?: number; proteins?: number; carbs?: number; fat?: number; fats?: number; fiber?: number; fibers?: number }
-export interface NutritionSavedMealView { id: string; name?: string | null; meal_type?: string | null; foods?: NutritionSavedMealFood[] | null; created_at?: string | null }
+export interface NutritionSavedMealView { id: string; user_id?: string | null; name?: string | null; meal_type?: string | null; foods?: NutritionSavedMealFood[] | null; created_at?: string | null }
 
 interface NutritionSavedMealsSectionProps {
   meals: NutritionSavedMealView[]
@@ -21,6 +22,20 @@ interface NutritionSavedMealsSectionProps {
   onAskDelete: (id: string) => void
   onDelete: (id: string) => void
   onCreate: () => void
+}
+
+export function NutritionSavedMealsReadNotice(props: {
+  status: SavedMealsLibraryStatus
+  loadingLabel: string
+  errorLabel: string
+}) {
+  if (props.status === 'loading') {
+    return <div role="status" style={{ ...bodyStyle, textAlign: 'center', padding: '24px 16px' }}>{props.loadingLabel}</div>
+  }
+  if (props.status === 'error') {
+    return <div role="alert" style={{ ...bodyStyle, color: colors.error, textAlign: 'center', padding: '24px 16px' }}>{props.errorLabel}</div>
+  }
+  return null
 }
 
 export function NutritionSavedMealsSection(props: NutritionSavedMealsSectionProps) {

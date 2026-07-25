@@ -86,6 +86,14 @@ a dérivé le coach authentifié et validé la relation active. Cette méthode
 n'ajoute donc aucune requête de relation et conserve les trois lectures
 initiales du domaine Nutrition.
 
+Le [sous-onglet « Mes repas »](NUTRITION_SAVED_MEALS_LIBRARY.md) conserve
+volontairement sa lecture directe wildcard historique. Il ne réutilise pas
+`listSavedMealsForOwner`, car cette méthode repository impose une projection
+explicite et une limite bornée, tandis que le contrat UI déployé est sans
+limite, se recharge à chaque entrée de sous-onglet et pilote des mutations
+optimistes locales. Son settlement pur ajoute uniquement les états de
+transport, l'owner et la neutralisation des réponses obsolètes.
+
 Les écritures legacy et leurs divergences avec ces projections read-only sont
 caractérisées dans
 [NUTRITION_PLAN_PRODUCERS.md](NUTRITION_PLAN_PRODUCERS.md). Les repositories
@@ -118,9 +126,9 @@ consommateurs logiques dans les catégories A–E. Il confirme :
 - deux lecteurs déployés seulement pour `client_meal_plans` : le repository
   coach/client et le loader dashboard dont le contrat de fraîcheur diffère;
 - six fichiers exécutables lisant `daily_food_logs`, cinq `meal_tracking` et
-  deux `saved_meals`;
+  trois `saved_meals` depuis l'extraction du cycle C06 dans son hook dédié;
 - aucune RPC Nutrition read-only;
-- dix consommateurs encore à migrer pour distinguer panne, absence, inconnue
+- trois consommateurs encore à migrer pour distinguer panne, absence, inconnue
   et zéro, sans ajouter de méthode repository par simple déduplication.
 
 La garde

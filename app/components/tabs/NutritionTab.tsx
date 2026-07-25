@@ -11,10 +11,11 @@ import ShoppingList from '../ShoppingList'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import { useNutritionJournal, useNutritionPlans } from '../../hooks/nutrition'
+import { useSavedMealsLibrary } from '../../hooks/nutrition/useSavedMealsLibrary'
 import { NutritionCalendarSection } from './nutrition/NutritionCalendarSection'
 import { NutritionPlanSection } from './nutrition/NutritionPlanSection'
 import { NutritionSummarySection } from './nutrition/NutritionSummarySection'
-import { NutritionSavedMealsSection, type NutritionSavedMealView } from './nutrition/NutritionSavedMealsSection'
+import { NutritionSavedMealsReadNotice, NutritionSavedMealsSection, type NutritionSavedMealView } from './nutrition/NutritionSavedMealsSection'
 import { NutritionJournalMealsSection, type NutritionJournalLog } from './nutrition/NutritionJournalMealsSection'
 import { NutritionPlanContent } from './nutrition/NutritionPlanContent'
 import { NutritionTabOverlays, type EditableMeal, type FoodSearchResult, type OverlayFood, type ReusableMeal } from './nutrition/NutritionTabOverlays'
@@ -97,8 +98,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const savedMealReuseInFlight = React.useRef(false)
   const savedMealReuseRequest = React.useRef(0)
   const savedMealSelectionRequest = React.useRef(0)
-  // Mes repas tab state
-  const [myMeals, setMyMeals] = useState<any[]>([])
   const [myMealsSearch, setMyMealsSearch] = useState('')
   const [myMealsFilter, setMyMealsFilter] = useState('all')
   const [editingMeal, setEditingMeal] = useState<any>(null)
@@ -124,6 +123,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const { activePersonalPlan: activeMealPlan, loading: loadingPlan, reload: fetchActiveMealPlan } = plans
   const addWater = (ml: number) => journal.addWater(ml, today)
   const [subTab, setSubTab] = useState<SubTab>('today')
+  const {
+    meals: myMeals,
+    status: myMealsStatus,
+    setMeals: setMyMeals,
+  } = useSavedMealsLibrary({
+    supabase,
+    userId,
+    active: subTab === 'meals',
+  })
   const nutritionSummary = readNutritionTabSummary({
     rows: dailyLogs,
     journalState,
@@ -150,14 +158,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   useEffect(() => {
     if (activeMealPlan && !coachMealPlan) setSubTab('today')
   }, [activeMealPlan, coachMealPlan])
-
-  // Fetch saved meals for "Mes Repas" tab
-  useEffect(() => {
-    if (subTab === 'meals' && userId) {
-      supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-        .then(({ data }: any) => setMyMeals(data || []))
-    }
-  }, [subTab, userId])
 
   useEffect(() => {
   }, [activeMealPlan, subTab])
@@ -477,7 +477,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
-        <NutritionSavedMealsSection meals={myMeals as NutritionSavedMealView[]} search={myMealsSearch} filter={myMealsFilter} locale={locale} labels={{ title: nt('chrome.myMeals'), search: nt('chrome.searchMeal'), all: nt('filters.all'), breakfast: nt('filters.breakfast'), lunch: nt('filters.lunch'), dinner: nt('filters.dinner'), snack: nt('filters.snack'), empty: 'Aucun repas sauvegardé. Ajoute un repas depuis l’onglet Journal pour le retrouver ici.', create: '+ CRÉER UN REPAS' }} mealLabels={MEAL_LABELS} confirmDeleteId={confirmDeleteMeal} onSearchChange={setMyMealsSearch} onFilterChange={setMyMealsFilter} onEdit={meal => { setSavedMealError(null); setEditingMeal(meal) }} onAskDelete={setConfirmDeleteMeal} onDelete={async id => { await supabase.from('saved_meals').delete().eq('id', id); setMyMeals(previous => previous.filter(meal => meal.id !== id)); setConfirmDeleteMeal(null) }} onCreate={async () => { const payload = prepareEmptySavedMealInsert({ userId, name: 'Nouveau repas', mealType: 'dejeuner' }); const { data } = await supabase.from('saved_meals').insert(payload).select().single(); if (data) { setMyMeals(previous => [data, ...previous]); setEditingMeal(data) } }} />
+        <>
+          <NutritionSavedMealsReadNotice status={myMealsStatus} loadingLabel={nt('savedMeals.loading')} errorLabel={nt('savedMeals.error')} />
+          {(myMeals.length > 0 || myMealsStatus === 'ready' || myMealsStatus === 'empty') && <NutritionSavedMealsSection meals={myMeals as NutritionSavedMealView[]} search={myMealsSearch} filter={myMealsFilter} locale={locale} labels={{ title: nt('chrome.myMeals'), search: nt('chrome.searchMeal'), all: nt('filters.all'), breakfast: nt('filters.breakfast'), lunch: nt('filters.lunch'), dinner: nt('filters.dinner'), snack: nt('filters.snack'), empty: 'Aucun repas sauvegardé. Ajoute un repas depuis l’onglet Journal pour le retrouver ici.', create: '+ CRÉER UN REPAS' }} mealLabels={MEAL_LABELS} confirmDeleteId={confirmDeleteMeal} onSearchChange={setMyMealsSearch} onFilterChange={setMyMealsFilter} onEdit={meal => { setSavedMealError(null); setEditingMeal(meal) }} onAskDelete={setConfirmDeleteMeal} onDelete={async id => { await supabase.from('saved_meals').delete().eq('id', id); setMyMeals(previous => previous.filter(meal => meal.id !== id)); setConfirmDeleteMeal(null) }} onCreate={async () => { const payload = prepareEmptySavedMealInsert({ userId, name: 'Nouveau repas', mealType: 'dejeuner' }); const { data } = await supabase.from('saved_meals').insert(payload).select().single(); if (data) { setMyMeals(previous => [data, ...previous]); setEditingMeal(data) } }} />}
+        </>
       )}
 
       {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && <ShoppingList planData={activeMealPlan?.plan_data || coachMealPlan} onClose={() => setShowShoppingModal(false)} />}

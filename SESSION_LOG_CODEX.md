@@ -11764,3 +11764,74 @@ inactive.
 **Prochaine action :** traiter uniquement C06, la lecture du sous-onglet
 « Mes repas » de `NutritionTab`, sans rouvrir C03/C04/C05 ni les surfaces
 Home figées.
+
+## Entrée — 2026-07-25 — C06 lecture « Mes repas » sécurisée
+
+**Contexte Git :** branche `main`, commit de départ et de fin `e1a6f96`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** l'effet « Mes repas » ne destructurait que `data` puis
+exécutait `setMyMeals(data || [])`. Une erreur Supabase, un rejet réseau ou
+`data = null` devenait donc la même liste vide qu'un succès `[]`. L'effet
+n'avait ni compteur ni cleanup : une réponse ancienne pouvait remplacer une
+ouverture ou un owner plus récent.
+
+**Flux avant/après :** avant :
+`NutritionTab → effet subTab/userId → saved_meals select('*') → data || [] →
+myMeals → NutritionSavedMealsSection`. Après :
+`NutritionTab → useSavedMealsLibrary → même lecture →
+begin/settleSavedMealsLibraryRead → état owner-scoped →
+NutritionSavedMealsReadNotice + NutritionSavedMealsSection`.
+
+**Comparaison des deux lectures :** le sélecteur d'import A05 reste inchangé :
+projection `SAVED_MEAL_PROJECTION`, ouverture/fermeture d'overlay et état
+temporaire. C06 conserve son wildcard historique, son absence de limite, son
+rafraîchissement à chaque entrée de sous-onglet et sa liste éditable. Le
+repository borné n'est pas utilisé, car il changerait projection, limite et
+fraîcheur. Seul le settlement pur est nouveau.
+
+**Sémantique :** première ouverture `loading`; succès non vide `ready`;
+succès `[]` `empty`; erreur Supabase, rejet réseau et `data = null` `error`.
+Une erreur après une liste visible conserve cette liste pour le même owner.
+Une réponse obsolète est ignorée. Un changement d'owner retire immédiatement
+les lignes précédentes; une ligne retournée avec un owner incorrect invalide
+la réponse. Une réouverture relance une unique lecture et peut récupérer après
+une erreur. L'ordre PostgREST est conservé sans tri client.
+
+**Requête et schéma :** 1 → 1 requête par entrée, `select('*')`, owner
+`userId`, `created_at DESC`, collection sans limite, sans cache ni polling.
+La projection explicite du sélecteur, avec aliases
+`total_protein:total_proteins` et `total_fat:total_fats`, répond HTTP 200 sur
+le backend déployé. L'OpenAPI anonyme n'est pas exposée (HTTP 401); les types
+générés et la baseline confirment `name`/`foods` requis, `foods jsonb` avec
+défaut `[]`, et owner/type/date/totaux nullables. Le rendu continue de
+recalculer depuis `foods` et accepte les alias historiques pluriels.
+
+**Périmètre :** les props/callbacks de la section, création, édition,
+suppression, payloads, mises à jour optimistes, import/réutilisation, C03,
+C04, C05, Home, Analytics et diagnostic restent inchangés. Aucun insert,
+update, upsert, delete, RPC ou producteur IA n'a changé. La première
+implémentation dépassait la garde de façade à 545 lignes; l'extraction du
+cycle dans un hook dédié ramène `NutritionTab` à 490 lignes.
+
+**Tests :** caractérisation legacy pré-correction 1 fichier/5 tests verts;
+les deux suites de correction étaient rouges car la frontière manquait.
+Après correction : C06 4 fichiers/28 tests; C06, sélecteur d'import, inventaire
+et sections 9 fichiers/48 tests; ciblés Nutrition/Home/Analytics/diagnostic
+72 fichiers/556 tests; agrégations autoritaires
+`status=ok, auditedConsumers=703, intentionalLegacy=2`; constructions
+Supabase `status=ok, canonical=4, legacy=53, total=57`; parité i18n 2 192 clés
+× 3 langues; suite complète 282 fichiers, 2 288 tests réussis et 3 `todo`.
+TypeScript est vert.
+
+**Dette ESLint :** `NutritionTab.tsx` passe de 15 à 13 erreurs historiques et
+de 3 à 2 avertissements. Le helper, le hook, la section et les tests C06 sont
+à 0 erreur/0 avertissement. Les 186 liens locaux contrôlés sont valides et
+`git diff --check` est vert.
+
+**État roadmap :** C06 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 19 et C à 3. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C07, le badge `macros_on_target`,
+sans rouvrir C03/C04/C05/C06 ni les surfaces Home figées.

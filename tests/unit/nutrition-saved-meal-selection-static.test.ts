@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const facade = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
+const libraryHook = readFileSync(
+  'app/hooks/nutrition/useSavedMealsLibrary.ts',
+  'utf8',
+)
 const repository = readFileSync('lib/repositories/nutrition/recipes.ts', 'utf8')
 const selection = readFileSync('lib/nutrition/saved-meal-selection.ts', 'utf8')
 
@@ -22,8 +26,8 @@ describe('saved meal import selection architecture', () => {
   })
 
   it('leaves the Mes repas read on its historical wildcard path', () => {
-    expect(facade).toContain(
-      "from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })",
+    expect(libraryHook).toMatch(
+      /from\('saved_meals'\)\.select\('\*'\)[\s\S]{0,120}\.eq\('user_id', userId\)\.order\('created_at', \{ ascending: false \}\)/,
     )
   })
 

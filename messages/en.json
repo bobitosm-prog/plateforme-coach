@@ -2320,6 +2320,8 @@
     "savedMeals": {
       "title": "MY MEALS",
       "empty": "No saved meals.",
+      "loading": "Loading saved meals...",
+      "error": "Saved meals are unavailable. Try opening this tab again.",
       "foodCount": "{count} foods",
       "usedCount": "{count}x used"
     }

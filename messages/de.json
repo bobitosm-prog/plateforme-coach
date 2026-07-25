@@ -2320,6 +2320,8 @@
     "savedMeals": {
       "title": "MEINE MAHLZEITEN",
       "empty": "Keine gespeicherten Mahlzeiten.",
+      "loading": "Gespeicherte Mahlzeiten werden geladen...",
+      "error": "Gespeicherte Mahlzeiten sind nicht verfügbar. Öffne diesen Tab erneut.",
       "foodCount": "{count} Lebensmittel",
       "usedCount": "{count}x verwendet"
     }

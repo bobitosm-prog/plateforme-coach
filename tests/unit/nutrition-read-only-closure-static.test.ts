@@ -79,6 +79,7 @@ describe('Nutrition read-only closure inventory', () => {
     ])
     expect(executableReads('saved_meals')).toEqual([
       'app/components/tabs/NutritionTab.tsx',
+      'app/hooks/nutrition/useSavedMealsLibrary.ts',
       'lib/repositories/nutrition/recipes.ts',
     ])
   })

@@ -2320,6 +2320,8 @@
     "savedMeals": {
       "title": "MES REPAS",
       "empty": "Aucun repas sauvegarde.",
+      "loading": "Chargement des repas sauvegardés...",
+      "error": "Les repas sauvegardés sont indisponibles. Réessaie en ouvrant à nouveau cet onglet.",
       "foodCount": "{count} aliments",
       "usedCount": "{count}x utilise"
     }
