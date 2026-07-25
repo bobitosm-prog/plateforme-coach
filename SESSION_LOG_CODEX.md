@@ -12100,3 +12100,69 @@ historiques de concordance, RC1 reste à 0/38 et Phase 9 inactive.
 **Prochaine action :** caractériser uniquement la décision Phase 4 applicable
 aux preuves historiques `600 → 500 kcal` et `0 → 18 g`, sans rouvrir C01 à
 C10, sans backfill implicite et sans cocher RC1.
+
+## Entrée — 2026-07-25 — Décision des divergences historiques Phase 4 caractérisée
+
+**Contexte Git :** branche `main`, commit de départ et de fin `1c5de0d`.
+Aucun commit ou push n'a été créé. Seuls quatre documents sont modifiés ou
+ajoutés et l'index reste vide.
+
+**Origine :** les paires `600 → 500 kcal` et `0 → 18 g` sont des fixtures
+synthétiques introduites ensemble par
+`cca0a72 test(nutrition): compare legacy canonical totals`. Elles ne portent
+aucun identifiant de production, aucune date métier et aucune preuve de
+succession ancien/nouveau. Le comparateur pur n'est raccordé ni au rendu, ni
+aux repositories, ni aux écritures.
+
+**600/500 :** la première fixture compare un total déclaré à un résultat
+canonique recalculé. Les producteurs runtime démontrent que les colonnes de
+total peuvent contenir l'objectif du diagnostic ou le total du lundi avec
+fallback sur l'objectif, tandis que `plan_data.<jour>.total_kcal` est recalculé
+depuis les aliments. La cause est une provenance non versionnée et des
+autorités sémantiques distinctes, pas la preuve que 600 doit devenir 500.
+Le choix recommandé pour l'historique est documentation seule. Une éventuelle
+règle future doit versionner l'autorité par producteur avant tout changement.
+
+**0/18 :** la seconde fixture arrive déjà avec `protein: 0` et sans
+`proteins: 18`; la valeur a été perdue avant la frontière de comparaison.
+Le snapshot v1 préserve désormais les alias présents, conserve un vrai zéro
+et refuse les conflits. Cette prévention future est déjà réalisée, mais aucun
+reader ou rendu ne peut reconstruire honnêtement 18 g depuis l'objet appauvri.
+Le choix recommandé pour la preuve historique est donc documentation seule,
+sans backfill.
+
+**Vérification distante :** un échantillon read-only borné a observé
+22 `meal_plans`, sans ligne contenant simultanément des valeurs numériques
+comparables pour `total_calories` et `plan_data.lundi.total_kcal`, et donc sans
+paire exacte 600/500. Il a observé 9 `saved_meals` et 37 objets aliments, sans
+cas exact singulier zéro, pluriel 18 ou conflit correspondant. Aucun identifiant
+ni contenu brut n'a été sorti. Cet instantané ne constitue pas une garantie
+future. Le runtime expose les colonnes `meal_plans` utilisées, tandis que les
+types générés restent sur `plan/active`; `saved_meals.foods` reste un JSON dont
+les alias ne sont pas contraints par SQL.
+
+**Décision et périmètre :** les deux divergences sont indépendantes et ne
+doivent pas partager migration ou backfill. Les douze fixtures, leur SHA,
+leurs statuts et tous les attendus restent inchangés. Aucun TypeScript,
+runtime, rendu, requête, donnée, schéma, migration, insert, update, upsert,
+delete, RPC, payload ou producteur IA n'a été modifié. Le domaine Nutrition
+read-only reste clôturable avec A=22, B=7, C=0, D=6 et E=5.
+
+**Validations :** les recherches statiques exhaustives ont couvert
+`app/`, `lib/`, `tests/`, `docs/`, la roadmap et le journal, puis l'historique
+Git depuis l'introduction des fixtures. Les caractérisations concordance,
+producteurs, snapshots, persistance, réutilisation, sélection et rendu passent :
+10 fichiers et 95 tests réussis. Les 173 liens locaux des quatre documents
+modifiés ou ajoutés sont valides. `git diff --check` est vert. Aucun contrôle
+TypeScript ou ESLint n'est requis puisqu'aucun fichier TypeScript ou JavaScript
+n'a changé.
+
+**État roadmap :** Phase 4 reste `partial` et son critère de concordance
+`unmet` : une documentation ne peut rendre vraies deux égalités protégées.
+RC1 reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** obtenir une validation métier explicite pour accepter
+les deux divergences comme exceptions documentées au critère Phase 4 et
+désigner séparément l'autorité future des totaux de plan. Aucune nouvelle
+décision de valeur n'est requise pour 0/18 : l'historique est irrécupérable et
+le chemin futur est déjà sécurisé.

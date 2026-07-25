@@ -86,10 +86,10 @@ donnée distante.
 
 | Définition de terminé | État | Preuve et limite |
 |---|---|---|
-| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [objectifs du diagnostic sécurisés](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md), [journal desktop du jour sécurisé](NUTRITION_DESKTOP_DAY_JOURNAL.md), [graphe desktop sept jours sécurisé](NUTRITION_DESKTOP_WEEK_GRAPH.md), [résumé `NutritionTab` sécurisé](NUTRITION_TAB_SUMMARY.md), [lecture « Mes repas » sécurisée](NUTRITION_SAVED_MEALS_LIBRARY.md), [badge `macros_on_target` sécurisé](NUTRITION_MACROS_ON_TARGET_BADGE.md), [adhérence Analytics coach sécurisée](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 à C10 sont sécurisés et le domaine read-only est clôturable; l'état reste `partial` uniquement parce que deux preuves historiques de concordance demeurent divergentes. |
+| Bornes et tolérances Nutrition explicites | `partial` | [`NUTRITION_CANONICAL_MODEL.md`](NUTRITION_CANONICAL_MODEL.md), [`NUTRITION_TOTAL_COMPARISON.md`](NUTRITION_TOTAL_COMPARISON.md), [décision des divergences historiques](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md), [lecture client-detail vérifiée sur le schéma runtime](NUTRITION_CLIENT_DETAIL_DOUBLE_READ.md), [diagnostic hebdomadaire sans lecture de plan](NUTRITION_WEEKLY_DIAGNOSTIC_CHARACTERIZATION.md), [objectifs du diagnostic sécurisés](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md), [mini-graphe Home sécurisé](NUTRITION_HOME_CALORIE_MINI_GRAPH.md), [journal desktop du jour sécurisé](NUTRITION_DESKTOP_DAY_JOURNAL.md), [graphe desktop sept jours sécurisé](NUTRITION_DESKTOP_WEEK_GRAPH.md), [résumé `NutritionTab` sécurisé](NUTRITION_TAB_SUMMARY.md), [lecture « Mes repas » sécurisée](NUTRITION_SAVED_MEALS_LIBRARY.md), [badge `macros_on_target` sécurisé](NUTRITION_MACROS_ON_TARGET_BADGE.md), [adhérence Analytics coach sécurisée](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md) et [audit de clôture read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md). C01 à C10 sont sécurisés et le domaine read-only est clôturable; l'état reste `partial` parce que les preuves historiques ne portent pas une autorité permettant de les rendre concordantes honnêtement. |
 | Composants ciblés sous les seuils | `met` | Gardes statiques des façades Nutrition/Progression. |
 | Agrégations non dupliquées | `met` | [`PROGRESSION_AGGREGATION_AUTHORITY.md`](PROGRESSION_AGGREGATION_AUTHORITY.md) définit les autorités, conserve les contrats divergents et ajoute une garde AST sur tout `app/` et les consommateurs `lib/` concernés. |
-| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. Le [snapshot v1](NUTRITION_LEGACY_SNAPSHOTS.md) sécurise production et réutilisation de `saved_meals`, refuse les conflits et retire `use_count` non contractuel. Les preuves historiques 600→500 kcal et 0→18 g demeurent divergentes sans backfill. |
+| Anciennes/nouvelles métriques concordantes | `unmet` | La [politique de concordance](NUTRITION_TOTAL_COMPARISON.md) rejoue sans modification 12 preuves. La [matrice de décision](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) conclut à deux causes indépendantes : provenance non versionnée des totaux 600/500, alias déjà perdu pour 0/18. Elle recommande documentation seule pour l'historique, aucun backfill, et une décision produit séparée avant toute règle future de total. Le snapshot v1 sécurise prospectivement `saved_meals`; les deux preuves restent honnêtement divergentes. |
 
 ## Phase 5 — `met`
 
@@ -156,9 +156,12 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Caractériser uniquement la décision Phase 4 applicable aux deux preuves
-historiques divergentes `600 → 500 kcal` et `0 → 18 g`, sans rouvrir C01 à C10,
-sans backfill implicite et sans cocher RC1.
+Faire valider par l'autorité métier l'acceptation des deux divergences
+historiques comme exceptions documentées au critère Phase 4 et, séparément,
+l'autorité future des totaux de plan (objectif, jour recalculé ou plan).
+La [matrice de décision](NUTRITION_PHASE_4_DIVERGENCE_DECISION.md) exclut tout
+backfill implicite et toute reconstruction de 18 g. Ne rouvrir ni C01 à C10,
+ni le runtime read-only, et ne cocher aucune case RC1 avant cette validation.
 L'[audit de clôture Nutrition read-only](NUTRITION_READ_ONLY_CLOSURE_AUDIT.md)
 est désormais clôturable et
 l'[adhérence Analytics coach](NUTRITION_COACH_ANALYTICS_MEAL_ADHERENCE.md)
