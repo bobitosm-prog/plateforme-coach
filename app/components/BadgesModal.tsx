@@ -31,6 +31,10 @@ interface BadgesModalProps {
   onClose: () => void
 }
 
+function hasCurrentValue(values: Record<string, number>, conditionType: string) {
+  return Object.prototype.hasOwnProperty.call(values, conditionType)
+}
+
 export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentValues, onClose }: BadgesModalProps) {
   const t = useTranslations('badges')
   const [filter, setFilter] = useState('all')
@@ -38,7 +42,11 @@ export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentVa
   const xpPct = Math.round(level.progress * 100)
   const earnedCount = allBadges.filter(b => unlockedIds.has(b.id)).length
   const lockedCount = allBadges.length - earnedCount
-  const almostBadges = allBadges.filter(b => !unlockedIds.has(b.id) && getProgress(b.condition_value, currentValues[b.condition_type] || 0) >= 50)
+  const almostBadges = allBadges.filter(
+    b => !unlockedIds.has(b.id)
+      && hasCurrentValue(currentValues, b.condition_type)
+      && getProgress(b.condition_value, currentValues[b.condition_type]) >= 50,
+  )
 
   const filtered = filter === 'all' ? allBadges : allBadges.filter(b => b.category === filter)
   const categories = filter === 'all' ? ['training', 'nutrition', 'streak', 'social'] : [filter]
@@ -102,8 +110,8 @@ export default function BadgesModal({ allBadges, unlockedIds, totalXp, currentVa
             </div>
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16 }}>
               {almostBadges.map(b => {
-                const pct = getProgress(b.condition_value, currentValues[b.condition_type] || 0)
-                const current = currentValues[b.condition_type] || 0
+                const pct = getProgress(b.condition_value, currentValues[b.condition_type])
+                const current = currentValues[b.condition_type]
                 return (
                   <div key={b.id} style={{ minWidth: 140, border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: 14, background: colors.surface, position: 'relative', flexShrink: 0 }}>
                     <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e' }}>{pct}%</span>

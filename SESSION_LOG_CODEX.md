@@ -11835,3 +11835,95 @@ inactive.
 
 **Prochaine action :** traiter uniquement C07, le badge `macros_on_target`,
 sans rouvrir C03/C04/C05/C06 ni les surfaces Home figées.
+
+## Entrée — 2026-07-25 — C07 badge `macros_on_target` sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `0afb66a`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `getConditionValue` ignorait les objets `error` des
+lectures `profiles` et `daily_food_logs`, puis utilisait
+`!prof?.calorie_goal`, `logs?.length`, `byDate[date] || 0` et
+`log.calories || 0`. Une cible absente, nulle ou zéro, une panne, une
+collection vide et des calories inconnues devenaient donc le même nombre
+zéro. Les chaînes numériques étaient concaténées. Le contrôle d'attribution
+appliquait ensuite `currentValues[type] || 0` sans savoir si le résultat était
+calculable.
+
+**Flux avant/après :** avant :
+`ProfileTab ou fin de séance → checkAndUnlockBadges → getConditionValue →
+profiles + daily_food_logs → agrégation inline permissive → currentValues →
+seuil et BadgesModal`. Après :
+`mêmes déclencheurs → checkAndUnlockBadges →
+getMacrosOnTargetBadgeReader → mêmes requêtes →
+calculateMacrosOnTargetBadge → valeur calculable ou indisponibilité explicite
+→ même seuil et même rendu`.
+
+**Règle métier :** le contrat historique reste calorique malgré le nom du
+badge. Les lignes sont groupées par leur chaîne SQL `date`; un jour correspond
+si `abs(consommation - calorie_goal) / calorie_goal <= 0,10`, bornes
+inclusives. `macros_perfect` reste débloqué à trois jours. La cible doit être
+finie et strictement positive; la consommation doit être finie et
+non négative. Un zéro consommé est connu, une cible zéro n'est pas calculable,
+une chaîne numérique non vide est convertie, et plusieurs lignes valides du
+même jour sont additionnées.
+
+**Transport et états :** succès vide `[]` vaut zéro jour calculable. Cible
+absente/invalide, consommation inconnue/invalide et owner explicite différent
+sont non calculables. Erreur Supabase ou rejet réseau porte la source
+`profiles` ou `daily_food_logs`. Le numéro de requête par client/owner rend une
+ancienne réponse `stale`. Aucun cache de valeur n'est créé : après une valeur
+visible, une nouvelle panne rend C07 indisponible et ne réutilise pas cette
+valeur pour attribuer une récompense. Une condition indisponible n'entre plus
+dans « Presque débloqués ».
+
+**Requêtes et schéma :** le nombre reste conditionnellement 1 → 1 ou 2 → 2.
+La première lecture reste
+`profiles.select('calorie_goal').eq('id', userId).single()`. Si la cible
+historique est truthy, la seconde reste
+`daily_food_logs.select('date, calories').eq('user_id', userId)
+.order('date', { ascending: false }).limit(200)`. Aucun filtre de période ni
+conversion timezone n'existe : il s'agit des 200 dernières lignes ordonnées
+par date. Les projections étendues de vérification
+`profiles(id,calorie_goal)` et
+`daily_food_logs(user_id,date,calories)` répondent HTTP 200 sur le backend
+déployé. Les types générés confirment la cible nullable, la date string, les
+calories numériques et l'owner nullable.
+
+**Choix de frontière :** les helpers NutritionTab, desktop, Analytics, Home
+et diagnostic ne sont pas réutilisés : ils diffèrent par owner chargé,
+fenêtre, timezone, nombre de métriques, granularité, cycle de fraîcheur et
+contrat UI. C07 reçoit une frontière minimale spécifique à la décision de
+récompense et fail-closed.
+
+**Périmètre :** projections, owner, ordre, limite, déclencheurs, seuil, props,
+callbacks et résultats valides sont préservés. Les autres badges sont
+inchangés. Aucun insert, update, upsert, delete, RPC, payload, mutation React,
+producteur IA ou payload d'attribution n'a changé; une valeur C07 non
+calculable est seulement empêchée d'atteindre les écritures existantes.
+
+**Tests et validations :** caractérisation legacy pré-correction 1 fichier/5
+tests verts; les attentes de correction étaient rouges avec module absent et
+3 gardes statiques en échec. Après correction : C07/badges 6 fichiers/55
+tests; non-régression Nutrition/Home/Analytics/diagnostic 67/525; gardes
+statiques 92/347; agrégations autoritaires
+`status=ok, auditedConsumers=704, intentionalLegacy=2`; constructions
+Supabase `status=ok, canonical=4, legacy=53, total=57`; parité i18n 2 192 clés
+× 3 langues; suite complète 286 fichiers, 2 330 tests réussis et 3 `todo`.
+TypeScript est vert. Les 734 liens locaux contrôlés sont valides et
+`git diff --check` est vert.
+
+**Dette ESLint :** la nouvelle frontière et les cinq fichiers de
+tests/garde C07 sont à 0 erreur/0 avertissement. Sur les deux fichiers
+historiques touchés, la dette passe de 7 erreurs/3 avertissements à
+6 erreurs/3 avertissements : le cas inline C07 retire un `any`; les six
+`any` restants de `check-badges.ts` et les trois imports/variables inutilisés
+de `BadgesModal.tsx` sont antérieurs et hors périmètre.
+
+**État roadmap :** C07 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 20 et C à 2, avec B=7, D=6 et E=5. Phase 4 reste `partial`, RC1
+reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** traiter uniquement C08, les objectifs Nutrition du
+diagnostic hebdomadaire, sans rouvrir C03/C04/C05/C06/C07 ni les surfaces
+Home figées.

@@ -3,6 +3,7 @@ import { computeStreak } from './streak'
 import { projectRestDates } from './project-rest-days'
 import { getLevelFromXP, getLevelTitle } from './gamification'
 import { legacyTonnage } from './progression'
+import { getMacrosOnTargetBadgeReader } from './nutrition/macros-on-target-badge'
 
 export interface Badge {
   id: string
@@ -20,7 +21,7 @@ export function getProgress(conditionValue: number, currentValue: number): numbe
   return Math.min(100, Math.round((currentValue / conditionValue) * 100))
 }
 
-async function getConditionValue(userId: string, conditionType: string, supabase: any): Promise<number> {
+async function getConditionValue(userId: string, conditionType: string, supabase: any): Promise<number | null> {
   switch (conditionType) {
     case 'workout_count': {
       const { count } = await supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('completed', true)
@@ -76,15 +77,9 @@ async function getConditionValue(userId: string, conditionType: string, supabase
       return count || 0
     }
     case 'macros_on_target': {
-      // Simplified: count days where calories are within 10% of goal
-      const { data: prof } = await supabase.from('profiles').select('calorie_goal').eq('id', userId).single()
-      if (!prof?.calorie_goal) return 0
-      const goal = prof.calorie_goal
-      const { data: logs } = await supabase.from('daily_food_logs').select('date, calories').eq('user_id', userId).order('date', { ascending: false }).limit(200)
-      if (!logs?.length) return 0
-      const byDate: Record<string, number> = {}
-      logs.forEach((l: any) => { byDate[l.date] = (byDate[l.date] || 0) + (l.calories || 0) })
-      return Object.values(byDate).filter(cal => Math.abs(cal - goal) / goal <= 0.1).length
+      const result = await getMacrosOnTargetBadgeReader(supabase).read(userId)
+      if (result.status !== 'ready' || result.value.status !== 'calculable') return null
+      return result.value.matchingDays
     }
     case 'subscription_type': {
       const { data } = await supabase.from('profiles').select('subscription_status').eq('id', userId).single()
@@ -113,12 +108,14 @@ export async function checkAndUnlockBadges(userId: string, supabase: any): Promi
 
   const conditionTypes = [...new Set<string>(allBadges.map((b: Badge) => b.condition_type))]
   for (const ct of conditionTypes) {
-    currentValues[ct] = await getConditionValue(userId, ct as string, supabase)
+    const value = await getConditionValue(userId, ct as string, supabase)
+    if (value !== null) currentValues[ct] = value
   }
 
   for (const badge of allBadges as Badge[]) {
     if (unlockedIds.has(badge.id)) continue
-    const current = currentValues[badge.condition_type] || 0
+    const current = currentValues[badge.condition_type]
+    if (current === undefined) continue
     if (current >= badge.condition_value) {
       // Use upsert to avoid duplicates — ignoreDuplicates silently skips conflicts
       const { error } = await supabase.from('user_badges').upsert(

@@ -67,6 +67,7 @@ describe('Nutrition read-only closure inventory', () => {
       'app/components/tabs/HomeTab.tsx',
       'app/hooks/nutrition/useNutritionJournal.ts',
       'lib/check-badges.ts',
+      'lib/nutrition/macros-on-target-badge.ts',
       'lib/repositories/nutrition/journal.ts',
       'lib/weekly-diagnostic/generator.ts',
     ])
