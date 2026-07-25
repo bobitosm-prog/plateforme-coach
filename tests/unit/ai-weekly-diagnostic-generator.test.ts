@@ -32,6 +32,9 @@ function createDatabase(options?: {
   insertError?: boolean
   pushSubscriptions?: boolean
   foodLogs?: Array<Record<string, unknown>>
+  profile?: Record<string, unknown> | null
+  profileError?: unknown
+  profileReject?: boolean
 }) {
   const events: string[] = []
   const inserted: Array<Record<string, unknown>> = []
@@ -61,7 +64,20 @@ function createDatabase(options?: {
       return Promise.resolve({ data: null, error: null })
     })
     builder.single = vi.fn(() => {
-      if (table === 'profiles' && operation === 'read') return Promise.resolve({ data: { objective: 'perdre', calorie_goal: 1900, protein_goal: 140, onboarding_answers: { sessions_per_week: 4 } }, error: null })
+      if (table === 'profiles' && operation === 'read') {
+        if (options?.profileReject) return Promise.reject(new Error('private network detail'))
+        const profile = Object.prototype.hasOwnProperty.call(options ?? {}, 'profile')
+          ? options?.profile
+          : {
+              objective: 'perdre',
+              calorie_goal: 1900,
+              protein_goal: 140,
+              carbs_goal: 220,
+              fat_goal: 60,
+              onboarding_answers: { sessions_per_week: 4 },
+            }
+        return Promise.resolve({ data: profile, error: options?.profileError ?? null })
+      }
       if (table === 'weekly_diagnostics' && operation === 'insert') {
         events.push('persist')
         if (options?.insertError) return Promise.resolve({ data: null, error: { message: 'private sql detail' } })
@@ -126,6 +142,72 @@ describe('weekly diagnostic shared generator', () => {
     const [request] = mocks.generate.mock.calls[0]
     expect(request.messages[0].content[0].text).toContain('Calories moyennes réelles: ?')
     expect(request.messages[0].content[0].text).toContain('Protéines moyennes: ?')
+  })
+
+  it('keeps valid consumption usable when calorie or protein goals are absent', async () => {
+    const database = createDatabase({
+      profile: {
+        objective: 'perdre',
+        calorie_goal: null,
+        protein_goal: undefined,
+        carbs_goal: 220,
+        fat_goal: 60,
+        onboarding_answers: { sessions_per_week: 4 },
+      },
+    })
+    await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
+
+    expect(database.inserted[0]).toMatchObject({
+      calorie_avg_real: 1900,
+      calorie_avg_target: null,
+      protein_avg_g: 140,
+      protein_compliance_pct: null,
+    })
+    const [request] = mocks.generate.mock.calls[0]
+    const prompt = request.messages[0].content[0].text
+    expect(prompt).toContain('Calorie goal: ? kcal')
+    expect(prompt).toContain('Protein goal: ? g')
+    expect(prompt).toContain('Target: ? kcal/jour')
+    expect(prompt).toContain('Écart moyen: ? kcal/jour')
+    expect(prompt).toContain('Objectif calories non défini')
+    expect(prompt).toContain('Objectif protéines non défini')
+    expect(prompt).not.toContain('Target: 0 kcal/jour')
+  })
+
+  it('keeps an empty week unavailable while preserving valid targets', async () => {
+    const database = createDatabase({ foodLogs: [] })
+    await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)
+    expect(database.inserted[0]).toMatchObject({
+      calorie_avg_real: null,
+      calorie_avg_target: 1900,
+      protein_avg_g: null,
+      protein_compliance_pct: null,
+    })
+    const [request] = mocks.generate.mock.calls[0]
+    const prompt = request.messages[0].content[0].text
+    expect(prompt).toContain('Calorie goal: 1900 kcal')
+    expect(prompt).toContain('Target: 1900 kcal/jour')
+    expect(prompt).toContain('Calories moyennes réelles: ?')
+  })
+
+  it.each([
+    ['Supabase error', { profileError: new Error('private sql detail') }],
+    ['network rejection', { profileReject: true }],
+  ] as const)('fails closed after a profile %s without AI or writes', async (_, options) => {
+    const database = createDatabase(options)
+    const result = await generateWeeklyDiagnostic(
+      'synthetic-user',
+      database.client as never,
+      DIAGNOSTIC_CONTEXT,
+    )
+    expect(result).toEqual({
+      error: 'Erreur lecture profil',
+      reasonCode: 'profile_read_failed',
+    })
+    expect(mocks.generate).not.toHaveBeenCalled()
+    expect(database.inserted).toHaveLength(0)
+    expect(database.events).toEqual([])
+    expect(JSON.stringify(result)).not.toContain('private')
   })
 
   it('excludes an invalid Nutrition day without lowering valid-day averages', async () => {

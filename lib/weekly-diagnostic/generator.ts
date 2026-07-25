@@ -19,6 +19,10 @@ import {
   aggregateWeeklyDiagnosticNutrition,
   previousCompleteZurichWeek,
 } from './nutrition-aggregation'
+import {
+  resolveWeeklyDiagnosticNutritionGoals,
+  weeklyDiagnosticNutritionGoalFlags,
+} from './nutrition-goals'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -72,11 +76,14 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 3. COLLECT DATA (parallel)
-    const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
+    const profileRead = Promise.resolve(
       supabase.from('profiles')
         .select('*')
         .eq('id', userId)
         .single(),
+    ).catch(error => ({ data: null, error }))
+    const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
+      profileRead,
       supabase.from('daily_food_logs')
         .select('date, calories, protein, carbs, fat')
         .eq('user_id', userId)
@@ -101,6 +108,9 @@ export async function generateWeeklyDiagnostic(
         .maybeSingle(),
     ])
 
+    if (profileRes.error) {
+      return { error: 'Erreur lecture profil', reasonCode: 'profile_read_failed' }
+    }
     const profile = profileRes.data
     if (!profile) return { error: 'Profile introuvable' }
 
@@ -131,10 +141,13 @@ export async function generateWeeklyDiagnostic(
     const daysLogged = nutrition.daysLogged
     const calorieAvgReal = nutrition.calories.average
     const proteinAvgG = nutrition.protein.average
-    const calorieAvgTarget = Number(profile.calorie_goal || 0)
-    const proteinGoal = Number(profile.protein_goal || 0)
-    const proteinCompliancePct = proteinAvgG !== null && proteinGoal > 0
-      ? (proteinAvgG / proteinGoal) * 100
+    const goals = resolveWeeklyDiagnosticNutritionGoals(profile)
+    const calorieGoal = goals.goals.calories
+    const proteinGoal = goals.goals.protein
+    const calorieAvgTarget = calorieGoal.status === 'known' ? calorieGoal.value : null
+    const proteinGoalValue = proteinGoal.status === 'known' ? proteinGoal.value : null
+    const proteinCompliancePct = proteinAvgG !== null && proteinGoalValue !== null
+      ? (proteinAvgG / proteinGoalValue) * 100
       : null
 
     const weightLogs = weightLogsRes.data || []
@@ -143,7 +156,7 @@ export async function generateWeeklyDiagnostic(
       : 0
 
     // 6. COHERENCE FLAGS
-    const coherenceFlags: string[] = []
+    const coherenceFlags: string[] = weeklyDiagnosticNutritionGoalFlags(goals)
     if (sessionsDone === 0) {
       coherenceFlags.push('Aucune séance complétée cette semaine')
     }
@@ -165,6 +178,7 @@ export async function generateWeeklyDiagnostic(
     if (
       profile.objective?.toLowerCase().includes('muscle') &&
       calorieAvgReal !== null &&
+      calorieAvgTarget !== null &&
       calorieAvgReal < calorieAvgTarget * 0.9
     ) {
       coherenceFlags.push('Objectif prise muscle mais déficit calorique moyen')
@@ -173,7 +187,8 @@ export async function generateWeeklyDiagnostic(
     // 7. BUILD PROMPT
     const invocation = buildWeeklyDiagnosticInvocation({
       profile, sessionsPlanned, sessionsDone, adherencePct, trainingVolumeTotal,
-      calorieAvgReal, calorieAvgTarget, proteinAvgG, proteinCompliancePct,
+      calorieAvgReal, calorieAvgTarget, proteinGoal: proteinGoalValue,
+      proteinAvgG, proteinCompliancePct,
       daysLogged, weightDeltaKg, coherenceFlags, previousDiagnostic: prevDiagRes.data,
     })
     const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })

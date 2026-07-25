@@ -118,7 +118,7 @@ describe('AI prompt boundaries', () => {
   })
 
   it('uses one exact weekly diagnostic contract for manual and cron triggers', () => {
-    const input = { profile: { objective: 'perdre', tdee: 2200, calorie_goal: 1900, protein_goal: 140, fitness_level: 'intermédiaire', fitness_score: 70, current_weight: 75 }, sessionsPlanned: 4, sessionsDone: 3, adherencePct: 75, trainingVolumeTotal: 12345, calorieAvgReal: 1850, calorieAvgTarget: 1900, proteinAvgG: 130, proteinCompliancePct: 92.5, daysLogged: 6, weightDeltaKg: -0.4, coherenceFlags: ['Donnée synthétique'], previousDiagnostic: { score_semaine: 68, applied_changes: true, objectif_semaine_prochaine: '4 séances' } }
+    const input = { profile: { objective: 'perdre', tdee: 2200, calorie_goal: 1900, protein_goal: 140, fitness_level: 'intermédiaire', fitness_score: 70, current_weight: 75 }, sessionsPlanned: 4, sessionsDone: 3, adherencePct: 75, trainingVolumeTotal: 12345, calorieAvgReal: 1850, calorieAvgTarget: 1900, proteinGoal: 140, proteinAvgG: 130, proteinCompliancePct: 92.5, daysLogged: 6, weightDeltaKg: -0.4, coherenceFlags: ['Donnée synthétique'], previousDiagnostic: { score_semaine: 68, applied_changes: true, objectif_semaine_prochaine: '4 séances' } }
     const manual = buildWeeklyDiagnosticInvocation(input)
     const cron = buildWeeklyDiagnosticInvocation(input)
     expect(manual).toEqual(cron)

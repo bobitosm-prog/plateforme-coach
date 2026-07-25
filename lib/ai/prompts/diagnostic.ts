@@ -3,16 +3,19 @@ import { immutableInvocation, type AiPromptInvocation } from './types'
 export interface WeeklyDiagnosticPromptInput {
   profile: { objective?: string | null; tdee?: number | null; calorie_goal?: number | null; protein_goal?: number | null; fitness_level?: string | null; fitness_score?: number | null; current_weight?: number | null }
   sessionsPlanned: number; sessionsDone: number; adherencePct: number; trainingVolumeTotal: number
-  calorieAvgReal: number | null; calorieAvgTarget: number; proteinAvgG: number | null; proteinCompliancePct: number | null
+  calorieAvgReal: number | null; calorieAvgTarget: number | null; proteinGoal: number | null; proteinAvgG: number | null; proteinCompliancePct: number | null
   daysLogged: number; weightDeltaKg: number; coherenceFlags: readonly string[]
   previousDiagnostic?: { score_semaine?: number | null; applied_changes?: boolean | null; objectif_semaine_prochaine?: string | null } | null
 }
 
 export function buildWeeklyDiagnosticInvocation(input: WeeklyDiagnosticPromptInput): AiPromptInvocation {
-  const { profile, sessionsPlanned, sessionsDone, adherencePct, trainingVolumeTotal, calorieAvgReal, calorieAvgTarget, proteinAvgG, proteinCompliancePct, daysLogged, weightDeltaKg, coherenceFlags } = input
+  const { profile, sessionsPlanned, sessionsDone, adherencePct, trainingVolumeTotal, calorieAvgReal, calorieAvgTarget, proteinGoal, proteinAvgG, proteinCompliancePct, daysLogged, weightDeltaKg, coherenceFlags } = input
   const prevDiagRes = { data: input.previousDiagnostic }
   const caloriesReal = calorieAvgReal === null ? '?' : calorieAvgReal.toFixed(0)
-  const calorieGap = calorieAvgReal === null ? '?' : (calorieAvgReal - calorieAvgTarget).toFixed(0)
+  const calorieTarget = calorieAvgTarget === null ? '?' : calorieAvgTarget
+  const calorieGap = calorieAvgReal === null || calorieAvgTarget === null
+    ? '?'
+    : (calorieAvgReal - calorieAvgTarget).toFixed(0)
   const proteinReal = proteinAvgG === null ? '?' : proteinAvgG.toFixed(0)
   const proteinCompliance = proteinCompliancePct === null ? '?' : proteinCompliancePct.toFixed(0)
     const systemPrompt = `Tu es le coach IA personnel de l'utilisateur MoovX.
@@ -41,8 +44,8 @@ Tu analyses sa semaine d'entrainement et de nutrition pour produire un diagnosti
 <profile>
 Objectif: ${profile.objective || 'non défini'}
 TDEE: ${profile.tdee || '?'} kcal
-Calorie goal: ${profile.calorie_goal || '?'} kcal
-Protein goal: ${profile.protein_goal || '?'} g
+Calorie goal: ${calorieTarget} kcal
+Protein goal: ${proteinGoal ?? '?'} g
 Niveau fitness: ${profile.fitness_level || '?'} (score ${profile.fitness_score || '?'}/100)
 Poids actuel: ${profile.current_weight || '?'} kg
 </profile>
@@ -56,7 +59,7 @@ Volume total (tonnage): ${trainingVolumeTotal.toFixed(0)} kg
 
 <nutrition_week>
 Calories moyennes réelles: ${caloriesReal} kcal/jour
-Target: ${calorieAvgTarget} kcal/jour
+Target: ${calorieTarget} kcal/jour
 Écart moyen: ${calorieGap} kcal/jour
 Protéines moyennes: ${proteinReal}g (compliance: ${proteinCompliance}%)
 Jours loggés: ${daysLogged}/7

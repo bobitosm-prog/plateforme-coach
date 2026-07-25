@@ -76,9 +76,14 @@ frontière read-only et n'ont pas été modifiés.
 
 ## Sources Nutrition et agrégation sécurisée
 
-Les objectifs `calorie_goal` et `protein_goal` sont lus dans `profiles`.
-L'objectif, le TDEE, le niveau, le score fitness, le poids courant et le nombre
-de séances planifiées viennent du même profil.
+Les quatre objectifs `calorie_goal`, `protein_goal`, `carbs_goal` et
+`fat_goal` sont lus dans `profiles`. Leur contrat nullable est résolu par la
+frontière pure documentée dans
+[`NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md`](NUTRITION_WEEKLY_DIAGNOSTIC_GOALS.md).
+Calories et protéines alimentent les comparaisons historiques; glucides et
+lipides ne participent à aucun calcul et signalent seulement une cible absente
+ou invalide. L'objectif produit, le TDEE, le niveau, le score fitness, le poids
+courant et le nombre de séances planifiées viennent du même profil.
 
 La consommation vient uniquement de `daily_food_logs`. La projection conserve
 `date, calories, protein, carbs, fat`, mais le diagnostic ne consomme que la

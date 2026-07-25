@@ -11927,3 +11927,82 @@ reste à 0/38 et Phase 9 inactive.
 **Prochaine action :** traiter uniquement C08, les objectifs Nutrition du
 diagnostic hebdomadaire, sans rouvrir C03/C04/C05/C06/C07 ni les surfaces
 Home figées.
+
+## Entrée — 2026-07-25 — C08 objectifs Nutrition du diagnostic sécurisés
+
+**Contexte Git :** branche `main`, commit de départ et de fin `45f2839`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** `generateWeeklyDiagnostic` lisait le profil avec
+`select('*').eq('id', userId).single()`, mais ignorait `profileRes.error` puis
+résolvait calories et protéines par `Number(profile.*_goal || 0)`. Une colonne
+nullable, un champ absent ou une chaîne vide devenait donc zéro; une chaîne
+invalide devenait `NaN`, les négatifs et `Infinity` restaient calculables.
+L'erreur Supabase ressemblait à un profil absent et un rejet réseau tombait
+dans `unexpected_error`. Glucides et lipides étaient sélectionnés sans contrat
+explicite.
+
+**Flux avant/après :** avant :
+`Home → POST /api/weekly-diagnostic → createWeeklyDiagnostic →
+generateWeeklyDiagnostic → profiles + quatre lectures parallèles →
+coercition inline → calculs/prompt → IA → écritures existantes → détail`.
+Après : même flux et mêmes lectures, avec
+`resolveWeeklyDiagnosticNutritionGoals` entre le profil et les calculs. Une
+erreur transport de profil s'arrête avec `profile_read_failed` avant IA et
+écritures.
+
+**Règles métier :** un nombre fini strictement positif ou une chaîne numérique
+non vide équivalente est connu. `null`, `undefined`, champ absent et chaîne
+vide sont absents. Zéro, négatif, texte non numérique, `NaN`, `Infinity` et
+types incompatibles sont invalides. Les quatre métriques sont indépendantes.
+Calories pilotent cible, écart, contrôle de déficit et
+`calorie_avg_target`; protéines pilotent cible, conformité et
+`protein_compliance_pct`; glucides/lipides ne pilotent aucun calcul historique
+et produisent seulement un drapeau de cohérence s'ils ne sont pas connus.
+
+**Période et rendu :** la consommation reste la semaine complète précédente
+en `Europe/Zurich`. Une consommation valide reste affichée si sa cible manque;
+la cible, l'écart ou la conformité non calculables deviennent `?` dans le
+prompt. Une semaine vide conserve les objectifs connus et ses consommations
+restent inconnues. Les quatre cibles valides produisent le prompt historique
+identique, confirmé par le golden inchangé. La génération serveur est
+one-shot et idempotente : elle n'a ni état visible précédent, ni réponse
+obsolète, ni cleanup React à traiter.
+
+**Requêtes et schéma :** C08 reste une seule lecture profil dans les cinq
+lectures parallèles, précédées de la même lecture d'idempotence; aucune requête
+n'est ajoutée. Projection `*`, owner `id = userId`, forme `single`, lectures
+hebdomadaires et éventuelle lecture `workout_sets` sont inchangés. La
+projection distante read-only
+`profiles(id,calorie_goal,protein_goal,carbs_goal,fat_goal)` répond HTTP 200.
+Les types générés déclarent les quatre objectifs `number | null`; un
+échantillon runtime normalisé a confirmé des nombres et des valeurs nulles.
+
+**Écritures :** les blocs `weekly_diagnostics.insert` et
+`profiles.update({ next_diagnostic_at })`, leurs clés et leur ordre sont
+inchangés. Seule la valeur calculée existante est honnête : cible calorique ou
+conformité protéique non calculable est `null` au lieu d'un faux zéro. Aucune
+écriture de plan, mutation Nutrition, RPC, payload de sauvegarde ou producteur
+de plan n'a changé.
+
+**Tests et validations :** caractérisation legacy pré-correction 1 fichier/5
+tests verts; les attentes du nouveau contrat étaient rouges avec le module
+absent et trois gardes statiques en échec. Après correction : C08/diagnostic
+9 fichiers/103 tests; non-régression Home/NutritionTab/desktop/Analytics/
+diagnostic/badges 37/299; gardes statiques 93/352. Agrégations autoritaires :
+`status=ok, auditedConsumers=705, intentionalLegacy=2`; constructions
+Supabase : `status=ok, canonical=4, legacy=53, total=57`; parité i18n :
+2 192 clés × 3 langues. Suite complète : 289 fichiers, 2 361 tests réussis
+et 3 `todo`. TypeScript est vert; les 741 liens locaux contrôlés sont valides
+et `git diff --check` est vert.
+
+**Dette ESLint :** les neuf fichiers TypeScript modifiés ou ajoutés sont à
+0 erreur/0 avertissement. Les cinq fichiers préexistants concernés étaient
+déjà à 0/0 au commit de départ : dette avant 0/0, après 0/0.
+
+**État roadmap :** C08 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 21 et C à 1, avec B=7, D=6 et E=5. Phase 4 reste `partial`, RC1
+reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** traiter uniquement C10, l'adhérence repas Nutrition de
+`useCoachAnalytics`, sans rouvrir C01 à C09 ni les surfaces Home figées.
