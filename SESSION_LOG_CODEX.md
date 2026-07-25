@@ -11474,3 +11474,72 @@ inactive.
 **Prochaine action :** traiter uniquement C09, les erreurs de transport des
 collections `meal_tracking` et `daily_food_logs` du résumé Home, sans changer
 ses calculs, ses cartes ni ses trois requêtes.
+
+## Entrée — 2026-07-25 — C09 transport du résumé Home sécurisé
+
+**Contexte Git :** branche `main`, commit de départ et de fin `e4ed5ba`.
+Aucun commit ou push n'a été créé et l'index reste vide.
+
+**Cause racine :** le `Promise.all` du résumé Home recevait bien les objets
+Supabase de `meal_tracking` et `daily_food_logs`, mais `HomeTab` ne transmettait
+que `trackingRes.data ?? []` et `logsRes.data ?? []` à
+`readHomeNutritionSummary`. Un `error` PostgREST, une panne réseau ou une
+réponse vide réussie devenaient donc le même tableau vide. Le calcul pouvait
+publier zéro ou un total partiel comme si les deux lectures avaient réussi.
+
+**Flux avant/après :** avant :
+`HomeTab → 2 lectures directes + personalPlanReader → data ?? [] →
+readHomeNutritionSummary → settle → consumedKcal → EnergyCard/NutritionCard`.
+Après :
+`HomeTab → classifyHomeNutritionCollectionRead pour chaque collection +
+personalPlanReader → readHomeNutritionSummaryFromReads → calcul historique
+inchangé → settle → mêmes cartes`. Aucun hook supplémentaire n'existe et aucun
+repository journal n'est réutilisé, car projections, jour, limites et cycle
+de fraîcheur diffèrent.
+
+**Sémantique :** `error = null/undefined` avec `data = null/[]` est une
+réussite vide réelle. Un champ `error` ou un rejet de la promesse devient un
+`failure` expurgé sourcé `meal_tracking`, `daily_food_logs` ou les deux.
+Une panne au premier chargement conserve la valeur initiale; après une valeur
+visible, celle-ci est conservée. Le compteur et le cleanup existants ignorent
+toujours la réponse obsolète avant tout calcul. `not_found` reste le seul plan
+absent; `conflict`, `invalid`, `legacy_unsupported` et `failure` du reader sont
+inchangés lorsque les deux collections ont réussi.
+
+**Requêtes et schéma :** 3 → 3 lectures, démarrées dans le même ordre :
+tracking, plan, logs. `meal_tracking(meal_type)` garde owner session, jour UTC,
+`is_completed=true`, `limit 20`; `daily_food_logs(calories)` garde le même
+owner/jour et `limit 20`; le plan garde repository, tri `created_at DESC`,
+`limit 1`, `maybeSingle`. Montage, retour via `homeRefreshKey`, compteur,
+cleanup et `Promise.all` sont inchangés. L'OpenAPI déployée confirme en
+lecture seule les colonnes non nullables et les projections répondent en 200
+avec les formes attendues.
+
+**Calculs et périmètre :** la portion du fichier allant de
+`settleHomeNutritionSummary` à la fin, qui inclut `sumLogs` et
+`readHomeNutritionSummary`, est byte-for-byte identique à `e4ed5ba`.
+Objectifs, macros, pourcentages, calories et formules sont donc inchangés.
+Le mini-graphe, `EnergyCard`, `NutritionCard`, leurs props/callbacks et tous
+les inserts, updates, upserts, deletes, RPC, payloads, mutations et producteurs
+IA restent hors diff.
+
+**Tests :** caractérisation pré-correction 1 fichier/4 tests verts; test rouge
+attendu avec `classifyHomeNutritionCollectionRead is not a function`. Après
+correction : ciblés Home 14 fichiers/76 tests; Analytics/diagnostic 7/58;
+Nutrition 52/400; gardes statiques 87/326; agrégations autoritaires
+`status=ok, auditedConsumers=698, intentionalLegacy=2`; constructions
+Supabase `status=ok, canonical=4, legacy=53, total=57`; suite complète
+268 fichiers, 2 171 tests réussis et 3 `todo`. TypeScript est vert.
+
+**Dette ESLint :** `HomeTab` reste à 35 erreurs/42 avertissements historiques,
+soit aucune dette ajoutée. `home-nutrition-summary.ts` et les trois tests
+modifiés/nouveaux sont à 0 erreur/0 avertissement. Les 158 liens locaux sur
+cinq Markdown et `git diff --check` sont verts.
+
+**État roadmap :** C09 passe de C à A; la matrice reste à 40 consommateurs,
+A passe à 15 et C à 7. Phase 4 reste `partial`, RC1 reste à 0/38 et Phase 9
+inactive.
+
+**Prochaine action :** traiter uniquement C03, l'agrégation du journal
+Nutrition du jour dans le dashboard desktop, sans toucher à C04 ni aux
+surfaces Home figées.

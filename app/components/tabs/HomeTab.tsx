@@ -38,7 +38,14 @@ import { formatZurichDate } from '../../../lib/format-time'
 import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 import { createCalendarClientAdapter, type CoachAppointment } from '../../../lib/coaching/calendar'
 import { legacyTonnage } from '../../../lib/progression'
-import { readHomeNutritionSummary, settleHomeNutritionSummary } from '../../../lib/nutrition/home-nutrition-summary'
+import {
+  classifyHomeNutritionCollectionRead,
+  homeNutritionCollectionFailure,
+  readHomeNutritionSummaryFromReads,
+  settleHomeNutritionSummary,
+  type HomeCalorieLog,
+  type HomeMealCompletion,
+} from '../../../lib/nutrition/home-nutrition-summary'
 import {
   aggregateHomeCalorieMiniGraph,
   settleHomeCalorieMiniGraph,
@@ -179,16 +186,28 @@ export default function HomeTab({
     const todayDate = new Date().toISOString().split('T')[0]
     const dayKey = todayNutritionKey()
 
+    const trackingRead = supabase.from('meal_tracking').select('meal_type')
+      .eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20)
+      .then(({ data, error }: { data: HomeMealCompletion[] | null; error: unknown }) =>
+        classifyHomeNutritionCollectionRead('meal_tracking', data, error))
+      .catch(() => homeNutritionCollectionFailure<HomeMealCompletion>('meal_tracking'))
+    const planRead = personalPlanReader.load(uid)
+    const logsRead = supabase.from('daily_food_logs').select('calories')
+      .eq('user_id', uid).eq('date', todayDate).limit(20)
+      .then(({ data, error }: { data: HomeCalorieLog[] | null; error: unknown }) =>
+        classifyHomeNutritionCollectionRead('daily_food_logs', data, error))
+      .catch(() => homeNutritionCollectionFailure<HomeCalorieLog>('daily_food_logs'))
+
     Promise.all([
-      supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20),
-      personalPlanReader.load(uid),
-      supabase.from('daily_food_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
-    ]).then(([trackingRes, plan, logsRes]) => {
+      trackingRead,
+      planRead,
+      logsRead,
+    ]).then(([tracking, plan, logs]) => {
       if (currentRequest !== homeNutritionRequest.current) return
-      const summary = readHomeNutritionSummary(
+      const summary = readHomeNutritionSummaryFromReads(
         plan,
-        trackingRes.data ?? [],
-        logsRes.data ?? [],
+        tracking,
+        logs,
         dayKey,
       )
       setConsumedKcal(previous => settleHomeNutritionSummary(previous, summary, true))

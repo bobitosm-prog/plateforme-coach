@@ -20,6 +20,20 @@ export interface HomeCalorieLog {
   readonly calories: number | null
 }
 
+export type HomeNutritionCollectionSource = 'meal_tracking' | 'daily_food_logs'
+
+export type HomeNutritionCollectionRead<T> =
+  | { readonly status: 'ready'; readonly data: readonly T[] }
+  | { readonly status: 'failure'; readonly source: HomeNutritionCollectionSource }
+
+export interface HomeNutritionTransportFailure {
+  readonly status: 'failure'
+  readonly error: {
+    readonly code: 'home_nutrition_transport_failure'
+    readonly sources: readonly HomeNutritionCollectionSource[]
+  }
+}
+
 export type HomeNutritionSummaryResult =
   | {
     readonly status: 'ready'
@@ -34,6 +48,49 @@ export type HomeNutritionSummaryResult =
     ActivePersonalMealPlanReadResult,
     { readonly status: 'conflict' | 'invalid' | 'legacy_unsupported' | 'failure' }
   >
+  | HomeNutritionTransportFailure
+
+export function homeNutritionCollectionFailure<T>(
+  source: HomeNutritionCollectionSource,
+): HomeNutritionCollectionRead<T> {
+  return { status: 'failure', source }
+}
+
+export function classifyHomeNutritionCollectionRead<T>(
+  source: HomeNutritionCollectionSource,
+  data: readonly T[] | null,
+  error: unknown,
+): HomeNutritionCollectionRead<T> {
+  return error === null || error === undefined
+    ? { status: 'ready', data: data ?? [] }
+    : homeNutritionCollectionFailure(source)
+}
+
+export function readHomeNutritionSummaryFromReads(
+  plan: ActivePersonalMealPlanReadResult,
+  completionsRead: HomeNutritionCollectionRead<HomeMealCompletion>,
+  logsRead: HomeNutritionCollectionRead<HomeCalorieLog>,
+  frenchDayKey: string,
+): HomeNutritionSummaryResult {
+  if (completionsRead.status === 'failure' || logsRead.status === 'failure') {
+    const failedSources: HomeNutritionCollectionSource[] = []
+    if (completionsRead.status === 'failure') failedSources.push(completionsRead.source)
+    if (logsRead.status === 'failure') failedSources.push(logsRead.source)
+    return {
+      status: 'failure',
+      error: {
+        code: 'home_nutrition_transport_failure',
+        sources: failedSources,
+      },
+    }
+  }
+  return readHomeNutritionSummary(
+    plan,
+    completionsRead.data,
+    logsRead.data,
+    frenchDayKey,
+  )
+}
 
 export function settleHomeNutritionSummary(
   previousConsumedKcal: number,

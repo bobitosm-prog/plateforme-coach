@@ -12,7 +12,7 @@ Le domaine Nutrition read-only **n'est pas encore clôturable**.
 
 Les lectures de plans sont clôturables : elles passent par les readers
 spécialisés déjà validés, ou sont des écritures hors périmètre. En revanche,
-huit consommateurs read-only conservent une sémantique legacy qui peut
+sept consommateurs read-only conservent une sémantique legacy qui peut
 transformer une panne, une inconnue ou une donnée nullable en zéro/absence.
 Le backend observé ne contient actuellement aucune macro nulle dans
 `daily_food_logs`; il n'y a donc pas de régression de données visible à
@@ -22,9 +22,9 @@ clôture honnête.
 
 ## Catégories
 
-- **A — raccordé à une frontière canonique : 14**
+- **A — raccordé à une frontière canonique : 15**
 - **B — volontairement non raccordable : 7**
-- **C — restant à migrer : 8**
+- **C — restant à migrer : 7**
 - **D — écriture/producteur hors périmètre : 6**
 - **E — faux positif, capacité inutilisée ou documentation/test : 5**
 - **Total : 40 lignes**
@@ -58,6 +58,7 @@ requête/cleanup neutralisant les réponses obsolètes.
 | A12 | A | `RecipesSection/useNutritionRecipes` | `recipes`, owner + public | projection R; owner ou `is_public`; `created_at DESC`; `limit 50`; coll. | montage/retry; courant + cleanup; erreur explicite | repository Nutrition; hors enveloppe de plan |
 | A13 | A | `useAnalytics/createAnalyticsReadModel` | `daily_food_logs`, owner | projection journal; `date >= J-7 local`; `date DESC, created_at DESC`; `limit 100`; coll. | refresh Analytics; compteur courant; erreur conserve la série visible | `aggregateAnalyticsNutritionByDate`; sommes journalières null-aware; C02 raccordé |
 | A14 | A | `HomeTab`, mini-graphe calories | `daily_food_logs`, owner session | calories/date; `date >= UTC J-7`; sans ordre; `limit 200`; coll. | montage/retour Home; compteur + cleanup; panne conserve la série | `aggregateHomeCalorieMiniGraph`; zéro/absence/invalide distincts; C01 raccordé |
+| A15 | A | `HomeTab`, transport du résumé consommé | `meal_tracking` + `daily_food_logs`, même owner qu'A02 | projections/filtres/limites A02; 2 coll. dans les 3 lectures Home | UTC aujourd'hui; montage/retour Home; compteur + cleanup; pannes sourcées | `classifyHomeNutritionCollectionRead → readHomeNutritionSummaryFromReads`; C09 raccordé |
 | B01 | B | `useNutritionPlans`, repas terminés | `meal_tracking`, owner + jour | `meal_type`; jour exact; complété; `limit 50`; coll. | même cycle A04, courant; erreur explicite | état de conformité, pas contenu de plan |
 | B02 | B | `checkAndUnlockBadges`, compte repas/scan | `daily_food_logs`, owner | `count exact head`; tout historique; scan ajoute `food_id not null` | à l'évaluation badge; panne devient 0 legacy | compteur gamification, aucune conversion macro |
 | B03 | B | `checkAndUnlockBadges`, streak Nutrition | `daily_food_logs`, owner | `date`; `date DESC`; `limit 100`; coll. | à l'évaluation; date SQL; absence = 0 | série de dates, incompatible avec journal/Analytics |
@@ -71,7 +72,6 @@ requête/cleanup neutralisant les réponses obsolètes.
 | C06 | C | `NutritionTab`, sous-onglet « Mes repas » | `saved_meals`, owner | `select('*')`; `created_at DESC`; coll. sans limite | à l'ouverture du sous-onglet; aucun compteur/cleanup | erreur Supabase transformée en liste vide, doublon sémantique de A05 |
 | C07 | C | badges `macros_on_target` | `profiles` + `daily_food_logs`, owner | objectif `single`; logs date/calories `date DESC limit 200` | évaluation badge; erreurs non distinguées | objectif absent/panne et logs absents/panne deviennent 0 |
 | C08 | C | diagnostic, objectifs | `profiles`, owner diagnostic | `select('*')`; `id`; `single` | même requête serveur que A11; profil absent échoue | `Number(profile.*_goal || 0)` transforme objectif nullable en zéro |
-| C09 | C | `HomeTab`, résultat des deux lectures A02 | `meal_tracking` + `daily_food_logs`, owner | mêmes requêtes A02 | erreur Supabase non transmise à HE; `data ?? []` | panne de journal/suivi indiscernable d'une collection vide |
 | C10 | C | `useCoachAnalytics`, adhérence repas | `meal_tracking`, owners `clientIds` issus des relations | user/date/état; `IN clients`; `date >= J-7`; coll. sans limite | refresh coach; aucun compteur; erreur ignorée | panne devient 0 repas et 0 % d'adhérence pour tous |
 | D01 | D | génération initiale, préférences, détail diagnostic, IA coach | `meal_plans` | `update is_active` puis `insert` legacy | déclenchements explicites | producteurs/écritures figés |
 | D02 | D | détail client, onboarding photo, AbsCalculator | `client_meal_plans` | insert/update/upsert; parfois `.select('id')` après mutation | actions coach/onboarding | écriture; le `select` de retour n'est pas une lecture autonome |
@@ -98,7 +98,7 @@ Les accès directs suivants ne doivent pas être raccordés à
 - objectifs de `profiles` et de `active_related_profiles`;
 - consommation spécialisée du diagnostic hebdomadaire.
 
-« Justifiée » ne signifie pas « sans dette ». Les huit lignes C restantes
+« Justifiée » ne signifie pas « sans dette ». Les sept lignes C restantes
 restent directes ou
 legacy pour une raison fonctionnelle identifiable, mais doivent recevoir une
 sémantique explicite avant clôture.
@@ -131,7 +131,7 @@ totaux de `saved_meals` sont eux aussi nullables.
 | Conversion | Emplacements | Conséquence |
 |---|---|---|
 | `x || 0` sur macros nullables | C03, C05 | inconnue assimilée à consommation nulle |
-| `data || []` / `data ?? []` sans tester `error` | C04, C06, C09, C10 | panne assimilée à absence ou série nulle |
+| `data || []` / `data ?? []` sans tester `error` | C04, C06, C10 | panne assimilée à absence ou série nulle |
 | objectif nullable `|| 0` | C07, C08 | cible inconnue assimilée à cible nulle |
 | objectifs UI codés en fallback | C05 | absence de profil affichée comme objectifs plausibles |
 | jour manquant rempli à zéro | C04 | absence de journal indiscernable d'un vrai zéro |
@@ -159,9 +159,9 @@ ces contrats restent couverts par leurs tests métier existants.
 
 ## Ordre de traitement restant
 
-1. C09 Home : distinguer séparément les erreurs de transport des collections
-   vides dans le résumé déjà raccordé.
-2. C03/C04 dashboard desktop : retirer les doubles lectures ou aligner leur
+1. C03 dashboard desktop : distinguer les inconnues des zéros dans le journal
+   du jour sans toucher à C04.
+2. C04 dashboard desktop : retirer les doubles lectures ou aligner leur
    sémantique sans changer le nombre global de requêtes sans justification.
 3. C05/C06 NutritionTab : distinguer macros/repas absents des pannes et retirer
    les objectifs plausibles inventés.
@@ -207,3 +207,18 @@ produit huit lacunes J−7…J. Une erreur Supabase conserve la série visible e
 le compteur avec cleanup neutralise une réponse obsolète. Le résumé Home
 A01/A02, ses trois requêtes, `EnergyCard` hors sparkline et `NutritionCard`
 restent inchangés.
+
+## C09 — clôturé le 25 juillet 2026
+
+C09 utilise désormais `classifyHomeNutritionCollectionRead` et
+`readHomeNutritionSummaryFromReads`. Les deux réponses directes du résumé
+Home distinguent une réussite vide d'un `error` Supabase ou d'un rejet réseau.
+Un échec produit un `failure` expurgé avec la source `meal_tracking`,
+`daily_food_logs` ou les deux; `settleHomeNutritionSummary` conserve alors la
+valeur visible. Une réponse obsolète reste neutralisée avant le calcul.
+
+Les trois lectures, leur ordre de démarrage, owner, projections, jour UTC,
+filtres, limites, `Promise.all`, `homeRefreshKey`, compteur et cleanup sont
+inchangés. Si les deux collections réussissent, la frontière délègue les
+données telles quelles à `readHomeNutritionSummary`; son calcul n'a pas été
+modifié. Le mini-graphe C01, `EnergyCard` et `NutritionCard` restent hors diff.

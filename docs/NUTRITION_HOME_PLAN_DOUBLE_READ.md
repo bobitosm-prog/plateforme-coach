@@ -37,8 +37,11 @@ même `Promise.all` que les complétions et les logs du jour.
 | rafraîchissement | montage + `homeRefreshKey` | identique |
 
 Les deux autres lectures restent exactement `meal_tracking(meal_type)`,
-limite 20, et `daily_food_logs(calories)`, limite 20. Le comportement
-historique de leurs erreurs comme collections vides reste inchangé.
+limite 20, et `daily_food_logs(calories)`, limite 20. Depuis la clôture C09,
+leurs réponses passent par `classifyHomeNutritionCollectionRead` : une
+réussite `data = null/[]` devient une collection vide réelle, tandis qu'un
+champ `error` ou un rejet réseau devient un échec expurgé et sourcé. L'ordre
+de démarrage reste tracking, plan, logs.
 
 ## Lecture et calcul
 
@@ -62,9 +65,20 @@ depuis l'enveloppe validée, sans reparcourir le JSON legacy brut :
 | `invalid` | `invalid` | valeur précédente conservée |
 | `legacy_unsupported` | `legacy_unsupported` | valeur précédente conservée |
 | panne repository | `failure` expurgé | valeur précédente conservée |
+| panne `meal_tracking` | `failure` transport sourcé | valeur précédente conservée |
+| panne `daily_food_logs` | `failure` transport sourcé | valeur précédente conservée |
+| panne des deux collections | `failure` avec deux sources | valeur précédente conservée |
+| deux collections vides réussies | calcul historique avec deux `[]` | zéro réel si plan absent |
 
 Un compteur de requête et son cleanup empêchent une réponse ancienne de
 remplacer celle du nouvel owner ou d'un rafraîchissement plus récent.
+
+`readHomeNutritionSummaryFromReads` orchestre uniquement les statuts de
+transport. Si les deux collections sont `ready`, il délègue sans transformation
+à `readHomeNutritionSummary`. Cette fonction, `sumLogs`, les objectifs, les
+macros, les pourcentages et toutes les formules restent byte-for-byte
+inchangés. Au premier chargement en échec, la valeur initiale reste visible;
+après une valeur confirmée, celle-ci est conservée.
 
 ## UI, écritures et rollback
 
