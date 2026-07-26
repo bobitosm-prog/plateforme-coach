@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "authority": "moovx-phase6-staging-seed-v1",
+  "environment": "staging",
+  "projectRef": "cycbnnojcymjnaqomlyj",
+  "namespace": "76000000",
+  "generatedAt": "2026-07-26T00:00:00.000Z",
+  "tableCounts": {
+    "auth.users": 9,
+    "public.profiles": 9,
+    "public.coach_clients": 1,
+    "public.meal_plans": 6,
+    "public.client_meal_plans": 2,
+    "public.saved_meals": 4,
+    "public.daily_food_logs": 14,
+    "public.meal_tracking": 7
+  },
+  "personas": [
+    {
+      "key": "admin",
+      "id": "76000000-0000-4000-8000-000000000001",
+      "email": "phase6-admin@moovx.invalid",
+      "role": "super_admin",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "coach",
+      "id": "76000000-0000-4000-8000-000000000002",
+      "email": "phase6-coach@moovx.invalid",
+      "role": "coach",
+      "subscriptionType": "coach_monthly",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientCanonical",
+      "id": "76000000-0000-4000-8000-000000000003",
+      "email": "phase6-client-1@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "active",
+      "objective": "cut"
+    },
+    {
+      "key": "clientLegacy",
+      "id": "76000000-0000-4000-8000-000000000004",
+      "email": "phase6-client-2@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "invited",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientConflict",
+      "id": "76000000-0000-4000-8000-000000000005",
+      "email": "phase6-client-3@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "lifetime",
+      "subscriptionStatus": "lifetime",
+      "objective": "mass"
+    },
+    {
+      "key": "clientInvalid",
+      "id": "76000000-0000-4000-8000-000000000006",
+      "email": "phase6-client-4@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "trialing",
+      "objective": "cut"
+    },
+    {
+      "key": "clientUnsupported",
+      "id": "76000000-0000-4000-8000-000000000007",
+      "email": "phase6-client-5@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "past_due",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientCanonicalSecond",
+      "id": "76000000-0000-4000-8000-000000000008",
+      "email": "phase6-client-6@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "canceled",
+      "objective": "mass"
+    },
+    {
+      "key": "clientNotFound",
+      "id": "76000000-0000-4000-8000-000000000009",
+      "email": "phase6-client-7@moovx.invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "expired",
+      "objective": "cut"
+    }
+  ],
+  "relation": {
+    "id": "76000001-0000-4000-8000-000000000001",
+    "coachKey": "coach",
+    "clientKey": "clientLegacy",
+    "status": "active",
+    "invitedByCoach": true
+  },
+  "personalPlans": [
+    {
+      "id": "76000002-0000-4000-8000-000000000001",
+      "ownerKey": "clientCanonical",
+      "fixture": "canonical",
+      "expectedStatus": "canonical"
+    },
+    {
+      "id": "76000002-0000-4000-8000-000000000002",
+      "ownerKey": "clientLegacy",
+      "fixture": "legacy",
+      "expectedStatus": "legacy_converted"
+    },
+    {
+      "id": "76000002-0000-4000-8000-000000000003",
+      "ownerKey": "clientConflict",
+      "fixture": "conflict",
+      "expectedStatus": "conflict"
+    },
+    {
+      "id": "76000002-0000-4000-8000-000000000004",
+      "ownerKey": "clientInvalid",
+      "fixture": "invalid",
+      "expectedStatus": "invalid"
+    },
+    {
+      "id": "76000002-0000-4000-8000-000000000005",
+      "ownerKey": "clientUnsupported",
+      "fixture": "legacy_unsupported",
+      "expectedStatus": "legacy_unsupported"
+    },
+    {
+      "id": "76000002-0000-4000-8000-000000000006",
+      "ownerKey": "clientCanonicalSecond",
+      "fixture": "canonical",
+      "expectedStatus": "canonical"
+    }
+  ],
+  "notFoundOwnerKey": "clientNotFound",
+  "coachPlans": [
+    {
+      "id": "76000003-0000-4000-8000-000000000001",
+      "clientKey": "clientCanonical",
+      "coachKey": "coach",
+      "fixture": "canonical",
+      "expectedStatus": "canonical"
+    },
+    {
+      "id": "76000003-0000-4000-8000-000000000002",
+      "clientKey": "clientLegacy",
+      "coachKey": "coach",
+      "fixture": "legacy",
+      "expectedStatus": "legacy_converted"
+    }
+  ],
+  "savedMeals": [
+    {
+      "id": "76000004-0000-4000-8000-000000000001",
+      "ownerKey": "clientCanonical",
+      "name": "Phase6 canonical breakfast",
+      "mealType": "breakfast",
+      "fixture": "canonical"
+    },
+    {
+      "id": "76000004-0000-4000-8000-000000000002",
+      "ownerKey": "clientLegacy",
+      "name": "Phase6 legacy lunch",
+      "mealType": "lunch",
+      "fixture": "legacy"
+    },
+    {
+      "id": "76000004-0000-4000-8000-000000000003",
+      "ownerKey": "clientConflict",
+      "name": "Phase6 alias conflict",
+      "mealType": "snack",
+      "fixture": "conflict"
+    },
+    {
+      "id": "76000004-0000-4000-8000-000000000004",
+      "ownerKey": "clientInvalid",
+      "name": "Phase6 invalid snapshot",
+      "mealType": "dinner",
+      "fixture": "invalid"
+    }
+  ],
+  "dailyFoodLogs": {
+    "rowsPerClient": 2,
+    "dates": [
+      "2026-07-20",
+      "2026-07-21"
+    ]
+  },
+  "mealTracking": {
+    "rowsPerClient": 1,
+    "date": "2026-07-21"
+  },
+  "cleanupOrder": [
+    "public.meal_tracking",
+    "public.daily_food_logs",
+    "public.saved_meals",
+    "public.client_meal_plans",
+    "public.meal_plans",
+    "public.coach_clients",
+    "public.profiles",
+    "auth.users"
+  ],
+  "failureCase": "runner_injection_only"
+}

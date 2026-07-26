@@ -12323,3 +12323,283 @@ l'alias Preview attendu. Le `ROLLBACK` laisse `pg_cron` et le schéma
 **Prochaine action :** obtenir dans le Dashboard la confirmation explicite
 que le deuxième projet Free/Nano coûte `0 USD`, puis demander une autorisation
 distincte avant `supabase projects create`.
+
+## Entrée — 2026-07-25 — Raccordement Supabase staging arrêté avant link
+
+**Contexte Git :** branche `main`, HEAD de départ `f783e6c`. Le working tree
+et l'index étaient propres. Aucun commit ni push n'est créé; l'index reste
+vide.
+
+**Cible authentifiée :** l'inventaire Supabase CLI strictement read-only
+confirme `moovx-staging`, ref `cycbnnojcymjnaqomlyj`, organisation
+`mlasmyrpaaqnhuuhuzma`, région `eu-central-2` et statut `ACTIVE_HEALTHY`.
+`CoachPlatform`/`njlzossopgknanhkzcbk` reste la production interdite et
+`MyPulse`/`olgticvcueptrbppeyvq` reste une cible distincte inactive. Aucune
+donnée métier n'est lue.
+
+**Garde :** le mode `pre-link` accepte uniquement le projet staging exact,
+Free/Nano, Zurich et sain. Il refuse production, autre ref, autre
+organisation, nom, région, taille, statut, variable processuelle divergente,
+URL MoovX et clé Stripe live. Le manifeste sans secret est préparé hors Git
+avec permissions `0600`. Le garde est vert avec six références production
+historiques, immuables et épinglées par SHA-256; il exige toujours
+`pg_cron` absent lors du replay.
+
+**Blocage fail-closed :** ni `SUPABASE_DB_PASSWORD`, ni
+`SUPABASE_STAGING_DB_PASSWORD`, ni manifeste opérateur n'étaient présents
+dans le processus au début. Le manifeste non secret a pu être préparé, mais
+le mot de passe DB ne doit pas être inventé, lu depuis `.env.local`, affiché
+ou demandé dans la conversation. `npx supabase link --project-ref
+cycbnnojcymjnaqomlyj` n'est donc pas exécuté. Aucun fichier
+`supabase/.temp/project-ref` n'est créé.
+
+**Runner :** `scripts/preproduction/apply-migrations.mjs` produit uniquement
+un plan `--dry-run` lexical, seed-free, roles-free, avec SHA-256 et une
+transaction par fichier. Il exige le ref lié exact et refuse `--apply`.
+L'exécution opérateur échoue comme prévu sur l'absence du lien. Le dry-run
+Supabase n'est pas tenté puisqu'il exige lui aussi la cible liée et le mot de
+passe.
+
+**Périmètre distant :** aucune migration, seed, rôle, extension, job cron,
+secret, schéma ou donnée distante n'est créé, lu ou modifié. Aucune commande
+Vercel ou Stripe n'est exécutée. La production n'est ni liée ni consultée.
+
+**Validations :** l'inventaire cible et les deux exécutions du garde pre-link
+sont verts. Les tests garde/cron/runner passent avec 3 fichiers et 47 tests.
+Le dry-run SQL local transactionnel confirme 4 jobs distincts, zéro URL
+production dans leurs commandes, l'alias Preview attendu et termine par
+`ROLLBACK`. `node --check`, TypeScript et ESLint ciblé passent sans erreur ni
+avertissement. Les 158 liens locaux des documents touchés sont valides. La
+recherche de credentials distants ne trouve rien; seule l'URL PostgreSQL
+locale de développement documentée est explicitement exclue. `git diff
+--check` est vert, `supabase/.temp/cli-latest` n'a aucun diff et l'index Git
+est vide.
+
+**État roadmap :** Phase 4 reste `met`; le blocage « projet Supabase staging
+absent » est levé, mais Phase 6 reste `blocked` faute de link, dry-runs,
+schema/seed, Preview et Stripe test. RC1 reste à 0/38 et Phase 9 inactive.
+
+**Prochaine action :** charger localement et silencieusement le mot de passe
+DB de `cycbnnojcymjnaqomlyj` dans `SUPABASE_DB_PASSWORD`, puis reprendre au
+garde pre-link avant d'autoriser le `supabase link` et les deux dry-runs. Ne
+jamais fournir cette valeur dans la conversation ou la stocker dans Git.
+
+## Entrée — 2026-07-25 — Plans de migrations staging comparés
+
+**Cible et sécurité :** le dépôt est lié à `cycbnnojcymjnaqomlyj`; le garde
+post-link est vert et le ref production reste exclu. L'inventaire schema-only
+ne trouve aucun schéma `cron`, donc `pg_cron` est absent. Aucun secret n'est
+affiché ou ajouté au dépôt.
+
+**Historique distant :** `supabase migration list --linked` retourne les
+142 entrées locales et aucune version distante. Il n'existe donc aucune
+migration déjà appliquée, distante uniquement ou doublon distant.
+
+**Configuration :** `db.migrations.enabled=false` date de l'introduction de
+`supabase/config.toml` au commit `d3e8a33`. Le commentaire associe ce choix aux
+préfixes date-only dupliqués et au runner local lexical. Le réglage est global
+au projet CLI. Un workdir temporaire hors Git a reproduit config, migrations
+et métadonnées de lien sans secret, avec seulement ce booléen à `true`.
+
+**Plans :** le dry-run Supabase via `--workdir` et le runner opérateur
+proposent exactement 142 migrations, avec zéro différence d'ensemble et
+d'ordre. Seeds séparés et rôles sont exclus. Le nom réel
+`20260715001000_secure_related_profile_visibility.sql` est confirmé.
+
+**Blocages :** 84 fichiers utilisent une version non standard; 17 versions
+logiques regroupent 73 fichiers. Le dry-run CLI les liste sans résoudre
+l'ambiguïté de leur enregistrement. De plus,
+`20260317010000_seed_exercises_catalog.sql` contient un `INSERT` de catalogue
+de référence. Il ne contient aucune donnée utilisateur, mais exige une
+autorisation explicite avant requalification. Le plan est classé A=0, B=68,
+C=0, D=0, E=74.
+
+**Cron :** les quatre migrations historiques restent dans le plan et leurs
+blocs cron deviennent no-op puisque `pg_cron` est absent. La migration
+environment-scoped arrive en dernier et ne crée aucun job automatiquement.
+
+**Périmètre :** aucun `db push` réel, repair, reset, seed, migration, job cron,
+donnée métier, Vercel, Stripe, commit ou push n'est exécuté. Phase 6 reste
+`blocked`.
+
+**Prochaine action :** obtenir une décision opérateur sur une stratégie de
+versions uniques immuable pour les 73 fichiers E et sur l'autorisation du
+catalogue d'exercices versionné, sans encore modifier l'historique distant.
+
+## Entrée — 2026-07-26 — Re-versioning staging immuable, arrêt sur mutations
+
+**Décision implémentée :** un manifeste immuable couvre les 142 migrations,
+leurs SHA-256, leur ordre et leurs dépendances connues. Une version historique
+unique est préservée; chaque collision date-only reçoit le rang lexical
+one-based sur six chiffres. Les 73 copies de 17 groupes obtiennent ainsi des
+versions staging uniques sans modifier les sources historiques.
+
+**Catalogue autorisé :** `20260317010000_seed_exercises_catalog.sql` est
+classé référence synthétique canonique. Son SHA est
+`e8fb102e03220fc263fa2f8900785e8d007c3de211122d69b0aa13cffb168a11`;
+il contient 178 UUID, aucune donnée personnelle, écrit uniquement
+`public.exercises_db`, ne remplit qu'une table vide et reste idempotent.
+
+**Inventaire des données :** 71 fichiers contiennent des motifs mutateurs,
+59 les exécutent pendant le replay et 12 uniquement dans des définitions de
+fonction. Après le catalogue et cinq migrations cron historiques autorisées
+comme no-op lorsque `pg_cron` est absent, 53 migrations de données restent
+sans autorisation.
+
+**Arrêt fail-closed :** le materializer valide 142/142 sources et SHA,
+142 versions uniques, 73 re-versionnements et 17 groupes résolus, puis refuse
+les 53 migrations avant toute création de workdir. Le dry-run Supabase
+re-versionné n'est donc pas exécuté; le contourner aurait violé la décision
+opérateur. Le test d'un workdir synthétique confirme sa suppression même après
+erreur.
+
+**État distant :** `supabase migration list --linked` relit uniquement les
+métadonnées et confirme encore 0 migration distante. Aucun push, migration,
+repair, seed, rôle, extension, job cron, donnée métier, Vercel ou Stripe n'est
+exécuté.
+
+**Validations ciblées :** garde, cron, runner historique et re-versioning
+passent avec 4 fichiers et 62 tests. Les validations complètes TypeScript,
+ESLint, liens, secrets et diff sont exécutées avant clôture.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked`; RC1 reste à
+0/38 et Phase 9 inactive.
+
+**Prochaine action :** obtenir une décision explicite sur les 53 migrations de
+données inventoriées avant de réessayer les deux dry-runs re-versionnés.
+
+## Entrée — 2026-07-26 — Classification A–F des 53 mutations staging
+
+**Classification :** les 53 migrations sont classées exactement une fois :
+A=6, B=4, C=36, D=6, E=1, F=0. L'autorité locale joint à chacune chemins,
+versions, SHA, ordre, tables, opérations, prédicats, comportements vide/peuplé,
+idempotence, dépendances, sensibilité, risque et nécessité. Toute dérive de
+catégorie échoue.
+
+**Données sensibles :** aucun secret, téléphone, identifiant Stripe, blob ou
+URL MoovX production. Trois D contiennent un email personnel, un UUID
+utilisateur ou un UUID de diagnostic codé en dur. Quatre B/A portent
+potentiellement sur historique Training/objectifs, mais sans identifiant réel
+codé en dur et sont no-op avant seed.
+
+**Plans :** strict=A+C, 131 migrations et 11 exclusions; compatibilité=A+B+C,
+135 migrations et 7 exclusions. Tous deux conservent ordre, SHA et zéro
+collision, mais restent incomplets : exclusion de
+`20260419_coach_clients_unique.sql` retire la contrainte unique et exclusion
+de `20260701200000_dedup_exercises_db.sql` laisse l'identité du catalogue
+ambiguë avant l'ajout suivant de `exercise_id`. L'hypothèse initiale d'une
+contrainte case-insensitive aval a ensuite été infirmée par la preuve détaillée.
+Les deux materializers refusent alors avant workdir et avant CLI.
+
+**Recommandation :** autoriser A/B/C, refuser quatre D personnelles ou
+historiques et E, puis décider individuellement les deux D structurelles
+ci-dessus avec préconditions explicites sur base staging vide/catalogue
+synthétique.
+
+**Périmètre :** aucune écriture distante, migration, seed, repair, cron,
+Vercel, Stripe, commit ou push. Phase 4 reste `met`; Phase 6 `blocked`; RC1
+0/38; Phase 9 inactive.
+
+## Entrée — 2026-07-26 — Preuves D et plan staging final
+
+**Coach/client :** transaction locale sur table vide; migration exacte,
+`DELETE 0`, contrainte unique créée, deux relations valides acceptées, doublon
+refusé et second replay sans altération. Le seed Phase 6 arrive après les
+migrations et aucune source historique n'insère de relation avant ce point.
+
+**Catalogue :** replay local du catalogue et des migrations exercices jusqu'à
+la déduplication. Avant : 178 lignes, deux groupes casse-only. Après : 176
+lignes, deux suppressions synthétiques, deux FK réassignées, zéro FK pendante
+et index hypothétique `lower(name)` accepté. Aucune migration suivante ne crée
+réellement cet index; la suivante ajoute `exercise_id`. La documentation
+erronée est corrigée, mais la déduplication reste l'autorité du catalogue
+canonique 176 lignes.
+
+**Exclusion schema-safe :** la migration invitation refusée contenait aussi la
+colonne `invited_by_coach`. Une projection staging épinglée conserve seulement
+ce DDL au même emplacement et exclut l'UPDATE vers l'email personnel.
+
+**Plan final :** 137 sources historiques + 1 projection, cinq exclusions,
+138 versions uniques, ordre conservé, zéro collision, empreinte
+`030a1e34757b7c069448d40ff6643e6770e57b58154e92a73bb6db7044b22535`.
+Le materializer vérifie les SHA, crée le workdir, exécute le dry-run Supabase
+avec succès et supprime le workdir.
+
+**Validations finales :** 5 fichiers Vitest / 73 tests réussis; les deux
+preuves SQL réussissent puis exécutent `ROLLBACK`; TypeScript et ESLint ciblé
+passent sans sortie; 167 liens locaux sur 8 documents sont valides; recherche
+de secrets et données personnelles sur les nouveaux outils/preuves sans
+résultat; garde anti-production `status=ok`; historique distant toujours vide;
+`git diff --check` vert. Les fixtures temporaires de garde sont désormais
+nettoyées par `afterEach` et aucun workdir `moovx-staging-migrations-*` ne
+subsiste.
+
+**Périmètre :** aucun push réel, migration distante, seed, repair, cron,
+Vercel, Stripe, commit ou push. Phase 6 reste `blocked` faute d'application,
+Preview, Stripe test et réconciliation Billing.
+
+## Entrée — 2026-07-26 — Application du plan staging final
+
+**Préconditions :** garde anti-production `status=ok`, ref local
+`cycbnnojcymjnaqomlyj`, production `njlzossopgknanhkzcbk` exclue, historique
+distant vide, schéma `cron` absent et empreinte opérateur exacte
+`030a1e34757b7c069448d40ff6643e6770e57b58154e92a73bb6db7044b22535`.
+Le plan contient 137 migrations historiques, une projection schema-only,
+138 versions uniques, zéro collision et cinq exclusions.
+
+**Application :** le runner matérialise sous le répertoire temporaire système,
+exécute le dry-run final, puis un unique `supabase db push --yes` avec arrêt au
+premier échec. Le processus termine avec succès et supprime son workdir. Aucun
+repair, reset, seed séparé ou second passage n'est exécuté.
+
+**Contrôles post-application :** historique distant 138/138, zéro version
+manquante, supplémentaire ou dupliquée; catalogue `exercises_db` 176 lignes;
+deux identifiants supprimés absents et deux canoniques présents; `profiles`,
+`coach_clients` et `weekly_diagnostics` à zéro ligne; colonne
+`invited_by_coach` et contrainte `coach_clients_coach_client_unique` présentes;
+53 tables RLS, 127 policies, 25 fonctions et aucun contrat critique manquant.
+Le dump du schéma `cron` retourne `no matching schemas were found` : `pg_cron`
+et jobs sont absents. Aucun endpoint MoovX production n'est présent dans le
+schéma effectif et aucun littéral personnel des migrations exclues n'apparaît
+dans les données.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked` faute de seed
+Phase 6, Preview Vercel, Stripe test et preuve Billing; RC1 reste 0/38 et
+Phase 9 inactive.
+
+## Entrée — 2026-07-26 — Seed synthétique Phase 6 staging
+
+**Contrat :** manifeste déterministe `moovx-phase6-staging-seed-v1`, namespace
+UUID `76000000`–`76000006`, cible exclusive `cycbnnojcymjnaqomlyj`. Les SHA-256
+verrouillés sont `39a76770…679b` pour le manifeste et `5d5c26a5…d6bf` pour le
+SQL. Le seed contient uniquement neuf identités `moovx.invalid`, sans mot de
+passe, identifiant Stripe, secret ou endpoint production.
+
+**Preuve locale :** les readers Nutrition couvrent `canonical`,
+`legacy_converted`, `not_found`, `conflict`, `invalid` et
+`legacy_unsupported`; `failure` reste injecté au runner. Deux replays du corps
+SQL dans la même transaction conservent les volumes, puis `ROLLBACK` annule
+toutes les écritures locales.
+
+**Préconditions staging :** garde vert, ref exacte, 138 migrations uniques et
+inchangées, namespace absent et `pg_cron` absent. Le dry-run Supabase annonce
+uniquement `supabase/seed.sql`, sans migration.
+
+**Application unique :** le runner exécute son dry-run obligatoire puis une
+seule application réussie (`executionCount=1`). Le workdir privé est supprimé.
+Les volumes post-application sont `auth.users=9`, `profiles=9`,
+`coach_clients=1`, `meal_plans=6`, `client_meal_plans=2`, `saved_meals=4`,
+`daily_food_logs=14`, `meal_tracking=7`. Il existe un admin, un coach, sept
+clients et aucun owner étranger.
+
+**Contrôles :** historique migrations 138/138 strictement identique avant et
+après; zéro mot de passe, domaine e-mail étranger, identifiant Stripe ou
+endpoint production; 53 tables RLS, 127 policies, 25 fonctions et les huit FK
+Nutrition présentes; `pg_cron` absent et zéro job. Un second dry-run retourne
+`Remote database is up to date` avec `executionCount=0`; aucun second seed
+n'est appliqué.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked` faute de
+Preview Vercel, Stripe test, webhooks test et preuve Billing; RC1 reste 0/38
+et Phase 9 inactive. Prochaine étape unique : autorisation distincte pour le
+Preview Vercel isolé puis Stripe test.

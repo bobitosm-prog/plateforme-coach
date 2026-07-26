@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **24 juillet 2026**.
+> Dernière mise à jour : **26 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Release Candidate RC1 — audit préalable à Phase 9**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -460,15 +460,25 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; la cible
-Supabase Free/Nano est fonctionnellement suffisante et le [runbook
-opératoire](docs/PHASE_6_PREPRODUCTION_RECONCILIATION.md) dispose désormais
-d'un garde local et d'une configuration cron environment-scoped. Les quatre
-migrations cron historiques restent immuables; staging doit les rejouer avec
-`pg_cron` absent, puis créer les jobs explicitement vers l'alias Preview.
-La création attend encore la confirmation Dashboard `0 USD`, puis une
-autorisation opérateur distincte. Aucune preuve de réconciliation
-Stripe/base n'est encore exécutée; Nutrition reste secondaire.**
+**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; le projet
+Supabase Free/Nano `moovx-staging` est lié au ref explicitement gardé. Le plan
+final de 138 migrations a été appliqué une fois : l'historique distant contient
+exactement 138 versions uniques, `pg_cron` reste absent et aucun job n'existe.
+Le [manifeste immuable de
+re-versioning](docs/PHASE_6_STAGING_MIGRATION_REVERSIONING.md) résout les
+17 collisions de 73 fichiers et autorise le catalogue synthétique canonique.
+La [classification des 53 mutations](docs/PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md)
+propose A=6, B=4, C=36, D=6, E=1, F=0. Les deux D individuelles passent leurs
+preuves SQL rollback. Le plan final matérialise 137 sources historiques et une
+projection schema-only, exclut cinq mutations refusées, conserve l'ordre et
+zéro collision; son dry-run Supabase puis son application sont verts à
+138 migrations. Le [seed synthétique déterministe
+Phase 6](docs/PHASE_6_STAGING_SYNTHETIC_SEED.md) a ensuite été appliqué une
+fois : 9 profils, 1 relation coach/client et les volumes Nutrition attendus
+sont présents, sans mot de passe ni identifiant Stripe. Aucun repair ou cron
+réel n'a été exécuté et aucune preuve Billing n'est encore exécutée.
+Aucune preuve de réconciliation Stripe/base n'est encore exécutée; Nutrition
+reste secondaire.**
 
 ### Pourquoi
 

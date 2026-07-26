@@ -1,8 +1,7 @@
 # Audit RC1 des Phases 1 à 8
 
-> Audit documentaire du 24 juillet 2026, révision
-> `8c43ebb2018363adceaab7b12b2ebc3d683863c2`. Aucun test applicatif, service
-> distant ou environnement de préproduction n'a été exécuté.
+> Audit initial du 24 juillet 2026, complété le 26 juillet par la preuve
+> opérateur Supabase staging. La production reste strictement hors périmètre.
 
 ## Résumé exécutif
 
@@ -108,7 +107,7 @@ Les quatre critères sont `met`, avec une preuve locale.
 |---|---|---|
 | Chaque événement Stripe supporté testé | `met` | [`BILLING_WEBHOOK_HANDLERS.md`](BILLING_WEBHOOK_HANDLERS.md) et suites listées dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 | Replay sans double mutation | `met` | [`BILLING_WEBHOOK_ORDERING.md`](BILLING_WEBHOOK_ORDERING.md), tests unitaires et concurrence locale. |
-| Aucune divergence en préproduction | `blocked` | [`BILLING_RECONCILIATION.md`](BILLING_RECONCILIATION.md) ne fournit qu'un service read-only. Le [runbook](PHASE_6_PREPRODUCTION_RECONCILIATION.md) démontre l'absence de cible représentative, recommande un seed synthétique déterministe et spécifie isolation, commandes, rapports et autorisations. Aucune ressource ou preuve n'est encore créée; la preuve Nutrition secondaire ne remplace pas Stripe/base. |
+| Aucune divergence en préproduction | `blocked` | Le projet Supabase isolé contient exactement les 138 versions du [plan final](PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md), sans collision; `pg_cron` et les jobs restent absents. Le [seed synthétique](PHASE_6_STAGING_SYNTHETIC_SEED.md) est appliqué avec les volumes exacts et sans secret. Aucun Preview Vercel, Stripe test ou rapport Billing n'existe encore. |
 | Routes sans métier substantiel | `met` | Inventaire `451 → 312` lignes et six adaptateurs dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 
 ## Phase 7 — `met`
@@ -157,9 +156,8 @@ une métrique terrain.
 
 ## Recommandation unique
 
-Identifier un projet Supabase staging existant avec Stripe test, ou autoriser
-explicitement leur création et le chargement du seed synthétique déterministe
-du [runbook Phase 6](PHASE_6_PREPRODUCTION_RECONCILIATION.md).
+Obtenir une autorisation opérateur distincte pour configurer le Preview Vercel
+isolé et Stripe test; ne pas lancer de `repair`, cron ou second seed.
 La conception de l'autorité versionnée des futurs totaux de plan reste un
 chantier Nutrition distinct, sans rouvrir la Phase 4, C01 à C10 ou les preuves
 historiques.

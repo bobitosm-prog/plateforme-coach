@@ -4,9 +4,13 @@
 
 **Statut : `blocked`.**
 
-Aucune préproduction exploitable, représentative et démontrée non-production
-n'est disponible dans le workspace. Aucune réconciliation distante n'a donc
-été exécutée et aucune preuve de sortie n'est fabriquée.
+Le projet Supabase isolé `moovx-staging` existe désormais, le dépôt est lié,
+mais aucun schéma n'y a été appliqué. L'inventaire CLI
+authentifié confirme le ref `cycbnnojcymjnaqomlyj`, l'organisation
+`mlasmyrpaaqnhuuhuzma`, la région `eu-central-2` et l'état
+`ACTIVE_HEALTHY`. Le ref production `njlzossopgknanhkzcbk` reste explicitement
+interdit. Aucune réconciliation distante n'a donc encore été exécutée et
+aucune preuve de sortie n'est fabriquée.
 
 Un second écart de périmètre est déterminant :
 
@@ -33,7 +37,7 @@ inspectés. Aucun secret n'a été affiché ou archivé.
 | Vercel lié | projet `plateforme-coach`, `prj_WI7LdZkzqU2SlXUCPCfBaASO52NJ` | lien local présent | cible locale déclarée `production` | aucune branche preview isolée ni source de données preview identifiée | non exploitable |
 | fichier Vercel temporaire | même host Supabase et mêmes classes de clés live | présent | oui ou indifférenciable de la production | aucune isolation démontrée | exclu |
 | Supabase local canonique | `plateforme-coach`, API `127.0.0.1:55321`, PostgreSQL `127.0.0.1:55322` | sain, contrat de migrations courant | non | schéma historique local et données synthétiques/incomplètes | contrôle local seulement, pas préproduction |
-| projet Supabase staging | cible `moovx-staging`, organisation `mlasmyrpaaqnhuuhuzma` | absent | cible Free/Nano validée localement, création non autorisée | suffisante en capacité pour le seed minimal | attente de la confirmation Dashboard `0 USD` |
+| projet Supabase staging | `moovx-staging`, ref `cycbnnojcymjnaqomlyj`, organisation `mlasmyrpaaqnhuuhuzma` | `ACTIVE_HEALTHY`, Free/Nano, `eu-central-2`; lié | non | historique distant vide, aucun schéma/seed MoovX appliqué | plan bloqué par 17 collisions de versions et une migration de données de référence |
 | snapshot anonymisé restauré | aucun fichier, manifeste ou empreinte | absent | non | aucune | indisponible |
 
 La commande locale `supabase:local:status` a actualisé automatiquement
@@ -343,31 +347,37 @@ export SUPABASE_ORG_ID=<supabase-org-id>
 export SUPABASE_STAGING_PROJECT_REF=<new-staging-project-ref>
 export SUPABASE_DB_PASSWORD=<loaded-from-secret-store>
 
-npx supabase projects create moovx-staging \
-  --org-id mlasmyrpaaqnhuuhuzma \
-  --region eu-central-1 \
-  --db-password "$SUPABASE_DB_PASSWORD" \
-  --size nano
+MOOVX_ENVIRONMENT=staging \
+SUPABASE_STAGING_PROJECT_REF=cycbnnojcymjnaqomlyj \
+node scripts/preproduction/assert-environment.mjs \
+  --mode pre-link \
+  --manifest "$MOOVX_STAGING_MANIFEST"
 
-npx supabase link --project-ref "$SUPABASE_STAGING_PROJECT_REF"
+npx supabase link \
+  --project-ref cycbnnojcymjnaqomlyj
 ```
 
-`projects create` et `link` sont confirmés par la
-[référence CLI Supabase](https://supabase.com/docs/reference/cli/supabase-seed).
-Le project ref retourné doit être copié dans le manifeste puis validé avant
-toute autre commande.
+La création est terminée manuellement et ne doit pas être rejouée. Le
+manifeste privé doit être copié depuis
+`scripts/preproduction/staging-manifest.example.json` vers un chemin absolu
+hors du dépôt avec permissions `0600`. Il ne contient aucun secret. Le mot de
+passe DB est chargé depuis un secret store dans `SUPABASE_DB_PASSWORD`; il
+n'est ni écrit dans le manifeste, ni passé dans la conversation, ni journalisé.
+Si la variable manque, l'opérateur s'arrête avant `link`.
 
 ### 2. Valider anti-production avant toute mutation
 
-Le garde `scripts/preproduction/assert-environment.mjs` existe et refuse toute
-organisation, taille, région, project ref ou variable non autorisée. Commande
-obligatoire :
+Le garde `scripts/preproduction/assert-environment.mjs` refuse toute
+organisation, taille, région, project ref, état ou variable non autorisée. Le
+mode `pre-create` reste disponible pour l'historique; la commande obligatoire
+après création et avant/après link est :
 
 ```bash
 MOOVX_ENVIRONMENT=staging \
+SUPABASE_STAGING_PROJECT_REF=cycbnnojcymjnaqomlyj \
 node scripts/preproduction/assert-environment.mjs \
-  --mode pre-create \
-  --manifest "$MOOVX_STAGING_MANIFEST" \
+  --mode pre-link \
+  --manifest "$MOOVX_STAGING_MANIFEST"
 ```
 
 Il protège aussi les cinq références production conservées dans quatre
@@ -378,8 +388,10 @@ référence ou modification de ces fichiers échoue. Sa sortie exige
 ### 3. Appliquer le schéma
 
 Les migrations historiques comportent des versions de date dupliquées et
-`supabase/config.toml` désactive le gestionnaire standard. Le `db push`
-officiel doit seulement servir de diagnostic initial :
+`supabase/config.toml` désactive le gestionnaire standard. Le re-versioning
+staging est désormais défini par un [manifeste immuable
+dédié](PHASE_6_STAGING_MIGRATION_REVERSIONING.md). Le `db push` officiel doit
+seulement servir de diagnostic initial :
 
 ```bash
 npx supabase db push --linked --include-all --dry-run
@@ -400,10 +412,68 @@ node scripts/preproduction/apply-migrations.mjs \
   --apply
 ```
 
-Ce runner reste à implémenter et doit enregistrer la liste, l'ordre et les
-SHA-256 des migrations. `supabase db reset --linked` est interdit dans ce
-runbook, même si Supabase le prévoit pour un staging jetable, car il détruit
-le schéma distant.
+Le runner existe désormais en mode `--dry-run` uniquement. Il exige le
+manifeste privé, le garde pre-link et un fichier local
+`supabase/.temp/project-ref` égal exactement à `cycbnnojcymjnaqomlyj`. Il
+enregistre la liste, l'ordre lexical et les SHA-256, exclut rôles et seeds, et
+refuse `--apply`. L'application restera un chantier et une autorisation
+séparés. `supabase db reset --linked` est interdit dans ce runbook, même si
+Supabase le prévoit pour un staging jetable, car il détruit le schéma distant.
+
+### État du raccordement au 26 juillet 2026
+
+- inventaire CLI read-only : cible staging exacte confirmée;
+- garde `pre-link` : `status=ok`, production exclue, six références
+  historiques immuables acceptées;
+- manifeste privé sans secret : préparé hors Git avec permissions `0600`;
+- `supabase link` : réussi vers `cycbnnojcymjnaqomlyj`;
+- historique distant avant application : vide;
+- `pg_cron` distant : absent;
+- comparaison historique avant re-versioning : dry-runs Supabase/opérateur
+  concordants à 142 migrations;
+- manifeste staging : 142 sources et SHA-256, 142 versions uniques,
+  73 copies re-versionnées et 17 groupes résolus;
+- migration de référence
+  `20260317010000_seed_exercises_catalog.sql` explicitement autorisée :
+  178 UUID synthétiques, aucune donnée personnelle et insertion idempotente;
+- inventaire SQL : 59 fichiers comportent une mutation au replay, dont le
+  catalogue autorisé et cinq crons historiques no-op avec `pg_cron` absent;
+- au point de contrôle initial, 53 autres migrations de données restaient sans
+  autorisation et le dry-run opérateur re-versionné refusait fail-closed avant
+  workdir; cette étape historique est désormais remplacée par les décisions
+  A/B/C, les deux preuves D et les cinq exclusions explicites documentées
+  ci-dessous;
+- application opérateur autorisée du plan final : 138/138 versions distantes,
+  zéro version manquante ou supplémentaire;
+- catalogue de référence final : 176 exercices, doublons supprimés absents et
+  références canoniques présentes;
+- overlay `invited_by_coach` et contrainte
+  `coach_clients_coach_client_unique` présents;
+- `pg_cron` et jobs : absents après application;
+- seed Phase 6 séparé : appliqué une fois avec les volumes et empreintes du
+  [`PHASE_6_STAGING_SYNTHETIC_SEED.md`](PHASE_6_STAGING_SYNTHETIC_SEED.md);
+- rôle opérateur, cron, repair ou reset : aucun.
+
+La comparaison complète et la classification A/B/C/D/E sont dans
+[`PHASE_6_STAGING_MIGRATION_PLAN.md`](PHASE_6_STAGING_MIGRATION_PLAN.md).
+Le manifeste, sa règle et l'inventaire exhaustif des blocages sont dans
+[`PHASE_6_STAGING_MIGRATION_REVERSIONING.md`](PHASE_6_STAGING_MIGRATION_REVERSIONING.md).
+La [classification des mutations](PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md)
+documente les 53 décisions. Les preuves rollback des deux D individuelles sont
+vertes et le plan final 138 migrations passe le dry-run Supabase puis son
+application unique sur `cycbnnojcymjnaqomlyj`.
+
+Pour reprendre sans exposer le secret :
+
+```bash
+export MOOVX_STAGING_MANIFEST=/absolute/private/path/manifest.json
+read -s "SUPABASE_DB_PASSWORD?Supabase staging DB password: "
+export SUPABASE_DB_PASSWORD
+echo
+```
+
+La saisie reste locale et masquée. La session opérateur reprend ensuite au
+garde `pre-link`; elle ne source jamais `.env` ou `.env.local`.
 
 Quatre migrations déjà appliquées en production contiennent historiquement
 `app.moovx.ch` et des placeholders de secret. Elles restent strictement
@@ -728,7 +798,7 @@ push n'a été exécutée.
 
 ## Prochaine étape unique
 
-Identifier un projet Supabase staging existant et son environnement Stripe
-test, ou autoriser explicitement leur création et le chargement du seed
-synthétique déterministe recommandé. Sans cette décision externe, la Phase 6
-reste `blocked`.
+Obtenir une autorisation opérateur distincte pour créer le Preview Vercel
+isolé `phase-6-staging`, puis établir exclusivement Stripe test et ses
+webhooks. La Phase 6 reste `blocked` jusqu'à la réconciliation Billing
+read-only archivée sans divergence.
