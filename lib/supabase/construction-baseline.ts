@@ -57,6 +57,6 @@ export const LEGACY_SUPABASE_CONSTRUCTIONS = [
   'app/onboarding/OnboardingContent.tsx:40:27:createBrowserClient',
   'app/weekly-diagnostic/[id]/WeeklyDiagnosticDetailContent.tsx:55:27:createBrowserClient',
   'lib/api-guard.ts:16:20:createClient',
-  'lib/billing/checkout/repository.ts:14:13:createClient',
+  'lib/billing/checkout/repository.ts:16:13:createClient',
   'lib/coach-invitations/service.ts:29:17:createClient',
 ] as const

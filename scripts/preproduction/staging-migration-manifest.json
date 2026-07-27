@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "authority": "moovx-staging-migration-reversioning",
   "sourceRoot": "supabase/migrations",
-  "sourceMigrationCount": 142,
+  "sourceMigrationCount": 143,
   "sourceOrder": "lexical-filename",
   "stagingOrder": "lexical-filename",
   "reversionRule": {
@@ -5353,6 +5353,27 @@
         ],
         "migrationTimeCount": 0,
         "definitionOnlyCount": 8
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260727120000_align_payments_checkout_contract.sql",
+      "historicalVersion": "20260727120000",
+      "historicalName": "20260727120000_align_payments_checkout_contract.sql",
+      "sourceSha256": "c24d2473d54579e1d445f83ff115c54fa59cc061d36258e1eb955fd783f7a6e6",
+      "stagingVersion": "20260727120000",
+      "stagingName": "20260727120000_align_payments_checkout_contract.sql",
+      "absoluteOrder": 143,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
       },
       "justification": "Schema or definition-only migration; no migration-time data mutation detected."
     }

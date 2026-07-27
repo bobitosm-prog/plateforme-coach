@@ -31,7 +31,7 @@ import {
 } from './environment-guard.mjs'
 
 const FINAL_OPERATOR_PLAN_SHA256 =
-  '030a1e34757b7c069448d40ff6643e6770e57b58154e92a73bb6db7044b22535'
+  '7272face271b5b596c14f9b9b7f098698ef2b54a2f33baf87251ec3843abaa52'
 
 function sha256(source) {
   return createHash('sha256').update(source).digest('hex')
@@ -53,14 +53,14 @@ export function verifyStagingMigrationManifest({
     throw new Error('Unsupported staging migration manifest schemaVersion')
   }
   const actual = createStagingMigrationManifest(migrationsRoot)
-  if (manifest.sourceMigrationCount !== 142 || manifest.migrations.length !== 142) {
-    throw new Error('Staging migration manifest must contain exactly 142 migrations')
+  if (manifest.sourceMigrationCount !== 143 || manifest.migrations.length !== 143) {
+    throw new Error('Staging migration manifest must contain exactly 143 migrations')
   }
   if (JSON.stringify(manifest) !== JSON.stringify(actual)) {
     throw new Error('Staging migration manifest diverges from migration sources')
   }
   const stagingVersions = manifest.migrations.map(migration => migration.stagingVersion)
-  if (new Set(stagingVersions).size !== 142) {
+  if (new Set(stagingVersions).size !== 143) {
     throw new Error('Staging migration manifest contains a version collision')
   }
   const reversioned = manifest.migrations.filter(
@@ -79,7 +79,7 @@ export function verifyStagingMigrationManifest({
 
   return {
     status: 'ok',
-    migrationCount: 142,
+    migrationCount: 143,
     shaCount: manifest.migrations.filter(migration => {
       const source = readFileSync(resolve(migrationsRoot, basename(migration.sourcePath)))
       return sha256(source) === migration.sourceSha256
@@ -293,8 +293,8 @@ function main() {
       )
     }
     if (
-      selectedMutationPlan.includedMigrationCount !== 138
-      || selectedMutationPlan.uniqueStagingVersionCount !== 138
+      selectedMutationPlan.includedMigrationCount !== 139
+      || selectedMutationPlan.uniqueStagingVersionCount !== 139
       || selectedMutationPlan.collisions !== 0
       || selectedMutationPlan.excludedMigrationCount !== 5
       || !selectedMutationPlan.historicalOrderPreserved
