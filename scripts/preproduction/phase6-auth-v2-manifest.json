@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 2,
+  "authority": "moovx-phase6-staging-auth-v2",
+  "environment": "staging",
+  "projectRef": "cycbnnojcymjnaqomlyj",
+  "supabaseUrl": "https://cycbnnojcymjnaqomlyj.supabase.co",
+  "namespace": "76100000",
+  "namespaces": {
+    "users": "76100000",
+    "coachClients": "76100001",
+    "mealPlans": "76100002",
+    "clientMealPlans": "76100003",
+    "savedMeals": "76100004",
+    "dailyFoodLogs": "76100005",
+    "mealTracking": "76100006"
+  },
+  "provisioning": {
+    "method": "supabase.auth.admin.createUser",
+    "provider": "email",
+    "emailConfirm": true
+  },
+  "generatedAt": "2026-07-27T00:00:00.000Z",
+  "tableCounts": {
+    "public.profiles": 9,
+    "public.coach_clients": 1,
+    "public.meal_plans": 6,
+    "public.client_meal_plans": 2,
+    "public.saved_meals": 4,
+    "public.daily_food_logs": 14,
+    "public.meal_tracking": 7
+  },
+  "personas": [
+    {
+      "key": "admin",
+      "id": "76100000-0000-4000-8000-000000000001",
+      "email": "phase6-v2-admin@moovx.invalid",
+      "fullName": "Phase6 v2 admin",
+      "role": "super_admin",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "coach",
+      "id": "76100000-0000-4000-8000-000000000002",
+      "email": "phase6-v2-coach-1@moovx.invalid",
+      "fullName": "Phase6 v2 coach",
+      "role": "coach",
+      "subscriptionType": "coach_monthly",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientCanonical",
+      "id": "76100000-0000-4000-8000-000000000003",
+      "email": "phase6-v2-client-1@moovx.invalid",
+      "fullName": "Phase6 v2 client canonical",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "active",
+      "objective": "cut"
+    },
+    {
+      "key": "clientLegacy",
+      "id": "76100000-0000-4000-8000-000000000004",
+      "email": "phase6-v2-client-2@moovx.invalid",
+      "fullName": "Phase6 v2 client legacy",
+      "role": "client",
+      "subscriptionType": "invited",
+      "subscriptionStatus": "active",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientConflict",
+      "id": "76100000-0000-4000-8000-000000000005",
+      "email": "phase6-v2-client-3@moovx.invalid",
+      "fullName": "Phase6 v2 client conflict",
+      "role": "client",
+      "subscriptionType": "lifetime",
+      "subscriptionStatus": "lifetime",
+      "objective": "mass"
+    },
+    {
+      "key": "clientInvalid",
+      "id": "76100000-0000-4000-8000-000000000006",
+      "email": "phase6-v2-client-4@moovx.invalid",
+      "fullName": "Phase6 v2 client invalid",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "trialing",
+      "objective": "cut"
+    },
+    {
+      "key": "clientUnsupported",
+      "id": "76100000-0000-4000-8000-000000000007",
+      "email": "phase6-v2-client-5@moovx.invalid",
+      "fullName": "Phase6 v2 client unsupported",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "past_due",
+      "objective": "maintain"
+    },
+    {
+      "key": "clientCanonicalSecond",
+      "id": "76100000-0000-4000-8000-000000000008",
+      "email": "phase6-v2-client-6@moovx.invalid",
+      "fullName": "Phase6 v2 client canonical second",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "canceled",
+      "objective": "mass"
+    },
+    {
+      "key": "clientNotFound",
+      "id": "76100000-0000-4000-8000-000000000009",
+      "email": "phase6-v2-client-7@moovx.invalid",
+      "fullName": "Phase6 v2 client not found",
+      "role": "client",
+      "subscriptionType": "client_monthly",
+      "subscriptionStatus": "expired",
+      "objective": "cut"
+    }
+  ],
+  "relation": {
+    "id": "76100001-0000-4000-8000-000000000001",
+    "coachKey": "coach",
+    "clientKey": "clientLegacy",
+    "status": "active",
+    "invitedByCoach": true
+  },
+  "personalPlans": [
+    { "id": "76100002-0000-4000-8000-000000000001", "ownerKey": "clientCanonical", "fixture": "canonical", "expectedStatus": "canonical" },
+    { "id": "76100002-0000-4000-8000-000000000002", "ownerKey": "clientLegacy", "fixture": "legacy", "expectedStatus": "legacy_converted" },
+    { "id": "76100002-0000-4000-8000-000000000003", "ownerKey": "clientConflict", "fixture": "conflict", "expectedStatus": "conflict" },
+    { "id": "76100002-0000-4000-8000-000000000004", "ownerKey": "clientInvalid", "fixture": "invalid", "expectedStatus": "invalid" },
+    { "id": "76100002-0000-4000-8000-000000000005", "ownerKey": "clientUnsupported", "fixture": "legacy_unsupported", "expectedStatus": "legacy_unsupported" },
+    { "id": "76100002-0000-4000-8000-000000000006", "ownerKey": "clientCanonicalSecond", "fixture": "canonical", "expectedStatus": "canonical" }
+  ],
+  "notFoundOwnerKey": "clientNotFound",
+  "coachPlans": [
+    { "id": "76100003-0000-4000-8000-000000000001", "clientKey": "clientCanonical", "coachKey": "coach", "fixture": "canonical", "expectedStatus": "canonical" },
+    { "id": "76100003-0000-4000-8000-000000000002", "clientKey": "clientLegacy", "coachKey": "coach", "fixture": "legacy", "expectedStatus": "legacy_converted" }
+  ],
+  "savedMeals": [
+    { "id": "76100004-0000-4000-8000-000000000001", "ownerKey": "clientCanonical", "name": "Phase6 v2 canonical breakfast", "mealType": "breakfast", "fixture": "canonical" },
+    { "id": "76100004-0000-4000-8000-000000000002", "ownerKey": "clientLegacy", "name": "Phase6 v2 legacy lunch", "mealType": "lunch", "fixture": "legacy" },
+    { "id": "76100004-0000-4000-8000-000000000003", "ownerKey": "clientConflict", "name": "Phase6 v2 alias conflict", "mealType": "snack", "fixture": "conflict" },
+    { "id": "76100004-0000-4000-8000-000000000004", "ownerKey": "clientInvalid", "name": "Phase6 v2 invalid snapshot", "mealType": "dinner", "fixture": "invalid" }
+  ],
+  "dailyFoodLogs": {
+    "rowsPerClient": 2,
+    "dates": ["2026-07-20", "2026-07-21"]
+  },
+  "mealTracking": {
+    "rowsPerClient": 1,
+    "date": "2026-07-21"
+  },
+  "cleanupOrder": [
+    "public.meal_tracking",
+    "public.daily_food_logs",
+    "public.saved_meals",
+    "public.client_meal_plans",
+    "public.meal_plans",
+    "public.coach_clients",
+    "public.profiles"
+  ],
+  "failureCase": "runner_injection_only"
+}

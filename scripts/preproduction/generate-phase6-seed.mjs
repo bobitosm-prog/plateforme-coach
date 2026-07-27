@@ -140,13 +140,14 @@ function savedMealFoods(fixture) {
 
 function assertManifest(manifest) {
   if (
-    manifest.schemaVersion !== 1
-    || manifest.authority !== 'moovx-phase6-staging-seed-v1'
+    manifest.schemaVersion !== 2
+    || manifest.authority !== 'moovx-phase6-staging-auth-v2'
     || manifest.environment !== 'staging'
     || manifest.projectRef !== 'cycbnnojcymjnaqomlyj'
-    || manifest.namespace !== '76000000'
+    || manifest.supabaseUrl !== 'https://cycbnnojcymjnaqomlyj.supabase.co'
+    || manifest.namespace !== '76100000'
   ) {
-    throw new Error('Invalid Phase 6 seed authority')
+    throw new Error('Invalid Phase 6 Auth v2 seed authority')
   }
   if (manifest.personas.length !== 9) throw new Error('Expected 9 personas')
   if (manifest.personalPlans.length !== 6) throw new Error('Expected 6 personal plans')
@@ -160,11 +161,12 @@ function assertManifest(manifest) {
     ...manifest.savedMeals.map(row => row.id),
   ]
   if (new Set(ids).size !== ids.length) throw new Error('Duplicate deterministic seed id')
-  if (ids.some(id => !id.startsWith('7600000'))) {
-    throw new Error('Seed id outside Phase 6 namespace')
+  if (ids.some(id => !id.startsWith('7610000'))) {
+    throw new Error('Seed id outside Phase 6 Auth v2 namespace')
   }
   if (manifest.personas.some(persona =>
     !persona.email.endsWith('@moovx.invalid')
+    || !persona.email.startsWith('phase6-v2-')
     || persona.email.includes('+')
   )) {
     throw new Error('Persona email must use the synthetic moovx.invalid domain')
@@ -179,36 +181,48 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
   const people = new Map(manifest.personas.map(persona => [persona.key, persona]))
   const clients = manifest.personas.filter(persona => persona.role === 'client')
   const fixtures = phase6PlanFixtures()
+  const expectedAuthRows = manifest.personas.map(persona =>
+    `      (${sqlString(persona.id)}::uuid, ${sqlString(persona.email)})`)
+    .join(',\n')
   const lines = [
-    '-- Generated from phase6-seed-manifest.json. Do not edit manually.',
-    '-- Synthetic, namespace-scoped staging data only.',
+    '-- Generated from phase6-auth-v2-manifest.json. Do not edit manually.',
+    '-- Relational staging data only. Auth users are read-only prerequisites.',
     ...(transaction ? ['BEGIN;'] : []),
     "SET LOCAL statement_timeout = '60s';",
     "SET LOCAL lock_timeout = '10s';",
     '',
-    'INSERT INTO auth.users',
-    '  (id, email, email_confirmed_at, raw_user_meta_data, raw_app_meta_data, aud, role, created_at, updated_at)',
-    'VALUES',
-    manifest.personas.map(persona => [
-      `  (${sqlString(persona.id)}::uuid`,
-      `${sqlString(persona.email)}`,
-      `${sqlString(FIXED_TIMESTAMP)}::timestamptz`,
-      `${jsonSql({ role: persona.role, synthetic: true, seed: manifest.authority })}`,
-      `${jsonSql({ provider: 'email', providers: ['email'] })}`,
-      "'authenticated'",
-      "'authenticated'",
-      `${sqlString(FIXED_TIMESTAMP)}::timestamptz`,
-      `${sqlString(FIXED_TIMESTAMP)}::timestamptz)`,
-    ].join(', ')).join(',\n'),
-    'ON CONFLICT (id) DO UPDATE SET',
-    '  email = EXCLUDED.email,',
-    '  email_confirmed_at = EXCLUDED.email_confirmed_at,',
-    '  raw_user_meta_data = EXCLUDED.raw_user_meta_data,',
-    '  raw_app_meta_data = EXCLUDED.raw_app_meta_data,',
-    '  updated_at = EXCLUDED.updated_at;',
+    'DO $phase6_auth_precondition$',
+    'DECLARE',
+    '  v_verified_count integer;',
+    'BEGIN',
+    '  WITH expected(id, email) AS (',
+    '    VALUES',
+    expectedAuthRows,
+    '  )',
+    '  SELECT count(*) INTO v_verified_count',
+    '  FROM expected',
+    '  JOIN auth.users AS users',
+    '    ON users.id = expected.id',
+    '   AND lower(users.email) = lower(expected.email)',
+    '   AND users.email_confirmed_at IS NOT NULL',
+    "   AND users.encrypted_password IS NOT NULL",
+    "   AND users.encrypted_password <> ''",
+    '   AND users.instance_id IS NOT NULL',
+    '  WHERE EXISTS (',
+    '    SELECT 1',
+    '    FROM auth.identities AS identities',
+    '    WHERE identities.user_id = expected.id',
+    "      AND identities.provider = 'email'",
+    "      AND lower(identities.identity_data->>'email') = lower(expected.email)",
+    '  );',
+    '  IF v_verified_count <> 9 THEN',
+    "    RAISE EXCEPTION 'phase6 Auth v2 prerequisite mismatch';",
+    '  END IF;',
+    'END',
+    '$phase6_auth_precondition$;',
     '',
     'INSERT INTO public.profiles',
-    '  (id, email, full_name, role, subscription_type, subscription_status,',
+    '  (id, email, full_name, role, status, subscription_type, subscription_status,',
     '   onboarding_completed, coach_onboarding_complete, objective, calorie_goal,',
     '   protein_goal, carbs_goal, fat_goal, training_location, preferred_locale,',
     '   needs_initial_generation, stripe_customer_id, stripe_subscription_id,',
@@ -217,8 +231,9 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
     manifest.personas.map((persona, index) => [
       `  (${sqlString(persona.id)}::uuid`,
       `${sqlString(persona.email)}`,
-      `${sqlString(`Phase6 ${persona.key}`)}`,
+      `${sqlString(persona.fullName)}`,
       `${sqlString(persona.role)}`,
+      "'active'",
       `${sqlString(persona.subscriptionType)}`,
       `${sqlString(persona.subscriptionStatus)}`,
       'true',
@@ -241,6 +256,7 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
     '  email = EXCLUDED.email,',
     '  full_name = EXCLUDED.full_name,',
     '  role = EXCLUDED.role,',
+    '  status = EXCLUDED.status,',
     '  subscription_type = EXCLUDED.subscription_type,',
     '  subscription_status = EXCLUDED.subscription_status,',
     '  onboarding_completed = EXCLUDED.onboarding_completed,',
@@ -329,7 +345,7 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
   let logIndex = 1
   for (const [clientIndex, client] of clients.entries()) {
     for (const [dateIndex, date] of manifest.dailyFoodLogs.dates.entries()) {
-      const id = `76000005-0000-4000-8000-${String(logIndex).padStart(12, '0')}`
+      const id = `${manifest.namespaces.dailyFoodLogs}-0000-4000-8000-${String(logIndex).padStart(12, '0')}`
       const calories = 400 + clientIndex * 10 + dateIndex * 5
       logRows.push(
         `  (${sqlString(id)}::uuid, ${sqlString(client.id)}::uuid, ${sqlString(date)}, ${sqlString(dateIndex === 0 ? 'lunch' : 'dinner')}, ${sqlString(`Phase6 food ${clientIndex + 1}-${dateIndex + 1}`)}, 100, ${calories}, 30, 40, 12, ${sqlString(FIXED_TIMESTAMP)}::timestamptz)`,
@@ -358,7 +374,7 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
     '  (id, user_id, date, meal_type, completed, created_at)',
     'VALUES',
     clients.map((client, index) => {
-      const id = `76000006-0000-4000-8000-${String(index + 1).padStart(12, '0')}`
+      const id = `${manifest.namespaces.mealTracking}-0000-4000-8000-${String(index + 1).padStart(12, '0')}`
       return `  (${sqlString(id)}::uuid, ${sqlString(client.id)}::uuid, ${sqlString(manifest.mealTracking.date)}, 'lunch', ${index % 2 === 0}, ${sqlString(FIXED_TIMESTAMP)}::timestamptz)`
     }).join(',\n'),
     'ON CONFLICT (id) DO UPDATE SET',
@@ -374,22 +390,21 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
     `    ${clients.map(client => `${sqlString(client.id)}::uuid`).join(', ')}`,
     '  ];',
     'BEGIN',
-    `  IF (SELECT count(*) FROM auth.users WHERE id::text LIKE '76000000-%') <> 9 THEN RAISE EXCEPTION 'phase6 auth.users volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '76000000-%') <> 9 THEN RAISE EXCEPTION 'phase6 profiles volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '76000000-%' AND role = 'super_admin') <> 1 THEN RAISE EXCEPTION 'phase6 admin volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '76000000-%' AND role = 'coach') <> 1 THEN RAISE EXCEPTION 'phase6 coach volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '76000000-%' AND role = 'client') <> 7 THEN RAISE EXCEPTION 'phase6 client volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.coach_clients WHERE id::text LIKE '76000001-%' AND status = 'active') <> 1 THEN RAISE EXCEPTION 'phase6 relation volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.meal_plans WHERE id::text LIKE '76000002-%') <> 6 THEN RAISE EXCEPTION 'phase6 meal_plans volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.client_meal_plans WHERE id::text LIKE '76000003-%') <> 2 THEN RAISE EXCEPTION 'phase6 client_meal_plans volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.saved_meals WHERE id::text LIKE '76000004-%') <> 4 THEN RAISE EXCEPTION 'phase6 saved_meals volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.daily_food_logs WHERE id::text LIKE '76000005-%') <> 14 THEN RAISE EXCEPTION 'phase6 daily_food_logs volume mismatch'; END IF;`,
-    `  IF (SELECT count(*) FROM public.meal_tracking WHERE id::text LIKE '76000006-%') <> 7 THEN RAISE EXCEPTION 'phase6 meal_tracking volume mismatch'; END IF;`,
-    `  IF EXISTS (SELECT 1 FROM public.meal_plans WHERE id::text LIKE '76000002-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign meal plan owner'; END IF;`,
-    `  IF EXISTS (SELECT 1 FROM public.saved_meals WHERE id::text LIKE '76000004-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign saved meal owner'; END IF;`,
-    `  IF EXISTS (SELECT 1 FROM public.daily_food_logs WHERE id::text LIKE '76000005-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign food log owner'; END IF;`,
-    `  IF EXISTS (SELECT 1 FROM public.meal_tracking WHERE id::text LIKE '76000006-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign tracking owner'; END IF;`,
-    `  IF EXISTS (SELECT 1 FROM public.profiles WHERE id::text LIKE '76000000-%' AND (stripe_customer_id IS NOT NULL OR stripe_subscription_id IS NOT NULL OR stripe_account_id IS NOT NULL)) THEN RAISE EXCEPTION 'phase6 Stripe id forbidden'; END IF;`,
+    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '${manifest.namespaces.users}-%') <> 9 THEN RAISE EXCEPTION 'phase6 profiles volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '${manifest.namespaces.users}-%' AND role = 'super_admin') <> 1 THEN RAISE EXCEPTION 'phase6 admin volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '${manifest.namespaces.users}-%' AND role = 'coach') <> 1 THEN RAISE EXCEPTION 'phase6 coach volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.profiles WHERE id::text LIKE '${manifest.namespaces.users}-%' AND role = 'client') <> 7 THEN RAISE EXCEPTION 'phase6 client volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.coach_clients WHERE id::text LIKE '${manifest.namespaces.coachClients}-%' AND status = 'active') <> 1 THEN RAISE EXCEPTION 'phase6 relation volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.meal_plans WHERE id::text LIKE '${manifest.namespaces.mealPlans}-%') <> 6 THEN RAISE EXCEPTION 'phase6 meal_plans volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.client_meal_plans WHERE id::text LIKE '${manifest.namespaces.clientMealPlans}-%') <> 2 THEN RAISE EXCEPTION 'phase6 client_meal_plans volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.saved_meals WHERE id::text LIKE '${manifest.namespaces.savedMeals}-%') <> 4 THEN RAISE EXCEPTION 'phase6 saved_meals volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.daily_food_logs WHERE id::text LIKE '${manifest.namespaces.dailyFoodLogs}-%') <> 14 THEN RAISE EXCEPTION 'phase6 daily_food_logs volume mismatch'; END IF;`,
+    `  IF (SELECT count(*) FROM public.meal_tracking WHERE id::text LIKE '${manifest.namespaces.mealTracking}-%') <> 7 THEN RAISE EXCEPTION 'phase6 meal_tracking volume mismatch'; END IF;`,
+    `  IF EXISTS (SELECT 1 FROM public.meal_plans WHERE id::text LIKE '${manifest.namespaces.mealPlans}-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign meal plan owner'; END IF;`,
+    `  IF EXISTS (SELECT 1 FROM public.saved_meals WHERE id::text LIKE '${manifest.namespaces.savedMeals}-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign saved meal owner'; END IF;`,
+    `  IF EXISTS (SELECT 1 FROM public.daily_food_logs WHERE id::text LIKE '${manifest.namespaces.dailyFoodLogs}-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign food log owner'; END IF;`,
+    `  IF EXISTS (SELECT 1 FROM public.meal_tracking WHERE id::text LIKE '${manifest.namespaces.mealTracking}-%' AND NOT (user_id = ANY(v_client_ids))) THEN RAISE EXCEPTION 'phase6 foreign tracking owner'; END IF;`,
+    `  IF EXISTS (SELECT 1 FROM public.profiles WHERE id::text LIKE '${manifest.namespaces.users}-%' AND (stripe_customer_id IS NOT NULL OR stripe_subscription_id IS NOT NULL OR stripe_account_id IS NOT NULL)) THEN RAISE EXCEPTION 'phase6 Stripe id forbidden'; END IF;`,
     'END',
     '$phase6_assert$;',
     '',
@@ -401,7 +416,7 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
 
 function main() {
   const manifestPath = resolve(
-    process.argv[2] ?? 'scripts/preproduction/phase6-seed-manifest.json',
+    process.argv[2] ?? 'scripts/preproduction/phase6-auth-v2-manifest.json',
   )
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
   process.stdout.write(buildPhase6SeedSql(manifest))

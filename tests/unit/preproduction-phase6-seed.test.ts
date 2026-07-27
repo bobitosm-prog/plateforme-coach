@@ -18,15 +18,7 @@ import {
 
 const root = process.cwd()
 const manifestSource = readFileSync(
-  resolve(root, 'scripts/preproduction/phase6-seed-manifest.json'),
-  'utf8',
-)
-const fixtureSource = readFileSync(
-  resolve(root, 'scripts/preproduction/phase6-seed.sql'),
-  'utf8',
-)
-const lockSource = readFileSync(
-  resolve(root, 'scripts/preproduction/phase6-seed-lock.json'),
+  resolve(root, 'scripts/preproduction/phase6-auth-v2-manifest.json'),
   'utf8',
 )
 const manifest = JSON.parse(manifestSource) as {
@@ -35,7 +27,7 @@ const manifest = JSON.parse(manifestSource) as {
   personalPlans: Array<{ ownerKey: string }>
   failureCase: string
 }
-const lock = JSON.parse(lockSource)
+const fixtureSource = buildPhase6SeedSql(manifest)
 const sha256 = (source: string) =>
   createHash('sha256').update(source).digest('hex')
 
@@ -44,21 +36,20 @@ describe('Phase 6 deterministic synthetic staging seed', () => {
     const result = verifyPhase6SeedAuthority({
       manifestSource,
       fixtureSource,
-      lockSource,
     })
 
     expect(result).toMatchObject({
       status: 'ok',
       projectRef: 'cycbnnojcymjnaqomlyj',
-      namespace: '76000000',
-      historyCountRequired: 138,
+      namespace: '76100000',
+      historyCountRequired: 143,
       owners: { admin: 1, coach: 1, clients: 7, foreign: 0 },
       containsPassword: false,
       containsStripeId: false,
       containsProductionUrl: false,
     })
-    expect(sha256(manifestSource)).toBe(lock.manifestSha256)
-    expect(sha256(fixtureSource)).toBe(lock.fixtureSha256)
+    expect(sha256(manifestSource)).toBe(result.manifestSha256)
+    expect(sha256(fixtureSource)).toBe(result.fixtureSha256)
     expect(buildPhase6SeedSql(manifest)).toBe(fixtureSource)
   })
 
@@ -75,8 +66,11 @@ describe('Phase 6 deterministic synthetic staging seed', () => {
     expect(combined).not.toContain('njlzossopgknanhkzcbk')
     expect(combined).not.toContain('app.moovx.ch')
     expect(combined).not.toMatch(/\b(?:sk_live|pk_live|cus_|sub_|acct_|whsec_)/)
-    expect(combined).not.toMatch(/encrypted_password|password\s*=/i)
+    expect(combined).not.toMatch(/password\s*=/i)
+    expect(combined).not.toMatch(/\$2[aby]\$\d{2}\$/)
     expect(fixtureSource).not.toMatch(/\bDELETE\b/)
+    expect(fixtureSource).not.toMatch(/\bINSERT\s+INTO\s+auth\./i)
+    expect(fixtureSource).not.toMatch(/\bUPDATE\s+auth\./i)
   })
 
   it('covers canonical and every supported legacy reader outcome', () => {
@@ -112,11 +106,11 @@ describe('Phase 6 deterministic synthetic staging seed', () => {
 
   it('is namespace-idempotent and transactionally fail-closed', () => {
     expect(fixtureSource.startsWith(
-      '-- Generated from phase6-seed-manifest.json.',
+      '-- Generated from phase6-auth-v2-manifest.json.',
     )).toBe(true)
     expect(fixtureSource).toContain('\nBEGIN;\n')
     expect(fixtureSource).toContain('\nCOMMIT;\n')
-    expect(fixtureSource.match(/ON CONFLICT/g)?.length).toBe(8)
+    expect(fixtureSource.match(/ON CONFLICT/g)?.length).toBe(7)
     expect(fixtureSource).toContain("SET LOCAL statement_timeout = '60s'")
     expect(fixtureSource).toContain('phase6 foreign meal plan owner')
 

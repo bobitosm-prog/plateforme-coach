@@ -15,15 +15,20 @@ import { basename, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildPhase6SeedSql } from './generate-phase6-seed.mjs'
 import {
+  assertSuccessfulPhase6AuthPreflight,
+  createPhase6AuthAdminClient,
+  preflightPhase6AuthV2,
+  readHiddenOperatorValue,
+} from './provision-phase6-auth-v2.mjs'
+import {
   PRODUCTION_SUPABASE_PROJECT_REF,
   STAGING_SUPABASE_PROJECT_REF,
   assertPreLinkEnvironment,
   readStagingManifest,
 } from './environment-guard.mjs'
 
-const EXPECTED_HISTORY_COUNT = 138
+const EXPECTED_HISTORY_COUNT = 143
 const EXPECTED_TABLE_COUNTS = {
-  'auth.users': 9,
   'public.profiles': 9,
   'public.coach_clients': 1,
   'public.meal_plans': 6,
@@ -56,25 +61,26 @@ function enabledSeedConfig(source) {
   return `${before}${updated}`
 }
 
+/**
+ * @param {{ manifestSource: string, fixtureSource?: string }} input
+ */
 export function verifyPhase6SeedAuthority({
   manifestSource,
   fixtureSource,
-  lockSource,
 }) {
   const manifest = JSON.parse(manifestSource)
-  const lock = JSON.parse(lockSource)
   const generated = buildPhase6SeedSql(manifest)
   const manifestSha256 = sha256(manifestSource)
-  const fixtureSha256 = sha256(fixtureSource)
   const generatedSha256 = sha256(generated)
 
   if (
-    lock.schemaVersion !== 1
-    || lock.authority !== 'moovx-phase6-staging-seed-lock-v1'
-    || lock.projectRef !== STAGING_SUPABASE_PROJECT_REF
-    || lock.namespace !== '76000000'
+    manifest.schemaVersion !== 2
+    || manifest.authority !== 'moovx-phase6-staging-auth-v2'
+    || manifest.projectRef !== STAGING_SUPABASE_PROJECT_REF
+    || manifest.namespace !== '76100000'
+    || manifest.personas.some(persona => persona.id.startsWith('76000000-'))
   ) {
-    throw new Error('Invalid Phase 6 seed lock authority')
+    throw new Error('Legacy or invalid Phase 6 seed authority refused')
   }
   if (manifest.projectRef !== STAGING_SUPABASE_PROJECT_REF) {
     throw new Error('Seed manifest targets an unexpected project')
@@ -82,19 +88,13 @@ export function verifyPhase6SeedAuthority({
   if (manifest.projectRef === PRODUCTION_SUPABASE_PROJECT_REF) {
     throw new Error('Production project forbidden in seed manifest')
   }
-  if (manifestSha256 !== lock.manifestSha256) {
-    throw new Error('Seed manifest SHA-256 mismatch')
-  }
-  if (fixtureSha256 !== lock.fixtureSha256 || generatedSha256 !== lock.fixtureSha256) {
-    throw new Error('Seed fixture SHA-256 mismatch')
+  if (fixtureSource !== undefined && fixtureSource !== generated) {
+    throw new Error('Seed fixture differs from the generated Auth v2 authority')
   }
   if (JSON.stringify(manifest.tableCounts) !== JSON.stringify(EXPECTED_TABLE_COUNTS)) {
     throw new Error('Seed table volumes differ from the approved contract')
   }
-  if (JSON.stringify(lock.tableCounts) !== JSON.stringify(EXPECTED_TABLE_COUNTS)) {
-    throw new Error('Seed lock table volumes differ from the approved contract')
-  }
-  const combined = `${manifestSource}\n${fixtureSource}`
+  const combined = `${manifestSource}\n${generated}`
   if (
     /njlzossopgknanhkzcbk|app\.moovx\.ch|https?:\/\/moovx\.ch/i.test(combined)
     || /\b(?:sk_live|pk_live|rk_live|whsec|cus_|sub_|acct_)[A-Za-z0-9_]+/.test(combined)
@@ -102,13 +102,16 @@ export function verifyPhase6SeedAuthority({
   ) {
     throw new Error('Forbidden production reference, credential or Stripe id in seed')
   }
+  if (/\b(?:INSERT|UPDATE|DELETE)\s+(?:INTO\s+|FROM\s+)?auth\./i.test(generated)) {
+    throw new Error('Auth schema mutation forbidden in relational seed')
+  }
   return {
     status: 'ok',
     authority: manifest.authority,
     projectRef: manifest.projectRef,
     namespace: manifest.namespace,
     manifestSha256,
-    fixtureSha256,
+    fixtureSha256: generatedSha256,
     historyCountRequired: EXPECTED_HISTORY_COUNT,
     tableCounts: manifest.tableCounts,
     owners: {
@@ -219,7 +222,7 @@ export function executePhase6SeedPlan(
   return { dryRun, apply: applied, executionCount: 1 }
 }
 
-function main() {
+async function main() {
   const argv = process.argv.slice(2)
   const dryRunOnly = argv.includes('--dry-run')
   const apply = argv.includes('--apply')
@@ -247,19 +250,20 @@ function main() {
     resolve(valueFor(argv, '--manifest')),
     'utf8',
   )
-  const fixtureSource = readFileSync(
-    resolve(valueFor(argv, '--fixture')),
-    'utf8',
-  )
-  const lockSource = readFileSync(
-    resolve(valueFor(argv, '--lock')),
-    'utf8',
-  )
+  const manifest = JSON.parse(manifestSource)
+  const fixtureSource = buildPhase6SeedSql(manifest)
   const verification = verifyPhase6SeedAuthority({
     manifestSource,
     fixtureSource,
-    lockSource,
   })
+  const serviceRoleValue = await readHiddenOperatorValue(
+    'Staging Auth authority for preflight (hidden)',
+  )
+  const authPreflight = await preflightPhase6AuthV2({
+    authAdmin: createPhase6AuthAdminClient(serviceRoleValue),
+    manifest,
+  })
+  assertSuccessfulPhase6AuthPreflight(authPreflight)
   const execution = withTemporaryPhase6SeedWorkdir({
     repositoryRoot,
     fixtureSource,
@@ -267,6 +271,13 @@ function main() {
   })
   process.stdout.write(`${JSON.stringify({
     ...verification,
+    authPreflight: {
+      status: authPreflight.status,
+      expectedCount: authPreflight.expectedCount,
+      canonicalCount: authPreflight.canonicalCount,
+      absentCount: authPreflight.absentCount,
+      collisionCount: authPreflight.collisionCount,
+    },
     mode: apply ? 'apply' : 'dry-run',
     workdirCreated: true,
     workdirRemoved: true,
@@ -275,14 +286,12 @@ function main() {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try {
-    main()
-  } catch (error) {
+  main().catch(error => {
     process.stderr.write(
       `Phase 6 seed runner refused: ${
         error instanceof Error ? error.message : String(error)
       }\n`,
     )
     process.exitCode = 1
-  }
+  })
 }
