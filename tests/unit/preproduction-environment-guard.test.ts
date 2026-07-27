@@ -1,10 +1,11 @@
-import { chmodSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   assertMigrationSourcesSafe,
   assertPreCreateEnvironment,
+  assertPreLinkEnvironment,
   findForbiddenMigrationReferences,
   readManifestForPreCreate,
 } from '../../scripts/preproduction/environment-guard.mjs'
@@ -24,6 +25,24 @@ const safeManifest = {
 const safeEnvironment = {
   MOOVX_ENVIRONMENT: 'staging',
 }
+
+const safePreLinkManifest = {
+  ...safeManifest,
+  supabase: {
+    ...safeManifest.supabase,
+    projectRef: 'cycbnnojcymjnaqomlyj',
+    region: 'eu-central-2',
+    status: 'ACTIVE_HEALTHY',
+  },
+}
+
+const temporaryDirectories: string[] = []
+
+afterEach(() => {
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
 
 describe('Phase 6 preproduction environment guard', () => {
   it('accepts only the explicit pre-create staging target', () => {
@@ -81,6 +100,57 @@ describe('Phase 6 preproduction environment guard', () => {
     })).not.toThrow()
   })
 
+  it('accepts only the authenticated, healthy staging project before link', () => {
+    expect(assertPreLinkEnvironment({
+      manifest: safePreLinkManifest,
+      environment: {
+        ...safeEnvironment,
+        SUPABASE_STAGING_PROJECT_REF: 'cycbnnojcymjnaqomlyj',
+      },
+    })).toEqual({
+      environment: 'staging',
+      organizationId: 'mlasmyrpaaqnhuuhuzma',
+      projectName: 'moovx-staging',
+      projectRef: 'cycbnnojcymjnaqomlyj',
+      region: 'eu-central-2',
+      size: 'nano',
+      projectStatus: 'ACTIVE_HEALTHY',
+      productionProjectExcluded: true,
+      productionVariablesLoaded: false,
+    })
+  })
+
+  it.each([
+    ['production ref', { projectRef: 'njlzossopgknanhkzcbk' }],
+    ['another ref', { projectRef: 'olgticvcueptrbppeyvq' }],
+    ['wrong organization', { organizationId: 'another-organization' }],
+    ['wrong name', { projectName: 'CoachPlatform' }],
+    ['wrong region', { region: 'eu-west-1' }],
+    ['wrong size', { size: 'micro' }],
+    ['inactive status', { status: 'INACTIVE' }],
+  ])('refuses pre-link metadata with %s', (_label, override) => {
+    expect(() => assertPreLinkEnvironment({
+      manifest: {
+        ...safePreLinkManifest,
+        supabase: {
+          ...safePreLinkManifest.supabase,
+          ...override,
+        },
+      },
+      environment: safeEnvironment,
+    })).toThrow()
+  })
+
+  it('refuses a process project ref that differs from the manifest', () => {
+    expect(() => assertPreLinkEnvironment({
+      manifest: safePreLinkManifest,
+      environment: {
+        ...safeEnvironment,
+        SUPABASE_STAGING_PROJECT_REF: 'olgticvcueptrbppeyvq',
+      },
+    })).toThrow(/must match/)
+  })
+
   it('refuses secrets embedded in the manifest', () => {
     expect(() => assertPreCreateEnvironment({
       manifest: {
@@ -98,6 +168,7 @@ describe('Phase 6 preproduction environment guard', () => {
     expect(() => readManifestForPreCreate('manifest.json', process.cwd())).toThrow(/absolute/)
 
     const directory = mkdtempSync(join(tmpdir(), 'moovx-staging-guard-'))
+    temporaryDirectories.push(directory)
     const manifestPath = join(directory, 'manifest.json')
     writeFileSync(manifestPath, JSON.stringify(safeManifest), { mode: 0o600 })
     expect(readManifestForPreCreate(manifestPath, process.cwd())).toEqual(safeManifest)
@@ -108,6 +179,7 @@ describe('Phase 6 preproduction environment guard', () => {
 
   it('accepts migration sources without production references', () => {
     const directory = mkdtempSync(join(tmpdir(), 'moovx-staging-migrations-safe-'))
+    temporaryDirectories.push(directory)
     writeFileSync(join(directory, '001_safe.sql'), 'select current_date;\n')
     expect(findForbiddenMigrationReferences(directory)).toEqual([])
     expect(assertMigrationSourcesSafe(directory)).toEqual({
@@ -118,6 +190,7 @@ describe('Phase 6 preproduction environment guard', () => {
 
   it('refuses production hosts and refs in migration sources', () => {
     const directory = mkdtempSync(join(tmpdir(), 'moovx-staging-migrations-unsafe-'))
+    temporaryDirectories.push(directory)
     writeFileSync(join(directory, '001_unsafe.sql'), [
       "select 'https://app.moovx.ch/api/cron';",
       "select 'njlzossopgknanhkzcbk';",
