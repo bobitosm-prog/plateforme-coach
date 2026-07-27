@@ -59,7 +59,17 @@ function request(body: Record<string, unknown>): NextRequest {
 
 function authenticatedAs(id = USER_ID, role = 'client') {
   mocks.authGetUser.mockResolvedValue({ data: { user: { id, email: `${role}@example.test` } } })
-  mocks.authProfileSingle.mockResolvedValue({ data: { role, subscription_status: null, subscription_type: null }, error: null })
+  mocks.authProfileSingle.mockResolvedValue({
+    data: {
+      role,
+      subscription_status: null,
+      subscription_type: null,
+      stripe_subscription_id: null,
+      subscription_end_date: null,
+      trial_ends_at: null,
+    },
+    error: null,
+  })
 }
 
 function expectNoMutation() {
@@ -117,6 +127,90 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     const response = await POST(request({ planId: 'coach_monthly' }))
     expect(response.status).toBe(200)
     expect(stripeMock.calls['checkout.sessions.create']).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, planId: 'coach_monthly' }) }), expect.any(Object))
+  })
+
+  it.each(['active', 'trialing', 'past_due'])(
+    'returns 409 for an existing %s subscription before mutation',
+    async subscriptionStatus => {
+      mocks.authProfileSingle.mockResolvedValue({
+        data: {
+          role: 'client',
+          subscription_status: subscriptionStatus,
+          subscription_type: 'client_monthly',
+          stripe_subscription_id: 'sub_existing',
+          subscription_end_date: '2999-08-26T00:00:00.000Z',
+          trial_ends_at: null,
+        },
+        error: null,
+      })
+
+      const response = await POST(request({ planId: 'client_monthly' }))
+
+      expect(response.status).toBe(409)
+      await expect(response.json()).resolves.toMatchObject({
+        code: 'SUBSCRIPTION_ALREADY_ACTIVE',
+      })
+      expectNoMutation()
+    },
+  )
+
+  it('returns 409 for lifetime access before mutation', async () => {
+    mocks.authProfileSingle.mockResolvedValue({
+      data: {
+        role: 'client',
+        subscription_status: 'lifetime',
+        subscription_type: 'lifetime',
+        stripe_subscription_id: null,
+        subscription_end_date: null,
+        trial_ends_at: null,
+      },
+      error: null,
+    })
+
+    const response = await POST(request({ planId: 'client_monthly' }))
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SUBSCRIPTION_ALREADY_ACTIVE',
+    })
+    expectNoMutation()
+  })
+
+  it('returns 503 when the Billing profile is incoherent', async () => {
+    mocks.authProfileSingle.mockResolvedValue({
+      data: {
+        role: 'client',
+        subscription_status: 'active',
+        subscription_type: 'client_monthly',
+        stripe_subscription_id: null,
+        subscription_end_date: null,
+        trial_ends_at: null,
+      },
+      error: null,
+    })
+
+    const response = await POST(request({ planId: 'client_monthly' }))
+
+    expect(response.status).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SUBSCRIPTION_STATE_UNVERIFIABLE',
+    })
+    expectNoMutation()
+  })
+
+  it('returns 503 when the Billing profile read fails', async () => {
+    mocks.authProfileSingle.mockResolvedValue({
+      data: null,
+      error: { message: 'profile unavailable' },
+    })
+
+    const response = await POST(request({ planId: 'client_monthly' }))
+
+    expect(response.status).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SUBSCRIPTION_STATE_UNVERIFIABLE',
+    })
+    expectNoMutation()
   })
 
   it.each([

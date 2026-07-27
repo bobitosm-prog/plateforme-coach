@@ -36,6 +36,8 @@ export type CheckoutErrorCode =
   | 'COACH_NOT_FOUND'
   | 'COACH_STRIPE_MISSING'
   | 'RATE_INVALID'
+  | 'SUBSCRIPTION_ALREADY_ACTIVE'
+  | 'SUBSCRIPTION_STATE_UNVERIFIABLE'
 
 export class CheckoutServiceError extends Error {
   constructor(public readonly code: CheckoutErrorCode) {
@@ -53,7 +55,14 @@ export interface StripeCheckoutPort {
 }
 
 export interface PlatformCheckoutRepository {
-  findProfile(userId: string): Promise<{ role: string | null } | null>
+  findProfile(userId: string): Promise<{
+    role: string | null
+    subscription_status: string | null
+    subscription_type: string | null
+    stripe_subscription_id: string | null
+    subscription_end_date: string | null
+    trial_ends_at: string | null
+  } | null>
   findPlatformConnectAccount(): Promise<string | null>
   createPendingPayment(payment: {
     coach_id: null
@@ -107,6 +116,55 @@ export function resolvePlatformPlan(planId: string): PlatformPlan {
   const plan = PLATFORM_PLANS[planId as PlatformPlanId]
   if (!plan) throw new CheckoutServiceError('INVALID_PLAN')
   return plan
+}
+
+const BLOCKING_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing', 'past_due'])
+const REPLACEABLE_SUBSCRIPTION_STATUSES = new Set([null, 'canceled', 'inactive', 'expired', 'beta', 'invited'])
+const PLATFORM_SUBSCRIPTION_TYPES = new Set(['client_monthly', 'client_yearly', 'coach_monthly'])
+const LIFETIME_SUBSCRIPTION_TYPES = new Set(['client_lifetime', 'lifetime'])
+const NON_PLATFORM_SUBSCRIPTION_TYPES = new Set([null, 'trial', 'beta', 'invited', 'coach_paid'])
+
+type PlatformCheckoutProfile = Awaited<ReturnType<PlatformCheckoutRepository['findProfile']>>
+
+function validOptionalDate(value: string | null): boolean {
+  return value === null || Number.isFinite(Date.parse(value))
+}
+
+export function assertPlatformCheckoutAvailable(profile: Exclude<PlatformCheckoutProfile, null>): void {
+  const status = profile.subscription_status
+  const type = profile.subscription_type
+  const subscriptionId = profile.stripe_subscription_id
+
+  if (!validOptionalDate(profile.subscription_end_date) || !validOptionalDate(profile.trial_ends_at)) {
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
+
+  if (LIFETIME_SUBSCRIPTION_TYPES.has(type || '') || status === 'lifetime') {
+    throw new CheckoutServiceError('SUBSCRIPTION_ALREADY_ACTIVE')
+  }
+
+  if (!PLATFORM_SUBSCRIPTION_TYPES.has(type || '') && !NON_PLATFORM_SUBSCRIPTION_TYPES.has(type)) {
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
+
+  if (BLOCKING_SUBSCRIPTION_STATUSES.has(status || '')) {
+    if (!subscriptionId) {
+      throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+    }
+    throw new CheckoutServiceError('SUBSCRIPTION_ALREADY_ACTIVE')
+  }
+
+  if (!REPLACEABLE_SUBSCRIPTION_STATUSES.has(status)) {
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
+
+  if (subscriptionId && status !== 'canceled' && status !== 'inactive' && status !== 'expired') {
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
+
+  if (PLATFORM_SUBSCRIPTION_TYPES.has(type || '') && status === null) {
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
 }
 
 export function buildPlatformSessionParams(input: {
@@ -194,12 +252,19 @@ export async function createPlatformCheckout(input: {
   appUrl: string
 }): Promise<{ url: string | null }> {
   const planId = validatePlatformCheckoutBody(input.body)
-  const profile = await input.repository.findProfile(input.userId)
-  if (!profile) throw new CheckoutServiceError('PROFILE_NOT_FOUND')
-  if (!input.stripeConfigured) throw new CheckoutServiceError('STRIPE_NOT_CONFIGURED')
-
+  let profile: Exclude<PlatformCheckoutProfile, null>
+  try {
+    const read = await input.repository.findProfile(input.userId)
+    if (!read) throw new CheckoutServiceError('PROFILE_NOT_FOUND')
+    profile = read
+  } catch (error) {
+    if (error instanceof CheckoutServiceError) throw error
+    throw new CheckoutServiceError('SUBSCRIPTION_STATE_UNVERIFIABLE')
+  }
   const plan = resolvePlatformPlan(planId)
   if (profile.role !== plan.requiredRole) throw new CheckoutServiceError('ROLE_FORBIDDEN')
+  assertPlatformCheckoutAvailable(profile)
+  if (!input.stripeConfigured) throw new CheckoutServiceError('STRIPE_NOT_CONFIGURED')
   const priceId = input.priceIds[plan.id]
   if (!priceId) throw new CheckoutServiceError('PRICE_NOT_CONFIGURED')
 

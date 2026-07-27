@@ -9,7 +9,10 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: mocks.createClient,
 }))
 
-import { createPlatformCheckoutRepository } from '@/lib/billing/checkout/repository'
+import {
+  createPlatformCheckoutRepository,
+  PLATFORM_CHECKOUT_PROFILE_PROJECTION,
+} from '@/lib/billing/checkout/repository'
 
 const PAYMENT = {
   coach_id: null,
@@ -24,6 +27,47 @@ const PAYMENT = {
 describe('platform checkout repository', () => {
   beforeEach(() => {
     mocks.createClient.mockReset()
+  })
+
+  it('reads the complete Billing authority and fails closed on a profile error', async () => {
+    const single = vi.fn()
+      .mockResolvedValueOnce({
+        data: {
+          role: 'client',
+          subscription_status: null,
+          subscription_type: null,
+          stripe_subscription_id: null,
+          subscription_end_date: null,
+          trial_ends_at: null,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: 'profile unavailable' },
+      })
+    const eq = vi.fn(() => ({ single }))
+    const select = vi.fn(() => ({ eq }))
+    const auth = {
+      from: vi.fn(() => ({ select })),
+    } as unknown as SupabaseClient
+    const repository = createPlatformCheckoutRepository({
+      auth,
+      supabaseUrl: 'https://staging.supabase.test',
+      serviceRoleKey: 'test-service-role',
+      ownerEmail: 'owner@example.test',
+    })
+
+    await expect(repository.findProfile(PAYMENT.client_id)).resolves.toMatchObject({
+      role: 'client',
+      subscription_status: null,
+      stripe_subscription_id: null,
+    })
+    await expect(repository.findProfile(PAYMENT.client_id))
+      .rejects.toThrow('checkout profile lookup: profile unavailable')
+
+    expect(select).toHaveBeenCalledWith(PLATFORM_CHECKOUT_PROFILE_PROJECTION)
+    expect(eq).toHaveBeenCalledWith('id', PAYMENT.client_id)
   })
 
   it('fails closed when the pending payment insert is rejected', async () => {

@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { CoachCheckoutRepository, PlatformCheckoutRepository } from './service'
 
+export const PLATFORM_CHECKOUT_PROFILE_PROJECTION = 'role,subscription_status,subscription_type,stripe_subscription_id,subscription_end_date,trial_ends_at' as const
+
 export function createPlatformCheckoutRepository(input: {
   auth: SupabaseClient
   supabaseUrl: string
@@ -16,7 +18,14 @@ export function createPlatformCheckoutRepository(input: {
   }
   return {
     async findProfile(userId) {
-      const { data } = await input.auth.from('profiles').select('role').eq('id', userId).single()
+      const { data, error } = await input.auth
+        .from('profiles')
+        .select(PLATFORM_CHECKOUT_PROFILE_PROJECTION)
+        .eq('id', userId)
+        .single()
+      if (error) {
+        throw new Error(`checkout profile lookup: ${error.message || 'database error'}`)
+      }
       return data
     },
     async findPlatformConnectAccount() {

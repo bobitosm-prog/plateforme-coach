@@ -15,6 +15,14 @@ import { buildCoachCheckoutMetadata, buildPlatformCheckoutMetadata } from '../..
 const CLIENT_ID = '00000000-0000-4000-8000-000000000001'
 const COACH_ID = '00000000-0000-4000-8000-000000000002'
 const PAYMENT_ID = '00000000-0000-4000-8000-000000000003'
+const NO_SUBSCRIPTION = {
+  role: 'client',
+  subscription_status: null,
+  subscription_type: null,
+  stripe_subscription_id: null,
+  subscription_end_date: null,
+  trial_ends_at: null,
+}
 
 function stripePort() {
   const createSession = vi.fn(async () => ({ id: 'cs_test', url: 'https://checkout.test/session' }))
@@ -24,7 +32,7 @@ function stripePort() {
 
 function platformRepository(overrides: Partial<PlatformCheckoutRepository> = {}) {
   const repository: PlatformCheckoutRepository = {
-    findProfile: vi.fn(async () => ({ role: 'client' })),
+    findProfile: vi.fn(async () => NO_SUBSCRIPTION),
     findPlatformConnectAccount: vi.fn(async () => null),
     createPendingPayment: vi.fn(async () => ({ id: PAYMENT_ID })),
     attachCheckoutSession: vi.fn(async () => undefined),
@@ -135,6 +143,146 @@ describe('createPlatformCheckout', () => {
       stripe: () => stripe.port, repository: platformRepository(),
       priceIds: {}, appUrl: 'http://app.test',
     }), 'INVALID_PLAN')
+    expect(stripe.createSession).not.toHaveBeenCalled()
+  })
+
+  it.each(['active', 'trialing', 'past_due'])(
+    'rejects a %s platform subscription before payment or Stripe',
+    async subscriptionStatus => {
+      const repository = platformRepository({
+        findProfile: vi.fn(async () => ({
+          ...NO_SUBSCRIPTION,
+          subscription_status: subscriptionStatus,
+          subscription_type: 'client_monthly',
+          stripe_subscription_id: 'sub_existing',
+          subscription_end_date: '2999-08-26T00:00:00.000Z',
+        })),
+      })
+
+      await expectCode(createPlatformCheckout({
+        userId: CLIENT_ID,
+        body: { planId: 'client_monthly' },
+        stripeConfigured: true,
+        stripe: () => stripe.port,
+        repository,
+        priceIds: { client_monthly: 'price_client_monthly' },
+        appUrl: 'http://app.test',
+      }), 'SUBSCRIPTION_ALREADY_ACTIVE')
+
+      expect(repository.createPendingPayment).not.toHaveBeenCalled()
+      expect(stripe.createSession).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each(['client_lifetime', 'lifetime'])(
+    'rejects the lifetime subscription type %s before payment or Stripe',
+    async subscriptionType => {
+      const repository = platformRepository({
+        findProfile: vi.fn(async () => ({
+          ...NO_SUBSCRIPTION,
+          subscription_status: 'lifetime',
+          subscription_type: subscriptionType,
+        })),
+      })
+
+      await expectCode(createPlatformCheckout({
+        userId: CLIENT_ID,
+        body: { planId: 'client_monthly' },
+        stripeConfigured: true,
+        stripe: () => stripe.port,
+        repository,
+        priceIds: { client_monthly: 'price_client_monthly' },
+        appUrl: 'http://app.test',
+      }), 'SUBSCRIPTION_ALREADY_ACTIVE')
+
+      expect(repository.createPendingPayment).not.toHaveBeenCalled()
+      expect(stripe.createSession).not.toHaveBeenCalled()
+    },
+  )
+
+  it('allows a new Checkout after a deterministically canceled subscription', async () => {
+    const repository = platformRepository({
+      findProfile: vi.fn(async () => ({
+        ...NO_SUBSCRIPTION,
+        subscription_status: 'canceled',
+        subscription_type: 'client_monthly',
+        stripe_subscription_id: 'sub_canceled',
+        subscription_end_date: '2026-07-01T00:00:00.000Z',
+      })),
+    })
+
+    await expect(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: { client_monthly: 'price_client_monthly' },
+      appUrl: 'http://app.test',
+    })).resolves.toEqual({ url: 'https://checkout.test/session' })
+
+    expect(repository.createPendingPayment).toHaveBeenCalledOnce()
+    expect(stripe.createSession).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    {
+      label: 'active status without subscription authority',
+      profile: { ...NO_SUBSCRIPTION, subscription_status: 'active', subscription_type: 'client_monthly' },
+    },
+    {
+      label: 'subscription authority without a local state',
+      profile: { ...NO_SUBSCRIPTION, subscription_type: 'client_monthly', stripe_subscription_id: 'sub_orphan' },
+    },
+    {
+      label: 'unknown subscription state',
+      profile: { ...NO_SUBSCRIPTION, subscription_status: 'unknown' },
+    },
+    {
+      label: 'unknown subscription type',
+      profile: { ...NO_SUBSCRIPTION, subscription_type: 'unknown' },
+    },
+    {
+      label: 'invalid subscription date',
+      profile: { ...NO_SUBSCRIPTION, subscription_end_date: 'not-a-date' },
+    },
+  ])('fails closed for $label', async ({ profile }) => {
+    const repository = platformRepository({
+      findProfile: vi.fn(async () => profile),
+    })
+
+    await expectCode(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: { client_monthly: 'price_client_monthly' },
+      appUrl: 'http://app.test',
+    }), 'SUBSCRIPTION_STATE_UNVERIFIABLE')
+
+    expect(repository.createPendingPayment).not.toHaveBeenCalled()
+    expect(stripe.createSession).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when the Billing profile read fails', async () => {
+    const repository = platformRepository({
+      findProfile: vi.fn(async () => {
+        throw new Error('profile read failed')
+      }),
+    })
+
+    await expectCode(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: { client_monthly: 'price_client_monthly' },
+      appUrl: 'http://app.test',
+    }), 'SUBSCRIPTION_STATE_UNVERIFIABLE')
+
+    expect(repository.createPendingPayment).not.toHaveBeenCalled()
     expect(stripe.createSession).not.toHaveBeenCalled()
   })
 

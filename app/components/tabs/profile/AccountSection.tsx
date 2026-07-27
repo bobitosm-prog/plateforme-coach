@@ -64,7 +64,7 @@ export default function AccountSection({
               </div>
             )
 
-            if (st === 'active') {
+            if (st === 'active' || st === 'trialing' || st === 'past_due') {
               const planLabel = subType === 'client_yearly' ? t('subscription.planYearly') : subType === 'coach_monthly' ? t('subscription.planCoach') : t('subscription.planMonthly')
               return (
                 <div>
@@ -83,7 +83,7 @@ export default function AccountSection({
                       )}
                     </>
                   )}
-                  <button onClick={() => setShowPaywall(true)} style={{ width: '100%', padding: 12, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer', textTransform: 'uppercase' as const, marginTop: 4 }}>
+                  <button type="button" disabled aria-disabled="true" style={{ width: '100%', padding: 12, borderRadius: radii.button, background: 'transparent', border: `1px solid ${colors.goldBorder}`, color: colors.textMuted, fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'not-allowed', textTransform: 'uppercase' as const, marginTop: 4, opacity: 0.7 }}>
                     {t('subscription.manageSubscription')}
                   </button>
                 </div>
