@@ -55,14 +55,19 @@ export interface StripeCheckoutPort {
 export interface PlatformCheckoutRepository {
   findProfile(userId: string): Promise<{ role: string | null } | null>
   findPlatformConnectAccount(): Promise<string | null>
-  insertPendingPayment(payment: {
+  createPendingPayment(payment: {
     coach_id: null
     client_id: string
-    stripe_checkout_session_id: string
+    stripe_checkout_session_id: null
     amount: number
     currency: 'chf'
     description: string
     status: 'pending'
+  }): Promise<{ id: string }>
+  attachCheckoutSession(input: {
+    paymentId: string
+    clientId: string
+    sessionId: string
   }): Promise<void>
 }
 
@@ -187,7 +192,6 @@ export async function createPlatformCheckout(input: {
   repository: PlatformCheckoutRepository
   priceIds: Partial<Record<PlatformPlanId, string | undefined>>
   appUrl: string
-  nowMs?: () => number
 }): Promise<{ url: string | null }> {
   const planId = validatePlatformCheckoutBody(input.body)
   const profile = await input.repository.findProfile(input.userId)
@@ -200,22 +204,28 @@ export async function createPlatformCheckout(input: {
   if (!priceId) throw new CheckoutServiceError('PRICE_NOT_CONFIGURED')
 
   const destinationAccountId = await input.repository.findPlatformConnectAccount()
-  const session = await input.stripe().createSession(buildPlatformSessionParams({
+  const stripe = input.stripe()
+  const payment = await input.repository.createPendingPayment({
+    coach_id: null,
+    client_id: input.userId,
+    stripe_checkout_session_id: null,
+    amount: plan.amount,
+    currency: 'chf',
+    description: plan.description,
+    status: 'pending',
+  })
+  const session = await stripe.createSession(buildPlatformSessionParams({
     userId: input.userId,
     plan,
     priceId,
     appUrl: input.appUrl,
     destinationAccountId,
-  }), buildPlatformCheckoutIdempotencyKey(input.userId, plan.id, (input.nowMs || Date.now)()))
+  }), buildPlatformCheckoutIdempotencyKey(payment.id))
 
-  await input.repository.insertPendingPayment({
-    coach_id: null,
-    client_id: input.userId,
-    stripe_checkout_session_id: session.id,
-    amount: plan.amount,
-    currency: 'chf',
-    description: plan.description,
-    status: 'pending',
+  await input.repository.attachCheckoutSession({
+    paymentId: payment.id,
+    clientId: input.userId,
+    sessionId: session.id,
   })
   return { url: session.url }
 }

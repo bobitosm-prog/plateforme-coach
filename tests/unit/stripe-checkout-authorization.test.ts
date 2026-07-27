@@ -17,14 +17,28 @@ const mocks = vi.hoisted(() => {
   const ownerMaybeSingle = vi.fn()
   const ownerEq = vi.fn(() => ({ maybeSingle: ownerMaybeSingle }))
   const ownerSelect = vi.fn(() => ({ eq: ownerEq }))
-  const paymentsInsert = vi.fn()
+  const paymentInsertSingle = vi.fn()
+  const paymentInsertSelect = vi.fn(() => ({ single: paymentInsertSingle }))
+  const paymentsInsert = vi.fn(() => ({ select: paymentInsertSelect }))
+  const paymentUpdateSingle = vi.fn()
+  const paymentUpdateQuery = {
+    eq: vi.fn(),
+    is: vi.fn(),
+    select: vi.fn(() => ({ single: paymentUpdateSingle })),
+  }
+  paymentUpdateQuery.eq.mockReturnValue(paymentUpdateQuery)
+  paymentUpdateQuery.is.mockReturnValue(paymentUpdateQuery)
+  const paymentsUpdate = vi.fn(() => paymentUpdateQuery)
   const serviceFrom = vi.fn((table: string) => table === 'profiles'
     ? { select: ownerSelect }
-    : { insert: paymentsInsert })
+    : { insert: paymentsInsert, update: paymentsUpdate })
   const createClient = vi.fn(() => ({ from: serviceFrom }))
   return {
     authGetUser, authProfileSingle, authFrom,
-    createSupabaseRouteClient, ownerMaybeSingle, paymentsInsert, serviceFrom, createClient,
+    createSupabaseRouteClient, ownerMaybeSingle,
+    paymentsInsert, paymentInsertSingle,
+    paymentsUpdate, paymentUpdateSingle,
+    serviceFrom, createClient,
   }
 })
 
@@ -36,6 +50,7 @@ import { POST } from '../../app/api/stripe/checkout/route'
 
 const USER_ID = '00000000-0000-4000-8000-000000000001'
 const FOREIGN_ID = '00000000-0000-4000-8000-000000000002'
+const PAYMENT_ID = '00000000-0000-4000-8000-000000000003'
 const originalEnv = { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL, MOOVX_E2E: process.env.MOOVX_E2E, STRIPE_E2E_BASE_URL: process.env.STRIPE_E2E_BASE_URL }
 
 function request(body: Record<string, unknown>): NextRequest {
@@ -64,7 +79,8 @@ beforeEach(() => {
   authenticatedAs()
   mocks.ownerMaybeSingle.mockResolvedValue({ data: null, error: null })
   stripeMock.succeed('checkout.sessions.create', { id: 'cs_platform', url: 'https://checkout.test/platform' })
-  mocks.paymentsInsert.mockResolvedValue({ error: null })
+  mocks.paymentInsertSingle.mockResolvedValue({ data: { id: PAYMENT_ID }, error: null })
+  mocks.paymentUpdateSingle.mockResolvedValue({ data: { id: PAYMENT_ID }, error: null })
 })
 
 afterAll(() => {
@@ -85,8 +101,15 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
   it('creates a client checkout from the authenticated server identity', async () => {
     const response = await POST(request({ planId: 'client_monthly' }))
     expect(response.status).toBe(200)
-    expect(stripeMock.calls['checkout.sessions.create']).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, coachId: 'platform' }) }), expect.objectContaining({ idempotencyKey: expect.stringContaining(USER_ID) }))
-    expect(mocks.paymentsInsert).toHaveBeenCalledWith(expect.objectContaining({ client_id: USER_ID, coach_id: null }))
+    expect(stripeMock.calls['checkout.sessions.create']).toHaveBeenCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ clientId: USER_ID, coachId: 'platform' }) }), expect.objectContaining({ idempotencyKey: `checkout-payment-${PAYMENT_ID}` }))
+    expect(mocks.paymentsInsert).toHaveBeenCalledWith(expect.objectContaining({
+      client_id: USER_ID,
+      coach_id: null,
+      stripe_checkout_session_id: null,
+    }))
+    expect(mocks.paymentsUpdate).toHaveBeenCalledWith({
+      stripe_checkout_session_id: 'cs_platform',
+    })
   })
 
   it('creates a coach plan only for the authenticated coach', async () => {

@@ -55,8 +55,8 @@ describe('central Stripe metadata contract', () => {
 })
 
 describe('central Billing idempotency contract', () => {
-  it('preserves the checkout keys including their current timestamp limitation', () => {
-    expect(buildPlatformCheckoutIdempotencyKey(CLIENT_ID, 'client_monthly', 123)).toBe(`checkout-${CLIENT_ID}-client_monthly-123`)
+  it('anchors platform checkout idempotency to the pending payment', () => {
+    expect(buildPlatformCheckoutIdempotencyKey('payment-1')).toBe('checkout-payment-payment-1')
     expect(buildCoachCheckoutIdempotencyKey(CLIENT_ID, COACH_ID, 456)).toBe(`coach-checkout-${CLIENT_ID}-${COACH_ID}-456`)
   })
 

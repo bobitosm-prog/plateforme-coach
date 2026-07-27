@@ -23,10 +23,36 @@ export function createPlatformCheckoutRepository(input: {
       const { data } = await getAdmin().from('profiles').select('stripe_account_id, stripe_onboarding_complete').eq('email', input.ownerEmail).maybeSingle()
       return data?.stripe_account_id && data.stripe_onboarding_complete ? data.stripe_account_id : null
     },
-    async insertPendingPayment(payment) {
-      const { error } = await getAdmin().from('payments').insert(payment)
+    async createPendingPayment(payment) {
+      const { data, error } = await getAdmin()
+        .from('payments')
+        .insert(payment)
+        .select('id')
+        .single()
       if (error) {
         throw new Error(`pending payment insert: ${error.message || 'database error'}`)
+      }
+      if (!data?.id) {
+        throw new Error('pending payment insert: missing payment id')
+      }
+      return { id: data.id }
+    },
+    async attachCheckoutSession({ paymentId, clientId, sessionId }) {
+      const { data, error } = await getAdmin()
+        .from('payments')
+        .update({ stripe_checkout_session_id: sessionId })
+        .eq('id', paymentId)
+        .eq('client_id', clientId)
+        .is('coach_id', null)
+        .eq('status', 'pending')
+        .is('stripe_checkout_session_id', null)
+        .select('id')
+        .single()
+      if (error) {
+        throw new Error(`checkout session attach: ${error.message || 'database error'}`)
+      }
+      if (data?.id !== paymentId) {
+        throw new Error('checkout session attach: payment authority mismatch')
       }
     },
   }

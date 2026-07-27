@@ -14,6 +14,7 @@ import { buildCoachCheckoutMetadata, buildPlatformCheckoutMetadata } from '../..
 
 const CLIENT_ID = '00000000-0000-4000-8000-000000000001'
 const COACH_ID = '00000000-0000-4000-8000-000000000002'
+const PAYMENT_ID = '00000000-0000-4000-8000-000000000003'
 
 function stripePort() {
   const createSession = vi.fn(async () => ({ id: 'cs_test', url: 'https://checkout.test/session' }))
@@ -25,7 +26,8 @@ function platformRepository(overrides: Partial<PlatformCheckoutRepository> = {})
   const repository: PlatformCheckoutRepository = {
     findProfile: vi.fn(async () => ({ role: 'client' })),
     findPlatformConnectAccount: vi.fn(async () => null),
-    insertPendingPayment: vi.fn(async () => undefined),
+    createPendingPayment: vi.fn(async () => ({ id: PAYMENT_ID })),
+    attachCheckoutSession: vi.fn(async () => undefined),
     ...overrides,
   }
   return repository
@@ -79,7 +81,7 @@ describe('createPlatformCheckout', () => {
 
   beforeEach(() => { stripe = stripePort() })
 
-  it('creates the unchanged platform session then writes its pending payment', async () => {
+  it('creates the pending payment, creates Stripe, attaches the session, then returns its URL', async () => {
     const repository = platformRepository()
     const result = await createPlatformCheckout({
       userId: CLIENT_ID,
@@ -89,10 +91,18 @@ describe('createPlatformCheckout', () => {
       repository,
       priceIds: { client_monthly: 'price_client_monthly' },
       appUrl: 'http://127.0.0.1:3210',
-      nowMs: () => 123,
     })
 
     expect(result).toEqual({ url: 'https://checkout.test/session' })
+    expect(repository.createPendingPayment).toHaveBeenCalledWith({
+      client_id: CLIENT_ID,
+      coach_id: null,
+      stripe_checkout_session_id: null,
+      amount: 10,
+      currency: 'chf',
+      description: 'MoovX Athena — Mensuel',
+      status: 'pending',
+    })
     expect(stripe.createSession).toHaveBeenCalledWith(expect.objectContaining({
       mode: 'subscription',
       line_items: [{ price: 'price_client_monthly', quantity: 1 }],
@@ -100,10 +110,18 @@ describe('createPlatformCheckout', () => {
       cancel_url: 'http://127.0.0.1:3210/?payment=cancel',
       metadata: { clientId: CLIENT_ID, planId: 'client_monthly', coachId: 'platform', subType: 'client_monthly' },
       subscription_data: { metadata: { clientId: CLIENT_ID, subType: 'client_monthly' } },
-    }), `checkout-${CLIENT_ID}-client_monthly-123`)
-    expect(repository.insertPendingPayment).toHaveBeenCalledWith(expect.objectContaining({
-      client_id: CLIENT_ID, coach_id: null, stripe_checkout_session_id: 'cs_test', status: 'pending',
-    }))
+    }), `checkout-payment-${PAYMENT_ID}`)
+    expect(repository.attachCheckoutSession).toHaveBeenCalledWith({
+      paymentId: PAYMENT_ID,
+      clientId: CLIENT_ID,
+      sessionId: 'cs_test',
+    })
+
+    const createOrder = vi.mocked(repository.createPendingPayment).mock.invocationCallOrder[0]
+    const stripeOrder = stripe.createSession.mock.invocationCallOrder[0]
+    const attachOrder = vi.mocked(repository.attachCheckoutSession).mock.invocationCallOrder[0]
+    expect(createOrder).toBeLessThan(stripeOrder)
+    expect(stripeOrder).toBeLessThan(attachOrder)
   })
 
   it('rejects an incompatible role and an unknown plan before Stripe', async () => {
@@ -120,7 +138,7 @@ describe('createPlatformCheckout', () => {
     expect(stripe.createSession).not.toHaveBeenCalled()
   })
 
-  it('does not write a local payment when Stripe fails', async () => {
+  it('keeps the pending payment unattached when Stripe fails', async () => {
     stripe.createSession.mockRejectedValueOnce(new Error('provider unavailable'))
     const repository = platformRepository()
     await expect(createPlatformCheckout({
@@ -128,12 +146,13 @@ describe('createPlatformCheckout', () => {
       stripe: () => stripe.port, repository,
       priceIds: { client_monthly: 'price_client_monthly' }, appUrl: 'http://app.test',
     })).rejects.toThrow('provider unavailable')
-    expect(repository.insertPendingPayment).not.toHaveBeenCalled()
+    expect(repository.createPendingPayment).toHaveBeenCalledOnce()
+    expect(repository.attachCheckoutSession).not.toHaveBeenCalled()
   })
 
-  it('does not return a Checkout URL when the pending payment insert fails', async () => {
+  it('does not call Stripe when the pending payment insert fails', async () => {
     const repository = platformRepository({
-      insertPendingPayment: vi.fn(async () => {
+      createPendingPayment: vi.fn(async () => {
         throw new Error('pending payment insert: database error')
       }),
     })
@@ -148,8 +167,31 @@ describe('createPlatformCheckout', () => {
       appUrl: 'http://app.test',
     })).rejects.toThrow('pending payment insert: database error')
 
+    expect(repository.createPendingPayment).toHaveBeenCalledOnce()
+    expect(stripe.createSession).not.toHaveBeenCalled()
+    expect(repository.attachCheckoutSession).not.toHaveBeenCalled()
+  })
+
+  it('does not return a Checkout URL when the session association fails', async () => {
+    const repository = platformRepository({
+      attachCheckoutSession: vi.fn(async () => {
+        throw new Error('checkout session attach: database error')
+      }),
+    })
+
+    await expect(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: { client_monthly: 'price_client_monthly' },
+      appUrl: 'http://app.test',
+    })).rejects.toThrow('checkout session attach: database error')
+
+    expect(repository.createPendingPayment).toHaveBeenCalledOnce()
     expect(stripe.createSession).toHaveBeenCalledOnce()
-    expect(repository.insertPendingPayment).toHaveBeenCalledOnce()
+    expect(repository.attachCheckoutSession).toHaveBeenCalledOnce()
   })
 })
 
