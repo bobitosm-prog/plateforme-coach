@@ -22,8 +22,8 @@ describe('client detail Nutrition double-read wiring', () => {
   })
 
   it('keeps tracking as the third bounded read and preserves request count', () => {
-    expect(domain).toContain("from('meal_tracking').select('date,meal_type,is_completed')")
-    expect(domain).toContain(".eq('is_completed' as never, true).limit(200)")
+    expect(domain).toContain("from('meal_tracking').select('date,meal_type,completed')")
+    expect(domain).toContain(".eq('completed', true).limit(200)")
     const promiseBlock = domain.slice(
       domain.indexOf('const [assigned, active, tracking] = await Promise.all(['),
       domain.indexOf('])', domain.indexOf('const [assigned, active, tracking]')),

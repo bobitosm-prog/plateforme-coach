@@ -21,7 +21,7 @@ describe('Home nutrition transport legacy characterization', () => {
     expect(home.match(/Promise\.all\(\[/g)).toBeTruthy()
     expect(home.match(/from\('meal_tracking'\)\.select\('meal_type'\)/g)).toHaveLength(1)
     expect(home).toContain(
-      ".eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20)",
+      ".eq('user_id', uid).eq('date', todayDate).eq('completed', true).limit(20)",
     )
     expect(home).toContain('personalPlanReader.load(uid)')
     expect(home.match(/from\('daily_food_logs'\)\.select\('calories'\)/g)).toHaveLength(1)

@@ -34,7 +34,7 @@ export function useNutritionPlans({ supabase, userId, date }: UseNutritionPlansP
     setState('loading')
     const [plan, tracking] = await Promise.all([
       personalPlanReader.load(userId),
-      supabase.from('meal_tracking').select('meal_type').eq('user_id', userId).eq('date', date).eq('is_completed', true).limit(50),
+      supabase.from('meal_tracking').select('meal_type').eq('user_id', userId).eq('date', date).eq('completed', true).limit(50),
     ])
     if (current !== requestId.current) return
     if ((plan.status !== 'ready' && plan.status !== 'absent') || tracking.error) { setState('error'); return }
@@ -45,17 +45,21 @@ export function useNutritionPlans({ supabase, userId, date }: UseNutritionPlansP
 
   useEffect(() => { queueMicrotask(() => { void reload() }); return () => { requestId.current += 1 } }, [reload])
 
-  const toggleMeal = useCallback(async (mealType: string, planId: string | null) => {
+  const toggleMeal = useCallback(async (mealType: string) => {
     if (!userId) return false
     const completed = !completedMeals.has(mealType)
     const next = new Set(completedMeals)
     if (completed) next.add(mealType); else next.delete(mealType)
     setCompletedMeals(next)
-    const { error } = await supabase.from('meal_tracking').upsert({
-      user_id: userId, meal_plan_id: planId, date, meal_type: mealType,
-      is_completed: completed, completed_at: completed ? new Date().toISOString() : null,
-    }, { onConflict: 'user_id,date,meal_type' })
-    if (error) { setCompletedMeals(completedMeals); return false }
+    const existing = await supabase.from('meal_tracking').select('id')
+      .eq('user_id', userId).eq('date', date).eq('meal_type', mealType).limit(1)
+    if (existing.error) { setCompletedMeals(completedMeals); return false }
+    const result = existing.data?.[0]
+      ? await supabase.from('meal_tracking').update({ completed }).eq('id', existing.data[0].id)
+      : await supabase.from('meal_tracking').insert({
+          user_id: userId, date, meal_type: mealType, completed,
+        })
+    if (result.error) { setCompletedMeals(completedMeals); return false }
     return true
   }, [completedMeals, date, supabase, userId])
 

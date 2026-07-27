@@ -16,7 +16,7 @@ describe('HomeTab personal plan read boundary', () => {
   it('preserves exactly the three parallel summary reads and their bounds', () => {
     expect(home.match(/from\('meal_tracking'\)\.select\('meal_type'\)/g)).toHaveLength(1)
     expect(home).toContain("from('meal_tracking').select('meal_type')")
-    expect(home).toContain(".eq('is_completed', true).limit(20)")
+    expect(home).toContain(".eq('completed', true).limit(20)")
     expect(home).toContain('personalPlanReader.load(uid)')
     expect(home.match(/from\('daily_food_logs'\)\.select\('calories'\)/g)).toHaveLength(1)
     expect(home).toContain("from('daily_food_logs').select('calories')")

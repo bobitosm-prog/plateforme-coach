@@ -56,8 +56,8 @@
       "email": "phase6-v2-client-1@moovx.invalid",
       "fullName": "Phase6 v2 client canonical",
       "role": "client",
-      "subscriptionType": "client_monthly",
-      "subscriptionStatus": "active",
+      "subscriptionType": null,
+      "subscriptionStatus": "inactive",
       "objective": "cut"
     },
     {

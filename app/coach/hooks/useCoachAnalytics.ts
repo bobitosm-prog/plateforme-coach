@@ -118,7 +118,7 @@ export default function useCoachAnalytics(coachId: string | null) {
     const mealTrackingRead = Promise.resolve(
       supabase
         .from('meal_tracking')
-        .select('user_id, date, is_completed')
+        .select('user_id, date, completed')
         .in('user_id', clientIds)
         .gte('date', fetch7d),
     ).catch(error => ({ data: null, error }))

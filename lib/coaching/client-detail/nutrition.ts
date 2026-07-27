@@ -32,7 +32,7 @@ export async function loadClientDetailNutrition(client: DatabaseClient, scope: C
   const [assigned, active, tracking] = await Promise.all([
     assignedReader.load(scope),
     personalReader.load(scope.clientUserId),
-    client.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', scope.clientUserId).gte('date', mondayDate).eq('is_completed' as never, true).limit(200),
+    client.from('meal_tracking').select('date,meal_type,completed').eq('user_id', scope.clientUserId).gte('date', mondayDate).eq('completed', true).limit(200),
   ])
   if (
     (assigned.status !== 'ready' && assigned.status !== 'absent') ||
@@ -41,7 +41,7 @@ export async function loadClientDetailNutrition(client: DatabaseClient, scope: C
   ) {
     return { status: 'unavailable', source: 'nutrition' }
   }
-  const trackingData = tracking.data as unknown as readonly { date: string; meal_type: string | null; is_completed: boolean | null }[] | null
+  const trackingData = tracking.data as unknown as readonly { date: string; meal_type: string | null; completed: boolean | null }[] | null
   const weeklyTracking: Record<string, Set<string>> = {}
   for (const row of trackingData ?? []) {
     if (!row.meal_type) continue
@@ -66,7 +66,7 @@ export async function loadClientDetailNutrition(client: DatabaseClient, scope: C
 }
 
 export async function loadClientDetailWeeklyTracking(client: DatabaseClient, clientUserId: string, mondayDate: string): Promise<ClientDetailLoadResult<Readonly<Record<string, ReadonlySet<string>>>>> {
-  const result = await client.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', clientUserId).gte('date', mondayDate).eq('is_completed' as never, true).limit(200)
+  const result = await client.from('meal_tracking').select('date,meal_type,completed').eq('user_id', clientUserId).gte('date', mondayDate).eq('completed', true).limit(200)
   if (result.error) return { status: 'unavailable', source: 'nutrition' }
   const rows = result.data as unknown as readonly { date: string; meal_type: string | null }[] | null
   const tracking: Record<string, Set<string>> = {}

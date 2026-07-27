@@ -94,7 +94,7 @@ describe('Nutrition repositories', () => {
     expect((result.ok && result.data.plan)).toBe(rawPlan)
     expect(callsFor(mock, 'select')).toContainEqual({ table: 'meal_plans', args: [PERSONAL_MEAL_PLAN_PROJECTION] })
     expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
-      ['user_id', 'owner-id'], ['is_active', true],
+      ['user_id', 'owner-id'], ['active', true],
     ])
     expect(callsFor(mock, 'order')).toContainEqual({
       table: 'meal_plans',
@@ -115,7 +115,7 @@ describe('Nutrition repositories', () => {
       { table: 'meal_plans', args: [PERSONAL_MEAL_PLAN_PROJECTION] },
     ])
     expect(callsFor(mock, 'eq').map(call => call.args)).toEqual([
-      ['user_id', 'owner-id'], ['is_active', true],
+      ['user_id', 'owner-id'], ['active', true],
     ])
     expect(callsFor(mock, 'limit')).toEqual([
       { table: 'meal_plans', args: [1] },

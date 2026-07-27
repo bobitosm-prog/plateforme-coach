@@ -42,7 +42,9 @@ describe('initial generation read-only control characterization', () => {
   it('keeps every Nutrition write outside the read-only control', () => {
     expect(hook.match(/from\('meal_plans'\)\.update/g)).toHaveLength(1)
     expect(hook.match(/from\('meal_plans'\)\.insert/g)).toHaveLength(1)
-    expect(hook).toContain('plan_data: planData')
-    expect(hook).toContain('is_active: true')
+    expect(hook).toContain('plan: planData')
+    expect(hook).toContain('active: true')
+    expect(hook).not.toContain('plan_data: planData')
+    expect(hook).not.toContain("from('meal_plans').update({ is_active: false })")
   })
 })

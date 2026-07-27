@@ -66,7 +66,7 @@ describe('client detail domain boundaries', () => {
     const db = database({
       client_meal_plans: { single: { id: 'assigned', client_id: 'client-1', coach_id: 'coach-1', calorie_target: 2283, protein_target: 134, carb_target: 266, fat_target: 76, plan: LEGACY_COACH_WEEK, created_at: '2026-01-01', updated_at: '2026-01-01' } },
       meal_plans: { single: { id: 'personal', user_id: 'client-1', created_by: null, name: 'Personnel', plan: LEGACY_AI_WEEK, active: true, created_at: '2026-01-01' } },
-      meal_tracking: { data: [{ date: '2026-01-05', meal_type: 'Déjeuner', is_completed: true }] },
+      meal_tracking: { data: [{ date: '2026-01-05', meal_type: 'Déjeuner', completed: true }] },
     })
     const result = await loadClientDetailNutrition(db.client, scope, '2026-01-05')
     expect(result).toMatchObject({ status: 'success', data: { assignedPlan: { id: 'assigned' }, activePlan: { id: 'personal' } } })

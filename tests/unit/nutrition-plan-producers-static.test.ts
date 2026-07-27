@@ -24,7 +24,7 @@ describe('Nutrition plan generated contracts', () => {
     expect(block).toContain('active: boolean | null')
     expect(block).not.toMatch(/plan_data|is_active|total_calories|protein_g|carbs_g|fat_g|objective/)
     expect(repositories).toContain(
-      "'id,user_id,created_by,plan:plan_data,active:is_active,created_at'",
+      "'id,user_id,created_by,name,plan,active,created_at'",
     )
   })
 
@@ -39,22 +39,23 @@ describe('Nutrition plan generated contracts', () => {
 })
 
 describe('Nutrition plan runtime producer characterization', () => {
-  it('finds the two minimal personal generation producers', () => {
+  it('keeps the two minimal personal generation producers on deployed columns', () => {
     for (const source of [preferences, initial]) {
-      expect(source).toContain("update({ is_active: false })")
-      expect(source).toContain('plan_data: planData')
-      expect(source).toContain('is_active: true')
+      expect(source).toContain("update({ active: false })")
+      expect(source).toContain('plan: planData')
+      expect(source).toContain('active: true')
+      expect(source).not.toContain('plan_data: planData')
+      expect(source).not.toContain("from('meal_plans').update({ is_active: false })")
     }
   })
 
-  it('finds both personal producers with declared plan-level totals', () => {
+  it('keeps both personal producers within the deployed persistence contract', () => {
     for (const source of [diagnostic, coachAi]) {
-      expect(source).toContain('total_calories:')
-      expect(source).toContain('protein_g:')
-      expect(source).toContain('carbs_g:')
-      expect(source).toContain('fat_g:')
-      expect(source).toContain('plan_data:')
-      expect(source).toContain('is_active: true')
+      expect(source).toContain('plan:')
+      expect(source).toContain('active: true')
+      expect(source).not.toContain('plan_data: rounded')
+      expect(source).not.toContain('plan_data: planData')
+      expect(source).not.toContain("from('meal_plans')\n        .update({ is_active: false })")
     }
   })
 

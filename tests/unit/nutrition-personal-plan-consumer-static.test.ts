@@ -12,10 +12,10 @@ describe('personal nutrition plan consumer boundary', () => {
     expect(hook).not.toContain("from('meal_plans')")
     expect(hook).not.toMatch(/plan_data|is_active/)
     expect(repository).toContain(
-      "PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,plan:plan_data,active:is_active,created_at'",
+      "PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,name,plan,active,created_at'",
     )
     expect(repository).toContain(
-      ".eq('user_id', ownerUserId).eq(DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN, true)",
+      ".eq('user_id', ownerUserId).eq(PERSONAL_PLAN_ACTIVE_COLUMN, true)",
     )
     expect(repository).toContain(".order('created_at', { ascending: false }).limit(1).maybeSingle()")
     expect(repository).not.toMatch(/select\(['"]\*['"]/)
@@ -36,11 +36,13 @@ describe('personal nutrition plan consumer boundary', () => {
     expect(coach).toBeGreaterThan(personal)
   })
 
-  it('keeps the existing completion mutation and adds no Nutrition write', () => {
-    expect(hook.match(/\.upsert\(/g)).toHaveLength(1)
-    expect(hook).toContain("supabase.from('meal_tracking').upsert({")
-    expect(hook).toContain('user_id: userId, meal_plan_id: planId, date, meal_type: mealType,')
-    expect(hook).toContain("}, { onConflict: 'user_id,date,meal_type' })")
+  it('writes completions using only deployed columns and no assumed unique constraint', () => {
+    expect(hook).toContain("supabase.from('meal_tracking').select('id')")
+    expect(hook).toContain(".eq('meal_type', mealType).limit(1)")
+    expect(hook).toContain("supabase.from('meal_tracking').update({ completed }).eq('id'")
+    expect(hook).toContain("supabase.from('meal_tracking').insert({")
+    expect(hook).toContain('user_id: userId, date, meal_type: mealType, completed,')
+    expect(hook).not.toMatch(/meal_plan_id|is_completed|completed_at|onConflict/)
     expect(hook).not.toMatch(/from\(['"]meal_plans['"]\)[\s\S]*(?:insert|update|upsert|delete)/)
   })
 

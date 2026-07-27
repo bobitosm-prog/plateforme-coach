@@ -99,12 +99,12 @@ export function aggregateCoachMealAdherence(
       continue
     }
     if (row.date < fromDate) continue
-    if (typeof row.is_completed !== 'boolean') {
+    if (typeof row.completed !== 'boolean') {
       counter.invalid = true
       continue
     }
     counter.observed += 1
-    if (row.is_completed) counter.completed += 1
+    if (row.completed) counter.completed += 1
   }
 
   return new Map([...counters].map(([clientId, counter]) => {

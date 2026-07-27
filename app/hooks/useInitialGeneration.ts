@@ -126,11 +126,11 @@ export default function useInitialGeneration(
               }
             }
             if (planData) {
-              await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
+              await supabase.from('meal_plans').update({ active: false }).eq('user_id', userId).eq('active', true)
               await supabase.from('meal_plans').insert({
                 user_id: userId,
-                plan_data: planData,
-                is_active: true,
+                plan: planData,
+                active: true,
               })
               mealOk = true
             }

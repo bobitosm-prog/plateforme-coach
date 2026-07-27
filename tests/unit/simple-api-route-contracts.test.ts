@@ -76,17 +76,35 @@ describe('simple API schemas', () => {
 describe('feedback routes', () => {
   it('reads only the session user reports and preserves the legacy response', async () => {
     const reports = [
-      { id: 'one', admin_reply: 'reply', read_by_user: false },
-      { id: 'two', admin_reply: null, read_by_user: false },
+      { id: 'one', title: 'First report' },
+      { id: 'two', title: 'Second report' },
     ]
     const order = vi.fn().mockResolvedValue({ data: reports, error: null })
     const eq = vi.fn(() => ({ order }))
-    mocks.from.mockReturnValue({ select: vi.fn(() => ({ eq })) })
+    const select = vi.fn((projection: string) => {
+      void projection
+      return { eq }
+    })
+    mocks.from.mockReturnValue({ select })
 
     const response = await readFeedback(routeRequest('/api/feedback/mine'))
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ reports, count: 2, unreadCount: 1 })
+    expect(await response.json()).toEqual({
+      reports: reports.map(report => ({
+        ...report,
+        admin_reply: null,
+        replied_at: null,
+        replied_by: null,
+        read_by_user: null,
+      })),
+      count: 2,
+      unreadCount: 0,
+    })
     expect(eq).toHaveBeenCalledWith('user_id', 'session-user')
+    const projection = String(select.mock.calls[0]?.[0])
+    expect(projection).not.toMatch(
+      /admin_reply|replied_at|replied_by|read_by_user|admin_notes/,
+    )
   })
 
   it('marks only session-owned unread answered reports', async () => {

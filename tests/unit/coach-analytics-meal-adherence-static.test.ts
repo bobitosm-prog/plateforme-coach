@@ -8,7 +8,7 @@ const dashboardDomain = readFileSync('lib/coaching/dashboard/index.ts', 'utf8')
 describe('C10 coach Analytics meal adherence static contract', () => {
   it('keeps the grouped read projection, scope and lower bound unchanged', () => {
     expect(hook).toContain("from('meal_tracking')")
-    expect(hook).toContain(".select('user_id, date, is_completed')")
+    expect(hook).toContain(".select('user_id, date, completed')")
     expect(hook).toContain(".in('user_id', clientIds)")
     expect(hook).toContain(".gte('date', fetch7d)")
     expect(hook.match(/from\('meal_tracking'\)/g)).toHaveLength(1)

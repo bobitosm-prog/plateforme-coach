@@ -16,6 +16,7 @@ const DAY_KEYS = [
 ]
 
 function sqlString(value) {
+  if (value === null) return 'NULL'
   return `'${String(value).replaceAll("'", "''")}'`
 }
 
@@ -179,6 +180,8 @@ function assertManifest(manifest) {
 export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
   assertManifest(manifest)
   const people = new Map(manifest.personas.map(persona => [persona.key, persona]))
+  const checkoutClient = people.get('clientCanonical')
+  if (!checkoutClient) throw new Error('Missing clientCanonical checkout persona')
   const clients = manifest.personas.filter(persona => persona.role === 'client')
   const fixtures = phase6PlanFixtures()
   const expectedAuthRows = manifest.personas.map(persona =>
@@ -273,6 +276,13 @@ export function buildPhase6SeedSql(manifest, { transaction = true } = {}) {
     '  stripe_subscription_id = NULL,',
     '  stripe_account_id = NULL,',
     '  updated_at = EXCLUDED.updated_at;',
+    '',
+    'UPDATE public.profiles',
+    "SET subscription_status = 'inactive',",
+    '    subscription_type = NULL,',
+    '    stripe_subscription_id = NULL,',
+    '    subscription_end_date = NULL',
+    `WHERE id = ${sqlString(checkoutClient.id)}::uuid;`,
     '',
   ]
 

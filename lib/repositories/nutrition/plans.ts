@@ -2,7 +2,7 @@ import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/res
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { createCoachClientRelationRepository } from '@/lib/repositories/coach-client-relations'
 
-export const PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,plan:plan_data,active:is_active,created_at' as const
+export const PERSONAL_MEAL_PLAN_PROJECTION = 'id,user_id,created_by,name,plan,active,created_at' as const
 export const ASSIGNED_MEAL_PLAN_PROJECTION = 'id,client_id,coach_id,plan,created_at,updated_at' as const
 export const CLIENT_DETAIL_ASSIGNED_MEAL_PLAN_PROJECTION = 'id,client_id,coach_id,calorie_target,protein_target,carb_target,fat_target,plan,created_at,updated_at' as const
 
@@ -17,8 +17,7 @@ export type ClientDetailAssignedMealPlanRow = AssignedMealPlanRow & {
   readonly fat_target: number | null
 }
 
-// The deployed runtime schema still exposes the legacy activation column.
-const DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN = 'is_active' as never
+const PERSONAL_PLAN_ACTIVE_COLUMN = 'active' as const
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 100
 
@@ -39,7 +38,7 @@ export function createNutritionPlanRepository(client: DatabaseClient) {
 
     async findActivePersonalPlanForOwner(ownerUserId: string): Promise<RepositoryResult<PersonalMealPlanRow>> {
       const { data, error } = await client.from('meal_plans').select(PERSONAL_MEAL_PLAN_PROJECTION)
-        .eq('user_id', ownerUserId).eq(DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN, true)
+        .eq('user_id', ownerUserId).eq(PERSONAL_PLAN_ACTIVE_COLUMN, true)
         .order('created_at', { ascending: false }).limit(1).maybeSingle()
       if (error) return repositoryFailure(error)
       return data
@@ -49,7 +48,7 @@ export function createNutritionPlanRepository(client: DatabaseClient) {
 
     async findFirstActivePersonalPlanForOwner(ownerUserId: string): Promise<RepositoryResult<PersonalMealPlanRow>> {
       const { data, error } = await client.from('meal_plans').select(PERSONAL_MEAL_PLAN_PROJECTION)
-        .eq('user_id', ownerUserId).eq(DEPLOYED_PERSONAL_PLAN_ACTIVE_COLUMN, true)
+        .eq('user_id', ownerUserId).eq(PERSONAL_PLAN_ACTIVE_COLUMN, true)
         .limit(1)
       if (error) return repositoryFailure(error)
       const first = data?.[0]

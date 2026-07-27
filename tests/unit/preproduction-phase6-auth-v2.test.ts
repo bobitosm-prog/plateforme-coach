@@ -56,6 +56,25 @@ describe('Phase 6 canonical Auth v2 cohort', () => {
     )).toBe(true)
   })
 
+  it('keeps only the checkout client without an active subscription', () => {
+    const checkoutClient = manifest.personas.find(
+      (row: { key: string }) => row.key === 'clientCanonical',
+    )
+    expect(checkoutClient).toMatchObject({
+      id: '76100000-0000-4000-8000-000000000003',
+      email: 'phase6-v2-client-1@moovx.invalid',
+      role: 'client',
+      subscriptionType: null,
+      subscriptionStatus: 'inactive',
+    })
+    expect(manifest.personas.find(
+      (row: { key: string }) => row.key === 'admin',
+    )).toMatchObject({
+      subscriptionType: 'client_monthly',
+      subscriptionStatus: 'active',
+    })
+  })
+
   it('generates a relational-only, controlled profile upsert', () => {
     const sql = buildPhase6SeedSql(manifest)
     expect(sql).toContain('INSERT INTO public.profiles')
@@ -69,6 +88,17 @@ describe('Phase 6 canonical Auth v2 cohort', () => {
       /\b(?:INSERT|UPDATE|DELETE)\s+(?:INTO\s+|FROM\s+)?auth\./i,
     )
     expect(sql).not.toContain('76000000-')
+    expect(sql).toMatch(
+      /\('76100000-0000-4000-8000-000000000003'::uuid,[^\n]*NULL,\s*'inactive'/,
+    )
+    expect(sql).not.toContain("'null'")
+    expect(sql).toContain(
+      "SET subscription_status = 'inactive',\n"
+      + '    subscription_type = NULL,\n'
+      + '    stripe_subscription_id = NULL,\n'
+      + '    subscription_end_date = NULL\n'
+      + "WHERE id = '76100000-0000-4000-8000-000000000003'::uuid;",
+    )
   })
 
   it('hard-blocks every target except the exact staging project', () => {

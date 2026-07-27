@@ -24,7 +24,7 @@ describe('C10 coach Analytics meal adherence read model', () => {
 
   it('preserves the historical denominator and rounding for valid rows', () => {
     const oneMissed = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: false },
+      { user_id: 'client-a', date: '2026-07-20', completed: false },
     ], scope, fromDate)
     expect(oneMissed.get('client-a')).toMatchObject({
       status: 'known',
@@ -34,17 +34,17 @@ describe('C10 coach Analytics meal adherence read model', () => {
     })
 
     const completed = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
     ], scope, fromDate)
     expect(completed.get('client-a')?.percentage).toBe(4)
   })
 
   it('aggregates several scoped clients independently', () => {
     const result = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
-      { user_id: 'client-a', date: '2026-07-21', is_completed: false },
-      { user_id: 'client-b', date: '2026-07-20', is_completed: true },
-      { user_id: 'outside', date: '2026-07-20', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
+      { user_id: 'client-a', date: '2026-07-21', completed: false },
+      { user_id: 'client-b', date: '2026-07-20', completed: true },
+      { user_id: 'outside', date: '2026-07-20', completed: true },
     ], scope, fromDate)
     expect(result.get('client-a')).toMatchObject({
       status: 'known',
@@ -58,13 +58,13 @@ describe('C10 coach Analytics meal adherence read model', () => {
 
   it('keeps the fixed denominator for partial and complete periods', () => {
     const partial = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
     ], scope, fromDate)
     const complete = aggregateCoachMealAdherence(
       Array.from({ length: 28 }, (_, index) => ({
         user_id: 'client-a',
         date: `2026-07-${String(18 + Math.floor(index / 4)).padStart(2, '0')}`,
-        is_completed: true,
+        completed: true,
       })),
       scope,
       fromDate,
@@ -75,8 +75,8 @@ describe('C10 coach Analytics meal adherence read model', () => {
 
   it('preserves duplicate valid rows because the historical projection has no identity', () => {
     const result = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
     ], scope, fromDate)
     expect(result.get('client-a')).toMatchObject({
       completedMeals: 2,
@@ -86,9 +86,9 @@ describe('C10 coach Analytics meal adherence read model', () => {
   })
 
   it.each([
-    ['invalid date', { user_id: 'client-a', date: 'invalid', is_completed: true }],
-    ['null completion', { user_id: 'client-a', date: '2026-07-20', is_completed: null }],
-    ['string completion', { user_id: 'client-a', date: '2026-07-20', is_completed: 'true' }],
+    ['invalid date', { user_id: 'client-a', date: 'invalid', completed: true }],
+    ['null completion', { user_id: 'client-a', date: '2026-07-20', completed: null }],
+    ['string completion', { user_id: 'client-a', date: '2026-07-20', completed: 'true' }],
   ])('makes a client non-calculable for an %s row', (_, row) => {
     expect(aggregateCoachMealAdherence([row], scope, fromDate).get('client-a')).toEqual({
       status: 'invalid',
@@ -100,7 +100,7 @@ describe('C10 coach Analytics meal adherence read model', () => {
 
   it('excludes a row before the preserved lower-bound window', () => {
     expect(aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-17', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-17', completed: true },
     ], scope, fromDate).get('client-a')?.status).toBe('no_tracking')
   })
 
@@ -132,7 +132,7 @@ describe('C10 coach Analytics meal adherence read model', () => {
     })
 
     const confirmed = aggregateCoachMealAdherence([
-      { user_id: 'client-a', date: '2026-07-20', is_completed: true },
+      { user_id: 'client-a', date: '2026-07-20', completed: true },
     ], scope, fromDate)
     const failedAfterValue = resolveCoachMealAdherenceRead(
       { status: 'failure' },

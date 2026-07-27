@@ -120,8 +120,12 @@ export function useClientDetailAi(input: UseClientDetailAiInput) {
       day.total_kcal = Math.round(day.total_kcal || 0); day.total_protein = Math.round(day.total_protein || 0); day.total_carbs = Math.round(day.total_carbs || 0); day.total_fat = Math.round(day.total_fat || 0)
       for (const foods of Object.values(day.repas ?? {})) for (const food of foods) { food.quantite_g = Math.round(food.quantite_g || 0); food.kcal = Math.round(food.kcal || 0); food.proteines = Math.round(food.proteines || 0); food.glucides = Math.round(food.glucides || 0); food.lipides = Math.round(food.lipides || 0) }
     }
-    const monday = rounded.lundi || {}
-    const { error } = await input.client.from('meal_plans').insert({ user_id: input.profile.id, created_by: input.coachId, total_calories: Math.round(monday.total_kcal || input.calorieTarget), protein_g: Math.round(monday.total_protein || input.protTarget), carbs_g: Math.round(monday.total_carbs || input.carbTarget), fat_g: Math.round(monday.total_fat || input.fatTarget), objective: input.profile.objective, plan_data: rounded, is_active: true } as never)
+    const { error } = await input.client.from('meal_plans').insert({
+      user_id: input.profile.id,
+      created_by: input.coachId,
+      plan: rounded,
+      active: true,
+    } as never)
     if (error) input.showToast(`Erreur : ${error.message}`); else { setAiMealPreview(null); input.showToast('Plan alimentaire IA envoyé au client'); input.refresh() }
   }
 

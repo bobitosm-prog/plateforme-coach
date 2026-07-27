@@ -4,7 +4,6 @@ import type { ApiErrorCode } from '@/lib/api/errors'
 
 const FEEDBACK_PROJECTION = `
   id, type, title, description, status, priority,
-  admin_reply, replied_at, replied_by, read_by_user,
   screenshot_url, page_url,
   created_at, updated_at
 ` as const
@@ -24,9 +23,14 @@ export async function readMyFeedback(): Promise<MyFeedbackServiceResult> {
       .eq('user_id', identity.data.id)
       .order('created_at', { ascending: false })
     if (error) return { ok: false, code: 'PERSISTENCE_FAILED', internalMessage: error.message }
-    const reports = data ?? []
-    const unreadCount = reports.filter((report) => report.admin_reply && report.read_by_user === false).length
-    return { ok: true, reports, count: reports.length, unreadCount }
+    const reports = (data ?? []).map(report => ({
+      ...report,
+      admin_reply: null,
+      replied_at: null,
+      replied_by: null,
+      read_by_user: null,
+    }))
+    return { ok: true, reports, count: reports.length, unreadCount: 0 }
   } catch {
     return { ok: false, code: 'INTERNAL_ERROR' }
   }

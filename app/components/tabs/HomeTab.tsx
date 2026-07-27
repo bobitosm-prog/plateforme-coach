@@ -187,7 +187,7 @@ export default function HomeTab({
     const dayKey = todayNutritionKey()
 
     const trackingRead = supabase.from('meal_tracking').select('meal_type')
-      .eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20)
+      .eq('user_id', uid).eq('date', todayDate).eq('completed', true).limit(20)
       .then(({ data, error }: { data: HomeMealCompletion[] | null; error: unknown }) =>
         classifyHomeNutritionCollectionRead('meal_tracking', data, error))
       .catch(() => homeNutritionCollectionFailure<HomeMealCompletion>('meal_tracking'))

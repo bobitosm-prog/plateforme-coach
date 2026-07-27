@@ -191,21 +191,16 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
       await supabase
         .from('meal_plans')
-        .update({ is_active: false })
+        .update({ active: false })
         .eq('user_id', userId)
-        .eq('is_active', true)
+        .eq('active', true)
 
       const { error: insertErr } = await supabase
         .from('meal_plans')
         .insert({
           user_id: userId,
-          plan_data: planData,
-          is_active: true,
-          total_calories: params.calorie_goal,
-          protein_g: params.protein_goal,
-          carbs_g: params.carbs_goal,
-          fat_g: params.fat_goal,
-          objective: params.objective_mode,
+          plan: planData,
+          active: true,
         })
 
       if (insertErr) throw insertErr
