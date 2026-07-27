@@ -478,7 +478,12 @@ fois : 9 profils, 1 relation coach/client et les volumes Nutrition attendus
 sont présents, sans mot de passe ni identifiant Stripe. Aucun repair ou cron
 réel n'a été exécuté et aucune preuve Billing n'est encore exécutée.
 Aucune preuve de réconciliation Stripe/base n'est encore exécutée; Nutrition
-reste secondaire.**
+reste secondaire. Le [Preview Vercel isolé](docs/PHASE_6_VERCEL_PREVIEW.md)
+est `READY` et l'Auth directe staging de `clientCanonical` est validée. Les
+[webhooks Phase 6](docs/PHASE_6_STRIPE_WEBHOOK_SCOPES.md) possèdent désormais
+des routes locales, secrets et gardes `livemode` séparés pour plateforme et
+Connect. La Phase reste bloquée avant la création des deux endpoints Stripe
+test, du bypass Vercel et de la preuve Billing.**
 
 ### Pourquoi
 

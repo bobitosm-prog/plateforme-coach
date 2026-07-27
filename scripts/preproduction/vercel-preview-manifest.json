@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "authority": "moovx-phase6-vercel-preview-v1",
+  "environment": "preview",
+  "branch": "phase-6-staging",
+  "gitAutomaticDeployment": false,
+  "project": {
+    "id": "prj_WI7LdZkzqU2SlXUCPCfBaASO52NJ",
+    "name": "plateforme-coach"
+  },
+  "team": {
+    "id": "team_jsmwUqZtuecSoWUzmdJF8N1W",
+    "slug": "bobitosm-3757s-projects"
+  },
+  "alias": "moovx-phase-6-staging.vercel.app",
+  "supabase": {
+    "projectRef": "cycbnnojcymjnaqomlyj",
+    "url": "https://cycbnnojcymjnaqomlyj.supabase.co"
+  },
+  "requiredBranchScopedVariables": [
+    "MOOVX_ENVIRONMENT",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "NEXT_PUBLIC_ADMIN_EMAIL",
+    "NEXT_PUBLIC_COACH_EMAIL",
+    "ADMIN_EMAIL",
+    "DEFAULT_COACH_EMAIL",
+    "ANTHROPIC_API_KEY",
+    "CRON_SECRET",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASS",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_PRICE_CLIENT_MONTHLY",
+    "NEXT_PUBLIC_PRICE_CLIENT_YEARLY",
+    "NEXT_PUBLIC_PRICE_CLIENT_LIFETIME",
+    "NEXT_PUBLIC_PRICE_COACH_MONTHLY"
+  ],
+  "disabledIntegrations": [
+    "anthropic",
+    "cron",
+    "smtp",
+    "stripe"
+  ],
+  "forbiddenProjectRefs": [
+    "njlzossopgknanhkzcbk"
+  ],
+  "forbiddenHosts": [
+    "app.moovx.ch",
+    "moovx.ch",
+    "www.moovx.ch",
+    "njlzossopgknanhkzcbk.supabase.co"
+  ],
+  "forbiddenFiles": [
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.preview"
+  ]
+}

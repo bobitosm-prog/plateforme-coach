@@ -4,6 +4,7 @@ import { basename, isAbsolute, join, relative, resolve } from 'node:path'
 
 export const PRODUCTION_SUPABASE_PROJECT_REF = 'njlzossopgknanhkzcbk'
 export const STAGING_SUPABASE_ORGANIZATION_ID = 'mlasmyrpaaqnhuuhuzma'
+export const STAGING_SUPABASE_PROJECT_REF = 'cycbnnojcymjnaqomlyj'
 export const STAGING_SUPABASE_REGIONS = new Set(['eu-central-1', 'eu-central-2'])
 export const PRODUCTION_HOSTS = new Set([
   'app.moovx.ch',
@@ -178,7 +179,82 @@ export function assertPreCreateEnvironment({
   }
 }
 
-export function readManifestForPreCreate(manifestPath, repositoryRoot = process.cwd()) {
+/**
+ * @param {{
+ *   manifest: Record<string, any>,
+ *   environment?: Record<string, string | undefined>,
+ * }} input
+ */
+export function assertPreLinkEnvironment({
+  manifest,
+  environment = process.env,
+}) {
+  assertManifestHasNoSecrets(manifest)
+  assertEnvironmentIsSafe(environment)
+
+  if (manifest?.schemaVersion !== 1) {
+    throw new Error('Unsupported or missing staging manifest schemaVersion')
+  }
+  if (manifest.environment !== 'staging') {
+    throw new Error('Manifest environment must be exactly staging')
+  }
+
+  const supabase = manifest.supabase
+  if (!supabase || typeof supabase !== 'object') {
+    throw new Error('Missing required staging value: manifest.supabase')
+  }
+
+  const organizationId = requiredString(supabase.organizationId, 'manifest.supabase.organizationId')
+  const projectName = requiredString(supabase.projectName, 'manifest.supabase.projectName')
+  const projectRef = requiredString(supabase.projectRef, 'manifest.supabase.projectRef')
+  const region = requiredString(supabase.region, 'manifest.supabase.region')
+  const size = requiredString(supabase.size, 'manifest.supabase.size')
+  const status = requiredString(supabase.status, 'manifest.supabase.status')
+
+  if (organizationId !== STAGING_SUPABASE_ORGANIZATION_ID) {
+    throw new Error(`Staging organization must be ${STAGING_SUPABASE_ORGANIZATION_ID}`)
+  }
+  if (projectName !== 'moovx-staging') {
+    throw new Error(`Staging project name must be moovx-staging, received ${projectName}`)
+  }
+  if (projectRef !== STAGING_SUPABASE_PROJECT_REF) {
+    throw new Error(`Staging project ref must be ${STAGING_SUPABASE_PROJECT_REF}`)
+  }
+  if (!STAGING_SUPABASE_REGIONS.has(region)) {
+    throw new Error(`Staging region must be one of ${[...STAGING_SUPABASE_REGIONS].join(', ')}, received ${region}`)
+  }
+  if (region !== 'eu-central-2') {
+    throw new Error(`Existing staging region must be eu-central-2, received ${region}`)
+  }
+  if (size !== 'nano') {
+    throw new Error(`Staging compute size must be nano, received ${size}`)
+  }
+  if (!['Healthy', 'ACTIVE_HEALTHY'].includes(status)) {
+    throw new Error(`Staging project must be healthy, received ${status}`)
+  }
+  if (containsProductionReference(JSON.stringify(manifest))) {
+    throw new Error('Production reference forbidden in staging manifest')
+  }
+
+  const environmentProjectRef = environment.SUPABASE_STAGING_PROJECT_REF
+  if (environmentProjectRef && environmentProjectRef !== projectRef) {
+    throw new Error('SUPABASE_STAGING_PROJECT_REF must match the staging manifest')
+  }
+
+  return {
+    environment: 'staging',
+    organizationId,
+    projectName,
+    projectRef,
+    region,
+    size,
+    projectStatus: 'ACTIVE_HEALTHY',
+    productionProjectExcluded: true,
+    productionVariablesLoaded: false,
+  }
+}
+
+export function readStagingManifest(manifestPath, repositoryRoot = process.cwd()) {
   if (!isAbsolute(manifestPath)) {
     throw new Error('Staging manifest path must be absolute')
   }
@@ -197,6 +273,8 @@ export function readManifestForPreCreate(manifestPath, repositoryRoot = process.
 
   return JSON.parse(readFileSync(absoluteManifestPath, 'utf8'))
 }
+
+export const readManifestForPreCreate = readStagingManifest
 
 export function findForbiddenMigrationReferences(migrationsRoot) {
   const findings = []

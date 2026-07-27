@@ -4,7 +4,8 @@ import { resolve } from 'node:path'
 import {
   assertMigrationSourcesSafe,
   assertPreCreateEnvironment,
-  readManifestForPreCreate,
+  assertPreLinkEnvironment,
+  readStagingManifest,
 } from './environment-guard.mjs'
 
 function valueFor(argv, name) {
@@ -18,13 +19,15 @@ function valueFor(argv, name) {
 function main() {
   const argv = process.argv.slice(2)
   const mode = valueFor(argv, '--mode')
-  if (mode !== 'pre-create') {
+  if (!['pre-create', 'pre-link'].includes(mode)) {
     throw new Error(`Unsupported guard mode: ${mode}`)
   }
 
   const manifestPath = valueFor(argv, '--manifest')
-  const manifest = readManifestForPreCreate(manifestPath)
-  const result = assertPreCreateEnvironment({ manifest })
+  const manifest = readStagingManifest(manifestPath)
+  const result = mode === 'pre-create'
+    ? assertPreCreateEnvironment({ manifest })
+    : assertPreLinkEnvironment({ manifest })
   const migrationsRoot = argv.includes('--migrations')
     ? valueFor(argv, '--migrations')
     : resolve(process.cwd(), 'supabase/migrations')

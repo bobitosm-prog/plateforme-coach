@@ -12603,3 +12603,59 @@ n'est appliqué.
 Preview Vercel, Stripe test, webhooks test et preuve Billing; RC1 reste 0/38
 et Phase 9 inactive. Prochaine étape unique : autorisation distincte pour le
 Preview Vercel isolé puis Stripe test.
+
+## Entrée — 2026-07-26 — Garde Vercel Preview Phase 6
+
+**Inventaire :** Vercel CLI `50.37.3`, session `bobitosm-3757`, projet
+`plateforme-coach` et team `bobitosm-3757s-projects` confirmés. Vingt variables
+Preview globales existent; plusieurs sont partagées avec Production. Leurs
+valeurs n'ont jamais été lues. La branche `phase-6-staging` et ses variables
+branch-scoped sont absentes.
+
+**Frontière :** manifeste sans secret et garde pour 23 variables exclusivement
+Preview/`phase-6-staging`. Supabase est limité à `cycbnnojcymjnaqomlyj`;
+Stripe, webhook, Anthropic, cron et SMTP sont désactivés; les e-mails sont
+synthétiques et les URLs limitées à l'alias `*.vercel.app`.
+
+**Blocage :** Vercel refuse la première variable avec `branch_not_found`.
+Aucune variable n'est créée. Pousser la branche avant les surcharges pourrait
+déclencher un build héritant des variables Preview globales; l'opération est
+donc arrêtée fail-closed. Aucun branch, push, déploiement ou alias n'est créé.
+Le fichier privé temporaire contenant les clés staging est supprimé.
+
+**Prochaine autorisation :** permettre un commit bootstrap dans un worktree
+propre, poussé exclusivement vers `phase-6-staging`, qui désactive avec
+`git.deploymentEnabled` le déploiement Git automatique de cette seule branche.
+Les variables branch-scoped pourront alors précéder le premier Preview CLI
+explicite. Phase 6 reste `blocked`; Stripe demeure interdit.
+
+## Entrée — 2026-07-26 — Séparation locale des webhooks Stripe Phase 6
+
+**Cause :** le handler historique mélangeait quatre événements du compte
+plateforme et `account.updated` pour les comptes Connect sous une route et un
+secret uniques. Stripe exige deux endpoints et fournit un secret distinct par
+endpoint. La route Preview déployée reste en outre protégée par le SSO Vercel.
+
+**Correction locale :** ajout de `/api/stripe/webhook/platform` et
+`/api/stripe/webhook/connect` derrière une frontière HTTP commune. Les routes
+exigent respectivement `STRIPE_PLATFORM_WEBHOOK_SECRET` et
+`STRIPE_CONNECT_WEBHOOK_SECRET`, ainsi qu'une valeur explicite de
+`STRIPE_WEBHOOK_EXPECTED_LIVEMODE`. Signature, mode, inventaire du scope et
+autorité `event.account` sont validés avant tout claim ou repository. La route
+historique et les services métier/RPC restent inchangés.
+
+**Périmètre :** tests uniquement locaux avec Stripe et Supabase injectés. Aucun
+credential, endpoint, bypass, variable Vercel, événement Stripe, accès
+Supabase distant, déploiement, commit ou push.
+
+**Validations :** 6 fichiers ciblés / 87 tests, suite complète 300 fichiers /
+2 507 tests réussis et 3 `todo`; TypeScript et ESLint ciblé sans sortie; liens
+Markdown 647/647; `git diff --check` vert. Le lint global reste rouge sur la
+dette préexistante `.claude/worktrees`/`tmp-legal` (2 135 erreurs, 9 088
+avertissements). Le build Turbopack a été interrompu après plus de trois
+minutes sans progrès ni diagnostic au-delà de la création du build optimisé.
+
+**État roadmap :** Phase 4 reste `met`; Phase 6 reste `blocked`; RC1 n'est pas
+coché et Phase 9 reste inactive. Prochaine étape opérateur : autoriser un
+Protection Bypass for Automation, charger un credential Stripe test en mémoire
+et créer séparément les endpoints Account et Connect.

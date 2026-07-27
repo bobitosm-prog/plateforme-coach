@@ -520,11 +520,17 @@ des [tokens Connect de test](https://docs.stripe.com/connect/testing); aucune
 identité ou carte réelle n'est utilisée.
 
 Le compte Connect est contrôlé par lecture API dans la réconciliation. Le
-runtime actuel n'expose qu'un endpoint et un secret
-`POST /api/stripe/webhook`; il ne supporte pas un second secret Connect.
-Aucun webhook Connected accounts séparé n'est donc créé dans ce plan minimal.
-En ajouter un serait un changement runtime distinct, non requis pour la preuve
-de réconciliation Connect actuelle.
+runtime expose désormais deux frontières Phase 6 distinctes, documentées dans
+[`PHASE_6_STRIPE_WEBHOOK_SCOPES.md`](PHASE_6_STRIPE_WEBHOOK_SCOPES.md) :
+
+- `/api/stripe/webhook/platform`, endpoint Account avec `connect=false`;
+- `/api/stripe/webhook/connect`, endpoint Connected accounts avec
+  `connect=true`.
+
+La route historique `/api/stripe/webhook` reste disponible pendant la
+transition, mais aucun endpoint Phase 6 ne doit la cibler. Les deux nouveaux
+endpoints exigent des secrets différents et
+`STRIPE_WEBHOOK_EXPECTED_LIVEMODE=false` en staging.
 
 ### 5. Charger le seed Supabase
 
@@ -563,6 +569,12 @@ npx vercel env add SUPABASE_SERVICE_ROLE_KEY preview phase-6-staging --sensitive
   < /secure/moovx/staging/SUPABASE_SERVICE_ROLE_KEY
 npx vercel env add STRIPE_SECRET_KEY preview phase-6-staging --sensitive \
   < /secure/moovx/staging/STRIPE_SECRET_KEY
+npx vercel env add STRIPE_PLATFORM_WEBHOOK_SECRET preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/STRIPE_PLATFORM_WEBHOOK_SECRET
+npx vercel env add STRIPE_CONNECT_WEBHOOK_SECRET preview phase-6-staging --sensitive \
+  < /secure/moovx/staging/STRIPE_CONNECT_WEBHOOK_SECRET
+npx vercel env add STRIPE_WEBHOOK_EXPECTED_LIVEMODE preview phase-6-staging \
+  < /secure/moovx/staging/STRIPE_WEBHOOK_EXPECTED_LIVEMODE
 npx vercel env add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY preview phase-6-staging \
   < /secure/moovx/staging/NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 npx vercel env add NEXT_PUBLIC_PRICE_CLIENT_MONTHLY preview phase-6-staging \
@@ -602,11 +614,9 @@ export MOOVX_PREVIEW_URL="https://$MOOVX_STAGING_ALIAS"
 
 node scripts/preproduction/configure-stripe-webhooks.mjs \
   --manifest "$MOOVX_STAGING_MANIFEST" \
-  --account-url "$MOOVX_PREVIEW_URL/api/stripe/webhook" \
-  --output /secure/moovx/staging/stripe-webhook.json
-
-npx vercel env add STRIPE_WEBHOOK_SECRET preview phase-6-staging --sensitive \
-  < /secure/moovx/staging/STRIPE_WEBHOOK_SECRET
+  --platform-url "$MOOVX_PREVIEW_URL/api/stripe/webhook/platform?x-vercel-protection-bypass=<secret-loaded-in-memory>" \
+  --connect-url "$MOOVX_PREVIEW_URL/api/stripe/webhook/connect?x-vercel-protection-bypass=<secret-loaded-in-memory>" \
+  --output /secure/moovx/staging/stripe-webhooks.json
 npx vercel env add NEXT_PUBLIC_APP_URL preview phase-6-staging \
   < /secure/moovx/staging/NEXT_PUBLIC_APP_URL
 npx vercel env add NEXT_PUBLIC_SITE_URL preview phase-6-staging \
@@ -617,11 +627,12 @@ export MOOVX_PREVIEW_DEPLOYMENT=<copied-from-vercel-deployment-url-final>
 npx vercel alias set "$MOOVX_PREVIEW_DEPLOYMENT" "$MOOVX_STAGING_ALIAS"
 ```
 
-Le script vérifie `livemode=false` et inscrit uniquement les événements
-supportés par le webhook MoovX. Stripe documente la création d'un
+Le runner reste à implémenter. Il devra vérifier `livemode=false`, créer
+exactement un endpoint Account et un endpoint Connect et inscrire uniquement
+les événements du scope correspondant. Stripe documente la création d'un
 [endpoint webhook test](https://docs.stripe.com/api/webhook_endpoints/create?lang=curl).
-Le manifeste enregistre le nouveau deployment ID et l'alias stable. L'endpoint
-Stripe continue de viser cet alias et ne doit pas être recréé.
+Le bypass Vercel doit rester secret et non persisté. Le manifeste archivable
+ne conserve que des empreintes expurgées et les IDs techniques tronqués.
 
 ### 8. Valider l'environnement déployé
 
@@ -798,7 +809,9 @@ push n'a été exécutée.
 
 ## Prochaine étape unique
 
-Obtenir une autorisation opérateur distincte pour créer le Preview Vercel
-isolé `phase-6-staging`, puis établir exclusivement Stripe test et ses
-webhooks. La Phase 6 reste `blocked` jusqu'à la réconciliation Billing
-read-only archivée sans divergence.
+Autoriser explicitement la création d'un Protection Bypass for Automation
+limité au Preview Phase 6, charger un credential Stripe test uniquement en
+mémoire, puis créer les deux endpoints décrits dans
+[`PHASE_6_STRIPE_WEBHOOK_SCOPES.md`](PHASE_6_STRIPE_WEBHOOK_SCOPES.md).
+La Phase 6 reste `blocked` jusqu'à la réconciliation Billing read-only
+archivée sans divergence.

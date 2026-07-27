@@ -1,0 +1,5360 @@
+{
+  "schemaVersion": 1,
+  "authority": "moovx-staging-migration-reversioning",
+  "sourceRoot": "supabase/migrations",
+  "sourceMigrationCount": 142,
+  "sourceOrder": "lexical-filename",
+  "stagingOrder": "lexical-filename",
+  "reversionRule": {
+    "uniqueHistoricalVersion": "preserve",
+    "collidingDateOnlyVersion": "YYYYMMDD + one-based lexical rank padded to HHMMSS",
+    "randomOrCurrentTime": false
+  },
+  "authorizedReferenceData": [
+    "20260317010000_seed_exercises_catalog.sql"
+  ],
+  "migrations": [
+    {
+      "sourcePath": "supabase/migrations/20260317000000_initial_schema_baseline.sql",
+      "historicalVersion": "20260317000000",
+      "historicalName": "20260317000000_initial_schema_baseline.sql",
+      "sourceSha256": "8766f53efc37f1a0806b2b9d7c9d3ea0ec7ad4113a3fd90465b14b30a04991fa",
+      "stagingVersion": "20260317000000",
+      "stagingName": "20260317000000_initial_schema_baseline.sql",
+      "absoluteOrder": 1,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260317010000_seed_exercises_catalog.sql",
+      "historicalVersion": "20260317010000",
+      "historicalName": "20260317010000_seed_exercises_catalog.sql",
+      "sourceSha256": "e8fb102e03220fc263fa2f8900785e8d007c3de211122d69b0aa13cffb168a11",
+      "stagingVersion": "20260317010000",
+      "stagingName": "20260317010000_seed_exercises_catalog.sql",
+      "absoluteOrder": 2,
+      "collisionGroup": null,
+      "category": "reference_data",
+      "knownDependencies": [
+        "20260317000000_initial_schema_baseline.sql"
+      ],
+      "authorization": "reference_data_authorized",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.exercises_db",
+            "line": 8,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Canonical synthetic exercise catalog explicitly authorized for empty staging."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260318_messages.sql",
+      "historicalVersion": "20260318",
+      "historicalName": "20260318_messages.sql",
+      "sourceSha256": "4a8682fb9c519a713c8254bbc532e2b987ec7fad68f71e8fd535cf1549c2541a",
+      "stagingVersion": "20260318000001",
+      "stagingName": "20260318000001_messages.sql",
+      "absoluteOrder": 3,
+      "collisionGroup": "20260318",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260318_progress_photos_rls.sql",
+      "historicalVersion": "20260318",
+      "historicalName": "20260318_progress_photos_rls.sql",
+      "sourceSha256": "388d68401fd48377b26c0629cd214fd0f3f7f0caf4efbb344fc906d08ac11edf",
+      "stagingVersion": "20260318000002",
+      "stagingName": "20260318000002_progress_photos_rls.sql",
+      "absoluteOrder": 4,
+      "collisionGroup": "20260318",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260320_coach_update_client_profiles.sql",
+      "historicalVersion": "20260320",
+      "historicalName": "20260320_coach_update_client_profiles.sql",
+      "sourceSha256": "ff8d7ec6cb39503c96155feae3011f09b7a8d71f073b2910f0ad2e8723c9e8d2",
+      "stagingVersion": "20260320000001",
+      "stagingName": "20260320000001_coach_update_client_profiles.sql",
+      "absoluteOrder": 5,
+      "collisionGroup": "20260320",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260320_scheduled_sessions.sql",
+      "historicalVersion": "20260320",
+      "historicalName": "20260320_scheduled_sessions.sql",
+      "sourceSha256": "b0d17640307b7615d6ecaf4dfa21ac7ecc09b7834e939d3b4e1f97356e5fd481",
+      "stagingVersion": "20260320000002",
+      "stagingName": "20260320000002_scheduled_sessions.sql",
+      "absoluteOrder": 6,
+      "collisionGroup": "20260320",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260321_push_subscriptions.sql",
+      "historicalVersion": "20260321",
+      "historicalName": "20260321_push_subscriptions.sql",
+      "sourceSha256": "53241d83b843167a1375ac7863e17a9daf625df2d86f266f6dfbaa1a194562cc",
+      "stagingVersion": "20260321",
+      "stagingName": "20260321_push_subscriptions.sql",
+      "absoluteOrder": 7,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260325_meal_tracking_coach_rls.sql",
+      "historicalVersion": "20260325",
+      "historicalName": "20260325_meal_tracking_coach_rls.sql",
+      "sourceSha256": "321155f8f50c7b8e22a691708db07cccfa1c8e43838885a4bb3e66bdd41148e5",
+      "stagingVersion": "20260325",
+      "stagingName": "20260325_meal_tracking_coach_rls.sql",
+      "absoluteOrder": 8,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260327_bug_reports_and_logs.sql",
+      "historicalVersion": "20260327",
+      "historicalName": "20260327_bug_reports_and_logs.sql",
+      "sourceSha256": "65942c5d453c7e91c8ffb21afe7e1ba2876689821e85a692951c09b7a0315206",
+      "stagingVersion": "20260327000001",
+      "stagingName": "20260327000001_bug_reports_and_logs.sql",
+      "absoluteOrder": 9,
+      "collisionGroup": "20260327",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260327_subscription_fields.sql",
+      "historicalVersion": "20260327",
+      "historicalName": "20260327_subscription_fields.sql",
+      "sourceSha256": "6ae2acf48a1ea8a41239af3945d1c26394ffa4ac72e241ac738daaf3bd424841",
+      "stagingVersion": "20260327000002",
+      "stagingName": "20260327000002_subscription_fields.sql",
+      "absoluteOrder": 10,
+      "collisionGroup": "20260327",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 13,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260327_trial_period.sql",
+      "historicalVersion": "20260327",
+      "historicalName": "20260327_trial_period.sql",
+      "sourceSha256": "3c83219ce6cb34e3edf0e660f90b028356029a3b654104e676b31bb1e18d85a3",
+      "stagingVersion": "20260327000003",
+      "stagingName": "20260327000003_trial_period.sql",
+      "absoluteOrder": 11,
+      "collisionGroup": "20260327",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 5,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260328_barcode_column.sql",
+      "historicalVersion": "20260328",
+      "historicalName": "20260328_barcode_column.sql",
+      "sourceSha256": "43ffb4f8264ca7319089c494e74ade347411fbda932e6e63bbf2253ce6b01fb3",
+      "stagingVersion": "20260328000001",
+      "stagingName": "20260328000001_barcode_column.sql",
+      "absoluteOrder": 12,
+      "collisionGroup": "20260328",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260328_recipes.sql",
+      "historicalVersion": "20260328",
+      "historicalName": "20260328_recipes.sql",
+      "sourceSha256": "bb5c8ea2bbb52e9f954824dc570531203ab7d570f2f3e3f64e138b8e5668cdb1",
+      "stagingVersion": "20260328000002",
+      "stagingName": "20260328000002_recipes.sql",
+      "absoluteOrder": 13,
+      "collisionGroup": "20260328",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "recipes",
+            "line": 86,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260328_user_badges.sql",
+      "historicalVersion": "20260328",
+      "historicalName": "20260328_user_badges.sql",
+      "sourceSha256": "eb163692e8a416523ff6f4321165be7f5be5f2bdbecb3e080b6006cd9747f446",
+      "stagingVersion": "20260328000003",
+      "stagingName": "20260328000003_user_badges.sql",
+      "absoluteOrder": 14,
+      "collisionGroup": "20260328",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260328_water_intake.sql",
+      "historicalVersion": "20260328",
+      "historicalName": "20260328_water_intake.sql",
+      "sourceSha256": "2afdb2de82eeccef6cbb6366753e0e6dfca535ce3574400c6f6937c39144abce",
+      "stagingVersion": "20260328000004",
+      "stagingName": "20260328000004_water_intake.sql",
+      "absoluteOrder": 15,
+      "collisionGroup": "20260328",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260329_cardio.sql",
+      "historicalVersion": "20260329",
+      "historicalName": "20260329_cardio.sql",
+      "sourceSha256": "271bec0b6cd6709f7c4f1cc6ebe0b13697e82fd4d52d1c48b5b5c2bf99cd3dd8",
+      "stagingVersion": "20260329000001",
+      "stagingName": "20260329000001_cardio.sql",
+      "absoluteOrder": 16,
+      "collisionGroup": "20260329",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260329_personal_records.sql",
+      "historicalVersion": "20260329",
+      "historicalName": "20260329_personal_records.sql",
+      "sourceSha256": "bb5988ee1fc0038d71a16c0cc21705f50ccd0e6ba9f6fa0400dbcfaaa023c95c",
+      "stagingVersion": "20260329000002",
+      "stagingName": "20260329000002_personal_records.sql",
+      "absoluteOrder": 17,
+      "collisionGroup": "20260329",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260329_scan_history.sql",
+      "historicalVersion": "20260329",
+      "historicalName": "20260329_scan_history.sql",
+      "sourceSha256": "f0022cb31179b6ea23eb526c1075b76f88fc6cc595a2e5bcd0968f4f325063d7",
+      "stagingVersion": "20260329000003",
+      "stagingName": "20260329000003_scan_history.sql",
+      "absoluteOrder": 18,
+      "collisionGroup": "20260329",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260329_scheduled_sessions.sql",
+      "historicalVersion": "20260329",
+      "historicalName": "20260329_scheduled_sessions.sql",
+      "sourceSha256": "b0cf73db0df98fc22cf5e6cb583b87af73f3e6918e047e05ff4cf842fd0c6b5b",
+      "stagingVersion": "20260329000004",
+      "stagingName": "20260329000004_scheduled_sessions.sql",
+      "absoluteOrder": 19,
+      "collisionGroup": "20260329",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260403_fitness_onboarding.sql",
+      "historicalVersion": "20260403",
+      "historicalName": "20260403_fitness_onboarding.sql",
+      "sourceSha256": "ad421e71b9d9ce6321ca497e3c350b4b77c7cc4ad331ad011aeea6ef9c46296e",
+      "stagingVersion": "20260403000001",
+      "stagingName": "20260403000001_fitness_onboarding.sql",
+      "absoluteOrder": 20,
+      "collisionGroup": "20260403",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260403_onboarding_photo.sql",
+      "historicalVersion": "20260403",
+      "historicalName": "20260403_onboarding_photo.sql",
+      "sourceSha256": "81d45d38f82aa5b5fab2df4759258f6b0e13143e35d836052e4d595634dd8b83",
+      "stagingVersion": "20260403000002",
+      "stagingName": "20260403000002_onboarding_photo.sql",
+      "absoluteOrder": 21,
+      "collisionGroup": "20260403",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260403_progress_photos_ai.sql",
+      "historicalVersion": "20260403",
+      "historicalName": "20260403_progress_photos_ai.sql",
+      "sourceSha256": "4fd03d81286bd8400c33ec9f41837364b29e48ee93473b74443a4b2289deb93f",
+      "stagingVersion": "20260403000003",
+      "stagingName": "20260403000003_progress_photos_ai.sql",
+      "absoluteOrder": 22,
+      "collisionGroup": "20260403",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260404_body_assessments.sql",
+      "historicalVersion": "20260404",
+      "historicalName": "20260404_body_assessments.sql",
+      "sourceSha256": "36c7da40a8559748f844c93aa683ad14adab091866c72c16ab5b2ad98c5c5495",
+      "stagingVersion": "20260404000001",
+      "stagingName": "20260404000001_body_assessments.sql",
+      "absoluteOrder": 23,
+      "collisionGroup": "20260404",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260404_community_foods.sql",
+      "historicalVersion": "20260404",
+      "historicalName": "20260404_community_foods.sql",
+      "sourceSha256": "20d8b4f85355d52b17d19b614642450fac0ce65a03248e6246a95dbce44bcfd4",
+      "stagingVersion": "20260404000002",
+      "stagingName": "20260404000002_community_foods.sql",
+      "absoluteOrder": 24,
+      "collisionGroup": "20260404",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260404_custom_programs.sql",
+      "historicalVersion": "20260404",
+      "historicalName": "20260404_custom_programs.sql",
+      "sourceSha256": "f5705425262293e72d8f90ede596e4501fe0535e4c354b3a7621160c3cf1e586",
+      "stagingVersion": "20260404000003",
+      "stagingName": "20260404000003_custom_programs.sql",
+      "absoluteOrder": 25,
+      "collisionGroup": "20260404",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260409_exercise_instructions.sql",
+      "historicalVersion": "20260409",
+      "historicalName": "20260409_exercise_instructions.sql",
+      "sourceSha256": "a29cfdd3cf68384dc5e48392d44a8972ccbeb679a1762e74b0d91c36873b510a",
+      "stagingVersion": "20260409000001",
+      "stagingName": "20260409000001_exercise_instructions.sql",
+      "absoluteOrder": 26,
+      "collisionGroup": "20260409",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260409_exercise_variants.sql",
+      "historicalVersion": "20260409",
+      "historicalName": "20260409_exercise_variants.sql",
+      "sourceSha256": "b76bdb41d39d78b9d5429fec31b10bf8a1c7b111a7c64b0d34f5435d385b2d8d",
+      "stagingVersion": "20260409000002",
+      "stagingName": "20260409000002_exercise_variants.sql",
+      "absoluteOrder": 27,
+      "collisionGroup": "20260409",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 6,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 7,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 8,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 9,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 10,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 11,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 14,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 15,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 16,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 19,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 20,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 21,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 24,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 25,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 26,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 27,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 30,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 31,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 32,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 33,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 36,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 37,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 38,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 39,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 40,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 41,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 42,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 45,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 46,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 47,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 50,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 51,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 52,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 55,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 56,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 57,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 60,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 63,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 66,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 67,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 68,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 71,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 72,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 73,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 76,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 77,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 80,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 81,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 84,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 85,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 86,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 89,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 90,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 91,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 54,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260411_exercise_info_columns.sql",
+      "historicalVersion": "20260411",
+      "historicalName": "20260411_exercise_info_columns.sql",
+      "sourceSha256": "9b5f9832c31f0f6074634c201ff1abcb3b71019d5889adcbec3b16a10760e0e3",
+      "stagingVersion": "20260411",
+      "stagingName": "20260411_exercise_info_columns.sql",
+      "absoluteOrder": 28,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260412_exercise_descriptions.sql",
+      "historicalVersion": "20260412",
+      "historicalName": "20260412_exercise_descriptions.sql",
+      "sourceSha256": "70bad17e9c11a267f3a8efe41a47628f192085c06c4d91f2fe041496452bd701",
+      "stagingVersion": "20260412000001",
+      "stagingName": "20260412000001_exercise_descriptions.sql",
+      "absoluteOrder": 29,
+      "collisionGroup": "20260412",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 5,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 6,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 7,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 8,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 9,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 10,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 11,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 12,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 13,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 14,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 15,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 16,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 19,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 20,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 21,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 22,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 23,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 24,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 25,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 26,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 27,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 28,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 29,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 32,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 33,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 34,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 35,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 36,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 37,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 38,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 41,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 42,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 43,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 44,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 45,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 46,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 47,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 50,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 51,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 52,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 53,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 54,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 55,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 58,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 59,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 60,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 61,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 62,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 63,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 64,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 65,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 68,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 69,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 70,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 71,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 74,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 75,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 76,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 77,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 80,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 81,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 82,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 85,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 86,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 87,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 88,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 89,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 90,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 91,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 92,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 95,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 96,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 72,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260412_standardize_session_types.sql",
+      "historicalVersion": "20260412",
+      "historicalName": "20260412_standardize_session_types.sql",
+      "sourceSha256": "4e4aba735896262ea9f571d83a3a6bc2403f82b615327d8026fca1d343d6f6c7",
+      "stagingVersion": "20260412000002",
+      "stagingName": "20260412000002_standardize_session_types.sql",
+      "absoluteOrder": 30,
+      "collisionGroup": "20260412",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 11,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 12,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 13,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 14,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 15,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 19,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 20,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 21,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 22,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "scheduled_sessions",
+            "line": 23,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 27,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 28,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 29,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 30,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 31,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 32,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 33,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "custom_programs",
+            "line": 80,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "client_programs",
+            "line": 121,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 19,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_developpe_couche.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_developpe_couche.sql",
+      "sourceSha256": "3857cc68fdde0866578f41a3e84ed3143d3e6393160374433ac4624bd44c4775",
+      "stagingVersion": "20260413000001",
+      "stagingName": "20260413000001_exercise_video_developpe_couche.sql",
+      "absoluteOrder": 31,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_developpe_incline.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_developpe_incline.sql",
+      "sourceSha256": "89ed53a0e3c35751b9a3b0cdef953ff64a7e1db76d5dd0e10d5338afb898803c",
+      "stagingVersion": "20260413000002",
+      "stagingName": "20260413000002_exercise_video_developpe_incline.sql",
+      "absoluteOrder": 32,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_developpe_militaire.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_developpe_militaire.sql",
+      "sourceSha256": "67db379d4651a9ad694babac9690c9cbafd378e6dd773bbe4fad11af9cbc4c13",
+      "stagingVersion": "20260413000003",
+      "stagingName": "20260413000003_exercise_video_developpe_militaire.sql",
+      "absoluteOrder": 33,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 3,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 9,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_developpe_militaire_barre.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_developpe_militaire_barre.sql",
+      "sourceSha256": "ea255ee0b1210f429ac430ffe4d3746583455b9fa81fe83e178c15c7c65b6a23",
+      "stagingVersion": "20260413000004",
+      "stagingName": "20260413000004_exercise_video_developpe_militaire_barre.sql",
+      "absoluteOrder": 34,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_rowing_barre.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_rowing_barre.sql",
+      "sourceSha256": "f3af497075046b8a38e67f1c5c1d6b813e7cab8ea47b4bc803dfc398cbbe6d2b",
+      "stagingVersion": "20260413000005",
+      "stagingName": "20260413000005_exercise_video_rowing_barre.sql",
+      "absoluteOrder": 35,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_souleve_de_terre.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_souleve_de_terre.sql",
+      "sourceSha256": "e688a50a47c9dd669291e3b42a9bbd70c7729a62921a3e189c41614cb1887e74",
+      "stagingVersion": "20260413000006",
+      "stagingName": "20260413000006_exercise_video_souleve_de_terre.sql",
+      "absoluteOrder": 36,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_souleve_terre_roumain.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_souleve_terre_roumain.sql",
+      "sourceSha256": "119268fae3ea203120f7833c0609834e7f8c44375e2955432ac18d008a1bb57c",
+      "stagingVersion": "20260413000007",
+      "stagingName": "20260413000007_exercise_video_souleve_terre_roumain.sql",
+      "absoluteOrder": 37,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_squat_barre.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_squat_barre.sql",
+      "sourceSha256": "6eab24273cd5f6d1fca46f324b2a07ff77599591eebbf77dc69c72391e889b7e",
+      "stagingVersion": "20260413000008",
+      "stagingName": "20260413000008_exercise_video_squat_barre.sql",
+      "absoluteOrder": 38,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 8,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260413_exercise_video_tractions_pronation.sql",
+      "historicalVersion": "20260413",
+      "historicalName": "20260413_exercise_video_tractions_pronation.sql",
+      "sourceSha256": "4cb3c852cc2adac74e434a4cd7fef9aee9e3fb37fe994e765c610e11bf50a020",
+      "stagingVersion": "20260413000009",
+      "stagingName": "20260413000009_exercise_video_tractions_pronation.sql",
+      "absoluteOrder": 39,
+      "collisionGroup": "20260413",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_backfill_badge_id.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_backfill_badge_id.sql",
+      "sourceSha256": "c301f56263d4f4e1dfdaf09b78d10e16def823f6bc5919ed1c0a1e7fc751729c",
+      "stagingVersion": "20260415000001",
+      "stagingName": "20260415000001_backfill_badge_id.sql",
+      "absoluteOrder": 40,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "user_badges",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_body_analyses.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_body_analyses.sql",
+      "sourceSha256": "0fe6552a1ce18dfe5ff77cf0800fa7f673083cdd15a9011a5e8653ba749ed117",
+      "stagingVersion": "20260415000002",
+      "stagingName": "20260415000002_body_analyses.sql",
+      "absoluteOrder": 41,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_exercise_video_curl_barre_droit.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_exercise_video_curl_barre_droit.sql",
+      "sourceSha256": "eebc8fcf156a8c85c58c96af769374237d765197ed394e29e6f0a5b519a8a03e",
+      "stagingVersion": "20260415000003",
+      "stagingName": "20260415000003_exercise_video_curl_barre_droit.sql",
+      "absoluteOrder": 42,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_exercise_video_curl_halteres.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_exercise_video_curl_halteres.sql",
+      "sourceSha256": "721cea9f762857eed6bc29b451bb0d5f70e153aa51eadffbffe954180f087e26",
+      "stagingVersion": "20260415000004",
+      "stagingName": "20260415000004_exercise_video_curl_halteres.sql",
+      "absoluteOrder": 43,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 3,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_exercise_video_developpe_militaire_barre_debout.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_exercise_video_developpe_militaire_barre_debout.sql",
+      "sourceSha256": "78d28cde86196c05118719f772475d8b934ef519e7d9a0f49f31a0ae1eb8e0cd",
+      "stagingVersion": "20260415000005",
+      "stagingName": "20260415000005_exercise_video_developpe_militaire_barre_debout.sql",
+      "absoluteOrder": 44,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 3,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_gamification_badges.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_gamification_badges.sql",
+      "sourceSha256": "1afb5711ab85c581d896a9a1c2e66b05433922536a79a148ba98eb8312619f13",
+      "stagingVersion": "20260415000006",
+      "stagingName": "20260415000006_gamification_badges.sql",
+      "absoluteOrder": 45,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "badges",
+            "line": 64,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_gamification_fix_rls.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_gamification_fix_rls.sql",
+      "sourceSha256": "005fb3903186511474fee945370a0674f928eda80dd298a22f081ea4116666f2",
+      "stagingVersion": "20260415000007",
+      "stagingName": "20260415000007_gamification_fix_rls.sql",
+      "absoluteOrder": 46,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "badges",
+            "line": 27,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_master_rls_fix.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_master_rls_fix.sql",
+      "sourceSha256": "22a20ce0978d012f3c1d4e943c7660f0b8f35bcdebb78ca8224a239b24b387ca",
+      "stagingVersion": "20260415000008",
+      "stagingName": "20260415000008_master_rls_fix.sql",
+      "absoluteOrder": 47,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260415_user_badges_celebrated.sql",
+      "historicalVersion": "20260415",
+      "historicalName": "20260415_user_badges_celebrated.sql",
+      "sourceSha256": "2da95e5bb5adfd0587d7e73eb5b8085b8ac4103f36c551014329e4e44839df18",
+      "stagingVersion": "20260415000009",
+      "stagingName": "20260415000009_user_badges_celebrated.sql",
+      "absoluteOrder": 48,
+      "collisionGroup": "20260415",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260416_ai_usage_log.sql",
+      "historicalVersion": "20260416",
+      "historicalName": "20260416_ai_usage_log.sql",
+      "sourceSha256": "c38c1e5a747a04c49d412e5f6f73187c09bdf35b71a0b2e37b95230a45a34ba7",
+      "stagingVersion": "20260416000001",
+      "stagingName": "20260416000001_ai_usage_log.sql",
+      "absoluteOrder": 49,
+      "collisionGroup": "20260416",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260416_periodization_columns.sql",
+      "historicalVersion": "20260416",
+      "historicalName": "20260416_periodization_columns.sql",
+      "sourceSha256": "0cb2f47969067b6ebff5ff8c50bc6fd57189dfd62ce0336ad086f09f5e1677c2",
+      "stagingVersion": "20260416000002",
+      "stagingName": "20260416000002_periodization_columns.sql",
+      "absoluteOrder": 50,
+      "collisionGroup": "20260416",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260416_program_scheduling.sql",
+      "historicalVersion": "20260416",
+      "historicalName": "20260416_program_scheduling.sql",
+      "sourceSha256": "816ec414c8b755757b4d7483d0b9b3017430eaa59a60f4358e9eb33983e92cbd",
+      "stagingVersion": "20260416000003",
+      "stagingName": "20260416000003_program_scheduling.sql",
+      "absoluteOrder": 51,
+      "collisionGroup": "20260416",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260417_photo_adjustments.sql",
+      "historicalVersion": "20260417",
+      "historicalName": "20260417_photo_adjustments.sql",
+      "sourceSha256": "f126d00d0809790c1966402af4f2179c9f4ff8de6e1befb92a0202f97ec4028e",
+      "stagingVersion": "20260417",
+      "stagingName": "20260417_photo_adjustments.sql",
+      "absoluteOrder": 52,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260418_muscles_worked.sql",
+      "historicalVersion": "20260418",
+      "historicalName": "20260418_muscles_worked.sql",
+      "sourceSha256": "d28a1d9bccf212c4e73756f39c4471547f930e5edb652cb185d7f9bb6cb703f3",
+      "stagingVersion": "20260418",
+      "stagingName": "20260418_muscles_worked.sql",
+      "absoluteOrder": 53,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 5,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 8,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 11,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 14,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 17,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "workout_sessions",
+            "line": 20,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 6,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_cleanup_empty_programs.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_cleanup_empty_programs.sql",
+      "sourceSha256": "1b9ab731d3b3f1c3469451615f5194c41eed7297bb0b0c31ff14810c59767146",
+      "stagingVersion": "20260419000001",
+      "stagingName": "20260419000001_cleanup_empty_programs.sql",
+      "absoluteOrder": 54,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "custom_programs",
+            "line": 3,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_coach_clients_unique.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_coach_clients_unique.sql",
+      "sourceSha256": "4029d710948d789276c9be75f28d272f46e3200095eda74bcefd3d05547e1148",
+      "stagingVersion": "20260419000002",
+      "stagingName": "20260419000002_coach_clients_unique.sql",
+      "absoluteOrder": 55,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "coach_clients",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_coach_meal_plans_rls.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_coach_meal_plans_rls.sql",
+      "sourceSha256": "427987e45951676ab7c9fd01869c8411f60a86b93d6b70c4f49582fe5941aa34",
+      "stagingVersion": "20260419000003",
+      "stagingName": "20260419000003_coach_meal_plans_rls.sql",
+      "absoluteOrder": 56,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_coach_rls_read.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_coach_rls_read.sql",
+      "sourceSha256": "d5d0377adc860a0ccf08266688cbc71bf60b2339d0ceea1ac01cd9d761f2f958",
+      "stagingVersion": "20260419000004",
+      "stagingName": "20260419000004_coach_rls_read.sql",
+      "absoluteOrder": 57,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_coach_rls_write.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_coach_rls_write.sql",
+      "sourceSha256": "ffdfe4125fb6f882115aaf9a47e42a56e9263d804dde7ed9d3a7afd00f3b8a3a",
+      "stagingVersion": "20260419000005",
+      "stagingName": "20260419000005_coach_rls_write.sql",
+      "absoluteOrder": 58,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_curl_halteres_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_curl_halteres_v4.sql",
+      "sourceSha256": "35a577113e3410e7ddfa40e3bf6a21950f30d1f6b32c0e2fb938c712dd80f226",
+      "stagingVersion": "20260419000006",
+      "stagingName": "20260419000006_curl_halteres_v4.sql",
+      "absoluteOrder": 59,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_custom_programs_coach_rls.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_custom_programs_coach_rls.sql",
+      "sourceSha256": "7f80d45355549a94f451a3c9a2de86864e0f21818ac71af596b74dfa63a4f378",
+      "stagingVersion": "20260419000007",
+      "stagingName": "20260419000007_custom_programs_coach_rls.sql",
+      "absoluteOrder": 60,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_daily_checkins.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_daily_checkins.sql",
+      "sourceSha256": "fc88dcdd634a3df41f6a4d2a8546f30fdc3adf43019d2f53f35130bd930cc55b",
+      "stagingVersion": "20260419000008",
+      "stagingName": "20260419000008_daily_checkins.sql",
+      "absoluteOrder": 61,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_dips_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_dips_video_v4.sql",
+      "sourceSha256": "5fc18f631d018a35faa06ede450652ab08d38e17d6b4356c1e028505a119ba49",
+      "stagingVersion": "20260419000009",
+      "stagingName": "20260419000009_dips_video_v4.sql",
+      "absoluteOrder": 62,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_invited_by_coach.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_invited_by_coach.sql",
+      "sourceSha256": "6f4474833e135d807e6a1dae2b897a7ce79fb3af28d9b31ab81bfb3ce989f715",
+      "stagingVersion": "20260419000010",
+      "stagingName": "20260419000010_invited_by_coach.sql",
+      "absoluteOrder": 63,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "coach_clients",
+            "line": 6,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_messages_coach_rls.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_messages_coach_rls.sql",
+      "sourceSha256": "281889d0249d5e123304ad09655da78cbe05a83aa32a6343155c59b0d3dc1a23",
+      "stagingVersion": "20260419000011",
+      "stagingName": "20260419000011_messages_coach_rls.sql",
+      "absoluteOrder": 64,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_militaire_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_militaire_video_v4.sql",
+      "sourceSha256": "20200f9d3ce593c96163998227552dac809406e50cc3886f9c16ec097fd65566",
+      "stagingVersion": "20260419000012",
+      "stagingName": "20260419000012_militaire_video_v4.sql",
+      "absoluteOrder": 65,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_rdl_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_rdl_video_v4.sql",
+      "sourceSha256": "b6eb4ec9c6c11e87442902b1d93035a05e38d023d51c4d6c6d4d1a7a824e5472",
+      "stagingVersion": "20260419000013",
+      "stagingName": "20260419000013_rdl_video_v4.sql",
+      "absoluteOrder": 66,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_souleve_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_souleve_video_v4.sql",
+      "sourceSha256": "3e5163537e366bb63b7f6126cd18ac8b0157aac51378ffd28d5eecf9baeb7f2f",
+      "stagingVersion": "20260419000014",
+      "stagingName": "20260419000014_souleve_video_v4.sql",
+      "absoluteOrder": 67,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_squat_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_squat_video_v4.sql",
+      "sourceSha256": "9b02216567d7c223f1235a20662c66e2e9275b9ff042dea6af9fb2511c41d9f4",
+      "stagingVersion": "20260419000015",
+      "stagingName": "20260419000015_squat_video_v4.sql",
+      "absoluteOrder": 68,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260419_tractions_video_v4.sql",
+      "historicalVersion": "20260419",
+      "historicalName": "20260419_tractions_video_v4.sql",
+      "sourceSha256": "7b763cd34993297192bb8b04c50288f04de176f46e4b1e15c0615dc06e8d88d2",
+      "stagingVersion": "20260419000016",
+      "stagingName": "20260419000016_tractions_video_v4.sql",
+      "absoluteOrder": 69,
+      "collisionGroup": "20260419",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 2,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260420_elevations_laterales_v4.sql",
+      "historicalVersion": "20260420",
+      "historicalName": "20260420_elevations_laterales_v4.sql",
+      "sourceSha256": "d47243098c135b6cda886cb812c4a60f942b304ca8d6c98810dda11319c94e85",
+      "stagingVersion": "20260420000001",
+      "stagingName": "20260420000001_elevations_laterales_v4.sql",
+      "absoluteOrder": 70,
+      "collisionGroup": "20260420",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260420_kettlebell_swing_v4.sql",
+      "historicalVersion": "20260420",
+      "historicalName": "20260420_kettlebell_swing_v4.sql",
+      "sourceSha256": "cac9ecc9006daf85169bd2bedf2d86bf0d5174cc24f9ee6481d3332a5a5e34c5",
+      "stagingVersion": "20260420000002",
+      "stagingName": "20260420000002_kettlebell_swing_v4.sql",
+      "absoluteOrder": 71,
+      "collisionGroup": "20260420",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260421_arnold_press_video.sql",
+      "historicalVersion": "20260421",
+      "historicalName": "20260421_arnold_press_video.sql",
+      "sourceSha256": "0d962aaf3c342467f3149ff053658df086f5a936a2c1b63f1dd901314a5e0ee9",
+      "stagingVersion": "20260421000001",
+      "stagingName": "20260421000001_arnold_press_video.sql",
+      "absoluteOrder": 72,
+      "collisionGroup": "20260421",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260421_hip_thrust_video.sql",
+      "historicalVersion": "20260421",
+      "historicalName": "20260421_hip_thrust_video.sql",
+      "sourceSha256": "76c4148e35cda444ad7b3c03e007dc2f54d4b78b4917f18c1f4e0dc7d6c64e4f",
+      "stagingVersion": "20260421000002",
+      "stagingName": "20260421000002_hip_thrust_video.sql",
+      "absoluteOrder": 73,
+      "collisionGroup": "20260421",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260422_curl_concentre_video.sql",
+      "historicalVersion": "20260422",
+      "historicalName": "20260422_curl_concentre_video.sql",
+      "sourceSha256": "c0f1af1da574137859dbe2d68fb2fde95510c324aa94063c91625948de891f2f",
+      "stagingVersion": "20260422000001",
+      "stagingName": "20260422000001_curl_concentre_video.sql",
+      "absoluteOrder": 74,
+      "collisionGroup": "20260422",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260422_curl_halteres_alterne_video.sql",
+      "historicalVersion": "20260422",
+      "historicalName": "20260422_curl_halteres_alterne_video.sql",
+      "sourceSha256": "0ebc641c2cc7fa9e5f6ca9fe444b075c474b3c31e186e35f03d59c86bf8fbe84",
+      "stagingVersion": "20260422000002",
+      "stagingName": "20260422000002_curl_halteres_alterne_video.sql",
+      "absoluteOrder": 75,
+      "collisionGroup": "20260422",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260422_curl_marteau_video.sql",
+      "historicalVersion": "20260422",
+      "historicalName": "20260422_curl_marteau_video.sql",
+      "sourceSha256": "50c8d5ddf701fae9713569d60783d96c0d16f4de9dd0013956c35c1e631d48ea",
+      "stagingVersion": "20260422000003",
+      "stagingName": "20260422000003_curl_marteau_video.sql",
+      "absoluteOrder": 76,
+      "collisionGroup": "20260422",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260422_elevations_frontales_halteres_video.sql",
+      "historicalVersion": "20260422",
+      "historicalName": "20260422_elevations_frontales_halteres_video.sql",
+      "sourceSha256": "5849a88f9c9e9d5a16fc22bc3b5c779fbfec5f13503d9805f5a402372dafaf40",
+      "stagingVersion": "20260422000004",
+      "stagingName": "20260422000004_elevations_frontales_halteres_video.sql",
+      "absoluteOrder": 77,
+      "collisionGroup": "20260422",
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 1,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260424_add_completed_sessions.sql",
+      "historicalVersion": "20260424",
+      "historicalName": "20260424_add_completed_sessions.sql",
+      "sourceSha256": "7cd4b7b15f1291ec1a42fd83ddf92c540b621a33b8a10c423da4e1621c9df9bc",
+      "stagingVersion": "20260424",
+      "stagingName": "20260424_add_completed_sessions.sql",
+      "absoluteOrder": 78,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260426_add_training_program_id_to_client_programs.sql",
+      "historicalVersion": "20260426",
+      "historicalName": "20260426_add_training_program_id_to_client_programs.sql",
+      "sourceSha256": "a759cdedf8f04a97a0d4dfe898a39f33480cc7cf318b508246189ad70ae5306c",
+      "stagingVersion": "20260426",
+      "stagingName": "20260426_add_training_program_id_to_client_programs.sql",
+      "absoluteOrder": 79,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260429_add_tags_to_training_programs.sql",
+      "historicalVersion": "20260429",
+      "historicalName": "20260429_add_tags_to_training_programs.sql",
+      "sourceSha256": "f870886f769420330356b42e9abf2b296017659086eea95fe2f5d434c2a54f2d",
+      "stagingVersion": "20260429",
+      "stagingName": "20260429_add_tags_to_training_programs.sql",
+      "absoluteOrder": 80,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260506_chat_ai_messages.sql",
+      "historicalVersion": "20260506",
+      "historicalName": "20260506_chat_ai_messages.sql",
+      "sourceSha256": "ba2b9a29792319ae8feb3e1dc4da1a6e8e93bcf3abf8b6d4fad7d18ee3284feb",
+      "stagingVersion": "20260506",
+      "stagingName": "20260506_chat_ai_messages.sql",
+      "absoluteOrder": 81,
+      "collisionGroup": null,
+      "category": "cron_historical",
+      "knownDependencies": [],
+      "authorization": "authorized_noop_pg_cron_absent",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 45,
+            "execution": "migration"
+          }
+        ],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Historical source is immutable and its cron block is a no-op only while pg_cron is absent."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260517120000_stripe_webhook_dedup.sql",
+      "historicalVersion": "20260517120000",
+      "historicalName": "20260517120000_stripe_webhook_dedup.sql",
+      "sourceSha256": "d8432e3151fa47a87fb587b327d44130d55d2bb6c1fc3dc83a6552a308ebb161",
+      "stagingVersion": "20260517120000",
+      "stagingName": "20260517120000_stripe_webhook_dedup.sql",
+      "absoluteOrder": 82,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260517140000_ai_usage_logs_rate_limiting.sql",
+      "historicalVersion": "20260517140000",
+      "historicalName": "20260517140000_ai_usage_logs_rate_limiting.sql",
+      "sourceSha256": "1336c8ac0ed90e4d68ab9eeb63df1d0f9cab3d440ff16b04fa69c0ee866a571b",
+      "stagingVersion": "20260517140000",
+      "stagingName": "20260517140000_ai_usage_logs_rate_limiting.sql",
+      "absoluteOrder": 83,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260517160000_add_preferred_locale_to_profiles.sql",
+      "historicalVersion": "20260517160000",
+      "historicalName": "20260517160000_add_preferred_locale_to_profiles.sql",
+      "sourceSha256": "474a2b00d8ffd5f8501fa2358930674c6c16d25f3f32b2dedcc261af435256b3",
+      "stagingVersion": "20260517160000",
+      "stagingName": "20260517160000_add_preferred_locale_to_profiles.sql",
+      "absoluteOrder": 84,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260518180000_add_missing_parent_exercises.sql",
+      "historicalVersion": "20260518180000",
+      "historicalName": "20260518180000_add_missing_parent_exercises.sql",
+      "sourceSha256": "d6d91742091471fbd60248f9591eb2affa5a81d999ce5d88cd79849297ca303a",
+      "stagingVersion": "20260518180000",
+      "stagingName": "20260518180000_add_missing_parent_exercises.sql",
+      "absoluteOrder": 85,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.exercises_db",
+            "line": 6,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260521203522_drop_insecure_rls_policies.sql",
+      "historicalVersion": "20260521203522",
+      "historicalName": "20260521203522_drop_insecure_rls_policies.sql",
+      "sourceSha256": "304fea0ac5ec971ecf01855c28b209de362c737ac89c7258830691286f659d4b",
+      "stagingVersion": "20260521203522",
+      "stagingName": "20260521203522_drop_insecure_rls_policies.sql",
+      "absoluteOrder": 86,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260521205152_drop_insecure_meal_rls_policies.sql",
+      "historicalVersion": "20260521205152",
+      "historicalName": "20260521205152_drop_insecure_meal_rls_policies.sql",
+      "sourceSha256": "726e1c6eb1583d7958a49eaf0d15be28de33ade91562a6fb062b4bd23718f427",
+      "stagingVersion": "20260521205152",
+      "stagingName": "20260521205152_drop_insecure_meal_rls_policies.sql",
+      "absoluteOrder": 87,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260521210640_fix_insert_libre_logs.sql",
+      "historicalVersion": "20260521210640",
+      "historicalName": "20260521210640_fix_insert_libre_logs.sql",
+      "sourceSha256": "e1abd631555c58975ab09ccce7822a79802fa60dedd7f130b556067b0732b877",
+      "stagingVersion": "20260521210640",
+      "stagingName": "20260521210640_fix_insert_libre_logs.sql",
+      "absoluteOrder": 88,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260521211443_harden_coach_clients_self_insert.sql",
+      "historicalVersion": "20260521211443",
+      "historicalName": "20260521211443_harden_coach_clients_self_insert.sql",
+      "sourceSha256": "6f4b970c48df60f02a606ac5081f43f1130afee1f8eccdd957262cba921be1fd",
+      "stagingVersion": "20260521211443",
+      "stagingName": "20260521211443_harden_coach_clients_self_insert.sql",
+      "absoluteOrder": 89,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260521212741_fix_coach_clients_policy_with_security_definer.sql",
+      "historicalVersion": "20260521212741",
+      "historicalName": "20260521212741_fix_coach_clients_policy_with_security_definer.sql",
+      "sourceSha256": "83b8e61ae503e616502ebeea971cd1a28cc57ccc74871c99893d5e8b5fd027f0",
+      "stagingVersion": "20260521212741",
+      "stagingName": "20260521212741_fix_coach_clients_policy_with_security_definer.sql",
+      "absoluteOrder": 90,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260522050836_add_get_default_coach_id_helper.sql",
+      "historicalVersion": "20260522050836",
+      "historicalName": "20260522050836_add_get_default_coach_id_helper.sql",
+      "sourceSha256": "32aecd03ccdd3b417b32254094f5b0d9d3a82bfebeff9c84bb50fb2b996cb99c",
+      "stagingVersion": "20260522050836",
+      "stagingName": "20260522050836_add_get_default_coach_id_helper.sql",
+      "absoluteOrder": 91,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260522090303_add_delete_user_account_rpc.sql",
+      "historicalVersion": "20260522090303",
+      "historicalName": "20260522090303_add_delete_user_account_rpc.sql",
+      "sourceSha256": "5102eb51e0915a9b89dfe55cd38bd934c86f85fd55f01637d86b6679bcc5f1f2",
+      "stagingVersion": "20260522090303",
+      "stagingName": "20260522090303_add_delete_user_account_rpc.sql",
+      "absoluteOrder": 92,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "workout_sets",
+            "line": 73,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "workout_sessions",
+            "line": 74,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "cardio_sessions",
+            "line": 75,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "completed_sessions",
+            "line": 76,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "scheduled_sessions",
+            "line": 77,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "workouts",
+            "line": 78,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_food_logs",
+            "line": 83,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_logs",
+            "line": 84,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_tracking",
+            "line": 85,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "water_intake",
+            "line": 86,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "saved_meals",
+            "line": 87,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "nutrition",
+            "line": 88,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_measurements",
+            "line": 93,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_analyses",
+            "line": 94,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_assessments",
+            "line": 95,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "weight_logs",
+            "line": 96,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "progress_photos",
+            "line": 97,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_checkins",
+            "line": 104,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_habits",
+            "line": 105,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_achievements",
+            "line": 106,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_badges",
+            "line": 107,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_xp",
+            "line": 108,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "personal_records",
+            "line": 109,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "progressive_overload_suggestions",
+            "line": 110,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_exercises",
+            "line": 112,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_foods",
+            "line": 113,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_programs",
+            "line": 114,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "exercise_feedback",
+            "line": 115,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "ai_usage_logs",
+            "line": 120,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "chat_ai_messages",
+            "line": 121,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "app_logs",
+            "line": 122,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "bug_reports",
+            "line": 123,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "client_meal_plans",
+            "line": 128,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "client_programs",
+            "line": 129,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_plans",
+            "line": 130,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_programs",
+            "line": 131,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "activity_feed",
+            "line": 136,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "coach_notes",
+            "line": 141,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "commissions",
+            "line": 142,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "training_programs",
+            "line": 148,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "training_programs",
+            "line": 151,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "community_foods",
+            "line": 155,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 156,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "recipes",
+            "line": 159,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "recipes",
+            "line": 160,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "messages",
+            "line": 166,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "messages",
+            "line": 168,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "payments",
+            "line": 173,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "coach_clients",
+            "line": 174,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "push_subscriptions",
+            "line": 179,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "profiles",
+            "line": 184,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 51
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260522130925_add_workout_summary_rpc.sql",
+      "historicalVersion": "20260522130925",
+      "historicalName": "20260522130925_add_workout_summary_rpc.sql",
+      "sourceSha256": "c2f4e3dc78b42dbdd6fa6684418f4e65b6d9cb368612057736fe10b8e0e16d2f",
+      "stagingVersion": "20260522130925",
+      "stagingName": "20260522130925_add_workout_summary_rpc.sql",
+      "absoluteOrder": 93,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260525094500_add_exercise_i18n_columns.sql",
+      "historicalVersion": "20260525094500",
+      "historicalName": "20260525094500_add_exercise_i18n_columns.sql",
+      "sourceSha256": "25dc46c073e20964fc51ed15ce7c9e4b251df2927260dc3d06be61d173c819f8",
+      "stagingVersion": "20260525094500",
+      "stagingName": "20260525094500_add_exercise_i18n_columns.sql",
+      "absoluteOrder": 94,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260527202908_allow_clients_read_coach_profiles.sql",
+      "historicalVersion": "20260527202908",
+      "historicalName": "20260527202908_allow_clients_read_coach_profiles.sql",
+      "sourceSha256": "58c94ed6a54ef28bc17cc2ede273864b6b31378b8cf4e132bbd6b78bb82494a4",
+      "stagingVersion": "20260527202908",
+      "stagingName": "20260527202908_allow_clients_read_coach_profiles.sql",
+      "absoluteOrder": 95,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260529054735_create_weekly_diagnostics_table.sql",
+      "historicalVersion": "20260529054735",
+      "historicalName": "20260529054735_create_weekly_diagnostics_table.sql",
+      "sourceSha256": "496e4fa57fb2d0c02deb464cc56c33403751368c2ad543a4dae1accf6e78ac7d",
+      "stagingVersion": "20260529054735",
+      "stagingName": "20260529054735_create_weekly_diagnostics_table.sql",
+      "absoluteOrder": 96,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260529120000_schedule_weekly_diagnostic_cron.sql",
+      "historicalVersion": "20260529120000",
+      "historicalName": "20260529120000_schedule_weekly_diagnostic_cron.sql",
+      "sourceSha256": "1168f4ec5c131e521e108e2b97905c0f784c8e5dda9c84b8e63b83a265ca2d0a",
+      "stagingVersion": "20260529120000",
+      "stagingName": "20260529120000_schedule_weekly_diagnostic_cron.sql",
+      "absoluteOrder": 97,
+      "collisionGroup": null,
+      "category": "cron_historical",
+      "knownDependencies": [],
+      "authorization": "authorized_noop_pg_cron_absent",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "cron.unschedule",
+            "line": 25,
+            "execution": "migration"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 29,
+            "execution": "migration"
+          }
+        ],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Historical source is immutable and its cron block is a no-op only while pg_cron is absent."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260529140000_update_weekly_diagnostic_cron_to_daily.sql",
+      "historicalVersion": "20260529140000",
+      "historicalName": "20260529140000_update_weekly_diagnostic_cron_to_daily.sql",
+      "sourceSha256": "234a7be3b25747e1fc8b49c2077c8447faa8498f26c27d447ff500e677013a5b",
+      "stagingVersion": "20260529140000",
+      "stagingName": "20260529140000_update_weekly_diagnostic_cron_to_daily.sql",
+      "absoluteOrder": 98,
+      "collisionGroup": null,
+      "category": "cron_historical",
+      "knownDependencies": [],
+      "authorization": "authorized_noop_pg_cron_absent",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "cron.unschedule",
+            "line": 21,
+            "execution": "migration"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 25,
+            "execution": "migration"
+          }
+        ],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Historical source is immutable and its cron block is a no-op only while pg_cron is absent."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260529213128_add_next_diagnostic_at_to_profiles.sql",
+      "historicalVersion": "20260529213128",
+      "historicalName": "20260529213128_add_next_diagnostic_at_to_profiles.sql",
+      "sourceSha256": "c8fc55d4ba5ab7dafd3ba44e03bc0cfc9b876e5c2ffcdeece631d376a3f85128",
+      "stagingVersion": "20260529213128",
+      "stagingName": "20260529213128_add_next_diagnostic_at_to_profiles.sql",
+      "absoluteOrder": 99,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 14,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260530033322_backfill_next_diagnostic_at_orphans.sql",
+      "historicalVersion": "20260530033322",
+      "historicalName": "20260530033322_backfill_next_diagnostic_at_orphans.sql",
+      "sourceSha256": "3a0249523fb2887b766a12dd9782f5fe3670113aca2e7b03fc28ac4125dfa23e",
+      "stagingVersion": "20260530033322",
+      "stagingName": "20260530033322_backfill_next_diagnostic_at_orphans.sql",
+      "absoluteOrder": 100,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 29,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 38,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260530034000_backfill_week_start_sunday_to_monday.sql",
+      "historicalVersion": "20260530034000",
+      "historicalName": "20260530034000_backfill_week_start_sunday_to_monday.sql",
+      "sourceSha256": "0e902f14167c5821638c0762fef69bd16c702192be02a7756b2463c48d55e303",
+      "stagingVersion": "20260530034000",
+      "stagingName": "20260530034000_backfill_week_start_sunday_to_monday.sql",
+      "absoluteOrder": 101,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "weekly_diagnostics",
+            "line": 30,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "weekly_diagnostics",
+            "line": 38,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260530044500_backfill_full_name_capitalize.sql",
+      "historicalVersion": "20260530044500",
+      "historicalName": "20260530044500_backfill_full_name_capitalize.sql",
+      "sourceSha256": "dacdadad0a55cd37ade1c55dea03bdbf3c44347600a0f6356ebf02a8e7f2c0e1",
+      "stagingVersion": "20260530044500",
+      "stagingName": "20260530044500_backfill_full_name_capitalize.sql",
+      "absoluteOrder": 102,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 24,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260530145524_normalize_exercises_equipment.sql",
+      "historicalVersion": "20260530145524",
+      "historicalName": "20260530145524_normalize_exercises_equipment.sql",
+      "sourceSha256": "e264b71b6a7e4b5180061ab49dea0472c8c6bfd90d727182f6e69a8ca269871e",
+      "stagingVersion": "20260530145524",
+      "stagingName": "20260530145524_normalize_exercises_equipment.sql",
+      "absoluteOrder": 103,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 23,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 29,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260530151940_add_profile_equipment.sql",
+      "historicalVersion": "20260530151940",
+      "historicalName": "20260530151940_add_profile_equipment.sql",
+      "sourceSha256": "3d31dab8c9e86ad66545956d5ea1281a7ac41501e2027f9a98d9c69a385be7e3",
+      "stagingVersion": "20260530151940",
+      "stagingName": "20260530151940_add_profile_equipment.sql",
+      "absoluteOrder": 104,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 27,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 31,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260531043341_complete_variant_group.sql",
+      "historicalVersion": "20260531043341",
+      "historicalName": "20260531043341_complete_variant_group.sql",
+      "sourceSha256": "9ace91796ebdb0f911c424c74066ab19056c8fbe222a1e6793429db27dfbc7a1",
+      "stagingVersion": "20260531043341",
+      "stagingName": "20260531043341_complete_variant_group.sql",
+      "absoluteOrder": 105,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 20,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 21,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 22,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 25,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 26,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 29,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 30,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 31,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 34,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 35,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 36,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 39,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 40,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 43,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 46,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 49,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 50,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 51,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 52,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 55,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 56,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 57,
+            "execution": "migration"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 60,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 23,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260531075113_add_needs_initial_generation.sql",
+      "historicalVersion": "20260531075113",
+      "historicalName": "20260531075113_add_needs_initial_generation.sql",
+      "sourceSha256": "6abb7aa6f02d539b2b2214b373743074d72a14beefe197226bfa5624274b31a0",
+      "stagingVersion": "20260531075113",
+      "stagingName": "20260531075113_add_needs_initial_generation.sql",
+      "absoluteOrder": 106,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260531104041_add_next_program_regen_at.sql",
+      "historicalVersion": "20260531104041",
+      "historicalName": "20260531104041_add_next_program_regen_at.sql",
+      "sourceSha256": "10178ebe28f9ba40fd596d6ea28a56649027bad333e098e3ef8182186ab5b17c",
+      "stagingVersion": "20260531104041",
+      "stagingName": "20260531104041_add_next_program_regen_at.sql",
+      "absoluteOrder": 107,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 20,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260531110137_schedule_training_regen_cron.sql",
+      "historicalVersion": "20260531110137",
+      "historicalName": "20260531110137_schedule_training_regen_cron.sql",
+      "sourceSha256": "fd4722777d1cf1a85a6a29be7c25904b6a383cf317805300db884c2b7285a264",
+      "stagingVersion": "20260531110137",
+      "stagingName": "20260531110137_schedule_training_regen_cron.sql",
+      "absoluteOrder": 108,
+      "collisionGroup": null,
+      "category": "cron_historical",
+      "knownDependencies": [],
+      "authorization": "authorized_noop_pg_cron_absent",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "cron.unschedule",
+            "line": 17,
+            "execution": "migration"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 20,
+            "execution": "migration"
+          }
+        ],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Historical source is immutable and its cron block is a no-op only while pg_cron is absent."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260602_create_coach_appointments.sql",
+      "historicalVersion": "20260602",
+      "historicalName": "20260602_create_coach_appointments.sql",
+      "sourceSha256": "698b68c05deb1bf7ea1ee42b31851eb4cf45249b66e87f73abd00a2bd5a2c5b3",
+      "stagingVersion": "20260602",
+      "stagingName": "20260602_create_coach_appointments.sql",
+      "absoluteOrder": 109,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260605141613_fix_profiles_training_location_default.sql",
+      "historicalVersion": "20260605141613",
+      "historicalName": "20260605141613_fix_profiles_training_location_default.sql",
+      "sourceSha256": "09988085ae33a5cc9ba7e23cfe0202a3bb7de2c4c3d42a36cb0cdeb6297a9c3d",
+      "stagingVersion": "20260605141613",
+      "stagingName": "20260605141613_fix_profiles_training_location_default.sql",
+      "absoluteOrder": 110,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260612_add_unit_personal_records.sql",
+      "historicalVersion": "20260612",
+      "historicalName": "20260612_add_unit_personal_records.sql",
+      "sourceSha256": "9d2dbca11136513d1e22aaf826c35d147a60509b7fa90fd328d4040ad6fd0b9e",
+      "stagingVersion": "20260612000001",
+      "stagingName": "20260612000001_add_unit_personal_records.sql",
+      "absoluteOrder": 111,
+      "collisionGroup": "20260612",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260612_backfill_personal_records.sql",
+      "historicalVersion": "20260612",
+      "historicalName": "20260612_backfill_personal_records.sql",
+      "sourceSha256": "ce64d9ea02973158a9bda01ef8ffa80ff75b1a9b2ced20bd28fa08a1f0c8cca3",
+      "stagingVersion": "20260612000002",
+      "stagingName": "20260612000002_backfill_personal_records.sql",
+      "absoluteOrder": 112,
+      "collisionGroup": "20260612",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "personal_records",
+            "line": 12,
+            "execution": "migration"
+          },
+          {
+            "operation": "insert_into",
+            "target": "personal_records",
+            "line": 44,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260612_user_badges_badge_type_nullable.sql",
+      "historicalVersion": "20260612",
+      "historicalName": "20260612_user_badges_badge_type_nullable.sql",
+      "sourceSha256": "d34f5e2760c7b5f2a0f81d219845999098484fc7d6affdac2e1488dfed1668b0",
+      "stagingVersion": "20260612000003",
+      "stagingName": "20260612000003_user_badges_badge_type_nullable.sql",
+      "absoluteOrder": 113,
+      "collisionGroup": "20260612",
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260613_streak_reminder.sql",
+      "historicalVersion": "20260613",
+      "historicalName": "20260613_streak_reminder.sql",
+      "sourceSha256": "17895af49d23d324d7bf44ebd772cd82bedb3973833f7988fe55536abfe89f84",
+      "stagingVersion": "20260613",
+      "stagingName": "20260613_streak_reminder.sql",
+      "absoluteOrder": 114,
+      "collisionGroup": null,
+      "category": "cron_historical",
+      "knownDependencies": [],
+      "authorization": "authorized_noop_pg_cron_absent",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 17,
+            "execution": "migration"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 27,
+            "execution": "migration"
+          }
+        ],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Historical source is immutable and its cron block is a no-op only while pg_cron is absent."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql",
+      "historicalVersion": "20260617120000",
+      "historicalName": "20260617120000_guard_profile_sensitive_columns.sql",
+      "sourceSha256": "da2986190e4e2a442bcba6ef5ffbf6ae80960c524aa0695549419274e960c8e7",
+      "stagingVersion": "20260617120000",
+      "stagingName": "20260617120000_guard_profile_sensitive_columns.sql",
+      "absoluteOrder": 115,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260617120100_drop_duplicate_profiles_update_policy.sql",
+      "historicalVersion": "20260617120100",
+      "historicalName": "20260617120100_drop_duplicate_profiles_update_policy.sql",
+      "sourceSha256": "fd646ecb3895d401729d570981e783f85a1b96606c15d964ea9060c10b65cf59",
+      "stagingVersion": "20260617120100",
+      "stagingName": "20260617120100_drop_duplicate_profiles_update_policy.sql",
+      "absoluteOrder": 116,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260617130000_beta_campaigns_public_read.sql",
+      "historicalVersion": "20260617130000",
+      "historicalName": "20260617130000_beta_campaigns_public_read.sql",
+      "sourceSha256": "abdf43b72e7e3b35b4deb9f79f14331e50fec10e70a5f883012140612c2ed99b",
+      "stagingVersion": "20260617130000",
+      "stagingName": "20260617130000_beta_campaigns_public_read.sql",
+      "absoluteOrder": 117,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260622120000_normalize_abdos_muscle_group.sql",
+      "historicalVersion": "20260622120000",
+      "historicalName": "20260622120000_normalize_abdos_muscle_group.sql",
+      "sourceSha256": "b2220786bb918f4ab2e673c31dbe4df19444bd8bdb3ce6327eace611fee8d020",
+      "stagingVersion": "20260622120000",
+      "stagingName": "20260622120000_normalize_abdos_muscle_group.sql",
+      "absoluteOrder": 118,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 3,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260622130000_add_rir_workout_sets.sql",
+      "historicalVersion": "20260622130000",
+      "historicalName": "20260622130000_add_rir_workout_sets.sql",
+      "sourceSha256": "8bef6365cb953604eb5bba7142a537047271fc6b1bfef42220ee4e1761fefdf8",
+      "stagingVersion": "20260622130000",
+      "stagingName": "20260622130000_add_rir_workout_sets.sql",
+      "absoluteOrder": 119,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260622140000_add_rir_preferences_profiles.sql",
+      "historicalVersion": "20260622140000",
+      "historicalName": "20260622140000_add_rir_preferences_profiles.sql",
+      "sourceSha256": "5f43e20449ed2835dff4ff2b3647cd77d5bf86e55c7821b7848867480f059b9f",
+      "stagingVersion": "20260622140000",
+      "stagingName": "20260622140000_add_rir_preferences_profiles.sql",
+      "absoluteOrder": 120,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260630100000_set_initial_trial_rpc.sql",
+      "historicalVersion": "20260630100000",
+      "historicalName": "20260630100000_set_initial_trial_rpc.sql",
+      "sourceSha256": "fa3b643276c191935234ddc24cf2b3cf5fe95cf64ebc242353b50e045587c433",
+      "stagingVersion": "20260630100000",
+      "stagingName": "20260630100000_set_initial_trial_rpc.sql",
+      "absoluteOrder": 121,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 34,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 1
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260630101000_set_role_rpc.sql",
+      "historicalVersion": "20260630101000",
+      "historicalName": "20260630101000_set_role_rpc.sql",
+      "sourceSha256": "a216e730b65d216595e48c5a8e6fd77efa71047f38f2d0fce649e3a2f5ed4d38",
+      "stagingVersion": "20260630101000",
+      "stagingName": "20260630101000_set_role_rpc.sql",
+      "absoluteOrder": 122,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 29,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 1
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260630102000_add_coach_columns.sql",
+      "historicalVersion": "20260630102000",
+      "historicalName": "20260630102000_add_coach_columns.sql",
+      "sourceSha256": "151a97a49d36d9321094cc061ce47fb6ecdc07ba9f2b837b5cf13b13c5c84a42",
+      "stagingVersion": "20260630102000",
+      "stagingName": "20260630102000_add_coach_columns.sql",
+      "absoluteOrder": 123,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260630103000_fix_coach_column_types.sql",
+      "historicalVersion": "20260630103000",
+      "historicalName": "20260630103000_fix_coach_column_types.sql",
+      "sourceSha256": "b33a4b918e0c98ec68ae0cdc67223c1e58616fc7a71762c47c1effbe6442010e",
+      "stagingVersion": "20260630103000",
+      "stagingName": "20260630103000_fix_coach_column_types.sql",
+      "absoluteOrder": 124,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260630104000_handle_new_user_role_from_metadata.sql",
+      "historicalVersion": "20260630104000",
+      "historicalName": "20260630104000_handle_new_user_role_from_metadata.sql",
+      "sourceSha256": "6230f292be805c652c9259c6dbf67c6d20f2a939002982f0bd2f91970e60c0b0",
+      "stagingVersion": "20260630104000",
+      "stagingName": "20260630104000_handle_new_user_role_from_metadata.sql",
+      "absoluteOrder": 125,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.profiles",
+            "line": 15,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 1
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260701200000_dedup_exercises_db.sql",
+      "historicalVersion": "20260701200000",
+      "historicalName": "20260701200000_dedup_exercises_db.sql",
+      "sourceSha256": "bb95a9f273e7111f109a9cf5a7d2078742cb80b6e748639adb49141880d4744d",
+      "stagingVersion": "20260701200000",
+      "stagingName": "20260701200000_dedup_exercises_db.sql",
+      "absoluteOrder": 126,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "exercises_db",
+            "line": 38,
+            "execution": "migration"
+          },
+          {
+            "operation": "delete_from",
+            "target": "exercises_db",
+            "line": 70,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 2,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260701201000_add_exercise_id_to_workout_sets.sql",
+      "historicalVersion": "20260701201000",
+      "historicalName": "20260701201000_add_exercise_id_to_workout_sets.sql",
+      "sourceSha256": "322fbe175f79979c010e8a167f651e7c0259b87c468cee4468572009b5068292",
+      "stagingVersion": "20260701201000",
+      "stagingName": "20260701201000_add_exercise_id_to_workout_sets.sql",
+      "absoluteOrder": 127,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260703110000_canonicalize_profiles_objective.sql",
+      "historicalVersion": "20260703110000",
+      "historicalName": "20260703110000_canonicalize_profiles_objective.sql",
+      "sourceSha256": "282796b6f44f11a0ea9156b08308d06f8729aee071a387c636c33b9ce99ac419",
+      "stagingVersion": "20260703110000",
+      "stagingName": "20260703110000_canonicalize_profiles_objective.sql",
+      "absoluteOrder": 128,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "blocked_data_mutation",
+      "allowed": false,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 10,
+            "execution": "migration"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 1,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Migration-time data mutation requires separate operator authorization."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260703170000_lock_objective_drop_goal.sql",
+      "historicalVersion": "20260703170000",
+      "historicalName": "20260703170000_lock_objective_drop_goal.sql",
+      "sourceSha256": "2fa123828742b3faa8095fcf0dc9bec8af6d2276c9eeda3df64b0cbca5769729",
+      "stagingVersion": "20260703170000",
+      "stagingName": "20260703170000_lock_objective_drop_goal.sql",
+      "absoluteOrder": 129,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260704140000_beta_campaign_link.sql",
+      "historicalVersion": "20260704140000",
+      "historicalName": "20260704140000_beta_campaign_link.sql",
+      "sourceSha256": "7b6cfe3a0a6f1f99383694ab85f8dcc26ad636d97b9def7f5b586d4967095164",
+      "stagingVersion": "20260704140000",
+      "stagingName": "20260704140000_beta_campaign_link.sql",
+      "absoluteOrder": 130,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "beta_campaigns",
+            "line": 50,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "profiles",
+            "line": 61,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 2
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260706100000_delete_account_weekly_diagnostics.sql",
+      "historicalVersion": "20260706100000",
+      "historicalName": "20260706100000_delete_account_weekly_diagnostics.sql",
+      "sourceSha256": "193966df4f36971326bf5f74d9750858533be880623b4ba6783f45f15e56e872",
+      "stagingVersion": "20260706100000",
+      "stagingName": "20260706100000_delete_account_weekly_diagnostics.sql",
+      "absoluteOrder": 131,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "delete_from",
+            "target": "workout_sets",
+            "line": 31,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "workout_sessions",
+            "line": 32,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "cardio_sessions",
+            "line": 33,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "completed_sessions",
+            "line": 34,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "scheduled_sessions",
+            "line": 35,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "workouts",
+            "line": 36,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_food_logs",
+            "line": 41,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_logs",
+            "line": 42,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_tracking",
+            "line": 43,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "water_intake",
+            "line": 44,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "saved_meals",
+            "line": 45,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "nutrition",
+            "line": 46,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_measurements",
+            "line": 51,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_analyses",
+            "line": 52,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "body_assessments",
+            "line": 53,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "weight_logs",
+            "line": 54,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "progress_photos",
+            "line": 55,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_checkins",
+            "line": 62,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "daily_habits",
+            "line": 63,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_achievements",
+            "line": 64,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_badges",
+            "line": 65,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_xp",
+            "line": 66,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "personal_records",
+            "line": 67,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "progressive_overload_suggestions",
+            "line": 68,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_exercises",
+            "line": 70,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_foods",
+            "line": 71,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "custom_programs",
+            "line": 72,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "exercise_feedback",
+            "line": 73,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "ai_usage_logs",
+            "line": 78,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "chat_ai_messages",
+            "line": 79,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "app_logs",
+            "line": 80,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "bug_reports",
+            "line": 81,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "weekly_diagnostics",
+            "line": 83,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "client_meal_plans",
+            "line": 88,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "client_programs",
+            "line": 89,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "meal_plans",
+            "line": 90,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "user_programs",
+            "line": 91,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "activity_feed",
+            "line": 96,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "coach_notes",
+            "line": 101,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "commissions",
+            "line": 102,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "training_programs",
+            "line": 108,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "training_programs",
+            "line": 111,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "community_foods",
+            "line": 115,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "exercises_db",
+            "line": 116,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "recipes",
+            "line": 119,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "recipes",
+            "line": 120,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "messages",
+            "line": 126,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "messages",
+            "line": 128,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "payments",
+            "line": 133,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "coach_clients",
+            "line": 134,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "push_subscriptions",
+            "line": 139,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "delete_from",
+            "target": "profiles",
+            "line": 144,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 52
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260708100000_commissions_rls.sql",
+      "historicalVersion": "20260708100000",
+      "historicalName": "20260708100000_commissions_rls.sql",
+      "sourceSha256": "2849959f7dcdc4a6c43fc71f9f09fb151f6a9565751385e2285cf24c1a6f3a21",
+      "stagingVersion": "20260708100000",
+      "stagingName": "20260708100000_commissions_rls.sql",
+      "absoluteOrder": 132,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260711190500_add_coach_invitations.sql",
+      "historicalVersion": "20260711190500",
+      "historicalName": "20260711190500_add_coach_invitations.sql",
+      "sourceSha256": "0c2c9576bf74af72644e6f5ae87bd115b4f3363a0752d85d01c5a6543b732b00",
+      "stagingVersion": "20260711190500",
+      "stagingName": "20260711190500_add_coach_invitations.sql",
+      "absoluteOrder": 133,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "public.profiles",
+            "line": 481,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "insert_into",
+            "target": "public.coach_clients",
+            "line": 494,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "public.coach_invitations",
+            "line": 506,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 3
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260712143000_harden_stripe_webhook_claims.sql",
+      "historicalVersion": "20260712143000",
+      "historicalName": "20260712143000_harden_stripe_webhook_claims.sql",
+      "sourceSha256": "35bf3171439745610d7c96eed07040e64fe2e8aa0afcc12ac78b55c787748214",
+      "stagingVersion": "20260712143000",
+      "stagingName": "20260712143000_harden_stripe_webhook_claims.sql",
+      "absoluteOrder": 134,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.stripe_webhook_events",
+            "line": 35,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "public.stripe_webhook_events",
+            "line": 47,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "public.stripe_webhook_events",
+            "line": 99,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 3
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260712190000_add_coach_monthly_rate.sql",
+      "historicalVersion": "20260712190000",
+      "historicalName": "20260712190000_add_coach_monthly_rate.sql",
+      "sourceSha256": "e33eb0dde01b2734fb44bb7c1b58d231ee47b3a79bcb935d4ed975bd760478f0",
+      "stagingVersion": "20260712190000",
+      "stagingName": "20260712190000_add_coach_monthly_rate.sql",
+      "absoluteOrder": 135,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260714211500_harden_payments_rls.sql",
+      "historicalVersion": "20260714211500",
+      "historicalName": "20260714211500_harden_payments_rls.sql",
+      "sourceSha256": "aeae85f7e99045a08aaf88dc707c9bb29994fd47c15a59bf8e1790b57940ad48",
+      "stagingVersion": "20260714211500",
+      "stagingName": "20260714211500_harden_payments_rls.sql",
+      "absoluteOrder": 136,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260714224500_harden_coach_clients_writes.sql",
+      "historicalVersion": "20260714224500",
+      "historicalName": "20260714224500_harden_coach_clients_writes.sql",
+      "sourceSha256": "b095859e1dd150b93262081f666a340ac43c9497a2508c9cf407dba700ee66d7",
+      "stagingVersion": "20260714224500",
+      "stagingName": "20260714224500_harden_coach_clients_writes.sql",
+      "absoluteOrder": 137,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.coach_clients",
+            "line": 74,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 1
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260714233000_fix_profile_sensitive_columns_guard.sql",
+      "historicalVersion": "20260714233000",
+      "historicalName": "20260714233000_fix_profile_sensitive_columns_guard.sql",
+      "sourceSha256": "d076569d7bd90546fb7c870e9c75ef8bdd796ed183324457678c22892cc3a50a",
+      "stagingVersion": "20260714233000",
+      "stagingName": "20260714233000_fix_profile_sensitive_columns_guard.sql",
+      "absoluteOrder": 138,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260715001000_secure_related_profile_visibility.sql",
+      "historicalVersion": "20260715001000",
+      "historicalName": "20260715001000_secure_related_profile_visibility.sql",
+      "sourceSha256": "b55634d5df832388178003128f265c3a5c0359ac28b6f0cd3131774bbf83d7b9",
+      "stagingVersion": "20260715001000",
+      "stagingName": "20260715001000_secure_related_profile_visibility.sql",
+      "absoluteOrder": 139,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "update",
+            "target": "public.profiles",
+            "line": 122,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 1
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260719160000_secure_messages.sql",
+      "historicalVersion": "20260719160000",
+      "historicalName": "20260719160000_secure_messages.sql",
+      "sourceSha256": "bf586b4196f99f911217f031902d2ee6acc0309dca022f1a5ead313b1bf43387",
+      "stagingVersion": "20260719160000",
+      "stagingName": "20260719160000_secure_messages.sql",
+      "absoluteOrder": 140,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260720190000_atomic_ai_usage.sql",
+      "historicalVersion": "20260720190000",
+      "historicalName": "20260720190000_atomic_ai_usage.sql",
+      "sourceSha256": "2109bf088365fe58aa625ee941b56015e626453157b3974e1b8c3d09cab1bb13",
+      "stagingVersion": "20260720190000",
+      "stagingName": "20260720190000_atomic_ai_usage.sql",
+      "absoluteOrder": 141,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "public.ai_usage_logs",
+            "line": 178,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "update",
+            "target": "public.ai_usage_logs",
+            "line": 280,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 2
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260725190000_configure_environment_scoped_cron.sql",
+      "historicalVersion": "20260725190000",
+      "historicalName": "20260725190000_configure_environment_scoped_cron.sql",
+      "sourceSha256": "e7d59231733fcfdefca669f9fb2809b70bd0faedadbadb8c0e838901af627480",
+      "stagingVersion": "20260725190000",
+      "stagingName": "20260725190000_configure_environment_scoped_cron.sql",
+      "absoluteOrder": 142,
+      "collisionGroup": null,
+      "category": "cron_environment_scoped",
+      "knownDependencies": [
+        "20260506_chat_ai_messages.sql",
+        "20260529120000_schedule_weekly_diagnostic_cron.sql",
+        "20260529140000_update_weekly_diagnostic_cron_to_daily.sql",
+        "20260531110137_schedule_training_regen_cron.sql",
+        "20260613_streak_reminder.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [
+          {
+            "operation": "insert_into",
+            "target": "private.moovx_cron_config",
+            "line": 127,
+            "execution": "definition_only"
+          }
+        ],
+        "calls": [
+          {
+            "operation": "mutating_call",
+            "target": "vault.create_secret",
+            "line": 112,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "vault.update_secret",
+            "line": 119,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.unschedule",
+            "line": 149,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 153,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 166,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 179,
+            "execution": "definition_only"
+          },
+          {
+            "operation": "mutating_call",
+            "target": "cron.schedule",
+            "line": 191,
+            "execution": "definition_only"
+          }
+        ],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 8
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    }
+  ]
+}

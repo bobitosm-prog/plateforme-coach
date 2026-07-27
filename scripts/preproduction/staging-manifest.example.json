@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "environment": "staging",
+  "supabase": {
+    "organizationId": "mlasmyrpaaqnhuuhuzma",
+    "projectName": "moovx-staging",
+    "projectRef": "cycbnnojcymjnaqomlyj",
+    "region": "eu-central-2",
+    "size": "nano",
+    "status": "ACTIVE_HEALTHY"
+  }
+}

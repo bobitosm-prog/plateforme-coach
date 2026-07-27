@@ -2,21 +2,31 @@
 
 ## Décision
 
-Les quatre migrations cron historiques restent immuables. Elles sont déjà
-documentées comme appliquées en production et leurs SHA-256 sont protégés par
-`scripts/preproduction/environment-guard.mjs`.
+Cinq migrations cron historiques restent immuables. Quatre pilotent des appels
+HTTP MoovX et une cinquième (`20260506_chat_ai_messages.sql`) programme une
+purge SQL interne. Les quatre migrations HTTP sont documentées comme appliquées
+en production et leurs références production sont protégées par
+`scripts/preproduction/environment-guard.mjs`; les cinq sources sont épinglées
+par le manifeste de migrations staging.
 
 La stratégie staging est :
 
-1. vérifier que `pg_cron` est absent avant le replay;
-2. appliquer les migrations historiques dans leur ordre lexical : leurs blocs
+1. valider le manifeste privé et le ref lié exact avec le garde `pre-link`;
+2. vérifier que `pg_cron` est absent avant le replay;
+3. appliquer les cinq migrations historiques dans leur ordre lexical : leurs blocs
    cron deviennent des no-op;
-3. appliquer la migration corrective
+4. appliquer la migration corrective
    `20260725190000_configure_environment_scoped_cron.sql`, sans effet
    automatique sur les jobs;
-4. une fois l'alias Preview et le secret disponibles, exécuter
+5. une fois l'alias Preview et le secret disponibles, exécuter
    `scripts/preproduction/configure-cron-jobs.sql`;
-5. relire les quatre jobs et confirmer la configuration avant toute preuve.
+6. relire les quatre jobs et confirmer la configuration avant toute preuve.
+
+Le projet staging confirmé est `cycbnnojcymjnaqomlyj`. Le lien local et
+l'absence distante de `pg_cron` ont été vérifiés. Le materializer
+`scripts/preproduction/materialize-staging-migrations.mjs` refuse toute autre
+cible, vérifie les 142 SHA-256 et reste limité à `--dry-run`. Il s'arrête
+actuellement avant le workdir sur 53 migrations de données non autorisées.
 
 Cette stratégie préserve les checksums et le comportement production. Elle
 évite aussi toute fenêtre où un cron staging pourrait appeler

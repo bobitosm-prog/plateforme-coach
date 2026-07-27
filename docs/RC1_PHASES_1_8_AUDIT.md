@@ -107,7 +107,7 @@ Les quatre critères sont `met`, avec une preuve locale.
 |---|---|---|
 | Chaque événement Stripe supporté testé | `met` | [`BILLING_WEBHOOK_HANDLERS.md`](BILLING_WEBHOOK_HANDLERS.md) et suites listées dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 | Replay sans double mutation | `met` | [`BILLING_WEBHOOK_ORDERING.md`](BILLING_WEBHOOK_ORDERING.md), tests unitaires et concurrence locale. |
-| Aucune divergence en préproduction | `blocked` | Le projet Supabase isolé contient exactement les 138 versions du [plan final](PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md), sans collision; `pg_cron` et les jobs restent absents. Le [seed synthétique](PHASE_6_STAGING_SYNTHETIC_SEED.md) est appliqué avec les volumes exacts et sans secret. Aucun Preview Vercel, Stripe test ou rapport Billing n'existe encore. |
+| Aucune divergence en préproduction | `blocked` | Le projet Supabase isolé contient les 138 versions du [plan final](PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md) et le [seed synthétique](PHASE_6_STAGING_SYNTHETIC_SEED.md). Le [Preview Vercel](PHASE_6_VERCEL_PREVIEW.md) est `READY` et l'Auth directe staging est validée. Les [routes webhook plateforme/Connect](PHASE_6_STRIPE_WEBHOOK_SCOPES.md) sont séparées localement, mais aucun endpoint Stripe test, bypass Vercel ou rapport Billing réel n'existe encore. |
 | Routes sans métier substantiel | `met` | Inventaire `451 → 312` lignes et six adaptateurs dans [`BILLING_HTTP_ADAPTERS.md`](BILLING_HTTP_ADAPTERS.md). |
 
 ## Phase 7 — `met`
