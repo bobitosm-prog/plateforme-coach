@@ -4,7 +4,7 @@
 
 Contrat appliqué depuis le 17 juillet 2026. Il complète le [modèle métier Billing](BILLING_DOMAIN_MODEL.md), le [modèle d'accès](BILLING_ACCESS_MODEL.md) et l'[ADR Billing](adr/0005-billing-domain-model.md).
 
-## Frontière HTTP conservée
+## Frontières HTTP
 
 [`app/api/stripe/webhook/route.ts`](../app/api/stripe/webhook/route.ts) reste propriétaire de la frontière Stripe et du cycle durable :
 
@@ -16,6 +16,21 @@ Contrat appliqué depuis le 17 juillet 2026. Il complète le [modèle métier Bi
 - conservation des réponses HTTP legacy `200`, `400`, `409`, `500` et `503`.
 
 La route ne délègue qu'après une signature valide, un claim acquis et la reconnaissance d'un type supporté. Une panne de finalisation reste un `503` retentable. Un événement `failed` peut donc être réclamé de nouveau sans permettre deux claims concurrents.
+
+Pour la préproduction Phase 6, deux adaptateurs supplémentaires séparent
+désormais les scopes sans supprimer ni modifier fonctionnellement cette route
+historique :
+
+- [`/api/stripe/webhook/platform`](../app/api/stripe/webhook/platform/route.ts)
+  reçoit exclusivement les quatre événements du compte plateforme;
+- [`/api/stripe/webhook/connect`](../app/api/stripe/webhook/connect/route.ts)
+  reçoit exclusivement `account.updated` avec une autorité `event.account`
+  cohérente.
+
+Ils utilisent des secrets de signature indépendants et refusent avant le claim
+une configuration `livemode` absente, un mode incompatible ou un événement du
+mauvais scope. Le [contrat Phase 6 détaillé](PHASE_6_STRIPE_WEBHOOK_SCOPES.md)
+documente les variables et l'ordre des gardes.
 
 ## Handlers métier extraits
 
@@ -50,6 +65,8 @@ Les journaux de la route ne contiennent que le type d'événement et, si nécess
 
 - `npx vitest run tests/unit/billing-webhook-handlers.test.ts` : décisions pures et ports du service ;
 - `npx vitest run tests/unit/stripe-webhook-metadata-replay.test.ts` : contrat HTTP, metadata, replay, concurrence et finalisation ;
+- `npx vitest run tests/unit/stripe-scoped-webhook-routes.test.ts` :
+  séparation plateforme/Connect, secrets, `livemode` et refus avant claim;
 - `psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -v ON_ERROR_STOP=1 -f tests/integration/stripe-webhook-claims.sql` : claim durable sur Supabase local.
 - `MOOVX_TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres bash tests/integration/stripe-webhook-concurrency.sh` : deux claims PostgreSQL réellement concurrents.
 

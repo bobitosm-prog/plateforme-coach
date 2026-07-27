@@ -11,6 +11,8 @@ const ROUTES = [
 ] as const
 
 const source = (route: typeof ROUTES[number]) => readFileSync(`app/api/stripe/${route}/route.ts`, 'utf8')
+const scopedWebhookSource = (scope: 'platform' | 'connect') =>
+  readFileSync(`app/api/stripe/webhook/${scope}/route.ts`, 'utf8')
 
 describe('Stripe HTTP adapter inventory', () => {
   it('tracks exactly the six audited Stripe routes', () => {
@@ -37,6 +39,29 @@ describe('Stripe HTTP adapter inventory', () => {
     expect(source('webhook')).toContain('deliverWebhookEvent')
     expect(source('webhook')).not.toContain('.rpc(')
     expect(source('webhook')).not.toContain('processWebhookEvent')
+  })
+
+  it('keeps the historical webhook and adds two scope-specific adapters', () => {
+    expect(source('webhook')).toContain('STRIPE_WEBHOOK_SECRET')
+    expect(scopedWebhookSource('platform')).toContain(
+      'STRIPE_PLATFORM_WEBHOOK_SECRET',
+    )
+    expect(scopedWebhookSource('platform')).toContain(
+      'PLATFORM_WEBHOOK_EVENTS',
+    )
+    expect(scopedWebhookSource('connect')).toContain(
+      'STRIPE_CONNECT_WEBHOOK_SECRET',
+    )
+    expect(scopedWebhookSource('connect')).toContain(
+      'CONNECT_WEBHOOK_EVENTS',
+    )
+    for (const scope of ['platform', 'connect'] as const) {
+      expect(scopedWebhookSource(scope)).toContain(
+        'createScopedStripeWebhookHandler',
+      )
+      expect(scopedWebhookSource(scope)).not.toContain('.rpc(')
+      expect(scopedWebhookSource(scope)).not.toContain('.from(')
+    }
   })
 
   it('moves product and price creation out of the admin route', () => {
