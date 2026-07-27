@@ -24,7 +24,10 @@ export function createPlatformCheckoutRepository(input: {
       return data?.stripe_account_id && data.stripe_onboarding_complete ? data.stripe_account_id : null
     },
     async insertPendingPayment(payment) {
-      await getAdmin().from('payments').insert(payment)
+      const { error } = await getAdmin().from('payments').insert(payment)
+      if (error) {
+        throw new Error(`pending payment insert: ${error.message || 'database error'}`)
+      }
     },
   }
 }

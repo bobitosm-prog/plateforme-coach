@@ -130,6 +130,27 @@ describe('createPlatformCheckout', () => {
     })).rejects.toThrow('provider unavailable')
     expect(repository.insertPendingPayment).not.toHaveBeenCalled()
   })
+
+  it('does not return a Checkout URL when the pending payment insert fails', async () => {
+    const repository = platformRepository({
+      insertPendingPayment: vi.fn(async () => {
+        throw new Error('pending payment insert: database error')
+      }),
+    })
+
+    await expect(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: { client_monthly: 'price_client_monthly' },
+      appUrl: 'http://app.test',
+    })).rejects.toThrow('pending payment insert: database error')
+
+    expect(stripe.createSession).toHaveBeenCalledOnce()
+    expect(repository.insertPendingPayment).toHaveBeenCalledOnce()
+  })
 })
 
 describe('createCoachCheckout', () => {
