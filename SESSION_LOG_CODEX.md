@@ -12816,3 +12816,28 @@ sur 38. RC1 global reste actif et non terminé; Phase 9 demeure inactive.
 **Bottleneck suivant :** le chemin critique restant de `/login` est dominé par
 le chargement des chunks JavaScript et l'hydratation. Ce constat est documenté
 sans ouvrir ni appliquer de correction dans cette étape.
+
+## Entrée — 2026-07-28 — RC1 : réconciliation complète des Phases 1 à 8
+
+**Autorité :** la matrice est réconciliée en lecture seule sur le commit
+`5a02c89` à partir de `ROADMAP_CODEX.md`, du journal de session, des audits
+existants, des résultats de tests récents et des preuves RC1 acquises.
+
+**Résultat consolidé :** les huit checklists totalisent 124 tâches terminées
+sur 124. Leurs définitions de terminé totalisent 36 critères de sortie, tous
+classés `met`; aucun critère ne reste `partial`, `unmet` ou `blocked`.
+`PHASES_1_TO_8_AUDIT_100_PERCENT=YES`.
+
+**Blocages historiques levés :** la Phase 6 n'est plus bloquée par l'absence
+de preuve préproduction. Auth v2, seed relationnel, diagnostic runtime,
+endpoints Stripe test, checkout réel, traitement webhook unique et
+réconciliation `issues=[]` établissent ses 4 critères sur 4; elle reste
+`VALIDATED`. La Phase 8 n'est plus partielle : son LCP p75 mobile dépasse la
+cible de 20 %, tandis que ses quatre autres critères étaient déjà `met`; elle
+passe officiellement à `VALIDATED`, avec 5 critères sur 5.
+
+**Décision RC1 :** le critère « Auditer et confirmer Phases 1 à 8 terminées à
+100 % » devient démontré et est coché. RC1 passe de 2 à 3 tâches sur 38, reste
+`ACTIVE` et n'est pas terminé. Les validations techniques, fonctionnelles,
+sécurité, performance restantes et la validation explicite RC1 demeurent
+ouvertes. Phase 9 reste `INACTIVE` et aucune nouvelle phase n'est créée.

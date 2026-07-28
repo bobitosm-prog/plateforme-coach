@@ -568,8 +568,9 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : checklist Phase 8 terminée — 13 tâches sur 13. Le critère LCP de la
-définition de terminé est validé en RC1 : sur le Preview
+**Statut : Phase 8 terminée — `VALIDATED`, checklist terminée, 13 tâches sur
+13 et définition de terminé validée, 5 critères sur 5. Le critère LCP est
+validé en RC1 : sur le Preview
 `phase-6-staging` au commit `63dad1e`, le LCP p75 mobile froid atteint
 `1 428 ms` sur `/fr/landing` et `2 856 ms` sur `/login`, soit des gains
 respectifs de `53,03 %` et `38,13 %` depuis la baseline, au-delà de la cible
@@ -631,14 +632,15 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 2 tâches sur 38. Phase 6 est terminée et `VALIDATED`;
-le critère LCP de fin de Phase 8 est validé, tandis que l'audit global et les
-autres contrôles RC1 restent ouverts.
+**Statut : active — 3 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
+sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 
 ### Checklist
 
-- [ ] Auditer et confirmer Phases 1 à 8 terminées à 100 %.
+- [x] Auditer et confirmer Phases 1 à 8 terminées à 100 % — réconciliation
+  sur `5a02c89`, 124/124 tâches et 36/36 critères de sortie `met`.
 - [ ] Vérifier l’état Git et coordonner les changements concurrents.
 - [ ] Exécuter la suite complète sans échec.
 - [ ] Atteindre zéro todo bloquant ou justifier chaque todo restant.
