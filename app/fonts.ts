@@ -26,7 +26,7 @@ export const barlowCondensed = localFont({
   ],
   variable: "--font-alt",
   display: "swap",
-  preload: true,
+  preload: false,
   fallback: ["Arial"],
   adjustFontFallback: "Arial",
 });
@@ -48,7 +48,7 @@ export const dmSans = localFont({
   style: "normal",
   variable: "--font-dm-sans",
   display: "swap",
-  preload: true,
+  preload: false,
   fallback: ["Arial"],
   adjustFontFallback: "Arial",
 });
@@ -59,7 +59,7 @@ export const anton = localFont({
   style: "normal",
   variable: "--font-impact",
   display: "swap",
-  preload: true,
+  preload: false,
   fallback: ["Arial"],
   adjustFontFallback: "Arial",
 });

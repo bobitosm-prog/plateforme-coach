@@ -7,6 +7,14 @@ const root = process.cwd();
 const fontModulePath = join(root, "app/fonts.ts");
 const fontModule = readFileSync(fontModulePath, "utf8");
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const landingHero = readFileSync(
+  join(root, "app/[locale]/landing/components/Hero.tsx"),
+  "utf8",
+);
+const loginPage = readFileSync(
+  join(root, "app/login/LoginPageContent.tsx"),
+  "utf8",
+);
 const nextConfig = readFileSync(join(root, "next.config.ts"), "utf8");
 const publicFontCss = readFileSync(
   join(root, "public/fonts/moovx-fonts.css"),
@@ -18,6 +26,23 @@ const staticPages = [
   "public/index-vitrine.html",
   "public/vitrine.html",
 ].map((path) => readFileSync(join(root, path), "utf8"));
+
+function getFontDeclaration(fontName: string): string {
+  const declarationStart = fontModule.indexOf(
+    `export const ${fontName} = localFont({`,
+  );
+  const nextDeclarationStart = fontModule.indexOf(
+    "\nexport const ",
+    declarationStart + 1,
+  );
+
+  expect(declarationStart).toBeGreaterThanOrEqual(0);
+
+  return fontModule.slice(
+    declarationStart,
+    nextDeclarationStart === -1 ? undefined : nextDeclarationStart,
+  );
+}
 
 const assets = {
   "public/fonts/moovx/Anton-Regular.ttf":
@@ -73,7 +98,27 @@ describe("local application fonts", () => {
     expect(fontModule).not.toContain('weight: "900"');
     expect(fontModule.match(/style: "normal"/g)).toHaveLength(6);
     expect(fontModule.match(/display: "swap"/g)).toHaveLength(5);
-    expect(fontModule.match(/preload: true/g)).toHaveLength(5);
+  });
+
+  it("preloads only the font families required by the measured LCP content", () => {
+    expect(getFontDeclaration("bebasNeue")).toContain("preload: true");
+    expect(getFontDeclaration("outfit")).toContain("preload: true");
+
+    expect(getFontDeclaration("barlowCondensed")).toContain("preload: false");
+    expect(getFontDeclaration("dmSans")).toContain("preload: false");
+    expect(getFontDeclaration("anton")).toContain("preload: false");
+
+    expect(fontModule.match(/preload: true/g)).toHaveLength(2);
+    expect(fontModule.match(/preload: false/g)).toHaveLength(3);
+  });
+
+  it("keeps critical preloads tied to the landing and login LCP typography", () => {
+    expect(landingHero).toContain('data-lcp-content="landing-headline"');
+    expect(landingHero).toContain("fontFamily: 'var(--font-display)'");
+    expect(landingHero).toContain('data-lcp-content="landing-description"');
+    expect(layout).toContain("fontFamily: \"var(--font-body), 'Outfit'");
+    expect(loginPage).toContain('data-lcp-content="login-title"');
+    expect(loginPage).toContain("style={{ ...pageTitleStyle");
   });
 
   it("pins every font asset to its documented SHA-256", () => {
