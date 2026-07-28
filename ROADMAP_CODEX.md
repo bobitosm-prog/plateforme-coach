@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 3 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 5 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -646,8 +646,15 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [ ] Atteindre zéro todo bloquant ou justifier chaque todo restant.
 - [ ] `npx tsc --noEmit` vert.
 - [ ] ESLint complet vert, sans erreur ; inventorier et traiter les avertissements.
-- [ ] Deux builds de production hermétiques complets.
-- [ ] Vérifier BUILD_ID, routes, manifests et pages générées.
+- [x] Deux builds de production hermétiques complets — commit `cd25d20`,
+  deux builds indépendants réussis en `24,50 s` et `27,29 s`; installation
+  reproductible sous npm 11 avec `npm ci --legacy-peer-deps`.
+- [x] Vérifier BUILD_ID, routes, manifests et pages générées — TypeScript
+  `PASS`, `BUILD_ID` présent, 84 routes identiques, 11/11 routes critiques,
+  90 pages statiques et 314 manifestes inventoriés. Les différences de
+  `BUILD_ID` et de matériel cryptographique généré par build sont attendues.
+  Sous Next 16/Turbopack, les manifestes App Router remplacent le
+  `app-build-manifest.json` racine historique.
 - [ ] Vérifier les types Supabase canoniques.
 - [ ] Rejouer les migrations locales et l’empreinte canonique.
 - [ ] Rejouer les matrices RLS/PostgREST.

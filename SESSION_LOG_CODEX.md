@@ -12841,3 +12841,47 @@ passe officiellement à `VALIDATED`, avec 5 critères sur 5.
 `ACTIVE` et n'est pas terminé. Les validations techniques, fonctionnelles,
 sécurité, performance restantes et la validation explicite RC1 demeurent
 ouvertes. Phase 9 reste `INACTIVE` et aucune nouvelle phase n'est créée.
+
+## Entrée — 2026-07-28 — RC1 : builds production hermétiques validés
+
+**Autorité :** audit exécuté sur le commit
+`cd25d20e52e2fa507054797c83d0be578d0a4af5`, depuis deux copies de travail
+indépendantes et sans fichier d'environnement local. Les dépendances sont
+installées depuis le lockfile versionné avec
+`npm ci --legacy-peer-deps --no-audit --no-fund`; son empreinte reste
+identique dans les deux copies.
+
+**Résultats :** les deux builds production `npm run build` réussissent
+respectivement en `24,50 s` et `27,29 s`. TypeScript passe, Next.js ne signale
+aucune erreur de compilation ou de génération et 90 pages statiques sont
+produites lors de chaque exécution. `PRODUCTION_BUILD_HERMETIC=YES`.
+
+**Artefacts et routes :** `BUILD_ID` est présent dans les deux résultats.
+Les 84 routes applicatives sont identiques; les 11 routes critiques attendues
+sont toutes présentes. L'inventaire contient 314 manifestes dans chaque build.
+Après neutralisation des valeurs volontairement générées à chaque exécution,
+les structures reproductibles sont identiques. Les différences restantes
+portent uniquement sur le `BUILD_ID` et le matériel cryptographique éphémère
+de prévisualisation ou de références serveur.
+
+**Particularité Next.js :** avec Next 16.1.6 et Turbopack, le fichier racine
+historique `app-build-manifest.json` n'est pas émis. Les manifestes App Router
+équivalents, notamment `app-path-routes-manifest.json` et
+`server/app-paths-manifest.json`, sont présents, valides et identiques entre
+les deux builds. Les manifestes routes, pré-rendu et middleware sont également
+présents et valides.
+
+**Dettes non bloquantes :** sous npm 11, `npm ci` sans option refuse le
+lockfile à cause de la résolution des peer dependencies; l'invocation
+reproductible exige actuellement `--legacy-peer-deps`.
+`@supabase/auth-helpers-nextjs@0.15.0` est déprécié et doit être migré
+ultérieurement, sans invalider le build actuel.
+
+**Décision RC1 :** les deux critères « Deux builds de production hermétiques
+complets » et « Vérifier BUILD_ID, routes, manifests et pages générées » sont
+cochés. RC1 passe de 3 à 5 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
+Phase 9 demeure `INACTIVE`. Aucun code, service distant, commit ou push n'est
+modifié par cette mise à jour documentaire.
+
+**Prochaine étape unique :** vérifier l'état Git et coordonner les changements
+concurrents conformément à la prochaine case ouverte de la checklist RC1.
