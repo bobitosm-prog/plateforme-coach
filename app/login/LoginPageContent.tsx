@@ -32,6 +32,7 @@ export default function LoginPageContent() {
 
   useEffect(() => {
     if (searchParams.get('confirmed') === '1') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- URL flag intentionally reveals the one-shot confirmation banner.
       setConfirmedVisible(true)
       // Nettoie l'URL pour pas re-afficher au refresh
       window.history.replaceState({}, '', '/login')
@@ -90,15 +91,20 @@ export default function LoginPageContent() {
   }
 
   if (checking) return (
-    <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG_BASE }}>
+    <div className="auth-page" style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: BG_BASE }}>
       <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media(prefers-reduced-motion:reduce){
+          .auth-page *{animation:none!important;transition:none!important}
+        }
+      `}</style>
     </div>
   )
 
   const T = titleStyle
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
+    <div className="auth-page" style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
       {/* Hero gym background */}
       <img src="/images/hero-gym.webp" alt={t('panel.heroAlt')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
@@ -115,6 +121,9 @@ export default function LoginPageContent() {
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}}
+        @media(prefers-reduced-motion:reduce){
+          .auth-page *, .auth-page *::before, .auth-page *::after{animation:none!important;transition:none!important}
+        }
       `}</style>
 
       <LeftPanel t={t} />
@@ -136,8 +145,8 @@ export default function LoginPageContent() {
 
           {forgotMode ? (
             /* ── Forgot password ── */
-            <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('forgot.title')}</h1>
+            <div className="login-lcp-content">
+              <h1 data-lcp-content="login-forgot-title" style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('forgot.title')}</h1>
               <p style={{ ...bodyStyle, fontSize: '0.88rem', fontWeight: 300, margin: '0 0 28px', lineHeight: 1.6 }}>{t('forgot.subtitle')}</p>
 
               {resetSent ? (
@@ -194,8 +203,8 @@ export default function LoginPageContent() {
                   </div>
                 </div>
               )}
-              <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-                <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('title')}</h1>
+              <div className="login-lcp-content">
+                <h1 data-lcp-content="login-title" style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('title')}</h1>
                 <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>{t('subtitle')}</p>
               </div>
 

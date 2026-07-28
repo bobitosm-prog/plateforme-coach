@@ -28,12 +28,11 @@ export default async function Hero() {
       background: '#000',
       color: '#fff',
     }}>
-      {/* Background image — CSS fade-in for LCP, GSAP handles parallax via HeroAnimation */}
+      {/* Background image — decorative fade-in; primary LCP content stays immediate */}
       <style>{`
         @keyframes heroFadeIn { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
         .hero-bg-container { animation: heroFadeIn 1.2s ease-out 0.1s both; }
         @keyframes heroContentIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .hero-content-animate { animation: heroContentIn 0.8s ease-out 0.4s both; }
         .hero-content-animate-delay { animation: heroContentIn 0.8s ease-out 0.6s both; }
         .hero-content-animate-delay2 { animation: heroContentIn 0.8s ease-out 0.8s both; }
       `}</style>
@@ -119,10 +118,10 @@ export default async function Hero() {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-      }}>
+        }}>
 
         {/* Eyebrow */}
-        <div className="hero-content-animate" style={{
+        <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: 12,
@@ -138,7 +137,7 @@ export default async function Hero() {
         </div>
 
         {/* Headline */}
-        <h1 className="hero-content-animate" style={{
+        <h1 data-lcp-content="landing-headline" style={{
           fontFamily: 'var(--font-display)',
           fontSize: 'clamp(64px, 14vw, 240px)',
           lineHeight: 0.85,
@@ -160,7 +159,7 @@ export default async function Hero() {
         </h1>
 
         {/* Subtitle + description */}
-        <div className="hero-content-animate-delay" style={{ maxWidth: 560, marginBottom: 48 }}>
+        <div data-lcp-content="landing-description" style={{ maxWidth: 560, marginBottom: 48 }}>
           <span style={{
             display: 'block',
             fontFamily: 'var(--font-display)',
@@ -374,6 +373,19 @@ export default async function Hero() {
         }
         @media (max-width: 640px) {
           .hero-marquee { font-size: 11px !important; gap: 24px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-bg-container,
+          .hero-content-animate-delay,
+          .hero-content-animate-delay2,
+          .hero-pulse-dot,
+          .hero-marquee {
+            animation: none !important;
+          }
+          .hero-bg-container,
+          .hero-marquee {
+            transform: none !important;
+          }
         }
       `}</style>
 

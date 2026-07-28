@@ -3,9 +3,8 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Client-only GSAP animations for the hero section.
- * Handles: scroll parallax on background image.
- * Does NOT handle initial reveal (that's CSS animation in the server-rendered HTML).
+ * Client-only scroll parallax for the decorative hero background.
+ * Primary LCP content remains visible in the server-rendered HTML.
  */
 export default function HeroAnimation() {
   const mounted = useRef(false)
@@ -15,7 +14,8 @@ export default function HeroAnimation() {
     mounted.current = true
 
     const bgEl = document.querySelector('.hero-bg-container') as HTMLElement | null
-    if (!bgEl) return
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (!bgEl || reducedMotion.matches) return
 
     const onScroll = () => {
       const y = window.scrollY * 0.3
