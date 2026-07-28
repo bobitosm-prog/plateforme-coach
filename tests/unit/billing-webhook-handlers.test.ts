@@ -32,7 +32,7 @@ function dependencies() {
     findProfileBySubscription: vi.fn(),
     updateProfileByConnectAccount: vi.fn(),
     upsertPayment: vi.fn(),
-    markPaymentPaid: vi.fn(),
+    finalizePlatformPayment: vi.fn(),
   }
   return { stripe, repository, now: () => NOW }
 }
@@ -55,7 +55,12 @@ describe('Billing webhook handlers', () => {
     expect(deps.repository.updateProfileById).toHaveBeenCalledWith(CLIENT_ID, expect.objectContaining({
       subscription_type: 'client_monthly', subscription_status: 'active', stripe_subscription_id: 'sub_client',
     }))
-    expect(deps.repository.markPaymentPaid).toHaveBeenCalledWith('cs_platform', NOW.toISOString())
+    expect(deps.repository.finalizePlatformPayment).toHaveBeenCalledWith({
+      sessionId: 'cs_platform',
+      clientId: CLIENT_ID,
+      eventId: 'evt_test',
+      paidAt: NOW.toISOString(),
+    })
     expect(deps.repository.upsertPayment).not.toHaveBeenCalled()
   })
 
@@ -84,7 +89,7 @@ describe('Billing webhook handlers', () => {
       .rejects.toMatchObject({ reason: 'INVALID_METADATA' } satisfies Partial<WebhookHandlerError>)
     expect(deps.repository.updateProfileById).not.toHaveBeenCalled()
     expect(deps.repository.upsertPayment).not.toHaveBeenCalled()
-    expect(deps.repository.markPaymentPaid).not.toHaveBeenCalled()
+    expect(deps.repository.finalizePlatformPayment).not.toHaveBeenCalled()
   })
 
   it('rejects foreign payment ownership and incompatible offers', async () => {
@@ -132,6 +137,6 @@ describe('Billing webhook handlers', () => {
 
     await processWebhookEvent(event('account.updated', { id: 'acct_1', charges_enabled: true, payouts_enabled: true }), deps)
     expect(deps.repository.updateProfileByConnectAccount).toHaveBeenCalledWith('acct_1', { stripe_onboarding_complete: true })
-    expect(deps.repository.markPaymentPaid).not.toHaveBeenCalled()
+    expect(deps.repository.finalizePlatformPayment).not.toHaveBeenCalled()
   })
 })

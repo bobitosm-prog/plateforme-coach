@@ -58,6 +58,30 @@ describe('Billing reconciliation audit', () => {
     expect(repository.readSnapshot).toHaveBeenCalledWith({ limit: 100 })
   })
 
+  it('keeps a finalized checkout payment linked to its successful webhook green', async () => {
+    const snapshot = cleanSnapshot()
+    snapshot.webhookEvents = [{
+      eventId: 'evt_checkout', eventType: 'checkout.session.completed', status: 'success',
+      processedAt: '2026-07-17T11:59:00.000Z', processingStartedAt: null,
+      objectId: 'cs_checkout',
+    }]
+    snapshot.payments = [{
+      id: 'pay_checkout',
+      stripeEventId: 'evt_checkout',
+      checkoutSessionId: 'cs_checkout',
+      status: 'paid',
+    }]
+
+    const { report } = await audit(snapshot)
+
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'PAYMENT_EVENT_ID_MISSING',
+    }))
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'PAYMENT_MISSING_FOR_EVENT',
+    }))
+  })
+
   it('detects stale failed and processing webhook claims', async () => {
     const snapshot = cleanSnapshot()
     snapshot.webhookEvents.push(

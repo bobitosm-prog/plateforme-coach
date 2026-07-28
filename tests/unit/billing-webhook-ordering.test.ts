@@ -48,7 +48,7 @@ function statefulDependencies() {
       const eventId = String(payment.stripe_event_id)
       if (!payments.has(eventId)) payments.set(eventId, payment)
     }),
-    markPaymentPaid: vi.fn(async () => undefined),
+    finalizePlatformPayment: vi.fn(async () => 'finalized' as const),
   }
   return { profile, payments, stripe, repository, now: () => new Date('2026-07-17T12:00:00Z') }
 }
@@ -110,6 +110,11 @@ describe('Billing webhook out-of-order delivery', () => {
 
     expect(deps.profile.subscriptionStatus).toBe('canceled')
     expect(deps.repository.updateProfileById).not.toHaveBeenCalled()
-    expect(deps.repository.markPaymentPaid).toHaveBeenCalledOnce()
+    expect(deps.repository.finalizePlatformPayment).toHaveBeenCalledWith({
+      sessionId: 'cs_late',
+      clientId: CLIENT_ID,
+      eventId: 'evt_late_checkout',
+      paidAt: '2026-07-17T12:00:00.000Z',
+    })
   })
 })

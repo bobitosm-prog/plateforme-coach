@@ -36,7 +36,12 @@ export interface WebhookBillingRepository {
   findProfileBySubscription(customerId: string, subscriptionId: string): Promise<{ id: string; subscriptionType: string | null } | null>
   updateProfileByConnectAccount(accountId: string, updates: Record<string, unknown>): Promise<void>
   upsertPayment(payment: Record<string, unknown>): Promise<void>
-  markPaymentPaid(sessionId: string, paidAt: string): Promise<void>
+  finalizePlatformPayment(input: {
+    sessionId: string
+    clientId: string
+    eventId: string
+    paidAt: string
+  }): Promise<'finalized' | 'already_finalized'>
 }
 
 export interface WebhookHandlerDependencies {
@@ -126,8 +131,13 @@ async function handleCheckoutCompleted(event: Stripe.Event, deps: WebhookHandler
     if (subType === 'client_lifetime' || subscriptionGrantsAccess) {
       await deps.repository.updateProfileById(clientId, updates)
     }
+    await deps.repository.finalizePlatformPayment({
+      sessionId: session.id,
+      clientId,
+      eventId: event.id,
+      paidAt: now.toISOString(),
+    })
   }
-  await deps.repository.markPaymentPaid(session.id, now.toISOString())
 }
 
 async function handleSubscriptionUpdated(event: Stripe.Event, deps: WebhookHandlerDependencies) {

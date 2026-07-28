@@ -29,11 +29,31 @@ const mocks = vi.hoisted(() => {
   const profileSelect = vi.fn(() => ({ eq: profileSelectEq }))
   const paymentInsert = vi.fn()
   const paymentUpsert = vi.fn()
-  const paymentUpdateEq = vi.fn()
-  const paymentUpdate = vi.fn(() => ({ eq: paymentUpdateEq }))
+  const paymentUpdateMaybeSingle = vi.fn()
+  const paymentUpdateQuery = {} as {
+    eq: ReturnType<typeof vi.fn>
+    is: ReturnType<typeof vi.fn>
+    in: ReturnType<typeof vi.fn>
+    select: ReturnType<typeof vi.fn>
+    maybeSingle: ReturnType<typeof vi.fn>
+  }
+  paymentUpdateQuery.eq = vi.fn(() => paymentUpdateQuery)
+  paymentUpdateQuery.is = vi.fn(() => paymentUpdateQuery)
+  paymentUpdateQuery.in = vi.fn(() => paymentUpdateQuery)
+  paymentUpdateQuery.select = vi.fn(() => paymentUpdateQuery)
+  paymentUpdateQuery.maybeSingle = paymentUpdateMaybeSingle
+  const paymentUpdate = vi.fn(() => paymentUpdateQuery)
+  const paymentUpdateEq = paymentUpdateQuery.eq
   const paymentMaybeSingle = vi.fn()
-  const paymentSelectEq = vi.fn(() => ({ maybeSingle: paymentMaybeSingle }))
-  const paymentSelect = vi.fn(() => ({ eq: paymentSelectEq }))
+  const paymentSelectQuery = {} as {
+    eq: ReturnType<typeof vi.fn>
+    is: ReturnType<typeof vi.fn>
+    maybeSingle: ReturnType<typeof vi.fn>
+  }
+  paymentSelectQuery.eq = vi.fn(() => paymentSelectQuery)
+  paymentSelectQuery.is = vi.fn(() => paymentSelectQuery)
+  paymentSelectQuery.maybeSingle = paymentMaybeSingle
+  const paymentSelect = vi.fn(() => paymentSelectQuery)
   const relationMaybeSingle = vi.fn()
   const relationStatusEq = vi.fn(() => ({ maybeSingle: relationMaybeSingle }))
   const relationCoachEq = vi.fn(() => ({ eq: relationStatusEq }))
@@ -66,6 +86,7 @@ const mocks = vi.hoisted(() => {
     paymentUpsert,
     paymentUpdate,
     paymentUpdateEq,
+    paymentUpdateMaybeSingle,
     paymentMaybeSingle,
     relationMaybeSingle,
     rpc,
@@ -155,7 +176,7 @@ beforeEach(() => {
   mocks.profileUpdateSecondEq.mockResolvedValue({ error: null })
   mocks.paymentInsert.mockResolvedValue({ error: null })
   mocks.paymentUpsert.mockResolvedValue({ error: null })
-  mocks.paymentUpdateEq.mockResolvedValue({ error: null })
+  mocks.paymentUpdateMaybeSingle.mockResolvedValue({ data: { id: 'pay_1' }, error: null })
   mocks.webhookEventUpdateEq.mockResolvedValue({ error: null })
 })
 
