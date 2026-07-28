@@ -12788,3 +12788,31 @@ performance et humaines, puis la validation explicite RC1.
 **Prochaine checklist :** réaliser le contrôle Core Web Vitals RC1 avec un
 échantillon permettant de statuer sur le LCP p75 mobile de Phase 8, sans
 activer Phase 9.
+
+## Entrée — 2026-07-28 — RC1 Phase 8 : LCP p75 mobile validé
+
+**Autorité mesurée :** Preview `phase-6-staging`, commit déployé `63dad1e`,
+statut `READY`. La campagne utilise Chromium `149.0.7827.55`, un viewport
+mobile `390×844`, DPR 3, tactile, CPU ×4, une latence de 150 ms, 1,6 Mbit/s
+descendant et 0,75 Mbit/s montant. Chaque page est mesurée sur six runs froids
+avec cache vidé et six runs chauds; le p75 suit la méthode nearest-rank.
+
+**Résultats :** `/fr/landing` atteint un LCP p75 mobile froid de `1 428 ms`
+contre une baseline de `3 040 ms`, soit un gain de `53,03 %`. `/login` atteint
+`2 856 ms` contre `4 616 ms`, soit `38,13 %`. Les deux pages dépassent donc la
+cible documentaire de 20 % et `LCP_P75_TARGET_MET=YES`. INP, CLS et TTFB
+restent au niveau `GOOD`.
+
+**Corrections validées :** les contenus LCP du hero landing et du titre login
+ne sont plus masqués par une animation initiale. Le layout ne précharge plus
+que les deux familles critiques, au lieu de mettre en concurrence toutes les
+polices dès le premier rendu. La campagne confirme l'efficacité cumulée de la
+suppression des animations bloquantes et de la réduction du preload fonts.
+
+**Décision :** le critère LCP p75 mobile de la définition de terminé de Phase 8
+est validé. Le contrôle Core Web Vitals RC1 est coché et RC1 passe à 2 tâches
+sur 38. RC1 global reste actif et non terminé; Phase 9 demeure inactive.
+
+**Bottleneck suivant :** le chemin critique restant de `/login` est dominé par
+le chargement des chunks JavaScript et l'hydratation. Ce constat est documenté
+sans ouvrir ni appliquer de correction dans cette étape.

@@ -568,9 +568,11 @@ L'IA est un avantage produit, mais les providers, modèles, prompts, parseurs, q
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P2/P3**
 
-**Statut : checklist Phase 8 terminée — 13 tâches sur 13. La définition de
-terminé reste à auditer en RC1 : le p75 mobile n'est pas démontrable avec les
-six observations locales ; leur gain médian est `16,580 %` face à une cible
+**Statut : checklist Phase 8 terminée — 13 tâches sur 13. Le critère LCP de la
+définition de terminé est validé en RC1 : sur le Preview
+`phase-6-staging` au commit `63dad1e`, le LCP p75 mobile froid atteint
+`1 428 ms` sur `/fr/landing` et `2 856 ms` sur `/login`, soit des gains
+respectifs de `53,03 %` et `38,13 %` depuis la baseline, au-delà de la cible
 documentaire de `20 %`. Baseline production Webpack capturée deux fois,
 budgets anti-régression automatisés, coque serveur du dashboard extraite,
 frontières de chargement ajoutées aux segments importants, frontières d’erreur
@@ -588,7 +590,11 @@ Next, avec six requêtes au lieu de sept et deux contrôles 79/79.
 La [comparaison Core Web Vitals](docs/PERFORMANCE_CWV_COMPARISON.md) est
 reproductible sur les validations finales. La calibration locale v2 de l'INP
 client (`53/36 → 64/48 ms`) conserve tout l'historique et fait passer les six
-artefacts 79/79 sans modifier leurs mesures.**
+artefacts 79/79 sans modifier leurs mesures. Le contrôle RC1 mobile confirme
+également INP, CLS et TTFB au niveau `GOOD`. Le gain LCP vient de l'affichage
+immédiat des contenus critiques puis de la réduction des preloads de polices;
+le prochain bottleneck identifié est le chargement des chunks JavaScript et
+l'hydratation de `/login`.**
 
 ### Pourquoi
 
@@ -615,7 +621,8 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 ### Définition de terminé
 
 - Bundle principal réduit d'au moins 25 %.
-- LCP p75 mobile amélioré d'au moins 20 %.
+- LCP p75 mobile amélioré d'au moins 20 % — **validé en RC1** :
+  `−53,03 %` sur `/fr/landing` et `−38,13 %` sur `/login`.
 - Médias publics du déploiement réduits d'au moins 50 %.
 - Aucun média manquant.
 - Les pages critiques possèdent chargement et erreur dédiés.
@@ -624,8 +631,9 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 1 tâche sur 38. Phase 6 est terminée et `VALIDATED`;
-l'audit de fin de Phase 8 et les autres contrôles RC1 restent ouverts.
+**Statut : active — 2 tâches sur 38. Phase 6 est terminée et `VALIDATED`;
+le critère LCP de fin de Phase 8 est validé, tandis que l'audit global et les
+autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 
 ### Checklist
@@ -660,7 +668,9 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [ ] Vérifier qu’aucun média privé n’est public.
 - [ ] Vérifier les polices locales et l’absence de Google Fonts.
 - [ ] Vérifier les deux baselines et tous les budgets performance.
-- [ ] Réaliser un contrôle Core Web Vitals RC1.
+- [x] Réaliser un contrôle Core Web Vitals RC1 — Preview `phase-6-staging`
+  `63dad1e`, LCP p75 mobile froid `1 428 ms` landing et `2 856 ms` login,
+  gains `53,03 %` et `38,13 %`; INP, CLS et TTFB `GOOD`.
 - [ ] Scanner secrets, tokens, URLs signées et données personnelles.
 - [ ] Vérifier dépendances et vulnérabilités sans mise à jour automatique.
 - [ ] Préparer notes de version, limitations et dettes connues.
@@ -867,7 +877,7 @@ Mettre à jour ce tableau chaque vendredi.
 | Parcours E2E intégrés | 0 | ≥8 | ≥15 | 5, réunis dans une suite canonique | 🔴 |
 | Poids médias publics | ≈154 Mo | ≤120 Mo | ≤70 Mo | ≈154 Mo | 🟠 |
 | Bundle principal | À mesurer | −15 % | −30 % | À mesurer | ⬜ |
-| LCP p75 mobile | À mesurer | −10 % | −20 % | À mesurer | ⬜ |
+| LCP p75 mobile | Landing 3 040 ms / Login 4 616 ms | −10 % | −20 % | Landing 1 428 ms (−53,03 %) / Login 2 856 ms (−38,13 %) | 🟢 |
 | Taux de tests instables | À mesurer | <3 % | <2 % | À mesurer | ⬜ |
 | Régressions par release | À mesurer | −25 % | −50 % | À mesurer | ⬜ |
 
