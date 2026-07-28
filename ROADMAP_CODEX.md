@@ -460,8 +460,8 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : `partial` — checklist terminée, 10 tâches sur 10 et 3 critères de
-fin sur 4 satisfaits. Le projet Supabase staging
+**Statut : Phase 6 terminée — `VALIDATED`, checklist terminée, 10 tâches sur
+10 et définition de terminé validée, 4 critères sur 4. Le projet Supabase staging
 `cycbnnojcymjnaqomlyj`, le Preview Vercel isolé
 `Preview / phase-6-staging` et Stripe Test sont explicitement gardés. La
 cohorte Auth v2 canonique compte 9 utilisateurs `76100000-*`, créés par
@@ -481,13 +481,17 @@ signature, acquis un claim et finalisé une fois en `success`, sans double
 mutation. Les anciens blocages d'environnement, d'Auth, d'endpoints, d'autorité
 Stripe et de Price sont donc levés.
 
-La Phase 6 n'est pas `VALIDATED` : aucun rapport complet de réconciliation
-Stripe/base sans divergence n'est encore archivé. De plus, le payment réel est
-`paid` mais `payments.stripe_event_id` reste `null`. Ce comportement correspond
-au chemin runtime actuel de `markPaymentPaid`, mais contredit le contrat du
-service de réconciliation, qui le classe `PAYMENT_EVENT_ID_MISSING` et peut
-classer l'événement `PAYMENT_MISSING_FOR_EVENT`. Ce reliquat doit être réaligné
-avant de rejouer la réconciliation finale.**
+Le correctif de finalisation persiste désormais `payments.stripe_event_id`;
+le paiement historique a été remédié de manière déterministe. Sur le commit
+déployé `8de0ffd`, la réconciliation complète en lecture seule est non
+partielle, non tronquée et ne signale aucune issue. Les familles inspectées
+sont non vides : 1 profil, 2 événements webhook, 3 payments et 1 checkout
+terminé. Le périmètre documenté exclut séparément 8 objets historiques,
+6 synthétiques et 3 liés à la cohorte quarantainée `76000000-*`; il comptabilise
+aussi 1 invoice initiale de subscription et 2 payments pending non finalisés.
+Ces volumes ne sont pas des divergences actives et aucune donnée réelle de la
+cohorte v2 n'est masquée. Le backup distant de référence est
+`backup/phase-6-staging-rc1-12198ae`.**
 
 ### Pourquoi
 
@@ -512,7 +516,7 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 
 - [x] Chaque événement Stripe supporté possède un test.
 - [x] Le replay ne produit aucune double mutation.
-- [ ] La réconciliation ne signale aucune divergence en préproduction.
+- [x] La réconciliation ne signale aucune divergence en préproduction.
 - [x] Les routes Stripe ne contiennent plus de logique métier substantielle.
 
 ---
@@ -620,8 +624,9 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 1 tâche sur 38. Phase 9 inactive jusqu'à validation
-explicite de RC1.**
+**Statut : active — 1 tâche sur 38. Phase 6 est terminée et `VALIDATED`;
+l'audit de fin de Phase 8 et les autres contrôles RC1 restent ouverts.
+Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 
 ### Checklist
 

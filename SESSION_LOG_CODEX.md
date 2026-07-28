@@ -12739,3 +12739,52 @@ exécuté avant remise du rapport.
 afin que la finalisation du payment persiste atomiquement l'identifiant de
 l'événement Stripe, avec tests de non-régression et d'idempotence, sans mutation
 distante.
+
+## Entrée — 2026-07-28 — RC1 Phase 6 : clôture officielle
+
+**Chaîne de livraison :** le commit `39d8275` persiste atomiquement
+`stripe_event_id` pendant la finalisation du payment; le commit `12198ae`
+archive la preuve du checkout réel; le commit `8de0ffd` borne explicitement la
+réconciliation RC1. Le backup distant
+`backup/phase-6-staging-rc1-12198ae` conserve le point de référence
+documentaire. Le Preview `phase-6-staging` du commit `8de0ffd` est déployé avec
+le statut `READY`.
+
+**Preuves Phase 6 consolidées :** les 9 utilisateurs Auth v2
+`76100000-*` sont canoniques et leur seed relationnel est validé. Le diagnostic
+environnement répond HTTP 200 avec Supabase staging, Stripe Test et les secrets
+webhook Platform et Connect présents sans exposition de leur valeur. Les deux
+endpoints Stripe sont actifs, séparés et limités au mode test. Le checkout réel
+à 10 CHF est payé; sa signature webhook est acceptée, son claim et sa
+finalisation sont uniques et `success`, le payment, le customer et la
+subscription sont cohérents, sans double mutation. Le lien
+`payments.stripe_event_id` est désormais persisté et le payment historique a
+été remédié de manière déterministe.
+
+**Réconciliation déployée :** sur `8de0ffd`, le rapport complet retourne
+`readOnly=true`, `partial=false`, `truncated=false`, `issues=[]`. Il inspecte
+1 profil, 2 événements webhook, 3 payments et 1 checkout terminé. Les compteurs
+hors issues actives sont `historicalExcludedCount=8`,
+`syntheticExcludedCount=6`, `quarantinedExcludedCount=3`,
+`ignoredInitialInvoiceCount=1` et `pendingNotFinalizedCount=2`. Les exclusions
+historiques, synthétiques et de la cohorte quarantainée `76000000-*` sont
+déterministes et documentées; aucune donnée réelle v2 n'est exclue.
+`RECONCILIATION_VALIDATED=YES`.
+
+**Décision :** Phase 6 passe officiellement à
+« Phase 6 terminée — `VALIDATED` », avec 10 tâches sur 10 et 4 critères de fin
+sur 4. RC1 reste actif à 1 tâche sur 38 et n'est pas terminé. Phase 9 demeure
+inactive.
+
+**RC1 encore ouvert hors Phase 6 :** l'audit global des Phases 1 à 8 ne peut
+pas être coché tant que la définition de fin de Phase 8 n'est pas démontrée.
+Le contrôle Core Web Vitals RC1 doit notamment établir le LCP p75 mobile :
+les six observations locales disponibles ne permettent pas de démontrer la
+cible de 20 % et leur gain médian est de 16,580 %. Restent également les
+contrôles RC1 non cochés, dont le checkout coach, le replay runtime des
+webhooks, les validations complètes techniques, fonctionnelles, sécurité,
+performance et humaines, puis la validation explicite RC1.
+
+**Prochaine checklist :** réaliser le contrôle Core Web Vitals RC1 avec un
+échantillon permettant de statuer sur le LCP p75 mobile de Phase 8, sans
+activer Phase 9.
