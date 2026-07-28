@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type Stripe from 'stripe'
 import {
   createBillingReconciliationStripePort,
+  RC1_PHASE6_RECONCILIATION_SCOPE,
   reconcileBillingAudit,
   type BillingReconciliationRepository,
   type BillingReconciliationStripePort,
@@ -53,6 +54,11 @@ describe('Billing reconciliation audit', () => {
     expect(report).toEqual({
       generatedAt: NOW.toISOString(), readOnly: true,
       scanned: { webhookEvents: 1, payments: 1, profiles: 1, completedCheckouts: 0 },
+      historicalExcludedCount: 0,
+      syntheticExcludedCount: 0,
+      quarantinedExcludedCount: 0,
+      ignoredInitialInvoiceCount: 0,
+      pendingNotFinalizedCount: 0,
       issues: [], truncated: false, partial: false,
     })
     expect(repository.readSnapshot).toHaveBeenCalledWith({ limit: 100 })
@@ -173,6 +179,269 @@ describe('Billing reconciliation audit', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CHECKOUT_WEBHOOK_MISSING' }))
   })
 
+  it('accepts a subscription_create invoice covered by its paid checkout', async () => {
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [
+        {
+          eventId: 'evt_checkout', eventType: 'checkout.session.completed',
+          status: 'success', processedAt: NOW.toISOString(),
+          processingStartedAt: null, objectId: 'cs_checkout',
+          clientId: '76100000-0000-4000-8000-000000000003',
+          customerId: 'cus_current', subscriptionId: 'sub_current',
+          billingReason: null,
+        },
+        {
+          eventId: 'evt_initial_invoice', eventType: 'invoice.payment_succeeded',
+          status: 'success', processedAt: NOW.toISOString(),
+          processingStartedAt: null, objectId: 'in_initial',
+          clientId: null, customerId: 'cus_current',
+          subscriptionId: 'sub_current', billingReason: 'subscription_create',
+        },
+      ],
+      payments: [{
+        id: 'pay_checkout', clientId: '76100000-0000-4000-8000-000000000003',
+        stripeEventId: 'evt_checkout', checkoutSessionId: 'cs_checkout',
+        status: 'paid',
+      }],
+      profiles: [],
+    }
+
+    const { report } = await audit(snapshot)
+
+    expect(report.issues).toEqual([])
+    expect(report.ignoredInitialInvoiceCount).toBe(1)
+  })
+
+  it('keeps the complete RC1 v2 checkout, payment, invoice and subscription scenario green', async () => {
+    const clientId = '76100000-0000-4000-8000-000000000003'
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [
+        {
+          eventId: 'evt_rc1_checkout', eventType: 'checkout.session.completed',
+          status: 'success', processedAt: NOW.toISOString(),
+          processingStartedAt: null, objectId: 'cs_rc1',
+          clientId, customerId: 'cus_rc1', subscriptionId: 'sub_rc1',
+        },
+        {
+          eventId: 'evt_rc1_invoice', eventType: 'invoice.payment_succeeded',
+          status: 'success', processedAt: NOW.toISOString(),
+          processingStartedAt: null, objectId: 'in_rc1',
+          customerId: 'cus_rc1', subscriptionId: 'sub_rc1',
+          billingReason: 'subscription_create',
+        },
+      ],
+      payments: [{
+        id: 'pay_rc1', clientId, stripeEventId: 'evt_rc1_checkout',
+        checkoutSessionId: 'cs_rc1', status: 'paid',
+      }],
+      profiles: [{
+        id: clientId, stripeCustomerId: 'cus_rc1',
+        stripeSubscriptionId: 'sub_rc1', stripeAccountId: null,
+        subscriptionStatus: 'active',
+      }],
+    }
+    const deps = ports(snapshot)
+    vi.mocked(deps.stripe.retrieveSubscription).mockResolvedValue({
+      ok: true, value: { status: 'active', customerId: 'cus_rc1' },
+    })
+    vi.mocked(deps.stripe.listRecentCompletedCheckouts).mockResolvedValue({
+      ok: true,
+      value: [{
+        id: 'cs_rc1', clientId, hasMoovxMetadata: true,
+      }],
+    })
+
+    const report = await reconcileBillingAudit({
+      ...deps, now: () => NOW, scope: RC1_PHASE6_RECONCILIATION_SCOPE,
+    })
+
+    expect(report).toEqual(expect.objectContaining({
+      readOnly: true,
+      partial: false,
+      truncated: false,
+      ignoredInitialInvoiceCount: 1,
+      issues: [],
+    }))
+    expect(report.scanned).toEqual({
+      webhookEvents: 2,
+      payments: 1,
+      profiles: 1,
+      completedCheckouts: 1,
+    })
+  })
+
+  it('requires a payment for subscription_cycle invoices and accepts it when present', async () => {
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [{
+        eventId: 'evt_cycle', eventType: 'invoice.payment_succeeded',
+        status: 'success', processedAt: NOW.toISOString(),
+        processingStartedAt: null, objectId: 'in_cycle',
+        subscriptionId: 'sub_current', billingReason: 'subscription_cycle',
+      }],
+      payments: [],
+      profiles: [],
+    }
+
+    const missing = await audit(snapshot)
+    expect(missing.report.issues).toContainEqual(expect.objectContaining({
+      code: 'PAYMENT_MISSING_FOR_EVENT',
+    }))
+
+    snapshot.payments.push({
+      id: 'pay_cycle', clientId: '76100000-0000-4000-8000-000000000003',
+      stripeEventId: 'evt_cycle', checkoutSessionId: null, status: 'paid',
+    })
+    const covered = await audit(snapshot)
+    expect(covered.report.issues).toEqual([])
+  })
+
+  it.each([
+    ['with session', 'cs_pending'],
+    ['without session', null],
+  ])('does not require an event for a pending payment %s', async (_label, sessionId) => {
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [],
+      payments: [{
+        id: 'pay_pending', clientId: '76100000-0000-4000-8000-000000000003',
+        stripeEventId: null, checkoutSessionId: sessionId, status: 'pending',
+      }],
+      profiles: [],
+    }
+
+    const { report } = await audit(snapshot)
+
+    expect(report.issues).toEqual([])
+    expect(report.pendingNotFinalizedCount).toBe(1)
+  })
+
+  it('still requires an event for paid payments and pending payments with a successful checkout claim', async () => {
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [{
+        eventId: 'evt_completed', eventType: 'checkout.session.completed',
+        status: 'success', processedAt: NOW.toISOString(),
+        processingStartedAt: null, objectId: 'cs_completed',
+      }],
+      payments: [
+        {
+          id: 'pay_paid', stripeEventId: null,
+          checkoutSessionId: 'cs_paid', status: 'paid',
+        },
+        {
+          id: 'pay_pending_completed', stripeEventId: null,
+          checkoutSessionId: 'cs_completed', status: 'pending',
+        },
+      ],
+      profiles: [],
+    }
+
+    const { report } = await audit(snapshot)
+
+    expect(report.issues.filter(issue =>
+      issue.code === 'PAYMENT_EVENT_ID_MISSING')).toHaveLength(2)
+    expect(report.pendingNotFinalizedCount).toBe(0)
+  })
+
+  it('excludes the frozen 760 cohort and its historical Stripe authorities only in RC1 scope', async () => {
+    const oldClient = '76000000-0000-4000-8000-000000000003'
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [
+        {
+          eventId: 'evt_old_checkout', eventType: 'checkout.session.completed',
+          status: 'failed', processedAt: '2026-07-17T10:00:00Z',
+          processingStartedAt: null, objectId: 'cs_old', clientId: oldClient,
+          customerId: 'cus_old', subscriptionId: 'sub_old',
+        },
+        {
+          eventId: 'evt_old_invoice', eventType: 'invoice.payment_succeeded',
+          status: 'success', processedAt: '2026-07-17T10:00:01Z',
+          processingStartedAt: null, objectId: 'in_old', clientId: null,
+          customerId: 'cus_old', subscriptionId: 'sub_old',
+          billingReason: 'subscription_create',
+        },
+      ],
+      payments: [{
+        id: 'pay_old', clientId: oldClient, stripeEventId: null,
+        checkoutSessionId: 'cs_old', status: 'paid',
+      }],
+      profiles: [{
+        id: oldClient, stripeCustomerId: 'cus_old',
+        stripeSubscriptionId: 'sub_old', stripeAccountId: null,
+        subscriptionStatus: 'active',
+      }],
+    }
+    const deps = ports(snapshot)
+
+    const report = await reconcileBillingAudit({
+      ...deps, now: () => NOW, scope: RC1_PHASE6_RECONCILIATION_SCOPE,
+    })
+
+    expect(report.issues).toEqual([])
+    expect(report.historicalExcludedCount).toBe(2)
+    expect(report.quarantinedExcludedCount).toBe(2)
+    expect(deps.stripe.retrieveCustomer).not.toHaveBeenCalled()
+    expect(deps.stripe.retrieveSubscription).not.toHaveBeenCalled()
+  })
+
+  it('excludes only verified synthetic fixtures and metadata-free Stripe CLI checkouts', async () => {
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [{
+        eventId: 'evt_rc1_platform_checkout_1785178456533',
+        eventType: 'checkout.session.completed', status: 'failed',
+        processedAt: NOW.toISOString(), processingStartedAt: null,
+        objectId: 'cs_test_rc1_1785178456533', clientId: null,
+      }],
+      payments: [],
+      profiles: [],
+    }
+    const deps = ports(snapshot)
+    vi.mocked(deps.stripe.listRecentCompletedCheckouts).mockResolvedValue({
+      ok: true,
+      value: [{
+        id: 'cs_cli_fixture', clientId: null, hasMoovxMetadata: false,
+      }],
+    })
+
+    const report = await reconcileBillingAudit({
+      ...deps, now: () => NOW, scope: RC1_PHASE6_RECONCILIATION_SCOPE,
+    })
+
+    expect(report.issues).toEqual([])
+    expect(report.syntheticExcludedCount).toBe(2)
+  })
+
+  it('never excludes a current v2 failed event or malformed v2 checkout', async () => {
+    const currentClient = '76100000-0000-4000-8000-000000000003'
+    const snapshot: ReconciliationSnapshot = {
+      webhookEvents: [{
+        eventId: 'evt_rc1_platform_checkout_1785178456533',
+        eventType: 'checkout.session.completed', status: 'failed',
+        processedAt: NOW.toISOString(), processingStartedAt: null,
+        objectId: 'cs_current_failed', clientId: currentClient,
+      }],
+      payments: [],
+      profiles: [],
+    }
+    const deps = ports(snapshot)
+    vi.mocked(deps.stripe.listRecentCompletedCheckouts).mockResolvedValue({
+      ok: true,
+      value: [{
+        id: 'cs_current_malformed',
+        clientId: currentClient,
+        hasMoovxMetadata: false,
+      }],
+    })
+
+    const report = await reconcileBillingAudit({
+      ...deps, now: () => NOW, scope: RC1_PHASE6_RECONCILIATION_SCOPE,
+    })
+
+    expect(report.issues.map(issue => issue.code)).toEqual([
+      'WEBHOOK_FAILED_STALE',
+      'CHECKOUT_WEBHOOK_MISSING',
+    ])
+    expect(report.syntheticExcludedCount).toBe(0)
+  })
+
   it('continues after a partial Stripe outage without exposing provider errors', async () => {
     const { report } = await audit(cleanSnapshot(), {
       retrieveSubscription: vi.fn(async () => ({ ok: false as const, reason: 'unavailable' as const })),
@@ -221,7 +490,14 @@ describe('Billing reconciliation Stripe adapter', () => {
     expect(await port.retrieveConnectAccount('acct_private')).toEqual({
       ok: true, value: { chargesEnabled: true, payoutsEnabled: false, detailsSubmitted: true },
     })
-    expect(await port.listRecentCompletedCheckouts({ limit: 10 })).toEqual({ ok: true, value: [{ id: 'cs_complete' }] })
+    expect(await port.listRecentCompletedCheckouts({ limit: 10 })).toEqual({
+      ok: true,
+      value: [{
+        id: 'cs_complete',
+        clientId: null,
+        hasMoovxMetadata: false,
+      }],
+    })
     expect(JSON.stringify(await port.retrieveCustomer('cus_private'))).not.toContain('secret provider payload')
   })
 })

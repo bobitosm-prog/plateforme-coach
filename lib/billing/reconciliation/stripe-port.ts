@@ -1,4 +1,5 @@
 import type Stripe from 'stripe'
+import { parseCheckoutMetadata } from '@/lib/stripe/metadata'
 import type { BillingReconciliationStripePort, StripeReadResult } from './types'
 
 function unavailable<T>(error: unknown): StripeReadResult<T> {
@@ -44,7 +45,22 @@ export function createBillingReconciliationStripePort(stripe: Stripe): BillingRe
     async listRecentCompletedCheckouts({ limit }) {
       try {
         const sessions = await stripe.checkout.sessions.list({ limit })
-        return { ok: true, value: sessions.data.filter(session => session.status === 'complete').map(session => ({ id: session.id })) }
+        return {
+          ok: true,
+          value: sessions.data
+            .filter(session => session.status === 'complete')
+            .map(session => {
+              const metadata = session.metadata as Record<string, string> | null
+              const parsed = parseCheckoutMetadata(metadata)
+              return {
+                id: session.id,
+                clientId: typeof metadata?.clientId === 'string'
+                  ? metadata.clientId
+                  : null,
+                hasMoovxMetadata: parsed.ok,
+              }
+            }),
+        }
       } catch (error) {
         return unavailable(error)
       }

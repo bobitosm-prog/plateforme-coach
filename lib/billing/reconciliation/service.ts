@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto'
 import type {
   BillingReconciliationRepository,
+  BillingReconciliationScope,
   BillingReconciliationStripePort,
+  LocalWebhookEvent,
   ReconciliationIssue,
   ReconciliationReport,
   ReconciliationSource,
@@ -39,6 +41,96 @@ export interface ReconcileBillingInput {
   staleAfterMs?: number
   limit?: number
   maxIssues?: number
+  scope?: BillingReconciliationScope
+}
+
+interface ReconciliationExclusions {
+  historicalExcludedCount: number
+  syntheticExcludedCount: number
+  quarantinedExcludedCount: number
+  ignoredInitialInvoiceCount: number
+  pendingNotFinalizedCount: number
+}
+
+function emptyExclusions(): ReconciliationExclusions {
+  return {
+    historicalExcludedCount: 0,
+    syntheticExcludedCount: 0,
+    quarantinedExcludedCount: 0,
+    ignoredInitialInvoiceCount: 0,
+    pendingNotFinalizedCount: 0,
+  }
+}
+
+function matchesPrefix(
+  value: string | null | undefined,
+  prefixes: readonly string[],
+): boolean {
+  return Boolean(value && prefixes.some(prefix => value.startsWith(prefix)))
+}
+
+function scopeLocalSnapshot(
+  snapshot: ReconciliationSnapshot,
+  scope: BillingReconciliationScope | undefined,
+  exclusions: ReconciliationExclusions,
+): ReconciliationSnapshot {
+  if (!scope) return snapshot
+
+  const isCurrentClient = (clientId: string | null | undefined) =>
+    matchesPrefix(clientId, scope.currentClientIdPrefixes)
+  const isQuarantinedClient = (clientId: string | null | undefined) =>
+    matchesPrefix(clientId, scope.quarantinedClientIdPrefixes)
+  const historicalCustomers = new Set(
+    snapshot.profiles
+      .filter(profile => isQuarantinedClient(profile.id))
+      .map(profile => profile.stripeCustomerId)
+      .filter((id): id is string => Boolean(id)),
+  )
+  const historicalSubscriptions = new Set(
+    snapshot.profiles
+      .filter(profile => isQuarantinedClient(profile.id))
+      .map(profile => profile.stripeSubscriptionId)
+      .filter((id): id is string => Boolean(id)),
+  )
+
+  for (const event of snapshot.webhookEvents) {
+    if (!isQuarantinedClient(event.clientId)) continue
+    if (event.customerId) historicalCustomers.add(event.customerId)
+    if (event.subscriptionId) historicalSubscriptions.add(event.subscriptionId)
+  }
+
+  const webhookEvents = snapshot.webhookEvents.filter(event => {
+    if (isCurrentClient(event.clientId)) return true
+    if (scope.syntheticEventIds.includes(event.eventId)) {
+      exclusions.syntheticExcludedCount += 1
+      return false
+    }
+    if (
+      isQuarantinedClient(event.clientId)
+      || Boolean(event.customerId && historicalCustomers.has(event.customerId))
+      || Boolean(
+        event.subscriptionId
+        && historicalSubscriptions.has(event.subscriptionId)
+      )
+    ) {
+      exclusions.historicalExcludedCount += 1
+      return false
+    }
+    return true
+  })
+
+  const payments = snapshot.payments.filter(payment => {
+    if (!isQuarantinedClient(payment.clientId)) return true
+    exclusions.quarantinedExcludedCount += 1
+    return false
+  })
+  const profiles = snapshot.profiles.filter(profile => {
+    if (!isQuarantinedClient(profile.id)) return true
+    exclusions.quarantinedExcludedCount += 1
+    return false
+  })
+
+  return { webhookEvents, payments, profiles }
 }
 
 export async function reconcileBillingAudit(input: ReconcileBillingInput): Promise<ReconciliationReport> {
@@ -47,7 +139,9 @@ export async function reconcileBillingAudit(input: ReconcileBillingInput): Promi
   const staleAfterMs = Math.max(60_000, input.staleAfterMs ?? 5 * 60_000)
   const limit = Math.min(500, Math.max(1, input.limit ?? 100))
   const maxIssues = Math.min(500, Math.max(1, input.maxIssues ?? 200))
-  const snapshot = await input.repository.readSnapshot({ limit })
+  const rawSnapshot = await input.repository.readSnapshot({ limit })
+  const exclusions = emptyExclusions()
+  const snapshot = scopeLocalSnapshot(rawSnapshot, input.scope, exclusions)
   const issues: ReconciliationIssue[] = []
   let truncated = false
   let partial = false
@@ -60,7 +154,7 @@ export async function reconcileBillingAudit(input: ReconcileBillingInput): Promi
     issues.push(issue)
   }
 
-  auditLocalSnapshot(snapshot, nowMs, staleAfterMs, add)
+  auditLocalSnapshot(snapshot, nowMs, staleAfterMs, exclusions, add)
 
   const stripeFailure = (source: ReconciliationSource, id: string, result: StripeReadResult<unknown>) => {
     if (result.ok) return false
@@ -150,12 +244,34 @@ export async function reconcileBillingAudit(input: ReconcileBillingInput): Promi
   let completedCheckouts = 0
   const checkoutResult = await input.stripe.listRecentCompletedCheckouts({ limit })
   if (checkoutResult.ok) {
-    completedCheckouts = checkoutResult.value.length
     const claimedCheckoutIds = new Set(snapshot.webhookEvents
       .filter(event => event.eventType === 'checkout.session.completed')
       .map(event => event.objectId)
       .filter((id): id is string => Boolean(id)))
     for (const checkout of checkoutResult.value.slice(0, limit)) {
+      const currentClient = matchesPrefix(
+        checkout.clientId,
+        input.scope?.currentClientIdPrefixes || [],
+      )
+      if (
+        input.scope
+        && matchesPrefix(
+          checkout.clientId,
+          input.scope.quarantinedClientIdPrefixes,
+        )
+      ) {
+        exclusions.historicalExcludedCount += 1
+        continue
+      }
+      if (
+        input.scope?.excludeUncontractedCheckouts
+        && !checkout.hasMoovxMetadata
+        && !currentClient
+      ) {
+        exclusions.syntheticExcludedCount += 1
+        continue
+      }
+      completedCheckouts += 1
       if (!claimedCheckoutIds.has(checkout.id)) {
         add({
           code: 'CHECKOUT_WEBHOOK_MISSING', severity: 'critical', source: 'checkout',
@@ -176,6 +292,7 @@ export async function reconcileBillingAudit(input: ReconcileBillingInput): Promi
       profiles: snapshot.profiles.length,
       completedCheckouts,
     },
+    ...exclusions,
     issues, truncated, partial,
   }
 }
@@ -184,16 +301,34 @@ function auditLocalSnapshot(
   snapshot: ReconciliationSnapshot,
   nowMs: number,
   staleAfterMs: number,
+  exclusions: ReconciliationExclusions,
   add: (issue: ReconciliationIssue) => void,
 ) {
+  const successfulCheckoutBySession = new Set(snapshot.webhookEvents
+    .filter(event =>
+      event.eventType === 'checkout.session.completed'
+      && event.status === 'success'
+      && event.objectId,
+    )
+    .map(event => event.objectId as string))
   const paymentsByEvent = new Map<string, number>()
   for (const payment of snapshot.payments) {
     if (!payment.stripeEventId) {
-      add({
-        code: 'PAYMENT_EVENT_ID_MISSING', severity: 'warning', source: 'payment',
-        entityRef: opaqueRef('payment', payment.id), recommendation: 'INSPECT_PAYMENT',
-        summary: 'Local payment has no Stripe event authority',
-      })
+      if (
+        payment.status === 'pending'
+        && (
+          !payment.checkoutSessionId
+          || !successfulCheckoutBySession.has(payment.checkoutSessionId)
+        )
+      ) {
+        exclusions.pendingNotFinalizedCount += 1
+      } else if (payment.status === 'paid' || payment.status === 'pending') {
+        add({
+          code: 'PAYMENT_EVENT_ID_MISSING', severity: 'warning', source: 'payment',
+          entityRef: opaqueRef('payment', payment.id), recommendation: 'INSPECT_PAYMENT',
+          summary: 'Local payment has no Stripe event authority',
+        })
+      }
       continue
     }
     paymentsByEvent.set(payment.stripeEventId, (paymentsByEvent.get(payment.stripeEventId) || 0) + 1)
@@ -209,11 +344,12 @@ function auditLocalSnapshot(
 
   for (const event of snapshot.webhookEvents) {
     const ageMs = timestampAgeMs(event.processingStartedAt || event.processedAt, nowMs)
-    if (event.status === 'failed' && ageMs !== null && ageMs >= staleAfterMs) {
+    if (event.status === 'failed') {
       add({
         code: 'WEBHOOK_FAILED_STALE', severity: 'critical', source: 'webhook',
         entityRef: opaqueRef('webhook', event.eventId), recommendation: 'RETRY_WEBHOOK',
-        summary: 'Failed webhook remains unrecovered', context: { ageSeconds: Math.floor(ageMs / 1000) },
+        summary: 'Failed webhook remains unrecovered',
+        context: { ageSeconds: ageMs === null ? 0 : Math.floor(ageMs / 1000) },
       })
     }
     if (event.status === 'processing' && ageMs !== null && ageMs >= staleAfterMs) {
@@ -223,7 +359,19 @@ function auditLocalSnapshot(
         summary: 'Webhook processing lease is stale', context: { ageSeconds: Math.floor(ageMs / 1000) },
       })
     }
-    if (event.status === 'success' && PAYMENT_EVENT_TYPES.has(event.eventType) && !paymentsByEvent.has(event.eventId)) {
+    const ignoredInitialInvoice =
+      event.eventType === 'invoice.payment_succeeded'
+      && event.billingReason === 'subscription_create'
+      && initialInvoiceHasCheckoutPayment(snapshot, event)
+    if (ignoredInitialInvoice) {
+      exclusions.ignoredInitialInvoiceCount += 1
+    }
+    if (
+      event.status === 'success'
+      && PAYMENT_EVENT_TYPES.has(event.eventType)
+      && !ignoredInitialInvoice
+      && !paymentsByEvent.has(event.eventId)
+    ) {
       add({
         code: 'PAYMENT_MISSING_FOR_EVENT', severity: 'critical', source: 'payment',
         entityRef: opaqueRef('payment', event.eventId), recommendation: 'INSPECT_PAYMENT',
@@ -231,4 +379,30 @@ function auditLocalSnapshot(
       })
     }
   }
+}
+
+function initialInvoiceHasCheckoutPayment(
+  snapshot: ReconciliationSnapshot,
+  invoice: LocalWebhookEvent,
+): boolean {
+  if (!invoice.subscriptionId) return false
+  const checkout = snapshot.webhookEvents.find(event =>
+    event.eventType === 'checkout.session.completed'
+    && event.status === 'success'
+    && event.subscriptionId === invoice.subscriptionId
+    && event.objectId,
+  )
+  if (!checkout?.objectId) return false
+  return snapshot.payments.some(payment =>
+    payment.status === 'paid'
+    && (
+      !checkout.clientId
+      || !payment.clientId
+      || checkout.clientId === payment.clientId
+    )
+    && (
+      payment.stripeEventId === checkout.eventId
+      || payment.checkoutSessionId === checkout.objectId
+    ),
+  )
 }

@@ -54,9 +54,30 @@ export interface ReconciliationReport {
     profiles: number
     completedCheckouts: number
   }
+  historicalExcludedCount: number
+  syntheticExcludedCount: number
+  quarantinedExcludedCount: number
+  ignoredInitialInvoiceCount: number
+  pendingNotFinalizedCount: number
   issues: ReconciliationIssue[]
   truncated: boolean
   partial: boolean
+}
+
+export interface BillingReconciliationScope {
+  name: string
+  currentClientIdPrefixes: readonly string[]
+  quarantinedClientIdPrefixes: readonly string[]
+  syntheticEventIds: readonly string[]
+  excludeUncontractedCheckouts: boolean
+}
+
+export const RC1_PHASE6_RECONCILIATION_SCOPE: BillingReconciliationScope = {
+  name: 'rc1-phase6-current',
+  currentClientIdPrefixes: ['76100000-'],
+  quarantinedClientIdPrefixes: ['76000000-'],
+  syntheticEventIds: ['evt_rc1_platform_checkout_1785178456533'],
+  excludeUncontractedCheckouts: true,
 }
 
 export interface LocalWebhookEvent {
@@ -66,10 +87,15 @@ export interface LocalWebhookEvent {
   processedAt: string
   processingStartedAt: string | null
   objectId: string | null
+  clientId?: string | null
+  customerId?: string | null
+  subscriptionId?: string | null
+  billingReason?: string | null
 }
 
 export interface LocalPayment {
   id: string
+  clientId?: string | null
   stripeEventId: string | null
   checkoutSessionId: string | null
   status: string | null
@@ -106,6 +132,8 @@ export interface StripeConnectAudit {
 
 export interface StripeCompletedCheckout {
   id: string
+  clientId?: string | null
+  hasMoovxMetadata?: boolean
 }
 
 export interface BillingReconciliationRepository {
