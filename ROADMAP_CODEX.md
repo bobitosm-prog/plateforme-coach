@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **26 juillet 2026**.
+> Dernière mise à jour : **28 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Release Candidate RC1 — audit préalable à Phase 9**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -460,30 +460,34 @@ Les dashboards coach et client detail concentrent données, calendrier, messages
 **Durée cible : 5 à 7 semaines**  
 **Priorité : P1**
 
-**Statut : `blocked` — checklist terminée, 10 tâches sur 10 ; le projet
-Supabase Free/Nano `moovx-staging` est lié au ref explicitement gardé. Le plan
-final de 138 migrations a été appliqué une fois : l'historique distant contient
-exactement 138 versions uniques, `pg_cron` reste absent et aucun job n'existe.
-Le [manifeste immuable de
-re-versioning](docs/PHASE_6_STAGING_MIGRATION_REVERSIONING.md) résout les
-17 collisions de 73 fichiers et autorise le catalogue synthétique canonique.
-La [classification des 53 mutations](docs/PHASE_6_STAGING_DATA_MUTATION_CLASSIFICATION.md)
-propose A=6, B=4, C=36, D=6, E=1, F=0. Les deux D individuelles passent leurs
-preuves SQL rollback. Le plan final matérialise 137 sources historiques et une
-projection schema-only, exclut cinq mutations refusées, conserve l'ordre et
-zéro collision; son dry-run Supabase puis son application sont verts à
-138 migrations. Le [seed synthétique déterministe
-Phase 6](docs/PHASE_6_STAGING_SYNTHETIC_SEED.md) a ensuite été appliqué une
-fois : 9 profils, 1 relation coach/client et les volumes Nutrition attendus
-sont présents, sans mot de passe ni identifiant Stripe. Aucun repair ou cron
-réel n'a été exécuté et aucune preuve Billing n'est encore exécutée.
-Aucune preuve de réconciliation Stripe/base n'est encore exécutée; Nutrition
-reste secondaire. Le [Preview Vercel isolé](docs/PHASE_6_VERCEL_PREVIEW.md)
-est `READY` et l'Auth directe staging de `clientCanonical` est validée. Les
-[webhooks Phase 6](docs/PHASE_6_STRIPE_WEBHOOK_SCOPES.md) possèdent désormais
-des routes locales, secrets et gardes `livemode` séparés pour plateforme et
-Connect. La Phase reste bloquée avant la création des deux endpoints Stripe
-test, du bypass Vercel et de la preuve Billing.**
+**Statut : `partial` — checklist terminée, 10 tâches sur 10 et 3 critères de
+fin sur 4 satisfaits. Le projet Supabase staging
+`cycbnnojcymjnaqomlyj`, le Preview Vercel isolé
+`Preview / phase-6-staging` et Stripe Test sont explicitement gardés. La
+cohorte Auth v2 canonique compte 9 utilisateurs `76100000-*`, créés par
+l'API Auth Admin, et son seed relationnel est appliqué; l'ancienne cohorte
+`76000000-*` reste quarantainée et inchangée. Le diagnostic runtime répond
+HTTP 200 avec le projet staging attendu, une clé Stripe classée `test`,
+`livemode=false` et les deux secrets webhook présents. Les endpoints Stripe
+test Platform `we_1Txt1…OqDMh6` et Connect `we_1Txt1…pUXwpb` sont actifs et
+séparés. L'autorité runtime est `acct_1SOyigIZkpmRaG4k`; le Price
+`price_1T…pXar5n` à 10 CHF/mois est actif en mode test.
+
+Le checkout réel du client v2 `76100000-0000-4000-8000-000000000003` est
+complet et payé : session `cs_test_…8WNAur`, customer
+`cus_Uy7D…yaQSU8`, subscription active `sub_1TyA…bsoGjH` et événement
+`evt_1TyA…7gaBWI`. Le webhook Platform a répondu HTTP 200, accepté la
+signature, acquis un claim et finalisé une fois en `success`, sans double
+mutation. Les anciens blocages d'environnement, d'Auth, d'endpoints, d'autorité
+Stripe et de Price sont donc levés.
+
+La Phase 6 n'est pas `VALIDATED` : aucun rapport complet de réconciliation
+Stripe/base sans divergence n'est encore archivé. De plus, le payment réel est
+`paid` mais `payments.stripe_event_id` reste `null`. Ce comportement correspond
+au chemin runtime actuel de `markPaymentPaid`, mais contredit le contrat du
+service de réconciliation, qui le classe `PAYMENT_EVENT_ID_MISSING` et peut
+classer l'événement `PAYMENT_MISSING_FOR_EVENT`. Ce reliquat doit être réaligné
+avant de rejouer la réconciliation finale.**
 
 ### Pourquoi
 
@@ -506,10 +510,10 @@ La facturation est un domaine critique et évoluera avec les offres, commissions
 
 ### Définition de terminé
 
-- Chaque événement Stripe supporté possède un test.
-- Le replay ne produit aucune double mutation.
-- La réconciliation ne signale aucune divergence en préproduction.
-- Les routes Stripe ne contiennent plus de logique métier substantielle.
+- [x] Chaque événement Stripe supporté possède un test.
+- [x] Le replay ne produit aucune double mutation.
+- [ ] La réconciliation ne signale aucune divergence en préproduction.
+- [x] Les routes Stripe ne contiennent plus de logique métier substantielle.
 
 ---
 
@@ -616,7 +620,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 0 tâche sur 38. Phase 9 inactive jusqu'à validation
+**Statut : active — 1 tâche sur 38. Phase 9 inactive jusqu'à validation
 explicite de RC1.**
 
 ### Checklist
@@ -639,8 +643,8 @@ explicite de RC1.**
 - [ ] Vérifier invitations et attribution coach.
 - [ ] Vérifier relations actives/inactives et accès étrangers.
 - [ ] Vérifier messagerie, realtime, reconnexion et nettoyage.
-- [ ] Vérifier checkout plateforme et coach en environnement de test.
-- [ ] Vérifier webhook replay, concurrence et événements désordonnés.
+- [ ] Vérifier checkout plateforme et coach en environnement de test — checkout plateforme client direct validé; checkout coach encore ouvert.
+- [ ] Vérifier webhook replay, concurrence et événements désordonnés — livraison réelle Platform validée; replay runtime RC1 encore ouvert.
 - [ ] Vérifier Training : programme, séance, reprise, repos et finalisation.
 - [ ] Vérifier Nutrition : journal, plans, recettes et génération IA.
 - [ ] Vérifier Progression : poids, mesures, records et analytics.
@@ -656,7 +660,7 @@ explicite de RC1.**
 - [ ] Vérifier dépendances et vulnérabilités sans mise à jour automatique.
 - [ ] Préparer notes de version, limitations et dettes connues.
 - [ ] Préparer le runbook de déploiement et rollback.
-- [ ] Déployer en préproduction si un environnement existe, avec autorisation séparée.
+- [x] Déployer en préproduction si un environnement existe, avec autorisation séparée — Preview isolé `phase-6-staging` `READY`.
 - [ ] Exécuter une validation humaine visuelle desktop/mobile.
 - [ ] Obtenir la validation explicite RC1 avant Phase 9.
 

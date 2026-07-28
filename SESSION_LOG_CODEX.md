@@ -12659,3 +12659,83 @@ minutes sans progrès ni diagnostic au-delà de la création du build optimisé.
 coché et Phase 9 reste inactive. Prochaine étape opérateur : autoriser un
 Protection Bypass for Automation, charger un credential Stripe test en mémoire
 et créer séparément les endpoints Account et Connect.
+
+## Entrée — 2026-07-28 — RC1 Phase 6 : checkout réel et webhook Platform validés
+
+**Contexte Git :** branche `phase-6-staging`, HEAD
+`e61b307b3f1370a152401188f3a9dcc785dd1abe`. Le working tree et l'index
+étaient propres avant cette mise à jour documentaire. Aucun commit ni push
+n'est créé.
+
+**Auth et seed v2 :** les neuf utilisateurs canoniques de la cohorte
+`76100000-*` ont été provisionnés exclusivement par l'API Supabase Auth Admin,
+avec identités e-mail et authentification fonctionnelles. L'administrateur
+RC1 est `phase6-v2-admin@moovx.invalid`; le client du checkout réel est
+`phase6-v2-client-1@moovx.invalid`, UUID
+`76100000-0000-4000-8000-000000000003`. Le seed relationnel v2 a créé les
+neuf profils, le rôle `super_admin` et les relations/volumes métier attendus,
+sans écriture SQL directe dans `auth.*`. L'ancienne cohorte `76000000-*`
+reste intacte et quarantainée.
+
+**Environnement :** le diagnostic runtime du Preview
+`Preview / phase-6-staging` répond HTTP 200. Il confirme le projet Supabase
+staging `cycbnnojcymjnaqomlyj`, une autorité Stripe classée `test`,
+`webhook_expected_livemode=false` et la présence des secrets Platform et
+Connect, sans exposer leur valeur. L'autorité Stripe runtime a été alignée sur
+`acct_1SOyigIZkpmRaG4k`.
+
+**Webhooks Stripe test :** les deux endpoints scoped sont actifs en mode test.
+Platform `we_1Txt1…OqDMh6` accepte strictement
+`checkout.session.completed`, `customer.subscription.updated`,
+`invoice.payment_succeeded` et `customer.subscription.deleted`. Connect
+`we_1Txt1…pUXwpb` accepte strictement `account.updated`. Leurs secrets restent
+séparés, présents dans le seul scope Preview de la branche et ne sont jamais
+consignés.
+
+**Price et checkout réel :** le Product `prod_Uy7…375BjE` et le Price
+`price_1T…pXar5n` ont été créés dans le compte Stripe Test aligné. Le Price est
+actif, `livemode=false`, récurrent mensuel, en CHF et à 1 000 centimes. La
+variable `NEXT_PUBLIC_PRICE_CLIENT_MONTHLY` du seul scope
+`Preview / phase-6-staging` a été alignée puis le Preview redéployé `READY`.
+
+Le client v2 a ensuite terminé un checkout réel à 10 CHF/mois. La session
+`cs_test_…8WNAur` est `complete` et `paid`, `livemode=false`; le customer
+`cus_Uy7D…yaQSU8` existe et la subscription `sub_1TyA…bsoGjH` est `active`.
+L'événement `evt_1TyA…7gaBWI` a été livré à la route Platform avec HTTP 200 et
+signature acceptée. Le claim durable est unique (`attempt_count=1`), sa
+finalisation est unique et `success`, sans erreur métier ni double mutation.
+
+**État staging :** le payment `…e1fa24` est `paid`, sa session est unique et
+`paid_at=2026-07-28T13:24:09.670Z`. Le profil porte le customer et la
+subscription masqués ci-dessus, `subscription_status=active` et
+`subscription_type=client_monthly`. Il existe une seule ligne payment pour
+cette session, un seul claim durable et une seule subscription active.
+`REAL_CHECKOUT_WEBHOOK_VALIDATED=YES`.
+
+**Reliquat contractuel :** `payments.stripe_event_id` reste `null` sur ce
+payment. Le claim durable et sa finalisation existent dans
+`stripe_webhook_events`; le handler plateforme appelle actuellement
+`markPaymentPaid(session.id, paidAt)`, qui ne persiste que `status` et
+`paid_at`. Ce `null` est donc attendu par l'implémentation runtime actuelle,
+mais il n'est pas conforme au contrat de réconciliation : celui-ci produit
+`PAYMENT_EVENT_ID_MISSING` et peut produire `PAYMENT_MISSING_FOR_EVENT`.
+Le champ est classé reliquat à corriger, pas exception acceptable pour une
+réconciliation sans divergence.
+
+**État roadmap :** les blocages Auth v2, seed relationnel, diagnostic runtime,
+endpoints Stripe, autorité du compte, Price et checkout/webhook réel sont
+levés. Phase 6 passe de `blocked` à `partial`, avec 3 critères de fin sur 4
+satisfaits. Elle ne peut pas devenir `VALIDATED` tant que le lien event/payment
+n'est pas réaligné et qu'un rapport complet de réconciliation Stripe/base sans
+issue, non partiel et non tronqué n'est pas archivé. RC1 passe à 1/38 pour le
+Preview de préproduction autorisé; Phase 9 reste inactive.
+
+**Validations documentaires :** seuls `ROADMAP_CODEX.md` et
+`SESSION_LOG_CODEX.md` sont modifiés; aucune ressource Stripe, Supabase ou
+Vercel n'est mutée pendant cette session documentaire. `git diff --check` est
+exécuté avant remise du rapport.
+
+**Prochaine action :** réaligner localement le contrat du checkout plateforme
+afin que la finalisation du payment persiste atomiquement l'identifiant de
+l'événement Stripe, avec tests de non-régression et d'idempotence, sans mutation
+distante.
