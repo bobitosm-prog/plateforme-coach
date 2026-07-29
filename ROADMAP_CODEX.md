@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 6 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 7 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -670,7 +670,14 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [ ] Vérifier relations actives/inactives et accès étrangers.
 - [ ] Vérifier messagerie, realtime, reconnexion et nettoyage.
 - [ ] Vérifier checkout plateforme et coach en environnement de test — checkout plateforme client direct validé; checkout coach encore ouvert.
-- [ ] Vérifier webhook replay, concurrence et événements désordonnés — livraison réelle Platform validée; replay runtime RC1 encore ouvert.
+- [x] Vérifier webhook replay, concurrence et événements désordonnés —
+  **RC1 — Webhook runtime E2E signé + replay : `VALIDATED`**. Sur le commit
+  `2033628`, la route `/api/stripe/webhook/platform` est appelée en HTTP réel
+  avec une signature de test générée par le Stripe SDK. Le traitement métier
+  finalise le payment, persiste `stripe_event_id`, puis le replay du même
+  `event.id` retourne `duplicate=true` sans double mutation. Commande :
+  `npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe`;
+  résultat : `PASS` (`1 passed`).
 - [ ] Vérifier Training : programme, séance, reprise, repos et finalisation.
 - [ ] Vérifier Nutrition : journal, plans, recettes et génération IA.
 - [ ] Vérifier Progression : poids, mesures, records et analytics.

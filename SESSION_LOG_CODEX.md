@@ -12907,3 +12907,35 @@ correspondantes restent ouvertes.
 RC1 passe de 5 à 6 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
 demeure `INACTIVE`. Aucun code applicatif, service distant, commit ou push
 n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — RC1 : webhook runtime E2E signé et replay validés
+
+**Bloc :** `Webhook runtime E2E signé + replay`.
+
+**Diagnostic et couverture :** le pipeline webhook a été suivi de bout en
+bout. Les routes scoped Platform/Connect et leurs autorités séparées, le claim
+SQL et le contrat d'idempotence ont été validés. La preuve runtime manquante a
+été ajoutée sur la route Platform : appel HTTP réel, corps JSON brut et
+signature Stripe de test générée par le Stripe SDK.
+
+**Résultat runtime :** le traitement métier
+`checkout.session.completed` s'exécute, finalise le payment et persiste
+`stripe_event_id`. Le replay strict du même `event.id`, du même payload et de
+la même signature retourne `duplicate=true`; aucune nouvelle mutation du
+payment n'est observée. La commande
+`npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe` réussit
+avec `1 passed`.
+
+**Fichiers principaux concernés par le bloc :**
+`lib/billing/webhook/scoped-http-handler.ts`,
+`scripts/fake-stripe-server.mjs`, `scripts/run-local-e2e.mjs` et
+`e2e/platform-webhook-runtime.spec.ts`.
+
+**Traçabilité Git :** commit `2033628`
+(`test(rc1): validate signed webhook runtime replay`) publié sur
+`origin/phase-6-staging`.
+
+**Décision RC1 :** le bloc est `VALIDATED` et la case webhook/replay est
+cochée. RC1 passe de 6 à 7 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
+Phase 9 demeure `INACTIVE`. Cette mise à jour ne modifie aucun code, migration,
+service distant, commit ou push.
