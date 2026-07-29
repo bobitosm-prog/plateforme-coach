@@ -13278,3 +13278,25 @@ reste bornée au parcours d'invitation coach.
 passe de 27 à 28 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
 demeure `INACTIVE`. Aucun code, test, service distant, commit ou push n'est
 modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — livraison média
+
+**Preuve E2E :**
+`npm run test:e2e -- e2e/performance-video-delivery.spec.ts` réussit avec
+`1 passed`. Le scénario valide le chargement différé de la vidéo sur mobile et
+desktop ainsi que son nettoyage après fermeture. La garde réseau accepte les
+hôtes locaux et le seul CDN média officiel `media.moovx.ch`; toute autre
+origine externe reste refusée.
+
+**Contrat de livraison :** `tests/unit/media-delivery-contract.test.ts`,
+`tests/unit/cache-strategy-inventory.test.ts`,
+`tests/unit/cache-policy.test.ts` et `lib/media/delivery/policy.ts` couvrent le
+cache immuable, le support Range et les headers `Accept-Ranges`,
+`Content-Range` et `ETag`. Le fallback local des posters reste disponible.
+L'architecture publique `media.moovx.ch` est conservée comme autorité
+documentée.
+
+**Décision RC1 :** la case « Vérifier le CDN public, fallback local, cache et
+Range » est cochée. RC1 passe de 28 à 29 tâches sur 38, reste `ACTIVE` et
+n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.

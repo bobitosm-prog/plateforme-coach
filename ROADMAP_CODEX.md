@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 28 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 29 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -737,7 +737,10 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [x] Vérifier SMTP, Push et Mailpit — transport SMTP mocké sans envoi réseau
   réel, Push local et livraison des invitations via Mailpit validés.
   Limitation : aucun E2E SMTP/Mailpit générique identifié.
-- [ ] Vérifier le CDN public, fallback local, cache et Range.
+- [x] Vérifier le CDN public, fallback local, cache et Range — CDN officiel
+  `media.moovx.ch`, cache immuable, Range et headers associés, fallback local
+  des posters, chargement différé et nettoyage vidéo validés. L'E2E autorise
+  uniquement le CDN média officiel comme origine externe.
 - [ ] Vérifier qu’aucun média privé n’est public.
 - [ ] Vérifier les polices locales et l’absence de Google Fonts.
 - [ ] Vérifier les deux baselines et tous les budgets performance.
