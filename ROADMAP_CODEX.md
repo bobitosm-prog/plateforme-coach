@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 32 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 33 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -765,7 +765,12 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [x] Réaliser un contrôle Core Web Vitals RC1 — Preview `phase-6-staging`
   `63dad1e`, LCP p75 mobile froid `1 428 ms` landing et `2 856 ms` login,
   gains `53,03 %` et `38,13 %`; INP, CLS et TTFB `GOOD`.
-- [ ] Scanner secrets, tokens, URLs signées et données personnelles.
+- [x] Scanner secrets, tokens, URLs signées et données personnelles — scan de
+  `app`, `lib`, `scripts` et `tests` sans secret réel détecté; aucun fichier
+  d'environnement sensible n'est versionné hors `.env.example`. Les médias
+  privés utilisent `createSignedUrl()` et
+  `tests/unit/dashboard-server-shell-static.test.ts` interdit la
+  sérialisation de `access_token` et `refresh_token` dans le shell serveur.
 - [ ] Vérifier dépendances et vulnérabilités sans mise à jour automatique.
 - [ ] Préparer notes de version, limitations et dettes connues.
 - [ ] Préparer le runbook de déploiement et rollback.

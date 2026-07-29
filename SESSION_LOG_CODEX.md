@@ -13358,3 +13358,21 @@ reproductibles et aucune régression bloquante n'est détectée. La case
 RC1 passe de 31 à 32 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
 Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit ou push
 n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — sécurité des secrets et tokens
+
+**Scan du dépôt :** la recherche de secrets et tokens dans `app`, `lib`,
+`scripts` et `tests` ne détecte aucun secret réel hardcodé. L'inventaire
+`git ls-files` confirme qu'aucun fichier `.env` réel ou autre fichier sensible
+n'est versionné; seul `.env.example` est conservé comme modèle.
+
+**Médias et authentification :** les médias privés utilisent des URL
+temporaires produites par `createSignedUrl()`.
+`tests/unit/dashboard-server-shell-static.test.ts` interdit la présence de
+`access_token` et `refresh_token` dans le shell serveur, empêchant leur
+sérialisation vers le client.
+
+**Décision RC1 :** la case « Scanner secrets, tokens, URLs signées et données
+personnelles » est cochée. RC1 passe de 32 à 33 tâches sur 38, reste `ACTIVE`
+et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.
