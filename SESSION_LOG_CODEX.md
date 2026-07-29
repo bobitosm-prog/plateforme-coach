@@ -13260,3 +13260,21 @@ avant tout appel fournisseur.
 est cochée. RC1 passe de 26 à 27 tâches sur 38, reste `ACTIVE` et n'est pas
 terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit
 ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — SMTP, Push et Mailpit
+
+**SMTP :** `tests/unit/email-transport.test.ts` et
+`tests/unit/provider-mocks.test.ts` valident le transport mocké et l'absence
+d'envoi réseau réel.
+
+**Push et Mailpit :** `npm run test:e2e:push` valide le transport Push local.
+`e2e/coach-invitation.spec.ts` valide la livraison et la consommation des
+invitations via Mailpit local.
+
+**Limitation :** aucun E2E SMTP/Mailpit générique identifié ; la preuve Mailpit
+reste bornée au parcours d'invitation coach.
+
+**Décision RC1 :** la case « Vérifier SMTP, Push et Mailpit » est cochée. RC1
+passe de 27 à 28 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
+demeure `INACTIVE`. Aucun code, test, service distant, commit ou push n'est
+modifié par cette mise à jour documentaire.

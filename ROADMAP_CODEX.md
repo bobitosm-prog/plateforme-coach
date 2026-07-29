@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 27 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 28 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -734,7 +734,9 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [x] Vérifier quotas et journalisation d’usage IA — réservation et
   finalisation d'usage, RPC Supabase, journalisation, coûts estimés, refus
   avant fournisseur et route `/api/ai-quota` validés par les tests dédiés.
-- [ ] Vérifier SMTP, Push et Mailpit.
+- [x] Vérifier SMTP, Push et Mailpit — transport SMTP mocké sans envoi réseau
+  réel, Push local et livraison des invitations via Mailpit validés.
+  Limitation : aucun E2E SMTP/Mailpit générique identifié.
 - [ ] Vérifier le CDN public, fallback local, cache et Range.
 - [ ] Vérifier qu’aucun média privé n’est public.
 - [ ] Vérifier les polices locales et l’absence de Google Fonts.
