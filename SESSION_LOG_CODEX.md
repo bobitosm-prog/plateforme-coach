@@ -13376,3 +13376,25 @@ sérialisation vers le client.
 personnelles » est cochée. RC1 passe de 32 à 33 tâches sur 38, reste `ACTIVE`
 et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — audit des dépendances
+
+**Audit exécuté :** `npm audit --omit=dev` a inventorié six vulnérabilités :
+une de sévérité `moderate` et cinq de sévérité `high`. `npm outdated` a
+également été exécuté à des fins d'inventaire uniquement.
+
+**Exceptions ouvertes :** les vulnérabilités ne sont pas corrigées. Elles
+concernent `@anthropic-ai/sdk`, la chaîne `next`/`postcss`/`sharp`,
+`nodemailer` et `xlsx`. Les corrections proposées nécessitent des upgrades
+potentiellement breaking; aucun correctif n'est actuellement disponible pour
+`xlsx`.
+
+**Absence de mutation automatique :** `npm audit fix --force` n'a pas été
+exécuté et aucune dépendance n'a été modifiée.
+
+**Décision RC1 :** la case « Vérifier dépendances et vulnérabilités sans mise
+à jour automatique » est cochée au titre de l'audit et de l'inventaire, sans
+présumer que les vulnérabilités sont corrigées. RC1 passe de 33 à 34 tâches
+sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`.
+Aucun code, test, service distant, commit ou push n'est modifié par cette mise
+à jour documentaire.

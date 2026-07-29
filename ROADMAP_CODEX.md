@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 33 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 34 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -771,7 +771,13 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   privés utilisent `createSignedUrl()` et
   `tests/unit/dashboard-server-shell-static.test.ts` interdit la
   sérialisation de `access_token` et `refresh_token` dans le shell serveur.
-- [ ] Vérifier dépendances et vulnérabilités sans mise à jour automatique.
+- [x] Vérifier dépendances et vulnérabilités sans mise à jour automatique —
+  `npm audit --omit=dev` et `npm outdated` exécutés en inventaire uniquement.
+  Six vulnérabilités restent ouvertes (`1 moderate`, `5 high`) dans les
+  chaînes `@anthropic-ai/sdk`, `next`/`postcss`/`sharp`, `nodemailer` et
+  `xlsx`; cette dernière ne dispose d'aucun correctif. Les autres corrections
+  proposées exigent des upgrades potentiellement breaking. Aucun
+  `npm audit fix --force` ni changement de dépendance n'a été exécuté.
 - [ ] Préparer notes de version, limitations et dettes connues.
 - [ ] Préparer le runbook de déploiement et rollback.
 - [x] Déployer en préproduction si un environnement existe, avec autorisation séparée — Preview isolé `phase-6-staging` `READY`.
