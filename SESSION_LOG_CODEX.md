@@ -13416,3 +13416,21 @@ connues » est cochée. RC1 passe de 34 à 35 tâches sur 38, reste `ACTIVE` et
 n'est pas une déclaration de mise en production. Phase 9 demeure `INACTIVE`
 jusqu'à validation explicite. Aucun code, test, service distant, commit ou
 push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — runbook déploiement et rollback
+
+**Document créé :** `docs/RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md` fournit une
+procédure opérateur exécutable pour les préchecks, la validation technique,
+le contrôle Supabase staging, le déploiement Preview, les smoke tests et les
+rollbacks application, base de données, secrets et intégrations.
+
+**Garde-fous :** le runbook interdit l'usage implicite de la production, les
+mutations non autorisées, la réécriture de l'historique Git, le force-push et
+les rollbacks SQL improvisés. Aucune production n'a été touchée pendant cette
+mise à jour documentaire et le runbook ne vaut pas autorisation de
+déploiement.
+
+**Décision RC1 :** la case « Préparer le runbook de déploiement et rollback »
+est cochée. RC1 passe de 35 à 36 tâches sur 38, reste `ACTIVE` et n'est pas
+terminé. Phase 9 demeure `INACTIVE` jusqu'à validation explicite. Aucun test,
+déploiement, commande distante, commit ou push n'est exécuté.

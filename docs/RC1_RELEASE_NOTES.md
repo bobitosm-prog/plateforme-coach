@@ -101,6 +101,8 @@ dédiée.
 
 ## Critères restant ouverts avant validation finale RC1
 
+[Runbook RC1 de déploiement et rollback](RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md)
+
 - Préparer le runbook de déploiement et rollback.
 - Exécuter une validation humaine visuelle desktop/mobile.
 - Obtenir la validation explicite RC1 avant Phase 9.

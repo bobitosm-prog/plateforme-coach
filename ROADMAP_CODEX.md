@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 35 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 36 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -782,7 +782,11 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   exploitable disponible dans [docs/RC1_RELEASE_NOTES.md](docs/RC1_RELEASE_NOTES.md),
   avec portée validée, limitations, vulnérabilités non corrigées, dettes
   techniques et critères restant ouverts.
-- [ ] Préparer le runbook de déploiement et rollback.
+- [x] Préparer le runbook de déploiement et rollback — procédure opérateur
+  disponible dans
+  [docs/RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md](docs/RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md);
+  elle couvre les garde-fous, préchecks, smoke tests et rollbacks application,
+  base de données, secrets et intégrations sans autoriser la production.
 - [x] Déployer en préproduction si un environnement existe, avec autorisation séparée — Preview isolé `phase-6-staging` `READY`.
 - [ ] Exécuter une validation humaine visuelle desktop/mobile.
 - [ ] Obtenir la validation explicite RC1 avant Phase 9.
