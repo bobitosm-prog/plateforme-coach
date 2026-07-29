@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 22 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 23 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -713,7 +713,11 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   `event.id` retourne `duplicate=true` sans double mutation. Commande :
   `npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe`;
   résultat : `PASS` (`1 passed`).
-- [ ] Vérifier Training : programme, séance, reprise, repos et finalisation.
+- [x] Vérifier Training : programme, séance, reprise, repos et finalisation —
+  génération de programme, transitions, persistance, reprise/interruption,
+  historique, finalisation et logique de repos validés par les tests Training
+  dédiés. Aucun E2E navigateur Training complet n'a été identifié ;
+  limitation documentée RC1.
 - [ ] Vérifier Nutrition : journal, plans, recettes et génération IA.
 - [ ] Vérifier Progression : poids, mesures, records et analytics.
 - [ ] Vérifier les 15 flux IA avec mocks/goldens, sans fournisseur réel.

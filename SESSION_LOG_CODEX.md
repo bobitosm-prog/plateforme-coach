@@ -13134,3 +13134,27 @@ environnement de test » est cochée. RC1 passe de 21 à 22 tâches sur 38, rest
 `ACTIVE` et n'est pas terminé. Le critère Training reste ouvert pour l'étape
 suivante et Phase 9 demeure `INACTIVE`. Aucun code, test, service distant,
 commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — Training
+
+**Génération :** `tests/unit/ai-training-generation.test.ts` et
+`tests/unit/ai-training-generation-static.test.ts` valident la génération et
+les contrats statiques des programmes.
+
+**Cycle de séance :** `tests/unit/workout-persistence-service.test.ts`,
+`tests/unit/workout-session-transitions.test.ts` et
+`tests/unit/workout-mobile-interruption.test.ts` couvrent la persistance, les
+transitions, la reprise et les interruptions.
+
+**Historique et repos :** `tests/unit/training-session-history.test.ts` et
+`tests/unit/streak.test.ts` valident l'historique, la finalisation et la
+logique de repos.
+
+**Limitation :** aucun E2E navigateur Training complet n'a été identifié ;
+limitation documentée RC1.
+
+**Décision RC1 :** la case « Vérifier Training : programme, séance, reprise,
+repos et finalisation » est cochée. RC1 passe de 22 à 23 tâches sur 38, reste
+`ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test,
+service distant, commit ou push n'est modifié par cette mise à jour
+documentaire.
