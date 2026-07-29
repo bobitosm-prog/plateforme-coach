@@ -674,6 +674,27 @@ function TrainingView({ todaySessionInfo, todaySessionDone, weekProgram, todayKe
    PAGE: PROGRESSION
    ═══════════════════════════════════════════════════ */
 function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, streak, strengthGains, personalRecords, progressPhotos, supabase, session }: any) {
+  const [progressPhotoSignedUrls, setProgressPhotoSignedUrls] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    async function generateSignedUrls() {
+      const urls: Record<string, string> = {}
+      for (const photo of progressPhotos || []) {
+        if (photo.signedUrl) {
+          urls[photo.id] = photo.signedUrl
+          continue
+        }
+        const { data } = await supabase.storage.from('progress-photos').createSignedUrl(photo.photo_url, 3600)
+        if (cancelled) return
+        if (data?.signedUrl) urls[photo.id] = data.signedUrl
+      }
+      if (!cancelled) setProgressPhotoSignedUrls(urls)
+    }
+    void generateSignedUrls()
+    return () => { cancelled = true }
+  }, [progressPhotos, supabase])
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
       {/* Weight chart */}
@@ -724,7 +745,7 @@ function ProgressView({ weightHistory, currentWeight, goalWeight, bodyFat, bmi, 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {progressPhotos.slice(0, 6).map((p: any, i: number) => (
               <div key={i} style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '3/4', background: '#1c1b1b', border: `1px solid ${CARD_BORDER}` }}>
-                <img src={supabase.storage.from('progress-photos').getPublicUrl(p.photo_url).data.publicUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                {progressPhotoSignedUrls[p.id] && <img src={progressPhotoSignedUrls[p.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />}
               </div>
             ))}
           </div>
