@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 15 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 20 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -641,7 +641,9 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 
 - [x] Auditer et confirmer Phases 1 à 8 terminées à 100 % — réconciliation
   sur `5a02c89`, 124/124 tâches et 36/36 critères de sortie `met`.
-- [ ] Vérifier l’état Git et coordonner les changements concurrents.
+- [x] Vérifier l’état Git et coordonner les changements concurrents — branche
+  `phase-6-staging`, HEAD `62619d0`, worktree propre et divergence `0/0` avec
+  `origin/phase-6-staging`.
 - [x] Exécuter la suite complète sans échec — `npm test` validé :
   306 fichiers de test réussis, 2571 tests réussis et 3 todo conservés.
 - [x] Atteindre zéro todo bloquant ou justifier chaque todo restant — les
@@ -661,10 +663,16 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   `BUILD_ID` et de matériel cryptographique généré par build sont attendues.
   Sous Next 16/Turbopack, les manifestes App Router remplacent le
   `app-build-manifest.json` racine historique.
-- [ ] Vérifier les types Supabase canoniques.
-- [ ] Rejouer les migrations locales et l’empreinte canonique.
-- [ ] Rejouer les matrices RLS/PostgREST.
-- [ ] Vérifier l’absence de données synthétiques résiduelles.
+- [x] Vérifier les types Supabase canoniques — types régénérés et validés par
+  TypeScript; contrat staging aligné à 144 migrations.
+- [x] Rejouer les migrations locales et l’empreinte canonique —
+  `supabase:local:verify` validé avec 144 migrations et l'empreinte
+  `6d14ca918056d5fe5a2283813c0f9147`.
+- [x] Rejouer les matrices RLS/PostgREST —
+  `npm run test:integration:rls` validé avec `RLS_POSTGREST_OK`.
+- [x] Vérifier l’absence de données synthétiques résiduelles — fixtures
+  temporaires nettoyées via `test.cleanup_personas` ; les seeds Phase 6
+  `@moovx.invalid` avec `metadata synthetic=true` restent autorisés et isolés.
 - [x] Exécuter les cinq E2E critiques — commit `7dc9400`, environnement E2E
   local propre après reset Supabase réussi (`143/143` migrations) :
   invitation coach, checkout plateforme, checkout coach, notification push

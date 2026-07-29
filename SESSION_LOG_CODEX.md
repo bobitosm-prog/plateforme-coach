@@ -13062,3 +13062,44 @@ Phase 9 demeure `INACTIVE`. Le lint global n'est pas présenté comme vert :
 sa dette préexistante est acceptée comme exception documentée pour RC1.
 Aucun test, fichier technique, service distant, commit ou push n'est modifié
 par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — état Git et contrat Supabase
+
+**Git et concurrence :** la branche active est `phase-6-staging`, au commit
+`62619d0`. Le worktree est propre et la comparaison avec
+`origin/phase-6-staging` indique une divergence `0/0`; aucun changement
+concurrent ne reste à coordonner. Ce contrôle porte RC1 de 15 à 16 tâches sur
+38.
+
+**Contrat Supabase :** les types canoniques ont été régénérés et sont
+compatibles avec `npx tsc --noEmit`. Le manifeste et les garde-fous
+preproduction sont alignés sur 144 migrations. Cette validation porte RC1 de
+16 à 17 tâches sur 38.
+
+**Migrations et empreinte :** `supabase:local:verify` a confirmé le contrat
+canonique avec 144 migrations et l'empreinte
+`6d14ca918056d5fe5a2283813c0f9147`. Cette validation porte RC1 de 17 à 18
+tâches sur 38.
+
+**RLS/PostgREST :** `npm run test:integration:rls` a réussi avec le résultat
+`RLS_POSTGREST_OK`. Cette validation porte RC1 de 18 à 19 tâches sur 38.
+
+**Décision :** les cases Git/concurrence, types Supabase canoniques,
+migrations/fingerprint et RLS/PostgREST sont cochées. RC1 reste `ACTIVE`, non
+terminé, et Phase 9 demeure `INACTIVE`.
+
+## Entrée — 2026-07-29 — Validation RC1 — isolation des données synthétiques
+
+**Fixtures temporaires :** les validations d'intégration utilisent un
+nettoyage explicite via `test.cleanup_personas`; aucun persona temporaire non
+autorisé ne subsiste après les campagnes.
+
+**Données Phase 6 autorisées :** les domaines `@moovx.invalid`, la metadata
+`synthetic=true` et les seeds Phase 6 dédiés sont réservés au staging et
+restent isolés par contrat.
+
+**Décision RC1 :** aucun résidu synthétique non autorisé n'a été détecté. La
+case correspondante est cochée et RC1 passe de 19 à 20 tâches sur 38. RC1
+reste `ACTIVE` et Phase 9 demeure `INACTIVE`. Aucun code, test, migration,
+service distant, commit ou push n'est modifié par cette mise à jour
+documentaire.
