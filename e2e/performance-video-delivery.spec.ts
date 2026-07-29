@@ -12,6 +12,7 @@ import {
 
 const EVIDENCE_PATH = process.env.MOOVX_VIDEO_EVIDENCE_PATH
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost'])
+const ALLOWED_MEDIA_HOSTS = new Set(['media.moovx.ch'])
 const VIDEO_PATH = '/videos/exercises/arnold-press.mp4'
 const POSTER_PATH = '/images/video-posters/arnold-press.webp'
 
@@ -29,7 +30,12 @@ function recordMedia(page: Page) {
   const external = new Set<string>()
   page.on('request', (request: Request) => {
     const url = new URL(request.url())
-    if (!LOCAL_HOSTS.has(url.hostname)) external.add(url.origin)
+    if (
+      !LOCAL_HOSTS.has(url.hostname) &&
+      !ALLOWED_MEDIA_HOSTS.has(url.hostname)
+    ) {
+      external.add(url.origin)
+    }
     if (url.pathname === VIDEO_PATH || url.pathname === POSTER_PATH) requests.push(url.pathname)
   })
   page.on('response', (response: Response) => {
