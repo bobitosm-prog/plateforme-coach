@@ -52,7 +52,7 @@ try {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl, NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SERVICE_ROLE_KEY, MOOVX_E2E_LOCAL_SMTP: '1', SMTP_HOST: '127.0.0.1', SMTP_PORT: '55325',
     DEFAULT_COACH_EMAIL: 'default-coach@moovx.example.test',
-    ...(withStripe ? { STRIPE_E2E_BASE_URL: stripeUrl, STRIPE_SECRET_KEY: 'sk_test_local_only', NEXT_PUBLIC_PRICE_CLIENT_MONTHLY: 'price_local_client_monthly' } : {}),
+    ...(withStripe ? { STRIPE_E2E_BASE_URL: stripeUrl, STRIPE_SECRET_KEY: 'sk_test_local_only', NEXT_PUBLIC_PRICE_CLIENT_MONTHLY: 'price_local_client_monthly', STRIPE_PLATFORM_WEBHOOK_SECRET: 'whsec_platform_e2e_local', STRIPE_CONNECT_WEBHOOK_SECRET: 'whsec_connect_e2e_local', STRIPE_WEBHOOK_EXPECTED_LIVEMODE: 'false' } : {}),
     ...(withPush ? { NODE_TLS_REJECT_UNAUTHORIZED: '0', NEXT_PUBLIC_VAPID_PUBLIC_KEY: vapid.publicKey, VAPID_PRIVATE_KEY: vapid.privateKey, VAPID_SUBJECT: 'mailto:e2e@localhost' } : {}),
     ...(withAnthropic ? { ANTHROPIC_API_KEY: 'local-e2e-key', ANTHROPIC_E2E_MESSAGES_URL: `${anthropicUrl}v1/messages` } : {}),
   }

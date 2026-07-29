@@ -34,7 +34,26 @@ interface ScopedWebhookDependencies {
 }
 
 const defaultDependencies: ScopedWebhookDependencies = {
-  createStripe: secretKey => new Stripe(secretKey),
+  createStripe: secretKey => {
+    const endpoint = process.env.STRIPE_E2E_BASE_URL
+    if (!endpoint) return new Stripe(secretKey)
+    if (process.env.MOOVX_E2E !== '1') {
+      throw new Error('Stripe E2E endpoint requires MOOVX_E2E=1')
+    }
+    const url = new URL(endpoint)
+    if (
+      url.protocol !== 'http:'
+      || !['127.0.0.1', 'localhost'].includes(url.hostname)
+      || url.pathname !== '/'
+    ) {
+      throw new Error('Stripe E2E endpoint must be a local HTTP origin')
+    }
+    return new Stripe(secretKey, {
+      host: url.hostname,
+      port: Number(url.port),
+      protocol: 'http',
+    })
+  },
   createSupabase: async () => {
     const { createSupabaseAdminClient } = await import('@/lib/supabase/admin')
     return createSupabaseAdminClient()
