@@ -12990,3 +12990,23 @@ onboarding et récupération de session » est cochée. RC1 passe de 8 à 9 tâc
 sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Cette
 mise à jour documentaire ne modifie aucun code, test, migration, service
 distant, commit ou push.
+
+## Entrée — 2026-07-29 — Validation RC1 — invitations et frontières coach/client
+
+**Invitation et attribution :** le parcours d'invitation coach vérifiée est
+couvert par `e2e/coach-invitation.spec.ts`. Il valide la création et la
+livraison de l'invitation, le token, sa consommation unique puis la relation
+finale dans `coach_clients` avec `status=active` et
+`invited_by_coach=true`. La réutilisation du token est refusée et l'ancien
+flux `/api/assign-coach` reste absent.
+
+**Frontières relationnelles :** `e2e/coach-client-client.spec.ts` et
+`e2e/coach-client-coach.spec.ts` valident les relations actives et inactives,
+les clients ou coachs sans relation et le refus des accès aux données
+étrangères.
+
+**Décision RC1 :** les cases « Vérifier invitations et attribution coach » et
+« Vérifier relations actives/inactives et accès étrangers » sont cochées.
+RC1 passe de 9 à 11 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
+demeure `INACTIVE`. Aucun code, test, migration, service distant, commit ou
+push n'est modifié par cette mise à jour documentaire.

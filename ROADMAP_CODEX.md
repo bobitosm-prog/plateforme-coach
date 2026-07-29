@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 9 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 11 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -674,8 +674,14 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   inscription client et coach, création automatique du profil via le trigger
   `auth.users → profiles`, rôles, login, redirections onboarding et
   persistance de session après reload. Résultat : `2 passed (16.4s)`.
-- [ ] Vérifier invitations et attribution coach.
-- [ ] Vérifier relations actives/inactives et accès étrangers.
+- [x] Vérifier invitations et attribution coach — validé par
+  `e2e/coach-invitation.spec.ts`. Le parcours couvre création, validation,
+  consommation unique et création de relation coach/client active avec
+  `invited_by_coach=true`.
+- [x] Vérifier relations actives/inactives et accès étrangers — validé par
+  `e2e/coach-client-client.spec.ts` et `e2e/coach-client-coach.spec.ts`. Les
+  parcours couvrent relation active, relation inactive, utilisateurs sans
+  relation et refus des accès étrangers.
 - [ ] Vérifier messagerie, realtime, reconnexion et nettoyage.
 - [ ] Vérifier checkout plateforme et coach en environnement de test — checkout plateforme client direct validé; checkout coach encore ouvert.
 - [x] Vérifier webhook replay, concurrence et événements désordonnés —
