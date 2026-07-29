@@ -1463,8 +1463,11 @@ export type Database = {
           coach_id: string | null
           created_at: string | null
           currency: string | null
+          description: string | null
           id: string
+          paid_at: string | null
           status: string | null
+          stripe_checkout_session_id: string | null
           stripe_event_id: string | null
           stripe_id: string | null
         }
@@ -1474,8 +1477,11 @@ export type Database = {
           coach_id?: string | null
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           id?: string
+          paid_at?: string | null
           status?: string | null
+          stripe_checkout_session_id?: string | null
           stripe_event_id?: string | null
           stripe_id?: string | null
         }
@@ -1485,8 +1491,11 @@ export type Database = {
           coach_id?: string | null
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           id?: string
+          paid_at?: string | null
           status?: string | null
+          stripe_checkout_session_id?: string | null
           stripe_event_id?: string | null
           stripe_id?: string | null
         }

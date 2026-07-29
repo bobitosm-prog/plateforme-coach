@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".claude/**",
+    ".next-e2e/**",
+    "tmp-legal/**",
+    "sites/moovx.ch/assets/**",
     "lib/supabase/database.types.ts",
   ]),
 ]);

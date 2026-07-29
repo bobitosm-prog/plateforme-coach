@@ -40,8 +40,10 @@ const forbiddenProjectedStripeField = relatedProjection.stripe_account_id
 const paymentWithoutAmount: TablesInsert<'payments'> = {}
 // @ts-expect-error subscription_price does not exist in canonical profiles.
 const profileWithHistoricalColumn: TablesUpdate<'profiles'> = { subscription_price: 10 }
-// @ts-expect-error stripe_checkout_session_id does not exist in canonical payments.
-const paymentWithMissingColumn: TablesInsert<'payments'> = { amount: 10, stripe_checkout_session_id: 'local' }
+const paymentWithCheckoutSession: TablesInsert<'payments'> = {
+  amount: 10,
+  stripe_checkout_session_id: 'local',
+}
 
 describe('generated Supabase database types', () => {
   it('exposes Row, Insert and Update contracts for critical tables and the related-profile view', () => {
@@ -57,7 +59,7 @@ describe('generated Supabase database types', () => {
     expect([profileInsert, coachClientInsert, invitationInsert, paymentInsert, pushInsert, profileUpdate, messageInsert, messageUpdate]).toHaveLength(8)
     expect(paymentWithoutAmount).toEqual({})
     expect(profileWithHistoricalColumn).toEqual({ subscription_price: 10 })
-    expect(paymentWithMissingColumn).toEqual({ amount: 10, stripe_checkout_session_id: 'local' })
+    expect(paymentWithCheckoutSession).toEqual({ amount: 10, stripe_checkout_session_id: 'local' })
     expect(forbiddenProjectedStripeField).toBeUndefined()
   })
 
