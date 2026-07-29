@@ -12939,3 +12939,25 @@ avec `1 passed`.
 cochée. RC1 passe de 6 à 7 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
 Phase 9 demeure `INACTIVE`. Cette mise à jour ne modifie aucun code, migration,
 service distant, commit ou push.
+
+## Entrée — 2026-07-29 — Validation RC1 — parcours coach/client E2E
+
+**Exécution :** le runner officiel `npm run test:e2e:coach-client` a été
+exécuté sur l'environnement E2E local. Résultat : `4 passed (43.2s)`.
+
+**Parcours validés :**
+
+- client lié à un coach et navigation sur le dashboard client, y compris après
+  reload ;
+- frontières client entre profils liés, invités et relations inactives ;
+- détail d'un client lié côté coach avec les données locales réelles ;
+- frontières coach et refus des accès étrangers ou sans relation.
+
+**Portée de la preuve :** cette preuve ne couvre pas encore inscription,
+onboarding, récupération de session complète ni Realtime complet. Ces
+contrôles RC1 restent ouverts.
+
+**Décision RC1 :** la case « Exécuter les parcours coach/client » est cochée.
+RC1 passe de 7 à 8 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
+demeure `INACTIVE`. Aucun code, test, migration, service distant, commit ou
+push n'est modifié par cette mise à jour documentaire.

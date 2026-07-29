@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 7 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 8 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -664,7 +664,10 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   invitation coach, checkout plateforme, checkout coach, notification push
   et chat Athena `PASS` en `145,0 s`. Cette preuve ne couvre pas onboarding,
   inscription, Realtime complet ni webhook runtime E2E.
-- [ ] Exécuter les parcours coach/client.
+- [x] Exécuter les parcours coach/client — validé par
+  `npm run test:e2e:coach-client`. Les scénarios client et coach utilisent
+  Supabase local réel, vérifient les frontières d'accès et les relations
+  autorisées/refusées. Résultat : `4 passed (43.2s)`.
 - [ ] Vérifier authentification, inscription, onboarding et récupération de session.
 - [ ] Vérifier invitations et attribution coach.
 - [ ] Vérifier relations actives/inactives et accès étrangers.
