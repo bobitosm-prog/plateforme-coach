@@ -13323,3 +13323,19 @@ restent privés et ne doivent générer aucune URL publique.
 cochée. RC1 passe de 29 à 30 tâches sur 38, reste `ACTIVE` et n'est pas
 terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit
 ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — polices locales
+
+**Preuves :** `tests/unit/local-font-hosting.test.ts` contrôle le contrat
+d'hébergement local et `app/fonts.ts` conserve la configuration
+`next/font/local`.
+
+**Absence de dépendance distante :** toutes les polices sont hébergées
+localement. Aucun appel runtime vers Google Fonts, aucune référence
+`fonts.googleapis.com`, aucun import `next/font/google` et aucun `@import`
+Google Fonts ne subsistent.
+
+**Décision RC1 :** la case « Vérifier les polices locales et l’absence de
+Google Fonts » est cochée. RC1 passe de 30 à 31 tâches sur 38, reste `ACTIVE`
+et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.
