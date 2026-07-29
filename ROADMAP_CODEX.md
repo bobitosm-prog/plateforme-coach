@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 5 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 6 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -659,7 +659,11 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [ ] Rejouer les migrations locales et l’empreinte canonique.
 - [ ] Rejouer les matrices RLS/PostgREST.
 - [ ] Vérifier l’absence de données synthétiques résiduelles.
-- [ ] Exécuter les cinq E2E critiques.
+- [x] Exécuter les cinq E2E critiques — commit `7dc9400`, environnement E2E
+  local propre après reset Supabase réussi (`143/143` migrations) :
+  invitation coach, checkout plateforme, checkout coach, notification push
+  et chat Athena `PASS` en `145,0 s`. Cette preuve ne couvre pas onboarding,
+  inscription, Realtime complet ni webhook runtime E2E.
 - [ ] Exécuter les parcours coach/client.
 - [ ] Vérifier authentification, inscription, onboarding et récupération de session.
 - [ ] Vérifier invitations et attribution coach.

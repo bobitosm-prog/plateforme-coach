@@ -12885,3 +12885,25 @@ modifié par cette mise à jour documentaire.
 
 **Prochaine étape unique :** vérifier l'état Git et coordonner les changements
 concurrents conformément à la prochaine case ouverte de la checklist RC1.
+
+## Entrée — 2026-07-29 — RC1 : suite E2E critique locale validée
+
+**Autorité :** exécution réelle sur le commit `7dc9400`, dans un environnement
+E2E local propre. La pile Supabase locale a été réinitialisée avec succès
+avant Playwright; les `143/143` migrations canoniques ont été appliquées. Aucun
+projet Supabase distant, service Stripe distant ou déploiement Vercel n'a été
+utilisé.
+
+**Résultats :** la suite E2E critique MoovX est entièrement verte en `145,0 s`.
+Les cinq parcours attendus passent : invitation coach, checkout plateforme,
+checkout coach, notification push et chat Athena.
+
+**Portée de la preuve :** cette campagne valide uniquement la suite critique
+canonique exécutée. Elle ne constitue pas une preuve des parcours onboarding,
+inscription, Realtime complet ou webhook runtime E2E; les cases RC1
+correspondantes restent ouvertes.
+
+**Décision RC1 :** la case « Exécuter les cinq E2E critiques » est cochée.
+RC1 passe de 5 à 6 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
+demeure `INACTIVE`. Aucun code applicatif, service distant, commit ou push
+n'est modifié par cette mise à jour documentaire.
