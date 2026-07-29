@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 24 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 25 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -722,7 +722,11 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   repositories, enveloppes de plans, transport, repas sauvegardés, producteurs
   IA et lecteurs dashboard validés par les tests Nutrition dédiés. Aucun E2E
   navigateur Nutrition complet identifié ; limitation documentée RC1.
-- [ ] Vérifier Progression : poids, mesures, records et analytics.
+- [x] Vérifier Progression : poids, mesures, records et analytics — calculs,
+  read models, loaders dashboard, domaines détail client et agrégations
+  validés. `npm run progression:authority:check` retourne `status=ok` avec
+  711 consommateurs audités et 2 usages legacy intentionnels. Aucun E2E
+  navigateur Progression complet identifié ; limitation documentée RC1.
 - [ ] Vérifier les 15 flux IA avec mocks/goldens, sans fournisseur réel.
 - [ ] Vérifier quotas et journalisation d’usage IA.
 - [ ] Vérifier SMTP, Push et Mailpit.

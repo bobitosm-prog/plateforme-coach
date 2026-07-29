@@ -13185,3 +13185,30 @@ limitation documentée RC1.
 génération IA » est cochée. RC1 passe de 23 à 24 tâches sur 38, reste `ACTIVE`
 et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — Progression
+
+**Autorité des agrégations :** `npm run progression:authority:check` réussit
+avec `{"status":"ok","auditedConsumers":711,"intentionalLegacy":2}`. Les deux
+usages legacy restants sont intentionnels et inventoriés.
+
+**Poids, mesures et analytics :**
+`tests/unit/progression-analytics-calculations.test.ts`,
+`tests/unit/progression-read-models.test.ts`,
+`tests/unit/client-dashboard-nutrition-measurements-loader.test.ts` et
+`tests/unit/client-dashboard-nutrition-measurements-loading-static.test.ts`
+valident les calculs, read models, poids et mesures corporelles.
+
+**Records et consommateurs :**
+`tests/unit/client-dashboard-training-loading-static.test.ts`,
+`tests/unit/client-detail-domains.test.ts` et
+`tests/unit/progression-aggregations-static.test.ts` couvrent les records
+personnels, les domaines détail client et les frontières d'agrégation.
+
+**Limitation :** aucun E2E navigateur Progression complet identifié ;
+limitation documentée RC1.
+
+**Décision RC1 :** la case « Vérifier Progression : poids, mesures, records et
+analytics » est cochée. RC1 passe de 24 à 25 tâches sur 38, reste `ACTIVE` et
+n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.
