@@ -13158,3 +13158,30 @@ repos et finalisation » est cochée. RC1 passe de 22 à 23 tâches sur 38, rest
 `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test,
 service distant, commit ou push n'est modifié par cette mise à jour
 documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — Nutrition
+
+**Persistance et plans :** `tests/unit/nutrition-repositories.test.ts`,
+`tests/unit/nutrition-plan-envelope.test.ts` et
+`tests/unit/home-nutrition-transport.test.ts` valident les repositories, les
+enveloppes de plans et leur transport.
+
+**Repas, IA et producteurs :**
+`tests/unit/nutrition-saved-meals-library-render.test.ts`,
+`tests/unit/ai-migrated-routes-contract.test.ts` et
+`tests/unit/nutrition-plan-producers-characterization.test.ts` couvrent la
+bibliothèque de repas, les routes IA migrées et les producteurs Nutrition.
+
+**Dashboard et synthèse :**
+`tests/unit/client-dashboard-nutrition-measurements-loading-static.test.ts`,
+`tests/unit/client-dashboard-coach-meal-plan-reader-static.test.ts` et
+`tests/unit/nutrition-tab-summary.test.ts` valident les lecteurs dashboard et
+la synthèse Nutrition.
+
+**Limitation :** aucun E2E navigateur Nutrition complet identifié ;
+limitation documentée RC1.
+
+**Décision RC1 :** la case « Vérifier Nutrition : journal, plans, recettes et
+génération IA » est cochée. RC1 passe de 23 à 24 tâches sur 38, reste `ACTIVE`
+et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.
