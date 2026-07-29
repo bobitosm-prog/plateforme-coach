@@ -12961,3 +12961,32 @@ contrôles RC1 restent ouverts.
 RC1 passe de 7 à 8 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
 demeure `INACTIVE`. Aucun code, test, migration, service distant, commit ou
 push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — Auth inscription onboarding session
+
+**Diagnostic :** l'audit du flux d'inscription local a révélé l'absence du
+trigger PostgreSQL sur `auth.users` appelant `public.handle_new_user()`. La
+fonction existait, mais aucun branchement ne créait automatiquement le profil
+après le signup.
+
+**Correction technique :** la migration
+`20260729100000_create_handle_new_user_trigger.sql` restaure le contrat
+`auth.users → profiles` avec un trigger `AFTER INSERT` idempotent. Le commit
+technique associé est `8b386e5`
+(`fix(rc1): restore auth profile trigger and validate registration flows`).
+
+**Validation E2E :**
+`npm run test:e2e -- e2e/auth-registration-flow.spec.ts` réussit avec
+`2 passed (16.4s)`. La preuve couvre l'inscription client et coach, la création
+automatique des profils, les rôles `client`/`coach`, le login, les redirections
+onboarding et la récupération de session après reload.
+
+**Fichiers techniques concernés :**
+`supabase/migrations/20260729100000_create_handle_new_user_trigger.sql` et
+`e2e/auth-registration-flow.spec.ts`.
+
+**Décision RC1 :** la case « Vérifier authentification, inscription,
+onboarding et récupération de session » est cochée. RC1 passe de 8 à 9 tâches
+sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Cette
+mise à jour documentaire ne modifie aucun code, test, migration, service
+distant, commit ou push.
