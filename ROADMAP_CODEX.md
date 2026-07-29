@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 29 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 30 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -741,7 +741,15 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   `media.moovx.ch`, cache immuable, Range et headers associés, fallback local
   des posters, chargement différé et nettoyage vidéo validés. L'E2E autorise
   uniquement le CDN média officiel comme origine externe.
-- [ ] Vérifier qu’aucun média privé n’est public.
+- [x] Vérifier qu’aucun média privé n’est public — aucun appel
+  `getPublicUrl()` ne cible le bucket privé `progress-photos`; les photos de
+  progression utilisent exclusivement des URL temporaires générées par
+  `createSignedUrl()` dans `app/(dashboard)/page-desktop.tsx`,
+  `app/components/tabs/progression/useProgressTabController.ts` et
+  `app/components/progress/BodyAssessment.tsx`. Les recherches
+  `getPublicUrl.*progress-photos` et `progress-photos.*getPublicUrl` ne
+  retournent aucun résultat. Les médias publics restent servis par
+  `media.moovx.ch`; `progress-photos` et `message-media` restent privés.
 - [ ] Vérifier les polices locales et l’absence de Google Fonts.
 - [ ] Vérifier les deux baselines et tous les budgets performance.
 - [x] Réaliser un contrôle Core Web Vitals RC1 — Preview `phase-6-staging`

@@ -13300,3 +13300,26 @@ documentée.
 Range » est cochée. RC1 passe de 28 à 29 tâches sur 38, reste `ACTIVE` et
 n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — sécurité des médias privés
+
+**Correction vérifiée :** l'exposition potentielle détectée dans
+`app/(dashboard)/page-desktop.tsx` a été supprimée. Le bucket privé
+`progress-photos` n'utilise plus `getPublicUrl()` et ses images sont chargées
+uniquement avec des URL temporaires produites par `createSignedUrl()`.
+
+**Preuves :** les recherches `getPublicUrl.*progress-photos` et
+`progress-photos.*getPublicUrl` ne retournent aucun résultat. L'usage sécurisé
+de `createSignedUrl()` est présent dans
+`app/(dashboard)/page-desktop.tsx`,
+`app/components/tabs/progression/useProgressTabController.ts` et
+`app/components/progress/BodyAssessment.tsx`.
+
+**Séparation des autorités média :** `media.moovx.ch` reste le domaine public
+officiel. Les buckets utilisateur `progress-photos` et `message-media`
+restent privés et ne doivent générer aucune URL publique.
+
+**Décision RC1 :** la case « Vérifier qu’aucun média privé n’est public » est
+cochée. RC1 passe de 29 à 30 tâches sur 38, reste `ACTIVE` et n'est pas
+terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit
+ou push n'est modifié par cette mise à jour documentaire.
