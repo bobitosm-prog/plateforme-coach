@@ -13239,3 +13239,24 @@ fournisseur réel » est cochée. RC1 passe de 25 à 26 tâches sur 38, reste
 `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test,
 service distant, commit ou push n'est modifié par cette mise à jour
 documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — quotas et usage IA
+
+**Cycle d'usage :** `tests/unit/ai-usage-service.test.ts`,
+`tests/unit/ai-usage-static.test.ts` et
+`tests/unit/ai-usage-supabase-port.test.ts` valident la réservation de quota,
+la finalisation de l'usage, la journalisation, les coûts estimés et le port
+RPC Supabase.
+
+**Routes et refus :** `tests/unit/supabase-access-migration-routes.test.ts`,
+`tests/unit/ai-migrated-routes-contract.test.ts`,
+`tests/unit/nutrition-meal-generation-route.test.ts`,
+`tests/unit/ai-analyze-body-route.test.ts` et
+`tests/unit/ai-training-generation.test.ts` couvrent la route
+`/api/ai-quota`, les consommateurs migrés et le refus des requêtes hors quota
+avant tout appel fournisseur.
+
+**Décision RC1 :** la case « Vérifier quotas et journalisation d’usage IA »
+est cochée. RC1 passe de 26 à 27 tâches sur 38, reste `ACTIVE` et n'est pas
+terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit
+ou push n'est modifié par cette mise à jour documentaire.
