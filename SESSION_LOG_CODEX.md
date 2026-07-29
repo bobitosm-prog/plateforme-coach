@@ -13212,3 +13212,30 @@ limitation documentée RC1.
 analytics » est cochée. RC1 passe de 24 à 25 tâches sur 38, reste `ACTIVE` et
 n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — 15 flux IA
+
+**Inventaire :** le journal de session établit un inventaire exhaustif de
+15 points d'entrée IA runtime. Le registre associe 15 features usage,
+15 contrats goldens et 15 politiques fallback.
+
+**Goldens et fallback :** `tests/unit/ai-golden-contracts.test.ts`,
+`tests/unit/ai-golden-contracts-static.test.ts`,
+`tests/unit/ai-fallback-policy.test.ts`,
+`tests/unit/ai-fallback-policy-static.test.ts` et
+`tests/unit/ai-resilience-policy.test.ts` valident les réponses contractuelles,
+les fallbacks et la résilience.
+
+**Fournisseurs et usage :** `tests/unit/provider-mocks.test.ts`,
+`tests/unit/ai-provider-interface.test.ts`,
+`tests/unit/ai-usage-service.test.ts` et
+`tests/unit/ai-usage-static.test.ts` couvrent les mocks fournisseurs,
+l'absence d'appel fournisseur réel et les contrats de quotas/journalisation
+d'usage. Le critère RC1 séparé consacré aux quotas reste inchangé dans cette
+étape.
+
+**Décision RC1 :** la case « Vérifier les 15 flux IA avec mocks/goldens, sans
+fournisseur réel » est cochée. RC1 passe de 25 à 26 tâches sur 38, reste
+`ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test,
+service distant, commit ou push n'est modifié par cette mise à jour
+documentaire.
