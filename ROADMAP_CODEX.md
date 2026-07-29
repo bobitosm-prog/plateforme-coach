@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 31 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 32 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -755,7 +755,13 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   `next/font/local` définie dans `app/fonts.ts`. Toutes les polices sont
   hébergées localement et aucun appel runtime, import `next/font/google`,
   référence `fonts.googleapis.com` ou `@import` Google Fonts ne subsiste.
-- [ ] Vérifier les deux baselines et tous les budgets performance.
+- [x] Vérifier les deux baselines et tous les budgets performance —
+  `npm run perf:budget:check` valide les deux baselines avec 79 contrôles et
+  aucune divergence informative chacune. `npm run perf:compare` confirme
+  l'amélioration du LCP mobile client de `16,580 %` et du LCP desktop coach
+  de `20,714 %`, avec INP dans la plage de référence et CLS stable. L'artefact
+  `perf/baseline/phase-8-comparison.json` ne révèle aucune régression
+  bloquante.
 - [x] Réaliser un contrôle Core Web Vitals RC1 — Preview `phase-6-staging`
   `63dad1e`, LCP p75 mobile froid `1 428 ms` landing et `2 856 ms` login,
   gains `53,03 %` et `38,13 %`; INP, CLS et TTFB `GOOD`.

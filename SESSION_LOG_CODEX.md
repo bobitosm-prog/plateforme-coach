@@ -13339,3 +13339,22 @@ Google Fonts ne subsistent.
 Google Fonts » est cochée. RC1 passe de 30 à 31 tâches sur 38, reste `ACTIVE`
 et n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — budgets et baselines performance
+
+**Budgets reproductibles :** `npm run perf:budget:check` valide
+`phase-8-baseline-run-1.json` et `phase-8-baseline-run-2.json`. Chaque
+baseline réussit 79 contrôles avec zéro dépassement informatif.
+
+**Comparaison Core Web Vitals :** `npm run perf:compare` confirme, pour
+`clientMobile`, un LCP de `386` à `322` (`-16,580 %`), un INP de `32` à `40`
+dans la plage initiale et un CLS stable. Pour `coachDesktop`, le LCP passe de
+`280` à `222` (`-20,714 %`), tandis que l'INP et le CLS restent stables.
+L'artefact de preuve est `perf/baseline/phase-8-comparison.json`.
+
+**Décision RC1 :** les budgets sont validés, les deux baselines sont
+reproductibles et aucune régression bloquante n'est détectée. La case
+« Vérifier les deux baselines et tous les budgets performance » est cochée.
+RC1 passe de 31 à 32 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
+Phase 9 demeure `INACTIVE`. Aucun code, test, service distant, commit ou push
+n'est modifié par cette mise à jour documentaire.
