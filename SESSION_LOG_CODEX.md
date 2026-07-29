@@ -13398,3 +13398,21 @@ présumer que les vulnérabilités sont corrigées. RC1 passe de 33 à 34 tâche
 sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure `INACTIVE`.
 Aucun code, test, service distant, commit ou push n'est modifié par cette mise
 à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — notes de version, limitations et dettes connues
+
+**Document créé :** `docs/RC1_RELEASE_NOTES.md` consolide le statut de la
+Release Candidate, la portée validée, les corrections de sécurité, les
+résultats de performance, les limitations connues et les dettes techniques
+restantes.
+
+**Transparence des risques :** les six vulnérabilités inventoriées par
+`npm audit --omit=dev` restent ouvertes. Aucune mise à jour automatique ni
+commande `npm audit fix --force` n'a été exécutée, et les upgrades
+potentiellement breaking sont réservés à une tranche dédiée.
+
+**Décision RC1 :** la case « Préparer notes de version, limitations et dettes
+connues » est cochée. RC1 passe de 34 à 35 tâches sur 38, reste `ACTIVE` et
+n'est pas une déclaration de mise en production. Phase 9 demeure `INACTIVE`
+jusqu'à validation explicite. Aucun code, test, service distant, commit ou
+push n'est modifié par cette mise à jour documentaire.
