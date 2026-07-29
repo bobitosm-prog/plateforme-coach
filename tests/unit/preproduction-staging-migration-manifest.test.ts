@@ -56,9 +56,9 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     const result = verifyStagingMigrationManifest({ manifest, migrationsRoot })
     expect(result).toEqual(expect.objectContaining({
       status: 'ok',
-      migrationCount: 143,
-      shaCount: 143,
-      uniqueStagingVersionCount: 143,
+      migrationCount: 144,
+      shaCount: 144,
+      uniqueStagingVersionCount: 144,
       reversionedMigrationCount: 73,
       resolvedCollisionGroupCount: 17,
       acceptableForSupabaseDryRun: false,
@@ -113,7 +113,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     const copy = structuredClone(manifest)
     mutate(copy)
     expect(() => verifyStagingMigrationManifest({ manifest: copy, migrationsRoot }))
-      .toThrow(/diverges|exactly 143|collision/)
+      .toThrow(/diverges|exactly 144|collision/)
     },
   )
 
@@ -174,7 +174,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
         const files = readdirSync(join(tempRoot, 'supabase/migrations'))
           .filter(file => file.endsWith('.sql'))
           .sort()
-        expect(files).toHaveLength(143)
+        expect(files).toHaveLength(144)
         expect(files).toEqual(
           manifest.migrations.map((migration: { stagingName: string }) => migration.stagingName),
         )
@@ -233,7 +233,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     expect(generated.migrations).toHaveLength(1)
     writeFileSync(join(root, '20260101000000_one.sql'), 'select 2;\n')
     expect(() => verifyStagingMigrationManifest({
-      manifest: { ...generated, sourceMigrationCount: 143, migrations: Array(143).fill(generated.migrations[0]) },
+      manifest: { ...generated, sourceMigrationCount: 144, migrations: Array(144).fill(generated.migrations[0]) },
       migrationsRoot: root,
     })).toThrow()
   })

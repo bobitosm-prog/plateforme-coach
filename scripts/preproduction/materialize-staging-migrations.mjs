@@ -53,14 +53,14 @@ export function verifyStagingMigrationManifest({
     throw new Error('Unsupported staging migration manifest schemaVersion')
   }
   const actual = createStagingMigrationManifest(migrationsRoot)
-  if (manifest.sourceMigrationCount !== 143 || manifest.migrations.length !== 143) {
-    throw new Error('Staging migration manifest must contain exactly 143 migrations')
+  if (manifest.sourceMigrationCount !== 144 || manifest.migrations.length !== 144) {
+    throw new Error('Staging migration manifest must contain exactly 144 migrations')
   }
   if (JSON.stringify(manifest) !== JSON.stringify(actual)) {
     throw new Error('Staging migration manifest diverges from migration sources')
   }
   const stagingVersions = manifest.migrations.map(migration => migration.stagingVersion)
-  if (new Set(stagingVersions).size !== 143) {
+  if (new Set(stagingVersions).size !== 144) {
     throw new Error('Staging migration manifest contains a version collision')
   }
   const reversioned = manifest.migrations.filter(
@@ -79,7 +79,7 @@ export function verifyStagingMigrationManifest({
 
   return {
     status: 'ok',
-    migrationCount: 143,
+    migrationCount: 144,
     shaCount: manifest.migrations.filter(migration => {
       const source = readFileSync(resolve(migrationsRoot, basename(migration.sourcePath)))
       return sha256(source) === migration.sourceSha256
