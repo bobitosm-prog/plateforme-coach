@@ -1264,12 +1264,15 @@ export type Database = {
           barcode: string | null
           brand: string | null
           calories: number | null
+          carbohydrates: number | null
           carbs: number | null
           created_at: string | null
+          energy_kcal: number | null
           fat: number | null
           id: string
           name: string
           protein: number | null
+          proteins: number | null
           serving_size_g: number | null
           source: string | null
         }
@@ -1277,12 +1280,15 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           calories?: number | null
+          carbohydrates?: number | null
           carbs?: number | null
           created_at?: string | null
+          energy_kcal?: number | null
           fat?: number | null
           id?: string
           name: string
           protein?: number | null
+          proteins?: number | null
           serving_size_g?: number | null
           source?: string | null
         }
@@ -1290,12 +1296,15 @@ export type Database = {
           barcode?: string | null
           brand?: string | null
           calories?: number | null
+          carbohydrates?: number | null
           carbs?: number | null
           created_at?: string | null
+          energy_kcal?: number | null
           fat?: number | null
           id?: string
           name?: string
           protein?: number | null
+          proteins?: number | null
           serving_size_g?: number | null
           source?: string | null
         }
