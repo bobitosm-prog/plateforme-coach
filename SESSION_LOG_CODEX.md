@@ -13010,3 +13010,18 @@ les clients ou coachs sans relation et le refus des accès aux données
 RC1 passe de 9 à 11 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9
 demeure `INACTIVE`. Aucun code, test, migration, service distant, commit ou
 push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — suite unitaire complète
+
+**Exécution :** la commande `npm test` a été exécutée sur l'état RC1 après
+alignement du manifeste staging à 144 migrations et de ses garde-fous
+preproduction.
+
+**Résultat :** les 306 fichiers de test passent. La suite totalise 2571 tests
+réussis et 3 `todo` conservés, sans test en échec. Le contrat complet reste
+vert après l'alignement du manifeste et des classifications staging.
+
+**Décision RC1 :** la case « Exécuter la suite complète sans échec » est
+cochée. RC1 passe de 11 à 12 tâches sur 38, reste `ACTIVE` et n'est pas
+terminé. Phase 9 demeure `INACTIVE`. Aucun test supplémentaire, service
+distant, commit ou push n'est exécuté par cette mise à jour documentaire.

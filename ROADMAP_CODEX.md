@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 11 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 12 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -642,7 +642,8 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [x] Auditer et confirmer Phases 1 à 8 terminées à 100 % — réconciliation
   sur `5a02c89`, 124/124 tâches et 36/36 critères de sortie `met`.
 - [ ] Vérifier l’état Git et coordonner les changements concurrents.
-- [ ] Exécuter la suite complète sans échec.
+- [x] Exécuter la suite complète sans échec — `npm test` validé :
+  306 fichiers de test réussis, 2571 tests réussis et 3 todo conservés.
 - [ ] Atteindre zéro todo bloquant ou justifier chaque todo restant.
 - [ ] `npx tsc --noEmit` vert.
 - [ ] ESLint complet vert, sans erreur ; inventorier et traiter les avertissements.
