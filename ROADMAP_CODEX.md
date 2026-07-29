@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 20 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 21 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -696,7 +696,12 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   `e2e/coach-client-client.spec.ts` et `e2e/coach-client-coach.spec.ts`. Les
   parcours couvrent relation active, relation inactive, utilisateurs sans
   relation et refus des accès étrangers.
-- [ ] Vérifier messagerie, realtime, reconnexion et nettoyage.
+- [x] Vérifier messagerie, realtime, reconnexion et nettoyage — preuves :
+  `npm run test:e2e:push`, `npm run test:e2e:chat`,
+  `tests/unit/coaching-messaging-realtime.test.ts`,
+  `tests/unit/coaching-messaging-consumer-lifecycle-static.test.ts` et
+  `tests/integration/messages-rls.sql`. Limitation documentée : aucun E2E
+  navigateur coach/client Realtime complet n'est identifié.
 - [ ] Vérifier checkout plateforme et coach en environnement de test — checkout plateforme client direct validé; checkout coach encore ouvert.
 - [x] Vérifier webhook replay, concurrence et événements désordonnés —
   **RC1 — Webhook runtime E2E signé + replay : `VALIDATED`**. Sur le commit

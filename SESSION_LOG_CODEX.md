@@ -13103,3 +13103,22 @@ case correspondante est cochée et RC1 passe de 19 à 20 tâches sur 38. RC1
 reste `ACTIVE` et Phase 9 demeure `INACTIVE`. Aucun code, test, migration,
 service distant, commit ou push n'est modifié par cette mise à jour
 documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — messagerie et Realtime
+
+**Preuves exécutées :** les parcours `npm run test:e2e:push` et
+`npm run test:e2e:chat` sont verts. Les contrats Realtime, reconnexion et
+nettoyage sont couverts par
+`tests/unit/coaching-messaging-realtime.test.ts` et
+`tests/unit/coaching-messaging-consumer-lifecycle-static.test.ts`. Les
+frontières d'accès aux messages sont couvertes par la matrice déjà validée
+`tests/integration/messages-rls.sql`.
+
+**Limitation :** aucun E2E navigateur coach/client Realtime complet n'a été
+identifié. Cette limite reste documentée sans invalider les preuves runtime,
+unitaires et RLS disponibles.
+
+**Décision RC1 :** la case « Vérifier messagerie, realtime, reconnexion et
+nettoyage » est cochée. RC1 passe de 20 à 21 tâches sur 38, reste `ACTIVE` et
+n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
+distant, commit ou push n'est modifié par cette mise à jour documentaire.
