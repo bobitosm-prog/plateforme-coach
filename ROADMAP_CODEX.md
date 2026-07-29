@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 12 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 13 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -644,7 +644,9 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [ ] Vérifier l’état Git et coordonner les changements concurrents.
 - [x] Exécuter la suite complète sans échec — `npm test` validé :
   306 fichiers de test réussis, 2571 tests réussis et 3 todo conservés.
-- [ ] Atteindre zéro todo bloquant ou justifier chaque todo restant.
+- [x] Atteindre zéro todo bloquant ou justifier chaque todo restant — les
+  3 `todo` conservés dans `tests/unit/coach-invitation-contract.test.ts`
+  sont documentés comme scénarios futurs non bloquants.
 - [ ] `npx tsc --noEmit` vert.
 - [ ] ESLint complet vert, sans erreur ; inventorier et traiter les avertissements.
 - [x] Deux builds de production hermétiques complets — commit `cd25d20`,

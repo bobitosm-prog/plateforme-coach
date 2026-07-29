@@ -13025,3 +13025,20 @@ vert après l'alignement du manifeste et des classifications staging.
 cochée. RC1 passe de 11 à 12 tâches sur 38, reste `ACTIVE` et n'est pas
 terminé. Phase 9 demeure `INACTIVE`. Aucun test supplémentaire, service
 distant, commit ou push n'est exécuté par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — justification des todo restants
+
+**État de la suite :** la suite complète reste verte avec 306 fichiers de test
+et 2571 tests réussis. Les 3 `todo` conservés se trouvent dans
+`tests/unit/coach-invitation-contract.test.ts`.
+
+**Justification :** les trois cas appartiennent au contrat d'invitation coach.
+Ils réservent des extensions futures : rollback transactionnel de la relation,
+du profil ou de l'invitation lors d'erreurs intermédiaires, ainsi qu'un flux
+`super_admin` séparé, audité et motivé.
+
+**Décision RC1 :** aucun de ces `todo` ne bloque RC1. La case « Atteindre zéro
+todo bloquant ou justifier chaque todo restant » est cochée. RC1 passe de 12 à
+13 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure
+`INACTIVE`. Aucun test, fichier technique, service distant, commit ou push
+n'est modifié par cette mise à jour documentaire.
