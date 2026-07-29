@@ -13122,3 +13122,15 @@ unitaires et RLS disponibles.
 nettoyage » est cochée. RC1 passe de 20 à 21 tâches sur 38, reste `ACTIVE` et
 n'est pas terminé. Phase 9 demeure `INACTIVE`. Aucun code, test, service
 distant, commit ou push n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — checkout plateforme et coach
+
+**Preuves E2E :** `npm run test:e2e:checkout` valide le checkout plateforme
+en environnement Stripe local. `npm run test:e2e:coach-checkout` valide le
+checkout coach avec ses identités et son autorité Connect locales.
+
+**Décision RC1 :** la case « Vérifier checkout plateforme et coach en
+environnement de test » est cochée. RC1 passe de 21 à 22 tâches sur 38, reste
+`ACTIVE` et n'est pas terminé. Le critère Training reste ouvert pour l'étape
+suivante et Phase 9 demeure `INACTIVE`. Aucun code, test, service distant,
+commit ou push n'est modifié par cette mise à jour documentaire.
