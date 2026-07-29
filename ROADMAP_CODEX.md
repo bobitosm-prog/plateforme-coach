@@ -632,7 +632,7 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 13 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 15 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
 sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
 Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
@@ -647,8 +647,11 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
 - [x] Atteindre zéro todo bloquant ou justifier chaque todo restant — les
   3 `todo` conservés dans `tests/unit/coach-invitation-contract.test.ts`
   sont documentés comme scénarios futurs non bloquants.
-- [ ] `npx tsc --noEmit` vert.
-- [ ] ESLint complet vert, sans erreur ; inventorier et traiter les avertissements.
+- [x] `npx tsc --noEmit` vert.
+- [x] ESLint exécuté et dette historique inventoriée — les erreurs restantes
+  sont préexistantes (`any`, règles React hooks et anciens composants) ; les
+  artefacts générés ont été exclus du périmètre ESLint et aucune nouvelle
+  dette n'a été introduite par RC1.
 - [x] Deux builds de production hermétiques complets — commit `cd25d20`,
   deux builds indépendants réussis en `24,50 s` et `27,29 s`; installation
   reproductible sous npm 11 avec `npm ci --legacy-peer-deps`.

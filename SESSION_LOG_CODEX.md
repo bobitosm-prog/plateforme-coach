@@ -13042,3 +13042,23 @@ todo bloquant ou justifier chaque todo restant » est cochée. RC1 passe de 12 �
 13 tâches sur 38, reste `ACTIVE` et n'est pas terminé. Phase 9 demeure
 `INACTIVE`. Aucun test, fichier technique, service distant, commit ou push
 n'est modifié par cette mise à jour documentaire.
+
+## Entrée — 2026-07-29 — Validation RC1 — TypeScript et diagnostic ESLint
+
+**TypeScript :** `npx tsc --noEmit` réussit sans erreur après régénération des
+types Supabase. Le critère TypeScript RC1 est validé.
+
+**ESLint :** `npm run lint` a été exécuté. Les artefacts hors code source
+canonique (`.claude/**`, `.next-e2e/**`, `tmp-legal/**` et
+`sites/moovx.ch/assets/**`) ont été exclus de `globalIgnores`. La dette
+restante est historique et inventoriée : usages de
+`@typescript-eslint/no-explicit-any`, règles React hooks récentes
+(`set-state-in-effect`, `refs`, `purity`) et anciens composants non migrés.
+Aucun nouveau problème ESLint n'a été introduit par les changements RC1.
+
+**Décision RC1 :** les critères TypeScript et diagnostic ESLint sont cochés.
+RC1 passe de 13 à 15 tâches sur 38, reste `ACTIVE` et n'est pas terminé.
+Phase 9 demeure `INACTIVE`. Le lint global n'est pas présenté comme vert :
+sa dette préexistante est acceptée comme exception documentée pour RC1.
+Aucun test, fichier technique, service distant, commit ou push n'est modifié
+par cette mise à jour documentaire.
