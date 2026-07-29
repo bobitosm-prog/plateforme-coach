@@ -1196,6 +1196,7 @@ export type Database = {
           description: string | null
           description_de: string | null
           description_en: string | null
+          difficulty: string | null
           equipment: string | null
           equipment_legacy: string | null
           execution_tips: string | null
@@ -1217,6 +1218,7 @@ export type Database = {
           description?: string | null
           description_de?: string | null
           description_en?: string | null
+          difficulty?: string | null
           equipment?: string | null
           equipment_legacy?: string | null
           execution_tips?: string | null
@@ -1238,6 +1240,7 @@ export type Database = {
           description?: string | null
           description_de?: string | null
           description_en?: string | null
+          difficulty?: string | null
           equipment?: string | null
           equipment_legacy?: string | null
           execution_tips?: string | null
