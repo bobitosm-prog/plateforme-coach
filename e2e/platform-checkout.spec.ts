@@ -88,7 +88,16 @@ test('checkout plateforme local: identité serveur, paywall et refus avant Strip
     const calls = await stripeRequests()
     expect(calls).toHaveLength(1)
     expect(calls[0]).toMatchObject({ method: 'POST', path: '/v1/checkout/sessions' })
-    expect(calls[0].idempotencyKey).toMatch(new RegExp(`^checkout-${firstId}-client_monthly-\\d+$`))
+    const successfulPayment = await admin.from('payments')
+      .select('id,status,stripe_checkout_session_id')
+      .eq('client_id', firstId)
+      .is('coach_id', null)
+      .single()
+    expect(successfulPayment.error).toBeNull()
+    if (!successfulPayment.data) throw new Error('Successful checkout payment was not persisted')
+    expect(successfulPayment.data).toMatchObject({ status: 'pending' })
+    expect(successfulPayment.data.stripe_checkout_session_id).toMatch(/^cs_/)
+    expect(calls[0].idempotencyKey).toBe(`checkout-payment-${successfulPayment.data.id}`)
     expect(calls[0].params).toMatchObject({
       mode: 'subscription', 'line_items[0][price]': 'price_local_client_monthly',
       success_url: 'http://127.0.0.1:3210/?payment=success', cancel_url: 'http://127.0.0.1:3210/?payment=cancel',
@@ -121,7 +130,22 @@ test('checkout plateforme local: identité serveur, paywall et refus avant Strip
       expect(response).toEqual({ status: 500, body: { error: 'Erreur lors de la création du paiement' } })
     } finally { await failureContext.close() }
     const afterPayments = await admin.from('payments').select('id', { count: 'exact', head: true }).in('client_id', ids)
-    expect(afterPayments.count).toBe(beforePayments.count)
+    expect(beforePayments.error).toBeNull()
+    expect(afterPayments.error).toBeNull()
+    expect(afterPayments.count).toBe((beforePayments.count || 0) + 1)
+    const failedPayment = await admin.from('payments')
+      .select('id,status,stripe_checkout_session_id')
+      .eq('client_id', secondId)
+      .is('coach_id', null)
+      .single()
+    expect(failedPayment.error).toBeNull()
+    if (!failedPayment.data) throw new Error('Failed checkout pending payment was not persisted')
+    expect(failedPayment.data).toMatchObject({
+      status: 'pending',
+      stripe_checkout_session_id: null,
+    })
+    const failedCalls = await stripeRequests()
+    expect(failedCalls.at(-1)?.idempotencyKey).toBe(`checkout-payment-${failedPayment.data.id}`)
     expect([...browserOrigins].every(origin => [
       'http://127.0.0.1:3210', 'http://127.0.0.1:55321', stripeUrl,
     ].includes(origin))).toBe(true)

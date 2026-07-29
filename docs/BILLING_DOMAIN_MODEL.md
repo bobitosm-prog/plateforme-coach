@@ -157,7 +157,11 @@ L'annulation arrête ou programme l'arrêt d'un abonnement ; le remboursement in
 
 ### Checkout plateforme
 
-`POST /api/stripe/checkout` authentifie côté serveur, valide le rôle et un plan fermé, crée une session Stripe puis tente d'insérer un paiement `pending`. Il couvre abonnements client, lifetime ponctuel et Coach Pro. Les Price IDs viennent de variables d'environnement.
+`POST /api/stripe/checkout` authentifie côté serveur, valide le rôle et un
+plan fermé, crée un paiement `pending`, utilise son ID comme autorité
+d'idempotence Stripe puis rattache la Checkout Session à cette même ligne. Il
+couvre abonnements client, lifetime ponctuel et Coach Pro. Les Price IDs
+viennent de variables d'environnement.
 
 ### Checkout coach
 
@@ -205,10 +209,15 @@ De même, le code Stripe ou admin utilise `profiles.stripe_onboarding_complete`,
 
 ### Transactions et idempotence incomplètes
 
-- Checkout plateforme : Stripe est créé avant l'écriture locale ; l'insertion n'est pas vérifiée explicitement et aucune transaction distribuée ne relie les deux opérations.
+- Checkout plateforme : le payment est créé avant Stripe, puis la session est
+  rattachée conditionnellement. Aucune transaction distribuée ne relie ces
+  trois opérations; une panne Stripe laisse un payment `pending` sans session.
 - Checkout coach : création Customer, mise à jour profil et session sont trois opérations séparées.
 - Webhook : profil, paiement et finalisation de l'événement sont des mutations successives ; un échec partiel peut laisser un état à réconcilier.
-- Les clés d'idempotence checkout contiennent `Date.now()`, donc deux demandes rapprochées d'un même utilisateur ne partagent pas une clé métier stable.
+- La clé plateforme est stable par payment
+  (`checkout-payment-{paymentId}`), tandis que la clé coach contient encore
+  `Date.now()`. Deux tentatives plateforme créent néanmoins deux payments
+  distincts et ne partagent donc pas une clé métier globale.
 - `stripe_event_id` protège certains upserts, mais pas toutes les mutations ni les commandes initiées avant webhook.
 
 ### Absence d'entitlements explicites

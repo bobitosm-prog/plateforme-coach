@@ -48,7 +48,7 @@ Une metadata valide n'est jamais une preuve d'autorité. Le webhook relit ensuit
 
 | Frontière | Clé ou autorité |
 |---|---|
-| Checkout plateforme | `checkout-{userId}-{planId}-{nowMs}` |
+| Checkout plateforme | `checkout-payment-{paymentId}` |
 | Checkout coach | `coach-checkout-{clientId}-{coachId}-{nowMs}` |
 | Claim webhook | `stripe_webhook_events.event_id`, via `claim_stripe_webhook_event` |
 | Paiement webhook | conflit sur `payments.stripe_event_id`, doublons ignorés |
@@ -57,8 +57,14 @@ Les résultats `already_success` et `already_skipped` sont terminaux et renvoien
 
 ## Limites actuelles
 
-- Les clés Checkout incluent l'heure à la milliseconde. Deux clics à des instants différents créent donc deux commandes Stripe distinctes ; ce n'est pas encore une idempotence métier durable.
-- L'insertion locale du paiement plateforme intervient après la création Stripe et n'est pas transactionnelle.
+- La clé du checkout plateforme est stable pour une tentative locale donnée :
+  la ligne `payments.pending` est créée avant Stripe et son `id` devient
+  l'autorité d'idempotence. Deux tentatives distinctes créent toutefois deux
+  payments et donc deux clés différentes.
+- La création du payment, la création Stripe et le rattachement conditionnel
+  de `stripe_checkout_session_id` restent trois opérations non atomiques. Une
+  panne Stripe conserve volontairement un payment `pending` sans session pour
+  la réconciliation.
 - L'idempotence webhook empêche le double traitement concurrent, mais les mutations multiples d'un handler ne forment pas encore une transaction unique.
 - Le faux Stripe local vérifie la vraie sérialisation SDK et l'en-tête d'idempotence, mais ne reproduit pas toute la sémantique de Stripe.
 

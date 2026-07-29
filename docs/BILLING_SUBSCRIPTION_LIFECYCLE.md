@@ -31,7 +31,7 @@ La relation active autorise le démarrage du checkout, mais le paiement ne crée
 | État | Portée réelle | Effet actuel sur l'accès |
 |---|---|---|
 | `requested` | Vocabulaire cible uniquement ; aucune commande persistée dédiée. | Aucun. |
-| `checkout_created` | Session Stripe créée. Pour la plateforme, une ligne `payments.pending` est tentée ; pour le coach, aucune projection locale équivalente. | Aucun. |
+| `checkout_created` | Pour la plateforme, `payments.pending` est créé avant Stripe puis reçoit l'ID de session après succès. Pour le coach, aucune projection locale équivalente n'est créée avant webhook. | Aucun. |
 | `trialing` | Statut Stripe accepté lors de la relecture d'une subscription. | Projeté localement comme `active` au checkout ; il n'existe pas de projection distincte complète. |
 | `active` | Subscription Stripe active et projection legacy `profiles.subscription_status`. | Peut accorder l'accès selon le plan, la période et les règles legacy. |
 | `past_due` | Statut Stripe propagé par `customer.subscription.updated`. | Refusé par le modèle canonique ; les consommateurs legacy doivent rester fail-closed hors `active`. |

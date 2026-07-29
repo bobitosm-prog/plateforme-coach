@@ -23,10 +23,13 @@ Le runner lance Next.js sur `127.0.0.1:3210` et, pour le checkout, le faux Strip
 - le producteur frontend envoie exactement `{ planId: "client_monthly" }` ;
 - la route dérive `clientId` de la session Supabase locale ;
 - Stripe reçoit le prix local attendu, le mode `subscription`, les URLs locales et les métadonnées serveur ;
-- le paiement `pending` n'est écrit qu'après une réponse Stripe réussie ;
+- le paiement `pending` est créé avant Stripe et son ID porte la clé
+  `checkout-payment-{paymentId}` ;
+- après succès, la Checkout Session est rattachée à ce même payment ;
 - anonyme, identifiants injectés, plan inconnu et plan coach incompatible sont refusés avant Stripe ;
 - un second client ne peut pas injecter l'identité du premier ;
-- une panne Stripe renvoie le contrat `500` existant sans nouvelle écriture de paiement ;
+- une panne Stripe renvoie le contrat `500` existant et conserve le payment
+  `pending` sans Checkout Session ;
 - les origines navigateur observées sont limitées à l'application, Supabase local et le faux Stripe.
 
 Deux exécutions consécutives après reset ont réussi en environ 13,2 secondes chacune.
@@ -37,7 +40,10 @@ Le scénario coach réutilise le même faux serveur et traverse la carte coachin
 
 Le faux Stripe reçoit d'abord `POST /v1/customers`, puis `POST /v1/checkout/sessions`. Le test vérifie le montant de 7 500 centimes, CHF, abonnement mensuel, destination Connect, commission plateforme de 3 %, métadonnées client/coach et URLs locales. L'identifiant client Stripe retourné localement est persisté dans le profil.
 
-Les refus anonyme, rôle non client, relation absente/inactive/multiple, coach sans rôle ou sans Connect, corps injecté et second client sont vérifiés avant Stripe. Une panne Stripe locale renvoie `500` sans ligne `payments`.
+Les refus anonyme, rôle non client, relation absente/inactive/multiple, coach
+sans rôle ou sans Connect, corps injecté et second client sont vérifiés avant
+Stripe. Pour le checkout coach, une panne Stripe locale renvoie `500` sans
+ligne `payments`; ce contrat est distinct du checkout plateforme.
 
 La route coach ne crée volontairement aucune ligne `payments` au checkout : cette écriture intervient après événement Stripe dans le webhook. Le test caractérise ce contrat au lieu d'inventer une écriture anticipée.
 
