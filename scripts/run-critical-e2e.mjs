@@ -4,19 +4,13 @@ import { resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { createClient } from '@supabase/supabase-js'
 import { config as loadEnv } from 'dotenv'
-import { acquireE2eLock, assertLocalE2eUrl, assertTemporaryPortsClosed, redactE2eOutput } from './e2e-local-contract.mjs'
+import { acquireE2eLock, assertLocalE2eUrl, assertTemporaryPortsClosed, getIntegratedCriticalE2eScenarios, redactE2eOutput } from './e2e-local-contract.mjs'
 import { assertNoRemoteProject, LOCAL_MAILPIT_URL } from './supabase-local-contract.mjs'
 
 const root = resolve(new URL('..', import.meta.url).pathname)
 const lockPath = resolve(root, '.critical-e2e.lock')
 const artifactsPath = resolve(root, 'test-results/critical-e2e')
-const scenarios = [
-  { name: 'Invitation coach vérifiée', spec: 'e2e/coach-invitation.spec.ts', flags: [] },
-  { name: 'Checkout plateforme', spec: 'e2e/platform-checkout.spec.ts', flags: ['--stripe'] },
-  { name: 'Checkout coach', spec: 'e2e/coach-checkout.spec.ts', flags: ['--stripe'] },
-  { name: 'Notification push', spec: 'e2e/push-notification.spec.ts', flags: ['--push'] },
-  { name: 'Chat Athena', spec: 'e2e/chat-ai.spec.ts', flags: ['--anthropic'] },
-]
+const scenarios = getIntegratedCriticalE2eScenarios()
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {

@@ -5,6 +5,37 @@ const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost'])
 
 export const E2E_TEMPORARY_PORTS = [3210, 55326, 55328, 55329, 55330]
 
+export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
+  { name: 'Invitation coach', spec: 'e2e/coach-invitation.spec.ts', flags: [], integrated: true },
+  { name: 'Checkout plateforme', spec: 'e2e/platform-checkout.spec.ts', flags: ['--stripe'], integrated: true },
+  { name: 'Checkout coach', spec: 'e2e/coach-checkout.spec.ts', flags: ['--stripe'], integrated: true },
+  { name: 'Notification Push', spec: 'e2e/push-notification.spec.ts', flags: ['--push'], integrated: true },
+  { name: 'Chat Athena', spec: 'e2e/chat-ai.spec.ts', flags: ['--anthropic'], integrated: true },
+  { name: 'Inscription, authentification et reprise de session', spec: 'e2e/auth-registration-flow.spec.ts', flags: [], integrated: true },
+  { name: 'Parcours client rattaché à un coach', spec: 'e2e/coach-client-client.spec.ts', flags: [], integrated: false },
+  { name: 'Parcours coach gérant un client', spec: 'e2e/coach-client-coach.spec.ts', flags: [], integrated: false },
+  { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: false },
+  { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: false },
+  { name: 'Cycle d’une séance Training', spec: null, flags: [], integrated: false },
+  { name: 'Journal nutritionnel quotidien', spec: null, flags: [], integrated: false },
+  { name: 'Suivi de progression', spec: null, flags: [], integrated: false },
+  { name: 'Messagerie coach-client et synchronisation Realtime', spec: null, flags: [], integrated: false },
+  { name: 'Réconciliation abonnement et Billing', spec: null, flags: [], integrated: false },
+])
+
+export function validateCriticalE2eTargetMatrix(matrix = CRITICAL_E2E_TARGET_MATRIX) {
+  if (matrix.length !== 15) throw new Error(`Critical E2E target matrix must contain exactly 15 journeys, received ${matrix.length}`)
+  const names = new Set(matrix.map(journey => journey.name))
+  if (names.size !== matrix.length) throw new Error('Critical E2E target matrix contains duplicate journey names')
+  const integrated = matrix.filter(journey => journey.integrated)
+  if (integrated.some(journey => !journey.spec)) throw new Error('Every integrated critical E2E journey must reference a spec')
+  return matrix
+}
+
+export function getIntegratedCriticalE2eScenarios(matrix = CRITICAL_E2E_TARGET_MATRIX) {
+  return validateCriticalE2eTargetMatrix(matrix).filter(journey => journey.integrated)
+}
+
 export function acquireE2eLock(lockPath, label = 'E2E suite', pid = process.pid) {
   try {
     const fd = openSync(lockPath, 'wx', 0o600)

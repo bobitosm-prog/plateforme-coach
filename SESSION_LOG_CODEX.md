@@ -13485,3 +13485,42 @@ seule transition documentaire.
 production. Aucun code, test, migration, configuration, variable
 d'environnement ou service distant n'est modifié. Aucun commit ni push n'est
 exécuté pendant cette mise à jour documentaire.
+
+## Entrée — 2026-07-30 — Phase 9 — matrice E2E critique et intégration Auth
+
+**Contrat canonique :** un parcours critique correspond désormais à une
+entrée exécutable nommée unique du runner `scripts/run-critical-e2e.mjs`,
+rattachée à une spécification métier principale. Plusieurs tests Playwright
+dans une même spécification comptent comme un parcours et les suites de
+performance sont exclues. La matrice cible versionnée contient exactement
+15 intitulés uniques.
+
+**Sous-batch Auth :** seul le parcours « Inscription, authentification et
+reprise de session », porté par `e2e/auth-registration-flow.spec.ts`, rejoint
+la suite canonique existante. Il utilise Chromium, Next.js et Supabase
+Auth/PostgREST/PostgreSQL locaux, sans fournisseur externe ni environnement
+distant. Les quatre autres spécifications métier déjà présentes dans le dépôt
+restent planifiées et ne sont pas intégrées dans ce sous-batch.
+
+**Qualification et nettoyage :** deux exécutions ciblées consécutives
+réussissent avec `2 passed`, respectivement en `17,3 s` et `16,1 s`. Après
+chaque exécution, les audits trouvent zéro utilisateur Auth, identité,
+session et profil synthétique; les ports temporaires sont fermés.
+
+**Validation transverse :** le contrat unitaire réussit avec `6 passed`.
+Une première exécution de `npm run test:e2e:critical` a rencontré un timeout
+non reproductible dans le parcours invitation existant; les cinq autres
+parcours étaient verts. La relance complète après reset canonique réussit les
+six parcours : invitation `40,7 s`, checkout plateforme `24,1 s`, checkout
+coach `24,1 s`, Push `26,7 s`, Chat Athena `30,0 s` et Auth `25,5 s`, pour
+une durée totale de `194,8 s`. L'audit final confirme l'absence de résidus
+Auth, identités, sessions, profils et ports temporaires.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé sur le contrat,
+le runner et son test, ainsi que `git diff --check`, réussissent.
+
+**Décision Phase 9 :** la tâche « Étendre la suite à 15 parcours E2E
+critiques » reste ouverte. Sa progression passe de `5/15` à `6/15`; aucun
+parcours Training, Nutrition, Progression, Realtime ou réconciliation Billing
+n'est créé ou intégré dans ce sous-batch. Aucun service distant ou
+environnement Production n'est utilisé.

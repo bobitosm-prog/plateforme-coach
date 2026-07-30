@@ -2,7 +2,14 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { acquireE2eLock, assertLocalE2eUrl, redactE2eOutput } from '../../scripts/e2e-local-contract.mjs'
+import {
+  acquireE2eLock,
+  assertLocalE2eUrl,
+  CRITICAL_E2E_TARGET_MATRIX,
+  getIntegratedCriticalE2eScenarios,
+  redactE2eOutput,
+  validateCriticalE2eTargetMatrix,
+} from '../../scripts/e2e-local-contract.mjs'
 
 describe('critical E2E local contract', () => {
   it('accepts localhost and rejects remote origins', () => {
@@ -37,10 +44,35 @@ describe('critical E2E local contract', () => {
   it('keeps the canonical suite sequential and complete', () => {
     const script = readFileSync(new URL('../../scripts/run-critical-e2e.mjs', import.meta.url), 'utf8')
     const localRunner = readFileSync(new URL('../../scripts/run-local-e2e.mjs', import.meta.url), 'utf8')
-    for (const spec of ['coach-invitation', 'platform-checkout', 'coach-checkout', 'push-notification', 'chat-ai']) {
-      expect(script).toContain(`e2e/${spec}.spec.ts`)
-    }
+    expect(script).toContain('getIntegratedCriticalE2eScenarios()')
     expect(localRunner).toContain("'--workers=1'")
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
+  })
+
+  it('defines 15 unique target journeys and integrates only the qualified six', () => {
+    expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
+    expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
+
+    const integrated = getIntegratedCriticalE2eScenarios()
+    expect(integrated.map(journey => journey.spec)).toEqual([
+      'e2e/coach-invitation.spec.ts',
+      'e2e/platform-checkout.spec.ts',
+      'e2e/coach-checkout.spec.ts',
+      'e2e/push-notification.spec.ts',
+      'e2e/chat-ai.spec.ts',
+      'e2e/auth-registration-flow.spec.ts',
+    ])
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(9)
+    expect(CRITICAL_E2E_TARGET_MATRIX.every(journey => (
+      !/performance|perf\//i.test(`${journey.name} ${journey.spec || ''}`)
+    ))).toBe(true)
+  })
+
+  it('rejects malformed matrices before executing the canonical suite', () => {
+    expect(() => validateCriticalE2eTargetMatrix(CRITICAL_E2E_TARGET_MATRIX.slice(0, 14))).toThrow('exactly 15')
+    const duplicate = CRITICAL_E2E_TARGET_MATRIX.map((journey, index) => (
+      index === 14 ? { ...journey, name: CRITICAL_E2E_TARGET_MATRIX[0].name } : journey
+    ))
+    expect(() => validateCriticalE2eTargetMatrix(duplicate)).toThrow('duplicate journey names')
   })
 })

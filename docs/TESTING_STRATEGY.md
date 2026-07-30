@@ -20,7 +20,7 @@ Un **niveau technique** indique quelles couches et quels processus sont exécut�
 | Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 34 fichiers, 400 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
 | Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 34 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
 | Intégration PostgreSQL/RPC | `tests/integration` | 11 fichiers; 114 attentes RLS bloquantes, assertions structurelles et 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
-| E2E Chromium | Playwright, `e2e/*.spec.ts` | 5 fichiers, 7 cas techniques, 5 parcours produit | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
+| E2E Chromium critique | Playwright, `e2e/*.spec.ts` | 6 parcours intégrés sur une cible canonique de 15 | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
 | Vérifications statiques | TypeScript, ESLint, i18n, build | commandes séparées | Contrats TypeScript, règles ESLint, parité des traductions et compilation Next.js. |
 
 Les 400 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
@@ -78,23 +78,53 @@ npm run test:e2e:checkout
 npm run test:e2e:coach-checkout
 npm run test:e2e:push
 npm run test:e2e:chat
+npm run test:e2e -- e2e/auth-registration-flow.spec.ts
 ```
 
-`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les cinq parcours avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les six parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
 ### Suite E2E critique canonique
 
 Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **139 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
 
-L'ordre est stable : invitation, checkout plateforme, checkout coach, push, puis chat. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+Un **parcours critique** est une entrée exécutable nommée unique de `scripts/run-critical-e2e.mjs`, rattachée à une spécification métier principale. Plusieurs tests Playwright dans cette spécification comptent comme un seul parcours. Les suites de performance ne font pas partie de ce décompte.
 
-Après le cinquième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena ou usage IA, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs` :
+
+| # | Parcours cible | État canonique |
+|---:|---|---|
+| 1 | Invitation coach | Intégré |
+| 2 | Checkout plateforme | Intégré |
+| 3 | Checkout coach | Intégré |
+| 4 | Notification Push | Intégré |
+| 5 | Chat Athena | Intégré |
+| 6 | Inscription, authentification et reprise de session | Intégré dans ce sous-batch |
+| 7 | Parcours client rattaché à un coach | Planifié |
+| 8 | Parcours coach gérant un client | Planifié |
+| 9 | Attribution du coach par défaut | Planifié |
+| 10 | Webhook Platform signé, rejeu et idempotence | Planifié |
+| 11 | Cycle d’une séance Training | Planifié |
+| 12 | Journal nutritionnel quotidien | Planifié |
+| 13 | Suivi de progression | Planifié |
+| 14 | Messagerie coach-client et synchronisation Realtime | Planifié |
+| 15 | Réconciliation abonnement et Billing | Planifié |
+
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, puis Auth/inscription/reprise de session. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+
+Après le sixième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena ou usage IA, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
 - stack arrêtée : cinq parcours verts en **184,7 s**;
 - stack déjà active, immédiatement après : cinq parcours verts en **159,7 s**;
 - les cinq commandes individuelles restent vertes; le push renforcé nettoie aussi ses fixtures dans un `afterEach` après timeout.
+
+Qualification Auth du 30 juillet 2026 :
+
+- `e2e/auth-registration-flow.spec.ts` traverse Chromium, Next.js, Supabase Auth/PostgREST/PostgreSQL et le trigger de profil sans fournisseur externe;
+- deux exécutions ciblées consécutives sont vertes;
+- après chaque exécution, les comptes Auth, identités, sessions et profils synthétiques sont absents et les ports temporaires sont fermés;
+- l'intégration canonique progresse de **5/15 à 6/15**; les neuf autres parcours restent planifiés.
 
 Le reset initial est volontairement destructif pour la stack locale. Pour une itération sur un seul parcours, lancer sa commande dédiée; pour une modification transverse, une correction de sécurité, une fusion ou un déploiement, lancer la suite critique complète.
 
