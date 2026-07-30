@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
       `style-src 'self' 'unsafe-inline'`,
       `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch https://moovx.ch https://media.moovx.ch https://*.googleusercontent.com`,
       `font-src 'self' data:`,
-      `connect-src 'self' ${isE2E ? 'http://127.0.0.1:* ws://127.0.0.1:*' : ''} https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`,
+      `connect-src 'self' ${isDev || isE2E ? 'http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*' : ''} https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`,
       `media-src 'self' https://*.supabase.co blob:`,
       `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com`,
       `frame-ancestors 'none'`,
