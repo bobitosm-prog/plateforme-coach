@@ -817,7 +817,7 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
-| [ ] Étendre la suite à 15 parcours E2E critiques — en cours : 8/15 parcours intégrés; seul « Parcours coach gérant un client » est ajouté dans ce sous-batch, l'attribution du coach par défaut reste planifiée | 4 j | Élevée | Moyen | Critique | Domaines stabilisés |
+| [ ] Étendre la suite à 15 parcours E2E critiques — en cours : 9/15 parcours intégrés; seule « Attribution du coach par défaut » est ajoutée dans ce sous-batch, le webhook Platform reste planifié | 4 j | Élevée | Moyen | Critique | Domaines stabilisés |
 | [ ] Tester toutes les migrations depuis une base vide | 2 j | Élevée | Moyen | Critique | Supabase local |
 | [ ] Vérifier l'alignement migrations locales/distantes | 1,5 j | Élevée | Moyen | Critique | Accès environnements |
 | [ ] Définir la procédure de release | 1 j | Moyenne | Faible | Élevé | CI stable |

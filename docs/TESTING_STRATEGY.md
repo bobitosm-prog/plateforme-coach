@@ -81,9 +81,10 @@ npm run test:e2e:chat
 npm run test:e2e -- e2e/auth-registration-flow.spec.ts
 npm run test:e2e:client-journey
 npm run test:e2e:coach-journey
+npm run test:e2e:default-coach
 ```
 
-`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les huit parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les neuf parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
 ### Suite E2E critique canonique
 
@@ -103,7 +104,7 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 6 | Inscription, authentification et reprise de session | Intégré dans ce sous-batch |
 | 7 | Parcours client rattaché à un coach | Intégré dans ce sous-batch |
 | 8 | Parcours coach gérant un client | Intégré dans ce sous-batch |
-| 9 | Attribution du coach par défaut | Planifié |
+| 9 | Attribution du coach par défaut | Intégré dans ce sous-batch |
 | 10 | Webhook Platform signé, rejeu et idempotence | Planifié |
 | 11 | Cycle d’une séance Training | Planifié |
 | 12 | Journal nutritionnel quotidien | Planifié |
@@ -111,9 +112,9 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 14 | Messagerie coach-client et synchronisation Realtime | Planifié |
 | 15 | Réconciliation abonnement et Billing | Planifié |
 
-L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, puis parcours coach gérant un client. L'attribution du coach par défaut reste distincte, planifiée et non intégrée. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, puis attribution du coach par défaut. Ce neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
 
-Après le huitième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+Après le neuvième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
@@ -142,6 +143,13 @@ Qualification du parcours coach du 30 juillet 2026 :
 - deux exécutions ciblées consécutives réussissent, sans résidu Auth, identité, session, profil, relation ou donnée métier, puis la suite canonique complète réussit ses huit parcours;
 - l'intégration canonique progresse de **7/15 à 8/15**; l'attribution du coach par défaut reste distincte, planifiée et non intégrée, et sept parcours restent à intégrer.
 
+Qualification de l'attribution du coach par défaut du 30 juillet 2026 :
+
+- `e2e/default-coach-assignment.spec.ts` traverse Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux avec une session client et un coach résolu exclusivement par la configuration serveur locale;
+- le parcours refuse l'accès anonyme et l'autorité forgée, crée une seule relation active, conserve l'abonnement et valide le rejeu idempotent;
+- la configuration dédiée crée le profil correspondant à `DEFAULT_COACH_EMAIL`; lorsqu'il est volontairement absent des autres parcours, le `503` est un échec fermé conforme, sans mutation ni dépendance distante;
+- l'intégration canonique progresse de **8/15 à 9/15** et six parcours restent à intégrer.
+
 Le reset initial est volontairement destructif pour la stack locale. Pour une itération sur un seul parcours, lancer sa commande dédiée; pour une modification transverse, une correction de sécurité, une fusion ou un déploiement, lancer la suite critique complète.
 
 ### Vérifications de livraison
@@ -156,7 +164,7 @@ git diff --check
 
 Les polices applicatives sont auto-hébergées via `next/font/local`; le build ne doit effectuer aucun téléchargement de police. Toute tentative réseau de police est une régression bloquante.
 
-## 3. Les huit parcours E2E actuels
+## 3. Les neuf parcours E2E actuels
 
 | Parcours | Frontières réelles | Frontière simulée | Documentation |
 |---|---|---|---|
@@ -168,6 +176,7 @@ Les polices applicatives sont auto-hébergées via `next/font/local`; le build n
 | Auth, inscription et reprise | Chromium, inscriptions client/coach, trigger profil, login, onboarding et reload de session | aucune frontière externe | stratégie canonique ci-dessus |
 | Parcours coach | Chromium desktop, dashboard coach, relation active, détail client, Auth/PostgREST/RLS | aucune frontière externe | [Coach/client](./E2E_COACH_CLIENT_HARNESS.md) |
 | Parcours client | Chromium mobile, dashboard client, relation, navigation et rechargement | aucune frontière externe | [Coach/client](./E2E_COACH_CLIENT_HARNESS.md) |
+| Attribution du coach par défaut | Chromium, route serveur, session client, RPC et relation active idempotente | configuration `DEFAULT_COACH_EMAIL` locale | [Attribution par défaut](./DEFAULT_COACH_ASSIGNMENT.md) |
 
 Un test n'est appelé **E2E MoovX** que si ses frontières principales — navigateur, interface, route, identité et persistance — sont réellement traversées. Intercepter `/api/*`, simuler Supabase Auth/PostgREST ou remplacer la persistance principale par un mock transforme le test en test de composant ou de route, même s'il utilise Playwright.
 

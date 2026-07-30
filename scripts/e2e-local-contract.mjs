@@ -14,7 +14,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Inscription, authentification et reprise de session', spec: 'e2e/auth-registration-flow.spec.ts', flags: [], integrated: true },
   { name: 'Parcours client rattaché à un coach', spec: 'e2e/coach-client-client.spec.ts', flags: [], integrated: true },
   { name: 'Parcours coach gérant un client', spec: 'e2e/coach-client-coach.spec.ts', flags: [], integrated: true },
-  { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: false },
+  { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: true },
   { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: false },
   { name: 'Cycle d’une séance Training', spec: null, flags: [], integrated: false },
   { name: 'Journal nutritionnel quotidien', spec: null, flags: [], integrated: false },

@@ -13618,3 +13618,49 @@ parcours coach est ajouté dans ce sous-batch; les sept autres parcours,
 notamment l'attribution du coach par défaut, restent planifiés. Aucun service
 distant, environnement Production, déploiement, migration, commit ou push
 n'est utilisé.
+
+## Entrée — 2026-07-30 — Phase 9 — intégration de l'attribution du coach par défaut
+
+**Périmètre :** seul le parcours « Attribution du coach par défaut », porté
+par `e2e/default-coach-assignment.spec.ts`, rejoint le runner canonique après
+le parcours coach. Le webhook Platform reste une entrée distincte, planifiée
+et non intégrée. La tâche globale des 15 parcours reste ouverte.
+
+**Qualification :** le parcours traverse Chromium, Next.js et Supabase
+Auth/PostgREST/PostgreSQL locaux. Le client est exclusivement issu de la
+session, le coach est résolu depuis `DEFAULT_COACH_EMAIL` injecté localement,
+et la RPC service-role crée une relation active sans modifier l'abonnement.
+L'accès anonyme et l'autorité forgée sont refusés; les appels répétés
+conservent une relation unique et prouvent l'idempotence.
+
+**Comportement frontière `503` :** le runner local fournit toujours l'adresse
+synthétique attendue, mais seuls les tests de ce parcours créent le profil
+coach correspondant. Dans les autres parcours, son absence volontaire fait
+échouer la route fermée en `503`, sans relation ni mutation métier. Ce signal
+est conforme au contrat et ne nécessite aucun correctif applicatif, de spec,
+de route, de RPC ou de configuration.
+
+**Validations ciblées :** deux exécutions consécutives de
+`npm run test:e2e:default-coach` réussissent avec `1 passed`, en `12,1 s`
+puis `10,9 s`. Après chacune, utilisateurs Auth, identités, sessions,
+profils, relations et toutes les familles métier auditées sont à zéro; les
+ports temporaires sont fermés et aucun processus E2E n'est abandonné. Le
+contrat `npm test -- tests/unit/e2e-local-contract.test.ts` réussit avec
+`6 passed`.
+
+**Validation canonique :** `npm run test:e2e:critical` réussit du premier
+coup : invitation `34,3 s`, checkout plateforme `27,1 s`, checkout coach
+`27,8 s`, Push `27,0 s`, Chat Athena `30,6 s`, Auth `25,5 s`, parcours
+client `39,4 s`, parcours coach `29,5 s` et attribution par défaut `16,6 s`,
+pour `280,6 s` au total. L'audit final ne trouve aucun résidu Auth ou métier,
+port temporaire ou processus abandonné.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé sur les fichiers
+JavaScript/TypeScript modifiés et `git diff --check` réussissent. Les warnings
+historiques `getSession()` et Next Image restent non bloquants.
+
+**Décision Phase 9 :** la progression passe de `8/15` à `9/15`. Seule
+l'attribution du coach par défaut est ajoutée dans ce sous-batch; les six
+autres parcours, à commencer par le webhook Platform, restent planifiés.
+Aucun service distant, environnement Production, déploiement, migration,
+commit ou push n'est utilisé.
