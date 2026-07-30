@@ -4,7 +4,7 @@ import { aiFailure, normalizeAiProviderError, normalizeMetadata, validateAiReque
 import type { AiGenerateRequest, AiProvider, AiRequestContext, AiResult, AiResultMetadata, AiStopReason, AiStreamEvent, AiTokenUsage } from '@/lib/ai/provider'
 import { parseAiJson, parseAiToolUse, unwrapLegacyToolInput } from '@/lib/ai/parsing'
 
-import type { AnthropicFetch, AnthropicProviderOptions } from './types'
+import type { AnthropicFetch, AnthropicHttpResponse, AnthropicProviderFailureLog, AnthropicProviderOptions } from './types'
 
 const DEFAULT_MESSAGES_URL = 'https://api.anthropic.com/v1/messages'
 
@@ -71,9 +71,44 @@ function invalidOutputFailure<T>(metadata: AiResultMetadata): AiResult<T> & { ok
   return { ok: false, error: { code: 'invalid_output', retryable: false }, metadata }
 }
 
+function safeProviderDiagnostic(value: unknown): string | undefined {
+  return typeof value === 'string' && /^[A-Za-z0-9_.-]{1,64}$/.test(value)
+    ? value
+    : undefined
+}
+
+async function readProviderFailure(response: AnthropicHttpResponse) {
+  try {
+    let raw: unknown
+    if (response.text) {
+      const text = await response.text()
+      if (text.length > 65_536) return {}
+      try {
+        raw = JSON.parse(text)
+      } catch {
+        return {}
+      }
+    } else {
+      raw = await response.json()
+    }
+    if (!isRecord(raw) || !isRecord(raw.error)) return {}
+    return {
+      providerErrorType: safeProviderDiagnostic(raw.error.type),
+      providerErrorCode: safeProviderDiagnostic(raw.error.code),
+    }
+  } catch {
+    return {}
+  }
+}
+
+function defaultFailureLogger(record: AnthropicProviderFailureLog) {
+  console.error(JSON.stringify(record))
+}
+
 export function createAnthropicProvider(options: AnthropicProviderOptions): AiProvider {
   const fetchImpl: AnthropicFetch = options.fetchImpl ?? (fetch as unknown as AnthropicFetch)
   const messagesUrl = options.messagesUrl ?? DEFAULT_MESSAGES_URL
+  const failureLogger = options.failureLogger ?? defaultFailureLogger
 
   async function generate<T>(request: AiGenerateRequest<T>, context: AiRequestContext): Promise<AiResult<T>> {
     if (!options.apiKey.trim() || !validateAiRequest(request, context).ok) return providerFailure(context, request)
@@ -86,7 +121,24 @@ export function createAnthropicProvider(options: AnthropicProviderOptions): AiPr
         headers: { 'content-type': 'application/json', 'x-api-key': options.apiKey.trim(), 'anthropic-version': '2023-06-01' },
         body: JSON.stringify(requestBody(request)),
       })
-      if (!response.ok) return providerFailure(context, request, response.status)
+      if (!response.ok) {
+        const details = await readProviderFailure(response)
+        const record: AnthropicProviderFailureLog = {
+          event: 'AI_PROVIDER_FAILURE',
+          provider: 'anthropic',
+          status: response.status,
+          providerErrorType: details.providerErrorType ?? 'unknown',
+          ...(details.providerErrorCode ? { providerErrorCode: details.providerErrorCode } : {}),
+          requestedModel: request.model,
+          correlationId: context.correlationId,
+        }
+        try {
+          failureLogger(record)
+        } catch {
+          // Observability must never alter the normalized provider failure.
+        }
+        return providerFailure(context, request, response.status)
+      }
       const raw = await response.json()
       if (!isRecord(raw)) return providerFailure(context, request, undefined, 'invalid_output')
       if (raw.stop_reason === 'refusal') {

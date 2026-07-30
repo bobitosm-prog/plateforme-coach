@@ -4,6 +4,7 @@ vi.mock('server-only', () => ({}))
 
 import { createAiCancellationController } from '@/lib/ai/provider'
 import { createAnthropicProvider } from '@/lib/ai/providers/anthropic'
+import type { AnthropicProviderFailureLog } from '@/lib/ai/providers/anthropic/types'
 
 const context = { correlationId: 'correlation-1', timeoutMs: 30_000 }
 const textRequest = {
@@ -16,14 +17,21 @@ const textRequest = {
 
 describe('Anthropic AiProvider adapter', () => {
   const calls: Array<{ url: string; body: Record<string, unknown>; headers: Readonly<Record<string, string>>; signal: AbortSignal }> = []
-  let response: { ok: boolean; status: number; body: unknown }
+  const failureLogs: AnthropicProviderFailureLog[] = []
+  let response: { ok: boolean; status: number; body: unknown; rawText?: string }
   const fetchImpl = vi.fn(async (url: string, init: { headers: Readonly<Record<string, string>>; body: string; signal: AbortSignal }) => {
     calls.push({ url, body: JSON.parse(init.body), headers: init.headers, signal: init.signal })
-    return { ok: response.ok, status: response.status, async json() { return response.body } }
+    return {
+      ok: response.ok,
+      status: response.status,
+      async json() { return response.body },
+      async text() { return response.rawText ?? JSON.stringify(response.body) },
+    }
   })
 
   beforeEach(() => {
     calls.length = 0
+    failureLogs.length = 0
     response = { ok: true, status: 200, body: { model: 'claude-sonnet-4-6', stop_reason: 'end_turn', usage: { input_tokens: 12, output_tokens: 4 }, content: [{ type: 'text', text: 'réponse' }] } }
     fetchImpl.mockClear()
   })
@@ -91,9 +99,121 @@ describe('Anthropic AiProvider adapter', () => {
 
   it.each([[429, 'quota_exceeded'], [500, 'network_error'], [403, 'provider_refused']] as const)('normalizes status %s', async (status, code) => {
     response = { ok: false, status, body: { prompt: 'must not leak' } }
-    const result = await createAnthropicProvider({ apiKey: 'key', fetchImpl }).generate(textRequest, context)
+    const result = await createAnthropicProvider({
+      apiKey: 'key',
+      fetchImpl,
+      failureLogger: record => failureLogs.push(record),
+    }).generate(textRequest, context)
     expect(result).toMatchObject({ ok: false, error: { code } })
     expect(JSON.stringify(result)).not.toContain('must not leak')
+    expect(failureLogs).toEqual([expect.objectContaining({
+      event: 'AI_PROVIDER_FAILURE',
+      provider: 'anthropic',
+      status,
+      providerErrorType: 'unknown',
+      requestedModel: textRequest.model,
+      correlationId: context.correlationId,
+    })])
+  })
+
+  it.each([
+    [400, 'invalid_request_error', 'invalid_model'],
+    [401, 'authentication_error', undefined],
+    [403, 'permission_error', undefined],
+    [404, 'not_found_error', undefined],
+    [429, 'rate_limit_error', undefined],
+  ] as const)('logs sanitized Anthropic diagnostics for HTTP %s', async (status, providerErrorType, providerErrorCode) => {
+    response = {
+      ok: false,
+      status,
+      body: {
+        type: 'error',
+        error: {
+          type: providerErrorType,
+          ...(providerErrorCode ? { code: providerErrorCode } : {}),
+          message: 'question exacte secret-key authorization header must never leak',
+        },
+      },
+    }
+
+    await createAnthropicProvider({
+      apiKey: 'secret-key',
+      fetchImpl,
+      failureLogger: record => failureLogs.push(record),
+    }).generate(textRequest, context)
+
+    expect(failureLogs).toEqual([{
+      event: 'AI_PROVIDER_FAILURE',
+      provider: 'anthropic',
+      status,
+      providerErrorType,
+      ...(providerErrorCode ? { providerErrorCode } : {}),
+      requestedModel: 'claude-sonnet-4-6',
+      correlationId: 'correlation-1',
+    }])
+    const serialized = JSON.stringify(failureLogs)
+    expect(serialized).not.toContain('question exacte')
+    expect(serialized).not.toContain('secret-key')
+    expect(serialized).not.toContain('authorization')
+    expect(serialized).not.toContain('headers')
+  })
+
+  it('logs only the status and allowlisted context for a non-JSON body', async () => {
+    response = {
+      ok: false,
+      status: 502,
+      body: null,
+      rawText: 'private upstream response containing question exacte and secret-key',
+    }
+
+    await createAnthropicProvider({
+      apiKey: 'secret-key',
+      fetchImpl,
+      failureLogger: record => failureLogs.push(record),
+    }).generate(textRequest, context)
+
+    expect(failureLogs).toEqual([{
+      event: 'AI_PROVIDER_FAILURE',
+      provider: 'anthropic',
+      status: 502,
+      providerErrorType: 'unknown',
+      requestedModel: 'claude-sonnet-4-6',
+      correlationId: 'correlation-1',
+    }])
+    expect(JSON.stringify(failureLogs)).not.toContain('private upstream')
+  })
+
+  it('writes the sanitized structured record through the default server logger', async () => {
+    const serverLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    response = {
+      ok: false,
+      status: 401,
+      body: {
+        error: {
+          type: 'authentication_error',
+          message: 'question exacte secret-key x-api-key',
+        },
+      },
+    }
+
+    try {
+      await createAnthropicProvider({ apiKey: 'secret-key', fetchImpl }).generate(textRequest, context)
+      expect(serverLog).toHaveBeenCalledTimes(1)
+      const serialized = String(serverLog.mock.calls[0]?.[0])
+      expect(JSON.parse(serialized)).toEqual({
+        event: 'AI_PROVIDER_FAILURE',
+        provider: 'anthropic',
+        status: 401,
+        providerErrorType: 'authentication_error',
+        requestedModel: 'claude-sonnet-4-6',
+        correlationId: 'correlation-1',
+      })
+      expect(serialized).not.toContain('question exacte')
+      expect(serialized).not.toContain('secret-key')
+      expect(serialized).not.toContain('x-api-key')
+    } finally {
+      serverLog.mockRestore()
+    }
   })
 
   it('normalizes an explicit provider refusal without returning its content', async () => {
