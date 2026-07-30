@@ -54,7 +54,24 @@ async function auditFinalState() {
   const { data: users, error: usersError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   if (usersError) throw new Error(`Final Auth cleanup audit failed: ${usersError.message}`)
   const syntheticUsers = users.users.filter(user => /@(moovx\.)?example\.test$/i.test(user.email || ''))
-  const tables = ['profiles', 'coach_clients', 'coach_invitations', 'payments', 'push_subscriptions', 'messages', 'chat_ai_messages', 'ai_usage_logs']
+  const tables = [
+    'profiles',
+    'coach_clients',
+    'coach_invitations',
+    'payments',
+    'push_subscriptions',
+    'messages',
+    'chat_ai_messages',
+    'ai_usage_logs',
+    'client_programs',
+    'weight_logs',
+    'completed_sessions',
+    'daily_food_logs',
+    'scheduled_sessions',
+    'user_badges',
+    'user_xp',
+    'weekly_diagnostics',
+  ]
   const counts = Object.fromEntries(await Promise.all(tables.map(async table => [table, await countRows(admin, table)])))
   const response = await fetch(`${LOCAL_MAILPIT_URL}/api/v1/messages`)
   if (!response.ok) throw new Error(`Mailpit cleanup audit failed with HTTP ${response.status}`)

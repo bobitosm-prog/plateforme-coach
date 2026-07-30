@@ -13524,3 +13524,51 @@ critiques » reste ouverte. Sa progression passe de `5/15` à `6/15`; aucun
 parcours Training, Nutrition, Progression, Realtime ou réconciliation Billing
 n'est créé ou intégré dans ce sous-batch. Aucun service distant ou
 environnement Production n'est utilisé.
+
+## Entrée — 2026-07-30 — Phase 9 — intégration du parcours client
+
+**Périmètre :** seul le parcours « Parcours client rattaché à un coach »,
+porté par `e2e/coach-client-client.spec.ts`, rejoint le runner canonique après
+Auth. Le parcours coach reste une entrée distincte, planifiée et non intégrée.
+La tâche globale des 15 parcours reste ouverte.
+
+**Qualification :** le parcours utilise six personas isolés par UUID
+aléatoire et email synthétique : coach, client lié, second coach, second
+client, client invité et client avec relation inactive. Il traverse Chromium
+mobile, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux. Il vérifie la
+relation active du client, la navigation dashboard, la reprise après reload
+et les frontières inactive, étrangère et invitée. Aucun fournisseur Stripe,
+Anthropic ou Push n'est démarré.
+
+**Données et nettoyage :** les fixtures couvrent `profiles`,
+`coach_clients`, `client_programs`, `weight_logs`, `completed_sessions`,
+`daily_food_logs`, `scheduled_sessions` et `messages`; les écritures runtime
+éventuelles dans `user_badges`, `user_xp` et `weekly_diagnostics` sont aussi
+nettoyées. L'audit canonique est étendu à ces tables. Après chaque exécution
+ciblée et après la suite complète, utilisateurs Auth, identités, sessions,
+profils, relations, invitations et données métier sont à zéro; aucun port ou
+processus E2E n'est abandonné.
+
+**Validations ciblées :** deux exécutions consécutives de
+`npm run test:e2e:client-journey` réussissent avec `2 passed`, en `31,0 s`
+puis `30,8 s`. Le contrat
+`npm test -- tests/unit/e2e-local-contract.test.ts` réussit avec `6 passed`.
+
+**Validation canonique :** `npm run test:e2e:critical` réussit du premier
+coup : invitation `42,1 s`, checkout plateforme `24,5 s`, checkout coach
+`23,3 s`, Push `29,1 s`, Chat Athena `32,2 s`, Auth `25,1 s` et parcours
+client `44,9 s`, pour `244,7 s` au total. Aucun nouveau signal de flakiness
+n'est observé; le signal invitation non reproductible du sous-batch précédent
+reste documenté séparément.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé sur les fichiers
+JavaScript/TypeScript modifiés et `git diff --check` réussissent. Les warnings
+historiques `getSession()` et Next Image restent non bloquants; les réponses
+`503` de l'attribution du coach par défaut apparaissent uniquement dans les
+cas frontière attendus et n'affectent pas le résultat.
+
+**Décision Phase 9 :** la progression passe de `6/15` à `7/15`. Seul le
+parcours client est ajouté dans ce sous-batch; les huit autres parcours,
+notamment le parcours coach, restent planifiés. Aucun service distant,
+environnement Production, déploiement, migration, commit ou push n'est
+utilisé.

@@ -20,7 +20,7 @@ Un **niveau technique** indique quelles couches et quels processus sont exécut�
 | Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 34 fichiers, 400 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
 | Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 34 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
 | Intégration PostgreSQL/RPC | `tests/integration` | 11 fichiers; 114 attentes RLS bloquantes, assertions structurelles et 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
-| E2E Chromium critique | Playwright, `e2e/*.spec.ts` | 6 parcours intégrés sur une cible canonique de 15 | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
+| E2E Chromium critique | Playwright, `e2e/*.spec.ts` | 7 parcours intégrés sur une cible canonique de 15 | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
 | Vérifications statiques | TypeScript, ESLint, i18n, build | commandes séparées | Contrats TypeScript, règles ESLint, parité des traductions et compilation Next.js. |
 
 Les 400 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
@@ -79,9 +79,10 @@ npm run test:e2e:coach-checkout
 npm run test:e2e:push
 npm run test:e2e:chat
 npm run test:e2e -- e2e/auth-registration-flow.spec.ts
+npm run test:e2e:client-journey
 ```
 
-`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les six parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les sept parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
 ### Suite E2E critique canonique
 
@@ -99,7 +100,7 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 4 | Notification Push | Intégré |
 | 5 | Chat Athena | Intégré |
 | 6 | Inscription, authentification et reprise de session | Intégré dans ce sous-batch |
-| 7 | Parcours client rattaché à un coach | Planifié |
+| 7 | Parcours client rattaché à un coach | Intégré dans ce sous-batch |
 | 8 | Parcours coach gérant un client | Planifié |
 | 9 | Attribution du coach par défaut | Planifié |
 | 10 | Webhook Platform signé, rejeu et idempotence | Planifié |
@@ -109,9 +110,9 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 14 | Messagerie coach-client et synchronisation Realtime | Planifié |
 | 15 | Réconciliation abonnement et Billing | Planifié |
 
-L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, puis Auth/inscription/reprise de session. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, puis parcours client rattaché à un coach. Le parcours coach reste distinct, planifié et non intégré. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
 
-Après le sixième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena ou usage IA, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+Après le septième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
@@ -125,6 +126,13 @@ Qualification Auth du 30 juillet 2026 :
 - deux exécutions ciblées consécutives sont vertes;
 - après chaque exécution, les comptes Auth, identités, sessions et profils synthétiques sont absents et les ports temporaires sont fermés;
 - l'intégration canonique progresse de **5/15 à 6/15**; les neuf autres parcours restent planifiés.
+
+Qualification du parcours client du 30 juillet 2026 :
+
+- `e2e/coach-client-client.spec.ts` traverse Chromium mobile, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux avec un coach, des clients liés/non liés et des relations active/inactive synthétiques;
+- deux exécutions ciblées consécutives réussissent, sans résidu Auth, identité, session, profil, relation ou donnée métier;
+- la suite canonique complète réussit ses sept parcours et son audit final étendu;
+- l'intégration canonique progresse de **6/15 à 7/15**; le parcours coach reste distinct, planifié et non intégré, et huit parcours restent à intégrer.
 
 Le reset initial est volontairement destructif pour la stack locale. Pour une itération sur un seul parcours, lancer sa commande dédiée; pour une modification transverse, une correction de sécurité, une fusion ou un déploiement, lancer la suite critique complète.
 

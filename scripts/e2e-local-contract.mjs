@@ -12,7 +12,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Notification Push', spec: 'e2e/push-notification.spec.ts', flags: ['--push'], integrated: true },
   { name: 'Chat Athena', spec: 'e2e/chat-ai.spec.ts', flags: ['--anthropic'], integrated: true },
   { name: 'Inscription, authentification et reprise de session', spec: 'e2e/auth-registration-flow.spec.ts', flags: [], integrated: true },
-  { name: 'Parcours client rattaché à un coach', spec: 'e2e/coach-client-client.spec.ts', flags: [], integrated: false },
+  { name: 'Parcours client rattaché à un coach', spec: 'e2e/coach-client-client.spec.ts', flags: [], integrated: true },
   { name: 'Parcours coach gérant un client', spec: 'e2e/coach-client-coach.spec.ts', flags: [], integrated: false },
   { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: false },
   { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: false },
