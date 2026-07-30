@@ -13469,3 +13469,19 @@ desktop/mobile » est cochée. RC1 passe de 36 à 37 tâches sur 38, reste
 explicite de RC1. Phase 9 demeure `INACTIVE` jusqu'à cette décision. Aucun
 fichier technique, test, migration ou configuration n'est modifié par cette
 mise à jour documentaire; aucun commit ni push n'est exécuté.
+
+## Entrée — 2026-07-30 — Validation explicite RC1 et activation Phase 9
+
+**Décision :** l'approbation explicite de RC1 est donnée. La dernière case de
+la checklist est cochée, RC1 passe de 37 à 38 tâches sur 38 et son statut
+devient `VALIDATED`.
+
+**Transition de roadmap :** le démarrage de la Phase 9 « Industrialisation et
+équipe future » est autorisé. Phase 9 devient la phase active; aucune de ses
+tâches techniques n'est considérée comme commencée ou terminée par cette
+seule transition documentaire.
+
+**Périmètre :** cette approbation ne constitue pas à elle seule une mise en
+production. Aucun code, test, migration, configuration, variable
+d'environnement ou service distant n'est modifié. Aucun commit ni push n'est
+exécuté pendant cette mise à jour documentaire.

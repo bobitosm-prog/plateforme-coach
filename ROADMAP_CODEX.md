@@ -2,9 +2,9 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **28 juillet 2026**.
+> Dernière mise à jour : **30 juillet 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Release Candidate RC1 — audit préalable à Phase 9**.
+> Phase active : **Phase 9 — Industrialisation et équipe future**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -632,11 +632,11 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 37 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : `VALIDATED` — 38 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
-sont `VALIDATED`. La validation humaine desktop/mobile est réussie et aucun
-autre bug bloquant n'a été détecté. Seule l'approbation explicite RC1 reste
-ouverte. Phase 9 demeure inactive jusqu'à cette validation.**
+sont `VALIDATED`. La validation humaine desktop/mobile est réussie, aucun
+autre bug bloquant n'a été détecté et l'approbation explicite RC1 a été donnée
+le 30 juillet 2026. Phase 9 est autorisée et active.**
 
 ### Checklist
 
@@ -796,11 +796,15 @@ ouverte. Phase 9 demeure inactive jusqu'à cette validation.**
   catalogue Training, la CSP `media.moovx.ch`, le fallback nutrition et la
   désactivation des anciens webhooks Stripe ont également été vérifiés; aucun
   autre bug bloquant n'a été détecté.
-- [ ] Obtenir la validation explicite RC1 avant Phase 9.
+- [x] Obtenir la validation explicite RC1 avant Phase 9 — approbation donnée
+  le 30 juillet 2026; RC1 validée à 38/38 et démarrage de Phase 9 autorisé.
 
 ---
 
 ## Phase 9 — Industrialisation et équipe future
+
+**Statut : active — démarrage autorisé le 30 juillet 2026 après validation
+explicite de RC1.**
 
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P1/P3**
