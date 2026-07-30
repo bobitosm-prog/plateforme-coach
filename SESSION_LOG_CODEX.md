@@ -13572,3 +13572,49 @@ parcours client est ajouté dans ce sous-batch; les huit autres parcours,
 notamment le parcours coach, restent planifiés. Aucun service distant,
 environnement Production, déploiement, migration, commit ou push n'est
 utilisé.
+
+## Entrée — 2026-07-30 — Phase 9 — intégration du parcours coach
+
+**Périmètre :** seul le parcours « Parcours coach gérant un client », porté
+par `e2e/coach-client-coach.spec.ts`, rejoint le runner canonique après le
+parcours client. L'attribution du coach par défaut reste une entrée distincte,
+planifiée et non intégrée. La tâche globale des 15 parcours reste ouverte.
+
+**Qualification :** le parcours utilise six personas isolés par UUID
+aléatoire et email synthétique : coach, client lié, second coach, second
+client, client invité et client avec relation inactive. Le coach authentifié
+accède au dashboard, ouvre la fiche du client lié et parcourt Aperçu,
+Programme, Progression, Nutrition, Messages et Notes. Les URLs directes vers
+un client étranger ou inactif, l'accès anonyme et le second coach sans
+relation échouent fermés avec les règles RLS et données locales réelles.
+
+**Données et nettoyage :** les fixtures couvrent `profiles`,
+`coach_clients`, `client_programs`, `weight_logs`, `completed_sessions`,
+`daily_food_logs`, `scheduled_sessions` et `messages`; les écritures runtime
+éventuelles dans `user_badges`, `user_xp` et `weekly_diagnostics` sont aussi
+nettoyées. Après chaque exécution ciblée et après la suite complète,
+utilisateurs Auth, identités, sessions, profils, relations, invitations et
+données métier sont à zéro; aucun port ou processus E2E n'est abandonné.
+
+**Validations ciblées :** deux exécutions consécutives de
+`npm run test:e2e:coach-journey` réussissent avec `2 passed`, en `19,9 s`
+puis `21,4 s`. Le contrat
+`npm test -- tests/unit/e2e-local-contract.test.ts` réussit avec `6 passed`.
+
+**Validation canonique :** `npm run test:e2e:critical` réussit du premier
+coup : invitation `31,6 s`, checkout plateforme `22,4 s`, checkout coach
+`22,3 s`, Push `21,4 s`, Chat Athena `28,4 s`, Auth `23,8 s`, parcours
+client `38,1 s` et parcours coach `29,6 s`, pour `240,1 s` au total. Aucun
+nouveau signal de flakiness n'est observé.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé sur les fichiers
+JavaScript/TypeScript modifiés et `git diff --check` réussissent. Les warnings
+historiques `getSession()` et Next Image restent non bloquants; le `503` de
+l'attribution du coach par défaut observé au chargement n'affecte pas les
+assertions du parcours.
+
+**Décision Phase 9 :** la progression passe de `7/15` à `8/15`. Seul le
+parcours coach est ajouté dans ce sous-batch; les sept autres parcours,
+notamment l'attribution du coach par défaut, restent planifiés. Aucun service
+distant, environnement Production, déploiement, migration, commit ou push
+n'est utilisé.

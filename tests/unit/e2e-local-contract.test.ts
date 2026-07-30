@@ -49,7 +49,7 @@ describe('critical E2E local contract', () => {
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
 
-  it('defines 15 unique target journeys and integrates only the qualified seven', () => {
+  it('defines 15 unique target journeys and integrates only the qualified eight', () => {
     expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
     expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
 
@@ -62,10 +62,11 @@ describe('critical E2E local contract', () => {
       'e2e/chat-ai.spec.ts',
       'e2e/auth-registration-flow.spec.ts',
       'e2e/coach-client-client.spec.ts',
+      'e2e/coach-client-coach.spec.ts',
     ])
-    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(8)
-    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/coach-client-coach.spec.ts')).toMatchObject({
-      name: 'Parcours coach gérant un client',
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(7)
+    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/default-coach-assignment.spec.ts')).toMatchObject({
+      name: 'Attribution du coach par défaut',
       integrated: false,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.every(journey => (

@@ -19,7 +19,7 @@ Les E2E critiques s'exécutent entièrement en local et séquentiellement :
 
 Les lanceurs refusent les origines et URLs fournisseurs non locales, appliquent le reset canonique, utilisent un seul worker lorsque l'état partagé l'exige et nettoient les données et processus temporaires. La commande canonique est `npm run test:e2e:critical`; les commandes par parcours restent disponibles pour une boucle ciblée.
 
-Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; sept sont intégrés. Le parcours client rattaché à un coach rejoint la suite après qualification locale, tandis que le parcours coach reste distinct, planifié et non intégré.
+Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; huit sont intégrés. Le parcours coach gérant un client rejoint la suite après qualification locale, tandis que l'attribution du coach par défaut reste distincte, planifiée et non intégrée.
 
 Les interceptions Playwright des routes critiques sont évitées : intercepter une route Next.js ou fabriquer sa réponse dans le navigateur contournerait précisément la frontière HTTP serveur que ces parcours doivent caractériser. La simulation est placée à la frontière réseau du fournisseur, après le code applicatif et le transport réels.
 
@@ -34,7 +34,7 @@ Les interceptions Playwright des routes critiques sont évitées : intercepter u
 
 - Chromium est le navigateur intégré actuel ; la matrice multi-navigateurs et mobile réel reste à construire.
 - Les faux fournisseurs valident les requêtes attendues, pas l'ensemble du comportement des plateformes distantes.
-- Huit parcours de la matrice cible restent planifiés; le parcours coach et les parcours Training, Nutrition, Progression, Realtime ou réconciliation Billing ne sont pas intégrés dans ce sous-batch.
+- Sept parcours de la matrice cible restent planifiés; l'attribution du coach par défaut et les parcours Training, Nutrition, Progression, Realtime ou réconciliation Billing ne sont pas intégrés dans ce sous-batch.
 - Une suite locale verte n'est pas une preuve de santé d'un environnement déployé.
 
 ## Références
