@@ -4,6 +4,12 @@ import { Search, X, Plus, Minus, Star, Camera } from 'lucide-react'
 import { normalizeFoodItem } from '../../lib/utils/food'
 import BarcodeScanner from './BarcodeScanner'
 import { colors, fonts } from '../../lib/design-tokens'
+import {
+  buildDailyFoodLogSnapshot,
+  searchFoodSearchCatalog,
+  selectInitialFoodSearchCatalog,
+  type FoodSearchCatalogItem,
+} from '../../lib/nutrition/fitness-food-search-fallback'
 import { RailOverlay } from './ui/RailOverlay'
 
 const MEAL_OPTIONS = [
@@ -43,7 +49,7 @@ interface FoodSearchProps {
 
 export default function FoodSearch({ supabase, userId, defaultMealType, dateOverride, onAdded, onClose }: FoodSearchProps) {
   const [query, setQuery] = useState('')
-  const [allFoods, setAllFoods] = useState<any[]>([])
+  const [allFoods, setAllFoods] = useState<FoodSearchCatalogItem[]>([])
   const [ansesResults, setAnsesResults] = useState<any[]>([])
   const [likedIds, setLikedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,8 +69,13 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
       supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').order('name').limit(200),
       supabase.from('profiles').select('liked_foods').eq('id', userId).single(),
     ]).then(([foodRes, profRes]: any[]) => {
-      const foods = (foodRes.data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') }))
-      setAllFoods(foods)
+      const remoteFoods = (foodRes.data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') }))
+      setAllFoods(selectInitialFoodSearchCatalog({
+        remoteFoods,
+        readError: foodRes.error,
+        categorize,
+      }))
+      if (profRes.error) console.error('[FoodSearch] Unable to load liked_foods', profRes.error)
       const lf = profRes.data?.liked_foods
       setLikedIds(Array.isArray(lf) ? lf : [])
       setLoading(false)
@@ -84,7 +95,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   }, [query])
 
   const filtered = query.length >= 1
-    ? allFoods.filter(f => f.nom.toLowerCase().includes(query.toLowerCase()))
+    ? searchFoodSearchCatalog(allFoods, query)
     : allFoods
 
   const favorites = filtered.filter(f => likedIds.includes(f.id))
@@ -102,15 +113,13 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   async function addFood() {
     if (!selected || saving) return
     setSaving(true)
-    const cal = Math.round((selected.calories * quantity) / 100)
-    const prot = Math.round(((selected.proteines * quantity) / 100) * 10) / 10
-    const gluc = Math.round(((selected.glucides * quantity) / 100) * 10) / 10
-    const lip = Math.round(((selected.lipides * quantity) / 100) * 10) / 10
-    const newLog = {
-      user_id: userId, date: today, meal_type: mealType,
-      custom_name: selected.nom,
-      quantity_g: quantity, calories: cal, protein: prot, carbs: gluc, fat: lip,
-    }
+    const newLog = buildDailyFoodLogSnapshot({
+      food: selected,
+      quantity,
+      userId,
+      date: today,
+      mealType,
+    })
     const { data: inserted, error } = await supabase.from('daily_food_logs').insert(newLog).select().single()
     // If RLS blocks SELECT after INSERT, build the row manually
     const logToAdd = inserted || { ...newLog, id: crypto.randomUUID(), created_at: new Date().toISOString() }
