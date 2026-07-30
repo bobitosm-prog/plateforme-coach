@@ -632,10 +632,11 @@ Le dashboard principal charge beaucoup de JavaScript et les médias publics sont
 
 ## Release Candidate RC1
 
-**Statut : active — 36 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
+**Statut : active — 37 tâches sur 38. Les Phases 1 à 8 sont réconciliées à
 124 tâches sur 124 et 36 critères de sortie sur 36 `met`; Phase 6 et Phase 8
-sont `VALIDATED`. Les autres contrôles RC1 restent ouverts.
-Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
+sont `VALIDATED`. La validation humaine desktop/mobile est réussie et aucun
+autre bug bloquant n'a été détecté. Seule l'approbation explicite RC1 reste
+ouverte. Phase 9 demeure inactive jusqu'à cette validation.**
 
 ### Checklist
 
@@ -788,7 +789,13 @@ Phase 9 demeure inactive jusqu'à validation explicite de RC1.**
   elle couvre les garde-fous, préchecks, smoke tests et rollbacks application,
   base de données, secrets et intégrations sans autoriser la production.
 - [x] Déployer en préproduction si un environnement existe, avec autorisation séparée — Preview isolé `phase-6-staging` `READY`.
-- [ ] Exécuter une validation humaine visuelle desktop/mobile.
+- [x] Exécuter une validation humaine visuelle desktop/mobile — validation
+  réussie sur le Preview `phase-6-staging`. Le Chat IA a été rétabli après
+  diagnostic expurgé d'une réponse Anthropic `401 authentication_error` et
+  remplacement de `ANTHROPIC_API_KEY` dans le scope Preview uniquement. Le
+  catalogue Training, la CSP `media.moovx.ch`, le fallback nutrition et la
+  désactivation des anciens webhooks Stripe ont également été vérifiés; aucun
+  autre bug bloquant n'a été détecté.
 - [ ] Obtenir la validation explicite RC1 avant Phase 9.
 
 ---

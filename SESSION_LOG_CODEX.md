@@ -13434,3 +13434,38 @@ déploiement.
 est cochée. RC1 passe de 35 à 36 tâches sur 38, reste `ACTIVE` et n'est pas
 terminé. Phase 9 demeure `INACTIVE` jusqu'à validation explicite. Aucun test,
 déploiement, commande distante, commit ou push n'est exécuté.
+
+## Entrée — 2026-07-30 — Validation RC1 — contrôle humain desktop/mobile
+
+**État Git préalable :** branche `phase-6-staging`, HEAD
+`ad8f7b164a5dca0dcfa4b506e9b8d560c971137d`, worktree propre et divergence
+`0/0` avec `origin/phase-6-staging` après rafraîchissement de la référence
+distante.
+
+**Chat IA :** le contrôle manuel a d'abord reproduit un HTTP `500` sur
+`POST /api/chat-ai`. L'observabilité Anthropic expurgée ajoutée côté serveur
+a enregistré uniquement les éléments diagnostiques autorisés : statut `401`,
+type `authentication_error` et modèle demandé `claude-sonnet-4-6`, sans
+exposer de clé, prompt, message, header ou réponse fournisseur complète. La
+cause racine était une `ANTHROPIC_API_KEY` invalide dans l'environnement
+Preview Vercel. La variable Preview uniquement a été remplacée, puis le
+nouveau déploiement a été testé manuellement avec une réponse fonctionnelle
+du Chat IA. Aucun environnement Production n'a été modifié.
+
+**Nutrition :** le fallback local curé a été validé manuellement avec
+« Blanc de poulet cuit » pour `100 g` : `165 kcal`, `31 g` de protéines,
+`0 g` de glucides et `3,6 g` de lipides, présentés à `4 g` après l'arrondi
+d'affichage.
+
+**Autres contrôles :** le catalogue d'exercices Training est de nouveau
+fonctionnel, la CSP autorise les posters du CDN `media.moovx.ch`, le catalogue
+nutrition distant vide est compensé par le fallback curé et les anciens
+webhooks Stripe obsolètes sont désactivés. Aucun autre bug bloquant n'a été
+détecté pendant la validation humaine desktop/mobile.
+
+**Décision RC1 :** la case « Exécuter une validation humaine visuelle
+desktop/mobile » est cochée. RC1 passe de 36 à 37 tâches sur 38, reste
+`ACTIVE` et n'est pas clôturée. La seule étape restante est l'approbation
+explicite de RC1. Phase 9 demeure `INACTIVE` jusqu'à cette décision. Aucun
+fichier technique, test, migration ou configuration n'est modifié par cette
+mise à jour documentaire; aucun commit ni push n'est exécuté.
