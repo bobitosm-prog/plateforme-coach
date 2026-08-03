@@ -5,13 +5,37 @@ import { describe, expect, it } from 'vitest'
 import {
   acquireE2eLock,
   assertLocalE2eUrl,
+  assertLocalSupabaseConfig,
   CRITICAL_E2E_TARGET_MATRIX,
   getIntegratedCriticalE2eScenarios,
   redactE2eOutput,
   validateCriticalE2eTargetMatrix,
 } from '../../scripts/e2e-local-contract.mjs'
 
+const localSupabaseConfig = (overrides: { siteUrl?: string, redirects?: string[] } = {}) => `
+port = 55321
+port = 55322
+port = 55324
+smtp_port = 55325
+site_url = "${overrides.siteUrl || 'http://127.0.0.1:3000'}"
+additional_redirect_urls = ${JSON.stringify(overrides.redirects || [
+  'http://127.0.0.1:3000/**',
+  'http://localhost:3000/**',
+  'http://127.0.0.1:3210/auth/callback',
+  'http://127.0.0.1:3210/join',
+])}
+`
+
 describe('critical E2E local contract', () => {
+  it('requires the local development site and both exact E2E redirects', () => {
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig())).not.toThrow()
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ siteUrl: 'http://127.0.0.1:3210' }))).toThrow('site_url = "http://127.0.0.1:3000"')
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ redirects: ['http://127.0.0.1:3210/join'] }))).toThrow('3210/auth/callback')
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ redirects: ['http://127.0.0.1:3210/auth/callback'] }))).toThrow('3210/join')
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ redirects: ['http://remote.example/auth/callback', 'http://127.0.0.1:3210/auth/callback', 'http://127.0.0.1:3210/join'] }))).toThrow('Refusing non-local URL')
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ siteUrl: 'https://remote.example' }))).toThrow('Refusing non-local URL')
+  })
+
   it('accepts localhost and rejects remote origins', () => {
     expect(assertLocalE2eUrl('http://127.0.0.1:3210').hostname).toBe('127.0.0.1')
     expect(assertLocalE2eUrl('https://localhost:55328').hostname).toBe('localhost')
@@ -49,7 +73,7 @@ describe('critical E2E local contract', () => {
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
 
-  it('defines 15 unique target journeys and integrates only the qualified nine', () => {
+  it('defines 15 unique target journeys and integrates only the qualified ten', () => {
     expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
     expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
 
@@ -64,10 +88,17 @@ describe('critical E2E local contract', () => {
       'e2e/coach-client-client.spec.ts',
       'e2e/coach-client-coach.spec.ts',
       'e2e/default-coach-assignment.spec.ts',
+      'e2e/platform-webhook-runtime.spec.ts',
     ])
-    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(6)
+    expect(integrated).toHaveLength(10)
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(5)
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/platform-webhook-runtime.spec.ts')).toMatchObject({
       name: 'Webhook Platform signé, rejeu et idempotence',
+      flags: ['--stripe'],
+      integrated: true,
+    })
+    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Cycle d’une séance Training')).toMatchObject({
+      spec: null,
       integrated: false,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.every(journey => (

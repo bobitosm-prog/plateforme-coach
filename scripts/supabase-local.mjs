@@ -1,6 +1,7 @@
 import { chmodSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { resolve } from 'node:path'
+import { assertLocalSupabaseConfig } from './e2e-local-contract.mjs'
 import {
   LOCAL_API_URL, LOCAL_DB_URL, LOCAL_MAILPIT_URL, acquireLock, assertLocalUrl,
   assertMigrationOrder, assertNoRemoteProject, localResetLockPath,
@@ -10,18 +11,12 @@ const root = resolve(import.meta.dirname, '..')
 const configPath = resolve(root, 'supabase/config.toml')
 const supabaseCli = resolve(root, 'node_modules/.bin/supabase')
 const migrationsDirectory = resolve(root, 'supabase/migrations')
-const requiredLocalValues = ['port = 55321', 'port = 55322', 'port = 55324', 'smtp_port = 55325', 'site_url = "http://127.0.0.1:3210"']
-
 function assertLocalConfiguration() {
   assertLocalUrl(LOCAL_API_URL, 'Supabase API URL')
   assertLocalUrl(LOCAL_DB_URL, 'PostgreSQL URL')
   assertLocalUrl(LOCAL_MAILPIT_URL, 'Mailpit URL')
   assertNoRemoteProject(process.env)
-  const config = readFileSync(configPath, 'utf8')
-  const activeConfig = config.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n')
-  const urls = activeConfig.match(/https?:\/\/[^"\s,\]]+/g) || []
-  if (urls.some(value => !['127.0.0.1', 'localhost'].includes(new URL(value).hostname))) throw new Error('Refusing non-local URL in Supabase config')
-  for (const value of requiredLocalValues) if (!config.includes(value)) throw new Error(`Missing required local config: ${value}`)
+  assertLocalSupabaseConfig(readFileSync(configPath, 'utf8'))
 }
 
 function run(command, args, options = {}) {

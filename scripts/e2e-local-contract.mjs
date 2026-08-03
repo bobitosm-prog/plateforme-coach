@@ -15,7 +15,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Parcours client rattaché à un coach', spec: 'e2e/coach-client-client.spec.ts', flags: [], integrated: true },
   { name: 'Parcours coach gérant un client', spec: 'e2e/coach-client-coach.spec.ts', flags: [], integrated: true },
   { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: true },
-  { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: false },
+  { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: true },
   { name: 'Cycle d’une séance Training', spec: null, flags: [], integrated: false },
   { name: 'Journal nutritionnel quotidien', spec: null, flags: [], integrated: false },
   { name: 'Suivi de progression', spec: null, flags: [], integrated: false },
@@ -53,6 +53,18 @@ export function assertLocalE2eUrl(value, label = 'E2E URL') {
   const url = new URL(value)
   if (!LOCAL_HOSTS.has(url.hostname)) throw new Error(`Refusing non-local ${label}: ${url.origin}`)
   return url
+}
+
+export function assertLocalSupabaseConfig(config) {
+  const activeConfig = config.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n')
+  const urls = activeConfig.match(/https?:\/\/[^"\s,\]]+/g) || []
+  if (urls.some(value => !LOCAL_HOSTS.has(new URL(value).hostname))) throw new Error('Refusing non-local URL in Supabase config')
+  const requiredValues = ['port = 55321', 'port = 55322', 'port = 55324', 'smtp_port = 55325', 'site_url = "http://127.0.0.1:3000"']
+  for (const value of requiredValues) if (!activeConfig.includes(value)) throw new Error(`Missing required local config: ${value}`)
+  const redirects = activeConfig.split('\n').find(line => line.trimStart().startsWith('additional_redirect_urls =')) || ''
+  for (const value of ['"http://127.0.0.1:3210/auth/callback"', '"http://127.0.0.1:3210/join"']) {
+    if (!redirects.includes(value)) throw new Error(`Missing required local E2E redirect: ${value}`)
+  }
 }
 
 export function redactE2eOutput(value) {

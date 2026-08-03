@@ -13664,3 +13664,53 @@ l'attribution du coach par défaut est ajoutée dans ce sous-batch; les six
 autres parcours, à commencer par le webhook Platform, restent planifiés.
 Aucun service distant, environnement Production, déploiement, migration,
 commit ou push n'est utilisé.
+
+## Entrée — 2026-08-03 — Phase 9 — intégration du webhook Platform signé et rejoué
+
+**Périmètre :** seul le parcours « Webhook Platform signé, rejeu et
+idempotence », porté par `e2e/platform-webhook-runtime.spec.ts`, rejoint le
+runner canonique après l'attribution du coach par défaut. La spec, les routes
+Stripe scoped, Billing, les RPC et les migrations restent inchangés. Le cycle
+Training demeure planifié et la tâche globale des quinze parcours reste
+ouverte.
+
+**Préflight local :** le contrat distingue désormais le `site_url` de
+développement `127.0.0.1:3000` des deux redirects E2E obligatoires sur
+`127.0.0.1:3210`. Sept tests unitaires valident le cas conforme, le refus de
+l'ancien `site_url`, l'absence de chacun des redirects et le refus des URLs
+distantes, sans assouplir les ports ou la protection contre un projet lié.
+
+**Validation dédiée :** deux exécutions consécutives de
+`npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe` réussissent
+avec `1 passed`, en `19,5 s` puis `10,2 s`. Le premier événement signé finalise
+le payment et persiste `stripe_event_id`; le rejeu du même `event.id` est
+reconnu sans seconde mutation. Les compteurs `payments` et
+`stripe_webhook_events` reviennent à zéro, tandis que l'admin local préexistant
+reste inchangé.
+
+**Contrats ciblés :** cinq fichiers Webhook/replay/finalisation réussissent
+avec `68 passed`. Le test SQL transactionnel `stripe-webhook-claims.sql`
+réussit puis rollbacke. Le contrat E2E local réussit avec `7 passed`.
+
+**Isolation canonique :** la suite complète est exécutée dans un worktree et
+une stack Supabase temporaires, avec le project id local distinct
+`plateforme-coach-e2e-isolated-20260803`, des ports Supabase `5632x` et un
+volume Docker séparé. La stack principale sur `55321/55322`, son volume et son
+admin ne sont ni arrêtés ni modifiés. La stack isolée, son volume et le
+worktree temporaire sont supprimés après l'audit final.
+
+**Validation canonique :** `npm run test:e2e:critical` réussit sans relance :
+invitation `42,7 s`, checkout plateforme `31,6 s`, checkout coach `21,9 s`,
+Push `34,6 s`, Chat Athena `36,7 s`, Auth/reprise `25,9 s`, parcours client
+`40,2 s`, parcours coach `34,6 s`, attribution par défaut `16,9 s` et webhook
+Platform `23,8 s`, pour `332,2 s` au total. L'audit final isolé constate zéro
+utilisateur, identité, session, profil, payment, claim webhook, relation ou
+message résiduel et tous les ports temporaires sont fermés.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé et
+`git diff --check` réussissent. Aucun secret réel, fournisseur Stripe distant,
+environnement Production ou déploiement n'est utilisé.
+
+**Décision Phase 9 :** la progression passe de `9/15` à `10/15`. Seul le
+webhook Platform est intégré; Training et les quatre parcours suivants restent
+planifiés. Aucun commit ni push n'est effectué dans cette étape.
