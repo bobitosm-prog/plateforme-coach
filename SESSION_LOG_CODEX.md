@@ -13714,3 +13714,52 @@ environnement Production ou déploiement n'est utilisé.
 **Décision Phase 9 :** la progression passe de `9/15` à `10/15`. Seul le
 webhook Platform est intégré; Training et les quatre parcours suivants restent
 planifiés. Aucun commit ni push n'est effectué dans cette étape.
+
+## Entrée — 2026-08-03 — Phase 9 — intégration du cycle Training
+
+**Périmètre :** seul le parcours « Cycle d’une séance Training », porté par
+`e2e/training-workout-cycle.spec.ts`, rejoint le runner canonique après le
+webhook Platform. Le journal nutritionnel reste planifié et la tâche globale
+des quinze parcours demeure ouverte.
+
+**Parcours Training :** une fixture dédiée crée localement un coach, un client,
+un client étranger, leur relation active et un programme hebdomadaire. Le
+client ouvre Training, démarre la séance, valide deux séries séparées par le
+repos, reprend après reload, finalise, obtient records, XP et badge, puis
+retrouve la séance dans l'historique. Le client étranger ne peut ni lire ni
+écrire la session du client testé.
+
+**Répétabilité et nettoyage :** deux exécutions dédiées réussissent avec
+`1 passed (13.6s)` chacune. Après chaque run, les audits trouvent zéro compte
+Auth, profil, relation, programme, planning, session, série, record, XP ou
+badge synthétique. Huit fichiers de tests Training/contrat réussissent avec
+`71 passed`.
+
+**Compatibilités historiques :** la fixture Invitation ne tente plus de créer
+un second profil après `auth.admin.createUser()` : elle attend le profil produit
+par le trigger Auth, complète uniquement les champs synthétiques nécessaires et
+supprime l'utilisateur si la préparation échoue. Sa navigation vers le lien
+d'invitation est directe afin d'éviter une course avec la redirection de
+landing. Les gardes Checkout et Chat utilisent désormais l'origine issue de
+`API_URL`; seuls les hôtes de boucle locale, le protocole et le port
+explicitement configurés sont acceptés. Un port local différent ou toute URL
+distante reste refusé.
+
+**Validations correctives :** Invitation réussit deux fois avec nettoyage
+complet, puis réussit immédiatement après un reset isolé. Checkout plateforme
+réussit avec `1 passed (19.7s)` et Chat Athena avec `2 passed (19.3s)` sur
+Supabase local `56321`. Les tests Invitation et contrat réussissent avec
+`54 passed` et les `3 todo` historiques conservés.
+
+**Validation canonique :** `npm run test:e2e:critical` réussit ses onze
+parcours : invitation `31.9 s`, checkout plateforme `27.7 s`, checkout coach
+`22.3 s`, Push `30.7 s`, Chat Athena `34.4 s`, Auth/reprise `25.1 s`, parcours
+client `39.1 s`, parcours coach `29.4 s`, attribution par défaut `16.2 s`,
+webhook Platform `23.8 s` et Training `25.9 s`, pour `329.2 s` au total.
+L'exécution utilise un worktree et une stack Supabase temporaires sur les ports
+`5632x`; la stack principale et son admin local restent inchangés.
+
+**Décision Phase 9 :** la progression passe de `10/15` à `11/15`. Training est
+le seul parcours ajouté; Nutrition 12/15 n'est pas commencée. Aucun service
+distant, environnement Production, migration, déploiement, commit ou push
+n'est utilisé.

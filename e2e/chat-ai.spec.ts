@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
+import { assertOnlyConfiguredLocalOrigins } from '../scripts/e2e-local-contract.mjs'
 
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
@@ -114,7 +115,7 @@ test('chat local: session, profil serveur, historique réel, persistance et Mark
     await expect(assistant.locator('script,img,svg,iframe,a')).toHaveCount(0)
     expect(await assistant.locator('*').evaluateAll(nodes => nodes.some(node => [...node.attributes].some(attr => attr.name.startsWith('on'))))).toBe(false)
     expect(dialogs).toEqual([])
-    expect([...browserOrigins].every(origin => ['http://127.0.0.1:3210', 'http://127.0.0.1:55321'].includes(origin))).toBe(true)
+    expect(() => assertOnlyConfiguredLocalOrigins(browserOrigins, ['http://127.0.0.1:3210', supabaseUrl])).not.toThrow()
 
     const { data: persisted } = await admin.from('chat_ai_messages').select('role,content').eq('user_id', userId).order('created_at')
     expect(persisted?.filter(row => row.role === 'user').at(-1)?.content).toHaveLength(500)

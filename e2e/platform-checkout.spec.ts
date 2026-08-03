@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, test, type Page } from '@playwright/test'
+import { assertOnlyConfiguredLocalOrigins } from '../scripts/e2e-local-contract.mjs'
 
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
@@ -146,9 +147,9 @@ test('checkout plateforme local: identité serveur, paywall et refus avant Strip
     })
     const failedCalls = await stripeRequests()
     expect(failedCalls.at(-1)?.idempotencyKey).toBe(`checkout-payment-${failedPayment.data.id}`)
-    expect([...browserOrigins].every(origin => [
-      'http://127.0.0.1:3210', 'http://127.0.0.1:55321', stripeUrl,
-    ].includes(origin))).toBe(true)
+    expect(() => assertOnlyConfiguredLocalOrigins(browserOrigins, [
+      'http://127.0.0.1:3210', supabaseUrl, stripeUrl,
+    ])).not.toThrow()
   } finally {
     await admin.from('payments').delete().in('client_id', ids)
     await admin.from('profiles').delete().in('id', ids)

@@ -16,7 +16,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Parcours coach gérant un client', spec: 'e2e/coach-client-coach.spec.ts', flags: [], integrated: true },
   { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: true },
   { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: true },
-  { name: 'Cycle d’une séance Training', spec: null, flags: [], integrated: false },
+  { name: 'Cycle d’une séance Training', spec: 'e2e/training-workout-cycle.spec.ts', flags: [], integrated: true },
   { name: 'Journal nutritionnel quotidien', spec: null, flags: [], integrated: false },
   { name: 'Suivi de progression', spec: null, flags: [], integrated: false },
   { name: 'Messagerie coach-client et synchronisation Realtime', spec: null, flags: [], integrated: false },
@@ -53,6 +53,16 @@ export function assertLocalE2eUrl(value, label = 'E2E URL') {
   const url = new URL(value)
   if (!LOCAL_HOSTS.has(url.hostname)) throw new Error(`Refusing non-local ${label}: ${url.origin}`)
   return url
+}
+
+export function assertOnlyConfiguredLocalOrigins(observedOrigins, configuredUrls) {
+  const configured = configuredUrls.map((value, index) => assertLocalE2eUrl(value, `configured E2E URL ${index + 1}`))
+  const allowedBoundaries = new Set(configured.map(url => `${url.protocol}//${url.port || (url.protocol === 'https:' ? '443' : '80')}`))
+  for (const origin of observedOrigins) {
+    const url = assertLocalE2eUrl(origin, 'observed browser origin')
+    const boundary = `${url.protocol}//${url.port || (url.protocol === 'https:' ? '443' : '80')}`
+    if (!allowedBoundaries.has(boundary)) throw new Error(`Refusing unconfigured local E2E origin: ${url.origin}`)
+  }
 }
 
 export function assertLocalSupabaseConfig(config) {

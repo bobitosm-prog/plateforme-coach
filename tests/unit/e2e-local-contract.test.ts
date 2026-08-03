@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   acquireE2eLock,
+  assertOnlyConfiguredLocalOrigins,
   assertLocalE2eUrl,
   assertLocalSupabaseConfig,
   CRITICAL_E2E_TARGET_MATRIX,
@@ -42,6 +43,29 @@ describe('critical E2E local contract', () => {
     expect(() => assertLocalE2eUrl('https://example.com')).toThrow('Refusing non-local')
   })
 
+  it('restricts browser origins to configured local protocol and ports', () => {
+    expect(() => assertOnlyConfiguredLocalOrigins(
+      ['http://127.0.0.1:3210', 'http://localhost:55321'],
+      ['http://127.0.0.1:3210', 'http://127.0.0.1:55321'],
+    )).not.toThrow()
+    expect(() => assertOnlyConfiguredLocalOrigins(
+      ['http://127.0.0.1:56321'],
+      ['http://localhost:56321'],
+    )).not.toThrow()
+    expect(() => assertOnlyConfiguredLocalOrigins(
+      ['http://127.0.0.1:55322'],
+      ['http://127.0.0.1:55321'],
+    )).toThrow('unconfigured local E2E origin')
+    expect(() => assertOnlyConfiguredLocalOrigins(
+      ['https://project.supabase.co'],
+      ['http://127.0.0.1:55321'],
+    )).toThrow('Refusing non-local')
+    expect(() => assertOnlyConfiguredLocalOrigins(
+      ['https://app.moovx.ch'],
+      ['http://127.0.0.1:55321'],
+    )).toThrow('Refusing non-local')
+  })
+
   it('redacts credentials and sensitive conversational fields', () => {
     const jwt = `eyJ${'a'.repeat(20)}.${'b'.repeat(20)}.${'c'.repeat(20)}`
     const output = redactE2eOutput(`authorization=Bearer-secret cookie=session-secret invitation_token=invite ${jwt} {"prompt":"private profile"}`)
@@ -73,7 +97,7 @@ describe('critical E2E local contract', () => {
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
 
-  it('defines 15 unique target journeys and integrates only the qualified ten', () => {
+  it('defines 15 unique target journeys and integrates only the qualified eleven', () => {
     expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
     expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
 
@@ -89,15 +113,20 @@ describe('critical E2E local contract', () => {
       'e2e/coach-client-coach.spec.ts',
       'e2e/default-coach-assignment.spec.ts',
       'e2e/platform-webhook-runtime.spec.ts',
+      'e2e/training-workout-cycle.spec.ts',
     ])
-    expect(integrated).toHaveLength(10)
-    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(5)
+    expect(integrated).toHaveLength(11)
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(4)
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/platform-webhook-runtime.spec.ts')).toMatchObject({
       name: 'Webhook Platform signé, rejeu et idempotence',
       flags: ['--stripe'],
       integrated: true,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Cycle d’une séance Training')).toMatchObject({
+      spec: 'e2e/training-workout-cycle.spec.ts',
+      integrated: true,
+    })
+    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Journal nutritionnel quotidien')).toMatchObject({
       spec: null,
       integrated: false,
     })

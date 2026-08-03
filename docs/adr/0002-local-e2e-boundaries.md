@@ -19,11 +19,15 @@ Les E2E critiques s'exécutent entièrement en local et séquentiellement :
 
 Les lanceurs refusent les origines et URLs fournisseurs non locales, appliquent le reset canonique, utilisent un seul worker lorsque l'état partagé l'exige et nettoient les données et processus temporaires. La commande canonique est `npm run test:e2e:critical`; les commandes par parcours restent disponibles pour une boucle ciblée.
 
-Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; dix sont intégrés. L'attribution du coach par défaut rejoint la suite après qualification locale : le runner fournit `DEFAULT_COACH_EMAIL` et la spec crée l'unique profil coach correspondant. Sans ce profil local valide, la route échoue fermée en `503` sans mutation.
+Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; onze sont intégrés. L'attribution du coach par défaut rejoint la suite après qualification locale : le runner fournit `DEFAULT_COACH_EMAIL` et la spec crée l'unique profil coach correspondant. Sans ce profil local valide, la route échoue fermée en `503` sans mutation.
 
 Le webhook Platform reste distinct du webhook Connect. Son parcours canonique active `--stripe`, fournit un secret de signature synthétique et dirige le SDK Stripe exclusivement vers le faux serveur local. Il signe puis livre un événement `checkout.session.completed` à la route Platform réelle, vérifie le claim durable et la finalisation du payment, puis rejoue le même événement. Le rejeu est accepté comme doublon sans seconde mutation et aucun accès Stripe réel n'est possible dans ce flux.
 
 Les interceptions Playwright des routes critiques sont évitées : intercepter une route Next.js ou fabriquer sa réponse dans le navigateur contournerait précisément la frontière HTTP serveur que ces parcours doivent caractériser. La simulation est placée à la frontière réseau du fournisseur, après le code applicatif et le transport réels.
+
+Les origines navigateur Supabase sont dérivées de l'URL locale injectée au run. La garde accepte uniquement `127.0.0.1` ou `localhost` avec le protocole et le port configurés; elle refuse un autre port local, un domaine Supabase distant et toute origine Production. Les fixtures Auth relisent le profil créé par le trigger `auth.users → profiles` et ne créent jamais un second profil.
+
+Le cycle Training canonique utilise un programme hebdomadaire synthétique, reprend une séance après reload, finalise les séries, vérifie progression et historique, exerce une frontière RLS étrangère et nettoie les tables Training avant la sortie du scénario.
 
 ## Conséquences
 
@@ -36,7 +40,7 @@ Les interceptions Playwright des routes critiques sont évitées : intercepter u
 
 - Chromium est le navigateur intégré actuel ; la matrice multi-navigateurs et mobile réel reste à construire.
 - Les faux fournisseurs valident les requêtes attendues, pas l'ensemble du comportement des plateformes distantes.
-- Cinq parcours de la matrice cible restent planifiés : Training, Nutrition, Progression, Realtime et réconciliation Billing.
+- Quatre parcours de la matrice cible restent planifiés : Nutrition, Progression, Realtime et réconciliation Billing.
 - Le parcours d'attribution du coach par défaut utilise uniquement Supabase et Next.js locaux; son `503` hors préconditions ne déclenche aucun accès distant.
 - Une suite locale verte n'est pas une preuve de santé d'un environnement déployé.
 

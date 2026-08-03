@@ -4,7 +4,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
 const password = 'Local-E2E-Password-42!'
-const mailpitUrl = 'http://127.0.0.1:55324'
+const mailpitUrl = process.env.MAILPIT_URL!
 
 function assertLocalUrl(value: string) {
   const url = new URL(value)
@@ -27,16 +27,23 @@ async function createFixture(admin: SupabaseClient, email: string, role: 'coach'
     user_metadata: { role },
   })
   if (error || !data.user) throw new Error(`Unable to create local ${role} fixture`)
-  const { error: profileError } = await admin.from('profiles').upsert({
-    id: data.user.id,
-    email,
-    full_name: role === 'coach' ? 'Coach E2E' : 'Client E2E',
-    role,
-    onboarding_completed: role === 'client',
-    coach_onboarding_complete: role === 'coach',
-  })
-  if (profileError) throw new Error(`Unable to create local ${role} profile`)
-  return data.user.id
+  try {
+    await expect.poll(async () => {
+      const profile = await admin.from('profiles').select('id,email,role').eq('id', data.user.id).maybeSingle()
+      if (profile.error) return null
+      return profile.data
+    }, { timeout: 15_000 }).toMatchObject({ id: data.user.id, email, role })
+    const { data: profile, error: profileError } = await admin.from('profiles').update({
+      full_name: role === 'coach' ? 'Coach E2E' : 'Client E2E',
+      onboarding_completed: role === 'client',
+      coach_onboarding_complete: role === 'coach',
+    }).eq('id', data.user.id).select('id').single()
+    if (profileError || profile?.id !== data.user.id) throw new Error(`Unable to complete local ${role} profile`)
+    return data.user.id
+  } catch (fixtureError) {
+    await admin.auth.admin.deleteUser(data.user.id)
+    throw fixtureError
+  }
 }
 
 async function cleanupStaleFixtures(admin: SupabaseClient) {
@@ -127,10 +134,9 @@ test('invitation coach vérifiée: création, livraison et consommation unique',
     clientContext = await browser.newContext()
     const clientPage = await clientContext.newPage()
     clientPage.on('request', request => observedRequests.push(new URL(request.url()).pathname + new URL(request.url()).search))
-    await clientPage.goto('/')
     const validationResponse = clientPage.waitForResponse(response =>
       response.url().endsWith('/api/coach/invitations/validate') && response.request().method() === 'POST')
-    await clientPage.evaluate(path => window.location.assign(path), `/join?token=${token}`)
+    await clientPage.goto(`/join?token=${token}`)
     await expect(clientPage).toHaveURL(/\/join$/)
     expect((await validationResponse).status()).toBe(200)
     mark('client-login')

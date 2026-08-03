@@ -89,7 +89,7 @@ npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe
 
 ### Suite E2E critique canonique
 
-Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **139 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
+Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **146 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
 
 Un **parcours critique** est une entrée exécutable nommée unique de `scripts/run-critical-e2e.mjs`, rattachée à une spécification métier principale. Plusieurs tests Playwright dans cette spécification comptent comme un seul parcours. Les suites de performance ne font pas partie de ce décompte.
 
@@ -107,15 +107,15 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 8 | Parcours coach gérant un client | Intégré dans ce sous-batch |
 | 9 | Attribution du coach par défaut | Intégré dans ce sous-batch |
 | 10 | Webhook Platform signé, rejeu et idempotence | Intégré dans ce sous-batch |
-| 11 | Cycle d’une séance Training | Planifié |
+| 11 | Cycle d’une séance Training | Intégré dans ce sous-batch |
 | 12 | Journal nutritionnel quotidien | Planifié |
 | 13 | Suivi de progression | Planifié |
 | 14 | Messagerie coach-client et synchronisation Realtime | Planifié |
 | 15 | Réconciliation abonnement et Billing | Planifié |
 
-L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, puis webhook Platform. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, webhook Platform, puis cycle Training. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Le onzième traverse un programme hebdomadaire, saisit deux séries, reprend la séance après reload, finalise la session, vérifie historique, progression et frontières RLS, puis nettoie toutes ses données synthétiques. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
 
-Après le dixième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Le parcours webhook contrôle et nettoie en plus son claim dédié dans son propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+Après le onzième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, série, record personnel, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Le parcours webhook contrôle et nettoie en plus son claim dédié dans son propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
@@ -157,6 +157,15 @@ Qualification du webhook Platform du 3 août 2026 :
 - la signature est générée avec un secret synthétique local; `checkout.session.completed` fait passer le payment de `pending` à `paid`, persiste `stripe_event_id` et finalise le claim durable;
 - le rejeu strict du même `event.id` répond `duplicate: true` et ne produit aucune seconde mutation;
 - l'intégration canonique progresse de **9/15 à 10/15**; cinq parcours restent planifiés et aucun fournisseur Stripe réel n'est utilisé.
+
+Qualification du cycle Training du 3 août 2026 :
+
+- `e2e/training-workout-cycle.spec.ts` traverse Chromium mobile, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux avec un programme hebdomadaire synthétique et des personas client, coach et client étranger;
+- le parcours saisit deux séries, reprend le brouillon après reload, finalise une session unique, vérifie séries, planning, records, XP, badge, historique et refus RLS étranger, puis nettoie Auth et toutes les tables Training concernées;
+- deux exécutions ciblées consécutives réussissent avec `1 passed (13.6s)` et zéro résidu; 71 tests Training ciblés réussissent;
+- la fixture Invitation relit désormais le profil créé par le trigger Auth avant de compléter ses champs synthétiques, et sa navigation directe vers le lien élimine une course avec la redirection de landing;
+- les gardes navigateur dérivent l'origine Supabase de `API_URL` et acceptent uniquement le protocole et le port local explicitement configurés; `127.0.0.1` et `localhost` restent interchangeables sur cette frontière, tandis qu'un port différent ou un hôte distant est refusé;
+- la suite canonique isolée réussit ses onze parcours en `329.2 s`; l'intégration progresse de **10/15 à 11/15** et quatre parcours restent planifiés, à commencer par le journal nutritionnel.
 
 Le reset initial est volontairement destructif pour la stack locale. Pour une itération sur un seul parcours, lancer sa commande dédiée; pour une modification transverse, une correction de sécurité, une fusion ou un déploiement, lancer la suite critique complète.
 

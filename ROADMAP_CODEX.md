@@ -817,7 +817,7 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
-| [ ] Étendre la suite à 15 parcours E2E critiques — en cours : 10/15 parcours intégrés; seul « Webhook Platform signé, rejeu et idempotence » est ajouté dans ce sous-batch, le cycle Training reste planifié | 4 j | Élevée | Moyen | Critique | Domaines stabilisés |
+| [ ] Étendre la suite à 15 parcours E2E critiques — en cours : 11/15 parcours intégrés; seul « Cycle d’une séance Training » est ajouté dans ce sous-batch, le journal nutritionnel reste planifié | 4 j | Élevée | Moyen | Critique | Domaines stabilisés |
 | [ ] Tester toutes les migrations depuis une base vide | 2 j | Élevée | Moyen | Critique | Supabase local |
 | [ ] Vérifier l'alignement migrations locales/distantes | 1,5 j | Élevée | Moyen | Critique | Accès environnements |
 | [ ] Définir la procédure de release | 1 j | Moyenne | Faible | Élevé | CI stable |
