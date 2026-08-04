@@ -5,6 +5,12 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { generateImage } from '@/lib/gemini/image'
 import { slugify } from '@/lib/seedance/slug'
+import { resolveCorrelationId } from '@/lib/security/audit-log'
+import {
+  isSeedanceReferenceStorageEnabled,
+  SeedanceReferenceStorageError,
+  uploadSeedanceReference,
+} from '@/lib/seedance/reference-storage'
 
 export const dynamic = 'force-dynamic'
 const BUCKET = 'exercise-videos'
@@ -58,17 +64,45 @@ export async function POST(req: Request) {
   let imagePrompt: string
   try {
     imagePrompt = customPrompt || await buildImagePrompt(anthropic, exerciseName, muscleGroup, equipment)
-  } catch (e: any) {
-    console.error('[seedance/image] prompt build failed:', e?.message)
+  } catch {
+    console.error(JSON.stringify({ event: 'SEEDANCE_IMAGE_PROMPT_FAILED', result: 'failed', errorCode: 'PROMPT_BUILD_FAILED' }))
     return NextResponse.json({ error: 'Échec de la construction du prompt image' }, { status: 502 })
   }
 
   let image
   try {
     image = await generateImage(imagePrompt)
-  } catch (e: any) {
-    console.error('[seedance/image] Gemini failed:', e?.message)
+  } catch {
+    console.error(JSON.stringify({ event: 'SEEDANCE_IMAGE_GENERATION_FAILED', result: 'failed', errorCode: 'IMAGE_PROVIDER_FAILED' }))
     return NextResponse.json({ error: 'Échec de la génération de l\'image' }, { status: 502 })
+  }
+
+  if (isSeedanceReferenceStorageEnabled()) {
+    const correlationId = resolveCorrelationId(req)
+    try {
+      const reference = await uploadSeedanceReference({
+        bytes: image.bytes,
+        mimeType: image.mimeType,
+        correlationId,
+      })
+      return NextResponse.json({
+        imageUrl: reference.signedUrl,
+        imagePrompt,
+        expiresAt: reference.expiresAt,
+      })
+    } catch (error: unknown) {
+      console.error(JSON.stringify({
+        event: 'SEEDANCE_REFERENCE_UPLOAD_FAILED',
+        correlationId,
+        bucket: 'seedance-references',
+        hostClass: 'staging_https',
+        mime: image.mimeType,
+        size: image.bytes.byteLength,
+        result: 'failed',
+        errorCode: error instanceof SeedanceReferenceStorageError ? error.code : 'UNKNOWN_ERROR',
+      }))
+      return NextResponse.json({ error: 'Upload temporaire Seedance échoué' }, { status: 500 })
+    }
   }
 
   const slug = slugify(exerciseName)

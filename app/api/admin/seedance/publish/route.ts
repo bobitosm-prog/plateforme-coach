@@ -3,6 +3,12 @@ import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { slugify } from '@/lib/seedance/slug'
+import { resolveCorrelationId } from '@/lib/security/audit-log'
+import {
+  createSignedSeedanceReference,
+  referenceObjectPathFromParams,
+  removeSeedanceReference,
+} from '@/lib/seedance/reference-storage'
 
 export const dynamic = 'force-dynamic'
 const BUCKET = 'exercise-videos'
@@ -27,7 +33,7 @@ export async function POST(req: Request) {
 
   const { data: job, error: jobErr } = await supabaseAdmin
     .from('seedance_jobs')
-    .select('id, exercise_id, exercise_name, status, video_url_remote, reference_image_url')
+    .select('id, exercise_id, exercise_name, status, video_url_remote, reference_image_url, params')
     .eq('id', jobId)
     .single()
 
@@ -67,6 +73,7 @@ export async function POST(req: Request) {
 
   const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath)
   const publishedVideoUrl = `${pub.publicUrl}?v=${Date.now()}`
+  const referenceObjectPath = referenceObjectPathFromParams(job.params)
 
   // 3. Update exercises_db (si l'exo est lié) : video_url + gif_url poster.
   // L'image de référence (image→vidéo) sert de thumbnail/poster dans l'app
@@ -74,9 +81,20 @@ export async function POST(req: Request) {
   if (job.exercise_id) {
     const update: { video_url: string; gif_url?: string } = { video_url: publishedVideoUrl }
 
-    if (job.reference_image_url && /^https:\/\//.test(job.reference_image_url)) {
+    let posterSourceUrl = job.reference_image_url && /^https:\/\//.test(job.reference_image_url)
+      ? job.reference_image_url
+      : null
+    if (referenceObjectPath) {
       try {
-        const imgRes = await fetch(job.reference_image_url)
+        posterSourceUrl = (await createSignedSeedanceReference(referenceObjectPath)).signedUrl
+      } catch {
+        posterSourceUrl = null
+      }
+    }
+
+    if (posterSourceUrl) {
+      try {
+        const imgRes = await fetch(posterSourceUrl)
         if (imgRes.ok) {
           const imgBuf = await imgRes.arrayBuffer()
           if (imgBuf.byteLength <= MAX_VIDEO_BYTES) {
@@ -90,9 +108,9 @@ export async function POST(req: Request) {
             }
           }
         }
-      } catch (e: any) {
+      } catch {
         // Le poster est un bonus : on n'échoue pas la publication si l'image manque.
-        console.error('[seedance/publish] poster copy failed:', e?.message)
+        console.error(JSON.stringify({ event: 'SEEDANCE_POSTER_COPY_FAILED', result: 'failed', errorCode: 'POSTER_COPY_FAILED' }))
       }
     }
 
@@ -108,6 +126,21 @@ export async function POST(req: Request) {
     .from('seedance_jobs')
     .update({ published_video_url: publishedVideoUrl })
     .eq('id', jobId)
+
+  if (referenceObjectPath) {
+    try {
+      await removeSeedanceReference(referenceObjectPath)
+    } catch {
+      console.error(JSON.stringify({
+        event: 'SEEDANCE_REFERENCE_CLEANUP_FAILED',
+        correlationId: resolveCorrelationId(req),
+        bucket: 'seedance-references',
+        hostClass: 'staging_https',
+        result: 'failed',
+        errorCode: 'CLEANUP_FAILED',
+      }))
+    }
+  }
 
   return NextResponse.json({ publishedVideoUrl })
 }

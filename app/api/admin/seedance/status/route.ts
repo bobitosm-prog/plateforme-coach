@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getTask } from '@/lib/seedance/client'
+import { resolveCorrelationId } from '@/lib/security/audit-log'
+import { referenceObjectPathFromParams, removeSeedanceReference } from '@/lib/seedance/reference-storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +22,8 @@ export async function GET(req: Request) {
   let result
   try {
     result = await getTask(taskId)
-  } catch (e: any) {
-    console.error('[seedance/status] getTask failed:', e?.message)
+  } catch {
+    console.error(JSON.stringify({ event: 'SEEDANCE_STATUS_FAILED', result: 'failed', errorCode: 'PROVIDER_STATUS_FAILED' }))
     return NextResponse.json({ error: 'Échec de la récupération du statut Seedance' }, { status: 502 })
   }
 
@@ -33,6 +35,29 @@ export async function GET(req: Request) {
       error: result.failedReason,
     })
     .eq('task_id', taskId)
+
+  if (result.status === 'failed') {
+    const { data: job } = await supabaseAdmin
+      .from('seedance_jobs')
+      .select('params')
+      .eq('task_id', taskId)
+      .maybeSingle()
+    const objectPath = referenceObjectPathFromParams(job?.params)
+    if (objectPath) {
+      try {
+        await removeSeedanceReference(objectPath)
+      } catch {
+        console.error(JSON.stringify({
+          event: 'SEEDANCE_REFERENCE_CLEANUP_FAILED',
+          correlationId: resolveCorrelationId(req),
+          bucket: 'seedance-references',
+          hostClass: 'staging_https',
+          result: 'failed',
+          errorCode: 'CLEANUP_FAILED',
+        }))
+      }
+    }
+  }
 
   return NextResponse.json({ status: result.status, videoUrl: result.videoUrl })
 }

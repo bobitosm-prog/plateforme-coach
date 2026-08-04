@@ -2,12 +2,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import { createTask, getTask } from '@/lib/seedance/client'
+import { createTask, getSeedanceProviderFailure, getTask } from '@/lib/seedance/client'
 
 const OLD_ENV = process.env
 
 beforeEach(() => {
-  process.env = { ...OLD_ENV, SEEDANCE_API_KEY: 'sk_test_abc', SEEDANCE_BASE_URL: 'https://api.seedance2.ai' }
+  process.env = {
+    ...OLD_ENV,
+    SEEDANCE_API_KEY: 'sk_test_abc',
+    SEEDANCE_BASE_URL: 'https://api.seedance2.ai',
+    SEEDANCE_PROVIDER_MODE: 'mock',
+  }
 })
 afterEach(() => {
   process.env = OLD_ENV
@@ -37,14 +42,44 @@ describe('createTask', () => {
     expect(body.input.prompt).toBe('demo')
   })
 
-  it('throws when the API responds non-OK', async () => {
+  it.each([
+    ['authentication failure', 401, { error: { type: 'authentication_error', code: 'invalid_api_key', message: 'sensitive detail' } }, 'authentication_error', 'invalid_api_key'],
+    ['invalid model', 400, { error: { type: 'invalid_request_error', code: 'model_not_found', message: 'sensitive detail' } }, 'invalid_request_error', 'model_not_found'],
+    ['inaccessible image', 422, { error: { type: 'invalid_request_error', code: 'image_unreachable', message: 'http://127.0.0.1:55321/private/path' } }, 'invalid_request_error', 'image_unreachable'],
+    ['invalid payload', 400, { type: 'validation_error', code: 'invalid_payload', message: 'prompt=sensitive' }, 'validation_error', 'invalid_payload'],
+  ])('normalizes %s without retaining provider messages', async (_case, status, body, providerErrorType, providerErrorCode) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false, status: 401, json: async () => ({ error: 'bad key' }),
+      ok: false,
+      status,
+      text: async () => JSON.stringify(body),
     }))
-    await expect(createTask('seedance-2-0', {
-      prompt: 'x', generation_type: 'text-to-video',
+
+    const error = await createTask('seedance-2-0', {
+      prompt: 'private prompt', generation_type: 'image-to-video', image_urls: ['http://127.0.0.1:55321/private/path'],
       duration: 5, aspect_ratio: '9:16', resolution: '1080p',
-    })).rejects.toThrow('Seedance createTask failed (401)')
+    }).catch((caught: unknown) => caught)
+
+    expect(getSeedanceProviderFailure(error)).toEqual({ status, providerErrorType, providerErrorCode })
+    expect(String(error)).not.toContain('sensitive detail')
+    expect(String(error)).not.toContain('private prompt')
+    expect(String(error)).not.toContain('127.0.0.1')
+  })
+
+  it('normalizes a network failure without retaining its message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connect failed with secret URL')))
+
+    const error = await createTask('seedance-2-0', {
+      prompt: 'private prompt', generation_type: 'text-to-video',
+      duration: 5, aspect_ratio: '9:16', resolution: '1080p',
+    }).catch((caught: unknown) => caught)
+
+    expect(getSeedanceProviderFailure(error)).toEqual({
+      status: null,
+      providerErrorType: 'network_error',
+      providerErrorCode: 'request_failed',
+    })
+    expect(String(error)).not.toContain('secret URL')
+    expect(String(error)).not.toContain('private prompt')
   })
 
   it('throws when SEEDANCE_API_KEY is missing', async () => {

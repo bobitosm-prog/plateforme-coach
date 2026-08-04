@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/admin/auth', () => ({
@@ -12,6 +12,19 @@ vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create: crea
 const { generateImageMock } = vi.hoisted(() => ({ generateImageMock: vi.fn() }))
 vi.mock('@/lib/gemini/image', () => ({ generateImage: generateImageMock }))
 
+const { referenceEnabledMock, uploadReferenceMock } = vi.hoisted(() => ({
+  referenceEnabledMock: vi.fn(),
+  uploadReferenceMock: vi.fn(),
+}))
+vi.mock('@/lib/seedance/reference-storage', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/seedance/reference-storage')>()
+  return {
+    ...actual,
+    isSeedanceReferenceStorageEnabled: referenceEnabledMock,
+    uploadSeedanceReference: uploadReferenceMock,
+  }
+})
+
 const uploadMock = vi.fn().mockResolvedValue({ error: null })
 const getPublicUrlMock = vi.fn().mockReturnValue({ data: { publicUrl: 'https://bucket/squat/ref-1.jpg' } })
 vi.mock('@/lib/supabase/admin', () => ({
@@ -24,21 +37,22 @@ import { verifyAdmin } from '@/lib/admin/auth'
 beforeEach(() => {
   vi.clearAllMocks()
   process.env.ANTHROPIC_API_KEY = 'sk-ant-test'
+  referenceEnabledMock.mockReturnValue(false)
 })
 const req = (body: unknown) => new Request('http://x', { method: 'POST', body: JSON.stringify(body) })
 
 it('rejects non-admin', async () => {
-  ;(verifyAdmin as any).mockRejectedValueOnce(new Error('no'))
+  vi.mocked(verifyAdmin).mockRejectedValueOnce(new Error('no'))
   expect((await POST(req({ exerciseName: 'Squat' }))).status).toBe(401)
 })
 
 it('400 when exerciseName missing', async () => {
-  ;(verifyAdmin as any).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
+  vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
   expect((await POST(req({}))).status).toBe(400)
 })
 
 it('builds prompt via Claude, generates image, uploads, returns url', async () => {
-  ;(verifyAdmin as any).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
+  vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
   createMock.mockResolvedValueOnce({ content: [{ type: 'text', text: 'A man seated at a lat pulldown machine' }] })
   generateImageMock.mockResolvedValueOnce({ bytes: new Uint8Array([1, 2, 3]), mimeType: 'image/jpeg' })
 
@@ -53,7 +67,7 @@ it('builds prompt via Claude, generates image, uploads, returns url', async () =
 })
 
 it('uses a custom imagePrompt without calling Claude', async () => {
-  ;(verifyAdmin as any).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
+  vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
   generateImageMock.mockResolvedValueOnce({ bytes: new Uint8Array([1]), mimeType: 'image/jpeg' })
 
   const res = await POST(req({ exerciseName: 'Squat', imagePrompt: 'my custom prompt' }))
@@ -61,4 +75,27 @@ it('uses a custom imagePrompt without calling Claude', async () => {
   const json = await res.json()
   expect(json.imagePrompt).toBe('my custom prompt')
   expect(createMock).not.toHaveBeenCalled()
+})
+
+it('returns the staging signed URL without exposing the object path', async () => {
+  referenceEnabledMock.mockReturnValue(true)
+  vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
+  generateImageMock.mockResolvedValueOnce({ bytes: new Uint8Array([1]), mimeType: 'image/webp' })
+  uploadReferenceMock.mockResolvedValueOnce({
+    objectPath: 'seedance-correlation/00000000-0000-4000-8000-000000000001.webp',
+    signedUrl: 'https://staging.example.com/signed?token=synthetic',
+    expiresAt: '2026-08-04T12:15:00.000Z',
+  })
+
+  const res = await POST(req({ exerciseName: 'Squat', imagePrompt: 'custom' }))
+  const json = await res.json()
+
+  expect(res.status).toBe(200)
+  expect(json).toEqual({
+    imageUrl: 'https://staging.example.com/signed?token=synthetic',
+    imagePrompt: 'custom',
+    expiresAt: '2026-08-04T12:15:00.000Z',
+  })
+  expect(JSON.stringify(json)).not.toContain('seedance-correlation/')
+  expect(uploadMock).not.toHaveBeenCalled()
 })
