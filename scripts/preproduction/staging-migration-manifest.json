@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "authority": "moovx-staging-migration-reversioning",
   "sourceRoot": "supabase/migrations",
-  "sourceMigrationCount": 144,
+  "sourceMigrationCount": 147,
   "sourceOrder": "lexical-filename",
   "stagingOrder": "lexical-filename",
   "reversionRule": {
@@ -5225,13 +5225,36 @@
       "justification": "Schema or definition-only migration; no migration-time data mutation detected."
     },
     {
+      "sourcePath": "supabase/migrations/20260718150000_seedance_jobs.sql",
+      "historicalVersion": "20260718150000",
+      "historicalName": "20260718150000_seedance_jobs.sql",
+      "sourceSha256": "976e8b08b114abc9d20688a7f335daffc58210364b6bbd9cdfe78cf1bc0dc912",
+      "stagingVersion": "20260718150000",
+      "stagingName": "20260718150000_seedance_jobs.sql",
+      "absoluteOrder": 140,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
       "sourcePath": "supabase/migrations/20260719160000_secure_messages.sql",
       "historicalVersion": "20260719160000",
       "historicalName": "20260719160000_secure_messages.sql",
       "sourceSha256": "bf586b4196f99f911217f031902d2ee6acc0309dca022f1a5ead313b1bf43387",
       "stagingVersion": "20260719160000",
       "stagingName": "20260719160000_secure_messages.sql",
-      "absoluteOrder": 140,
+      "absoluteOrder": 141,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],
@@ -5252,7 +5275,7 @@
       "sourceSha256": "2109bf088365fe58aa625ee941b56015e626453157b3974e1b8c3d09cab1bb13",
       "stagingVersion": "20260720190000",
       "stagingName": "20260720190000_atomic_ai_usage.sql",
-      "absoluteOrder": 141,
+      "absoluteOrder": 142,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],
@@ -5286,7 +5309,7 @@
       "sourceSha256": "e7d59231733fcfdefca669f9fb2809b70bd0faedadbadb8c0e838901af627480",
       "stagingVersion": "20260725190000",
       "stagingName": "20260725190000_configure_environment_scoped_cron.sql",
-      "absoluteOrder": 142,
+      "absoluteOrder": 143,
       "collisionGroup": null,
       "category": "cron_environment_scoped",
       "knownDependencies": [
@@ -5363,7 +5386,7 @@
       "sourceSha256": "c24d2473d54579e1d445f83ff115c54fa59cc061d36258e1eb955fd783f7a6e6",
       "stagingVersion": "20260727120000",
       "stagingName": "20260727120000_align_payments_checkout_contract.sql",
-      "absoluteOrder": 143,
+      "absoluteOrder": 144,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],
@@ -5384,7 +5407,51 @@
       "sourceSha256": "b3e04bcf24432035d78e03bddb68cf4e8c310f7ea7d64d5a349d9bf70283c055",
       "stagingVersion": "20260729100000",
       "stagingName": "20260729100000_create_handle_new_user_trigger.sql",
-      "absoluteOrder": 144,
+      "absoluteOrder": 145,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260729190000_add_exercises_difficulty.sql",
+      "historicalVersion": "20260729190000",
+      "historicalName": "20260729190000_add_exercises_difficulty.sql",
+      "sourceSha256": "734579447d5acf21ffe5b28eb389d2aed4df41e86c39804c656671a4019fd369",
+      "stagingVersion": "20260729190000",
+      "stagingName": "20260729190000_add_exercises_difficulty.sql",
+      "absoluteOrder": 146,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [
+        "20260317010000_seed_exercises_catalog.sql"
+      ],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260729193000_align_food_items_nutrition_contract.sql",
+      "historicalVersion": "20260729193000",
+      "historicalName": "20260729193000_align_food_items_nutrition_contract.sql",
+      "sourceSha256": "dac56c62dafd414e95a0c228d2cfdf1d0a66e429e1763310ffc3b181e217fb59",
+      "stagingVersion": "20260729193000",
+      "stagingName": "20260729193000_align_food_items_nutrition_contract.sql",
+      "absoluteOrder": 147,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],

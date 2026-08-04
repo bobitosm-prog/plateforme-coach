@@ -2042,6 +2042,68 @@ export type Database = {
           },
         ]
       }
+      seedance_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          exercise_id: string | null
+          exercise_name: string
+          generation_type: string
+          id: string
+          model: string
+          params: Json
+          prompt: string
+          published_video_url: string | null
+          reference_image_url: string | null
+          status: string
+          task_id: string
+          video_url_remote: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exercise_id?: string | null
+          exercise_name: string
+          generation_type: string
+          id?: string
+          model: string
+          params?: Json
+          prompt: string
+          published_video_url?: string | null
+          reference_image_url?: string | null
+          status?: string
+          task_id: string
+          video_url_remote?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          exercise_id?: string | null
+          exercise_name?: string
+          generation_type?: string
+          id?: string
+          model?: string
+          params?: Json
+          prompt?: string
+          published_video_url?: string | null
+          reference_image_url?: string | null
+          status?: string
+          task_id?: string
+          video_url_remote?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seedance_jobs_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises_db"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           attempt_count: number

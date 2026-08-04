@@ -56,9 +56,9 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     const result = verifyStagingMigrationManifest({ manifest, migrationsRoot })
     expect(result).toEqual(expect.objectContaining({
       status: 'ok',
-      migrationCount: 144,
-      shaCount: 144,
-      uniqueStagingVersionCount: 144,
+      migrationCount: 147,
+      shaCount: 147,
+      uniqueStagingVersionCount: 147,
       reversionedMigrationCount: 73,
       resolvedCollisionGroupCount: 17,
       acceptableForSupabaseDryRun: false,
@@ -88,6 +88,30 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     }
   })
 
+  it('keeps the Seedance jobs migration additive and closed by RLS', () => {
+    const migration = manifest.migrations.find(
+      item => item.historicalName === '20260718150000_seedance_jobs.sql',
+    )
+    expect(migration).toEqual(expect.objectContaining({
+      category: 'schema',
+      authorization: 'authorized_schema',
+      allowed: true,
+    }))
+    expect(migration?.mutationInventory.statements).toEqual([])
+
+    const source = readFileSync(
+      resolve(migrationsRoot, '20260718150000_seedance_jobs.sql'),
+      'utf8',
+    )
+    expect(source).toMatch(/create table if not exists public\.seedance_jobs/i)
+    expect(source).toMatch(/alter table public\.seedance_jobs enable row level security/i)
+    expect(source).toMatch(/create index if not exists seedance_jobs_task_id_idx/i)
+    expect(source).toMatch(/create index if not exists seedance_jobs_created_at_idx/i)
+    expect(source).not.toMatch(/\b(?:drop\s+(?:table|schema)|delete\s+from|update\s+\S+\s+set|insert\s+into)\b/i)
+    expect(source).not.toMatch(/\bgrant\s+.*\b(?:public|anon|authenticated)\b/i)
+    expect(source).not.toMatch(/create\s+policy/i)
+  })
+
   it('expands colliding date-only versions by deterministic lexical rank', () => {
     const group = manifest.migrations.filter(
       (migration: { collisionGroup: string | null }) =>
@@ -113,7 +137,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     const copy = structuredClone(manifest)
     mutate(copy)
     expect(() => verifyStagingMigrationManifest({ manifest: copy, migrationsRoot }))
-      .toThrow(/diverges|exactly 144|collision/)
+      .toThrow(/diverges|exactly 147|collision/)
     },
   )
 
@@ -174,7 +198,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
         const files = readdirSync(join(tempRoot, 'supabase/migrations'))
           .filter(file => file.endsWith('.sql'))
           .sort()
-        expect(files).toHaveLength(144)
+        expect(files).toHaveLength(147)
         expect(files).toEqual(
           manifest.migrations.map((migration: { stagingName: string }) => migration.stagingName),
         )
@@ -233,7 +257,7 @@ describe('Phase 6 staging migration re-versioning manifest', () => {
     expect(generated.migrations).toHaveLength(1)
     writeFileSync(join(root, '20260101000000_one.sql'), 'select 2;\n')
     expect(() => verifyStagingMigrationManifest({
-      manifest: { ...generated, sourceMigrationCount: 144, migrations: Array(144).fill(generated.migrations[0]) },
+      manifest: { ...generated, sourceMigrationCount: 147, migrations: Array(147).fill(generated.migrations[0]) },
       migrationsRoot: root,
     })).toThrow()
   })
