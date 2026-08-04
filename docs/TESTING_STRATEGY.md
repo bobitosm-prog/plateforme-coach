@@ -20,7 +20,7 @@ Un **niveau technique** indique quelles couches et quels processus sont exécut�
 | Tests unitaires et de modules | Vitest, `tests/unit/**/*.test.ts` | 34 fichiers, 400 actifs, 3 `todo` | Fonctions pures, validation, autorisation isolée, modules serveur, contrats statiques et routes chargées avec dépendances simulées. |
 | Test de rendu React | Vitest + `renderToStaticMarkup`, `chat-markdown-renderer.test.ts` | 1 fichier inclus dans les 34 | Rendu serveur de `ChatMarkdown`; pas de navigateur, d'événement DOM ou de suite de composants interactive. |
 | Intégration PostgreSQL/RPC | `tests/integration` | 11 fichiers; 114 attentes RLS bloquantes, assertions structurelles et 1 scénario de concurrence | Migrations sur base vide, personas, schéma, droits, RLS, RPC, rollback transactionnel, claims Stripe et concurrence invitation. |
-| E2E Chromium critique | Playwright, `e2e/*.spec.ts` | 7 parcours intégrés sur une cible canonique de 15 | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
+| E2E Chromium critique | Playwright, `e2e/*.spec.ts` | 12 parcours intégrés sur une cible canonique de 15 | Chromium, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux; fournisseurs simulés seulement à leur frontière réseau. |
 | Vérifications statiques | TypeScript, ESLint, i18n, build | commandes séparées | Contrats TypeScript, règles ESLint, parité des traductions et compilation Next.js. |
 
 Les 400 tests Vitest comprennent donc des objectifs différents : tests purs, caractérisation du comportement existant, contrats de sécurité, tests hostiles et tests de routes. Leur présence sous `tests/unit` décrit le runner et l'isolation technique, pas nécessairement la nature métier.
@@ -83,9 +83,10 @@ npm run test:e2e:client-journey
 npm run test:e2e:coach-journey
 npm run test:e2e:default-coach
 npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe
+npm run test:e2e -- e2e/nutrition-daily-journal.spec.ts
 ```
 
-`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les dix parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les douze parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
 ### Suite E2E critique canonique
 
@@ -108,14 +109,14 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 9 | Attribution du coach par défaut | Intégré dans ce sous-batch |
 | 10 | Webhook Platform signé, rejeu et idempotence | Intégré dans ce sous-batch |
 | 11 | Cycle d’une séance Training | Intégré dans ce sous-batch |
-| 12 | Journal nutritionnel quotidien | Planifié |
+| 12 | Journal nutritionnel quotidien | Intégré dans ce sous-batch |
 | 13 | Suivi de progression | Planifié |
 | 14 | Messagerie coach-client et synchronisation Realtime | Planifié |
 | 15 | Réconciliation abonnement et Billing | Planifié |
 
-L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, webhook Platform, puis cycle Training. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Le onzième traverse un programme hebdomadaire, saisit deux séries, reprend la séance après reload, finalise la session, vérifie historique, progression et frontières RLS, puis nettoie toutes ses données synthétiques. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, webhook Platform, cycle Training, puis journal Nutrition. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Le onzième traverse un programme hebdomadaire, saisit deux séries, reprend la séance après reload, finalise la session, vérifie historique, progression et frontières RLS, puis nettoie toutes ses données synthétiques. Le douzième exige `food_items` vide, utilise le fallback `FITNESS_FOODS`, vérifie ajout, reload, modification, suppression et frontières RLS sur `daily_food_logs`; la relation coach inactive reste hors scope. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
 
-Après le onzième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, série, record personnel, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Le parcours webhook contrôle et nettoie en plus son claim dédié dans son propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+Après le douzième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure, séance, série, record personnel, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Le parcours webhook contrôle et nettoie en plus son claim dédié dans son propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
@@ -181,7 +182,17 @@ git diff --check
 
 Les polices applicatives sont auto-hébergées via `next/font/local`; le build ne doit effectuer aucun téléchargement de police. Toute tentative réseau de police est une régression bloquante.
 
-## 3. Les dix parcours E2E actuels
+Qualification du journal Nutrition du 4 août 2026 :
+
+- `e2e/nutrition-daily-journal.spec.ts` traverse Chromium mobile, Next.js et Supabase Auth/PostgREST/PostgreSQL locaux avec un propriétaire, son coach actif et un client étranger synthétiques;
+- avec `food_items` vide, la recherche `poulet` utilise exclusivement le fallback local et trouve notamment « Blanc de poulet cuit » et « Cuisse de poulet cuite sans peau »;
+- l'ajout de 100 g persiste une ligne unique avec `food_id` nul et le snapshot 165 kcal, 31 g protéines, 0 g glucides, 3,6 g lipides; après reload, la modification à 200 g produit 330 kcal, 62 g protéines, 0 g glucides et 7,2 g lipides, sans duplication, puis la suppression ramène les totaux à zéro;
+- le propriétaire conserve son CRUD, le coach actif lit sans pouvoir écrire et le client étranger ne lit ni ne modifie; la relation coach inactive reste hors scope;
+- deux runs dédiés réussissent avec `1 passed` en `26.0 s` puis `13.4 s`; 121 tests Nutrition/contrat réussissent;
+- la suite canonique isolée réussit ses douze parcours en `500.7 s`, sans résidu Auth ou métier et sans altérer l'admin local principal;
+- l'intégration progresse de **11/15 à 12/15**; Progression 13/15 reste planifiée et la tâche globale demeure ouverte.
+
+## 3. Les douze parcours E2E actuels
 
 | Parcours | Frontières réelles | Frontière simulée | Documentation |
 |---|---|---|---|
@@ -195,6 +206,8 @@ Les polices applicatives sont auto-hébergées via `next/font/local`; le build n
 | Parcours client | Chromium mobile, dashboard client, relation, navigation et rechargement | aucune frontière externe | [Coach/client](./E2E_COACH_CLIENT_HARNESS.md) |
 | Attribution du coach par défaut | Chromium, route serveur, session client, RPC et relation active idempotente | configuration `DEFAULT_COACH_EMAIL` locale | [Attribution par défaut](./DEFAULT_COACH_ASSIGNMENT.md) |
 | Webhook Platform signé et rejeu | Chromium, checkout, route Platform, Supabase, claim durable et finalisation payment | signature et transport Stripe synthétiques locaux via `--stripe` | stratégie canonique ci-dessus |
+| Cycle d’une séance Training | Chromium mobile, programme, brouillon, reload, finalisation, historique, progression et RLS | aucune frontière externe | stratégie canonique ci-dessus |
+| Journal nutritionnel quotidien | Chromium mobile, fallback local, journal, reload, modification, suppression et RLS `daily_food_logs` | aucune frontière externe | stratégie canonique ci-dessus |
 
 Un test n'est appelé **E2E MoovX** que si ses frontières principales — navigateur, interface, route, identité et persistance — sont réellement traversées. Intercepter `/api/*`, simuler Supabase Auth/PostgREST ou remplacer la persistance principale par un mock transforme le test en test de composant ou de route, même s'il utilise Playwright.
 

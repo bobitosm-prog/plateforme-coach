@@ -17,7 +17,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Attribution du coach par défaut', spec: 'e2e/default-coach-assignment.spec.ts', flags: [], integrated: true },
   { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: true },
   { name: 'Cycle d’une séance Training', spec: 'e2e/training-workout-cycle.spec.ts', flags: [], integrated: true },
-  { name: 'Journal nutritionnel quotidien', spec: null, flags: [], integrated: false },
+  { name: 'Journal nutritionnel quotidien', spec: 'e2e/nutrition-daily-journal.spec.ts', flags: [], integrated: true },
   { name: 'Suivi de progression', spec: null, flags: [], integrated: false },
   { name: 'Messagerie coach-client et synchronisation Realtime', spec: null, flags: [], integrated: false },
   { name: 'Réconciliation abonnement et Billing', spec: null, flags: [], integrated: false },

@@ -13763,3 +13763,51 @@ L'exécution utilise un worktree et une stack Supabase temporaires sur les ports
 le seul parcours ajouté; Nutrition 12/15 n'est pas commencée. Aucun service
 distant, environnement Production, migration, déploiement, commit ou push
 n'est utilisé.
+
+## Entrée — 2026-08-04 — Phase 9 — intégration du journal nutritionnel quotidien
+
+**Périmètre :** seul le parcours « Journal nutritionnel quotidien », porté
+par `e2e/nutrition-daily-journal.spec.ts` et sa fixture dédiée, rejoint le
+runner canonique après le cycle Training. Le suivi de progression reste
+planifié et la tâche globale des quinze parcours demeure ouverte.
+
+**Parcours Nutrition :** la fixture crée un client propriétaire, son coach
+lié actif et un client étranger dans Supabase local. Avec `food_items` vide,
+la recherche `poulet` utilise le fallback `FITNESS_FOODS` et retrouve « Blanc
+de poulet cuit » et « Cuisse de poulet cuite sans peau ». L'ajout de 100 g au
+Déjeuner persiste une ligne unique de `daily_food_logs`, avec `food_id` nul et
+le snapshot 165 kcal, 31 g protéines, 0 g glucides et 3,6 g lipides. Après
+reload, la modification à 200 g produit 330 kcal, 62 g protéines, 0 g
+glucides et 7,2 g lipides sans duplication, puis la suppression ramène les
+totaux à zéro.
+
+**Frontières RLS :** le propriétaire conserve lecture et mutations, le coach
+actif peut lire sans insérer, modifier ou supprimer, et le client étranger ne
+peut ni lire ni muter la ligne. La relation coach inactive, l'IA Nutrition,
+les photos, codes-barres et fournisseurs alimentaires réels restent hors
+scope.
+
+**Répétabilité et nettoyage :** deux exécutions dédiées réussissent avec
+`1 passed`, en `26.0 s` puis `13.4 s`. Après chacune, utilisateurs Auth,
+profils, relations et journaux synthétiques sont à zéro, `food_items` reste
+vide et les ports temporaires sont fermés. Onze fichiers de tests Nutrition
+et contrat réussissent avec `121 passed`.
+
+**Validation canonique isolée :** `npm run test:e2e:critical` réussit ses
+douze parcours : invitation `80.6 s`, checkout plateforme `40.7 s`, checkout
+coach `26.3 s`, Push `46.5 s`, Chat Athena `42.6 s`, Auth/reprise `30.4 s`,
+parcours client `48.7 s`, parcours coach `46.1 s`, attribution par défaut
+`18.1 s`, webhook Platform `31.9 s`, Training `36.1 s` et Nutrition `24.0 s`,
+pour `500.7 s` au total. L'audit final trouve zéro résidu Auth, profil,
+relation, journal, payment, message ou séance; tous les ports temporaires sont
+fermés. La stack principale conserve son unique utilisateur Auth et son profil
+`super_admin`.
+
+**Contrôles statiques :** `npx tsc --noEmit`, ESLint ciblé et
+`git diff --check` réussissent. Aucun service distant, environnement
+Production, migration, changement applicatif Nutrition ou fournisseur réel
+n'est utilisé.
+
+**Décision Phase 9 :** la progression passe de `11/15` à `12/15`. Nutrition
+est le seul parcours ajouté; Progression 13/15 n'est pas commencée. Aucun
+commit, push, cherry-pick Seedance ou déploiement n'est effectué.
