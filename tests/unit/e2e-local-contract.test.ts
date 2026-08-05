@@ -97,7 +97,7 @@ describe('critical E2E local contract', () => {
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
 
-  it('defines 15 unique target journeys and integrates only the qualified twelve', () => {
+  it('defines 15 unique target journeys and integrates only the qualified thirteen', () => {
     expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
     expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
 
@@ -115,9 +115,10 @@ describe('critical E2E local contract', () => {
       'e2e/platform-webhook-runtime.spec.ts',
       'e2e/training-workout-cycle.spec.ts',
       'e2e/nutrition-daily-journal.spec.ts',
+      'e2e/progression-tracking.spec.ts',
     ])
-    expect(integrated).toHaveLength(12)
-    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(3)
+    expect(integrated).toHaveLength(13)
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(2)
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/platform-webhook-runtime.spec.ts')).toMatchObject({
       name: 'Webhook Platform signé, rejeu et idempotence',
       flags: ['--stripe'],
@@ -132,6 +133,14 @@ describe('critical E2E local contract', () => {
       integrated: true,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Suivi de progression')).toMatchObject({
+      spec: 'e2e/progression-tracking.spec.ts',
+      integrated: true,
+    })
+    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Messagerie coach-client et synchronisation Realtime')).toMatchObject({
+      spec: null,
+      integrated: false,
+    })
+    expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Réconciliation abonnement et Billing')).toMatchObject({
       spec: null,
       integrated: false,
     })

@@ -19,7 +19,7 @@ Les E2E critiques s'exécutent entièrement en local et séquentiellement :
 
 Les lanceurs refusent les origines et URLs fournisseurs non locales, appliquent le reset canonique, utilisent un seul worker lorsque l'état partagé l'exige et nettoient les données et processus temporaires. La commande canonique est `npm run test:e2e:critical`; les commandes par parcours restent disponibles pour une boucle ciblée.
 
-Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; douze sont intégrés. L'attribution du coach par défaut rejoint la suite après qualification locale : le runner fournit `DEFAULT_COACH_EMAIL` et la spec crée l'unique profil coach correspondant. Sans ce profil local valide, la route échoue fermée en `503` sans mutation.
+Un parcours critique est défini comme une entrée exécutable nommée unique du runner canonique, rattachée à une spécification métier principale. Le nombre de tests Playwright contenus dans cette spécification ne change pas le décompte et les suites de performance en sont exclues. La matrice cible comporte 15 parcours; treize sont intégrés. L'attribution du coach par défaut rejoint la suite après qualification locale : le runner fournit `DEFAULT_COACH_EMAIL` et la spec crée l'unique profil coach correspondant. Sans ce profil local valide, la route échoue fermée en `503` sans mutation.
 
 Le webhook Platform reste distinct du webhook Connect. Son parcours canonique active `--stripe`, fournit un secret de signature synthétique et dirige le SDK Stripe exclusivement vers le faux serveur local. Il signe puis livre un événement `checkout.session.completed` à la route Platform réelle, vérifie le claim durable et la finalisation du payment, puis rejoue le même événement. Le rejeu est accepté comme doublon sans seconde mutation et aucun accès Stripe réel n'est possible dans ce flux.
 
@@ -30,6 +30,10 @@ Les origines navigateur Supabase sont dérivées de l'URL locale injectée au ru
 Le cycle Training canonique utilise un programme hebdomadaire synthétique, reprend une séance après reload, finalise les séries, vérifie progression et historique, exerce une frontière RLS étrangère et nettoie les tables Training avant la sortie du scénario.
 
 Le journal Nutrition canonique exige un catalogue `food_items` vide, traverse le fallback local `FITNESS_FOODS`, ajoute un snapshot de 100 g, le retrouve après reload, le modifie à 200 g puis le supprime. Il vérifie une ligne unique avec `food_id` nul, les recalculs calories/macros et les frontières RLS propriétaire, coach actif en lecture seule et client étranger sans accès. La relation coach inactive reste hors de ce sous-batch.
+
+Le suivi de progression canonique vérifie les poids historiques, l'ajout et la correction d'un poids sur une ligne unique, le graphique, les mensurations, un record personnel et leur persistance après reload. Il exerce les frontières RLS du propriétaire, du coach actif en lecture seule et du client étranger sans accès, puis nettoie les données Progression. La relation inactive, les photos, le Storage, l'IA corporelle, l'export, les champs bras/cuisses et `profiles.current_weight` restent hors de ce sous-batch.
+
+L'horloge du parcours Nutrition capture l'instant réel avant la création du JWT et en dérive la date UTC stable du scénario. Elle ne projette plus le navigateur à midi UTC, ce qui évite une expiration artificielle du token lors des exécutions matinales sans modifier Supabase Auth ni la durée de vie des sessions.
 
 ## Conséquences
 
@@ -42,7 +46,7 @@ Le journal Nutrition canonique exige un catalogue `food_items` vide, traverse le
 
 - Chromium est le navigateur intégré actuel ; la matrice multi-navigateurs et mobile réel reste à construire.
 - Les faux fournisseurs valident les requêtes attendues, pas l'ensemble du comportement des plateformes distantes.
-- Trois parcours de la matrice cible restent planifiés : Progression, Realtime et réconciliation Billing.
+- Deux parcours de la matrice cible restent planifiés : Realtime et réconciliation Billing.
 - Le parcours d'attribution du coach par défaut utilise uniquement Supabase et Next.js locaux; son `503` hors préconditions ne déclenche aucun accès distant.
 - Une suite locale verte n'est pas une preuve de santé d'un environnement déployé.
 

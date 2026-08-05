@@ -13811,3 +13811,54 @@ n'est utilisé.
 **Décision Phase 9 :** la progression passe de `11/15` à `12/15`. Nutrition
 est le seul parcours ajouté; Progression 13/15 n'est pas commencée. Aucun
 commit, push, cherry-pick Seedance ou déploiement n'est effectué.
+
+## Entrée — 2026-08-05 — Phase 9 — intégration du suivi de progression
+
+**Périmètre :** seul le parcours « Suivi de progression », porté par
+`e2e/progression-tracking.spec.ts` et sa fixture dédiée, rejoint le runner
+canonique après le journal Nutrition. Realtime/Messagerie reste non intégré et
+la tâche globale des quinze parcours demeure ouverte. Le correctif applicatif
+d'invalidation du cache reste isolé dans le commit `29c2323`.
+
+**Parcours Progression :** la fixture crée un client propriétaire, son coach
+lié actif et un client étranger dans Supabase local. Le scénario vérifie deux
+poids historiques, l'ajout puis la correction du poids courant à 81,4 kg sur
+une ligne unique, un graphique à trois points, les mensurations 81/95/100, le
+record Squat, le reload et la persistance. Le propriétaire lit et écrit, le
+coach actif lit sans muter et le client étranger ne peut ni lire ni écrire.
+
+**Limites explicites :** relation coach inactive, photos, Storage, IA
+corporelle, export, champs bras/cuisses, synchronisation
+`profiles.current_weight` et Realtime/Messagerie restent hors scope.
+
+**Correction temporelle Nutrition :** le test Nutrition capturait la date du
+jour puis avançait systématiquement l'horloge navigateur à midi UTC. Avant
+midi, cette projection plaçait le navigateur après l'expiration du JWT local
+nouvellement émis et provoquait un retour vers `/login`. La spec capture
+désormais une seule fois l'instant réel avant authentification et en dérive la
+date UTC, sans modifier Supabase Auth, le TTL du token ou le contrat du journal.
+Deux runs avant midi UTC réussissent avec `1 passed (19.2s)` puis
+`1 passed (11.3s)` et zéro résidu.
+
+**Répétabilité Progression :** les deux runs dédiés déjà qualifiés réussissent
+en `20.8 s` puis `13.5 s`; le run de non-régression après correction Nutrition
+réussit avec `1 passed (16.2s)`. Chaque audit retrouve zéro utilisateur Auth,
+profil, relation, poids, mensuration, record, séance ou série synthétique.
+
+**Validation canonique isolée :** `npm run test:e2e:critical` réussit ses
+treize parcours : invitation `29.3 s`, checkout plateforme `29.0 s`, checkout
+coach `23.2 s`, Push `32.7 s`, Chat Athena `34.8 s`, Auth/reprise `26.0 s`,
+parcours client `45.7 s`, parcours coach `39.8 s`, attribution par défaut
+`20.2 s`, webhook Platform `34.2 s`, Training `34.3 s`, Nutrition `21.3 s` et
+Progression `24.2 s`, pour `428.7 s` au total. L'audit final ne trouve aucun
+résidu Auth ou métier. La stack isolée utilise uniquement les ports locaux
+`583xx`; la stack principale et son admin local restent inchangés.
+
+**Contrôles statiques :** quatorze fichiers de tests Nutrition, Progression et
+contrat réussissent avec `111 passed`; `npx tsc --noEmit`, ESLint ciblé et
+`git diff --check` réussissent. Aucun secret réel, service distant,
+environnement Production ou déploiement n'est utilisé.
+
+**Décision Phase 9 :** la progression passe de `12/15` à `13/15`. Progression
+est le seul parcours ajouté; Realtime/Messagerie 14/15 n'est pas commencé et
+la tâche globale reste ouverte. Aucun commit ni push n'est effectué.

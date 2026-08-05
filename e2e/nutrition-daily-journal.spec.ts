@@ -53,8 +53,8 @@ test('journal nutritionnel quotidien: fallback, persistance, modification, RLS e
     mode: 'e2e',
   })
   const fixture = buildNutritionFixture(createRunSuffix())
-  const runDate = new Date().toISOString().split('T')[0]
-  const fixedNow = new Date(`${runDate}T12:00:00.000Z`).valueOf()
+  const fixedNow = Date.now()
+  const runDate = new Date(fixedNow).toISOString().split('T')[0]
   const browserOrigins = new Set<string>()
   page.on('request', request => {
     const url = new URL(request.url())

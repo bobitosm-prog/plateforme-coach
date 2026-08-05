@@ -69,6 +69,7 @@ async function auditFinalState() {
     'workout_sets',
     'personal_records',
     'weight_logs',
+    'body_measurements',
     'completed_sessions',
     'daily_food_logs',
     'scheduled_sessions',

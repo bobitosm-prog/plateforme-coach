@@ -18,7 +18,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Webhook Platform signé, rejeu et idempotence', spec: 'e2e/platform-webhook-runtime.spec.ts', flags: ['--stripe'], integrated: true },
   { name: 'Cycle d’une séance Training', spec: 'e2e/training-workout-cycle.spec.ts', flags: [], integrated: true },
   { name: 'Journal nutritionnel quotidien', spec: 'e2e/nutrition-daily-journal.spec.ts', flags: [], integrated: true },
-  { name: 'Suivi de progression', spec: null, flags: [], integrated: false },
+  { name: 'Suivi de progression', spec: 'e2e/progression-tracking.spec.ts', flags: [], integrated: true },
   { name: 'Messagerie coach-client et synchronisation Realtime', spec: null, flags: [], integrated: false },
   { name: 'Réconciliation abonnement et Billing', spec: null, flags: [], integrated: false },
 ])
