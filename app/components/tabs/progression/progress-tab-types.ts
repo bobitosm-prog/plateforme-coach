@@ -23,7 +23,7 @@ export interface ProgressTabPublicProps {
   readonly setModal: (modal: string) => void
   readonly chartMin: number
   readonly chartMax: number
-  readonly onRefresh: () => void
+  readonly onRefresh: (forceRefresh?: boolean) => void | Promise<void>
   readonly profile: ProgressProfile | null
   readonly coachId: string | null
   readonly personalRecords: AnalyticsPersonalRecord[]

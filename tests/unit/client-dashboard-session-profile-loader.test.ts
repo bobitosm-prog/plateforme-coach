@@ -79,6 +79,15 @@ describe('client dashboard session/profile loader', () => {
     expect(mismatched.cache.remove).toHaveBeenCalledWith('dashboard_client-1')
   })
 
+  it('bypasses an owner-scoped dashboard cache when refresh is forced', async () => {
+    const cached = { ownerUserId: 'client-1', profileData: { id: 'client-1' } }
+    const { loader, cache, findById } = setup({ cached })
+
+    expect(await loadOnce(loader, true)).toEqual({ kind: 'profile', profile })
+    expect(cache.get).not.toHaveBeenCalled()
+    expect(findById).toHaveBeenCalledWith('client-1')
+  })
+
   it('ignores a stale profile response after an identity switch', async () => {
     let resolveProfile!: (value: { ok: true; data: typeof profile }) => void
     const pending = new Promise<{ ok: true; data: typeof profile }>(resolve => { resolveProfile = resolve })

@@ -49,4 +49,20 @@ describe('ProgressTab facade architecture', () => {
     expect(controller).not.toMatch(/\bany\b/)
     expect(controller.match(/select\('\*'\)/g)?.length ?? 0).toBe(2)
   })
+
+  it('forces a fresh dashboard read only after successful Progression mutations', () => {
+    const controller = fs.readFileSync(path.join(progressionDirectory, 'useProgressTabController.ts'), 'utf8')
+    const saveWeight = controller.slice(controller.indexOf('async function saveWeight'), controller.indexOf('async function saveMeasure'))
+    const saveMeasure = controller.slice(controller.indexOf('async function saveMeasure'), controller.indexOf('async function exportData'))
+
+    for (const mutation of [saveWeight, saveMeasure]) {
+      const errorBranch = mutation.indexOf('if (error)')
+      const successBranch = mutation.indexOf('else {')
+      const forcedRefresh = mutation.indexOf('props.onRefresh(true)')
+      expect(errorBranch).toBeGreaterThanOrEqual(0)
+      expect(successBranch).toBeGreaterThan(errorBranch)
+      expect(forcedRefresh).toBeGreaterThan(successBranch)
+      expect(mutation.match(/props\.onRefresh\(true\)/g)).toHaveLength(1)
+    }
+  })
 })
