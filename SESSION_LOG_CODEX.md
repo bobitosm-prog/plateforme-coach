@@ -13862,3 +13862,65 @@ environnement Production ou déploiement n'est utilisé.
 **Décision Phase 9 :** la progression passe de `12/15` à `13/15`. Progression
 est le seul parcours ajouté; Realtime/Messagerie 14/15 n'est pas commencé et
 la tâche globale reste ouverte. Aucun commit ni push n'est effectué.
+
+## Entrée — 2026-08-05 — Phase 9 — intégration de la messagerie Realtime
+
+**Périmètre :** seul le parcours « Messagerie coach-client et synchronisation
+Realtime », porté par `e2e/messaging-realtime.spec.ts` et sa fixture dédiée,
+rejoint le runner canonique après le suivi de progression. La réconciliation
+abonnement/Billing reste planifiée et la tâche globale des quinze parcours
+demeure ouverte.
+
+**Parcours Messagerie :** la fixture crée un client, son coach lié actif, un
+client étranger et un coach non lié dans Supabase local. Deux contextes
+Chromium indépendants ouvrent les interfaces réelles client et coach. Un
+message client→coach puis une réponse coach→client sont reçus sans reload;
+le badge non-lu est visible puis disparaît après lecture. Après reload et
+reconnexion, les deux messages restent ordonnés, aucune mutation n'est
+dupliquée et les accès des deux personas non liés sont refusés par RLS.
+
+**Realtime local :** `supabase/config.toml` active Realtime uniquement pour
+la stack locale. La migration additive et idempotente
+`20260805100000_publish_messages_realtime.sql` ajoute `public.messages` à la
+publication `supabase_realtime` seulement si nécessaire. Son rejeu laisse une
+seule entrée de publication; elle ne modifie aucune policy ni donnée. Le
+manifeste staging passe à 148 migrations.
+
+**Répétabilité et nettoyage :** deux exécutions dédiées réussissent avec
+`1 passed (26.0s)` puis `1 passed (29.5s)`. Les rapports runtime observent les
+deux abonnements Realtime, des latences bidirectionnelles inférieures à une
+seconde, deux messages, zéro doublon et les frontières RLS vertes. Après chaque
+run, utilisateurs Auth, identités, sessions, profils, relations et messages
+synthétiques sont à zéro; les ports temporaires sont fermés.
+
+**Harnais critique :** le `spawnSync` imbriqué du runner retenait le premier
+sous-runner Invitation après la fin de ses enfants. Invitation a été reproduit
+deux fois en dédié, dont une fois avec les variables critiques, avec `2 passed`
+en `32.9 s` puis `28.2 s`. Le runner utilise désormais un processus enfant
+asynchrone, avec la même capture expurgée, la même limite de sortie de 40 MiB,
+le même ordre séquentiel et la même classification des échecs.
+
+**Validation canonique isolée :** `npm run test:e2e:critical` réussit ses
+quatorze parcours : invitation `33.9 s`, checkout plateforme `29.1 s`, checkout
+coach `34.2 s`, Push `31.6 s`, Chat Athena `33.8 s`, Auth/reprise `25.4 s`,
+parcours client `38.8 s`, parcours coach `32.3 s`, attribution par défaut
+`18.2 s`, webhook Platform `25.9 s`, Training `27.2 s`, Nutrition `20.3 s`,
+Progression `22.6 s` et Messagerie Realtime `28.0 s`, pour `438.9 s` au total.
+L'audit final isolé constate zéro résidu Auth ou métier et tous les ports
+temporaires sont fermés. La stack principale et son admin local préexistant
+restent présents et inchangés.
+
+**Contrôles :** onze fichiers de tests Messagerie, publication Realtime,
+manifeste staging et contrat E2E réussissent avec `75 passed`; le test SQL
+`messages-rls.sql` réussit puis rollbacke; la migration rejouée conserve une
+publication unique. `npx tsc --noEmit`, ESLint ciblé et `git diff --check`
+réussissent. Aucun secret réel, service distant, environnement Production,
+déploiement, commit ou push n'est utilisé.
+
+**Limites :** pièces jointes, notifications Push, présence, indicateurs de
+saisie, pagination avancée et historique long restent hors scope de ce
+parcours critique.
+
+**Décision Phase 9 :** la progression passe de `13/15` à `14/15`. Messagerie
+Realtime est le seul parcours ajouté; la réconciliation abonnement/Billing
+15/15 reste non commencée et la tâche globale reste ouverte.

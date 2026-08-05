@@ -98,8 +98,8 @@ describe('Phase 6 staging mutation classification', () => {
   })
 
   it.each([
-    ['strict', 136, 11],
-    ['compatibility', 140, 7],
+    ['strict', 137, 11],
+    ['compatibility', 141, 7],
   ] as const)('builds the %s plan without collisions or order drift', (
     planName,
     included,
@@ -130,11 +130,11 @@ describe('Phase 6 staging mutation classification', () => {
       plan: 'final',
     })
     expect(plan).toEqual(expect.objectContaining({
-      includedHistoricalMigrationCount: 142,
+      includedHistoricalMigrationCount: 143,
       overlayMigrationCount: 1,
-      includedMigrationCount: 143,
+      includedMigrationCount: 144,
       excludedMigrationCount: 5,
-      uniqueStagingVersionCount: 143,
+      uniqueStagingVersionCount: 144,
       collisions: 0,
       historicalOrderPreserved: true,
       acceptableForSupabaseDryRun: true,

@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { mkdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
@@ -13,20 +13,46 @@ const artifactsPath = resolve(root, 'test-results/critical-e2e')
 const scenarios = getIntegratedCriticalE2eScenarios()
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
-    cwd: root,
-    encoding: 'utf8',
-    maxBuffer: 40 * 1024 * 1024,
-    env: options.env || process.env,
+  return new Promise((resolveRun, rejectRun) => {
+    const maxOutputLength = 40 * 1024 * 1024
+    const child = spawn(command, args, {
+      cwd: root,
+      env: options.env || process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    let stdout = ''
+    let stderr = ''
+    let outputLimitExceeded = false
+    const capture = (current, chunk) => {
+      if (stdout.length + stderr.length + chunk.length > maxOutputLength) {
+        outputLimitExceeded = true
+        child.kill('SIGTERM')
+        return current
+      }
+      return current + chunk
+    }
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
+    child.stdout.on('data', chunk => { stdout = capture(stdout, chunk) })
+    child.stderr.on('data', chunk => { stderr = capture(stderr, chunk) })
+    child.once('error', error => rejectRun(new Error(`${options.label || command}: ${error.message}`)))
+    child.once('close', status => {
+      const output = redactE2eOutput(`${stdout}${stderr}`)
+      if (outputLimitExceeded) {
+        const error = new Error(`${options.label || command} exceeded the 40 MiB output limit`)
+        error.output = output
+        rejectRun(error)
+        return
+      }
+      if (status !== 0) {
+        const error = new Error(`${options.label || command} failed with exit code ${status}`)
+        error.output = output
+        rejectRun(error)
+        return
+      }
+      resolveRun(output)
+    })
   })
-  const output = redactE2eOutput(`${result.stdout || ''}${result.stderr || ''}`)
-  if (result.error) throw new Error(`${options.label || command}: ${result.error.message}`)
-  if (result.status !== 0) {
-    const error = new Error(`${options.label || command} failed with exit code ${result.status}`)
-    error.output = output
-    throw error
-  }
-  return output
 }
 
 function classifyFailure(output) {
@@ -104,15 +130,15 @@ try {
   }
   rmSync(artifactsPath, { recursive: true, force: true })
   mkdirSync(artifactsPath, { recursive: true })
-  run('docker', ['info', '--format', '{{.ServerVersion}}'], { label: 'Docker check' })
-  run(process.execPath, ['scripts/supabase-local.mjs', 'reset'], { label: 'Canonical Supabase reset' })
-  run(process.execPath, ['scripts/supabase-local.mjs', 'verify'], { label: 'Migration contract verification' })
+  await run('docker', ['info', '--format', '{{.ServerVersion}}'], { label: 'Docker check' })
+  await run(process.execPath, ['scripts/supabase-local.mjs', 'reset'], { label: 'Canonical Supabase reset' })
+  await run(process.execPath, ['scripts/supabase-local.mjs', 'verify'], { label: 'Migration contract verification' })
 
   for (const scenario of scenarios) {
     const scenarioStarted = performance.now()
     const scenarioArtifacts = resolve(artifactsPath, scenario.spec.replace(/^e2e\//, '').replace(/\.spec\.ts$/, ''))
     try {
-      run(process.execPath, ['scripts/run-local-e2e.mjs', scenario.spec, ...scenario.flags], {
+      await run(process.execPath, ['scripts/run-local-e2e.mjs', scenario.spec, ...scenario.flags], {
         label: scenario.name,
         env: {
           ...process.env,

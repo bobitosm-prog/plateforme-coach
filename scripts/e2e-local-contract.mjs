@@ -19,7 +19,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Cycle d’une séance Training', spec: 'e2e/training-workout-cycle.spec.ts', flags: [], integrated: true },
   { name: 'Journal nutritionnel quotidien', spec: 'e2e/nutrition-daily-journal.spec.ts', flags: [], integrated: true },
   { name: 'Suivi de progression', spec: 'e2e/progression-tracking.spec.ts', flags: [], integrated: true },
-  { name: 'Messagerie coach-client et synchronisation Realtime', spec: null, flags: [], integrated: false },
+  { name: 'Messagerie coach-client et synchronisation Realtime', spec: 'e2e/messaging-realtime.spec.ts', flags: [], integrated: true },
   { name: 'Réconciliation abonnement et Billing', spec: null, flags: [], integrated: false },
 ])
 
@@ -69,6 +69,8 @@ export function assertLocalSupabaseConfig(config) {
   const activeConfig = config.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n')
   const urls = activeConfig.match(/https?:\/\/[^"\s,\]]+/g) || []
   if (urls.some(value => !LOCAL_HOSTS.has(new URL(value).hostname))) throw new Error('Refusing non-local URL in Supabase config')
+  const realtimeSection = activeConfig.match(/\[realtime\]([\s\S]*?)(?=\n\[|$)/)?.[1] || ''
+  if (!/^\s*enabled\s*=\s*true\s*$/m.test(realtimeSection)) throw new Error('Local Supabase Realtime must be enabled')
   const requiredValues = ['port = 55321', 'port = 55322', 'port = 55324', 'smtp_port = 55325', 'site_url = "http://127.0.0.1:3000"']
   for (const value of requiredValues) if (!activeConfig.includes(value)) throw new Error(`Missing required local config: ${value}`)
   const redirects = activeConfig.split('\n').find(line => line.trimStart().startsWith('additional_redirect_urls =')) || ''

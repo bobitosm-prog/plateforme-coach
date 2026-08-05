@@ -18,6 +18,9 @@ port = 55321
 port = 55322
 port = 55324
 smtp_port = 55325
+[realtime]
+enabled = true
+[auth]
 site_url = "${overrides.siteUrl || 'http://127.0.0.1:3000'}"
 additional_redirect_urls = ${JSON.stringify(overrides.redirects || [
   'http://127.0.0.1:3000/**',
@@ -35,6 +38,11 @@ describe('critical E2E local contract', () => {
     expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ redirects: ['http://127.0.0.1:3210/auth/callback'] }))).toThrow('3210/join')
     expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ redirects: ['http://remote.example/auth/callback', 'http://127.0.0.1:3210/auth/callback', 'http://127.0.0.1:3210/join'] }))).toThrow('Refusing non-local URL')
     expect(() => assertLocalSupabaseConfig(localSupabaseConfig({ siteUrl: 'https://remote.example' }))).toThrow('Refusing non-local URL')
+  })
+
+  it('requires Realtime in the bounded local Supabase section', () => {
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig())).not.toThrow()
+    expect(() => assertLocalSupabaseConfig(localSupabaseConfig().replace('[realtime]\nenabled = true', '[realtime]\nenabled = false'))).toThrow('Realtime must be enabled')
   })
 
   it('accepts localhost and rejects remote origins', () => {
@@ -93,11 +101,14 @@ describe('critical E2E local contract', () => {
     const script = readFileSync(new URL('../../scripts/run-critical-e2e.mjs', import.meta.url), 'utf8')
     const localRunner = readFileSync(new URL('../../scripts/run-local-e2e.mjs', import.meta.url), 'utf8')
     expect(script).toContain('getIntegratedCriticalE2eScenarios()')
+    expect(script).toContain("import { spawn } from 'node:child_process'")
+    expect(script).not.toContain('spawnSync')
+    expect(script).toContain("await run(process.execPath, ['scripts/run-local-e2e.mjs'")
     expect(localRunner).toContain("'--workers=1'")
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
 
-  it('defines 15 unique target journeys and integrates only the qualified thirteen', () => {
+  it('defines 15 unique target journeys and integrates only the qualified fourteen', () => {
     expect(validateCriticalE2eTargetMatrix()).toBe(CRITICAL_E2E_TARGET_MATRIX)
     expect(new Set(CRITICAL_E2E_TARGET_MATRIX.map(journey => journey.name)).size).toBe(15)
 
@@ -116,9 +127,10 @@ describe('critical E2E local contract', () => {
       'e2e/training-workout-cycle.spec.ts',
       'e2e/nutrition-daily-journal.spec.ts',
       'e2e/progression-tracking.spec.ts',
+      'e2e/messaging-realtime.spec.ts',
     ])
-    expect(integrated).toHaveLength(13)
-    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(2)
+    expect(integrated).toHaveLength(14)
+    expect(CRITICAL_E2E_TARGET_MATRIX.filter(journey => !journey.integrated)).toHaveLength(1)
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.spec === 'e2e/platform-webhook-runtime.spec.ts')).toMatchObject({
       name: 'Webhook Platform signé, rejeu et idempotence',
       flags: ['--stripe'],
@@ -137,8 +149,8 @@ describe('critical E2E local contract', () => {
       integrated: true,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Messagerie coach-client et synchronisation Realtime')).toMatchObject({
-      spec: null,
-      integrated: false,
+      spec: 'e2e/messaging-realtime.spec.ts',
+      integrated: true,
     })
     expect(CRITICAL_E2E_TARGET_MATRIX.find(journey => journey.name === 'Réconciliation abonnement et Billing')).toMatchObject({
       spec: null,

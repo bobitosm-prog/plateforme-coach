@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "authority": "moovx-staging-migration-reversioning",
   "sourceRoot": "supabase/migrations",
-  "sourceMigrationCount": 147,
+  "sourceMigrationCount": 148,
   "sourceOrder": "lexical-filename",
   "stagingOrder": "lexical-filename",
   "reversionRule": {
@@ -5452,6 +5452,27 @@
       "stagingVersion": "20260729193000",
       "stagingName": "20260729193000_align_food_items_nutrition_contract.sql",
       "absoluteOrder": 147,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260805100000_publish_messages_realtime.sql",
+      "historicalVersion": "20260805100000",
+      "historicalName": "20260805100000_publish_messages_realtime.sql",
+      "sourceSha256": "ec3f3c2c931b8d05b05dd30f59be8a1e457a50ec3a118939c3f6bf4acec0e94d",
+      "stagingVersion": "20260805100000",
+      "stagingName": "20260805100000_publish_messages_realtime.sql",
+      "absoluteOrder": 148,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],
