@@ -13973,3 +13973,45 @@ Production ou déploiement n'est utilisé.
 **Décision Phase 9 :** la progression passe de `14/15` à `15/15`. La tâche
 « Étendre la suite à 15 parcours E2E critiques » est terminée. Phase 9 reste
 active : ses autres tâches ne sont ni commencées ni clôturées dans ce sous-batch.
+
+## Entrée — 2026-08-06 — Phase 9 — reconstruction des migrations depuis une base vide
+
+**Périmètre :** ajout d'une preuve dédiée `test:migrations:empty-db` qui
+reconstruit deux fois le schéma dans des stacks Supabase locales jetables. Les
+deux runs utilisent des `project_id`, volumes Docker, ports et répertoires
+temporaires distincts. La stack principale `plateforme-coach` reste active et
+n'est jamais reset, arrêtée ou modifiée.
+
+**Inventaire :** le dépôt et le manifeste staging correspondent à 149
+migrations, avec noms, ordre lexical, hashes et versions staging contrôlés. Les
+collisions historiques de préfixes date à huit chiffres sont conservées sans
+réécriture et désambiguïsées par le contrat de reversioning existant; aucun nom
+de fichier ni aucune version staging n'est dupliqué.
+
+**Première reconstruction :** 149/149 migrations appliquées avec
+`ON_ERROR_STOP`; assertions baseline et propreté vertes, Auth et données
+synthétiques vides, Mailpit propre, puis conteneurs, volume et répertoire
+temporaire supprimés. Durée : `64 986 ms`.
+
+**Deuxième reconstruction :** nouveau projet, nouveau volume et nouvelle plage
+de ports; 149/149 migrations, mêmes assertions et même ordre, zéro résidu et
+cleanup complet. Durée : `64 338 ms`.
+
+**Comparaison :** les deux fingerprints sont identiques :
+`0f7371a353b5180d8d36c9785557b343`. Aucun objet structurel divergent n'est
+détecté. Après les deux runs, aucun conteneur, volume ou répertoire jetable ne
+subsiste.
+
+**Isolation :** `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN` et
+`SUPABASE_DB_URL` étaient absents. Le runner refuse `--linked`, les URL
+distantes, le `project_id` principal et ses ports. Aucun projet distant,
+Production, déploiement, `db push`, commit ou push n'est utilisé.
+
+**Préservation locale :** le conteneur et le volume DB principaux sont
+inchangés. Avant et après la preuve, la stack principale contient exactement un
+utilisateur Auth, un profil et un profil `super_admin`.
+
+**Contrôles :** les tests unitaires du contrat Supabase local et du nouveau
+runner sont verts. La tâche Phase 9 « Tester toutes les migrations depuis une
+base vide » est terminée. La tâche suivante, alignement migrations
+locales/distantes, n'est pas commencée.

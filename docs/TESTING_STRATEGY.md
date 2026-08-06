@@ -341,7 +341,7 @@ Le reset :
 - refuse les URLs non locales et tout contexte CLI portant `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN` ou `SUPABASE_DB_URL` ;
 - exige Docker et les ports définis par `supabase/config.toml` (API 55321, PostgreSQL 55322, Mailpit HTTP/SMTP 55324/55325) ;
 - sérialise les exécutions avec `.supabase-local-reset.lock`, supprimé même après échec ;
-- applique les 139 migrations actuelles avec `ON_ERROR_STOP`, sans seed implicite ;
+- applique les 149 migrations actuelles avec `ON_ERROR_STOP`, sans seed implicite ;
 - exécute la baseline structurelle, les fixtures SQL puis leur nettoyage, et vérifie l'absence de comptes, profils, relations, paiements et invitations ;
 - vide Mailpit et régénère `.env.e2e.local` en mode `0600`, sans afficher les clés ;
 - publie une empreinte stable des relations, colonnes, contraintes, index, fonctions, policies et migrations.
@@ -353,11 +353,22 @@ npm run supabase:local:reset       # reconstruction destructive strictement loca
 npm run supabase:local:status      # pile active + liste de migrations exacte
 npm run supabase:local:verify      # contrat de migrations + assertions structurelles
 npm run supabase:local:fingerprint # empreinte comparable entre deux resets
+npm run test:migrations:empty-db  # deux reconstructions locales jetables indépendantes
 ```
 
 Les lanceurs E2E appellent `ensure` via `scripts/run-local-e2e.mjs`. Ils vérifient ainsi le même contrat et régénèrent l'environnement local, sans réimplémenter le reset. `tests/integration/reset-migrations.sh` reste réservé aux bases PostgreSQL locales isolées qui ne fournissent pas Auth/PostgREST/Mailpit; il ne constitue pas le reset E2E canonique.
 
 La reproductibilité attendue est : état arrêté ou actif → même empreinte; données synthétiques contaminantes → reset → même empreinte; deuxième reset concurrent → refus immédiat. Toute empreinte différente doit être expliquée par une modification versionnée du schéma ou de la liste des migrations.
+
+La preuve Phase 9 dédiée utilise deux `project_id`, volumes Docker, plages de
+ports et répertoires temporaires distincts. Elle refuse le projet et les ports
+de la stack principale, tout contexte Supabase distant et l'option `--linked`.
+Chaque run part d'une stack neuve, applique les 149 migrations en ordre lexical,
+compare le manifeste versionné, exécute les assertions structurelles et de
+propreté, calcule l'empreinte puis supprime ses seules ressources dans un
+`finally`. Les collisions historiques de préfixes date à huit chiffres restent
+explicitement gérées par le manifeste de reversioning; les noms source et les
+versions staging résultantes restent uniques et ordonnés.
 
 ## 8. Sécurité des tests
 

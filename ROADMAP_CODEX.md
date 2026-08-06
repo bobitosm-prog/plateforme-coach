@@ -818,7 +818,7 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 | Tâche | Estimation | Difficulté | Risque | Impact | Dépend de |
 |---|---:|---|---|---|---|
 | [x] Étendre la suite à 15 parcours E2E critiques — 15/15 parcours intégrés et validés par `npm run test:e2e:critical`; le cycle Billing couvre checkout Platform, webhooks signés, replay, renouvellement, retry et réconciliation read-only sans Stripe réel | 4 j | Élevée | Moyen | Critique | Domaines stabilisés |
-| [ ] Tester toutes les migrations depuis une base vide | 2 j | Élevée | Moyen | Critique | Supabase local |
+| [x] Tester toutes les migrations depuis une base vide — deux reconstructions Supabase locales jetables et indépendantes ont appliqué 149/149 migrations dans le même ordre, avec assertions vertes, zéro résidu et fingerprint final identique | 2 j | Élevée | Moyen | Critique | Supabase local |
 | [ ] Vérifier l'alignement migrations locales/distantes | 1,5 j | Élevée | Moyen | Critique | Accès environnements |
 | [ ] Définir la procédure de release | 1 j | Moyenne | Faible | Élevé | CI stable |
 | [ ] Définir et répéter la procédure de rollback | 1,5 j | Élevée | Faible | Critique | Release |
