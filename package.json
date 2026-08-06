@@ -36,6 +36,7 @@
     "test:migrations:staging-alignment": "node scripts/preproduction/compare-staging-migration-alignment.mjs",
     "release:preflight": "node scripts/preproduction/release-preflight.mjs",
     "rollback:preflight": "node scripts/preproduction/rollback-preflight.mjs",
+    "rollback:rehearse:local": "node scripts/preproduction/run-local-rollback-rehearsal.mjs",
     "supabase:types:generate": "node scripts/generate-supabase-types.mjs generate",
     "supabase:types:check": "node scripts/generate-supabase-types.mjs check",
     "supabase:factories:check": "node scripts/check-supabase-client-constructions.ts",

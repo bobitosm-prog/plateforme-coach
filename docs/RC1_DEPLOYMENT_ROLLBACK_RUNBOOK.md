@@ -236,7 +236,9 @@ rollback application est requis.
 
 Cette section est une interface d'urgence existante. La tâche Phase 9
 « Définir et répéter la procédure de rollback » reste distincte et non
-terminée; aucune durée inférieure à 30 minutes n'est encore prouvée.
+terminée. Deux répétitions locales synthétiques du 6 août 2026 ont démontré
+`87,429 ms` et `69,295 ms`, attentes et smoke tests inclus, mais aucune
+répétition Preview ou Production n'est prouvée.
 
 Avant toute répétition, préparer une preuve locale expurgée puis exécuter :
 
@@ -334,4 +336,5 @@ Ne consigner aucune clé, aucun token, aucun cookie ni aucune valeur secrète.
 - Les vulnérabilités npm connues restent ouvertes.
 - Certains domaines ne disposent pas encore d’un E2E navigateur complet.
 - Phase 9 reste active; la tâche rollback reste ouverte jusqu'à une répétition
-  chronométrée et validée.
+  chronométrée revue et explicitement acceptée. Deux runs locaux isolés sont
+  verts; ils ne remplacent pas une preuve Preview/Production.

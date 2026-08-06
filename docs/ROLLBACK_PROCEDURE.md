@@ -66,8 +66,32 @@ Les mesures suivantes sont conservées séparément :
 - `validationMs`;
 - `totalMs`.
 
-`platformWaitMs` et les smoke tests font partie de `totalMs`. Le dépôt ne
-possède encore aucune preuve chronométrée inférieure à 30 minutes.
+`platformWaitMs` et les smoke tests font partie de `totalMs`. Le préflight est
+mesuré séparément et précède l'approbation qui déclenche le chronomètre.
+
+## Preuve locale isolée du 6 août 2026
+
+Deux répétitions indépendantes ont validé le contrat applicatif local avec des
+artefacts synthétiques immuables et distincts. Elles ont utilisé des
+répertoires temporaires et des ports dédiés différents, sans arrêter ni
+réinitialiser la stack Supabase principale.
+
+| Run | Port | Décision | Confirmation incident | Action rollback | Attente plateforme | Smoke tests | Durée officielle | Résultat | Cleanup |
+|---|---:|---|---:|---:|---:|---:|---:|---|---|
+| `local-run-1` | `62310` | `READY` | `92,940 ms` | `20,334 ms` | `61,048 ms` | `4,854 ms` | `87,429 ms` | `PASS` | complet |
+| `local-run-2` | `63310` | `READY` | `78,343 ms` | `3,109 ms` | `59,795 ms` | `4,880 ms` | `69,295 ms` | `PASS` | complet |
+
+Pour les deux runs, le chronomètre a commencé à l'approbation synthétique de
+`ROLLBACK_REQUIRED` et s'est arrêté après démarrage de l'artefact sain,
+confirmation du SHA servi, sept catégories de smoke tests vertes et écriture
+du journal minimal. Les processus incident et sain, ports et répertoires
+temporaires ont été supprimés après chaque exécution. Aucune donnée synthétique
+n'a été créée.
+
+Cette preuve démontre une répétition **locale synthétique** strictement
+inférieure à 30 minutes. Elle ne démontre ni rollback Preview/Production, ni
+attente réelle de plateforme, ni restauration de données/PITR. Le drift staging
+`HISTORY_AND_STRUCTURE_DRIFT` reste `NO_GO` pour Preview.
 
 ## 1. Rollback applicatif
 
@@ -286,7 +310,8 @@ personnelle n'est autorisée.
 
 ## État de la tâche
 
-Cette procédure et son préflight définissent le contrat. Aucune répétition,
-aucun rollback et aucune preuve inférieure à 30 minutes n'ont encore été
-exécutés. La tâche Phase 9 « Définir et répéter la procédure de rollback »
-reste ouverte.
+Cette procédure, son préflight et les deux répétitions locales du 6 août 2026
+définissent et éprouvent le contrat local. La preuve locale est inférieure à
+30 minutes, mais ne vaut pas répétition Preview/Production. La tâche Phase 9
+« Définir et répéter la procédure de rollback » reste ouverte jusqu'à revue et
+décision explicites sur cette preuve bornée.

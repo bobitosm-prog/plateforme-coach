@@ -364,11 +364,29 @@ répétition locale isolée utilise un schéma reconstruit et peut marquer la pr
 d'alignement distant `NOT_APPLICABLE`; cette exception ne s'étend jamais à un
 environnement distant.
 
-Le chronomètre inclut préflight, action, attente plateforme et validations. Il
-commence à l'approbation de `ROLLBACK_REQUIRED` et se termine après confirmation
-du SHA servi, smoke tests verts et journal minimal. Aucune répétition ni preuve
-inférieure à 30 minutes n'est encore acquise, et aucune capacité de sauvegarde
-ou PITR n'est supposée.
+Le préflight est mesuré séparément. Le chronomètre officiel inclut action,
+attente plateforme et validations; il commence à l'approbation de
+`ROLLBACK_REQUIRED` et se termine après confirmation du SHA servi, smoke tests
+verts et journal minimal. Aucune capacité de sauvegarde ou PITR n'est supposée.
+
+La répétition locale isolée s'exécute avec un fichier JSON local explicite :
+
+```bash
+npm run rollback:rehearse:local -- --input /chemin/local/rollback-rehearsal.json
+```
+
+Le runner refuse les ports des stacks principales, les URL distantes,
+Production, Stripe live, `--prod` et `--linked`. Il matérialise deux artefacts
+synthétiques immuables distincts dans un répertoire temporaire, confirme
+l'incident, restaure l'artefact sain, vérifie le SHA servi, exécute les sept
+catégories de smoke tests et nettoie systématiquement processus, port et
+répertoire.
+
+Le 6 août 2026, deux runs indépendants sur les ports `62310` et `63310` ont
+réussi en `87,429 ms` et `69,295 ms`. Ils n'ont créé aucune donnée synthétique
+et n'ont pas modifié la stack Supabase principale. Cette preuve est locale et
+synthétique : elle ne prouve ni Preview/Production, ni restauration de
+données/PITR; le drift staging reste `NO_GO`.
 
 Les resets de base, E2E Chromium et tests de concurrence sont volontairement plus lents et séquentiels. Ils ne doivent pas alourdir chaque sauvegarde locale, mais restent obligatoires avant livraison lorsqu'ils couvrent le risque modifié.
 
