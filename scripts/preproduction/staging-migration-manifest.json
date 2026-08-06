@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "authority": "moovx-staging-migration-reversioning",
   "sourceRoot": "supabase/migrations",
-  "sourceMigrationCount": 148,
+  "sourceMigrationCount": 149,
   "sourceOrder": "lexical-filename",
   "stagingOrder": "lexical-filename",
   "reversionRule": {
@@ -5473,6 +5473,27 @@
       "stagingVersion": "20260805100000",
       "stagingName": "20260805100000_publish_messages_realtime.sql",
       "absoluteOrder": 148,
+      "collisionGroup": null,
+      "category": "schema",
+      "knownDependencies": [],
+      "authorization": "authorized_schema",
+      "allowed": true,
+      "mutationInventory": {
+        "statements": [],
+        "calls": [],
+        "migrationTimeCount": 0,
+        "definitionOnlyCount": 0
+      },
+      "justification": "Schema or definition-only migration; no migration-time data mutation detected."
+    },
+    {
+      "sourcePath": "supabase/migrations/20260806100000_enforce_payments_stripe_event_unique_constraint.sql",
+      "historicalVersion": "20260806100000",
+      "historicalName": "20260806100000_enforce_payments_stripe_event_unique_constraint.sql",
+      "sourceSha256": "6b0916b5e0ad5dba9219dc8220e35d5b79cd97a992b4bac789a820fa3ef9e332",
+      "stagingVersion": "20260806100000",
+      "stagingName": "20260806100000_enforce_payments_stripe_event_unique_constraint.sql",
+      "absoluteOrder": 149,
       "collisionGroup": null,
       "category": "schema",
       "knownDependencies": [],

@@ -157,12 +157,6 @@ async function handleInvoicePaid(event: Stripe.Event, deps: WebhookHandlerDepend
   if (!client) return
   const now = (deps.now || (() => new Date()))()
   const interval = client.subscriptionType === 'client_yearly' ? 365 : 30
-  if (grantsSubscriptionAccess(currentSubscription.status)) {
-    await deps.repository.updateProfileById(client.id, {
-      subscription_status: 'active',
-      subscription_end_date: daysAfter(now, interval),
-    })
-  }
   await deps.repository.upsertPayment({
     client_id: client.id,
     amount: (invoice.amount_paid || 0) / 100,
@@ -172,6 +166,12 @@ async function handleInvoicePaid(event: Stripe.Event, deps: WebhookHandlerDepend
     paid_at: now.toISOString(),
     stripe_event_id: event.id,
   })
+  if (grantsSubscriptionAccess(currentSubscription.status)) {
+    await deps.repository.updateProfileById(client.id, {
+      subscription_status: 'active',
+      subscription_end_date: daysAfter(now, interval),
+    })
+  }
 }
 
 async function handleSubscriptionDeleted(event: Stripe.Event, deps: WebhookHandlerDependencies) {

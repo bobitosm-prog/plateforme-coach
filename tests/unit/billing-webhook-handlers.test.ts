@@ -125,6 +125,29 @@ describe('Billing webhook handlers', () => {
     await processWebhookEvent(event('invoice.payment_succeeded', { id: 'in_1' }, 'evt_invoice'), deps)
     expect(deps.repository.updateProfileById).toHaveBeenCalledWith(CLIENT_ID, expect.objectContaining({ subscription_status: 'active' }))
     expect(deps.repository.upsertPayment).toHaveBeenCalledWith(expect.objectContaining({ stripe_event_id: 'evt_invoice', amount: 99 }))
+    expect(vi.mocked(deps.repository.upsertPayment).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(deps.repository.updateProfileById).mock.invocationCallOrder[0])
+  })
+
+  it('does not update the subscription profile when renewal payment persistence fails', async () => {
+    const deps = dependencies()
+    vi.mocked(deps.stripe.retrieveInvoice).mockResolvedValue({
+      id: 'in_failed', customer: 'cus_1', billing_reason: 'subscription_cycle', amount_paid: 1000, currency: 'chf',
+      parent: { subscription_details: { subscription: 'sub_1' } },
+    } as unknown as Stripe.Invoice)
+    vi.mocked(deps.stripe.retrieveSubscription).mockResolvedValue({
+      id: 'sub_1', customer: 'cus_1', status: 'active',
+    } as unknown as Stripe.Subscription)
+    vi.mocked(deps.repository.findProfileBySubscription).mockResolvedValue({ id: CLIENT_ID, subscriptionType: 'client_monthly' })
+    vi.mocked(deps.repository.upsertPayment).mockRejectedValue(new Error('payment persistence failed'))
+
+    await expect(processWebhookEvent(
+      event('invoice.payment_succeeded', { id: 'in_failed' }, 'evt_failed'),
+      deps,
+    )).rejects.toThrow('payment persistence failed')
+
+    expect(deps.repository.upsertPayment).toHaveBeenCalledOnce()
+    expect(deps.repository.updateProfileById).not.toHaveBeenCalled()
   })
 
   it('handles cancellation and completed Connect onboarding without granting unrelated access', async () => {
