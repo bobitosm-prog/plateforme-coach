@@ -3,7 +3,7 @@
 ## 1. Portée et garde-fous
 
 - Branche source : `phase-6-staging`.
-- Phase 9 inactive.
+- Phase 9 active depuis la validation explicite de RC1 le 30 juillet 2026.
 - Production interdite sans autorisation explicite séparée.
 - Ne jamais réutiliser les variables de production pendant une validation
   staging ou Preview.
@@ -14,7 +14,12 @@
 - N’exécuter aucun changement de schéma ou de données sans plan et
   autorisation dédiés.
 
-Tout écart à ces garde-fous impose l’arrêt immédiat de l’opération.
+Tout écart à ces garde-fous impose l'arrêt immédiat de l'opération.
+
+La procédure de décision de release actuelle est définie dans
+[`RELEASE_PROCEDURE.md`](RELEASE_PROCEDURE.md). Le présent document conserve
+les opérations Preview et l'interface rollback; il ne démontre ni une CI
+stable ni un rollback applicatif en moins de 30 minutes.
 
 ## 2. Prérequis opérateur
 
@@ -75,6 +80,11 @@ npm run test:e2e:critical
 - [ ] Deux builds hermétiques réalisés si la politique RC1 l’exige pour cette
   promotion.
 - [ ] E2E critiques verts sur une pile locale autorisée et propre.
+- [ ] Préflight local exécuté depuis une preuve explicite avec
+  `npm run release:preflight -- --input <fichier-local>`.
+
+Le préflight local ne remplace pas une CI stable : aucune configuration CI
+versionnée n'existe encore dans le dépôt.
 
 Les tests qui utilisent Stripe, Anthropic, Push ou SMTP dépendent
 d’environnements explicitement autorisés. Ne jamais les pointer par défaut
@@ -93,13 +103,17 @@ npm run supabase:local:verify
 npm run supabase:local:fingerprint
 ```
 
-- [ ] Inventaire exact de 144 migrations.
-- [ ] Fingerprint canonique :
-  `6d14ca918056d5fe5a2283813c0f9147`.
+- [ ] Inventaire exact de 149 migrations sources.
+- [ ] Comparaison contre le plan final de 145 versions staging.
+- [ ] Verdict d'alignement exactement `ALIGNED`.
 - [ ] Projet staging explicitement identifié avant toute lecture distante.
 - [ ] Aucune migration production.
 - [ ] Aucune migration staging destructive ni mutation de données sans
   autorisation séparée.
+
+Au 6 août 2026, staging présente 141/145 versions et le verdict documenté
+`HISTORY_AND_STRUCTURE_DRIFT`. Cet état impose `NO_GO`; les quatre versions
+manquantes ne sont pas remédiées par cette procédure.
 
 Plans d’autorité :
 
@@ -143,6 +157,10 @@ copier les valeurs dans ce runbook, les logs, les captures ou le journal.
 - [ ] `productionVariablesLoaded=false`, si cette preuve est exposée.
 
 ## 8. Déploiement
+
+Cette section décrit une opération Preview. La décision de release et ses
+gates sont régies par [`RELEASE_PROCEDURE.md`](RELEASE_PROCEDURE.md); aucune
+commande Production n'est autorisée implicitement.
 
 1. Geler et consigner le SHA candidat.
 2. Vérifier que `phase-6-staging` est propre et synchronisée avec
@@ -210,6 +228,10 @@ Consigner le constat, arrêter la promotion et décider explicitement si le
 rollback application est requis.
 
 ## 11. Rollback application
+
+Cette section est une interface d'urgence existante. La tâche Phase 9
+« Définir et répéter la procédure de rollback » reste distincte et non
+terminée; aucune durée inférieure à 30 minutes n'est encore prouvée.
 
 1. Identifier le dernier SHA Preview validé et documenté comme sain.
 2. Ne pas réécrire l’historique Git.

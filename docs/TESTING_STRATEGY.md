@@ -319,6 +319,33 @@ Cette boucle doit rester rapide, locale et sans Docker lorsque le comportement n
 - build dans un environnement pouvant résoudre les polices externes;
 - procédure de rollback et migrations vérifiées.
 
+### Préflight de release Phase 9
+
+La procédure canonique est décrite dans
+[`RELEASE_PROCEDURE.md`](RELEASE_PROCEDURE.md). Son préflight local consomme
+uniquement un fichier JSON explicitement fourni :
+
+```bash
+npm run release:preflight -- --input /chemin/local/preflight.json
+```
+
+Le contrat exige onze preuves `PASS` : tests unitaires, TypeScript, lint,
+build, E2E critiques 15/15, reconstruction depuis une base vide, alignement
+migrations staging, types et factories Supabase, i18n et budget performance.
+Chaque preuve contient uniquement `status`, `durationMs`, `source` et
+`capturedAt`; `FAIL`, `MISSING` ou `SKIPPED` impose `NO_GO`.
+
+Le comparateur doit retourner exactement `ALIGNED`. L'état staging documenté
+à 141/145 versions, avec verdict `HISTORY_AND_STRUCTURE_DRIFT`, impose donc
+`NO_GO` sans lancer de remédiation. Le préflight ne charge aucun `.env`, ne
+lance aucune commande, ne contacte aucun service et ne déploie rien.
+
+Ces preuves locales ne remplacent pas encore une CI stable : aucune
+configuration CI versionnée et aucune mesure de flaky rate ne sont attestées.
+Un verdict technique `GO` requiert toujours une approbation humaine avant
+toute action distante, et Production demeure soumise à une autorisation
+séparée.
+
 Les resets de base, E2E Chromium et tests de concurrence sont volontairement plus lents et séquentiels. Ils ne doivent pas alourdir chaque sauvegarde locale, mais restent obligatoires avant livraison lorsqu'ils couvrent le risque modifié.
 
 ## 7. Déterminisme

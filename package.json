@@ -34,6 +34,7 @@
     "supabase:local:fingerprint": "node scripts/supabase-local.mjs fingerprint",
     "test:migrations:empty-db": "node scripts/verify-empty-database-rebuild.mjs",
     "test:migrations:staging-alignment": "node scripts/preproduction/compare-staging-migration-alignment.mjs",
+    "release:preflight": "node scripts/preproduction/release-preflight.mjs",
     "supabase:types:generate": "node scripts/generate-supabase-types.mjs generate",
     "supabase:types:check": "node scripts/generate-supabase-types.mjs check",
     "supabase:factories:check": "node scripts/check-supabase-client-constructions.ts",
