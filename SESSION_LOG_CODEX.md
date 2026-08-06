@@ -14047,3 +14047,29 @@ aux trois versions récentes présentes sont conformes.
 terminée et la checklist Phase 9 est cochée, mais aucune remédiation n'est
 commencée. Aucun `db push`, `migration repair`, reset, DDL, DML, seed, accès
 Production, déploiement, commit ou push n'est effectué.
+
+## Entrée — 2026-08-06 — Phase 9 — définition de la procédure de release
+
+**Commit fonctionnel :** `3285244 feat(phase-9): define release procedure and
+preflight gates` versionne la procédure dans `docs/RELEASE_PROCEDURE.md` et un
+préflight local pur dans `scripts/preproduction/release-preflight.mjs`.
+
+**Contrat :** la procédure fixe le candidat par branche et SHA immuable,
+distingue local, Preview, staging et Production, et définit les rôles
+opérateur, approbateur, responsable go/no-go et autorité Production. Le
+préflight exige onze gates et retourne les décisions structurées `GO`,
+`NO_GO` ou `BLOCKED` sans réseau, mutation, chargement implicite de `.env` ni
+déploiement.
+
+**Validation :** les six fichiers de tests ciblés des gardes et contrats ont
+précédemment réussi avec `103 passed`. Le test dédié du préflight est également
+vert dans cette clôture documentaire. Le drift staging actuel
+`HISTORY_AND_STRUCTURE_DRIFT` produit volontairement `NO_GO`; staging n'est
+pas remédié.
+
+**Limites :** la stabilité de la CI n'est pas attestée, aucune release de bout
+en bout n'est répétée, aucun déploiement ou rollback n'est exécuté et
+Production n'est pas déclarée prête. La tâche « Définir la procédure de
+release » est clôturée sur son objectif documentaire et contractuel. Phase 9
+reste active; la tâche suivante « Définir et répéter la procédure de rollback »
+reste non commencée.
