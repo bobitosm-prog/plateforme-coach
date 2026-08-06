@@ -14015,3 +14015,35 @@ utilisateur Auth, un profil et un profil `super_admin`.
 runner sont verts. La tâche Phase 9 « Tester toutes les migrations depuis une
 base vide » est terminée. La tâche suivante, alignement migrations
 locales/distantes, n'est pas commencée.
+
+## Entrée — 2026-08-06 — Phase 9 — audit d'alignement migrations staging
+
+**Cible et garde :** le worktree était propre sur `a4318d3`, synchronisé 0/0
+avec `origin/phase-6-staging`. Le ref lié a été confirmé exactement égal au
+staging `cycbnnojcymjnaqomlyj`; le ref Production est différent et exclu.
+Aucune variable Supabase/DB distante n'était chargée dans le processus.
+
+**Acquisitions :** deux lectures `supabase migration list --linked` ont été
+effectuées sans mutation à `2026-08-06T13:57:50.560Z` et
+`2026-08-06T13:58:20.241Z`. Les deux captures sont identiques : 141 versions,
+même ordre, zéro doublon. Les inventaires temporaires expurgés ne contiennent
+que métadonnées de cible, horodatage et versions.
+
+**Comparaison :** le plan final reste défini par 149 sources, 144 migrations
+historiques incluses, cinq exclusions et un overlay, soit 145 versions. Les
+deux rapports du comparateur retournent `MISSING_REMOTE_VERSIONS` avec quatre
+versions absentes : `20260718150000`, `20260729100000`, `20260805100000` et
+`20260806100000`. Aucun ajout, doublon ou ordre divergent n'est détecté.
+
+**Structure :** une requête catalogues a été exécutée avec transaction
+read-only, timeout de 10 secondes et `ROLLBACK`. `seedance_jobs` est absente;
+la fonction `handle_new_user()` existe mais son trigger Auth manque;
+`public.messages` existe mais n'est pas publiée dans `supabase_realtime`; la
+contrainte réelle `payments_stripe_event_id_key` manque et l'ancien index
+unique partiel demeure. Les objets checkout, difficulty et Nutrition associés
+aux trois versions récentes présentes sont conformes.
+
+**Décision :** verdict **`HISTORY_AND_STRUCTURE_DRIFT`**. La vérification est
+terminée et la checklist Phase 9 est cochée, mais aucune remédiation n'est
+commencée. Aucun `db push`, `migration repair`, reset, DDL, DML, seed, accès
+Production, déploiement, commit ou push n'est effectué.

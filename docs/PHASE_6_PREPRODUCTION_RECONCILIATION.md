@@ -519,6 +519,56 @@ Une preuve structurelle n'est concluante que lorsque les inventaires attendus
 et observés sont tous deux présents; si elle est exigée sans ces deux côtés,
 le résultat reste `INCOMPLETE_EVIDENCE`.
 
+### Photographie staging read-only du 6 août 2026
+
+Après validation du ref lié exact `cycbnnojcymjnaqomlyj` et exclusion du ref
+Production, deux acquisitions indépendantes ont été effectuées à
+`2026-08-06T13:57:50.560Z` et `2026-08-06T13:58:20.241Z`. Elles contiennent
+chacune 141 versions distantes, dans le même ordre, sans doublon. Les inventaires
+temporaires n'ont contenu que le ref, l'horodatage, la source de capture et les
+versions; aucun credential ou contenu métier n'a été conservé.
+
+Le comparateur versionné a produit deux rapports identiques hors horodatage :
+
+| Contrôle | Résultat |
+|---|---:|
+| sources canoniques | 149 |
+| versions staging finales attendues | 145 |
+| versions distantes observées | 141 |
+| versions manquantes | 4 |
+| versions supplémentaires | 0 |
+| doublons distants | 0 |
+| inversions d'ordre entre versions communes | 0 |
+| exclusions explicites | 5 |
+| overlays staging | 1 |
+| verdict du comparateur | `MISSING_REMOTE_VERSIONS` |
+
+Les quatre versions absentes sont `20260718150000`, `20260729100000`,
+`20260805100000` et `20260806100000`. Les versions `20260727120000`,
+`20260729190000` et `20260729193000` sont présentes. Le décalage de position
+des versions présentes provient uniquement des versions manquantes; aucune
+inversion relative n'est observée.
+
+Une requête ciblée sur `supabase_migrations`, `pg_catalog` et
+`information_schema` a ensuite été exécutée avec
+`transaction_read_only=on`, `statement_timeout=10s`, puis `ROLLBACK` :
+
+| Version | Historique | Objet attendu | État structurel read-only |
+|---|---|---|---|
+| `20260718150000` | absente | `public.seedance_jobs` | table, colonnes, contraintes, index et RLS absents |
+| `20260727120000` | présente | contrat checkout `payments` | trois colonnes présentes; index checkout unique partiel conforme |
+| `20260729100000` | absente | trigger Auth `on_auth_user_created` | fonction `handle_new_user()` présente, trigger absent |
+| `20260729190000` | présente | `exercises_db.difficulty` | colonne `text` nullable présente |
+| `20260729193000` | présente | colonnes Nutrition `food_items` | trois colonnes `numeric` avec defaults présentes |
+| `20260805100000` | absente | publication Realtime de `public.messages` | table présente, publication absente |
+| `20260806100000` | absente | contrainte `payments_stripe_event_id_key` | contrainte absente; ancien index unique partiel encore présent |
+
+Verdict consolidé : **`HISTORY_AND_STRUCTURE_DRIFT`**. La photographie est
+fiable et les divergences sont classifiées; la tâche Phase 9 de vérification
+peut donc être clôturée. Toute application des quatre migrations ou autre
+remédiation reste un sous-batch séparé nécessitant une autorisation explicite.
+La preuve historique 138/138 du 26 juillet demeure inchangée.
+
 Pour reprendre sans exposer le secret :
 
 ```bash

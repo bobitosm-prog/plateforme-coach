@@ -194,3 +194,35 @@ tables `profiles`, `coach_clients` et `weekly_diagnostics` restent vides.
 
 La prochaine autorisation doit porter sur le seed synthétique Phase 6. Tout
 `migration repair`, reset ou configuration cron reste interdit.
+
+## Audit d'alignement staging du 6 août 2026
+
+La preuve du 26 juillet ci-dessus reste un fait historique daté. Deux nouvelles
+captures read-only de `supabase migration list --linked`, réalisées à
+`2026-08-06T13:57:50.560Z` et `2026-08-06T13:58:20.241Z` après validation du
+ref staging `cycbnnojcymjnaqomlyj`, sont strictement identiques : 141 versions
+distantes, même ordre et aucun doublon.
+
+Le plan courant contient 149 sources, cinq exclusions explicites et un overlay;
+son autorité distante est donc constituée de 145 versions finales. Le
+comparateur local retourne `MISSING_REMOTE_VERSIONS` pour les deux captures :
+
+- manquantes : `20260718150000`, `20260729100000`, `20260805100000` et
+  `20260806100000`;
+- supplémentaires : aucune;
+- doublons : aucun;
+- inversion d'ordre entre les versions communes : aucune.
+
+Le contrôle structurel PostgreSQL a été exécuté dans une transaction read-only,
+avec timeout borné, puis `ROLLBACK`. Il confirme que les trois versions récentes
+présentes ont leurs objets attendus : contrat checkout `payments`, colonne
+`exercises_db.difficulty` et colonnes Nutrition de `food_items`. Pour les quatre
+versions absentes, les objets finaux divergent également : `seedance_jobs` est
+absente, le trigger `on_auth_user_created` est absent malgré la fonction
+`handle_new_user()` présente, `public.messages` n'est pas publiée dans
+`supabase_realtime`, et `payments_stripe_event_id_key` reste un index unique
+partiel au lieu d'une contrainte `UNIQUE (stripe_event_id)` réelle.
+
+Verdict : **`HISTORY_AND_STRUCTURE_DRIFT`**. Cette vérification clôt l'audit
+d'alignement, pas sa remédiation. Aucun `db push`, `migration repair`, reset,
+DDL, DML, seed ou accès Production n'a été exécuté.
