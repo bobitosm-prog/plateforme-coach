@@ -346,6 +346,30 @@ Un verdict technique `GO` requiert toujours une approbation humaine avant
 toute action distante, et Production demeure soumise à une autorisation
 séparée.
 
+### Préflight de rollback Phase 9
+
+Le contrat canonique est documenté dans
+[`ROLLBACK_PROCEDURE.md`](ROLLBACK_PROCEDURE.md). Son préflight local s'exécute
+uniquement à partir d'un JSON local explicite :
+
+```bash
+npm run rollback:preflight -- --input /chemin/local/rollback-preflight.json
+```
+
+Le module ne charge aucun `.env`, ne contient aucun client réseau et n'exécute
+aucune commande. Il vérifie l'identité immuable des artefacts, la compatibilité
+schéma, les approbations, les preuves, les smoke tests et l'expurgation. Pour
+Preview et staging, tout verdict différent de `ALIGNED` impose `NO_GO`. Une
+répétition locale isolée utilise un schéma reconstruit et peut marquer la preuve
+d'alignement distant `NOT_APPLICABLE`; cette exception ne s'étend jamais à un
+environnement distant.
+
+Le chronomètre inclut préflight, action, attente plateforme et validations. Il
+commence à l'approbation de `ROLLBACK_REQUIRED` et se termine après confirmation
+du SHA servi, smoke tests verts et journal minimal. Aucune répétition ni preuve
+inférieure à 30 minutes n'est encore acquise, et aucune capacité de sauvegarde
+ou PITR n'est supposée.
+
 Les resets de base, E2E Chromium et tests de concurrence sont volontairement plus lents et séquentiels. Ils ne doivent pas alourdir chaque sauvegarde locale, mais restent obligatoires avant livraison lorsqu'ils couvrent le risque modifié.
 
 ## 7. Déterminisme

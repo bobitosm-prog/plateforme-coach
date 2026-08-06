@@ -21,6 +21,11 @@ La procédure de décision de release actuelle est définie dans
 les opérations Preview et l'interface rollback; il ne démontre ni une CI
 stable ni un rollback applicatif en moins de 30 minutes.
 
+Le contrat canonique de rollback, ses états, son chronomètre et son préflight
+local pur sont définis dans
+[`ROLLBACK_PROCEDURE.md`](ROLLBACK_PROCEDURE.md). Cette définition ne constitue
+pas une répétition et n'autorise aucune action distante.
+
 ## 2. Prérequis opérateur
 
 - [ ] Accès GitHub au dépôt et à la branche autorisée.
@@ -233,6 +238,22 @@ Cette section est une interface d'urgence existante. La tâche Phase 9
 « Définir et répéter la procédure de rollback » reste distincte et non
 terminée; aucune durée inférieure à 30 minutes n'est encore prouvée.
 
+Avant toute répétition, préparer une preuve locale expurgée puis exécuter :
+
+```bash
+npm run rollback:preflight -- --input /chemin/local/rollback-preflight.json
+```
+
+Le chronomètre commence à l'approbation de `ROLLBACK_REQUIRED` et se termine
+seulement après restauration de l'artefact sain, état `READY`, confirmation du
+SHA servi, smoke tests verts et journal minimal enregistré. Les attentes de
+plateforme et les smoke tests restent inclus dans la durée totale.
+
+Le verdict staging actuel `HISTORY_AND_STRUCTURE_DRIFT` impose `NO_GO` pour
+une répétition Preview. Une répétition locale isolée peut déclarer l'alignement
+distant `NOT_APPLICABLE` uniquement avec un schéma local reconstruit et une
+compatibilité locale démontrée.
+
 1. Identifier le dernier SHA Preview validé et documenté comme sain.
 2. Ne pas réécrire l’historique Git.
 3. Redéployer ce SHA connu comme sain avec la méthode Vercel autorisée.
@@ -256,6 +277,8 @@ Interdictions :
 - Classifier séparément toute mutation de données.
 - Obtenir une sauvegarde ou une preuve de restauration exploitable avant
   action.
+- Ne supposer ni sauvegarde managée ni capacité PITR : elles doivent être
+  attestées pour l'environnement et la fenêtre concernés.
 - Interdire toute opération production sans autorisation séparée.
 
 ## 13. Rollback secrets et intégrations
@@ -310,4 +333,5 @@ Ne consigner aucune clé, aucun token, aucun cookie ni aucune valeur secrète.
 - La validation explicite RC1 reste ouverte.
 - Les vulnérabilités npm connues restent ouvertes.
 - Certains domaines ne disposent pas encore d’un E2E navigateur complet.
-- Phase 9 reste inactive.
+- Phase 9 reste active; la tâche rollback reste ouverte jusqu'à une répétition
+  chronométrée et validée.

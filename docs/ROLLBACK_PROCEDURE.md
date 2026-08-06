@@ -1,0 +1,292 @@
+# Procédure canonique de rollback MoovX
+
+## Statut et portée
+
+Cette procédure définit le contrat d'une répétition de rollback. Elle ne
+déclenche ni déploiement, ni mutation distante, ni restauration. La tâche
+Phase 9 reste ouverte jusqu'à une répétition chronométrée et validée.
+
+La Production est exclue. Une répétition Production exige une autorisation
+distincte, une cible confirmée et des capacités de sauvegarde attestées.
+
+## Déclencheurs
+
+Une décision `ROLLBACK_REQUIRED` peut être proposée après un mauvais
+environnement ou SHA, une régression critique, des erreurs `5xx` persistantes,
+une indisponibilité Auth, une incohérence de données, des webhooks mal scopés
+ou l'exposition d'un média privé. Elle doit être approuvée avant le début du
+chronomètre.
+
+## Rôles
+
+- **Opérateur** : exécute le préflight et la procédure autorisée.
+- **Approbateur** : confirme la décision et le périmètre.
+- **Chronométreur** : mesure chaque segment sans neutraliser les attentes de
+  plateforme.
+- **Responsable d'incident** : tient le canal, le journal et la décision
+  finale.
+- **Autorité Production** : seule autorité pouvant permettre ultérieurement
+  une action Production.
+
+Le journal enregistre des rôles, jamais des identités ou credentials.
+
+## États et décisions
+
+| État | Signification |
+|---|---|
+| `DRAFT` | Contrat incomplet ou non évalué |
+| `READY_FOR_REHEARSAL` | Préflight local favorable; aucune action exécutée |
+| `REHEARSAL_RUNNING` | Répétition explicitement autorisée en cours |
+| `ROLLBACK_SUCCEEDED` | Cible saine restaurée et validations vertes |
+| `ROLLBACK_FAILED` | Action terminée sans satisfaire le contrat |
+| `NO_GO` | Invariant technique ou preuve obligatoire non conforme |
+| `BLOCKED` | Autorité, sécurité ou rapport empêche l'opération |
+| `MANUAL_RECOVERY_REQUIRED` | Retour automatisable impossible; reprise humaine requise |
+
+Les décisions du préflight sont `READY`, `NO_GO` et `BLOCKED`. `READY` ne
+constitue jamais une autorisation de répétition ou de déploiement.
+
+## Chronomètre officiel
+
+Le seuil Phase 9 porte sur un rollback applicatif strictement inférieur à
+30 minutes.
+
+**Début :** instant où `ROLLBACK_REQUIRED` est approuvé, après identification
+de l'environnement, de l'incident et de l'artefact sain.
+
+**Fin :** artefact sain restauré, environnement `READY`, SHA réellement servi
+confirmé, smoke tests obligatoires verts et journal minimal enregistré.
+
+Les mesures suivantes sont conservées séparément :
+
+- `decisionMs`;
+- `preflightMs`;
+- `actionMs`;
+- `platformWaitMs`;
+- `validationMs`;
+- `totalMs`.
+
+`platformWaitMs` et les smoke tests font partie de `totalMs`. Le dépôt ne
+possède encore aucune preuve chronométrée inférieure à 30 minutes.
+
+## 1. Rollback applicatif
+
+Le rollback applicatif redéploie un artefact connu comme sain sans modifier le
+schéma ni les données.
+
+- Un SHA seul ne prouve pas l'identité de l'artefact.
+- Preview/Vercel exige un deployment ID immuable ou un identifiant équivalent,
+  associé au SHA sain.
+- L'artefact incident et l'artefact sain doivent être distincts.
+- Après retour, le SHA réellement servi doit être contrôlé.
+- L'artefact sain doit être compatible avec le schéma réellement présent.
+- Aucun `git reset --hard`, force-push ou réécriture de branche partagée.
+
+## 2. Rollback de configuration
+
+- Capturer avant changement un inventaire expurgé des noms, présences,
+  environnements et scopes; ne jamais capturer les valeurs.
+- Preview utilise Stripe test uniquement.
+- Restaurer atomiquement la configuration précédente ou appliquer une
+  compensation bornée et journalisée.
+- Vérifier ensuite l'environnement, les scopes, Auth et les intégrations.
+- Un secret compromis est révoqué; il n'est pas simplement restauré.
+
+## 3. Rollback de schéma
+
+- Les migrations sont forward-only.
+- Une migration appliquée n'est jamais supprimée ni réécrite.
+- Aucun downgrade SQL improvisé.
+- Une correction exige une migration compensatoire séparée, idempotente et
+  revue.
+- La compatibilité entre l'application saine et le schéma cible est
+  obligatoire.
+- Un verdict distant différent de `ALIGNED` impose `NO_GO` pour Preview,
+  staging et Production.
+
+Le drift staging actuel `HISTORY_AND_STRUCTURE_DRIFT` interdit donc une
+répétition Preview. Le préflight ne le remédie pas.
+
+## 4. Rollback de données
+
+- Une sauvegarde vérifiée est obligatoire avant toute restauration.
+- PITR ou restauration logique n'est disponible que si la capacité est
+  explicitement attestée; le dépôt ne la suppose jamais.
+- Toute restauration destructive nécessite une autorisation distincte.
+- Billing, Auth et Storage sont évalués et restaurés séparément.
+- Les claims Stripe, paiements, événements, identités Auth et objets Storage
+  ne sont jamais supprimés pour simplifier un incident.
+- Une divergence de migration seule ne justifie pas une restauration globale.
+
+## 5. Rollback opérationnel
+
+1. Déclarer l'incident et ouvrir un canal dédié.
+2. Classer l'incident : application, configuration, schéma ou données.
+3. Identifier les artefacts incident et sain, ainsi que leur compatibilité.
+4. Recueillir approbation, opérateur et chronométreur.
+5. Exécuter le préflight local pur.
+6. Arrêter si la décision n'est pas `READY`.
+7. Obtenir une autorisation séparée pour toute répétition réelle.
+8. Démarrer le chronomètre à l'approbation `ROLLBACK_REQUIRED`.
+9. Exécuter une seule stratégie, puis les smoke tests.
+10. Confirmer le SHA servi, arrêter le chronomètre et clore le journal.
+
+## Contrat de preuves
+
+Les preuves minimales sont :
+
+- `candidateIdentity`;
+- `healthyArtifactIdentity`;
+- `environmentGuard`;
+- `schemaCompatibility`;
+- `migrationAlignment`;
+- `authorization`;
+- `smokeTestPlan`;
+- `cleanupPlan`;
+- `timingPlan`;
+- `evidenceSanitization`.
+
+Chaque preuve contient exactement :
+
+```json
+{
+  "status": "PASS",
+  "source": "source-bornee",
+  "capturedAt": "2026-08-06T18:00:00.000Z"
+}
+```
+
+Les statuts autorisés sont `PASS`, `FAIL`, `MISSING` et `NOT_APPLICABLE`.
+`FAIL` ou `MISSING` sur une preuve obligatoire impose `NO_GO` ou `BLOCKED`.
+`NOT_APPLICABLE` est admis seulement pour `migrationAlignment` lors d'une
+répétition locale isolée utilisant un schéma reconstruit et compatible. Les
+sources appartiennent à un ensemble fermé défini par le préflight.
+
+L'entrée JSON contient exactement les champs suivants. Les identifiants
+d'artefacts sont des références non sensibles; aucune URL ni valeur de variable
+n'est admise.
+
+```json
+{
+  "environment": "local",
+  "branch": "phase-6-staging",
+  "incidentSha": "1111111",
+  "healthySha": "2222222",
+  "incidentArtifactId": "artefact-incident",
+  "healthyArtifactId": "artefact-sain",
+  "artifactImmutabilityVerified": true,
+  "servedShaBefore": "1111111",
+  "migrationAlignmentVerdict": "LOCAL_NOT_REQUIRED",
+  "schemaCompatibility": "LOCAL_REBUILT_COMPATIBLE",
+  "releaseCandidate": {
+    "incidentArtifactSha": "1111111",
+    "healthyArtifactSha": "2222222"
+  },
+  "approvals": {
+    "operator": true,
+    "approver": true,
+    "timer": true
+  },
+  "backupCapability": {
+    "required": false,
+    "attested": false
+  },
+  "requiredSmokeTests": [
+    "environment",
+    "servedSha",
+    "auth",
+    "criticalJourneys",
+    "dataConsistency",
+    "privateMedia",
+    "billing"
+  ],
+  "evidence": {},
+  "stripeMode": "test",
+  "requestedCommands": [],
+  "productionAuthorized": false,
+  "startedAt": "2026-08-06T18:00:00.000Z"
+}
+```
+
+## Préflight local pur
+
+```bash
+npm run rollback:preflight -- --input /chemin/local/rollback-preflight.json
+```
+
+Le préflight :
+
+- lit un fichier JSON local explicite;
+- ne charge aucun `.env`;
+- ne lit aucun secret;
+- n'utilise aucun client réseau;
+- n'exécute aucune commande;
+- retourne zéro uniquement pour `READY`;
+- affiche uniquement un rapport expurgé.
+
+Il refuse notamment Production sans autorisation distincte, Stripe live,
+secrets, `--prod`, `--linked`, force-push, `git reset --hard`, mutations
+Supabase distantes, réécriture de migrations, SQL destructif et restauration
+sans sauvegarde attestée.
+
+## Frontières d'environnement
+
+| Environnement | Règle |
+|---|---|
+| Local isolé | Schéma reconstruit et `LOCAL_REBUILT_COMPATIBLE`; alignement distant explicitement `NOT_APPLICABLE` |
+| Preview | Alignement distant exactement `ALIGNED`, compatibilité et artefact immuable obligatoires |
+| Staging | Même contrat strict que Preview; aucune mutation implicite |
+| Production | `BLOCKED` sans autorisation distincte; ce préflight ne déclenche jamais l'action |
+
+## Smoke tests obligatoires
+
+Le plan doit couvrir, dans l'ordre contractuel : environnement, SHA servi,
+Auth, parcours critiques, cohérence des données, médias privés et Billing.
+
+## Raisons bornées
+
+Le rapport peut notamment contenir :
+
+- `TARGET_ENVIRONMENT_NOT_ALLOWED`;
+- `PRODUCTION_AUTHORIZATION_REQUIRED`;
+- `INCIDENT_ARTIFACT_MISSING`;
+- `HEALTHY_ARTIFACT_MISSING`;
+- `HEALTHY_ARTIFACT_NOT_IMMUTABLE`;
+- `INCIDENT_AND_HEALTHY_ARTIFACT_EQUAL`;
+- `GIT_SHA_MISMATCH`;
+- `MIGRATION_ALIGNMENT_NOT_ALIGNED`;
+- `SCHEMA_COMPATIBILITY_UNPROVEN`;
+- `APPROVAL_MISSING`;
+- `BACKUP_CAPABILITY_UNPROVEN`;
+- `REQUIRED_SMOKE_TESTS_MISSING`;
+- `REQUIRED_EVIDENCE_MISSING`;
+- `SECRET_DETECTED`;
+- `LIVE_STRIPE_DETECTED`;
+- `UNSAFE_COMMAND_DETECTED`;
+- `REPORT_INVALID`.
+
+## Journal minimal expurgé
+
+```text
+Incident :
+Environnement :
+Artefact incident (identifiant non sensible) :
+Artefact sain (identifiant non sensible) :
+SHA incident / sain :
+Rôles et approbation :
+Décision du préflight :
+Segments et durée totale :
+SHA réellement servi après action :
+Résultat des smoke tests :
+Décision finale :
+```
+
+Aucune clé, valeur de variable, URL signée, header, cookie, JWT ou donnée
+personnelle n'est autorisée.
+
+## État de la tâche
+
+Cette procédure et son préflight définissent le contrat. Aucune répétition,
+aucun rollback et aucune preuve inférieure à 30 minutes n'ont encore été
+exécutés. La tâche Phase 9 « Définir et répéter la procédure de rollback »
+reste ouverte.

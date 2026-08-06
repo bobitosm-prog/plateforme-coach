@@ -215,9 +215,23 @@ mal scopés ou média privé exposé.
 
 Avant une release autorisée, identifier le dernier SHA sain. En cas de
 déclenchement, passer à
-[`RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md`](RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md).
+[`ROLLBACK_PROCEDURE.md`](ROLLBACK_PROCEDURE.md), puis utiliser
+[`RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md`](RC1_DEPLOYMENT_ROLLBACK_RUNBOOK.md)
+pour les contrôles opérateur autorisés.
 La définition et la répétition du rollback sont une tâche Phase 9 distincte;
 un rollback en moins de 30 minutes n'est pas encore démontré.
+
+Le préflight rollback est local, pur et sans réseau :
+
+```bash
+npm run rollback:preflight -- --input /chemin/local/rollback-preflight.json
+```
+
+Il ne déclenche aucune action. Le drift staging
+`HISTORY_AND_STRUCTURE_DRIFT` impose `NO_GO` pour Preview. Seule une répétition
+locale isolée, sur schéma reconstruit et compatible, peut rendre l'alignement
+distant explicitement non applicable. Aucune capacité de sauvegarde ou PITR
+n'est supposée sans attestation.
 
 ## 11. Journal de preuve expurgé
 
