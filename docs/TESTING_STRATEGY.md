@@ -354,6 +354,8 @@ npm run supabase:local:status      # pile active + liste de migrations exacte
 npm run supabase:local:verify      # contrat de migrations + assertions structurelles
 npm run supabase:local:fingerprint # empreinte comparable entre deux resets
 npm run test:migrations:empty-db  # deux reconstructions locales jetables indépendantes
+npm run test:migrations:staging-alignment -- \
+  --inventory /chemin/local/inventaire-staging.json
 ```
 
 Les lanceurs E2E appellent `ensure` via `scripts/run-local-e2e.mjs`. Ils vérifient ainsi le même contrat et régénèrent l'environnement local, sans réimplémenter le reset. `tests/integration/reset-migrations.sh` reste réservé aux bases PostgreSQL locales isolées qui ne fournissent pas Auth/PostgREST/Mailpit; il ne constitue pas le reset E2E canonique.
@@ -369,6 +371,18 @@ propreté, calcule l'empreinte puis supprime ses seules ressources dans un
 `finally`. Les collisions historiques de préfixes date à huit chiffres restent
 explicitement gérées par le manifeste de reversioning; les noms source et les
 versions staging résultantes restent uniques et ordonnés.
+
+Le comparateur d'alignement staging est un outil local pur : il reconstruit le
+plan final à partir du manifeste versionné puis compare ses **145 versions** à
+un inventaire JSON local explicitement fourni. Les 149 sources ne sont jamais
+utilisées comme séquence distante attendue : cinq sources restent exclues par
+décision opérateur et un overlay schema-only complète les 144 sources retenues.
+Il détecte manque, ajout, doublon et ordre divergent sans corriger ni
+normaliser l'inventaire. Le ref staging explicite est obligatoire; ref/host
+Production, `--linked`, URL distante en argument et champs ressemblant à des
+secrets sont refusés. L'acquisition de l'inventaire distant et toute
+remédiation restent hors de cette commande et nécessitent des autorisations
+séparées.
 
 ## 8. Sécurité des tests
 

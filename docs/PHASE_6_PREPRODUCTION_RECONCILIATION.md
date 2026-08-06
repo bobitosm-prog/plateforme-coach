@@ -463,6 +463,62 @@ documente les 53 décisions. Les preuves rollback des deux D individuelles sont
 vertes et le plan final 138 migrations passe le dry-run Supabase puis son
 application unique sur `cycbnnojcymjnaqomlyj`.
 
+### Comparaison locale du plan courant avec un inventaire fourni
+
+Les preuves datées ci-dessus restent historiques. Le dépôt courant contient
+149 migrations sources, mais le plan staging final ne doit jamais être comparé
+directement à ces 149 fichiers : il conserve 144 migrations historiques,
+exclut cinq mutations explicitement refusées et ajoute l'overlay schema-only
+`20260419000010_invited_by_coach_schema_only.sql`. L'autorité de comparaison
+est donc une séquence ordonnée de **145 versions staging**.
+
+Le script
+`scripts/preproduction/compare-staging-migration-alignment.mjs` compare cette
+séquence à un inventaire JSON déjà acquis et stocké localement. Il ne contient
+aucun client Supabase, n'appelle aucun réseau et n'acquiert jamais implicitement
+l'état du projet lié. L'acquisition read-only de staging exige une autorisation
+opérateur distincte; toute remédiation (`db push`, `migration repair`, reset ou
+écriture SQL) constitue encore une opération séparée.
+
+Format minimal de l'inventaire :
+
+```json
+{
+  "projectRef": "cycbnnojcymjnaqomlyj",
+  "capturedAt": "2026-08-06T12:00:00.000Z",
+  "source": "operator-read-only",
+  "versions": ["20260317000000", "20260317010000"],
+  "structure": {
+    "tables": [],
+    "functions": [],
+    "policies": [],
+    "publications": []
+  }
+}
+```
+
+L'inventaire ne doit contenir ni clé, mot de passe, token, URL avec credentials,
+donnée métier ou dump. `projectRef` est obligatoire et doit être exactement le
+ref staging; le ref et les hosts Production sont refusés. Les versions peuvent
+avoir 8 chiffres lorsqu'une version historique était déjà unique, ou 14 chiffres
+après re-versioning. Leur ordre est significatif.
+
+Exécution locale, après acquisition séparément autorisée :
+
+```bash
+npm run test:migrations:staging-alignment -- \
+  --inventory /chemin/local/inventaire-staging.json
+```
+
+La sortie expurgée distingue compte source, compte staging, manque, ajout,
+doublon, inversion d'ordre, cinq exclusions et overlay. Les verdicts possibles
+sont `ALIGNED`, `MISSING_REMOTE_VERSIONS`, `EXTRA_REMOTE_VERSIONS`,
+`DUPLICATE_REMOTE_VERSIONS`, `ORDER_MISMATCH`,
+`INVALID_REMOTE_INVENTORY`, `STRUCTURE_DRIFT` et `INCOMPLETE_EVIDENCE`.
+Une preuve structurelle n'est concluante que lorsque les inventaires attendus
+et observés sont tous deux présents; si elle est exigée sans ces deux côtés,
+le résultat reste `INCOMPLETE_EVIDENCE`.
+
 Pour reprendre sans exposer le secret :
 
 ```bash
