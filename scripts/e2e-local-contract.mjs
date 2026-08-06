@@ -20,7 +20,7 @@ export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Journal nutritionnel quotidien', spec: 'e2e/nutrition-daily-journal.spec.ts', flags: [], integrated: true },
   { name: 'Suivi de progression', spec: 'e2e/progression-tracking.spec.ts', flags: [], integrated: true },
   { name: 'Messagerie coach-client et synchronisation Realtime', spec: 'e2e/messaging-realtime.spec.ts', flags: [], integrated: true },
-  { name: 'Réconciliation abonnement et Billing', spec: null, flags: [], integrated: false },
+  { name: 'Réconciliation abonnement et Billing', spec: 'e2e/billing-subscription-reconciliation.spec.ts', flags: ['--stripe'], integrated: true },
 ])
 
 export function validateCriticalE2eTargetMatrix(matrix = CRITICAL_E2E_TARGET_MATRIX) {

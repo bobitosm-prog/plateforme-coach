@@ -84,13 +84,14 @@ npm run test:e2e:coach-journey
 npm run test:e2e:default-coach
 npm run test:e2e -- e2e/platform-webhook-runtime.spec.ts --stripe
 npm run test:e2e -- e2e/nutrition-daily-journal.spec.ts
+npm run test:e2e -- e2e/billing-subscription-reconciliation.spec.ts --stripe
 ```
 
-`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les douze parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
+`npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les quinze parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
 ### Suite E2E critique canonique
 
-Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **148 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
+Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **149 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
 
 Un **parcours critique** est une entrée exécutable nommée unique de `scripts/run-critical-e2e.mjs`, rattachée à une spécification métier principale. Plusieurs tests Playwright dans cette spécification comptent comme un seul parcours. Les suites de performance ne font pas partie de ce décompte.
 
@@ -112,11 +113,11 @@ La matrice cible canonique est versionnée dans `scripts/e2e-local-contract.mjs`
 | 12 | Journal nutritionnel quotidien | Intégré dans ce sous-batch |
 | 13 | Suivi de progression | Intégré dans ce sous-batch |
 | 14 | Messagerie coach-client et synchronisation Realtime | Intégré dans ce sous-batch |
-| 15 | Réconciliation abonnement et Billing | Planifié |
+| 15 | Réconciliation abonnement et Billing | Intégré dans ce sous-batch |
 
-L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, webhook Platform, cycle Training, journal Nutrition, suivi de progression, puis messagerie Realtime. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Le onzième traverse un programme hebdomadaire, saisit deux séries, reprend la séance après reload, finalise la session, vérifie historique, progression et frontières RLS, puis nettoie toutes ses données synthétiques. Le douzième exige `food_items` vide, utilise le fallback `FITNESS_FOODS`, vérifie ajout, reload, modification, suppression et frontières RLS sur `daily_food_logs`; son horloge capture l'instant réel avant authentification afin de stabiliser la date UTC sans avancer au-delà de l'émission du JWT. Le treizième vérifie poids, graphique, mensurations, record personnel, reload et frontières RLS du suivi de progression. Le quatorzième utilise deux contextes Chromium et Supabase Realtime local pour vérifier les échanges client→coach et coach→client sans reload, l'état non-lu/lu, la persistance après reconnexion, l'absence de doublon et les refus RLS des tiers non liés. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
+L'ordre exécutable est stable : invitation, checkout plateforme, checkout coach, push, chat, Auth/inscription/reprise de session, parcours client rattaché à un coach, parcours coach gérant un client, attribution du coach par défaut, webhook Platform, cycle Training, journal Nutrition, suivi de progression, messagerie Realtime, puis réconciliation abonnement/Billing. Le neuvième parcours injecte une valeur locale de `DEFAULT_COACH_EMAIL` et crée le profil coach correspondant; hors de ces préconditions, la route échoue fermée en `503` sans mutation et sans bloquer les autres parcours. Le dixième utilise `--stripe`, un secret synthétique et le faux Stripe local pour signer `checkout.session.completed`, finaliser le payment puis rejouer exactement le même événement; le rejeu est reconnu comme doublon sans seconde mutation. Le onzième traverse un programme hebdomadaire, saisit deux séries, reprend la séance après reload, finalise la session, vérifie historique, progression et frontières RLS, puis nettoie toutes ses données synthétiques. Le douzième exige `food_items` vide, utilise le fallback `FITNESS_FOODS`, vérifie ajout, reload, modification, suppression et frontières RLS sur `daily_food_logs`; son horloge capture l'instant réel avant authentification afin de stabiliser la date UTC sans avancer au-delà de l'émission du JWT. Le treizième vérifie poids, graphique, mensurations, record personnel, reload et frontières RLS du suivi de progression. Le quatorzième utilise deux contextes Chromium et Supabase Realtime local pour vérifier les échanges client→coach et coach→client sans reload, l'état non-lu/lu, la persistance après reconnexion, l'absence de doublon et les refus RLS des tiers non liés. Le quinzième utilise le faux Stripe local et la route Platform réelle pour vérifier payment initial, renouvellement, replay, annulation, reprise d'un claim `failed` avec le même Event ID et réconciliation read-only finale `issues=[]`. Aucun fournisseur Stripe réel n'est contacté. Un seul reset a lieu au début; chaque scénario doit isoler ses identifiants et nettoyer ses comptes, profils et écritures dans son propre `finally`/`afterEach`. Next.js et uniquement le faux fournisseur requis sont démarrés pour le scénario courant puis arrêtés avant le suivant. La suite désactive les proxies externes, limite `NO_PROXY` à la boucle locale et force `--workers=1`.
 
-Après le quatorzième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure corporelle, séance, série, record personnel, poids, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Le parcours webhook contrôle et nettoie en plus son claim dédié dans son propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
+Après le quinzième parcours, l'orchestrateur vérifie qu'il ne reste aucun compte Auth synthétique, profil, relation, invitation, paiement, abonnement push, message, historique Athena, usage IA, programme client, mesure corporelle, séance, série, record personnel, poids, journal nutritionnel, planning, badge, XP ou diagnostic hebdomadaire, que Mailpit est vide et que les ports `3210`, `55326`, `55328`, `55329` et `55330` sont fermés. Les parcours webhook et Billing contrôlent et nettoient en plus leurs claims dédiés dans leur propre `finally`. Son résumé indique statut et durée par parcours, durée totale et nature d'un échec : fonctionnel, infrastructure ou nettoyage incomplet. Toute sortie d'échec est expurgée des jetons, cookies, clés et champs conversationnels sensibles. Les traces/captures ne sont conservées sous `test-results/critical-e2e/` qu'en cas d'échec; elles sont supprimées après une suite verte.
 
 Preuves du 15 juillet 2026 :
 
@@ -213,7 +214,16 @@ Qualification de la messagerie Realtime du 5 août 2026 :
 - la suite canonique isolée réussit ses quatorze parcours en `438.9 s`, dont Messagerie Realtime en `28.0 s`; l'audit final est vide, les ports temporaires sont fermés et la stack principale avec son admin local reste inchangée;
 - l'intégration progresse de **13/15 à 14/15**; seule la réconciliation abonnement/Billing reste planifiée et la tâche globale demeure ouverte.
 
-## 3. Les quatorze parcours E2E actuels
+Qualification de la réconciliation abonnement et Billing du 6 août 2026 :
+
+- `e2e/billing-subscription-reconciliation.spec.ts` traverse Chromium, Next.js, Supabase Auth/PostgREST/PostgreSQL, les routes Checkout et webhook Platform, le claim durable et le service de réconciliation, avec le SDK Stripe dirigé uniquement vers `127.0.0.1:55326`;
+- le parcours vérifie payment `pending`, checkout signé et finalisé, replay sans mutation, `subscription.updated`, renouvellement `invoice.payment_succeeded` unique, annulation et reprise du même Event ID après un premier claim `failed` (`attempt_count` 1 puis 2 et état final `success`);
+- la réconciliation finale reste read-only, non partielle, non tronquée et sans issue; le correctif applicatif préalable est isolé dans `9aca3ba`;
+- deux exécutions dédiées réussissent avec `1 passed`, en `18.2 s` puis `9.8 s`, et chaque audit retrouve zéro résidu Auth, profil, payment ou claim;
+- la suite canonique isolée réussit ses quinze parcours en `452.5 s`, dont Billing en `23.7 s`; l'audit final est vide, les ports temporaires sont fermés et la stack principale conserve son admin local;
+- l'intégration progresse de **14/15 à 15/15** et la tâche d'extension de la suite critique est terminée, sans clôturer les autres tâches de Phase 9.
+
+## 3. Les quinze parcours E2E actuels
 
 | Parcours | Frontières réelles | Frontière simulée | Documentation |
 |---|---|---|---|
@@ -231,6 +241,7 @@ Qualification de la messagerie Realtime du 5 août 2026 :
 | Journal nutritionnel quotidien | Chromium mobile, fallback local, journal, reload, modification, suppression et RLS `daily_food_logs` | aucune frontière externe | stratégie canonique ci-dessus |
 | Suivi de progression | Chromium mobile, poids, graphique, mensurations, record, reload et RLS | aucune frontière externe | stratégie canonique ci-dessus |
 | Messagerie coach-client et Realtime | Deux contextes Chromium, messagerie client/coach, état non-lu/lu, reconnexion, persistance et RLS | serveur Supabase Realtime local; aucune frontière externe | stratégie canonique ci-dessus |
+| Réconciliation abonnement et Billing | Chromium, Checkout Platform, webhooks signés, claims, payments, profil et réconciliation read-only | Customer, Checkout Session, Subscription et Invoice via faux Stripe local | stratégie canonique ci-dessus |
 
 Un test n'est appelé **E2E MoovX** que si ses frontières principales — navigateur, interface, route, identité et persistance — sont réellement traversées. Intercepter `/api/*`, simuler Supabase Auth/PostgREST ou remplacer la persistance principale par un mock transforme le test en test de composant ou de route, même s'il utilise Playwright.
 
@@ -400,7 +411,7 @@ On ajoute un test au niveau le plus bas capable de détecter fidèlement la rég
 - Une seule caractérisation de rendu React et aucune vraie suite de composants interactifs.
 - Pas de commandes npm distinctes pour TypeScript ou lint ciblé; l'intégration RLS et la suite E2E critique possèdent désormais leurs commandes.
 - `npm run test:e2e` reste générique et ne démarre pas toutes les frontières optionnelles; `test:e2e:critical` est le point d'entrée transverse.
-- Parcours critiques encore absents : séance/reprise mobile, nutrition, messaging/realtime, onboarding, abonnement/webhook complet et administration.
+- Les 15 parcours critiques cibles sont intégrés; la couverture multi-navigateurs, mobile réel et les variantes d'administration restent à construire.
 - Mesure du taux de tests intermittents et build hermétique aux polices non encore disponibles.
 
 ## 13. Documents liés

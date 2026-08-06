@@ -13924,3 +13924,52 @@ parcours critique.
 **Décision Phase 9 :** la progression passe de `13/15` à `14/15`. Messagerie
 Realtime est le seul parcours ajouté; la réconciliation abonnement/Billing
 15/15 reste non commencée et la tâche globale reste ouverte.
+
+## Entrée — 2026-08-06 — Phase 9 — intégration de la réconciliation abonnement et Billing
+
+**Périmètre :** le dernier parcours « Réconciliation abonnement et Billing »,
+porté par `e2e/billing-subscription-reconciliation.spec.ts`, rejoint le runner
+canonique. Il utilise uniquement Supabase local, la route Platform réelle, le
+SDK Stripe et le faux serveur Stripe sur la boucle locale; Connect, Stripe
+réel, livemode et Production restent hors scope.
+
+**Contrat Billing :** le scénario crée un client sans abonnement, déclenche le
+checkout Platform et vérifie le payment `pending`, puis livre
+`checkout.session.completed` signé. Le payment devient `paid`, `paid_at` et
+`stripe_event_id` sont renseignés, le profil devient actif et le replay ne
+produit aucune seconde mutation. `customer.subscription.updated`, un
+renouvellement `invoice.payment_succeeded` unique et
+`customer.subscription.deleted` sont ensuite validés.
+
+**Retry et réconciliation :** une Invoice volontairement absente produit un
+claim `failed` avec `attempt_count=1`. Après ajout de cette seule ressource au
+faux Stripe, le même Event ID est rejoué : le claim atteint `success` avec
+`attempt_count=2` et un seul payment. La réconciliation read-only finale est
+non partielle, non tronquée et retourne `issues=[]`. Le correctif applicatif
+préalable de contrainte `stripe_event_id` et d'ordre payment→profil est isolé
+dans le commit `9aca3ba`.
+
+**Répétabilité :** deux exécutions dédiées réussissent avec `1 passed`, en
+`18.2 s` puis `9.8 s`. Après chaque run, les audits constatent zéro utilisateur
+Auth, profil, payment ou claim synthétique et tous les processus temporaires
+sont fermés.
+
+**Validation canonique isolée :** `npm run test:e2e:critical` réussit ses
+quinze parcours : invitation `41.6 s`, checkout plateforme `26.6 s`, checkout
+coach `25.0 s`, Push `30.4 s`, Chat Athena `32.9 s`, Auth/reprise `25.0 s`,
+parcours client `40.0 s`, parcours coach `30.9 s`, attribution par défaut
+`16.5 s`, webhook Platform `23.7 s`, Training `26.8 s`, Nutrition `19.7 s`,
+Progression `22.2 s`, Messagerie Realtime `29.4 s` et Billing `23.7 s`, pour
+`452.5 s` au total. L'audit final isolé est vide, les ports temporaires sont
+fermés et la stack principale conserve son unique utilisateur Auth et son
+profil `super_admin`.
+
+**Contrôles :** les tests ciblés faux Stripe, webhook, ordering, finalisation,
+replay, réconciliation, migration et contrat E2E sont verts; le test SQL des
+claims réussit puis rollbacke. TypeScript, ESLint ciblé et `git diff --check`
+réussissent. Aucun secret réel, service distant, Stripe réel, environnement
+Production ou déploiement n'est utilisé.
+
+**Décision Phase 9 :** la progression passe de `14/15` à `15/15`. La tâche
+« Étendre la suite à 15 parcours E2E critiques » est terminée. Phase 9 reste
+active : ses autres tâches ne sont ni commencées ni clôturées dans ce sous-batch.
