@@ -11,6 +11,7 @@ import {
   buildCanonicalRestoreSql,
   compareRestoreProofs,
   neutralizeUnsupportedCliRoleGrant,
+  prepareOfficialCliRoleGrant,
   sanitizeRestoreError,
   validateBackupDirectory,
   withGuaranteedCleanup,
@@ -57,19 +58,75 @@ describe('staging backup local restore contract', () => {
     expect(sql).toMatch(/COMMIT;$/)
   })
 
-  it('requires the official role grant exactly once', () => {
-    expect(() => neutralizeUnsupportedCliRoleGrant('CREATE ROLE fixture_owner;'))
-      .toThrow(/exactly one/)
-    expect(() => neutralizeUnsupportedCliRoleGrant(
-      `${OFFICIAL_CLI_ROLE_GRANT}\n${OFFICIAL_CLI_ROLE_GRANT}`,
-    )).toThrow(/exactly one/)
+  it('accepts an already sanitized roles dump without transforming it', () => {
+    const source = 'CREATE ROLE fixture_owner NOLOGIN;\n'
+    expect(prepareOfficialCliRoleGrant(source)).toEqual({
+      source,
+      classification: 'OFFICIAL_GRANT_ALREADY_OMITTED',
+    })
   })
 
   it('neutralizes only the unsupported official CLI role grant', () => {
     const source = `CREATE ROLE fixture_owner;\n${OFFICIAL_CLI_ROLE_GRANT}\nGRANT fixture_owner TO postgres;`
-    const result = neutralizeUnsupportedCliRoleGrant(source)
-    expect(result).not.toContain(OFFICIAL_CLI_ROLE_GRANT)
-    expect(result).toContain('GRANT fixture_owner TO postgres;')
+    const original = structuredClone(source)
+    const result = prepareOfficialCliRoleGrant(source)
+    expect(result.classification).toBe('OFFICIAL_GRANT_FILTERED')
+    expect(result.source).not.toContain(OFFICIAL_CLI_ROLE_GRANT)
+    expect(result.source).toContain('GRANT fixture_owner TO postgres;')
+    expect(source).toBe(original)
+  })
+
+  it('recognizes the exact official grant across whitespace and newlines', () => {
+    const source = 'GRANT "postgres" TO "cli_login_postgres"\nWITH INHERIT FALSE GRANTED BY "supabase_admin";'
+    expect(prepareOfficialCliRoleGrant(source).classification).toBe('OFFICIAL_GRANT_FILTERED')
+  })
+
+  it('blocks multiple official grants with a redacted classification', () => {
+    try {
+      prepareOfficialCliRoleGrant(`${OFFICIAL_CLI_ROLE_GRANT}\n${OFFICIAL_CLI_ROLE_GRANT}`)
+      throw new Error('expected contract rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport.classification', 'MULTIPLE_OFFICIAL_GRANTS')
+      const report = (error as { restoreReport?: unknown }).restoreReport
+      expect(JSON.stringify(report)).not.toContain(OFFICIAL_CLI_ROLE_GRANT)
+    }
+  })
+
+  it.each([
+    'GRANT "postgres" TO "cli_login_postgres" WITH INHERIT FALSE GRANTED BY "other_admin";',
+    'GRANT "postgres" TO "cli_login_postgres" WITH ADMIN OPTION GRANTED BY "supabase_admin";',
+    'GRANT "fixture_owner" TO "cli_login_postgres" GRANTED BY "supabase_admin";',
+    'GRANT "postgres" TO "other_role" WITH INHERIT FALSE GRANTED BY "supabase_admin";',
+    'grant postgres to cli_login_postgres',
+  ])('blocks an unrecognized related privilege grant without leaking it', variant => {
+    try {
+      prepareOfficialCliRoleGrant(variant)
+      throw new Error('expected contract rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport.classification', 'UNRECOGNIZED_PRIVILEGE_GRANT')
+      const report = (error as { restoreReport?: unknown }).restoreReport
+      expect(JSON.stringify(report)).not.toContain(variant)
+    }
+  })
+
+  it('ignores relevant words in comments and string literals', () => {
+    const source = [
+      '-- cli_login_postgres GRANT "postgres" TO "other_role";',
+      "SELECT 'GRANT postgres TO cli_login_postgres GRANTED BY supabase_admin';",
+      'CREATE ROLE fixture_owner NOLOGIN;',
+    ].join('\n')
+    expect(prepareOfficialCliRoleGrant(source)).toEqual({
+      source,
+      classification: 'OFFICIAL_GRANT_ALREADY_OMITTED',
+    })
+  })
+
+  it('is deterministic for sanitized and filtered inputs', () => {
+    const sanitized = 'CREATE ROLE fixture_owner NOLOGIN;\n'
+    const filtered = `${sanitized}${OFFICIAL_CLI_ROLE_GRANT}\n`
+    expect(prepareOfficialCliRoleGrant(sanitized)).toEqual(prepareOfficialCliRoleGrant(sanitized))
+    expect(prepareOfficialCliRoleGrant(filtered)).toEqual(prepareOfficialCliRoleGrant(filtered))
+    expect(neutralizeUnsupportedCliRoleGrant(sanitized)).toBe(sanitized)
   })
 
   it.each([

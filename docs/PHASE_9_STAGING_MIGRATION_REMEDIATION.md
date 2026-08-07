@@ -263,8 +263,17 @@ Il exige exactement `roles.sql`, `schema.sql`, `data.sql`,
 local. Il restaure dans l'ordre `roles → schema → data → history schema →
 history data`, avec `ON_ERROR_STOP`, une transaction unique et
 `session_replication_role=replica` avant les données. Conformément à la
-procédure Supabase de backup/restore, il omet uniquement le grant ci-dessus
-dans une copie en mémoire. Les fichiers source ne sont jamais modifiés.
+procédure Supabase de backup/restore, il accepte deux formes strictes de
+`roles.sql` : zéro occurrence lorsque la CLI actuelle a déjà omis le grant, ou
+exactement une occurrence officielle, alors retirée uniquement dans une copie
+en mémoire. Les fichiers source ne sont jamais modifiés. Une occurrence
+multiple ou une instruction apparentée mais non reconnue bloque la restauration
+avec une classification expurgée.
+
+- zéro occurrence : `OFFICIAL_GRANT_ALREADY_OMITTED`;
+- une occurrence officielle : `OFFICIAL_GRANT_FILTERED`;
+- plusieurs occurrences : `MULTIPLE_OFFICIAL_GRANTS`;
+- variante apparentée : `UNRECOGNIZED_PRIVILEGE_GRANT`.
 
 Le harnais refuse `--linked`, `--prod`, `--db-url`, `--password`, `--no-owner`,
 les entrées distantes, les commandes `psql` dangereuses et tout ensemble de
@@ -274,19 +283,26 @@ de rôle, un changement des propriétaires Supabase gérés ou un ordre de
 restauration différent sont explicitement exclus : ces stratégies masqueraient
 le contrat de sécurité au lieu de traiter l'incompatibilité précise.
 
-Deux restaurations indépendantes d'une sauvegarde entièrement synthétique ont
-retourné `RESTORABLE`, avec l'empreinte identique
-`a211710b79bdcac7f0f4101c73788e16`. Chaque run a vérifié deux lignes métier
+Quatre restaurations indépendantes d'une sauvegarde entièrement synthétique,
+deux avec zéro occurrence officielle et deux avec une occurrence officielle,
+ont retourné `RESTORABLE`, avec l'empreinte commune
+`71c68b801ba2e5511f944bfb72fddb65`. Chaque run a vérifié deux lignes métier
 synthétiques, deux versions d'historique, RLS active, une policy, une fonction
 `SECURITY DEFINER`, une publication, l'absence du membership incompatible et
 les propriétaires `supabase_admin` inchangés pour `auth`, `storage` et
-`realtime`. Les comptes Auth et objets Storage sont restés vides; les deux
+`realtime`. Les comptes Auth et objets Storage sont restés vides; les quatre
 stacks, volumes et répertoires jetables ont été nettoyés.
 
 Cette preuve valide uniquement le mécanisme local et son diagnostic. La
 sauvegarde staging antérieure n'est pas conservée, aucune nouvelle sauvegarde
 staging n'a été acquise et la capacité réelle de restauration staging reste à
 attester sous autorisation séparée.
+
+Le contrat acceptant une occurrence déjà omise a été ajouté après qu'un dump
+staging réel acquis le 7 août 2026 a présenté zéro occurrence. Ce dump a été
+supprimé sans exécuter son SQL. Aucun dump staging réel n'a encore été restauré
+avec ce nouveau contrat; la capacité de récupération staging reste donc non
+attestée et Preview reste `NO_GO`.
 
 ## Validation distante future
 

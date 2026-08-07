@@ -152,9 +152,10 @@ Le harnais
 `scripts/preproduction/restore-staging-backup-locally.mjs` permet de vérifier
 deux fois une sauvegarde logique dans des stacks Supabase locales jetables. Il
 respecte l'ordre `roles → schema → data → history`, conserve les propriétaires
-et permissions, et omet seulement dans une copie en mémoire le grant
-`cli_login_postgres` que la procédure Supabase signale comme incompatible avec
-une restauration locale. La preuve synthétique du 7 août 2026 est reproductible
+et permissions, et accepte soit un dump où la CLI a déjà omis le grant
+`cli_login_postgres`, soit exactement l'instruction officielle, retirée dans
+une copie en mémoire. Une occurrence multiple ou une variante apparentée
+inconnue bloque la restauration. La preuve synthétique du 7 août 2026 est reproductible
 et n'atteste pas qu'une sauvegarde staging réelle est disponible ou
 restaurable. Toute nouvelle acquisition ou répétition staging exige toujours
 une autorisation séparée.

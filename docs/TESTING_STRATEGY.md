@@ -462,11 +462,18 @@ artefacts SQL séparés (`roles`, `schema`, `data`, `history_schema` et
 distantes, puis exécute exactement deux restaurations dans des stacks, ports,
 volumes et répertoires indépendants.
 
-Le seul ajustement autorisé est l'omission, dans une copie en mémoire de
-`roles.sql`, du grant officiel `cli_login_postgres` qui échoue localement avec
-SQLSTATE `42501`. Le fichier source, les autres propriétaires et les autres
-permissions restent inchangés. Le harnais refuse notamment `--no-owner` et
-toute neutralisation large des `OWNER` ou `GRANT`.
+Le contrat accepte zéro occurrence du grant officiel `cli_login_postgres`
+lorsque la CLI Supabase l'a déjà omis, sans modifier le contenu. Il accepte
+aussi exactement une occurrence officielle, retirée uniquement dans une copie
+en mémoire parce qu'elle échoue localement avec SQLSTATE `42501`. Une occurrence
+multiple ou une instruction apparentée mais non reconnue produit un blocage
+expurgé. Le fichier source, les autres propriétaires et les autres permissions
+restent inchangés. Le harnais refuse notamment `--no-owner` et toute
+neutralisation large des `OWNER` ou `GRANT`.
+
+Les classifications sont respectivement
+`OFFICIAL_GRANT_ALREADY_OMITTED`, `OFFICIAL_GRANT_FILTERED`,
+`MULTIPLE_OFFICIAL_GRANTS` et `UNRECOGNIZED_PRIVILEGE_GRANT`.
 
 La fixture synthétique de référence vérifie données, historique, RLS, policy,
 fonction `SECURITY DEFINER`, publication et propriétaires des schémas Supabase
@@ -474,6 +481,11 @@ gérés. Deux runs doivent produire des compteurs, propriétaires et fingerprint
 strictement identiques, puis nettoyer toutes leurs ressources, y compris en
 cas d'échec. Cette preuve locale ne remplace pas l'acquisition et la validation
 d'une sauvegarde staging sous autorisation distincte.
+
+Les deux formes de `roles.sql` sont chacune restaurées deux fois avec la
+fixture synthétique. Leurs états finaux doivent être fonctionnellement
+identiques. Aucun dump staging réel n'a encore été restauré sous ce contrat;
+la capacité réelle reste non attestée et Preview demeure `NO_GO`.
 
 ## 8. Sécurité des tests
 

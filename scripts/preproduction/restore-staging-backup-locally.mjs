@@ -28,6 +28,9 @@ export const REQUIRED_BACKUP_FILES = Object.freeze([
 export const OFFICIAL_CLI_ROLE_GRANT =
   'GRANT "postgres" TO "cli_login_postgres" WITH INHERIT FALSE GRANTED BY "supabase_admin";'
 
+const OFFICIAL_CLI_ROLE_GRANT_PATTERN =
+  /GRANT[ \t\r\n]+"postgres"[ \t\r\n]+TO[ \t\r\n]+"cli_login_postgres"[ \t\r\n]+WITH[ \t\r\n]+INHERIT[ \t\r\n]+FALSE[ \t\r\n]+GRANTED[ \t\r\n]+BY[ \t\r\n]+"supabase_admin"[ \t\r\n]*;/g
+
 const repositoryRoot = resolve(import.meta.dirname, '../..')
 const supabaseCli = resolve(repositoryRoot, 'node_modules/.bin/supabase')
 const dockerBinary = '/usr/local/bin/docker'
@@ -99,23 +102,116 @@ export function validateBackupDirectory(directory) {
   return { root, files }
 }
 
+function privilegeGrantContractError(classification) {
+  const error = new Error('CLI role grant contract blocked')
+  error.restoreReport = {
+    phase: 'roles_contract',
+    sqlstate: 'NOT_APPLICABLE',
+    operation: 'GRANT',
+    objectType: 'ROLE',
+    schema: null,
+    classification,
+    sensitiveDetailRemoved: true,
+  }
+  return error
+}
+
+function maskSqlCommentsAndStrings(source) {
+  const characters = source.split('')
+  const masked = source.split('')
+  const blank = index => {
+    if (masked[index] !== '\n' && masked[index] !== '\r') masked[index] = ' '
+  }
+  for (let index = 0; index < characters.length;) {
+    if (characters[index] === '-' && characters[index + 1] === '-') {
+      blank(index++)
+      blank(index++)
+      while (index < characters.length && characters[index] !== '\n') blank(index++)
+      continue
+    }
+    if (characters[index] === '/' && characters[index + 1] === '*') {
+      blank(index++)
+      blank(index++)
+      while (index < characters.length) {
+        const closing = characters[index] === '*' && characters[index + 1] === '/'
+        blank(index++)
+        if (closing) {
+          blank(index++)
+          break
+        }
+      }
+      continue
+    }
+    if (characters[index] === "'") {
+      blank(index++)
+      while (index < characters.length) {
+        const quote = characters[index] === "'"
+        blank(index++)
+        if (quote && characters[index] === "'") {
+          blank(index++)
+          continue
+        }
+        if (quote) break
+      }
+      continue
+    }
+    if (characters[index] === '$') {
+      const delimiter = source.slice(index).match(/^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/)?.[0]
+      if (delimiter) {
+        for (let offset = 0; offset < delimiter.length; offset += 1) blank(index++)
+        const closing = source.indexOf(delimiter, index)
+        const end = closing === -1 ? characters.length : closing + delimiter.length
+        while (index < end) blank(index++)
+        continue
+      }
+    }
+    index += 1
+  }
+  return masked.join('')
+}
+
+function officialGrantMatches(maskedSource) {
+  return [...maskedSource.matchAll(OFFICIAL_CLI_ROLE_GRANT_PATTERN)]
+}
+
+function hasUnrecognizedRelevantGrant(maskedSource, recognizedMatches) {
+  const withoutRecognized = maskedSource.split('')
+  for (const match of recognizedMatches) {
+    for (let index = match.index; index < match.index + match[0].length; index += 1) {
+      if (withoutRecognized[index] !== '\n' && withoutRecognized[index] !== '\r') {
+        withoutRecognized[index] = ' '
+      }
+    }
+  }
+  const grantStatements = withoutRecognized.join('').match(/\bGRANT\b[\s\S]*?(?:;|$)/gi) ?? []
+  return grantStatements.some(statement => (
+    /\bcli_login_postgres\b/i.test(statement)
+    || /\bsupabase_admin\b/i.test(statement)
+    || /^GRANT[ \t\r\n]+"?postgres"?(?:[ \t\r\n]|$)/i.test(statement)
+  ))
+}
+
+export function prepareOfficialCliRoleGrant(source) {
+  const maskedSource = maskSqlCommentsAndStrings(source)
+  const matches = officialGrantMatches(maskedSource)
+  if (matches.length > 1) throw privilegeGrantContractError('MULTIPLE_OFFICIAL_GRANTS')
+  if (hasUnrecognizedRelevantGrant(maskedSource, matches)) {
+    throw privilegeGrantContractError('UNRECOGNIZED_PRIVILEGE_GRANT')
+  }
+  if (matches.length === 0) {
+    return { source, classification: 'OFFICIAL_GRANT_ALREADY_OMITTED' }
+  }
+  const match = matches[0]
+  const prepared = `${source.slice(0, match.index)}-- Local restore: official Supabase cli_login_postgres grant omitted.${source.slice(match.index + match[0].length)}`
+  return { source: prepared, classification: 'OFFICIAL_GRANT_FILTERED' }
+}
+
 export function neutralizeUnsupportedCliRoleGrant(source) {
-  const occurrences = source.split(OFFICIAL_CLI_ROLE_GRANT).length - 1
-  if (occurrences !== 1) {
-    throw new Error('Expected exactly one official cli_login_postgres grant')
-  }
-  const result = source.replace(
-    OFFICIAL_CLI_ROLE_GRANT,
-    '-- Local restore: official Supabase cli_login_postgres grant omitted.',
-  )
-  if (/GRANT\s+"postgres"\s+TO\s+"cli_login_postgres"/i.test(result)) {
-    throw new Error('Unsupported cli_login_postgres grant remains')
-  }
-  return result
+  return prepareOfficialCliRoleGrant(source).source
 }
 
 export function buildCanonicalRestoreSql(files) {
-  const roles = neutralizeUnsupportedCliRoleGrant(files['roles.sql'].source)
+  const roles = prepareOfficialCliRoleGrant(files['roles.sql'].source).source
   return [
     '\\set ON_ERROR_STOP on',
     'BEGIN;',
@@ -376,6 +472,7 @@ async function restoreOnce({ backup, runNumber, ports }) {
 
 export async function restoreBackupTwice(backupDirectory) {
   const backup = validateBackupDirectory(backupDirectory)
+  const roleGrant = prepareOfficialCliRoleGrant(backup.files['roles.sql'].source)
   const proofs = []
   for (let index = 0; index < runPorts.length; index += 1) {
     proofs.push(await restoreOnce({ backup, runNumber: index + 1, ports: runPorts[index] }))
@@ -387,6 +484,7 @@ export async function restoreBackupTwice(backupDirectory) {
     fingerprintsIdentical: true,
     countsIdentical: true,
     ownershipIdentical: true,
+    roleGrantClassification: roleGrant.classification,
     sourceDumpModified: false,
     remoteAccess: false,
   }
