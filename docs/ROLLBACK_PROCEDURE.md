@@ -150,7 +150,10 @@ il ne remplace jamais une migration compensatoire forward-only.
 
 Le harnais
 `scripts/preproduction/restore-staging-backup-locally.mjs` permet de vérifier
-deux fois une sauvegarde logique dans des stacks Supabase locales jetables. Il
+une première restauration opérateur avec `--runs 1`, ou sa reproductibilité
+avec `--runs 2` dans deux stacks Supabase locales jetables indépendantes. Sans
+option, le comportement par défaut reste deux runs. Toute autre valeur est
+refusée. Il
 respecte l'ordre `roles → schema → data → history`, conserve les propriétaires
 et permissions, et accepte soit un dump où la CLI a déjà omis le grant
 `cli_login_postgres`, soit exactement l'instruction officielle, retirée dans

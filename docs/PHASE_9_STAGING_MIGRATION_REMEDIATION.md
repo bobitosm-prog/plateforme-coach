@@ -258,6 +258,13 @@ node scripts/preproduction/restore-staging-backup-locally.mjs \
   --runs 2
 ```
 
+Le défaut reste `--runs 2`. Le mode strict `--runs 1` qualifie uniquement une
+première restauration opérateur dans une stack jetable et ne prétend pas
+démontrer la reproductibilité. Le mode `--runs 2` conserve la preuve historique
+avec deux stacks indépendantes et comparaison obligatoire des fingerprints,
+compteurs et propriétaires. Toute autre valeur est refusée avec la
+classification `INVALID_RUN_COUNT`.
+
 Il exige exactement `roles.sql`, `schema.sql`, `data.sql`,
 `history_schema.sql` et `history_data.sql`, dans un répertoire temporaire
 local. Il restaure dans l'ordre `roles → schema → data → history schema →
@@ -303,6 +310,10 @@ staging réel acquis le 7 août 2026 a présenté zéro occurrence. Ce dump a é
 supprimé sans exécuter son SQL. Aucun dump staging réel n'a encore été restauré
 avec ce nouveau contrat; la capacité de récupération staging reste donc non
 attestée et Preview reste `NO_GO`.
+
+Le mode strict à une restauration a été validé uniquement avec les deux formes
+de fixture synthétique. Aucun nouveau dump staging réel n'a été acquis ou testé
+avec ce mode; la capacité réelle staging reste non attestée.
 
 ## Validation distante future
 

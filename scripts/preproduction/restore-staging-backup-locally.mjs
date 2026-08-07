@@ -77,8 +77,21 @@ export function assertSafeRestoreArgs(argv) {
   } catch (error) {
     if (error instanceof Error && error.message === 'Remote backup URL is forbidden') throw error
   }
-  const runs = Number(values['--runs'] ?? '2')
-  if (runs !== 2) throw new Error('Exactly two independent restore runs are required')
+  const requestedRuns = values['--runs'] ?? '2'
+  if (!/^[12]$/.test(requestedRuns)) {
+    const error = new Error('Restore run count must be exactly 1 or 2')
+    error.restoreReport = {
+      phase: 'arguments',
+      sqlstate: 'NOT_APPLICABLE',
+      operation: 'RESTORE',
+      objectType: 'RUN_COUNT',
+      schema: null,
+      classification: 'INVALID_RUN_COUNT',
+      sensitiveDetailRemoved: true,
+    }
+    throw error
+  }
+  const runs = Number(requestedRuns)
   return { backupDirectory: assertLocalPath(values['--backup-dir'], 'backup directory'), runs }
 }
 
@@ -470,29 +483,72 @@ async function restoreOnce({ backup, runNumber, ports }) {
   return proof
 }
 
-export async function restoreBackupTwice(backupDirectory) {
-  const backup = validateBackupDirectory(backupDirectory)
+/**
+ * @param {{
+ *   backup: { files: Record<string, { source: string }> },
+ *   requestedRuns: number,
+ *   restoreRun?: (input: {
+ *     backup: { files: Record<string, { source: string }> },
+ *     runNumber: number,
+ *     ports: { db: number } & Record<string, number>,
+ *   }) => Promise<{
+ *     fingerprint: string,
+ *     counts: Record<string, unknown>,
+ *     owners: Record<string, unknown>,
+ *   }>,
+ *   ports?: readonly ({ db: number } & Record<string, number>)[],
+ *   compareProofs?: (
+ *     first: { fingerprint: string, counts: Record<string, unknown>, owners: Record<string, unknown> },
+ *     second: { fingerprint: string, counts: Record<string, unknown>, owners: Record<string, unknown> },
+ *   ) => boolean,
+ * }} input
+ */
+export async function executeRestoreRuns({
+  backup,
+  requestedRuns,
+  restoreRun = restoreOnce,
+  ports = runPorts,
+  compareProofs = compareRestoreProofs,
+}) {
+  if (requestedRuns !== 1 && requestedRuns !== 2) {
+    throw new Error('Restore execution requires exactly 1 or 2 runs')
+  }
   const roleGrant = prepareOfficialCliRoleGrant(backup.files['roles.sql'].source)
   const proofs = []
-  for (let index = 0; index < runPorts.length; index += 1) {
-    proofs.push(await restoreOnce({ backup, runNumber: index + 1, ports: runPorts[index] }))
+  for (let index = 0; index < requestedRuns; index += 1) {
+    proofs.push(await restoreRun({ backup, runNumber: index + 1, ports: ports[index] }))
   }
-  compareRestoreProofs(proofs[0], proofs[1])
+  if (requestedRuns === 2) {
+    compareProofs(proofs[0], proofs[1])
+  }
   return {
     status: 'RESTORABLE',
+    requestedRuns,
+    completedRuns: proofs.length,
+    runs: proofs,
     restoreRuns: proofs,
-    fingerprintsIdentical: true,
-    countsIdentical: true,
-    ownershipIdentical: true,
+    fingerprint: proofs[0].fingerprint,
+    fingerprintsIdentical: requestedRuns === 2 ? true : null,
+    countsIdentical: requestedRuns === 2 ? true : null,
+    ownershipIdentical: requestedRuns === 2 ? true : null,
     roleGrantClassification: roleGrant.classification,
     sourceDumpModified: false,
     remoteAccess: false,
   }
 }
 
+export async function restoreBackupRuns(backupDirectory, requestedRuns = 2) {
+  const backup = validateBackupDirectory(backupDirectory)
+  return executeRestoreRuns({ backup, requestedRuns })
+}
+
+export async function restoreBackupTwice(backupDirectory) {
+  return restoreBackupRuns(backupDirectory, 2)
+}
+
 async function main() {
-  const { backupDirectory } = assertSafeRestoreArgs(process.argv.slice(2))
-  const report = await restoreBackupTwice(backupDirectory)
+  const { backupDirectory, runs } = assertSafeRestoreArgs(process.argv.slice(2))
+  const report = await restoreBackupRuns(backupDirectory, runs)
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 }
 

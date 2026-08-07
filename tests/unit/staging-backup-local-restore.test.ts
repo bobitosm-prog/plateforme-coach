@@ -10,6 +10,7 @@ import {
   assertSafeRestoreArgs,
   buildCanonicalRestoreSql,
   compareRestoreProofs,
+  executeRestoreRuns,
   neutralizeUnsupportedCliRoleGrant,
   prepareOfficialCliRoleGrant,
   sanitizeRestoreError,
@@ -170,11 +171,144 @@ describe('staging backup local restore contract', () => {
       .toThrow(/--no-owner/)
   })
 
-  it('accepts only the planned two-run local mode', () => {
+  it('defaults to two restore runs', () => {
+    expect(assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a']))
+      .toEqual({ backupDirectory: '/private/tmp/a', runs: 2 })
+  })
+
+  it.each(['1', '2'])('accepts the bounded %s-run local mode', runs => {
+    expect(assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a', '--runs', runs]))
+      .toEqual({ backupDirectory: '/private/tmp/a', runs: Number(runs) })
+  })
+
+  it.each(['0', '3', '-1', '1.5', 'abc'])('refuses invalid run count %s', runs => {
+    try {
+      assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a', '--runs', runs])
+      throw new Error('expected run count rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport.classification', 'INVALID_RUN_COUNT')
+    }
+  })
+
+  it('refuses a missing or duplicated run count', () => {
+    expect(() => assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a', '--runs']))
+      .toThrow(/incomplete/)
+    expect(() => assertSafeRestoreArgs([
+      '--backup-dir', '/private/tmp/a', '--runs', '1', '--runs', '2',
+    ])).toThrow(/Duplicate/)
+  })
+
+  it('executes one restore without cross-run comparison', async () => {
+    const calls: Array<{ runNumber: number, ports: { db: number } }> = []
+    let comparisons = 0
+    const report = await executeRestoreRuns({
+      backup: { files: backupFiles() },
+      requestedRuns: 1,
+      ports: [{ db: 62001 }],
+      restoreRun: async ({ runNumber, ports }) => {
+        calls.push({ runNumber, ports })
+        return { fingerprint: 'one', counts: { rows: 2 }, owners: { auth: 'supabase_admin' } }
+      },
+      compareProofs: () => {
+        comparisons += 1
+        return true
+      },
+    })
+
+    expect(calls).toEqual([{ runNumber: 1, ports: { db: 62001 } }])
+    expect(comparisons).toBe(0)
+    expect(report).toEqual(expect.objectContaining({
+      status: 'RESTORABLE',
+      requestedRuns: 1,
+      completedRuns: 1,
+      fingerprint: 'one',
+      fingerprintsIdentical: null,
+    }))
+    expect(report.runs).toHaveLength(1)
+  })
+
+  it('executes and compares two independent restores', async () => {
+    const calls: number[] = []
+    let comparisons = 0
+    const proof = { fingerprint: 'same', counts: { rows: 2 }, owners: { auth: 'supabase_admin' } }
+    const report = await executeRestoreRuns({
+      backup: { files: backupFiles() },
+      requestedRuns: 2,
+      ports: [{ db: 62001 }, { db: 62002 }],
+      restoreRun: async ({ runNumber }) => {
+        calls.push(runNumber)
+        return structuredClone(proof)
+      },
+      compareProofs: (first, second) => {
+        comparisons += 1
+        return compareRestoreProofs(first, second)
+      },
+    })
+
+    expect(calls).toEqual([1, 2])
+    expect(comparisons).toBe(1)
+    expect(report).toEqual(expect.objectContaining({
+      status: 'RESTORABLE',
+      requestedRuns: 2,
+      completedRuns: 2,
+      fingerprintsIdentical: true,
+    }))
+    expect(report.runs).toHaveLength(2)
+  })
+
+  it('blocks a divergent two-run restore proof', async () => {
+    await expect(executeRestoreRuns({
+      backup: { files: backupFiles() },
+      requestedRuns: 2,
+      ports: [{ db: 62001 }, { db: 62002 }],
+      restoreRun: async ({ runNumber }) => ({
+        fingerprint: `run-${runNumber}`,
+        counts: { rows: 2 },
+        owners: { auth: 'supabase_admin' },
+      }),
+    })).rejects.toThrow(/fingerprints/)
+  })
+
+  it('stops a one-run execution after its first failure', async () => {
+    let attempts = 0
+    let cleanups = 0
+    await expect(executeRestoreRuns({
+      backup: { files: backupFiles() },
+      requestedRuns: 1,
+      ports: [{ db: 62001 }],
+      restoreRun: async () => withGuaranteedCleanup(async () => {
+        attempts += 1
+        throw new Error('synthetic restore failure')
+      }, async () => { cleanups += 1 }),
+    })).rejects.toThrow(/synthetic restore failure/)
+    expect(attempts).toBe(1)
+    expect(cleanups).toBe(1)
+  })
+
+  it('cleans each attempted restore when the second run fails', async () => {
+    let attempts = 0
+    let cleanups = 0
+    await expect(executeRestoreRuns({
+      backup: { files: backupFiles() },
+      requestedRuns: 2,
+      ports: [{ db: 62001 }, { db: 62002 }],
+      restoreRun: async ({ runNumber }) => withGuaranteedCleanup(async () => {
+        attempts += 1
+        if (runNumber === 2) throw new Error('synthetic second restore failure')
+        return {
+          fingerprint: 'first',
+          counts: { rows: 2 },
+          owners: { auth: 'supabase_admin' },
+        }
+      }, async () => { cleanups += 1 }),
+    })).rejects.toThrow(/synthetic second restore failure/)
+    expect(attempts).toBe(2)
+    expect(cleanups).toBe(2)
+  })
+
+  it('keeps the explicit historical two-run argument', () => {
     expect(assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a', '--runs', '2']))
       .toEqual({ backupDirectory: '/private/tmp/a', runs: 2 })
-    expect(() => assertSafeRestoreArgs(['--backup-dir', '/private/tmp/a', '--runs', '1']))
-      .toThrow(/two independent/)
   })
 
   it('refuses primary ports, duplicate ports and invalid project IDs', () => {

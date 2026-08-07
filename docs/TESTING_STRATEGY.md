@@ -459,8 +459,12 @@ séparées.
 répète une restauration logique sans connexion distante. Il exige les cinq
 artefacts SQL séparés (`roles`, `schema`, `data`, `history_schema` et
 `history_data`) sous un répertoire temporaire, refuse les options et entrées
-distantes, puis exécute exactement deux restaurations dans des stacks, ports,
-volumes et répertoires indépendants.
+distantes, puis accepte exactement un ou deux runs. Le défaut est deux. Le mode
+`--runs 1` qualifie une première restauration opérateur dans une seule stack
+jetable, sans comparaison cross-run. Le mode `--runs 2` utilise deux stacks,
+ports, volumes et répertoires indépendants et compare obligatoirement leurs
+preuves. Zéro, plus de deux, une valeur négative, décimale ou non numérique
+produit `INVALID_RUN_COUNT`.
 
 Le contrat accepte zéro occurrence du grant officiel `cli_login_postgres`
 lorsque la CLI Supabase l'a déjà omis, sans modifier le contenu. Il accepte
@@ -486,6 +490,10 @@ Les deux formes de `roles.sql` sont chacune restaurées deux fois avec la
 fixture synthétique. Leurs états finaux doivent être fonctionnellement
 identiques. Aucun dump staging réel n'a encore été restauré sous ce contrat;
 la capacité réelle reste non attestée et Preview demeure `NO_GO`.
+
+Le mode `--runs 1` a également été validé localement pour chacune des deux
+formes synthétiques; `--runs 2` conserve la preuve de reproductibilité. Aucun
+nouveau dump staging réel n'a été acquis ou restauré avec ce mode borné.
 
 ## 8. Sécurité des tests
 
