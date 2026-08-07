@@ -315,6 +315,23 @@ Le mode strict à une restauration a été validé uniquement avec les deux form
 de fixture synthétique. Aucun nouveau dump staging réel n'a été acquis ou testé
 avec ce mode; la capacité réelle staging reste non attestée.
 
+Le contrôle de sécurité des artefacts SQL reste fail-closed, mais analyse
+désormais le contexte lexical au lieu de rechercher les motifs dangereux dans
+le texte brut. Les commentaires, chaînes SQL, identifiants entre guillemets,
+corps dollar-quoted et blocs de données `COPY ... FROM STDIN` sont masqués en
+conservant leurs lignes et positions avant l'analyse. Une vraie méta-commande
+`psql` `\!` en début de ligne et un vrai statement top-level
+`COPY ... FROM/TO PROGRAM` restent bloqués avant toute
+création de stack, avec des classifications expurgées. Un commentaire bloc,
+une chaîne, un identifiant quoted ou un corps dollar-quoted non terminé bloque
+avec `SQL_LEXING_INCOMPLETE`; aucune construction ambiguë n'est supposée sûre.
+
+Ce durcissement a été qualifié uniquement sur des fixtures synthétiques : les
+motifs documentaires sont acceptés, tandis que les commandes shell et
+`COPY PROGRAM` exécutables sont refusés avant la stack. Aucun nouveau dump
+staging réel n'a été acquis ou restauré après ce correctif. La capacité réelle
+de restauration staging reste non attestée et Preview reste `NO_GO`.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit

@@ -495,6 +495,19 @@ Le mode `--runs 1` a également été validé localement pour chacune des deux
 formes synthétiques; `--runs 2` conserve la preuve de reproductibilité. Aucun
 nouveau dump staging réel n'a été acquis ou restauré avec ce mode borné.
 
+Le préflight SQL du harnais est contextuel et fail-closed. Un lexer
+déterministe masque commentaires, chaînes, identifiants quoted, corps
+dollar-quoted et blocs de données `COPY ... FROM STDIN` en conservant les
+lignes et positions. Il bloque une vraie méta-commande `psql` `\!` placée au
+début d'une ligne et tout statement
+top-level `COPY ... FROM/TO PROGRAM`, mais accepte ces motifs lorsqu'ils sont
+uniquement documentaires. Un commentaire, une chaîne ou un dollar quote non
+terminé produit `SQL_LEXING_INCOMPLETE`. Les fixtures dangereuses doivent être
+refusées avant la création d'une stack; la fixture documentaire doit être
+`RESTORABLE` avec `--runs 1` et reproductible avec `--runs 2`. Aucun dump
+staging réel n'a encore été restauré après ce correctif; la capacité réelle
+reste non attestée et Preview demeure `NO_GO`.
+
 ## 8. Sécurité des tests
 
 - Production, préproduction partagée et services hébergés sont interdits par défaut.

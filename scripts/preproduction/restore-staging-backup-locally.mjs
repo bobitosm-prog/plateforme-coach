@@ -107,12 +107,255 @@ export function validateBackupDirectory(directory) {
     const metadata = statSync(path)
     if (!metadata.isFile() || metadata.size === 0) throw new Error(`Backup file is empty: ${name}`)
     const source = readFileSync(path, 'utf8')
-    if (/\\connect\b|\\!|COPY\s+.+PROGRAM/i.test(source)) {
-      throw new Error(`Unsafe backup command detected: ${name}`)
-    }
+    validateSqlArtifactSafety(source, name)
     return [name, { path, source, sizeBytes: metadata.size }]
   }))
   return { root, files }
+}
+
+function sqlSafetyError({ artifact, classification, line, patternType }) {
+  const error = new Error('Unsafe backup SQL artifact blocked')
+  error.restoreReport = {
+    artifact,
+    classification,
+    line,
+    type: patternType,
+  }
+  return error
+}
+
+function lineNumberAt(source, index) {
+  let line = 1
+  for (let cursor = 0; cursor < index; cursor += 1) {
+    if (source[cursor] === '\n') line += 1
+  }
+  return line
+}
+
+function escapeStringPrefixLength(source, quoteIndex) {
+  if (quoteIndex >= 1 && /[eE]/.test(source[quoteIndex - 1])) {
+    const before = source[quoteIndex - 2]
+    if (!before || !/[a-zA-Z0-9_$]/.test(before)) return 1
+  }
+  if (quoteIndex >= 2 && /[uU]/.test(source[quoteIndex - 2]) && source[quoteIndex - 1] === '&') {
+    const before = source[quoteIndex - 3]
+    if (!before || !/[a-zA-Z0-9_$]/.test(before)) return 2
+  }
+  return 0
+}
+
+function maskSqlNonExecutableContexts(source, {
+  artifact = 'unknown.sql',
+  maskDoubleQuotedIdentifiers = true,
+} = {}) {
+  const characters = source.split('')
+  const masked = source.split('')
+  const blank = index => {
+    if (masked[index] !== '\n' && masked[index] !== '\r') masked[index] = ' '
+  }
+  const incomplete = (index, patternType) => {
+    throw sqlSafetyError({
+      artifact,
+      classification: 'SQL_LEXING_INCOMPLETE',
+      line: lineNumberAt(source, index),
+      patternType,
+    })
+  }
+  let statementStart = 0
+
+  for (let index = 0; index < characters.length;) {
+    if (characters[index] === '-' && characters[index + 1] === '-') {
+      blank(index++)
+      blank(index++)
+      while (index < characters.length && characters[index] !== '\n') blank(index++)
+      continue
+    }
+
+    if (characters[index] === '/' && characters[index + 1] === '*') {
+      const opening = index
+      let depth = 1
+      blank(index++)
+      blank(index++)
+      while (index < characters.length && depth > 0) {
+        if (characters[index] === '/' && characters[index + 1] === '*') {
+          depth += 1
+          blank(index++)
+          blank(index++)
+          continue
+        }
+        if (characters[index] === '*' && characters[index + 1] === '/') {
+          depth -= 1
+          blank(index++)
+          blank(index++)
+          continue
+        }
+        blank(index++)
+      }
+      if (depth !== 0) incomplete(opening, 'BLOCK_COMMENT')
+      continue
+    }
+
+    if (characters[index] === "'") {
+      const opening = index
+      const escapePrefixLength = escapeStringPrefixLength(source, index)
+      for (let offset = escapePrefixLength; offset > 0; offset -= 1) blank(index - offset)
+      blank(index++)
+      let closed = false
+      while (index < characters.length) {
+        if (escapePrefixLength > 0 && characters[index] === '\\') {
+          blank(index++)
+          if (index < characters.length) blank(index++)
+          continue
+        }
+        const quote = characters[index] === "'"
+        blank(index++)
+        if (quote && characters[index] === "'") {
+          blank(index++)
+          continue
+        }
+        if (quote) {
+          closed = true
+          break
+        }
+      }
+      if (!closed) incomplete(opening, 'SINGLE_QUOTED_STRING')
+      continue
+    }
+
+    if (characters[index] === '"') {
+      const opening = index
+      if (maskDoubleQuotedIdentifiers) blank(index)
+      index += 1
+      let closed = false
+      while (index < characters.length) {
+        const quote = characters[index] === '"'
+        if (maskDoubleQuotedIdentifiers) blank(index)
+        index += 1
+        if (quote && characters[index] === '"') {
+          if (maskDoubleQuotedIdentifiers) blank(index)
+          index += 1
+          continue
+        }
+        if (quote) {
+          closed = true
+          break
+        }
+      }
+      if (!closed) incomplete(opening, 'DOUBLE_QUOTED_IDENTIFIER')
+      continue
+    }
+
+    if (characters[index] === '$') {
+      const delimiter = source.slice(index).match(/^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/)?.[0]
+      if (delimiter) {
+        const opening = index
+        for (let offset = 0; offset < delimiter.length; offset += 1) blank(index++)
+        const closing = source.indexOf(delimiter, index)
+        if (closing === -1) incomplete(opening, 'DOLLAR_QUOTED_BODY')
+        const end = closing + delimiter.length
+        while (index < end) blank(index++)
+        continue
+      }
+    }
+
+    if (characters[index] === ';') {
+      const statement = masked.slice(statementStart, index + 1).join('')
+      const copyFromStdin = statement.match(
+        /(?:^|\n)[ \t]*COPY\b[\s\S]*?\bFROM\s+STDIN\s*;[ \t\r]*$/i,
+      )
+      statementStart = index + 1
+      if (copyFromStdin) {
+        const payloadStart = index + 1
+        let cursor = payloadStart
+        let terminatorEnd = -1
+        while (cursor < characters.length) {
+          const lineEnd = source.indexOf('\n', cursor)
+          const end = lineEnd === -1 ? characters.length : lineEnd
+          const line = source.slice(cursor, end).replace(/\r$/, '')
+          if (/^[ \t]*\\\.[ \t]*$/.test(line)) {
+            terminatorEnd = end
+            break
+          }
+          cursor = lineEnd === -1 ? characters.length : lineEnd + 1
+        }
+        if (terminatorEnd === -1) incomplete(payloadStart, 'COPY_STDIN_DATA')
+        index = payloadStart
+        while (index < terminatorEnd) blank(index++)
+        if (characters[index] === '\n') index += 1
+        statementStart = index
+        continue
+      }
+    }
+
+    index += 1
+  }
+  return masked.join('')
+}
+
+function statementRanges(maskedSource) {
+  const ranges = []
+  let start = 0
+  for (let index = 0; index < maskedSource.length; index += 1) {
+    if (maskedSource[index] === ';') {
+      ranges.push({ start, end: index + 1 })
+      start = index + 1
+    }
+  }
+  if (start < maskedSource.length) ranges.push({ start, end: maskedSource.length })
+  return ranges
+}
+
+export function validateSqlArtifactSafety(source, artifact = 'unknown.sql') {
+  const maskedSource = maskSqlNonExecutableContexts(source, {
+    artifact,
+    maskDoubleQuotedIdentifiers: true,
+  })
+  const maskedLines = maskedSource.split(/\n/)
+  const executableCharacters = maskedSource.split('')
+  let lineOffset = 0
+  for (let index = 0; index < maskedLines.length; index += 1) {
+    const line = maskedLines[index]
+    if (/^[ \t]*\\!/.test(line)) {
+      throw sqlSafetyError({
+        artifact,
+        classification: 'UNSAFE_PSQL_SHELL_COMMAND',
+        line: index + 1,
+        patternType: 'PSQL_SHELL_COMMAND',
+      })
+    }
+    if (/^[ \t]*\\connect\b/i.test(line)) {
+      throw sqlSafetyError({
+        artifact,
+        classification: 'UNSAFE_PSQL_CONNECT_COMMAND',
+        line: index + 1,
+        patternType: 'PSQL_CONNECT_COMMAND',
+      })
+    }
+    if (/^[ \t]*\\/.test(line)) {
+      for (let cursor = lineOffset; cursor < lineOffset + line.length; cursor += 1) {
+        if (maskedSource[cursor] !== '\r') {
+          // Other psql meta-commands are excluded from SQL statement parsing.
+          executableCharacters[cursor] = ' '
+        }
+      }
+    }
+    lineOffset += line.length + 1
+  }
+
+  const executableSource = executableCharacters.join('')
+  for (const range of statementRanges(executableSource)) {
+    const statement = executableSource.slice(range.start, range.end)
+    if (/^\s*COPY\b[\s\S]*?\b(?:FROM|TO)\s+PROGRAM\b/i.test(statement)) {
+      const copyOffset = statement.search(/\bCOPY\b/i)
+      throw sqlSafetyError({
+        artifact,
+        classification: 'UNSAFE_COPY_PROGRAM',
+        line: lineNumberAt(executableSource, range.start + Math.max(copyOffset, 0)),
+        patternType: 'COPY_PROGRAM',
+      })
+    }
+  }
+  return true
 }
 
 function privilegeGrantContractError(classification) {
@@ -127,60 +370,6 @@ function privilegeGrantContractError(classification) {
     sensitiveDetailRemoved: true,
   }
   return error
-}
-
-function maskSqlCommentsAndStrings(source) {
-  const characters = source.split('')
-  const masked = source.split('')
-  const blank = index => {
-    if (masked[index] !== '\n' && masked[index] !== '\r') masked[index] = ' '
-  }
-  for (let index = 0; index < characters.length;) {
-    if (characters[index] === '-' && characters[index + 1] === '-') {
-      blank(index++)
-      blank(index++)
-      while (index < characters.length && characters[index] !== '\n') blank(index++)
-      continue
-    }
-    if (characters[index] === '/' && characters[index + 1] === '*') {
-      blank(index++)
-      blank(index++)
-      while (index < characters.length) {
-        const closing = characters[index] === '*' && characters[index + 1] === '/'
-        blank(index++)
-        if (closing) {
-          blank(index++)
-          break
-        }
-      }
-      continue
-    }
-    if (characters[index] === "'") {
-      blank(index++)
-      while (index < characters.length) {
-        const quote = characters[index] === "'"
-        blank(index++)
-        if (quote && characters[index] === "'") {
-          blank(index++)
-          continue
-        }
-        if (quote) break
-      }
-      continue
-    }
-    if (characters[index] === '$') {
-      const delimiter = source.slice(index).match(/^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/)?.[0]
-      if (delimiter) {
-        for (let offset = 0; offset < delimiter.length; offset += 1) blank(index++)
-        const closing = source.indexOf(delimiter, index)
-        const end = closing === -1 ? characters.length : closing + delimiter.length
-        while (index < end) blank(index++)
-        continue
-      }
-    }
-    index += 1
-  }
-  return masked.join('')
 }
 
 function officialGrantMatches(maskedSource) {
@@ -205,7 +394,10 @@ function hasUnrecognizedRelevantGrant(maskedSource, recognizedMatches) {
 }
 
 export function prepareOfficialCliRoleGrant(source) {
-  const maskedSource = maskSqlCommentsAndStrings(source)
+  const maskedSource = maskSqlNonExecutableContexts(source, {
+    artifact: 'roles.sql',
+    maskDoubleQuotedIdentifiers: false,
+  })
   const matches = officialGrantMatches(maskedSource)
   if (matches.length > 1) throw privilegeGrantContractError('MULTIPLE_OFFICIAL_GRANTS')
   if (hasUnrecognizedRelevantGrant(maskedSource, matches)) {

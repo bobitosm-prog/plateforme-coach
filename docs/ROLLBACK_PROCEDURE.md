@@ -163,6 +163,16 @@ et n'atteste pas qu'une sauvegarde staging réelle est disponible ou
 restaurable. Toute nouvelle acquisition ou répétition staging exige toujours
 une autorisation séparée.
 
+Avant toute création de stack, le harnais applique aussi une analyse SQL
+contextuelle et fail-closed. Il masque commentaires, chaînes, identifiants
+quoted, corps dollar-quoted et données `COPY ... FROM STDIN`, puis refuse les
+vraies méta-commandes `psql` `\!` en début de ligne et les statements top-level
+`COPY ... FROM/TO PROGRAM`.
+Tout contexte lexical non terminé produit `SQL_LEXING_INCOMPLETE`. Les motifs
+strictement documentaires ne sont pas exécutés et ne constituent plus des faux
+positifs. Aucun dump staging réel n'a encore été restauré après ce correctif;
+la capacité réelle reste non attestée et Preview demeure `NO_GO`.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.

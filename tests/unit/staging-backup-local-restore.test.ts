@@ -15,6 +15,7 @@ import {
   prepareOfficialCliRoleGrant,
   sanitizeRestoreError,
   validateBackupDirectory,
+  validateSqlArtifactSafety,
   withGuaranteedCleanup,
 } from '../../scripts/preproduction/restore-staging-backup-locally.mjs'
 
@@ -364,6 +365,136 @@ describe('staging backup local restore contract', () => {
       writeFileSync(resolve(directory, 'schema.sql'), `${unsafe};\n`)
       expect(() => validateBackupDirectory(directory)).toThrow(/Unsafe/)
     })
+
+  it.each([
+    ['\\! rm -rf /tmp/example', 1],
+    ['   \\! echo example', 1],
+    ['SELECT 1;\n\t\\! echo example', 2],
+  ])('blocks an executable psql shell command without exposing it: %s', (source, line) => {
+    try {
+      validateSqlArtifactSafety(source, 'schema.sql')
+      throw new Error('expected shell command rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport', expect.objectContaining({
+        artifact: 'schema.sql',
+        classification: 'UNSAFE_PSQL_SHELL_COMMAND',
+        line,
+        type: 'PSQL_SHELL_COMMAND',
+      }))
+      expect(JSON.stringify((error as { restoreReport?: unknown }).restoreReport))
+        .not.toMatch(/rm -rf|echo example/)
+    }
+  })
+
+  it.each([
+    '-- example: \\! echo danger',
+    '/* example: \\! echo danger */\nSELECT 1;',
+    "SELECT '\\! echo danger';",
+    'SELECT "\\! identifier";',
+    'DO $$ BEGIN RAISE NOTICE \'\\! example\'; END $$;',
+    'DO $body$ BEGIN /* \\! example */ NULL; END $body$;',
+    "COMMENT ON FUNCTION public.example() IS '\\! is forbidden';",
+  ])('accepts a documentary psql shell motif: %s', source => {
+    expect(validateSqlArtifactSafety(source, 'schema.sql')).toBe(true)
+  })
+
+  it.each([
+    "COPY public.items FROM PROGRAM 'curl example.invalid';",
+    "COPY public.items TO PROGRAM 'processor';",
+    "cOpY public.items FrOm PrOgRaM 'processor';",
+    "COPY (\n  SELECT *\n  FROM public.items\n)\nTO PROGRAM 'processor';",
+  ])('blocks executable COPY PROGRAM without exposing it: %s', source => {
+    try {
+      validateSqlArtifactSafety(source, 'schema.sql')
+      throw new Error('expected COPY PROGRAM rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport', expect.objectContaining({
+        artifact: 'schema.sql',
+        classification: 'UNSAFE_COPY_PROGRAM',
+        type: 'COPY_PROGRAM',
+      }))
+      expect(JSON.stringify((error as { restoreReport?: unknown }).restoreReport))
+        .not.toMatch(/curl|processor|public\.items/)
+    }
+  })
+
+  it.each([
+    "-- COPY public.items FROM PROGRAM 'processor';",
+    "/* COPY public.items TO PROGRAM 'processor'; */\nSELECT 1;",
+    "SELECT 'COPY public.items TO PROGRAM ''processor''';",
+    'SELECT "COPY public.items FROM PROGRAM";',
+    "CREATE FUNCTION public.example() RETURNS text LANGUAGE plpgsql AS $$ BEGIN RETURN 'COPY public.items FROM PROGRAM'; END; $$;",
+    "CREATE FUNCTION public.example() RETURNS text LANGUAGE plpgsql AS $body$ BEGIN RETURN 'COPY public.items TO PROGRAM'; END; $body$;",
+    "COMMENT ON FUNCTION public.example() IS 'COPY PROGRAM is forbidden';",
+    'COPY public.items TO STDOUT;\nCOPY public.other_items TO STDOUT;',
+    [
+      'COPY public.items (label) FROM STDIN;',
+      '\\! is literal row data',
+      "COPY public.items TO PROGRAM 'literal row data'",
+      "unclosed ' and /* and $body$ are literal row data",
+      '\\.',
+      'SELECT 1;',
+    ].join('\n'),
+  ])('accepts a non-executable COPY PROGRAM motif: %s', source => {
+    expect(validateSqlArtifactSafety(source, 'schema.sql')).toBe(true)
+  })
+
+  it.each([
+    ['/* unclosed', 'BLOCK_COMMENT'],
+    ["SELECT 'unclosed", 'SINGLE_QUOTED_STRING'],
+    ['SELECT "unclosed', 'DOUBLE_QUOTED_IDENTIFIER'],
+    ['DO $$ BEGIN NULL; END;', 'DOLLAR_QUOTED_BODY'],
+    ['DO $body$ BEGIN NULL; END;', 'DOLLAR_QUOTED_BODY'],
+    ['COPY public.items FROM STDIN;\nunterminated data', 'COPY_STDIN_DATA'],
+  ])('fails closed for incomplete SQL lexing: %s', (source, patternType) => {
+    try {
+      validateSqlArtifactSafety(source, 'schema.sql')
+      throw new Error('expected incomplete lexing rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport', expect.objectContaining({
+        artifact: 'schema.sql',
+        classification: 'SQL_LEXING_INCOMPLETE',
+        type: patternType,
+      }))
+      expect(JSON.stringify((error as { restoreReport?: unknown }).restoreReport))
+        .not.toContain(source)
+    }
+  })
+
+  it('handles nested block comments and escaped quoted content deterministically', () => {
+    const source = [
+      "/* outer COPY x TO PROGRAM 'x'; /* nested \\! x */ still comment */",
+      "SELECT E'quoted \\\' COPY x FROM PROGRAM';",
+      'SELECT "quoted ""COPY x TO PROGRAM""";',
+      'SELECT 1;',
+    ].join('\n')
+    expect(validateSqlArtifactSafety(source, 'schema.sql')).toBe(true)
+    expect(validateSqlArtifactSafety(source, 'schema.sql')).toBe(true)
+  })
+
+  it('blocks a connect meta-command only when it is executable', () => {
+    expect(() => validateSqlArtifactSafety('\\connect remote', 'schema.sql'))
+      .toThrow(expect.objectContaining({
+        restoreReport: expect.objectContaining({ classification: 'UNSAFE_PSQL_CONNECT_COMMAND' }),
+      }))
+    expect(validateSqlArtifactSafety("SELECT '\\connect remote';", 'schema.sql')).toBe(true)
+  })
+
+  it('parses COPY after an allowed psql meta-command line', () => {
+    expect(() => validateSqlArtifactSafety(
+      "\\set example value\nCOPY public.items TO PROGRAM 'processor';",
+      'schema.sql',
+    )).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({ classification: 'UNSAFE_COPY_PROGRAM' }),
+    }))
+  })
+
+  it('keeps the roles contract fail-closed on incomplete quoting', () => {
+    expect(() => prepareOfficialCliRoleGrant("SELECT 'unclosed"))
+      .toThrow(expect.objectContaining({
+        restoreReport: expect.objectContaining({ classification: 'SQL_LEXING_INCOMPLETE' }),
+      }))
+  })
 
   it('detects divergent fingerprints, counts and owners', () => {
     const base = { fingerprint: 'a', counts: { rows: 1 }, owners: { auth: 'supabase_admin' } }
