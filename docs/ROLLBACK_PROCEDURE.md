@@ -173,6 +173,21 @@ strictement documentaires ne sont pas exécutés et ne constituent plus des faux
 positifs. Aucun dump staging réel n'a encore été restauré après ce correctif;
 la capacité réelle reste non attestée et Preview demeure `NO_GO`.
 
+Le dump staging réel acquis le 7 août 2026 contient également une occurrence
+officielle de `GRANT SET ON PARAMETER` pour `log_min_messages` vers
+`supabase_realtime_admin`. Elle échoue sous le rôle local non-superuser
+`postgres` avec SQLSTATE `42501`. Le harnais applique cette unique forme exacte
+avec le rôle Supabase géré préexistant `supabase_admin`, puis l'omet de la copie
+mémoire du SQL canonique. Zéro occurrence est accepté; toute multiplicité ou
+variante est bloquée. Il n'existe aucun filtrage générique des privilèges et le
+dump source n'est jamais réécrit. Le backup réel n'a pas été relancé après
+cette correction; la capacité staging reste non attestée et Preview demeure
+`NO_GO`.
+Une validation synthétique a franchi la restauration canonique, puis rencontré
+une erreur distincte en phase `inventory`. Son diagnostic appartient à un
+sous-batch séparé; aucun verdict `RESTORABLE` de bout en bout n'est revendiqué
+ici et la tâche rollback reste ouverte.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.

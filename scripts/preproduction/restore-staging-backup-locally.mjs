@@ -27,9 +27,13 @@ export const REQUIRED_BACKUP_FILES = Object.freeze([
 ])
 export const OFFICIAL_CLI_ROLE_GRANT =
   'GRANT "postgres" TO "cli_login_postgres" WITH INHERIT FALSE GRANTED BY "supabase_admin";'
+export const OFFICIAL_REALTIME_PARAMETER_GRANT =
+  'GRANT SET ON PARAMETER "log_min_messages" TO "supabase_realtime_admin";'
 
 const OFFICIAL_CLI_ROLE_GRANT_PATTERN =
   /GRANT[ \t\r\n]+"postgres"[ \t\r\n]+TO[ \t\r\n]+"cli_login_postgres"[ \t\r\n]+WITH[ \t\r\n]+INHERIT[ \t\r\n]+FALSE[ \t\r\n]+GRANTED[ \t\r\n]+BY[ \t\r\n]+"supabase_admin"[ \t\r\n]*;/g
+const OFFICIAL_REALTIME_PARAMETER_GRANT_PATTERN =
+  /GRANT[ \t\r\n]+SET[ \t\r\n]+ON[ \t\r\n]+PARAMETER[ \t\r\n]+"log_min_messages"[ \t\r\n]+TO[ \t\r\n]+"supabase_realtime_admin"[ \t\r\n]*;/g
 
 const repositoryRoot = resolve(import.meta.dirname, '../..')
 const supabaseCli = resolve(repositoryRoot, 'node_modules/.bin/supabase')
@@ -372,6 +376,20 @@ function privilegeGrantContractError(classification) {
   return error
 }
 
+function parameterGrantContractError(classification) {
+  const error = new Error('Realtime parameter grant contract blocked')
+  error.restoreReport = {
+    phase: 'roles_contract',
+    sqlstate: 'NOT_APPLICABLE',
+    operation: 'GRANT SET ON PARAMETER',
+    objectType: 'PARAMETER',
+    schema: null,
+    classification,
+    sensitiveDetailRemoved: true,
+  }
+  return error
+}
+
 function officialGrantMatches(maskedSource) {
   return [...maskedSource.matchAll(OFFICIAL_CLI_ROLE_GRANT_PATTERN)]
 }
@@ -411,12 +429,46 @@ export function prepareOfficialCliRoleGrant(source) {
   return { source: prepared, classification: 'OFFICIAL_GRANT_FILTERED' }
 }
 
+export function prepareOfficialRealtimeParameterGrant(source) {
+  const maskedSource = maskSqlNonExecutableContexts(source, {
+    artifact: 'roles.sql',
+    maskDoubleQuotedIdentifiers: false,
+  })
+  const matches = [...maskedSource.matchAll(OFFICIAL_REALTIME_PARAMETER_GRANT_PATTERN)]
+  if (matches.length > 1) {
+    throw parameterGrantContractError('MULTIPLE_OFFICIAL_PARAMETER_GRANTS')
+  }
+  const withoutRecognized = maskedSource.split('')
+  for (const match of matches) {
+    for (let index = match.index; index < match.index + match[0].length; index += 1) {
+      if (withoutRecognized[index] !== '\n' && withoutRecognized[index] !== '\r') {
+        withoutRecognized[index] = ' '
+      }
+    }
+  }
+  const relatedGrants = withoutRecognized.join('').match(/\bGRANT\b[\s\S]*?(?:;|$)/gi) ?? []
+  if (relatedGrants.some(statement => (
+    /\bGRANT\s+SET\s+ON\s+PARAMETER\b/i.test(statement)
+    || /\blog_min_messages\b/i.test(statement)
+    || /\bsupabase_realtime_admin\b/i.test(statement)
+  ))) {
+    throw parameterGrantContractError('UNRECOGNIZED_PARAMETER_GRANT')
+  }
+  if (matches.length === 0) {
+    return { source, classification: 'OFFICIAL_PARAMETER_GRANT_ALREADY_OMITTED' }
+  }
+  const match = matches[0]
+  const prepared = `${source.slice(0, match.index)}-- Local restore: official Supabase realtime parameter grant applied by the managed role.${source.slice(match.index + match[0].length)}`
+  return { source: prepared, classification: 'OFFICIAL_PARAMETER_GRANT_FILTERED' }
+}
+
 export function neutralizeUnsupportedCliRoleGrant(source) {
   return prepareOfficialCliRoleGrant(source).source
 }
 
 export function buildCanonicalRestoreSql(files) {
-  const roles = prepareOfficialCliRoleGrant(files['roles.sql'].source).source
+  const cliPrepared = prepareOfficialCliRoleGrant(files['roles.sql'].source)
+  const roles = prepareOfficialRealtimeParameterGrant(cliPrepared.source).source
   return [
     '\\set ON_ERROR_STOP on',
     'BEGIN;',
@@ -433,6 +485,7 @@ export function buildCanonicalRestoreSql(files) {
 function operationFromError(message) {
   const match = message.match(/(?:STATEMENT|statement):\s*([^\n]+)/i)
   const statement = match?.[1]?.trim() ?? ''
+  if (/^GRANT\s+SET\s+ON\s+PARAMETER\b/i.test(statement)) return 'GRANT SET ON PARAMETER'
   if (/^GRANT\b/i.test(statement)) return 'GRANT'
   if (/^ALTER\s+.+OWNER\b/i.test(statement)) return 'ALTER OWNER'
   if (/^SET\s+ROLE\b/i.test(statement)) return 'SET ROLE'
@@ -447,7 +500,7 @@ export function sanitizeRestoreError(raw, phase = 'restore') {
     ?? message.match(/SQLSTATE\s+([0-9A-Z]{5})/)?.[1]
     ?? 'UNKNOWN'
   const schema = message.match(/schema\s+"?([a-z_][a-z0-9_]*)"?/i)?.[1] ?? null
-  const objectType = message.match(/(?:table|function|schema|role|publication|extension)\s+"?[^\s"]+/i)?.[0]?.split(/\s+/)[0]?.toUpperCase() ?? 'UNKNOWN'
+  const objectType = message.match(/(?:table|function|schema|role|publication|extension|parameter)\s+"?[^\s"]+/i)?.[0]?.split(/\s+/)[0]?.toUpperCase() ?? 'UNKNOWN'
   const classification = sqlstate === '42501'
     ? 'INSUFFICIENT_PRIVILEGE'
     : sqlstate === '42704'
@@ -629,6 +682,14 @@ async function restoreOnce({ backup, runNumber, ports }) {
       || !resources(projectId).volumes.includes(volume)) {
       throw new Error('Expected isolated database resources are missing')
     }
+    const cliPrepared = prepareOfficialCliRoleGrant(backup.files['roles.sql'].source)
+    const parameterPrepared = prepareOfficialRealtimeParameterGrant(cliPrepared.source)
+    if (parameterPrepared.classification === 'OFFICIAL_PARAMETER_GRANT_FILTERED') {
+      docker(
+        ['exec', '-i', container, 'psql', '-U', 'supabase_admin', '-d', 'postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
+        { input: OFFICIAL_REALTIME_PARAMETER_GRANT, phase: 'managed_parameter_grant' },
+      )
+    }
     const restoreSql = buildCanonicalRestoreSql(backup.files)
     docker(
       ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
@@ -706,6 +767,7 @@ export async function executeRestoreRuns({
     throw new Error('Restore execution requires exactly 1 or 2 runs')
   }
   const roleGrant = prepareOfficialCliRoleGrant(backup.files['roles.sql'].source)
+  const parameterGrant = prepareOfficialRealtimeParameterGrant(roleGrant.source)
   const proofs = []
   for (let index = 0; index < requestedRuns; index += 1) {
     proofs.push(await restoreRun({ backup, runNumber: index + 1, ports: ports[index] }))
@@ -724,6 +786,7 @@ export async function executeRestoreRuns({
     countsIdentical: requestedRuns === 2 ? true : null,
     ownershipIdentical: requestedRuns === 2 ? true : null,
     roleGrantClassification: roleGrant.classification,
+    parameterGrantClassification: parameterGrant.classification,
     sourceDumpModified: false,
     remoteAccess: false,
   }

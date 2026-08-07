@@ -508,6 +508,21 @@ refusées avant la création d'une stack; la fixture documentaire doit être
 staging réel n'a encore été restauré après ce correctif; la capacité réelle
 reste non attestée et Preview demeure `NO_GO`.
 
+Le contrat `roles.sql` couvre aussi l'unique forme officielle
+`GRANT SET ON PARAMETER "log_min_messages" TO "supabase_realtime_admin"`.
+La reproduction locale synthétique doit obtenir `42501` sous `postgres`, puis
+prouver que le rôle géré préexistant `supabase_admin` applique le privilège. Le
+harnais retire ensuite seulement cette occurrence de sa copie mémoire. Zéro
+occurrence est accepté; une variante ou plusieurs occurrences sont refusées.
+Les tests préservent les autres permissions, le contrat `cli_login_postgres`,
+`ON_ERROR_STOP`, les modes `--runs 1`/`--runs 2`, l'absence de réseau et le
+cleanup succès/échec. Le backup staging réel n'est pas rejoué dans ce
+sous-batch; Preview reste `NO_GO`.
+La validation synthétique du chemin corrigé atteint la phase `inventory`, où
+une erreur distincte encore non diagnostiquée bloque le verdict final. Aucun
+résultat `RESTORABLE` de bout en bout ni capacité réelle staging ne doit être
+déduit avant le sous-batch de diagnostic correspondant.
+
 ## 8. Sécurité des tests
 
 - Production, préproduction partagée et services hébergés sont interdits par défaut.

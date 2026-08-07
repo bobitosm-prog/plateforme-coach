@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   OFFICIAL_CLI_ROLE_GRANT,
+  OFFICIAL_REALTIME_PARAMETER_GRANT,
   PRIMARY_LOCAL_PORTS,
   REQUIRED_BACKUP_FILES,
   assertIsolatedTarget,
@@ -13,6 +14,7 @@ import {
   executeRestoreRuns,
   neutralizeUnsupportedCliRoleGrant,
   prepareOfficialCliRoleGrant,
+  prepareOfficialRealtimeParameterGrant,
   sanitizeRestoreError,
   validateBackupDirectory,
   validateSqlArtifactSafety,
@@ -29,7 +31,7 @@ function temporaryDirectory() {
 
 function backupFiles(overrides: Record<string, string> = {}) {
   return {
-    'roles.sql': { source: `CREATE ROLE fixture_owner NOLOGIN;\n${OFFICIAL_CLI_ROLE_GRANT}\n` },
+    'roles.sql': { source: `CREATE ROLE fixture_owner NOLOGIN;\n${OFFICIAL_CLI_ROLE_GRANT}\n${OFFICIAL_REALTIME_PARAMETER_GRANT}\n` },
     'schema.sql': { source: 'CREATE SCHEMA restore_fixture AUTHORIZATION fixture_owner;' },
     'data.sql': { source: 'SET search_path TO restore_fixture;' },
     'history_schema.sql': { source: 'CREATE SCHEMA IF NOT EXISTS supabase_migrations;' },
@@ -131,10 +133,90 @@ describe('staging backup local restore contract', () => {
     expect(neutralizeUnsupportedCliRoleGrant(sanitized)).toBe(sanitized)
   })
 
+  it('filters the exact managed realtime parameter grant only in memory', () => {
+    const source = [
+      'ALTER ROLE anon SET statement_timeout TO \'3s\';',
+      OFFICIAL_REALTIME_PARAMETER_GRANT,
+      'GRANT SELECT ON TABLE public.items TO authenticated;',
+    ].join('\n')
+    const original = structuredClone(source)
+    const result = prepareOfficialRealtimeParameterGrant(source)
+
+    expect(result.classification).toBe('OFFICIAL_PARAMETER_GRANT_FILTERED')
+    expect(result.source).not.toContain(OFFICIAL_REALTIME_PARAMETER_GRANT)
+    expect(result.source).toContain('ALTER ROLE anon SET statement_timeout')
+    expect(result.source).toContain('GRANT SELECT ON TABLE public.items TO authenticated;')
+    expect(source).toBe(original)
+  })
+
+  it('accepts a roles dump where the managed parameter grant is already omitted', () => {
+    const source = 'ALTER ROLE anon SET statement_timeout TO \'3s\';'
+    expect(prepareOfficialRealtimeParameterGrant(source)).toEqual({
+      source,
+      classification: 'OFFICIAL_PARAMETER_GRANT_ALREADY_OMITTED',
+    })
+  })
+
+  it('recognizes the exact managed parameter grant across whitespace', () => {
+    const source = 'GRANT SET ON PARAMETER\n"log_min_messages" TO\n"supabase_realtime_admin";'
+    expect(prepareOfficialRealtimeParameterGrant(source).classification)
+      .toBe('OFFICIAL_PARAMETER_GRANT_FILTERED')
+  })
+
+  it('blocks multiple managed parameter grants', () => {
+    expect(() => prepareOfficialRealtimeParameterGrant(
+      `${OFFICIAL_REALTIME_PARAMETER_GRANT}\n${OFFICIAL_REALTIME_PARAMETER_GRANT}`,
+    )).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: 'MULTIPLE_OFFICIAL_PARAMETER_GRANTS',
+      }),
+    }))
+  })
+
+  it.each([
+    'GRANT SET ON PARAMETER "log_min_messages" TO "authenticated";',
+    'GRANT SET ON PARAMETER "statement_timeout" TO "supabase_realtime_admin";',
+    'GRANT ALTER SYSTEM ON PARAMETER "log_min_messages" TO "supabase_realtime_admin";',
+    'GRANT SET ON PARAMETER log_min_messages TO supabase_realtime_admin;',
+  ])('blocks an unrecognized managed parameter grant variant', variant => {
+    try {
+      prepareOfficialRealtimeParameterGrant(variant)
+      throw new Error('expected parameter grant rejection')
+    } catch (error) {
+      expect(error).toHaveProperty(
+        'restoreReport.classification',
+        'UNRECOGNIZED_PARAMETER_GRANT',
+      )
+      expect(JSON.stringify((error as { restoreReport?: unknown }).restoreReport))
+        .not.toContain(variant)
+    }
+  })
+
+  it('ignores managed parameter grant motifs in comments and strings', () => {
+    const source = [
+      `-- ${OFFICIAL_REALTIME_PARAMETER_GRANT}`,
+      `SELECT '${OFFICIAL_REALTIME_PARAMETER_GRANT.replaceAll("'", "''")}';`,
+      'ALTER ROLE anon SET statement_timeout TO \'3s\';',
+    ].join('\n')
+    expect(prepareOfficialRealtimeParameterGrant(source)).toEqual({
+      source,
+      classification: 'OFFICIAL_PARAMETER_GRANT_ALREADY_OMITTED',
+    })
+  })
+
+  it('removes both known incompatible grants while preserving restore order', () => {
+    const sql = buildCanonicalRestoreSql(backupFiles())
+    expect(sql).not.toContain(OFFICIAL_CLI_ROLE_GRANT)
+    expect(sql).not.toContain(OFFICIAL_REALTIME_PARAMETER_GRANT)
+    expect(sql).toMatch(/^\\set ON_ERROR_STOP on\nBEGIN;/)
+    expect(sql).toMatch(/COMMIT;$/)
+  })
+
   it.each([
     ['42501', 'ALTER TABLE public.items OWNER TO fixture_owner;', 'ALTER OWNER', 'INSUFFICIENT_PRIVILEGE'],
     ['42501', 'SET ROLE fixture_owner;', 'SET ROLE', 'INSUFFICIENT_PRIVILEGE'],
     ['42501', 'GRANT SELECT ON TABLE public.items TO fixture_owner;', 'GRANT', 'INSUFFICIENT_PRIVILEGE'],
+    ['42501', OFFICIAL_REALTIME_PARAMETER_GRANT, 'GRANT SET ON PARAMETER', 'INSUFFICIENT_PRIVILEGE'],
     ['42704', 'GRANT postgres TO missing_role;', 'GRANT', 'MISSING_OBJECT'],
     ['42710', 'CREATE EXTENSION fixture;', 'CREATE EXTENSION', 'DUPLICATE_OBJECT'],
   ])('sanitizes SQLSTATE %s for %s', (state, statement, operation, classification) => {
@@ -224,6 +306,7 @@ describe('staging backup local restore contract', () => {
       completedRuns: 1,
       fingerprint: 'one',
       fingerprintsIdentical: null,
+      parameterGrantClassification: 'OFFICIAL_PARAMETER_GRANT_FILTERED',
     }))
     expect(report.runs).toHaveLength(1)
   })
@@ -538,5 +621,7 @@ describe('staging backup local restore contract', () => {
     expect(source).not.toMatch(/process\.env|dotenv|loadEnv|\.env\b/)
     expect(source).not.toMatch(/execute\([^\n]+(?:db\s+push|migration\s+repair)/)
     expect(source).not.toMatch(/execute\(supabaseCli,\s*\[[^\]]*['"](?:--linked|--prod)['"]/)
+    expect(source).toContain("'-U', 'supabase_admin'")
+    expect(source).toContain('OFFICIAL_REALTIME_PARAMETER_GRANT')
   })
 })

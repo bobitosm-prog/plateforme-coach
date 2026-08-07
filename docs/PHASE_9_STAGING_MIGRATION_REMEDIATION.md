@@ -332,6 +332,35 @@ motifs documentaires sont acceptés, tandis que les commandes shell et
 staging réel n'a été acquis ou restauré après ce correctif. La capacité réelle
 de restauration staging reste non attestée et Preview reste `NO_GO`.
 
+Une acquisition read-only staging autorisée le 7 août 2026 a ensuite produit
+les cinq artefacts attendus, avec 141 versions d'historique et révocation HTTP
+200 du credential CLI temporaire. L'unique restauration réelle demandée avec
+`--runs 1` s'est arrêtée dans `roles.sql`, instruction 7, ligne 11, sur
+`GRANT SET ON PARAMETER` pour `log_min_messages` vers le rôle géré
+`supabase_realtime_admin`. Le rôle local initiateur `postgres` possède
+`CREATEROLE` mais n'est pas superuser; PostgreSQL retourne donc `42501`
+`INSUFFICIENT_PRIVILEGE`. Cette instruction est distincte du grant
+`cli_login_postgres` précédemment traité.
+
+La reproduction synthétique locale retourne le même SQLSTATE et la même
+opération. Sur une stack Supabase jetable, le rôle géré préexistant
+`supabase_admin` peut appliquer exactement ce privilège, après quoi
+`has_parameter_privilege(..., 'SET')` est vrai. Le harnais reconnaît donc
+uniquement la forme officielle exacte, l'applique séparément sous ce rôle géré,
+puis la retire uniquement de la copie mémoire transmise à la restauration
+canonique. Zéro occurrence reste accepté; une occurrence multiple ou toute
+variante apparentée bloque. Aucun `GRANT` ou `OWNER` générique n'est filtré,
+le dump source et `ON_ERROR_STOP` restent inchangés, et aucun superuser
+artificiel n'est créé.
+
+Le backup réel n'a pas été rejoué après ce correctif : aucune deuxième
+restauration et aucun dry-run `141 → 145` n'ont été exécutés. La capacité réelle
+de restauration staging demeure non attestée et Preview reste `NO_GO`.
+Une validation synthétique du chemin corrigé a dépassé
+`canonical_restore`, puis s'est arrêtée sur une erreur distincte en phase
+`inventory`. Cette nouvelle erreur n'est pas diagnostiquée dans ce sous-batch
+et aucun verdict `RESTORABLE` de bout en bout n'est revendiqué.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit
