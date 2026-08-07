@@ -132,6 +132,12 @@ Seul le verdict `ALIGNED` autorise la suite. Tout autre verdict impose
 Le verdict actuel `HISTORY_AND_STRUCTURE_DRIFT` est donc un exemple réel de
 `NO_GO`. Sa remédiation relève d'un plan et d'une autorisation distincts.
 
+Le plan de remédiation est documenté dans
+[`PHASE_9_STAGING_MIGRATION_REMEDIATION.md`](PHASE_9_STAGING_MIGRATION_REMEDIATION.md).
+Il reste séparé de la release : après toute remédiation autorisée, une nouvelle
+photographie read-only et un verdict exact `ALIGNED` sont obligatoires. Une
+application réussie ne réactive jamais automatiquement la promotion Preview.
+
 ## 5. Préflight local pur
 
 Préparer manuellement un JSON local conforme au contrat, sans secret ni URL

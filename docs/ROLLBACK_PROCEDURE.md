@@ -131,6 +131,12 @@ schéma ni les données.
 Le drift staging actuel `HISTORY_AND_STRUCTURE_DRIFT` interdit donc une
 répétition Preview. Le préflight ne le remédie pas.
 
+La préparation de sa remédiation est décrite dans
+[`PHASE_9_STAGING_MIGRATION_REMEDIATION.md`](PHASE_9_STAGING_MIGRATION_REMEDIATION.md).
+Une nouvelle photographie read-only et un verdict exact `ALIGNED` sont requis
+avant toute répétition Preview. Un rollback applicatif restaure un artefact;
+il ne remplace jamais une migration compensatoire forward-only.
+
 ## 4. Rollback de données
 
 - Une sauvegarde vérifiée est obligatoire avant toute restauration.
