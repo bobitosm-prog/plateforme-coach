@@ -148,6 +148,17 @@ il ne remplace jamais une migration compensatoire forward-only.
   ne sont jamais supprimés pour simplifier un incident.
 - Une divergence de migration seule ne justifie pas une restauration globale.
 
+Le harnais
+`scripts/preproduction/restore-staging-backup-locally.mjs` permet de vérifier
+deux fois une sauvegarde logique dans des stacks Supabase locales jetables. Il
+respecte l'ordre `roles → schema → data → history`, conserve les propriétaires
+et permissions, et omet seulement dans une copie en mémoire le grant
+`cli_login_postgres` que la procédure Supabase signale comme incompatible avec
+une restauration locale. La preuve synthétique du 7 août 2026 est reproductible
+et n'atteste pas qu'une sauvegarde staging réelle est disponible ou
+restaurable. Toute nouvelle acquisition ou répétition staging exige toujours
+une autorisation séparée.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.

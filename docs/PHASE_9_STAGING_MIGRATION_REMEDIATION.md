@@ -233,6 +233,61 @@ assertions de preuve ou sur l'attente de libération du verrou; leurs cleanups
 ont été vérifiés. Elles n'ont modifié ni les migrations ni une base distante.
 Seul le run final ci-dessus constitue la preuve positive.
 
+## Diagnostic local de restauration logique
+
+Le 7 août 2026, l'échec antérieur d'une restauration logique a été reproduit
+sur une stack Supabase locale jetable, sans nouvelle acquisition staging. La
+cause exacte est l'instruction suivante du dump `roles.sql` :
+
+```sql
+GRANT "postgres" TO "cli_login_postgres" WITH INHERIT FALSE GRANTED BY "supabase_admin";
+```
+
+Le rôle local `postgres` n'est pas superuser et ne peut pas émettre ce
+`GRANT ROLE` au nom de `supabase_admin`. PostgreSQL retourne donc SQLSTATE
+`42501`, classé `INSUFFICIENT_PRIVILEGE`. Une première fixture incomplète avait
+retourné `42704` parce que le rôle cible n'existait pas; elle n'est pas retenue
+comme diagnostic. Une autre calibration contenant un grant artificiel a aussi
+été écartée avant la preuve finale.
+
+Le harnais canonique local est :
+
+```bash
+node scripts/preproduction/restore-staging-backup-locally.mjs \
+  --backup-dir /private/tmp/<backup-local-expurge> \
+  --runs 2
+```
+
+Il exige exactement `roles.sql`, `schema.sql`, `data.sql`,
+`history_schema.sql` et `history_data.sql`, dans un répertoire temporaire
+local. Il restaure dans l'ordre `roles → schema → data → history schema →
+history data`, avec `ON_ERROR_STOP`, une transaction unique et
+`session_replication_role=replica` avant les données. Conformément à la
+procédure Supabase de backup/restore, il omet uniquement le grant ci-dessus
+dans une copie en mémoire. Les fichiers source ne sont jamais modifiés.
+
+Le harnais refuse `--linked`, `--prod`, `--db-url`, `--password`, `--no-owner`,
+les entrées distantes, les commandes `psql` dangereuses et tout ensemble de
+fichiers incomplet ou supplémentaire. Il ne charge ni `.env`, ni client
+réseau. Une suppression globale des clauses `OWNER` ou `GRANT`, une élévation
+de rôle, un changement des propriétaires Supabase gérés ou un ordre de
+restauration différent sont explicitement exclus : ces stratégies masqueraient
+le contrat de sécurité au lieu de traiter l'incompatibilité précise.
+
+Deux restaurations indépendantes d'une sauvegarde entièrement synthétique ont
+retourné `RESTORABLE`, avec l'empreinte identique
+`a211710b79bdcac7f0f4101c73788e16`. Chaque run a vérifié deux lignes métier
+synthétiques, deux versions d'historique, RLS active, une policy, une fonction
+`SECURITY DEFINER`, une publication, l'absence du membership incompatible et
+les propriétaires `supabase_admin` inchangés pour `auth`, `storage` et
+`realtime`. Les comptes Auth et objets Storage sont restés vides; les deux
+stacks, volumes et répertoires jetables ont été nettoyés.
+
+Cette preuve valide uniquement le mécanisme local et son diagnostic. La
+sauvegarde staging antérieure n'est pas conservée, aucune nouvelle sauvegarde
+staging n'a été acquise et la capacité réelle de restauration staging reste à
+attester sous autorisation séparée.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit

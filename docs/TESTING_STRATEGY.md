@@ -453,6 +453,28 @@ secrets sont refusés. L'acquisition de l'inventaire distant et toute
 remédiation restent hors de cette commande et nécessitent des autorisations
 séparées.
 
+### Restauration logique locale isolée
+
+`scripts/preproduction/restore-staging-backup-locally.mjs` diagnostique et
+répète une restauration logique sans connexion distante. Il exige les cinq
+artefacts SQL séparés (`roles`, `schema`, `data`, `history_schema` et
+`history_data`) sous un répertoire temporaire, refuse les options et entrées
+distantes, puis exécute exactement deux restaurations dans des stacks, ports,
+volumes et répertoires indépendants.
+
+Le seul ajustement autorisé est l'omission, dans une copie en mémoire de
+`roles.sql`, du grant officiel `cli_login_postgres` qui échoue localement avec
+SQLSTATE `42501`. Le fichier source, les autres propriétaires et les autres
+permissions restent inchangés. Le harnais refuse notamment `--no-owner` et
+toute neutralisation large des `OWNER` ou `GRANT`.
+
+La fixture synthétique de référence vérifie données, historique, RLS, policy,
+fonction `SECURITY DEFINER`, publication et propriétaires des schémas Supabase
+gérés. Deux runs doivent produire des compteurs, propriétaires et fingerprints
+strictement identiques, puis nettoyer toutes leurs ressources, y compris en
+cas d'échec. Cette preuve locale ne remplace pas l'acquisition et la validation
+d'une sauvegarde staging sous autorisation distincte.
+
 ## 8. Sécurité des tests
 
 - Production, préproduction partagée et services hébergés sont interdits par défaut.
