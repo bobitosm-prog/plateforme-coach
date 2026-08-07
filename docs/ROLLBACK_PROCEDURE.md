@@ -183,10 +183,19 @@ variante est bloquée. Il n'existe aucun filtrage générique des privilèges et
 dump source n'est jamais réécrit. Le backup réel n'a pas été relancé après
 cette correction; la capacité staging reste non attestée et Preview demeure
 `NO_GO`.
-Une validation synthétique a franchi la restauration canonique, puis rencontré
-une erreur distincte en phase `inventory`. Son diagnostic appartient à un
-sous-batch séparé; aucun verdict `RESTORABLE` de bout en bout n'est revendiqué
-ici et la tâche rollback reste ouverte.
+L'erreur distincte en phase `inventory` provenait d'une fixture temporaire qui
+ne créait pas `supabase_migrations.schema_migrations`. Le restore était sain,
+mais le comptage d'historique échouait avec SQLSTATE `42P01` : classification
+`INVENTORY_FAILURE`, et non `RESTORE_FAILURE`. L'inventaire vérifie désormais
+ses prérequis et distingue `PRESENT`, `ABSENT`, `ERROR` et `NOT_APPLICABLE`;
+une erreur SQL ne peut jamais devenir silencieusement `ABSENT`.
+
+La fixture canonique complète est `RESTORABLE` avec `--runs 1` et reproductible
+avec `--runs 2`, avec l'empreinte commune
+`ba98812d295b81320b298a35cc650ec3`. La fixture sans historique est bloquée.
+Cette preuve est exclusivement synthétique : le backup staging réel n'a pas
+été relancé, la capacité réelle staging reste non attestée, Preview demeure
+`NO_GO` et la tâche rollback reste ouverte.
 
 ## 5. Rollback opérationnel
 

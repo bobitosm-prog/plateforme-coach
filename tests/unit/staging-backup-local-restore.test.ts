@@ -3,19 +3,23 @@ import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  INVENTORY_STATUSES,
   OFFICIAL_CLI_ROLE_GRANT,
   OFFICIAL_REALTIME_PARAMETER_GRANT,
   PRIMARY_LOCAL_PORTS,
   REQUIRED_BACKUP_FILES,
   assertIsolatedTarget,
+  assertInventoryPrerequisites,
   assertSafeRestoreArgs,
   buildCanonicalRestoreSql,
   compareRestoreProofs,
+  classifyInventoryPrerequisites,
   executeRestoreRuns,
   neutralizeUnsupportedCliRoleGrant,
   prepareOfficialCliRoleGrant,
   prepareOfficialRealtimeParameterGrant,
   sanitizeRestoreError,
+  sanitizeInventoryQueryError,
   validateBackupDirectory,
   validateSqlArtifactSafety,
   withGuaranteedCleanup,
@@ -47,6 +51,18 @@ afterEach(() => {
 })
 
 describe('staging backup local restore contract', () => {
+  const nominalInventoryPresence = {
+    authUsers: true,
+    storageObjects: true,
+    migrationHistory: true,
+    plpgsql: true,
+    fixtureTable: true,
+    fixturePolicy: true,
+    fixturePublication: true,
+    fixtureSecurityDefiner: true,
+    billingPayments: false,
+  }
+
   it('builds the canonical roles, schema, data and history order', () => {
     const sql = buildCanonicalRestoreSql(backupFiles())
     const positions = [
@@ -210,6 +226,96 @@ describe('staging backup local restore contract', () => {
     expect(sql).not.toContain(OFFICIAL_REALTIME_PARAMETER_GRANT)
     expect(sql).toMatch(/^\\set ON_ERROR_STOP on\nBEGIN;/)
     expect(sql).toMatch(/COMMIT;$/)
+  })
+
+  it('classifies the nominal inventory contract explicitly', () => {
+    expect(assertInventoryPrerequisites(nominalInventoryPresence)).toEqual({
+      auth: 'PRESENT',
+      storage: 'PRESENT',
+      migrationHistory: 'PRESENT',
+      extensions: 'PRESENT',
+      fixture: 'PRESENT',
+      policies: 'PRESENT',
+      publications: 'PRESENT',
+      securityDefiner: 'PRESENT',
+      billing: 'NOT_APPLICABLE',
+    })
+  })
+
+  it.each([
+    ['authUsers', 'AUTH_USERS', 'auth'],
+    ['storageObjects', 'STORAGE_OBJECTS', 'storage'],
+    ['migrationHistory', 'MIGRATION_HISTORY', 'supabase_migrations'],
+    ['plpgsql', 'PLPGSQL_EXTENSION', null],
+  ] as const)('blocks an absent required inventory object: %s', (field, queryType, schema) => {
+    const presence = { ...nominalInventoryPresence, [field]: false }
+    try {
+      assertInventoryPrerequisites(presence)
+      throw new Error('expected absent inventory object rejection')
+    } catch (error) {
+      expect(error).toHaveProperty('restoreReport', expect.objectContaining({
+        phase: 'inventory',
+        classification: 'INVENTORY_REQUIRED_OBJECT_ABSENT',
+        queryType,
+        schema,
+        status: 'ABSENT',
+      }))
+    }
+  })
+
+  it('distinguishes optional fixture evidence from missing required objects', () => {
+    const statuses = classifyInventoryPrerequisites({
+      ...nominalInventoryPresence,
+      fixtureTable: false,
+      fixturePolicy: false,
+      fixturePublication: false,
+      fixtureSecurityDefiner: false,
+    })
+    expect(statuses.fixture).toBe(INVENTORY_STATUSES.notApplicable)
+    expect(statuses.policies).toBe(INVENTORY_STATUSES.notApplicable)
+    expect(statuses.publications).toBe(INVENTORY_STATUSES.notApplicable)
+    expect(statuses.securityDefiner).toBe(INVENTORY_STATUSES.notApplicable)
+  })
+
+  it('reports an absent fixture publication without converting it to an SQL error', () => {
+    const statuses = classifyInventoryPrerequisites({
+      ...nominalInventoryPresence,
+      fixturePublication: false,
+    })
+    expect(statuses.fixture).toBe(INVENTORY_STATUSES.present)
+    expect(statuses.publications).toBe(INVENTORY_STATUSES.absent)
+  })
+
+  it('classifies inventory permission denial as ERROR, never ABSENT', () => {
+    const report = sanitizeInventoryQueryError(
+      'ERROR: 42501: permission denied\nSTATEMENT: SELECT 1;',
+      'INVENTORY_PREREQUISITES',
+    )
+    expect(report).toEqual(expect.objectContaining({
+      phase: 'inventory',
+      sqlstate: '42501',
+      operation: 'SELECT',
+      classification: 'INVENTORY_PERMISSION_DENIED',
+      status: 'ERROR',
+    }))
+    expect(report.status).not.toBe(INVENTORY_STATUSES.absent)
+  })
+
+  it('classifies an invalid catalog query as ERROR, never ABSENT', () => {
+    const report = sanitizeInventoryQueryError(
+      'ERROR: 42703: column does not exist\nSTATEMENT: SELECT missing_column;',
+      'INVENTORY_AGGREGATE',
+      2,
+    )
+    expect(report).toEqual(expect.objectContaining({
+      sqlstate: '42703',
+      operation: 'SELECT',
+      queryType: 'INVENTORY_AGGREGATE',
+      lineOrOrdinal: 2,
+      classification: 'INVENTORY_QUERY_ERROR',
+      status: 'ERROR',
+    }))
+    expect(report.status).not.toBe(INVENTORY_STATUSES.absent)
   })
 
   it.each([
@@ -580,13 +686,22 @@ describe('staging backup local restore contract', () => {
   })
 
   it('detects divergent fingerprints, counts and owners', () => {
-    const base = { fingerprint: 'a', counts: { rows: 1 }, owners: { auth: 'supabase_admin' } }
+    const base = {
+      fingerprint: 'a',
+      counts: { rows: 1 },
+      owners: { auth: 'supabase_admin' },
+      inventoryStatuses: { auth: 'PRESENT' },
+    }
     expect(() => compareRestoreProofs(base, { ...base, fingerprint: 'b' }))
       .toThrow(/fingerprints/)
     expect(() => compareRestoreProofs(base, { ...base, counts: { rows: 2 } }))
       .toThrow(/counts/)
     expect(() => compareRestoreProofs(base, { ...base, owners: { auth: 'postgres' } }))
       .toThrow(/ownership/)
+    expect(() => compareRestoreProofs(base, {
+      ...base,
+      inventoryStatuses: { auth: 'ERROR' },
+    })).toThrow(/inventory statuses/)
   })
 
   it('accepts deterministic restore proofs', () => {

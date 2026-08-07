@@ -47,6 +47,12 @@ const runPorts = Object.freeze([
 
 const SECRET_PATTERN =
   /(?:\bBearer\s+\S+|\b(?:sbp|eyJ|sk_live|sk_test|whsec)_\S+|(?:password|secret|token|cookie|credential)\s*[=:]\s*\S+|postgres(?:ql)?:\/\/\S+)/gi
+export const INVENTORY_STATUSES = Object.freeze({
+  present: 'PRESENT',
+  absent: 'ABSENT',
+  error: 'ERROR',
+  notApplicable: 'NOT_APPLICABLE',
+})
 
 function assertLocalPath(value, label) {
   const path = resolve(value)
@@ -491,6 +497,7 @@ function operationFromError(message) {
   if (/^SET\s+ROLE\b/i.test(statement)) return 'SET ROLE'
   if (/^CREATE\s+EXTENSION\b/i.test(statement)) return 'CREATE EXTENSION'
   if (/^ALTER\s+PUBLICATION\b/i.test(statement)) return 'ALTER PUBLICATION'
+  if (/^SELECT\b/i.test(statement)) return 'SELECT'
   return 'UNKNOWN'
 }
 
@@ -530,6 +537,128 @@ export async function withGuaranteedCleanup(operation, cleanup) {
   }
 }
 
+function inventoryContractError({
+  classification,
+  queryType,
+  objectType,
+  schema = null,
+  status,
+  inventoryStatuses,
+}) {
+  const error = new Error('Inventory contract blocked')
+  error.restoreReport = {
+    phase: 'inventory',
+    sqlstate: 'NOT_APPLICABLE',
+    operation: 'SELECT',
+    queryType,
+    objectType,
+    schema,
+    lineOrOrdinal: 1,
+    status,
+    classification,
+    inventoryStatuses,
+    sensitiveDetailRemoved: true,
+  }
+  return error
+}
+
+export function classifyInventoryPrerequisites(presence) {
+  const required = {
+    auth: presence?.authUsers === true,
+    storage: presence?.storageObjects === true,
+    migrationHistory: presence?.migrationHistory === true,
+    plpgsql: presence?.plpgsql === true,
+  }
+  const fixturePresent = presence?.fixtureTable === true
+  return {
+    auth: required.auth ? INVENTORY_STATUSES.present : INVENTORY_STATUSES.absent,
+    storage: required.storage ? INVENTORY_STATUSES.present : INVENTORY_STATUSES.absent,
+    migrationHistory: required.migrationHistory
+      ? INVENTORY_STATUSES.present
+      : INVENTORY_STATUSES.absent,
+    extensions: required.plpgsql ? INVENTORY_STATUSES.present : INVENTORY_STATUSES.absent,
+    fixture: fixturePresent ? INVENTORY_STATUSES.present : INVENTORY_STATUSES.notApplicable,
+    policies: fixturePresent
+      ? (presence?.fixturePolicy === true ? INVENTORY_STATUSES.present : INVENTORY_STATUSES.absent)
+      : INVENTORY_STATUSES.notApplicable,
+    publications: fixturePresent
+      ? (presence?.fixturePublication === true
+          ? INVENTORY_STATUSES.present
+          : INVENTORY_STATUSES.absent)
+      : INVENTORY_STATUSES.notApplicable,
+    securityDefiner: fixturePresent
+      ? (presence?.fixtureSecurityDefiner === true
+          ? INVENTORY_STATUSES.present
+          : INVENTORY_STATUSES.absent)
+      : INVENTORY_STATUSES.notApplicable,
+    billing: presence?.billingPayments === true
+      ? INVENTORY_STATUSES.present
+      : INVENTORY_STATUSES.notApplicable,
+  }
+}
+
+export function assertInventoryPrerequisites(presence) {
+  const statuses = classifyInventoryPrerequisites(presence)
+  const required = [
+    ['auth', 'AUTH_USERS', 'TABLE', 'auth'],
+    ['storage', 'STORAGE_OBJECTS', 'TABLE', 'storage'],
+    ['migrationHistory', 'MIGRATION_HISTORY', 'TABLE', 'supabase_migrations'],
+    ['extensions', 'PLPGSQL_EXTENSION', 'EXTENSION', null],
+  ]
+  for (const [category, queryType, objectType, schema] of required) {
+    if (statuses[category] === INVENTORY_STATUSES.absent) {
+      throw inventoryContractError({
+        classification: 'INVENTORY_REQUIRED_OBJECT_ABSENT',
+        queryType,
+        objectType,
+        schema,
+        status: INVENTORY_STATUSES.absent,
+        inventoryStatuses: statuses,
+      })
+    }
+  }
+  return statuses
+}
+
+export function sanitizeInventoryQueryError(raw, queryType, lineOrOrdinal = 1) {
+  const report = sanitizeRestoreError(raw, 'inventory')
+  return {
+    ...report,
+    operation: report.operation === 'UNKNOWN' ? 'SELECT' : report.operation,
+    queryType,
+    lineOrOrdinal,
+    status: INVENTORY_STATUSES.error,
+    classification: report.sqlstate === '42501'
+      ? 'INVENTORY_PERMISSION_DENIED'
+      : 'INVENTORY_QUERY_ERROR',
+  }
+}
+
+function enrichInventoryExecutionError(error, queryType, lineOrOrdinal = 1) {
+  const report = error?.restoreReport
+  if (!report) {
+    return inventoryContractError({
+      classification: 'INVENTORY_QUERY_ERROR',
+      queryType,
+      objectType: 'CATALOG',
+      status: INVENTORY_STATUSES.error,
+      inventoryStatuses: {},
+    })
+  }
+  error.restoreReport = {
+    ...report,
+    phase: 'inventory',
+    operation: report.operation === 'UNKNOWN' ? 'SELECT' : report.operation,
+    queryType,
+    lineOrOrdinal,
+    status: INVENTORY_STATUSES.error,
+    classification: report.sqlstate === '42501'
+      ? 'INVENTORY_PERMISSION_DENIED'
+      : 'INVENTORY_QUERY_ERROR',
+  }
+  return error
+}
+
 export function assertIsolatedTarget({ projectId, ports, temporaryRoot }) {
   if (!/^moovx-staging-restore-[a-z0-9-]+$/.test(projectId)) {
     throw new Error('Isolated project ID is invalid')
@@ -549,6 +678,9 @@ export function compareRestoreProofs(first, second) {
   }
   if (JSON.stringify(first.owners) !== JSON.stringify(second.owners)) {
     throw new Error('Restore ownership differs')
+  }
+  if (JSON.stringify(first.inventoryStatuses) !== JSON.stringify(second.inventoryStatuses)) {
+    throw new Error('Restore inventory statuses differ')
   }
   return true
 }
@@ -610,6 +742,40 @@ function forceCleanup(projectId) {
 }
 
 function inventory(container) {
+  const prerequisiteSql = `
+SELECT json_build_object(
+  'authUsers', to_regclass('auth.users') IS NOT NULL,
+  'storageObjects', to_regclass('storage.objects') IS NOT NULL,
+  'migrationHistory', to_regclass('supabase_migrations.schema_migrations') IS NOT NULL,
+  'plpgsql', EXISTS (SELECT 1 FROM pg_extension WHERE extname='plpgsql'),
+  'fixtureTable', to_regclass('restore_fixture.items') IS NOT NULL,
+  'fixturePolicy', EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='restore_fixture' AND tablename='items'),
+  'fixturePublication', EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='fixture_restore_publication' AND schemaname='restore_fixture' AND tablename='items'),
+  'fixtureSecurityDefiner', EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='restore_fixture' AND p.proname='item_count' AND p.prosecdef),
+  'billingPayments', to_regclass('public.payments') IS NOT NULL
+)::text;`
+  let presenceOutput
+  try {
+    presenceOutput = docker(
+      ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-Atq', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
+      { input: prerequisiteSql, allowOutput: true, phase: 'inventory' },
+    ).trim()
+  } catch (error) {
+    throw enrichInventoryExecutionError(error, 'INVENTORY_PREREQUISITES')
+  }
+  let presence
+  try {
+    presence = JSON.parse(presenceOutput)
+  } catch {
+    throw inventoryContractError({
+      classification: 'INVENTORY_QUERY_ERROR',
+      queryType: 'INVENTORY_PREREQUISITES',
+      objectType: 'CATALOG',
+      status: INVENTORY_STATUSES.error,
+      inventoryStatuses: {},
+    })
+  }
+  const inventoryStatuses = assertInventoryPrerequisites(presence)
   const sql = `
 SELECT json_build_object(
   'counts', json_build_object(
@@ -633,11 +799,28 @@ SELECT json_build_object(
     UNION ALL SELECT concat('o|',nspname,'|',pg_get_userbyid(nspowner)) FROM pg_namespace WHERE nspname IN ('public','auth','storage','realtime','restore_fixture')
   ) fingerprint_items))
 )::text;`
-  const output = docker(
-    ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-Atq', '-v', 'ON_ERROR_STOP=1'],
-    { input: sql, allowOutput: true, phase: 'inventory' },
-  ).trim()
-  const report = JSON.parse(output)
+  let output
+  try {
+    output = docker(
+      ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-Atq', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
+      { input: sql, allowOutput: true, phase: 'inventory' },
+    ).trim()
+  } catch (error) {
+    throw enrichInventoryExecutionError(error, 'INVENTORY_AGGREGATE')
+  }
+  let report
+  try {
+    report = JSON.parse(output)
+  } catch {
+    throw inventoryContractError({
+      classification: 'INVENTORY_QUERY_ERROR',
+      queryType: 'INVENTORY_AGGREGATE',
+      objectType: 'CATALOG',
+      status: INVENTORY_STATUSES.error,
+      inventoryStatuses,
+    })
+  }
+  report.inventoryStatuses = inventoryStatuses
   if (report.fixturePresent) {
     const fixtureSql = `
 SELECT json_build_object(
@@ -652,10 +835,35 @@ SELECT json_build_object(
   'cliRolePresent', EXISTS (SELECT 1 FROM pg_roles WHERE rolname='cli_login_postgres'),
   'unsupportedMembershipCount', (SELECT count(*) FROM pg_auth_members m JOIN pg_roles role ON role.oid=m.roleid JOIN pg_roles member ON member.oid=m.member WHERE role.rolname='postgres' AND member.rolname='cli_login_postgres')
 )::text;`
-    report.fixture = JSON.parse(docker(
-      ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-Atq', '-v', 'ON_ERROR_STOP=1'],
-      { input: fixtureSql, allowOutput: true, phase: 'fixture_inventory' },
-    ).trim())
+    let fixtureOutput
+    try {
+      fixtureOutput = docker(
+        ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-X', '-Atq', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose'],
+        { input: fixtureSql, allowOutput: true, phase: 'inventory' },
+      ).trim()
+    } catch (error) {
+      throw enrichInventoryExecutionError(error, 'FIXTURE_INVENTORY')
+    }
+    try {
+      report.fixture = JSON.parse(fixtureOutput)
+    } catch {
+      throw inventoryContractError({
+        classification: 'INVENTORY_QUERY_ERROR',
+        queryType: 'FIXTURE_INVENTORY',
+        objectType: 'CATALOG',
+        status: INVENTORY_STATUSES.error,
+        inventoryStatuses,
+      })
+    }
+    if (Number(report.fixture.policyCount) === 0) {
+      report.inventoryStatuses.policies = INVENTORY_STATUSES.absent
+    }
+    if (Number(report.fixture.publicationCount) === 0) {
+      report.inventoryStatuses.publications = INVENTORY_STATUSES.absent
+    }
+    if (report.fixture.securityDefiner !== true) {
+      report.inventoryStatuses.securityDefiner = INVENTORY_STATUSES.absent
+    }
   }
   return report
 }
@@ -699,7 +907,13 @@ async function restoreOnce({ backup, runNumber, ports }) {
     if (restored.owners.auth !== 'supabase_admin'
       || restored.owners.storage !== 'supabase_admin'
       || restored.owners.realtime !== 'supabase_admin') {
-      throw new Error('Supabase-managed schema ownership changed')
+      throw inventoryContractError({
+        classification: 'INVENTORY_OWNER_MISMATCH',
+        queryType: 'MANAGED_SCHEMA_OWNERS',
+        objectType: 'SCHEMA',
+        status: INVENTORY_STATUSES.error,
+        inventoryStatuses: restored.inventoryStatuses,
+      })
     }
     if (restored.fixturePresent
       && (Number(restored.fixture.rowCount) !== 2
@@ -712,7 +926,14 @@ async function restoreOnce({ backup, runNumber, ports }) {
         || restored.fixture.fixtureRolePresent !== true
         || restored.fixture.cliRolePresent !== true
         || Number(restored.fixture.unsupportedMembershipCount) !== 0)) {
-      throw new Error('Synthetic restore contract mismatch')
+      throw inventoryContractError({
+        classification: 'INVENTORY_FIXTURE_CONTRACT_MISMATCH',
+        queryType: 'FIXTURE_ASSERTIONS',
+        objectType: 'FIXTURE',
+        schema: 'restore_fixture',
+        status: INVENTORY_STATUSES.error,
+        inventoryStatuses: restored.inventoryStatuses,
+      })
     }
     proof = {
       runNumber,
@@ -722,6 +943,7 @@ async function restoreOnce({ backup, runNumber, ports }) {
       fingerprint: restored.fingerprint,
       counts: restored.counts,
       owners: restored.owners,
+      inventoryStatuses: restored.inventoryStatuses,
     }
   }, async () => {
     try { execute(supabaseCli, ['stop', '--no-backup'], { cwd: projectRoot, phase: 'stack_stop' }) } catch {}

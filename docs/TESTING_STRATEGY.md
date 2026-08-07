@@ -518,10 +518,19 @@ Les tests préservent les autres permissions, le contrat `cli_login_postgres`,
 `ON_ERROR_STOP`, les modes `--runs 1`/`--runs 2`, l'absence de réseau et le
 cleanup succès/échec. Le backup staging réel n'est pas rejoué dans ce
 sous-batch; Preview reste `NO_GO`.
-La validation synthétique du chemin corrigé atteint la phase `inventory`, où
-une erreur distincte encore non diagnostiquée bloque le verdict final. Aucun
-résultat `RESTORABLE` de bout en bout ni capacité réelle staging ne doit être
-déduit avant le sous-batch de diagnostic correspondant.
+La première fixture temporaire ayant atteint `inventory` omettait la table
+`supabase_migrations.schema_migrations`; le comptage d'historique échouait donc
+avec `42P01`. Le harnais classe désormais cette absence comme
+`INVENTORY_REQUIRED_OBJECT_ABSENT` et expose, pour chaque catégorie,
+`PRESENT`, `ABSENT`, `ERROR` ou `NOT_APPLICABLE`. Une permission refusée ou une
+requête catalogue invalide reste `ERROR`, jamais `ABSENT`.
+
+La fixture canonique complète doit être `RESTORABLE` en `--runs 1` et en
+`--runs 2`; les deux runs doivent partager fingerprint, compteurs, owners et
+statuts d'inventaire. La preuve du 7 août 2026 produit l'empreinte
+`ba98812d295b81320b298a35cc650ec3`. Une fixture sans historique doit rester
+bloquée. Aucune de ces preuves synthétiques n'atteste le backup staging réel;
+la capacité staging reste non attestée et Preview demeure `NO_GO`.
 
 ## 8. Sécurité des tests
 

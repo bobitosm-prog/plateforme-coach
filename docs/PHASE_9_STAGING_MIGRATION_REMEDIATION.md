@@ -356,10 +356,28 @@ artificiel n'est créé.
 Le backup réel n'a pas été rejoué après ce correctif : aucune deuxième
 restauration et aucun dry-run `141 → 145` n'ont été exécutés. La capacité réelle
 de restauration staging demeure non attestée et Preview reste `NO_GO`.
-Une validation synthétique du chemin corrigé a dépassé
-`canonical_restore`, puis s'est arrêtée sur une erreur distincte en phase
-`inventory`. Cette nouvelle erreur n'est pas diagnostiquée dans ce sous-batch
-et aucun verdict `RESTORABLE` de bout en bout n'est revendiqué.
+L'erreur distincte observée ensuite en phase `inventory` a été diagnostiquée
+localement. La fixture temporaire utilisée pour ce diagnostic omettait
+`supabase_migrations.schema_migrations`; la restauration avait abouti, puis le
+comptage d'historique levait SQLSTATE `42P01`. Il s'agissait donc d'un
+`INVENTORY_FAILURE` causé par une fixture incomplète, et non d'un
+`RESTORE_FAILURE` de la fixture canonique.
+
+L'inventaire vérifie désormais ses prérequis avant les agrégations et expose
+explicitement `PRESENT`, `ABSENT`, `ERROR` ou `NOT_APPLICABLE`. Une table
+d'historique absente produit `INVENTORY_REQUIRED_OBJECT_ABSENT`; une erreur SQL
+reste `ERROR` et ne devient jamais silencieusement `ABSENT`. Les erreurs de
+permission et de requête catalogue conservent leur SQLSTATE et leur type de
+requête; les divergences d'owner et de contrat synthétique restent bloquantes.
+
+La fixture canonique complète, incluant deux entrées d'historique et les rôles
+synthétiques attendus, retourne `RESTORABLE` avec `--runs 1`, puis avec
+`--runs 2`. Les deux runs produisent l'empreinte
+`ba98812d295b81320b298a35cc650ec3`, ainsi que des compteurs, owners et statuts
+d'inventaire identiques. Une fixture volontairement privée de l'historique est
+bloquée avec `migrationHistory=ABSENT`. Ces résultats restent entièrement
+synthétiques : le backup staging réel n'a pas été rejoué, la capacité réelle
+staging reste non attestée et Preview demeure `NO_GO`.
 
 ## Validation distante future
 
