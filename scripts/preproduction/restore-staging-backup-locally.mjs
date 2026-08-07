@@ -53,6 +53,21 @@ export const INVENTORY_STATUSES = Object.freeze({
   error: 'ERROR',
   notApplicable: 'NOT_APPLICABLE',
 })
+export const ISOLATION_CLASSIFICATIONS = Object.freeze({
+  confirmed: 'ISOLATION_RESOURCES_CONFIRMED',
+  missing: 'ISOLATION_RESOURCE_MISSING',
+  projectMismatch: 'ISOLATION_PROJECT_MISMATCH',
+  volumeMismatch: 'ISOLATION_VOLUME_MISMATCH',
+  portConflict: 'ISOLATION_PORT_CONFLICT',
+  labelMismatch: 'ISOLATION_LABEL_MISMATCH',
+})
+const SUPABASE_DOCKER_PROJECT_ID_LIMIT = 40
+const ISOLATION_POLL_INTERVAL_MS = 250
+const ISOLATION_POLL_TIMEOUT_MS = 3_000
+const DOCKER_PROJECT_LABELS = Object.freeze([
+  'com.docker.compose.project',
+  'com.supabase.cli.project',
+])
 
 function assertLocalPath(value, label) {
   const path = resolve(value)
@@ -671,6 +686,129 @@ export function assertIsolatedTarget({ projectId, ports, temporaryRoot }) {
   assertLocalPath(temporaryRoot, 'restore worktree')
 }
 
+function isolationContractError(classification) {
+  const error = new Error('Docker isolation contract blocked')
+  error.restoreReport = {
+    phase: 'resource_inventory',
+    sqlstate: 'NOT_APPLICABLE',
+    operation: 'INSPECT',
+    objectType: 'DOCKER_RESOURCE',
+    schema: null,
+    classification,
+    sensitiveDetailRemoved: true,
+  }
+  return error
+}
+
+export function normalizeSupabaseDockerProjectId(projectId) {
+  if (!/^moovx-staging-restore-[a-z0-9-]+$/.test(projectId)) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.projectMismatch)
+  }
+  return projectId.slice(0, SUPABASE_DOCKER_PROJECT_ID_LIMIT)
+}
+
+function publishedHostPorts(publishedPorts) {
+  return Object.values(publishedPorts ?? {})
+    .flatMap(bindings => bindings ?? [])
+    .map(binding => Number(binding.HostPort))
+    .filter(Number.isInteger)
+}
+
+export function verifyDockerIsolationSnapshot({
+  projectId,
+  ports,
+  temporaryRoot,
+  snapshot,
+}) {
+  assertIsolatedTarget({ projectId, ports, temporaryRoot })
+  const dockerProjectId = normalizeSupabaseDockerProjectId(projectId)
+  if (dockerProjectId === 'plateforme-coach') {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.projectMismatch)
+  }
+  if (!snapshot?.containers?.length || !snapshot?.volumes?.length) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.missing)
+  }
+  const resources = [...snapshot.containers, ...snapshot.volumes]
+  for (const resource of resources) {
+    for (const label of DOCKER_PROJECT_LABELS) {
+      if (!Object.hasOwn(resource.labels ?? {}, label)) {
+        throw isolationContractError(ISOLATION_CLASSIFICATIONS.labelMismatch)
+      }
+      if (resource.labels[label] !== dockerProjectId) {
+        throw isolationContractError(ISOLATION_CLASSIFICATIONS.projectMismatch)
+      }
+    }
+  }
+  const databaseContainerName = `supabase_db_${dockerProjectId}`
+  const databaseVolumeName = `supabase_db_${dockerProjectId}`
+  const databaseContainer = snapshot.containers.find(
+    resource => resource.name === databaseContainerName,
+  )
+  if (!databaseContainer) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.missing)
+  }
+  const expectedPorts = new Set(Object.values(ports))
+  const allPublishedPorts = snapshot.containers.flatMap(
+    resource => publishedHostPorts(resource.publishedPorts),
+  )
+  if (allPublishedPorts.some(port => (
+    PRIMARY_LOCAL_PORTS.includes(port) || !expectedPorts.has(port)
+  ))) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.portConflict)
+  }
+  const actualPorts = publishedHostPorts(databaseContainer.publishedPorts)
+  if (!actualPorts.includes(ports.db)
+    || actualPorts.some(port => PRIMARY_LOCAL_PORTS.includes(port))) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.portConflict)
+  }
+  const databaseVolume = snapshot.volumes.find(resource => resource.name === databaseVolumeName)
+  if (!databaseVolume || databaseVolume.name === 'supabase_db_plateforme-coach') {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.volumeMismatch)
+  }
+  const databaseMount = (databaseContainer.mounts ?? []).find(
+    mount => mount.type === 'volume' && mount.destination === '/var/lib/postgresql/data',
+  )
+  if (!databaseMount || databaseMount.name !== databaseVolumeName) {
+    throw isolationContractError(ISOLATION_CLASSIFICATIONS.volumeMismatch)
+  }
+  return {
+    classification: ISOLATION_CLASSIFICATIONS.confirmed,
+    dockerProjectId,
+    databaseContainerName,
+    databaseVolumeName,
+  }
+}
+
+export async function waitForDockerIsolation({
+  projectId,
+  ports,
+  temporaryRoot,
+  readSnapshot,
+  pollIntervalMs = ISOLATION_POLL_INTERVAL_MS,
+  timeoutMs = ISOLATION_POLL_TIMEOUT_MS,
+  sleep = delay => new Promise(resolvePromise => setTimeout(resolvePromise, delay)),
+}) {
+  const attempts = Math.floor(timeoutMs / pollIntervalMs) + 1
+  let lastError
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return verifyDockerIsolationSnapshot({
+        projectId,
+        ports,
+        temporaryRoot,
+        snapshot: readSnapshot(),
+      })
+    } catch (error) {
+      if (error?.restoreReport?.classification !== ISOLATION_CLASSIFICATIONS.missing) {
+        throw error
+      }
+      lastError = error
+    }
+    if (attempt < attempts - 1) await sleep(pollIntervalMs)
+  }
+  throw lastError ?? isolationContractError(ISOLATION_CLASSIFICATIONS.missing)
+}
+
 export function compareRestoreProofs(first, second) {
   if (first.fingerprint !== second.fingerprint) throw new Error('Restore fingerprints differ')
   if (JSON.stringify(first.counts) !== JSON.stringify(second.counts)) {
@@ -723,22 +861,59 @@ function docker(args, options) {
   return execute(dockerBinary, args, { label: 'docker', ...options })
 }
 
-function resources(projectId) {
-  const containers = docker(
-    ['ps', '-a', '--filter', `name=${projectId}`, '--format', '{{.Names}}'],
+function parseDockerInspectLine(line, type) {
+  const [name, labels, publishedPorts, mounts] = line.split('|')
+  return {
+    name: JSON.parse(name),
+    labels: JSON.parse(labels),
+    ...(type === 'container' ? {
+      publishedPorts: JSON.parse(publishedPorts),
+      mounts: JSON.parse(mounts).map(mount => ({
+        type: mount.Type,
+        name: mount.Name,
+        destination: mount.Destination,
+      })),
+    } : {}),
+  }
+}
+
+export function readDockerIsolationSnapshot(projectId) {
+  const dockerProjectId = normalizeSupabaseDockerProjectId(projectId)
+  const labelFilter = `label=com.supabase.cli.project=${dockerProjectId}`
+  const containerLines = docker(
+    ['ps', '-a', '--filter', labelFilter, '--format', '{{json .Names}}'],
+    { allowOutput: true, phase: 'resource_inventory' },
+  ).trim().split('\n').filter(Boolean)
+  const containers = containerLines.map(line => {
+    const parsedName = JSON.parse(line)
+    const inspected = docker(
+      ['inspect', '--format',
+        '{{json .Name}}|{{json .Config.Labels}}|{{json .NetworkSettings.Ports}}|{{json .Mounts}}',
+        parsedName],
+      { allowOutput: true, phase: 'resource_inventory' },
+    ).trim()
+    const resource = parseDockerInspectLine(inspected, 'container')
+    return { ...resource, name: resource.name.replace(/^\//, '') }
+  }).sort((left, right) => left.name.localeCompare(right.name))
+  const volumeNames = docker(
+    ['volume', 'ls', '--filter', labelFilter, '--format', '{{.Name}}'],
     { allowOutput: true, phase: 'resource_inventory' },
   ).trim().split('\n').filter(Boolean).sort()
-  const volumes = docker(
-    ['volume', 'ls', '--filter', `name=${projectId}`, '--format', '{{.Name}}'],
+  const volumes = volumeNames.map(name => parseDockerInspectLine(docker(
+    ['volume', 'inspect', '--format', '{{json .Name}}|{{json .Labels}}', name],
     { allowOutput: true, phase: 'resource_inventory' },
-  ).trim().split('\n').filter(Boolean).sort()
+  ).trim(), 'volume'))
   return { containers, volumes }
 }
 
 function forceCleanup(projectId) {
-  const current = resources(projectId)
-  if (current.containers.length) docker(['rm', '-f', ...current.containers], { phase: 'cleanup' })
-  if (current.volumes.length) docker(['volume', 'rm', ...current.volumes], { phase: 'cleanup' })
+  const current = readDockerIsolationSnapshot(projectId)
+  if (current.containers.length) {
+    docker(['rm', '-f', ...current.containers.map(resource => resource.name)], { phase: 'cleanup' })
+  }
+  if (current.volumes.length) {
+    docker(['volume', 'rm', ...current.volumes.map(resource => resource.name)], { phase: 'cleanup' })
+  }
 }
 
 function inventory(container) {
@@ -875,21 +1050,24 @@ async function restoreOnce({ backup, runNumber, ports }) {
   assertIsolatedTarget({ projectId, ports, temporaryRoot })
   const projectRoot = resolve(temporaryRoot, 'project')
   const configRoot = resolve(projectRoot, 'supabase')
-  const container = `supabase_db_${projectId}`
-  const volume = `supabase_db_${projectId}`
   mkdirSync(resolve(configRoot, 'migrations'), { recursive: true, mode: 0o700 })
   writeFileSync(resolve(configRoot, 'config.toml'), configFor(projectId, ports), { mode: 0o600 })
   chmodSync(temporaryRoot, 0o700)
   let proof
   await withGuaranteedCleanup(async () => {
-    if (resources(projectId).containers.length || resources(projectId).volumes.length) {
+    if (readDockerIsolationSnapshot(projectId).containers.length
+      || readDockerIsolationSnapshot(projectId).volumes.length) {
       throw new Error('Isolated Docker resource collision')
     }
     execute(supabaseCli, ['start'], { cwd: projectRoot, phase: 'stack_start' })
-    if (!resources(projectId).containers.includes(container)
-      || !resources(projectId).volumes.includes(volume)) {
-      throw new Error('Expected isolated database resources are missing')
-    }
+    const isolation = await waitForDockerIsolation({
+      projectId,
+      ports,
+      temporaryRoot,
+      readSnapshot: () => readDockerIsolationSnapshot(projectId),
+    })
+    const container = isolation.databaseContainerName
+    const volume = isolation.databaseVolumeName
     const cliPrepared = prepareOfficialCliRoleGrant(backup.files['roles.sql'].source)
     const parameterPrepared = prepareOfficialRealtimeParameterGrant(cliPrepared.source)
     if (parameterPrepared.classification === 'OFFICIAL_PARAMETER_GRANT_FILTERED') {
@@ -950,7 +1128,7 @@ async function restoreOnce({ backup, runNumber, ports }) {
     forceCleanup(projectId)
     chmodSync(temporaryRoot, 0o700)
     rmSync(temporaryRoot, { recursive: true, force: true })
-    const remaining = resources(projectId)
+    const remaining = readDockerIsolationSnapshot(projectId)
     if (remaining.containers.length || remaining.volumes.length) {
       throw new Error('Isolated cleanup incomplete')
     }

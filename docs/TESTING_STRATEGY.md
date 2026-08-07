@@ -532,6 +532,22 @@ statuts d'inventaire. La preuve du 7 août 2026 produit l'empreinte
 bloquée. Aucune de ces preuves synthétiques n'atteste le backup staging réel;
 la capacité staging reste non attestée et Preview demeure `NO_GO`.
 
+La preuve opérateur ultérieure du 7 août 2026 a restauré deux fois, dans deux
+stacks indépendantes, le même backup staging réel. Les deux runs sont
+`RESTORABLE` avec un fingerprint, des compteurs et des owners identiques : la
+capacité de récupération est `RECOVERY_CAPABILITY_VERIFIED`. Preview reste
+néanmoins `NO_GO` tant que le plan de migrations distant n'est pas `ALIGNED`.
+
+La première tentative de dry-run réel `141 → 145` a été stoppée avant SQL car
+Supabase CLI tronque le Project ID Docker à 40 caractères. Le garde corrigé
+utilise les labels exacts `com.supabase.cli.project` et
+`com.docker.compose.project`, puis vérifie le conteneur DB, son port publié, le
+volume monté et le répertoire temporaire. L'apparition des ressources est
+pollée toutes les 250 ms pendant trois secondes au maximum; seul l'état
+`ISOLATION_RESOURCE_MISSING` est retenté. Deux validations synthétiques
+indépendantes ont produit `ISOLATION_RESOURCES_CONFIRMED` et un cleanup complet.
+Aucun backup réel ni dry-run `141 → 145` n'a été rejoué après ce correctif.
+
 ## 8. Sécurité des tests
 
 - Production, préproduction partagée et services hébergés sont interdits par défaut.

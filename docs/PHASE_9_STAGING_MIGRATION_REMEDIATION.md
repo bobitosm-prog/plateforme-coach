@@ -379,6 +379,32 @@ bloquée avec `migrationHistory=ABSENT`. Ces résultats restent entièrement
 synthétiques : le backup staging réel n'a pas été rejoué, la capacité réelle
 staging reste non attestée et Preview demeure `NO_GO`.
 
+## Diagnostic local du garde d'isolation Docker du dry-run
+
+Le 7 août 2026, deux restaurations indépendantes du backup staging réel ont
+abouti avec le même fingerprint `ef4b1ba5b73f1ec667b0b6a27b2287c3`, les
+mêmes compteurs et les mêmes owners. La capacité de récupération est donc
+qualifiée `RECOVERY_CAPABILITY_VERIFIED`. Le backup reste hors dépôt, inchangé
+et protégé par ses permissions `700/600`.
+
+La première tentative de dry-run réel `141 → 145` s'est arrêtée avant toute
+restauration SQL sur `isolated resources missing`. La cause démontrée avec une
+stack synthétique est la normalisation du Project ID par Supabase CLI : les
+identités Docker sont tronquées à 40 caractères. Le garde comparait les noms
+human-readable à l'identifiant demandé non normalisé.
+
+L'autorité locale repose désormais conjointement sur les labels exacts
+`com.supabase.cli.project` et `com.docker.compose.project`, le conteneur DB, le
+port publié, le volume DB monté et le répertoire temporaire attendu. Un polling
+borné à 250 ms, pendant trois secondes au maximum, ne tolère que l'apparition
+retardée d'une ressource; tout mismatch de label, projet, volume ou port bloque
+immédiatement. Deux stacks synthétiques indépendantes ont retourné
+`ISOLATION_RESOURCES_CONFIRMED`, avec cleanup complet.
+
+Aucun backup réel n'a été rejoué après ce correctif et aucun dry-run `141 →
+145` n'a été relancé. Le backup réel est inchangé, aucune migration distante
+n'a été appliquée et Preview reste `NO_GO` jusqu'à un audit final `ALIGNED`.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit

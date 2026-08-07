@@ -197,6 +197,20 @@ Cette preuve est exclusivement synthétique : le backup staging réel n'a pas
 été relancé, la capacité réelle staging reste non attestée, Preview demeure
 `NO_GO` et la tâche rollback reste ouverte.
 
+Le 7 août 2026, deux restaurations locales indépendantes du même backup staging
+réel ont ensuite produit `RESTORABLE`, le même fingerprint, les mêmes compteurs
+et les mêmes owners. La capacité de récupération est désormais qualifiée
+`RECOVERY_CAPABILITY_VERIFIED`; cela ne rend pas Preview déployable et
+n'autorise aucune mutation staging.
+
+Le garde de la tentative de dry-run suivante a révélé que Supabase CLI tronque
+les identités Docker à 40 caractères. L'isolation ne dépend plus du seul nom :
+elle exige les labels Compose et Supabase CLI exacts, le conteneur et le volume
+DB attendus, le port publié et un répertoire temporaire distinct. Deux stacks
+synthétiques ont confirmé `ISOLATION_RESOURCES_CONFIRMED`. Aucun backup réel
+n'a été rejoué avec ce correctif, aucun dry-run `141 → 145` n'a été relancé et
+Preview reste `NO_GO`.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.

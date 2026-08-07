@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   INVENTORY_STATUSES,
+  ISOLATION_CLASSIFICATIONS,
   OFFICIAL_CLI_ROLE_GRANT,
   OFFICIAL_REALTIME_PARAMETER_GRANT,
   PRIMARY_LOCAL_PORTS,
@@ -16,12 +17,15 @@ import {
   classifyInventoryPrerequisites,
   executeRestoreRuns,
   neutralizeUnsupportedCliRoleGrant,
+  normalizeSupabaseDockerProjectId,
   prepareOfficialCliRoleGrant,
   prepareOfficialRealtimeParameterGrant,
   sanitizeRestoreError,
   sanitizeInventoryQueryError,
   validateBackupDirectory,
   validateSqlArtifactSafety,
+  verifyDockerIsolationSnapshot,
+  waitForDockerIsolation,
   withGuaranteedCleanup,
 } from '../../scripts/preproduction/restore-staging-backup-locally.mjs'
 
@@ -41,6 +45,27 @@ function backupFiles(overrides: Record<string, string> = {}) {
     'history_schema.sql': { source: 'CREATE SCHEMA IF NOT EXISTS supabase_migrations;' },
     'history_data.sql': { source: 'SET search_path TO supabase_migrations;' },
     ...Object.fromEntries(Object.entries(overrides).map(([name, source]) => [name, { source }])),
+  }
+}
+
+function isolationSnapshot(projectId: string) {
+  const dockerProjectId = normalizeSupabaseDockerProjectId(projectId)
+  const labels = {
+    'com.docker.compose.project': dockerProjectId,
+    'com.supabase.cli.project': dockerProjectId,
+  }
+  return {
+    containers: [{
+      name: `supabase_db_${dockerProjectId}`,
+      labels,
+      publishedPorts: { '5432/tcp': [{ HostPort: '62001' }] },
+      mounts: [{
+        type: 'volume',
+        name: `supabase_db_${dockerProjectId}`,
+        destination: '/var/lib/postgresql/data',
+      }],
+    }],
+    volumes: [{ name: `supabase_db_${dockerProjectId}`, labels }],
   }
 }
 
@@ -525,6 +550,176 @@ describe('staging backup local restore contract', () => {
       ports: { db: 62001, api: 62002 },
       temporaryRoot: '/private/tmp/moovx-unit',
     })).not.toThrow()
+  })
+
+  it('confirms a nominal Docker isolation snapshot', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    expect(verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot: isolationSnapshot(projectId),
+    })).toEqual(expect.objectContaining({
+      classification: ISOLATION_CLASSIFICATIONS.confirmed,
+      dockerProjectId: projectId,
+    }))
+  })
+
+  it('accepts CLI normalization only when both Docker labels match', () => {
+    const projectId = 'moovx-staging-restore-dryrun-12345-abcdefgh'
+    expect(projectId.length).toBeGreaterThan(40)
+    expect(normalizeSupabaseDockerProjectId(projectId)).toBe(projectId.slice(0, 40))
+    expect(verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot: isolationSnapshot(projectId),
+    })).toEqual(expect.objectContaining({
+      classification: ISOLATION_CLASSIFICATIONS.confirmed,
+      dockerProjectId: projectId.slice(0, 40),
+    }))
+  })
+
+  it('blocks a mismatched Docker project label', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshot = isolationSnapshot(projectId)
+    snapshot.containers[0].labels['com.docker.compose.project'] = 'foreign-project'
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot,
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.projectMismatch,
+      }),
+    }))
+  })
+
+  it('blocks a primary database volume', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshot = isolationSnapshot(projectId)
+    snapshot.volumes[0].name = 'supabase_db_plateforme-coach'
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot,
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.volumeMismatch,
+      }),
+    }))
+  })
+
+  it('blocks a conflicting published database port', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshot = isolationSnapshot(projectId)
+    snapshot.containers[0].publishedPorts['5432/tcp'][0].HostPort = '55322'
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot,
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.portConflict,
+      }),
+    }))
+  })
+
+  it('blocks a genuinely missing Docker resource', () => {
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId: 'moovx-staging-restore-unit',
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot: { containers: [], volumes: [] },
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.missing,
+      }),
+    }))
+  })
+
+  it('accepts a resource that appears within the bounded polling window', async () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshots = [
+      { containers: [], volumes: [] },
+      isolationSnapshot(projectId),
+    ]
+    let reads = 0
+    await expect(waitForDockerIsolation({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      readSnapshot: () => snapshots[Math.min(reads++, snapshots.length - 1)],
+      pollIntervalMs: 250,
+      timeoutMs: 500,
+      sleep: async () => {},
+    })).resolves.toEqual(expect.objectContaining({
+      classification: ISOLATION_CLASSIFICATIONS.confirmed,
+    }))
+    expect(reads).toBe(2)
+  })
+
+  it('blocks a resource that remains absent after the polling timeout', async () => {
+    let reads = 0
+    await expect(waitForDockerIsolation({
+      projectId: 'moovx-staging-restore-unit',
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      readSnapshot: () => {
+        reads += 1
+        return { containers: [], volumes: [] }
+      },
+      pollIntervalMs: 250,
+      timeoutMs: 500,
+      sleep: async () => {},
+    })).rejects.toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.missing,
+      }),
+    }))
+    expect(reads).toBe(3)
+  })
+
+  it('refuses a similarly named foreign container', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshot = isolationSnapshot(projectId)
+    snapshot.containers.push({
+      ...structuredClone(snapshot.containers[0]),
+      name: 'supabase_db_moovx-staging-restore-unit-similar',
+      labels: {
+        'com.docker.compose.project': 'foreign-project',
+        'com.supabase.cli.project': 'foreign-project',
+      },
+    })
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot,
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.projectMismatch,
+      }),
+    }))
+  })
+
+  it('blocks resources without both authoritative labels', () => {
+    const projectId = 'moovx-staging-restore-unit'
+    const snapshot = isolationSnapshot(projectId)
+    delete snapshot.volumes[0].labels['com.docker.compose.project']
+    expect(() => verifyDockerIsolationSnapshot({
+      projectId,
+      ports: { db: 62001, api: 62002 },
+      temporaryRoot: '/private/tmp/moovx-unit',
+      snapshot,
+    })).toThrow(expect.objectContaining({
+      restoreReport: expect.objectContaining({
+        classification: ISOLATION_CLASSIFICATIONS.labelMismatch,
+      }),
+    }))
   })
 
   it('validates the exact five-file backup contract', () => {
