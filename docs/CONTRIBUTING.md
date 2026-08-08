@@ -97,6 +97,15 @@ Appliquer la [stratégie de cache par domaine](CACHE_STRATEGY.md). Par défaut, 
 
 Une décision structurante est enregistrée selon l'[index des ADR](adr/README.md).
 
+## Code review
+
+Avant soumission, l'auteur effectue une self-review avec la [checklist
+canonique de revue de code](CODE_REVIEW_CHECKLIST.md). Le reviewer contrôle les
+preuves indépendamment; chaque case `N/A` exige une justification. La
+profondeur des validations dépend du risque et du périmètre : un changement
+documentaire n'appelle pas les mêmes preuves qu'une migration ou une frontière
+d'autorisation. La checklist ne remplace pas les quality gates CI.
+
 ## Commits et Git
 
 Utiliser un message court de type Conventional Commits cohérent avec le dépôt : `feat`, `fix`, `refactor`, `test`, `docs` ou `chore`, suivi d'un scope utile lorsque pertinent. Un commit doit rester focalisé et ne contenir que les fichiers validés.

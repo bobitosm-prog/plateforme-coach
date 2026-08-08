@@ -14134,3 +14134,31 @@ tâche « Définir et répéter la procédure de rollback » est clôturée. Pha
 reste active et les tâches suivantes restent inchangées. Cette preuve n'a
 créé aucun déploiement, appliqué aucune migration et utilisé aucun Stripe live;
 Production est restée exclue.
+
+## Entrée — 2026-08-08 — Phase 9 — checklist de revue de code
+
+**Contrat :** `docs/CODE_REVIEW_CHECKLIST.md` centralise une checklist concise
+et orientée preuve pour l'auteur et le reviewer. Elle couvre périmètre,
+architecture, sécurité et autorisation serveur, RLS, données et migrations,
+secrets, tests, UI/UX, performance, exploitation, documentation et Git. Toute
+case `N/A` exige une justification et la profondeur des preuves reste
+proportionnée au risque.
+
+**Intégration :** `docs/CONTRIBUTING.md` référence la checklist et impose la
+self-review avant soumission, puis une vérification indépendante. La checklist
+renvoie aux documents canoniques de tests, release, rollback et ADR au lieu de
+dupliquer leurs procédures; elle ne remplace pas les quality gates CI.
+
+**Garde et validation :** `tests/unit/code-review-checklist.test.ts` vérifie le
+fichier, son lien, ses dix sections, les règles `N/A`, les autorités
+canoniques, le verdict reviewer et le maintien des garanties Auth serveur,
+RLS, secrets et preuves de tests. Résultat ciblé : 1 fichier et 16 tests
+réussis. TypeScript, ESLint ciblé, liens documentaires, `git diff --check` et
+scan secrets sont verts. Les relectures manuelles API, migration Supabase et
+documentation seule confirment que les preuves demandées restent
+proportionnées.
+
+**Décision :** aucun CODEOWNERS, workflow CI ou template PR n'est ajouté dans
+ce sous-batch. La tâche « Créer la checklist de revue de code » est clôturée.
+Phase 9 reste active et la tâche suivante « Finaliser le guide d'onboarding
+développeur » reste ouverte.
