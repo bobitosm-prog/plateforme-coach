@@ -431,6 +431,62 @@ Aucun backup réel n'a été rejoué après ce correctif et aucun dry-run `141 �
 145` n'a été relancé. Le backup réel est inchangé, aucune migration distante
 n'a été appliquée et Preview reste `NO_GO` jusqu'à un audit final `ALIGNED`.
 
+## Diagnostic du backup frais multi-schémas du 8 août 2026
+
+Le backup frais pré-remédiation acquis le 8 août 2026 est resté
+`NOT_RESTORABLE` avec la version courante du harnais. Une reproduction locale
+bornée, arrêtée avant `data.sql`, l'historique et l'inventaire, a localisé le
+premier échec dans `schema.sql`, statement 20, ligne 48 : un `CREATE TYPE` dans
+le schéma géré `auth`. PostgreSQL retourne `42501` parce que le rôle local
+initiateur `postgres` n'est ni propriétaire de `auth`, ni membre de son
+propriétaire `supabase_admin`, et ne possède pas `CREATE` sur ce schéma.
+
+Ce cas est distinct du grant de rôle `cli_login_postgres` et du
+`GRANT SET ON PARAMETER log_min_messages` déjà traités. Il provient du périmètre
+d'acquisition : le backup frais inclut `public`, `auth`, `storage` et
+`realtime` dans `schema.sql`, alors que le backup restaurable de référence
+isole le schéma applicatif public et conserve l'historique dans ses deux
+artefacts dédiés. L'inventaire expurgé passe ainsi de 168 773 à 314 358 octets,
+de un à quatre `CREATE SCHEMA`, et introduit notamment 15 `CREATE TYPE` et de
+nombreuses opérations supplémentaires sur les schémas gérés.
+
+Une fixture synthétique reproduit exactement `42501` sous `postgres`. Le même
+`CREATE TYPE` réussit sous le rôle géré local préexistant `supabase_admin`, avec
+le bon owner, puis un rollback confirme l'absence de résidu ou d'élévation de
+privilèges. Cette preuve ne justifie toutefois pas l'exécution globale d'un
+dump `auth`/`storage`/`realtime` sous un rôle différent : ce serait un
+élargissement du contrat et du périmètre de restauration. Aucun filtre ni
+changement du harnais n'est donc retenu. La prochaine acquisition devra être
+explicitement bornée au schéma applicatif attendu; elle exige une nouvelle
+autorisation opérateur. Aucune remédiation staging n'a été exécutée et Preview
+reste `NO_GO`.
+
+Le prochain contrat d'acquisition proposé, encore **non validé**, sépare
+strictement les artefacts :
+
+- `roles.sql` contient uniquement les rôles et conserve la sanitization ciblée
+  existante;
+- `schema.sql` contient uniquement le schéma applicatif `public`;
+- `data.sql` contient uniquement les données applicatives `public`;
+- `history_schema.sql` et `history_data.sql` restent les artefacts séparés de
+  l'historique des migrations;
+- `auth`, `storage` et `realtime` restent les schémas gérés de la stack
+  Supabase locale cible et ne sont pas recréés depuis le dump applicatif.
+
+Cette stratégie devra faire l'objet d'une nouvelle acquisition et d'une
+restauration explicitement autorisées. Le statut historique
+`RECOVERY_CAPABILITY_VERIFIED` démontre le harnais avec l'ancien périmètre; il
+ne valide pas ce backup frais ni son scope multi-schémas. Ce dernier ne fournit
+donc aucune nouvelle capacité de récupération. Staging reste à 141 versions,
+avec les quatre versions attendues toujours absentes, et aucune remédiation n'a
+été exécutée.
+
+Les alternatives consistant à exécuter globalement `schema.sql` sous
+`supabase_admin`, rendre `postgres` artificiellement superuser ou membre du
+rôle géré, filtrer génériquement `OWNER` ou `GRANT`, utiliser `--no-owner`,
+désactiver `ON_ERROR_STOP` ou ignorer `42501` sont explicitement rejetées. Le
+défaut relève du contrat d'acquisition/restauration, pas d'une migration métier.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit

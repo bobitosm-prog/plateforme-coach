@@ -600,6 +600,25 @@ donc explicitement ACL, activation/forçage RLS et policies, avec des statuts
 bornés `PASS`, `FAIL`, `ABSENT` et `ERROR`. Une assertion agrégée ou une attente
 implicite d'absence de grant est interdite pour ce scénario.
 
+Le diagnostic de restauration du 8 août 2026 distingue aussi le périmètre du
+dump de son contenu. Une séquence locale minimale `roles.sql` puis `schema.sql`
+a identifié, sans exécuter les données ni l'historique, un `CREATE TYPE` dans
+le schéma géré `auth` échouant avec SQLSTATE `42501` sous `postgres`. La fixture
+synthétique confirme que `auth` appartient à `supabase_admin`, que `postgres`
+n'y possède pas `CREATE` et que le rôle géré peut produire l'effet attendu sans
+modifier les privilèges. Cette preuve n'autorise ni un changement global de
+rôle, ni un filtre de statements : un backup multi-schémas est refusé et doit
+être réacquis avec le périmètre applicatif canonique. Le backup frais réel n'a
+pas été rejoué intégralement et reste `NOT_RESTORABLE`; Preview reste `NO_GO`.
+
+La prochaine preuve devra acquérir séparément les rôles, le schéma `public`,
+les données `public` et les deux artefacts d'historique, puis restaurer sur une
+stack dont `auth`, `storage` et `realtime` restent gérés localement. Cette
+stratégie n'est pas encore validée. Les gardes doivent refuser `--no-owner`,
+les filtres génériques `OWNER`/`GRANT`, toute élévation artificielle de
+`postgres` et toute interprétation de l'ancienne preuve de récupération comme
+validation du nouveau scope.
+
 ## 12. Lacunes prioritaires
 
 - Les fixtures partagées existent, mais plusieurs anciens E2E recréent encore leurs comptes localement et migreront progressivement.

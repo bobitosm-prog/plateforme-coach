@@ -211,6 +211,26 @@ synthétiques ont confirmé `ISOLATION_RESOURCES_CONFIRMED`. Aucun backup réel
 n'a été rejoué avec ce correctif, aucun dry-run `141 → 145` n'a été relancé et
 Preview reste `NO_GO`.
 
+Le diagnostic local du 8 août 2026 ajoute une garde d'exploitation : un backup
+dont `schema.sql` inclut les schémas gérés `auth`, `storage` ou `realtime` ne
+doit pas être traité comme équivalent au backup applicatif public attendu. Le
+premier statement concerné, un `CREATE TYPE` dans `auth`, échoue avec SQLSTATE
+`42501` sous le rôle local `postgres`, qui n'est ni propriétaire du schéma ni
+membre de `supabase_admin`. Une exécution synthétique sous le rôle géré prouve
+l'effet PostgreSQL, mais ne constitue pas une autorisation pour restaurer tout
+le schéma géré sous ce rôle. Le harnais reste inchangé et fail-closed; une
+nouvelle acquisition bornée est requise avant toute qualification réelle.
+Le backup frais concerné reste `NOT_RESTORABLE`, aucune remédiation staging n'a
+été exécutée et Preview reste `NO_GO`.
+
+La stratégie suivante reste à valider sous autorisation séparée : rôles seuls
+dans `roles.sql`, schéma et données `public` seuls dans `schema.sql` et
+`data.sql`, historique dans ses deux artefacts dédiés, et conservation des
+schémas gérés `auth`/`storage`/`realtime` fournis par la stack cible. L'ancienne
+preuve `RECOVERY_CAPABILITY_VERIFIED` reste historique et ne qualifie pas ce
+nouveau scope. Aucun `--no-owner`, filtre générique `OWNER`/`GRANT`, superuser
+artificiel ou membership ajouté à `postgres` n'est une stratégie acceptable.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.
