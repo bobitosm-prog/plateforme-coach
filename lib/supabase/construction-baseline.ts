@@ -2,6 +2,7 @@ export const CANONICAL_SUPABASE_CONSTRUCTIONS = [
   'lib/supabase/admin.ts:17:10:createClient',
   'lib/supabase/browser.ts:16:10:createBrowserClient',
   'lib/supabase/server.ts:21:10:createServerClient',
+  'lib/seedance/reference-storage.ts:83:10:createClient',
   'proxy.ts:113:20:createServerClient',
 ] as const
 

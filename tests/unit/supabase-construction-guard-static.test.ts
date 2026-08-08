@@ -9,8 +9,11 @@ describe('Supabase construction guard architecture', () => {
   it('uses exact occurrence keys without directory or wildcard allowlists', () => {
     const all = [...CANONICAL_SUPABASE_CONSTRUCTIONS, ...LEGACY_SUPABASE_CONSTRUCTIONS]
     expect(new Set(all).size).toBe(all.length)
-    expect(CANONICAL_SUPABASE_CONSTRUCTIONS).toHaveLength(4)
+    expect(CANONICAL_SUPABASE_CONSTRUCTIONS).toHaveLength(5)
     expect(LEGACY_SUPABASE_CONSTRUCTIONS).toHaveLength(53)
+    expect(CANONICAL_SUPABASE_CONSTRUCTIONS.filter(key => key.includes('seedance'))).toEqual([
+      'lib/seedance/reference-storage.ts:83:10:createClient',
+    ])
     const exactKey = new RegExp(
       '^(?:app|lib)/.+\\.tsx?:\\d+:\\d+:(?:createClient|createBrowserClient|createServerClient)$'
       + '|^proxy\\.ts:\\d+:\\d+:createServerClient$',

@@ -7,6 +7,7 @@ const checklistPath = resolve(repositoryRoot, 'docs/CODE_REVIEW_CHECKLIST.md')
 const contributingPath = resolve(repositoryRoot, 'docs/CONTRIBUTING.md')
 const checklist = readFileSync(checklistPath, 'utf8')
 const contributing = readFileSync(contributingPath, 'utf8')
+const ciWorkflow = readFileSync(resolve(repositoryRoot, '.github/workflows/ci.yml'), 'utf8')
 
 describe('code review checklist contract', () => {
   it('keeps one canonical checklist linked from the contribution guide', () => {
@@ -64,10 +65,11 @@ describe('code review checklist contract', () => {
     expect(checklist).not.toMatch(/secrets? (?:sont )?tolérés?|tests? (?:sont )?facultatifs?/i)
   })
 
-  it('does not introduce repository governance or CI infrastructure in this sub-batch', () => {
+  it('keeps repository governance absent and CI limited to non-deployment checks', () => {
     expect(existsSync(resolve(repositoryRoot, 'CODEOWNERS'))).toBe(false)
     expect(existsSync(resolve(repositoryRoot, '.github/CODEOWNERS'))).toBe(false)
-    expect(existsSync(resolve(repositoryRoot, '.github/workflows'))).toBe(false)
+    expect(existsSync(resolve(repositoryRoot, '.github/workflows/ci.yml'))).toBe(true)
+    expect(ciWorkflow).not.toMatch(/--prod|VERCEL_ENV|deploy|db push|migration repair/i)
     expect(existsSync(resolve(repositoryRoot, '.github/pull_request_template.md'))).toBe(false)
     expect(existsSync(resolve(repositoryRoot, '.github/PULL_REQUEST_TEMPLATE'))).toBe(false)
   })

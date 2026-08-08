@@ -9,6 +9,7 @@ const adr = read('docs/adr/0008-domain-boundaries-and-code-placement.md')
 const adrIndex = read('docs/adr/README.md')
 const readme = read('README.md')
 const onboarding = read('docs/DEVELOPER_ONBOARDING.md')
+const ciWorkflow = read('.github/workflows/ci.yml')
 
 describe('domain documentation contract', () => {
   it('keeps the canonical domain map and ADR 0008', () => {
@@ -119,10 +120,11 @@ describe('domain documentation contract', () => {
     expect(`${domainMap}\n${adr}`).not.toMatch(/RLS (?:est )?optionnelle|identifiant du navigateur fait autorité/i)
   })
 
-  it('keeps application code, migrations and CI outside this documentation guard', () => {
-    expect(existsSync(resolve(root, '.github/workflows'))).toBe(false)
+  it('keeps application code and migrations outside this documentation guard without enabling deployment CI', () => {
+    expect(existsSync(resolve(root, '.github/workflows/ci.yml'))).toBe(true)
     expect(domainMap).not.toMatch(/créer une migration|ajouter un workflow CI/i)
     expect(adr).toContain("n'impose aucun déplacement mécanique immédiat du legacy")
+    expect(ciWorkflow).not.toMatch(/--prod|VERCEL_ENV|deploy|db push|migration repair/i)
   })
 
   it('makes the four placement review cases explicit', () => {

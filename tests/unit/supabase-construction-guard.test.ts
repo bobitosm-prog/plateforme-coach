@@ -4,6 +4,10 @@ import {
   compareSupabaseConstructionBaseline,
   constructionKey,
 } from '../../lib/supabase/construction-guard'
+import {
+  CANONICAL_SUPABASE_CONSTRUCTIONS,
+  LEGACY_SUPABASE_CONSTRUCTIONS,
+} from '../../lib/supabase/construction-baseline'
 import { checkSupabaseConstructionPolicy } from '../../scripts/check-supabase-client-constructions'
 
 const audit = (source: string) => auditSupabaseConstructions('fixture.ts', source)
@@ -64,5 +68,26 @@ describe('Supabase construction guard', () => {
     const result = checkSupabaseConstructionPolicy()
     expect(result.uncalledRuntimeImports).toEqual([])
     expect(result.comparison).toEqual({ ok: true, added: [], missing: [] })
+  })
+
+  it('allows only the exact Seedance storage constructor occurrence', () => {
+    const expected = [...CANONICAL_SUPABASE_CONSTRUCTIONS, ...LEGACY_SUPABASE_CONSTRUCTIONS]
+    const result = checkSupabaseConstructionPolicy()
+    const seedance = result.constructions.filter(item => item.file === 'lib/seedance/reference-storage.ts')
+    expect(seedance.map(constructionKey)).toEqual([
+      'lib/seedance/reference-storage.ts:83:10:createClient',
+    ])
+
+    const secondSeedance = { ...seedance[0], line: 84 }
+    expect(compareSupabaseConstructionBaseline(
+      [...result.constructions, secondSeedance],
+      expected,
+    ).added).toEqual(['lib/seedance/reference-storage.ts:84:10:createClient'])
+
+    const unexpected = { file: 'lib/unexpected-client.ts', line: 1, column: 1, constructor: 'createClient' }
+    expect(compareSupabaseConstructionBaseline(
+      [...result.constructions, unexpected],
+      expected,
+    ).added).toEqual(['lib/unexpected-client.ts:1:1:createClient'])
   })
 })

@@ -1,0 +1,99 @@
+name: MoovX Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - phase-6-staging
+  workflow_dispatch:
+    inputs:
+      base_sha:
+        description: Exact ancestor SHA used as the comparison base
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: Gate A - Fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Resolve trusted comparison base
+        id: base
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+          MANUAL_BASE_SHA: ${{ inputs.base_sha }}
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME" in
+            pull_request) candidate="$PR_BASE_SHA" ;;
+            push) candidate="$PUSH_BASE_SHA" ;;
+            workflow_dispatch) candidate="$MANUAL_BASE_SHA" ;;
+            *) echo "Unsupported event: $EVENT_NAME" >&2; exit 1 ;;
+          esac
+          if [[ ! "$candidate" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "Comparison base must be an exact 40-character commit SHA" >&2
+            exit 1
+          fi
+          git cat-file -e "${candidate}^{commit}"
+          git merge-base --is-ancestor "$candidate" HEAD
+          echo "sha=$(git rev-parse "$candidate")" >> "$GITHUB_OUTPUT"
+
+      - name: Check changed whitespace
+        env:
+          DIFF_BASE: ${{ steps.base.outputs.sha }}
+        run: git diff --check "$DIFF_BASE"...HEAD
+
+      - name: Lint changed JavaScript and TypeScript files
+        shell: bash
+        env:
+          DIFF_BASE: ${{ steps.base.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE"...HEAD -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx')
+          if (( ${#files[@]} == 0 )); then
+            echo "No changed JavaScript or TypeScript files to lint"
+            exit 0
+          fi
+          npx eslint -- "${files[@]}"
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
+      - name: Check translations
+        run: npm run i18n:check
+
+      - name: Check Supabase client factories
+        run: npm run supabase:factories:check
+
+      - name: Run fast documentation and CI contracts
+        run: >-
+          npm test --
+          tests/unit/ci-quality-gates.test.ts
+          tests/unit/developer-onboarding.test.ts
+          tests/unit/code-review-checklist.test.ts
+          tests/unit/domain-documentation.test.ts

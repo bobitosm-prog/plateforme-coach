@@ -51,6 +51,13 @@ git diff --check
 
 `npm run lint` peut encore révéler une dette historique hors tranche ; le lint ciblé des fichiers modifiés reste obligatoire et toute nouvelle erreur est refusée. Le build doit être exécuté avant livraison sans dépendre d'un réseau de police : les familles applicatives sont auto-hébergées et toute tentative Google Fonts est une régression bloquante.
 
+Le Gate A du workflow `MoovX Quality Gates` automatise en observation le
+contrôle du diff, TypeScript, le lint différentiel, i18n, les factories
+Supabase et les contrats documentaires rapides. Le lint global n'est pas un
+gate bloquant tant que sa dette historique subsiste. Gate A ne démontre encore
+ni une CI complète sous 20 minutes ni un flaky rate inférieur à 2 %; les gates
+Standard et Heavy restent à versionner séparément.
+
 Lancer un seul E2E pendant une boucle ciblée ; lancer la suite critique complète lorsqu'un changement traverse plusieurs frontières ou avant fusion/déploiement. La suite critique exécute 15/15 parcours dans un ordre stable sur Chromium, Next.js et Supabase locaux ; la matrice canonique détaillée reste dans la [stratégie de tests](TESTING_STRATEGY.md).
 
 ## Sécurité des tests et des journaux

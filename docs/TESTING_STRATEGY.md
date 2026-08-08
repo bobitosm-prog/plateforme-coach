@@ -346,6 +346,23 @@ Un verdict technique `GO` requiert toujours une approbation humaine avant
 toute action distante, et Production demeure soumise à une autorisation
 séparée.
 
+### Gate A CI — observation initiale
+
+Le workflow `MoovX Quality Gates` introduit uniquement un premier gate rapide
+sur les pull requests, les pushes vers `phase-6-staging` et les déclenchements
+manuels munis d'un SHA de base explicite. Il utilise Node 24 et le lockfile npm,
+puis vérifie le diff, TypeScript, les fichiers JavaScript/TypeScript modifiés
+avec ESLint, la parité i18n, le contrat des factories Supabase et les contrats
+documentaires rapides.
+
+Le lint global reste non bloquant tant que sa dette historique n'est pas
+résorbée; le lint différentiel refuse néanmoins toute nouvelle erreur dans les
+fichiers touchés. Ce gate est en observation : il n'atteste encore ni une CI
+complète sous 20 minutes, ni un flaky rate inférieur à 2 %. Les gates Standard
+et Heavy, incluant build, Docker, Supabase local et E2E, restent à ajouter dans
+des sous-batchs séparés. Aucun accès distant, secret fournisseur ou déploiement
+n'est effectué par Gate A.
+
 ### Préflight de rollback Phase 9
 
 Le contrat canonique est documenté dans
