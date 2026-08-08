@@ -21,11 +21,20 @@ Le modèle Billing distingue désormais, au niveau du contrat métier :
 
 Une ligne de paiement ne suffit jamais à accorder un accès. Un abonnement coach ne remplace pas un abonnement plateforme. Les droits sont projetés depuis des sources vérifiées, avec une période et un état propres.
 
-La mise en œuvre suivra une migration progressive expand/backfill/calcul parallèle/comparaison/bascule/contract. Les champs `profiles.subscription_*` et les tables financières existantes restent compatibles jusqu'à migration explicite de leurs consommateurs.
+La mise en œuvre suit une migration progressive expand/backfill/calcul parallèle/comparaison/bascule/contract. Les champs `profiles.subscription_*` et les tables financières existantes restent compatibles jusqu'à migration explicite de leurs consommateurs.
+
+## État d'implémentation au 8 août 2026
+
+Les frontières checkout, Connect, webhook signé, claim idempotent et
+réconciliation read-only sont désormais extraites sous `lib/billing/`. La
+réconciliation compare les autorités Stripe et locales par ports injectés,
+produit un rapport borné et ne mute aucune donnée. Cet état d'implémentation ne
+change pas la décision historique : les entitlements persistés et la
+normalisation complète des statuts restent progressifs.
 
 ## Conséquences
 
-- Les futures tables et services Billing devront rendre ces frontières explicites sans migration big bang.
+- Les évolutions Billing continuent de rendre ces frontières explicites sans migration big bang.
 - Les handlers webhook évolueront vers des commandes idempotentes par agrégat et par identifiant Stripe.
 - Les accès produit ne pourront plus dépendre d'un cache ou d'un statut financier isolé.
 - Une relation active sera recoupée pour toute activation coach/client, y compris au rejeu d'un webhook.
@@ -33,10 +42,10 @@ La mise en œuvre suivra une migration progressive expand/backfill/calcul parall
 
 ## Limites et dette restante
 
-- Cet ADR n'ajoute aucun schéma, service ou handler ; le modèle cible reste à implémenter par tranches.
+- À son adoption, cet ADR n'ajoutait aucun schéma, service ou handler ; le modèle cible reste partiellement implémenté par tranches.
 - Les colonnes runtime divergentes de `payments` et `profiles` doivent être auditées avant une migration.
 - Les statuts historiques ne sont pas encore normalisés et les entitlements n'existent pas encore comme objets persistés.
-- La réconciliation Stripe/base, les remboursements et les événements désordonnés restent à construire.
+- Les remboursements, les entitlements persistés et certaines variantes d'événements désordonnés restent à construire ; la réconciliation Stripe/base read-only existe désormais.
 
 ## Références
 

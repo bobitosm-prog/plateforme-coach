@@ -1,6 +1,6 @@
 # Repositories Training
 
-> Statut : contrat de lecture initial, non branché dans l'application.
+> Statut : contrat de lecture branché progressivement dans l'application.
 > Date : 17 juillet 2026.
 > Modèle : [`TRAINING_CANONICAL_MODEL.md`](TRAINING_CANONICAL_MODEL.md).
 > Inventaire legacy : [`TRAINING_FORMATS_INVENTORY.md`](TRAINING_FORMATS_INVENTORY.md).
@@ -8,8 +8,9 @@
 ## Périmètre
 
 Les repositories de `lib/repositories/training` centralisent les projections
-SQL utiles aux prochaines extractions de `useClientDashboard`, `TrainingTab` et
-des écrans coach. Ils reçoivent obligatoirement un `DatabaseClient` injecté :
+SQL utilisées par `useClientDashboard`, la pagination des programmes coach et
+les extractions du détail client. Ils reçoivent obligatoirement un
+`DatabaseClient` injecté :
 ils ne créent ni client navigateur, ni client serveur, ni client admin.
 
 Cette première frontière est volontairement **read-only**. Les écritures
@@ -117,8 +118,10 @@ if (result.ok) {
 }
 ```
 
-L'intégration applicative est explicitement reportée aux tâches d'extraction de
-`useClientDashboard` et des domaines Training suivants.
+L'intégration applicative a commencé par `useClientDashboard`, la pagination
+des programmes coach et les lectures Training/Progression du détail client.
+Les mutations et consommateurs legacy restants conservent leurs contrats
+propres jusqu'à une extraction caractérisée.
 
 ## Premier consommateur dashboard
 

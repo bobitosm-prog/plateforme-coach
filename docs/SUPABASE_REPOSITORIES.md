@@ -50,11 +50,10 @@ consommateurs applicatifs/ports n'a été migré ou modifié par cette extractio
 ## Messaging Coaching
 
 L'audit [`COACHING_MESSAGING_REALTIME.md`](COACHING_MESSAGING_REALTIME.md)
-documente pourquoi aucun repository `messages` n'est encore branché. Le champ
-UI `image_url` est absent du schéma et des types canoniques, et les policies
-historiques ne limitent pas les échanges à une relation coach/client active.
-Une migration de schéma/RLS explicitement autorisée est donc un préalable à une
-projection typée fidèle et à des mutations sûres.
+documente le repository `messages`, son service et son port Realtime désormais
+branchés dans les trois consommateurs humains. `image_url` est canonisé et les
+échanges s'appuient sur la relation coach/client active et la RLS. Athena et
+`chat_ai_messages` restent un domaine distinct.
 
 ## Profil
 

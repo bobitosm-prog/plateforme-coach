@@ -23,6 +23,8 @@ Production n'est nécessaire pour développer localement.
 ## Documentation
 
 - [Onboarding développeur](docs/DEVELOPER_ONBOARDING.md)
+- [Carte des domaines](docs/DOMAIN_MAP.md)
+- [ADR 0008 — placement du code](docs/adr/0008-domain-boundaries-and-code-placement.md)
 - [Guide de contribution](docs/CONTRIBUTING.md)
 - [Stratégie de tests](docs/TESTING_STRATEGY.md)
 

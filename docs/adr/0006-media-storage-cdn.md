@@ -49,6 +49,13 @@ Le jalon B approuvé a créé le bucket R2 Standard
 - Le dual-read public est temporaire et borné ; la suppression locale vient
   après une période de sécurité explicitement approuvée.
 
+## État d'implémentation au 8 août 2026
+
+Le rendu desktop historique de `progress-photos` n'appelle plus
+`getPublicUrl` : les trois consommateurs identifiés utilisent désormais des
+URLs signées temporaires. Cette correction ne clôt pas la dette distincte du
+feedback vidéo `exercise-videos`, qui persiste encore une URL publique.
+
 ## Limites et dette restante
 
 - Aucun des 131 autres médias publics n'est migré.
@@ -61,10 +68,10 @@ Le jalon B approuvé a créé le bucket R2 Standard
 - `exercise-videos` produit aujourd’hui une URL publique pour du feedback :
   c’est une divergence de sécurité à corriger séparément avant toute migration
   privée.
-- Un ancien rendu de `progress-photos` utilise `getPublicUrl` alors que les
-  autres consommateurs utilisent une URL signée.
-- Les URLs signées sont actuellement créées principalement côté client et
-  durent 3 600 secondes ; la cible serveur n’est pas encore déployée.
+- Les URLs signées Progression et Messaging sont encore principalement créées
+  côté client avec une durée de 3 600 secondes. Seedance utilise une signature
+  serveur courte, mais cette frontière n'est pas encore généralisée aux autres
+  médias privés.
 
 ## Références
 

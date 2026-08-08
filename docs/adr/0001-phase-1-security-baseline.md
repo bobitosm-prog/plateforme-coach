@@ -32,7 +32,7 @@ Les parcours locaux invitation, checkout plateforme, checkout coach, push et cha
 ## Limites et dette restante
 
 - La déduplication couvre les événements Stripe supportés ; elle ne constitue pas encore le domaine Billing ni une réconciliation Stripe/base complète.
-- Les cinq parcours Chromium locaux ne certifient ni les infrastructures ni les fournisseurs réels.
+- Les quinze parcours Chromium locaux désormais intégrés ne certifient ni les infrastructures ni les fournisseurs réels.
 - Les politiques RLS et matrices doivent continuer à évoluer lorsqu'une nouvelle table ou capacité sensible est ajoutée.
 
 ## Références

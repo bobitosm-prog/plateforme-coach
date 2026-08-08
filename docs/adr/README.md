@@ -56,3 +56,4 @@ Les affirmations doivent être vérifiables dans le code ou dans une documentati
 - [ADR 0005 — Séparer contrat financier et accès produit dans Billing](0005-billing-domain-model.md)
 - [ADR 0006 — Stockage et CDN des médias](0006-media-storage-cdn.md)
 - [ADR 0007 — Contrat de persistance des plans Nutrition](0007-nutrition-plan-persistence-contract.md)
+- [ADR 0008 — Frontières de domaines et placement du code](0008-domain-boundaries-and-code-placement.md)

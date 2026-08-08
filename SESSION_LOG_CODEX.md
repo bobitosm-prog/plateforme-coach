@@ -14197,3 +14197,43 @@ réel et aucune mutation de la stack principale n'ont été effectués. La tâch
 « Finaliser le guide d'onboarding développeur » est clôturée. Phase 9 reste
 active et la tâche suivante « Finaliser les ADR et cartes de domaines » reste
 ouverte et non commencée.
+
+## Entrée — 2026-08-08 — Phase 9 — ADR et carte des domaines
+
+**Carte :** `docs/DOMAIN_MAP.md` distingue propriétaire de donnée, lecteur
+transverse et orchestrateur pour dix domaines : Auth/profil/onboarding,
+Coach/client, Training, Nutrition, Progression, Messaging/Realtime, Billing,
+IA, Médias/Storage et infrastructure partagée. Chaque domaine indique ses
+entrées, modules, repositories ou ports, données possédées ou seulement lues,
+dépendances, documentation et exceptions legacy.
+
+**Décision :** l'ADR accepté 0008 fixe le placement unidirectionnel
+`UI/HTTP → orchestration → domaine/services → repositories/ports → Supabase ou
+fournisseur`. `app/` et les dashboards ne deviennent pas des autorités métier;
+les repositories reçoivent leur client, les lectures transverses passent par
+un port/read model, et session serveur comme RLS restent obligatoires. Les
+fichiers racine historiques de `lib/` sont tolérés sans devenir le modèle du
+nouveau code.
+
+**Réconciliation documentaire :** l'ADR sécurité décrit désormais les quinze
+E2E locaux; l'ADR Billing consigne la réconciliation read-only livrée; l'ADR
+média retire la dette corrigée `progress-photos` tout en conservant la dette
+publique `exercise-videos` et distingue la signature serveur Seedance. Les
+documents repositories Training et Messaging reflètent leurs consommateurs
+réels. README et onboarding relient la carte puis l'ADR détaillé.
+
+**Garde et validation :** `tests/unit/domain-documentation.test.ts` valide la
+carte, l'index ADR unique, les liens, les dix domaines, le sens des dépendances,
+les chemins, les corrections d'état et les frontières d'autorité. Résultat :
+1 fichier et 22 tests réussis; TypeScript, ESLint ciblé, liens documentaires,
+`git diff --check` et scan secrets sont verts.
+
+**Relectures manuelles :** les quatre cas Auth (route/service/repository),
+Training (ownership des programmes et exécutions), Billing (autorité métier et
+port Stripe) et dashboard coach (composition Training/Nutrition/Progression)
+sont compréhensibles depuis la carte et l'ADR 0008 : `PASS`.
+
+**Décision Phase 9 :** aucun code métier, migration, workflow CI, accès distant
+ou déploiement n'est ajouté. La tâche « Finaliser les ADR et cartes de
+domaines » est clôturée. Phase 9 reste active et la tâche suivante « Ajouter
+les quality gates CI progressifs » reste ouverte et non commencée.

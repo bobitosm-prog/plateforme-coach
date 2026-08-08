@@ -129,9 +129,11 @@ accès directs dispersés. Billing isole Stripe derrière ses ports et webhooks.
 Les E2E utilisent Supabase réel local et des faux fournisseurs limités à la
 boucle locale.
 
-Lire ensuite l'[index des ADR](adr/README.md), notamment les frontières E2E,
-Supabase, API, Billing, médias et Nutrition. Les cartes de domaines détaillées
-restent une tâche Phase 9 distincte.
+Lire ensuite la [carte des domaines](DOMAIN_MAP.md), puis
+[l'ADR 0008 sur le placement du code](adr/0008-domain-boundaries-and-code-placement.md)
+et l'[index des ADR](adr/README.md). Ils relient les frontières E2E, Supabase,
+API, Billing, médias et Nutrition sans transformer les exceptions legacy en
+modèle pour le nouveau code.
 
 ## 10. Commandes utiles
 
