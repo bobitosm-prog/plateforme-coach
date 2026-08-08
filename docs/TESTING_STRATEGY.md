@@ -386,7 +386,19 @@ Le 6 août 2026, deux runs indépendants sur les ports `62310` et `63310` ont
 réussi en `87,429 ms` et `69,295 ms`. Ils n'ont créé aucune donnée synthétique
 et n'ont pas modifié la stack Supabase principale. Cette preuve est locale et
 synthétique : elle ne prouve ni Preview/Production, ni restauration de
-données/PITR; le drift staging reste `NO_GO`.
+données/PITR.
+
+Le 8 août 2026, après confirmation read-only du staging `145/145 ALIGNED`, une
+répétition réelle Vercel Preview a utilisé deux deployments immuables et
+distincts. Le préflight a retourné `READY_FOR_REHEARSAL / READY`. L'action de
+rollback a duré `2,588 s`, l'attente et la confirmation plateforme `18,249 s`,
+puis les smoke tests et le journal `156,646 s`, pour un total officiel de
+`177,483 s` (`2 min 57,483 s`). L'alias final sert le SHA sain attendu, le
+deployment est `READY`, les contrôles environnement, Auth, navigation,
+Seedance, Realtime, Billing read-only, données et médias privés sont verts, et
+zéro erreur critique `5xx` est observée. Le verdict
+`ROLLBACK_REHEARSAL_VERIFIED` satisfait le seuil Phase 9 inférieur à 30
+minutes, sans Production, migration ou Stripe live.
 
 Les resets de base, E2E Chromium et tests de concurrence sont volontairement plus lents et séquentiels. Ils ne doivent pas alourdir chaque sauvegarde locale, mais restent obligatoires avant livraison lorsqu'ils couvrent le risque modifié.
 

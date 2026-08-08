@@ -18,8 +18,9 @@ Tout écart à ces garde-fous impose l'arrêt immédiat de l'opération.
 
 La procédure de décision de release actuelle est définie dans
 [`RELEASE_PROCEDURE.md`](RELEASE_PROCEDURE.md). Le présent document conserve
-les opérations Preview et l'interface rollback; il ne démontre ni une CI
-stable ni un rollback applicatif en moins de 30 minutes.
+les opérations Preview et l'interface rollback. La répétition Preview du 8
+août 2026 démontre un rollback applicatif en moins de 30 minutes; elle ne
+démontre toujours ni une CI stable, ni un rollback Production.
 
 Le contrat canonique de rollback, ses états, son chronomètre et son préflight
 local pur sont définis dans
@@ -234,11 +235,10 @@ rollback application est requis.
 
 ## 11. Rollback application
 
-Cette section est une interface d'urgence existante. La tâche Phase 9
-« Définir et répéter la procédure de rollback » reste distincte et non
-terminée. Deux répétitions locales synthétiques du 6 août 2026 ont démontré
-`87,429 ms` et `69,295 ms`, attentes et smoke tests inclus, mais aucune
-répétition Preview ou Production n'est prouvée.
+Cette section est l'interface d'urgence versionnée. Deux répétitions locales
+synthétiques du 6 août 2026 ont d'abord démontré `87,429 ms` et `69,295 ms`,
+attentes et smoke tests inclus. Une répétition réelle Vercel Preview a ensuite
+été validée le 8 août 2026 en `177,483 s` (`2 min 57,483 s`).
 
 Avant toute répétition, préparer une preuve locale expurgée puis exécuter :
 
@@ -251,10 +251,28 @@ seulement après restauration de l'artefact sain, état `READY`, confirmation du
 SHA servi, smoke tests verts et journal minimal enregistré. Les attentes de
 plateforme et les smoke tests restent inclus dans la durée totale.
 
-Le verdict staging actuel `HISTORY_AND_STRUCTURE_DRIFT` impose `NO_GO` pour
-une répétition Preview. Une répétition locale isolée peut déclarer l'alignement
-distant `NOT_APPLICABLE` uniquement avec un schéma local reconstruit et une
-compatibilité locale démontrée.
+Le staging était confirmé `145/145 ALIGNED` avant cette répétition. Une
+répétition locale isolée peut déclarer l'alignement distant `NOT_APPLICABLE`
+uniquement avec un schéma local reconstruit et une compatibilité locale
+démontrée.
+
+### Preuve Preview validée
+
+- incident immuable : `dpl_67eeUqzMDQxeaqpbkJn8qqhsgXE1`, SHA
+  `bbdf83a3d4280b65821ab580071389ce29dcaa2f`;
+- artefact sain immuable : `dpl_9NBS5FQFNJCCWodtsiC8rKMV1cTy`, SHA
+  `bc0c44d9cb81214a4ff688740ddd04a909427cc2`;
+- préflight : `READY_FOR_REHEARSAL / READY`;
+- action : `2,588 s`;
+- attente et confirmation plateforme : `18,249 s`;
+- smoke tests et journal : `156,646 s`;
+- total : `177,483 s`, strictement inférieur à 30 minutes;
+- état final : alias sur l'artefact sain, deployment `READY`, SHA servi
+  confirmé, smoke tests verts et zéro `5xx` critique.
+
+Verdict : **`ROLLBACK_REHEARSAL_VERIFIED`**. Aucune migration, Production,
+opération Stripe live ou création de deployment n'a été exécutée pendant la
+répétition.
 
 1. Identifier le dernier SHA Preview validé et documenté comme sain.
 2. Ne pas réécrire l’historique Git.
@@ -335,6 +353,7 @@ Ne consigner aucune clé, aucun token, aucun cookie ni aucune valeur secrète.
 - La validation explicite RC1 reste ouverte.
 - Les vulnérabilités npm connues restent ouvertes.
 - Certains domaines ne disposent pas encore d’un E2E navigateur complet.
-- Phase 9 reste active; la tâche rollback reste ouverte jusqu'à une répétition
-  chronométrée revue et explicitement acceptée. Deux runs locaux isolés sont
-  verts; ils ne remplacent pas une preuve Preview/Production.
+- Phase 9 reste active pour ses autres tâches. La tâche rollback est clôturée
+  par la répétition Preview chronométrée et explicitement validée du 8 août
+  2026. Cette preuve Preview ne remplace pas une autorisation ou une preuve
+  Production.

@@ -821,7 +821,7 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 | [x] Tester toutes les migrations depuis une base vide — deux reconstructions Supabase locales jetables et indépendantes ont appliqué 149/149 migrations dans le même ordre, avec assertions vertes, zéro résidu et fingerprint final identique | 2 j | Élevée | Moyen | Critique | Supabase local |
 | [x] Vérifier l'alignement migrations locales/distantes — deux captures staging read-only cohérentes observent 141/145 versions, sans ajout, doublon ni inversion; quatre versions et leurs objets associés manquent. Verdict documenté : `HISTORY_AND_STRUCTURE_DRIFT`, sans remédiation | 1,5 j | Élevée | Moyen | Critique | Accès environnements |
 | [x] Définir la procédure de release | 1 j | Moyenne | Faible | Élevé | CI stable |
-| [ ] Définir et répéter la procédure de rollback | 1,5 j | Élevée | Faible | Critique | Release |
+| [x] Définir et répéter la procédure de rollback — répétition réelle Vercel Preview validée avec deux artefacts immuables distincts, préflight `READY`, restauration de l'artefact sain en `177,483 s`, SHA servi confirmé, smoke tests verts et zéro erreur critique `5xx`; staging `145/145 ALIGNED`, sans Production, migration ni Stripe live | 1,5 j | Élevée | Faible | Critique | Release |
 | [ ] Créer la checklist de revue de code | 0,5 j | Faible | Faible | Moyen | Conventions |
 | [ ] Finaliser le guide d'onboarding développeur | 1 j | Faible | Faible | Moyen | Architecture stable |
 | [ ] Finaliser les ADR et cartes de domaines | 1,5 j | Moyenne | Faible | Élevé | Domaines stabilisés |

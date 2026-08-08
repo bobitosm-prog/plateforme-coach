@@ -3,8 +3,10 @@
 ## Statut et portée
 
 Cette procédure définit le contrat d'une répétition de rollback. Elle ne
-déclenche ni déploiement, ni mutation distante, ni restauration. La tâche
-Phase 9 reste ouverte jusqu'à une répétition chronométrée et validée.
+déclenche par elle-même ni déploiement, ni mutation distante, ni restauration.
+La répétition réelle Vercel Preview du 8 août 2026 est validée; la tâche Phase
+9 associée est clôturée, tandis que les autres tâches de la phase restent
+actives.
 
 La Production est exclue. Une répétition Production exige une autorisation
 distincte, une cible confirmée et des capacités de sauvegarde attestées.
@@ -90,8 +92,39 @@ n'a été créée.
 
 Cette preuve démontre une répétition **locale synthétique** strictement
 inférieure à 30 minutes. Elle ne démontre ni rollback Preview/Production, ni
-attente réelle de plateforme, ni restauration de données/PITR. Le drift staging
-`HISTORY_AND_STRUCTURE_DRIFT` reste `NO_GO` pour Preview.
+attente réelle de plateforme, ni restauration de données/PITR. Elle a servi de
+prérequis à la répétition Preview décrite ci-dessous.
+
+## Preuve Preview réelle du 8 août 2026
+
+Le staging était confirmé `145/145 ALIGNED` avant la répétition. Deux
+deployments Vercel Preview immuables et compatibles avec ce schéma ont été
+identifiés :
+
+- incident synthétique contrôlé :
+  `dpl_67eeUqzMDQxeaqpbkJn8qqhsgXE1`, SHA
+  `bbdf83a3d4280b65821ab580071389ce29dcaa2f`;
+- artefact sain : `dpl_9NBS5FQFNJCCWodtsiC8rKMV1cTy`, SHA
+  `bc0c44d9cb81214a4ff688740ddd04a909427cc2`.
+
+Le préflight a retourné `READY_FOR_REHEARSAL` et `READY`, avec dix preuves sur
+dix. Après confirmation de l'incident sur l'alias Preview, le chronomètre a
+commencé à l'approbation `ROLLBACK_REQUIRED`. Les segments mesurés sont :
+
+| Segment | Durée |
+|---|---:|
+| Action rollback | `2,588 s` |
+| Attente et confirmation plateforme | `18,249 s` |
+| Smoke tests et journal | `156,646 s` |
+| **Total officiel** | **`177,483 s` (`2 min 57,483 s`)** |
+
+L'alias final résout l'artefact sain, le deployment est `READY` et le SHA servi
+est confirmé. Les smoke tests environnement, SHA, Auth, navigation critique,
+Seedance, Realtime, Billing read-only, cohérence des données et médias privés
+sont verts. Aucun `5xx` critique n'est observé. Le verdict est
+**`ROLLBACK_REHEARSAL_VERIFIED`** et l'objectif strictement inférieur à 30
+minutes est atteint. Aucune Production, migration, opération Stripe live ou
+création de deployment n'a été impliquée.
 
 ## 1. Rollback applicatif
 
@@ -416,8 +449,10 @@ personnelle n'est autorisée.
 
 ## État de la tâche
 
-Cette procédure, son préflight et les deux répétitions locales du 6 août 2026
-définissent et éprouvent le contrat local. La preuve locale est inférieure à
-30 minutes, mais ne vaut pas répétition Preview/Production. La tâche Phase 9
-« Définir et répéter la procédure de rollback » reste ouverte jusqu'à revue et
-décision explicites sur cette preuve bornée.
+Cette procédure, son préflight, les deux répétitions locales du 6 août 2026 et
+la répétition Preview réelle du 8 août 2026 définissent et éprouvent le
+contrat. La preuve Preview atteint `ROLLBACK_REHEARSAL_VERIFIED` en
+`177,483 s`, sous le seuil de 30 minutes. La tâche Phase 9 « Définir et répéter
+la procédure de rollback » est clôturée; Phase 9 reste active pour ses autres
+tâches. Cette validation n'autorise ni ne prouve un rollback Production ou une
+restauration de données/PITR.

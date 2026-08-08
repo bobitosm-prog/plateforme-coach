@@ -14101,3 +14101,36 @@ structurelle `ea997ef1bf9182c54d32c5f4c64b2628`.
 Production, déploiement, promotion Preview, rollback, Stripe live, `db push`,
 `migration repair` ou reset distant. La tâche rollback reste ouverte et
 aucune reprise Preview n'est exécutée dans cette entrée.
+
+## Entrée — 2026-08-08 — Phase 9 — répétition réelle du rollback Preview
+
+**Préconditions :** la branche `phase-6-staging` était synchronisée sur
+`bc0c44d`, le staging était confirmé `145/145 ALIGNED` et le préflight a
+retourné `READY_FOR_REHEARSAL` avec décision `READY` et dix preuves sur dix.
+L'artefact incident synthétique immuable était le deployment
+`dpl_67eeUqzMDQxeaqpbkJn8qqhsgXE1`, SHA
+`bbdf83a3d4280b65821ab580071389ce29dcaa2f`; l'artefact sain immuable était
+`dpl_9NBS5FQFNJCCWodtsiC8rKMV1cTy`, SHA
+`bc0c44d9cb81214a4ff688740ddd04a909427cc2`.
+
+**Répétition :** l'alias de branche Preview a d'abord été basculé vers
+l'artefact incident contrôlé et son deployment, son SHA, son état `READY` et
+son accès `/login` ont été confirmés. Le chronomètre a commencé à
+l'approbation `ROLLBACK_REQUIRED`; l'alias a ensuite été restauré vers
+l'artefact sain. L'action a pris `2,588 s`, l'attente et la confirmation de la
+plateforme `18,249 s`, puis les smoke tests et le journal `156,646 s`, soit
+`177,483 s` au total (`2 min 57,483 s`).
+
+**Validation :** le Preview final est `READY`, l'alias résout le deployment
+sain et son SHA attendu. Les contrôles environnement, SHA servi, Auth,
+navigation critique, Seedance, Realtime, Billing read-only, données et médias
+privés sont verts; les statuts `401`, `307` et `308` observés correspondent aux
+gardes et redirections attendues. L'audit des logs du deployment sain relève
+zéro erreur critique `5xx` pendant la fenêtre.
+
+**Décision :** verdict **`ROLLBACK_REHEARSAL_VERIFIED`**. L'objectif Phase 9
+de rollback applicatif strictement inférieur à 30 minutes est atteint. La
+tâche « Définir et répéter la procédure de rollback » est clôturée. Phase 9
+reste active et les tâches suivantes restent inchangées. Cette preuve n'a
+créé aucun déploiement, appliqué aucune migration et utilisé aucun Stripe live;
+Production est restée exclue.
