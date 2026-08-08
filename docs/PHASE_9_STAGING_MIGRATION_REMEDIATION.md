@@ -99,6 +99,32 @@ colonnes, contraintes, index, RLS, policies et propriétaire avant toute suite.
 Postconditions : table et 15 colonnes présentes, trois index attendus, RLS
 active, aucune policy, aucune ligne, puis version enregistrée une fois.
 
+#### Diagnostic des postconditions sur la restauration staging réelle
+
+Le 8 août 2026, une restauration locale jetable du backup staging réel a été
+arrêtée immédiatement après cette migration. Le fingerprint initial des 141
+versions était `ef4b1ba5b73f1ec667b0b6a27b2287c3`; la migration et son replay
+transactionnel ont réussi, puis l'historique local a atteint 142.
+
+L'ancien contrôle agrégé interprétait `has_table_privilege(...)=true` pour
+`anon` ou `authenticated` comme une ouverture de données. Cette attente était
+incorrecte sur l'état restauré : le backup contient des `ALTER DEFAULT
+PRIVILEGES` accordant les privilèges de table aux rôles Supabase. La migration
+n'ajoute elle-même aucun `GRANT`. L'accès aux lignes reste fermé parce que RLS
+est activée et qu'aucune policy n'existe.
+
+Le diagnostic sépare désormais table, colonnes, PK, FK, autres contraintes,
+index, RLS, policies, ACL, propriétaire, triggers, cardinalité et historique.
+Chaque contrôle retourne `PASS`, `FAIL`, `ABSENT` ou `ERROR`. Sur la copie
+réelle restaurée, les quinze contrôles sont `PASS`, y compris les ACL attendues
+pour `anon`, `authenticated`, `service_role` et le propriétaire `postgres`.
+La divergence précédente est classée `ASSERTION_DRIFT`; la migration
+historique reste inchangée.
+
+Cette preuve ne valide pas le dry-run complet 141→145 : les migrations Auth,
+Realtime et Billing n'ont pas été exécutées pendant ce diagnostic. Preview
+reste `NO_GO`.
+
 ### 2. Auth — `20260729100000`
 
 | Propriété | Contrat |

@@ -37,6 +37,130 @@ export const STAGING_REMEDIATION_DECISIONS = Object.freeze({
   blocked: 'BLOCKED',
 })
 
+export const SEEDANCE_POSTCONDITION_STATUSES = Object.freeze({
+  pass: 'PASS',
+  fail: 'FAIL',
+  absent: 'ABSENT',
+  error: 'ERROR',
+})
+
+const EXPECTED_SEEDANCE_COLUMNS = Object.freeze([
+  { ordinal: 1, name: 'id', type: 'uuid', nullable: false, default: 'gen_random_uuid()', identity: null, generated: null },
+  { ordinal: 2, name: 'created_at', type: 'timestamp with time zone', nullable: false, default: 'now()', identity: null, generated: null },
+  { ordinal: 3, name: 'created_by', type: 'uuid', nullable: true, default: null, identity: null, generated: null },
+  { ordinal: 4, name: 'exercise_id', type: 'uuid', nullable: true, default: null, identity: null, generated: null },
+  { ordinal: 5, name: 'exercise_name', type: 'text', nullable: false, default: null, identity: null, generated: null },
+  { ordinal: 6, name: 'prompt', type: 'text', nullable: false, default: null, identity: null, generated: null },
+  { ordinal: 7, name: 'model', type: 'text', nullable: false, default: null, identity: null, generated: null },
+  { ordinal: 8, name: 'generation_type', type: 'text', nullable: false, default: null, identity: null, generated: null },
+  { ordinal: 9, name: 'params', type: 'jsonb', nullable: false, default: "'{}'::jsonb", identity: null, generated: null },
+  { ordinal: 10, name: 'reference_image_url', type: 'text', nullable: true, default: null, identity: null, generated: null },
+  { ordinal: 11, name: 'task_id', type: 'text', nullable: false, default: null, identity: null, generated: null },
+  { ordinal: 12, name: 'status', type: 'text', nullable: false, default: "'queued'::text", identity: null, generated: null },
+  { ordinal: 13, name: 'video_url_remote', type: 'text', nullable: true, default: null, identity: null, generated: null },
+  { ordinal: 14, name: 'published_video_url', type: 'text', nullable: true, default: null, identity: null, generated: null },
+  { ordinal: 15, name: 'error', type: 'text', nullable: true, default: null, identity: null, generated: null },
+])
+
+const EXPECTED_SEEDANCE_PRIMARY_KEY = Object.freeze([
+  { name: 'seedance_jobs_pkey', type: 'PRIMARY KEY', definition: 'PRIMARY KEY (id)' },
+])
+const EXPECTED_SEEDANCE_FOREIGN_KEYS = Object.freeze([
+  { name: 'seedance_jobs_created_by_fkey', type: 'FOREIGN KEY', definition: 'FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL' },
+  { name: 'seedance_jobs_exercise_id_fkey', type: 'FOREIGN KEY', definition: 'FOREIGN KEY (exercise_id) REFERENCES exercises_db(id) ON DELETE SET NULL' },
+])
+const EXPECTED_SEEDANCE_INDEXES = Object.freeze([
+  { name: 'seedance_jobs_created_at_idx', unique: false, primary: false, predicate: null, definition: 'CREATE INDEX seedance_jobs_created_at_idx ON public.seedance_jobs USING btree (created_at DESC)' },
+  { name: 'seedance_jobs_pkey', unique: true, primary: true, predicate: null, definition: 'CREATE UNIQUE INDEX seedance_jobs_pkey ON public.seedance_jobs USING btree (id)' },
+  { name: 'seedance_jobs_task_id_idx', unique: false, primary: false, predicate: null, definition: 'CREATE INDEX seedance_jobs_task_id_idx ON public.seedance_jobs USING btree (task_id)' },
+])
+const SEEDANCE_TABLE_PRIVILEGES = Object.freeze([
+  'DELETE', 'INSERT', 'REFERENCES', 'SELECT', 'TRIGGER', 'TRUNCATE', 'UPDATE',
+])
+const EXPECTED_SEEDANCE_GRANT_ROLES = Object.freeze([
+  'anon', 'authenticated', 'postgres', 'service_role',
+])
+
+function namedPostcondition(expected, actual, { absent = false } = {}) {
+  if (absent) {
+    return { status: SEEDANCE_POSTCONDITION_STATUSES.absent, expected, actual }
+  }
+  if (actual === undefined) {
+    return { status: SEEDANCE_POSTCONDITION_STATUSES.error, expected, actual: null }
+  }
+  return {
+    status: valuesEqual(actual, expected)
+      ? SEEDANCE_POSTCONDITION_STATUSES.pass
+      : SEEDANCE_POSTCONDITION_STATUSES.fail,
+    expected,
+    actual,
+  }
+}
+
+function dependentPostcondition(tableExists, expected, actual) {
+  return namedPostcondition(expected, actual, { absent: tableExists === false })
+}
+
+function normalizedSeedanceGrants(inventory) {
+  if (!Array.isArray(inventory.explicitGrants) || !Array.isArray(inventory.effectiveGrants)) {
+    return undefined
+  }
+  const explicit = inventory.explicitGrants.map(grant => ({
+    role: grant?.role,
+    privilege: grant?.privilege,
+  })).sort((left, right) => `${left.role}|${left.privilege}`.localeCompare(`${right.role}|${right.privilege}`))
+  const effective = inventory.effectiveGrants.map(grant => ({
+    role: grant?.role,
+    privileges: Array.isArray(grant?.privileges) ? [...grant.privileges].sort() : grant?.privileges,
+  })).sort((left, right) => String(left.role).localeCompare(String(right.role)))
+  return { explicit, effective }
+}
+
+function expectedSeedanceGrants() {
+  return {
+    explicit: EXPECTED_SEEDANCE_GRANT_ROLES.flatMap(role =>
+      SEEDANCE_TABLE_PRIVILEGES.map(privilege => ({ role, privilege }))),
+    effective: EXPECTED_SEEDANCE_GRANT_ROLES.map(role => ({
+      role,
+      privileges: [...SEEDANCE_TABLE_PRIVILEGES],
+    })),
+  }
+}
+
+export function evaluateSeedancePostconditions(inventory) {
+  if (!isRecord(inventory)) throw new Error('Seedance inventory is required')
+  const tableExists = inventory.tableExists
+  const constraints = Array.isArray(inventory.constraints) ? inventory.constraints : undefined
+  const primaryKey = constraints?.filter(constraint => constraint.type === 'PRIMARY KEY')
+  const foreignKeys = constraints?.filter(constraint => constraint.type === 'FOREIGN KEY')
+  const otherConstraints = constraints?.filter(
+    constraint => !['PRIMARY KEY', 'FOREIGN KEY'].includes(constraint.type),
+  )
+  const checks = {
+    tableExists: namedPostcondition(true, tableExists),
+    columnCount: dependentPostcondition(tableExists, 15, inventory.columnCount),
+    columns: dependentPostcondition(tableExists, EXPECTED_SEEDANCE_COLUMNS, inventory.columns),
+    primaryKey: dependentPostcondition(tableExists, EXPECTED_SEEDANCE_PRIMARY_KEY, primaryKey),
+    foreignKeys: dependentPostcondition(tableExists, EXPECTED_SEEDANCE_FOREIGN_KEYS, foreignKeys),
+    constraints: dependentPostcondition(tableExists, [], otherConstraints),
+    indexes: dependentPostcondition(tableExists, EXPECTED_SEEDANCE_INDEXES, inventory.indexes),
+    rlsEnabled: dependentPostcondition(tableExists, true, inventory.rlsEnabled),
+    rlsForced: dependentPostcondition(tableExists, false, inventory.rlsForced),
+    policies: dependentPostcondition(tableExists, [], inventory.policies),
+    grants: dependentPostcondition(tableExists, expectedSeedanceGrants(), normalizedSeedanceGrants(inventory)),
+    owner: dependentPostcondition(tableExists, 'postgres', inventory.owner),
+    triggers: dependentPostcondition(tableExists, [], inventory.triggers),
+    rowCount: dependentPostcondition(tableExists, 0, Number.isInteger(inventory.rowCount) ? inventory.rowCount : inventory.rowCount),
+    historyCount: namedPostcondition(1, Number.isInteger(inventory.historyCount) ? inventory.historyCount : inventory.historyCount),
+  }
+  return {
+    status: Object.values(checks).every(check => check.status === SEEDANCE_POSTCONDITION_STATUSES.pass)
+      ? SEEDANCE_POSTCONDITION_STATUSES.pass
+      : SEEDANCE_POSTCONDITION_STATUSES.fail,
+    checks,
+  }
+}
+
 const SECRET_FIELD_PATTERN =
   /(authorization|cookie|password|secret|service.?role|token|private.?key|anon.?key|credential)/i
 const REQUIRED_INVENTORY_KEYS = Object.freeze([
@@ -57,6 +181,20 @@ function sha256(source) {
 
 function arraysEqual(left, right) {
   return JSON.stringify(left) === JSON.stringify(right)
+}
+
+function canonicalValue(value) {
+  if (Array.isArray(value)) return value.map(canonicalValue)
+  if (!isRecord(value)) return value
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => [key, canonicalValue(child)]),
+  )
+}
+
+function valuesEqual(left, right) {
+  return JSON.stringify(canonicalValue(left)) === JSON.stringify(canonicalValue(right))
 }
 
 function containsProductionReference(value) {

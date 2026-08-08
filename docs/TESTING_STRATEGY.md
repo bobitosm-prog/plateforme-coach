@@ -592,6 +592,14 @@ La cible n'est pas un pourcentage. Elle suit le coût et la précision :
 
 On ajoute un test au niveau le plus bas capable de détecter fidèlement la régression, puis un niveau supérieur uniquement pour protéger une frontière ou une intégration réelle.
 
+Pour la remédiation Seedance, le contrôle local ne déduit pas l'accès aux
+lignes de `has_table_privilege` seul. Le backup staging restaure des privilèges
+par défaut sur les nouvelles tables publiques, tandis que RLS sans policy ferme
+les lignes à `anon` et `authenticated`. Le rapport de postconditions distingue
+donc explicitement ACL, activation/forçage RLS et policies, avec des statuts
+bornés `PASS`, `FAIL`, `ABSENT` et `ERROR`. Une assertion agrégée ou une attente
+implicite d'absence de grant est interdite pour ce scénario.
+
 ## 12. Lacunes prioritaires
 
 - Les fixtures partagées existent, mais plusieurs anciens E2E recréent encore leurs comptes localement et migreront progressivement.
