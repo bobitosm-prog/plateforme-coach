@@ -231,6 +231,23 @@ preuve `RECOVERY_CAPABILITY_VERIFIED` reste historique et ne qualifie pas ce
 nouveau scope. Aucun `--no-owner`, filtre générique `OWNER`/`GRANT`, superuser
 artificiel ou membership ajouté à `postgres` n'est une stratégie acceptable.
 
+Le 8 août 2026, une preuve complémentaire a validé localement la récupération
+structurelle des migrations Auth et Realtime manquantes sur deux restaurations
+indépendantes du backup applicatif public/historique à 141 versions. Le trigger
+Auth et l'entrée `public.messages` de la publication sont ajoutés, contrôlés,
+les grants et la fonction Auth restent identiques, puis les ajouts sont
+compensés individuellement; les fingerprints structurels reviennent à l'état
+initial et les compteurs Auth/messages ne changent pas. Le verdict est
+`STRUCTURAL_RECOVERY_VERIFIED` sur les deux runs, avec cleanup complet.
+
+Cette compensation est bornée : elle refuse toute divergence de fonction,
+trigger, publication ou liste de relations et n'emploie ni filtre générique,
+ni downgrade SQL improvisé, ni restauration de données. Elle complète la
+preuve applicative `APPLICATION_RECOVERY_RESTORABLE` pour préparer les quatre
+migrations, sans attester une remédiation distante. Staging reste à 141
+versions et Preview demeure `NO_GO` tant que l'alignement final n'est pas
+`ALIGNED`.
+
 ## 5. Rollback opérationnel
 
 1. Déclarer l'incident et ouvrir un canal dédié.

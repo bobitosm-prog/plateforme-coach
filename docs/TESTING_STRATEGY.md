@@ -619,6 +619,27 @@ les filtres génériques `OWNER`/`GRANT`, toute élévation artificielle de
 `postgres` et toute interprétation de l'ancienne preuve de récupération comme
 validation du nouveau scope.
 
+Le contrat de récupération structurelle Auth/Realtime est couvert par
+`tests/unit/staging-structural-recovery.test.ts` et le runner pur
+`scripts/preproduction/validate-staging-structural-recovery.mjs`. Il capture
+des snapshots catalogues bornés, vérifie les effets exacts des migrations Auth
+et Realtime, construit uniquement les compensations ciblées, puis exige que le
+fingerprint après compensation égale celui d'avant migration et que les
+compteurs métier soient inchangés. Toute absence, multiplicité ou divergence
+d'objet bloque avant compensation.
+
+Le 8 août 2026, deux stacks locales jetables indépendantes ont restauré le
+backup applicatif public/historique à 141 versions et obtenu le même verdict
+`STRUCTURAL_RECOVERY_VERIFIED`. Auth revient au fingerprint
+`831357d9f4c833b383f02206a3a7a00b959bad05512e4abf737eb7fd2427cd3c`, incluant
+les grants de la fonction, et Realtime
+au fingerprint
+`1ca743d36c0fb62675f041be3c6c4785cb20750ac2c7280c4317fe225cac068a`; les
+comptes d'utilisateurs et de messages sont inchangés et le cleanup est complet.
+Aucun accès distant ou nouveau dump n'a été utilisé. Cette preuve prépare la
+remédiation des quatre migrations, mais ne change ni l'historique staging à
+141 versions ni le statut Preview `NO_GO`.
+
 ## 12. Lacunes prioritaires
 
 - Les fixtures partagées existent, mais plusieurs anciens E2E recréent encore leurs comptes localement et migreront progressivement.

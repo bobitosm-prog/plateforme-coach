@@ -487,6 +487,46 @@ rôle géré, filtrer génériquement `OWNER` ou `GRANT`, utiliser `--no-owner`,
 désactiver `ON_ERROR_STOP` ou ignorer `42501` sont explicitement rejetées. Le
 défaut relève du contrat d'acquisition/restauration, pas d'une migration métier.
 
+## Preuve locale de récupération structurelle Auth et Realtime
+
+Le 8 août 2026, le backup staging applicatif public déjà qualifié
+`APPLICATION_RECOVERY_RESTORABLE`, contenant 141 versions d'historique, a été
+restauré dans deux stacks Supabase locales jetables et indépendantes. Aucun
+nouveau dump, accès distant ou changement staging n'a été effectué.
+
+Pour `20260729100000_create_handle_new_user_trigger.sql`, chaque run a vérifié
+la fonction préexistante `public.handle_new_user()` (signature, owner,
+`SECURITY DEFINER`, langage, `search_path`, grants et empreinte de définition),
+puis le trigger exact ajouté sur `auth.users`. La compensation garde ensuite ces
+invariants et supprime uniquement `on_auth_user_created`. Le fingerprint
+structurel Auth revient exactement de
+`d44ec1957257ba4adface87e54a3d2ac0e738f71d1d6a33673adb16bcef9fa8d` à
+`831357d9f4c833b383f02206a3a7a00b959bad05512e4abf737eb7fd2427cd3c`, identique
+à l'état initial; le nombre d'utilisateurs Auth reste inchangé.
+
+Pour `20260805100000_publish_messages_realtime.sql`, chaque run a vérifié la
+publication et la table existantes, l'absence initiale de `public.messages`
+dans `supabase_realtime`, puis l'ajout unique sans autre changement de la liste
+publiée. La compensation garde la liste complète attendue et retire uniquement
+`public.messages`. Le fingerprint structurel Realtime revient exactement de
+`4be91628ab053740dec38d861f7b2bd321829cc1f24f465fa7384fb3a4ac775b` à
+`1ca743d36c0fb62675f041be3c6c4785cb20750ac2c7280c4317fe225cac068a`, identique
+à l'état initial; le nombre de messages reste inchangé.
+
+Les deux runs produisent les mêmes fingerprints et le verdict
+`STRUCTURAL_RECOVERY_VERIFIED`, avec cleanup complet des conteneurs, volumes et
+répertoires temporaires. Les gardes bloquent un trigger absent, multiple ou
+divergent, une fonction divergente, une publication/table absente, une liste de
+relations modifiée ou une postcondition inattendue. Aucun filtrage générique,
+élévation de privilèges, changement de policy ou compensation de données n'est
+autorisé.
+
+Cette preuve, combinée à la restauration applicative public/historique déjà
+qualifiée, rend la stratégie locale **suffisante pour préparer** la remédiation
+des quatre migrations manquantes. Elle ne constitue ni une remédiation staging,
+ni une preuve `ALIGNED`; staging reste à 141 versions et Preview reste
+`NO_GO` jusqu'à la validation distante finale.
+
 ## Validation distante future
 
 Après les quatre étapes, une nouvelle acquisition read-only indépendante doit
