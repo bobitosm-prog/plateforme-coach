@@ -44,6 +44,20 @@ export const SEEDANCE_POSTCONDITION_STATUSES = Object.freeze({
   error: 'ERROR',
 })
 
+export const AUTH_OPERATOR_GUARD_TABLE = '_codex_guard'
+
+export function buildAuthOperatorGuardSql() {
+  return `CREATE TEMP TABLE ${AUTH_OPERATOR_GUARD_TABLE} ON COMMIT DROP AS
+SELECT
+  (SELECT count(*)::bigint FROM auth.users) AS auth_user_count,
+  (
+    SELECT count(*)::bigint
+    FROM pg_trigger
+    WHERE tgrelid = 'auth.users'::regclass
+      AND NOT tgisinternal
+  ) AS auth_trigger_count;`
+}
+
 const EXPECTED_SEEDANCE_COLUMNS = Object.freeze([
   { ordinal: 1, name: 'id', type: 'uuid', nullable: false, default: 'gen_random_uuid()', identity: null, generated: null },
   { ordinal: 2, name: 'created_at', type: 'timestamp with time zone', nullable: false, default: 'now()', identity: null, generated: null },

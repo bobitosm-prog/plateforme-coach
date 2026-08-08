@@ -3,12 +3,14 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildExpectedStagingAlignmentPlan } from '../../scripts/preproduction/compare-staging-migration-alignment.mjs'
 import {
+  AUTH_OPERATOR_GUARD_TABLE,
   EXPECTED_STAGING_INITIAL_STATE,
   EXPECTED_STAGING_MISSING_VERSIONS,
   SEEDANCE_POSTCONDITION_STATUSES,
   STAGING_REMEDIATION_DECISIONS,
   adaptSeedanceCatalogInventory,
   assertSafeRemediationArgs,
+  buildAuthOperatorGuardSql,
   evaluateSeedancePostconditions,
   prepareStagingMigrationRemediation,
 } from '../../scripts/preproduction/prepare-staging-migration-remediation.mjs'
@@ -114,6 +116,27 @@ function seedanceCatalogInventory() {
 }
 
 describe('staging migration remediation preparation', () => {
+  it('builds valid CREATE TABLE AS syntax for the Auth operator guard', () => {
+    const sql = buildAuthOperatorGuardSql()
+    expect(sql).toMatch(/^CREATE TEMP TABLE _codex_guard ON COMMIT DROP AS\nSELECT/)
+    expect(sql).not.toMatch(/_codex_guard\s*\([^)]*\b(?:bigint|integer|text)\b[^)]*\)\s*ON COMMIT DROP AS/i)
+  })
+
+  it('captures the Auth data and trigger precondition counts in the guard', () => {
+    const sql = buildAuthOperatorGuardSql()
+    expect(AUTH_OPERATOR_GUARD_TABLE).toBe('_codex_guard')
+    expect(sql).toContain('FROM auth.users) AS auth_user_count')
+    expect(sql).toContain("tgrelid = 'auth.users'::regclass")
+    expect(sql).toContain('AND NOT tgisinternal')
+    expect(sql).toContain('AS auth_trigger_count')
+  })
+
+  it('does not embed a migration, mutation, or permissive fallback in the guard', () => {
+    const sql = buildAuthOperatorGuardSql()
+    expect(sql).not.toMatch(/CREATE\s+TRIGGER|DROP\s+TRIGGER|INSERT\s+INTO|UPDATE|DELETE|TRUNCATE/i)
+    expect(sql).not.toMatch(/EXCEPTION\s+WHEN|ON\s+ERROR|CONTINUE/i)
+  })
+
   it('returns READY only for the exact four-version drift', () => {
     expect(prepare()).toEqual(expect.objectContaining({
       decision: STAGING_REMEDIATION_DECISIONS.ready,
