@@ -14162,3 +14162,38 @@ proportionnées.
 ce sous-batch. La tâche « Créer la checklist de revue de code » est clôturée.
 Phase 9 reste active et la tâche suivante « Finaliser le guide d'onboarding
 développeur » reste ouverte.
+
+## Entrée — 2026-08-08 — Phase 9 — guide d'onboarding développeur
+
+**Guide canonique :** `docs/DEVELOPER_ONBOARDING.md` ordonne le premier jour
+d'un développeur autour d'un parcours exclusivement local : prérequis,
+installation reproductible, séparation de `.env.local` et `.env.e2e.local`,
+Supabase local, application Webpack, premier compte par l'interface, carte du
+dépôt, architecture, commandes, tests, migrations/RLS, Git, revue, procédures
+opérateur et dépannage. Aucun compte admin, mot de passe ou secret partagé
+n'est inventé; les fixtures E2E restent distinctes des comptes développeur.
+
+**Entrées documentaires :** le README générique `create-next-app` est remplacé
+par une entrée MoovX courte qui renvoie au guide, à la contribution et à la
+stratégie de tests. `docs/CONTRIBUTING.md` renvoie au guide et décrit désormais
+la suite critique canonique à 15/15 parcours locaux au lieu de l'ancien résumé
+à cinq parcours.
+
+**Garde et validations :** `tests/unit/developer-onboarding.test.ts` protège
+les seize sections, les commandes versionnées, les prérequis, les frontières
+d'environnement, les autorités documentaires, l'absence de comptes inventés
+et de boilerplate Next.js. Résultats : 1 fichier et 16 tests réussis,
+TypeScript sans erreur, ESLint ciblé vert, liens locaux valides,
+`git diff --check` vert et scan secrets vide. Docker, `psql`, Playwright et la
+CLI Supabase du dépôt sont disponibles. La lecture de la stack principale a
+signalé un état local préexistant à 146 migrations contre 149 attendues; aucun
+reset n'a été lancé afin de préserver ses données et le bootstrap destructif
+complet a donc été explicitement écarté. Le guide et ses commandes ont été
+validés statiquement. Le bootstrap complet sur une stack Supabase locale propre
+reste à démontrer séparément.
+
+**Décision :** aucun accès distant, staging ou Production, aucun fournisseur
+réel et aucune mutation de la stack principale n'ont été effectués. La tâche
+« Finaliser le guide d'onboarding développeur » est clôturée. Phase 9 reste
+active et la tâche suivante « Finaliser les ADR et cartes de domaines » reste
+ouverte et non commencée.
