@@ -7,6 +7,7 @@ import {
   EXPECTED_STAGING_MISSING_VERSIONS,
   SEEDANCE_POSTCONDITION_STATUSES,
   STAGING_REMEDIATION_DECISIONS,
+  adaptSeedanceCatalogInventory,
   assertSafeRemediationArgs,
   evaluateSeedancePostconditions,
   prepareStagingMigrationRemediation,
@@ -98,6 +99,18 @@ function seedanceInventory() {
     rowCount: 0,
     historyCount: 1,
   }
+}
+
+function seedanceCatalogInventory() {
+  const candidate = seedanceInventory()
+  const primaryKey = candidate.constraints.filter(constraint => constraint.type === 'PRIMARY KEY')
+  const foreignKeys = candidate.constraints.filter(constraint => constraint.type === 'FOREIGN KEY')
+  const otherConstraints = candidate.constraints.filter(
+    constraint => !['PRIMARY KEY', 'FOREIGN KEY'].includes(constraint.type),
+  )
+  const { constraints: omittedConstraints, ...catalog } = candidate
+  void omittedConstraints
+  return { ...catalog, primaryKey, foreignKeys, otherConstraints }
 }
 
 describe('staging migration remediation preparation', () => {
@@ -219,6 +232,48 @@ describe('staging migration remediation preparation', () => {
 })
 
 describe('Seedance migration postconditions', () => {
+  it('adapts the separated real catalog to all 15 versioned postconditions', () => {
+    const inventory = adaptSeedanceCatalogInventory(seedanceCatalogInventory())
+    const report = evaluateSeedancePostconditions(inventory)
+    expect(report.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.pass)
+    expect(Object.values(report.checks).every(check => check.status === 'PASS')).toBe(true)
+  })
+
+  it('keeps an absent primary key as a FAIL after catalog adaptation', () => {
+    const candidate = seedanceCatalogInventory()
+    candidate.primaryKey = []
+    const report = evaluateSeedancePostconditions(adaptSeedanceCatalogInventory(candidate))
+    expect(report.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+    expect(report.checks.primaryKey.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+  })
+
+  it('keeps an absent foreign key as a FAIL after catalog adaptation', () => {
+    const candidate = seedanceCatalogInventory()
+    candidate.foreignKeys.splice(0, 1)
+    const report = evaluateSeedancePostconditions(adaptSeedanceCatalogInventory(candidate))
+    expect(report.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+    expect(report.checks.foreignKeys.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+  })
+
+  it('keeps a divergent constraint as a FAIL after catalog adaptation', () => {
+    const candidate = seedanceCatalogInventory()
+    candidate.otherConstraints.push({
+      name: 'seedance_jobs_unexpected_check',
+      type: 'CHECK',
+      definition: 'CHECK (true)',
+    })
+    const report = evaluateSeedancePostconditions(adaptSeedanceCatalogInventory(candidate))
+    expect(report.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+    expect(report.checks.constraints.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.fail)
+  })
+
+  it('refuses missing catalog evidence instead of manufacturing a PASS', () => {
+    const candidate = seedanceCatalogInventory() as Record<string, unknown>
+    delete candidate.foreignKeys
+    expect(() => adaptSeedanceCatalogInventory(candidate))
+      .toThrow(/foreign keys inventory is required/)
+  })
+
   it('reports every named postcondition as PASS for the restored staging contract', () => {
     const report = evaluateSeedancePostconditions(seedanceInventory())
     expect(report.status).toBe(SEEDANCE_POSTCONDITION_STATUSES.pass)

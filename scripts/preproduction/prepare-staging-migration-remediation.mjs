@@ -127,6 +127,32 @@ function expectedSeedanceGrants() {
   }
 }
 
+function assertConstraintFamily(value, label) {
+  if (!Array.isArray(value)) throw new Error(`Seedance ${label} inventory is required`)
+  if (value.some(constraint => !isRecord(constraint))) {
+    throw new Error(`Seedance ${label} inventory is malformed`)
+  }
+  return [...value].sort((left, right) =>
+    String(left.name).localeCompare(String(right.name)))
+}
+
+export function adaptSeedanceCatalogInventory(inventory) {
+  if (!isRecord(inventory)) throw new Error('Seedance catalog inventory is required')
+  if (Object.hasOwn(inventory, 'constraints')) {
+    throw new Error('Seedance catalog inventory must use separated constraint families')
+  }
+  const primaryKey = assertConstraintFamily(inventory.primaryKey, 'primary key')
+  const foreignKeys = assertConstraintFamily(inventory.foreignKeys, 'foreign keys')
+  const otherConstraints = assertConstraintFamily(
+    inventory.otherConstraints,
+    'other constraints',
+  )
+  return {
+    ...inventory,
+    constraints: [...primaryKey, ...foreignKeys, ...otherConstraints],
+  }
+}
+
 export function evaluateSeedancePostconditions(inventory) {
   if (!isRecord(inventory)) throw new Error('Seedance inventory is required')
   const tableExists = inventory.tableExists
