@@ -226,3 +226,22 @@ partiel au lieu d'une contrainte `UNIQUE (stripe_event_id)` réelle.
 Verdict : **`HISTORY_AND_STRUCTURE_DRIFT`**. Cette vérification clôt l'audit
 d'alignement, pas sa remédiation. Aucun `db push`, `migration repair`, reset,
 DDL, DML, seed ou accès Production n'a été exécuté.
+
+## État post-remédiation du 8 août 2026
+
+La séquence autorisée a ajouté uniquement `20260718150000`, `20260729100000`,
+`20260805100000` et `20260806100000`, avec contrôle et arrêt possible après
+chaque migration. Le ledger staging contient désormais les 145 versions
+finales attendues. Seedance, le trigger Auth, la publication Realtime et la
+contrainte UNIQUE Billing sont conformes; aucune donnée métier n'a été créée
+par les vérifications.
+
+Deux captures read-only indépendantes ont été comparées au plan versionné :
+chacune retourne zéro version manquante, supplémentaire ou dupliquée, zéro
+écart d'ordre, `aligned=true` et `verdict=ALIGNED`. Les structures contrôlées
+ont la même empreinte `ea997ef1bf9182c54d32c5f4c64b2628`. Le verdict
+`HISTORY_AND_STRUCTURE_DRIFT` ci-dessus reste la photographie historique du
+6 août; le verdict courant est **`ALIGNED`**.
+
+Aucun déploiement, rollback Preview, accès Production, `db push`,
+`migration repair` ou reset distant n'accompagne cette preuve.

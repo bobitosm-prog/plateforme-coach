@@ -541,6 +541,31 @@ vérifier :
 Un verdict différent de `ALIGNED` impose `NO_GO`. La remédiation est distincte
 de la release : aucune promotion Preview ne suit automatiquement une réussite.
 
+## Exécution staging et audit final du 8 août 2026
+
+La remédiation autorisée a fait passer l'historique staging de 141 à 145
+versions, une migration à la fois, avec arrêt et contrôle entre chaque étape.
+Seedance (`20260718150000`), Auth (`20260729100000`), Realtime
+(`20260805100000`) et Billing (`20260806100000`) sont chacune présentes une
+seule fois et leurs postconditions sont conformes. Seedance conserve sa table
+vide, RLS active et aucune policy; le trigger Auth est unique et sa fonction
+reste `SECURITY DEFINER`; `public.messages` est publiée exactement une fois;
+la contrainte UNIQUE Billing réelle remplace l'ancien index partiel sans
+modifier les cinq paiements ni leurs Event IDs.
+
+Deux captures read-only indépendantes, à
+`2026-08-08T17:14:57.729094Z` et `2026-08-08T17:15:07.282567Z`, constatent
+145/145 versions, zéro manque, ajout, doublon ou divergence d'ordre. Le
+comparateur versionné retourne pour chacune `aligned=true` et
+`verdict=ALIGNED`; les deux empreintes structurelles sont identiques
+(`ea997ef1bf9182c54d32c5f4c64b2628`). Le backup applicatif public/historique
+avait été qualifié `APPLICATION_RECOVERY_RESTORABLE` avant la remédiation.
+
+Cette preuve lève le drift de migrations staging uniquement. Aucun accès
+Production, déploiement, promotion Preview, rollback, `db push`,
+`migration repair` ou reset distant n'a été exécuté. La tâche rollback reste
+ouverte et distincte.
+
 ## Interdictions et limites
 
 - aucune commande Production;

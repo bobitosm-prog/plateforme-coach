@@ -569,6 +569,26 @@ peut donc être clôturée. Toute application des quatre migrations ou autre
 remédiation reste un sous-batch séparé nécessitant une autorisation explicite.
 La preuve historique 138/138 du 26 juillet demeure inchangée.
 
+### Remédiation et double audit du 8 août 2026
+
+Sous autorisation staging explicite, les quatre versions précédemment absentes
+ont été appliquées isolément et contrôlées après chaque transaction. L'état
+est passé de 141 à 145 versions : Seedance, Auth, Realtime et Billing sont
+présentes exactement une fois et leurs structures finales sont conformes. La
+contrainte Billing réelle n'a modifié ni la cardinalité des cinq paiements ni
+les Event IDs existants.
+
+Deux nouvelles captures read-only indépendantes constatent 145 versions,
+aucun manque, ajout, doublon ou écart d'ordre. Les deux rapports du comparateur
+retournent `aligned=true` et `verdict=ALIGNED`, avec la même empreinte
+structurelle `ea997ef1bf9182c54d32c5f4c64b2628`. Le backup applicatif
+public/historique avait été restauré localement et qualifié avant mutation.
+Cette mise à jour remplace le drift courant; les constats 138/138 du 26 juillet
+et 141/145 du 6 août restent conservés comme preuves historiques datées.
+
+Aucun accès Production, déploiement, promotion Preview, rollback, reset,
+`db push` ou `migration repair` n'a été exécuté.
+
 Pour reprendre sans exposer le secret :
 
 ```bash

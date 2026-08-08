@@ -14073,3 +14073,31 @@ Production n'est pas déclarée prête. La tâche « Définir la procédure de
 release » est clôturée sur son objectif documentaire et contractuel. Phase 9
 reste active; la tâche suivante « Définir et répéter la procédure de rollback »
 reste non commencée.
+
+## Entrée — 2026-08-08 — Phase 9 — remédiation migrations staging 145/145
+
+**Sauvegarde et reprise :** le backup applicatif public/historique staging a
+été qualifié `APPLICATION_RECOVERY_RESTORABLE` localement avant mutation. La
+remédiation a repris depuis l'historique 141, puis a appliqué isolément
+Seedance, Auth, Realtime et Billing avec lecture et postconditions entre chaque
+étape. Deux erreurs de raccord opérateur ont été diagnostiquées sans mutation
+partielle : mapping des contraintes Seedance puis syntaxe du garde temporaire
+Auth; leurs correctifs locaux ont été testés avant reprise.
+
+**Résultats :** Seedance conserve 15 colonnes, ses contraintes et index, RLS
+active, zéro policy et zéro ligne. Le trigger Auth est unique et sa fonction
+reste conforme. `public.messages` est publiée exactement une fois sans donnée
+modifiée. Billing remplace l'index unique partiel par la contrainte réelle
+`UNIQUE (stripe_event_id)`; les cinq paiements, l'unique Event ID non nul et
+les quatre valeurs NULL restent inchangés, sans doublon.
+
+**Audit final :** deux captures read-only indépendantes à
+`2026-08-08T17:14:57.729094Z` et `2026-08-08T17:15:07.282567Z` constatent
+145/145 versions, zéro manque, ajout, doublon ou divergence d'ordre. Les deux
+comparaisons retournent `aligned=true`, `verdict=ALIGNED` et la même empreinte
+structurelle `ea997ef1bf9182c54d32c5f4c64b2628`.
+
+**Sécurité :** cible limitée au staging `cycbnnojcymjnaqomlyj`; aucun accès
+Production, déploiement, promotion Preview, rollback, Stripe live, `db push`,
+`migration repair` ou reset distant. La tâche rollback reste ouverte et
+aucune reprise Preview n'est exécutée dans cette entrée.
