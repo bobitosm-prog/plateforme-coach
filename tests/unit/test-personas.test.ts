@@ -48,6 +48,33 @@ describe('shared test personas contract', () => {
     expect(committed).toBe(generated)
   })
 
+  it('cleans the AI concurrency fixtures on success, failure and controlled termination', () => {
+    const harness = readFileSync('tests/integration/ai-usage-concurrency.sh', 'utf8')
+    expect(harness).toContain('trap cleanup EXIT')
+    expect(harness).toContain("trap 'exit 130' INT")
+    expect(harness).toContain("trap 'exit 143' TERM")
+    expect(harness).toContain('fail-after-seed) exit 86')
+    expect(harness).toContain('term-after-seed) kill -TERM "$$"')
+    expect(harness).toContain('SELECT test.cleanup_personas();')
+  })
+
+  it('bounds AI concurrency cleanup to the reserved personas and correlations', () => {
+    const harness = readFileSync('tests/integration/ai-usage-concurrency.sh', 'utf8')
+    expect(harness).toContain("WHERE user_id = '$user_id'")
+    expect(harness).toContain("AND correlation_id LIKE 'concurrency-%'")
+    expect(harness).toContain('WHERE id IN (SELECT id FROM test.personas)')
+    expect(harness).toContain('WHERE coach_id IN (SELECT id FROM test.personas)')
+    expect(harness).not.toContain("DELETE FROM public.ai_usage_logs WHERE user_id='$user_id' AND feature='chat-ai'")
+  })
+
+  it('asserts that every synthetic AI concurrency scope is empty after cleanup', () => {
+    const harness = readFileSync('tests/integration/ai-usage-concurrency.sh', 'utf8')
+    for (const scope of ['auth.users', 'profiles', 'coach_clients', 'ai_usage_logs']) {
+      expect(harness).toContain(`AI_USAGE_CONCURRENCY_CLEANUP_FAILED [${scope}]`)
+    }
+    expect(harness).toContain('AI_USAGE_CONCURRENCY_PRECONDITION_FAILED [synthetic scope is not empty]')
+  })
+
   it('defines duplicate Auth creation as an explicit error', async () => {
     const createUser = vi.fn().mockResolvedValue({ data: { user: null }, error: { message: 'already registered' } })
     const admin = { auth: { admin: { createUser } } }
