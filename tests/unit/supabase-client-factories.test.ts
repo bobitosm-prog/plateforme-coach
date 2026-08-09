@@ -92,8 +92,9 @@ describe('Supabase client factories', () => {
   it.each(['url', 'service'] as const)('fails admin creation when %s is missing without leaking secrets', async (missing) => {
     if (missing === 'url') delete process.env.NEXT_PUBLIC_SUPABASE_URL
     else delete process.env.SUPABASE_SERVICE_ROLE_KEY
-    await expect(import('../../lib/supabase/admin')).rejects.toThrow(/Supabase server configuration is incomplete/)
-    try { await import('../../lib/supabase/admin') } catch (error) {
+    const { getSupabaseAdmin } = await import('../../lib/supabase/admin')
+    expect(() => getSupabaseAdmin()).toThrow(/Supabase server configuration is incomplete/)
+    try { getSupabaseAdmin() } catch (error) {
       expect(String(error)).not.toContain('server-only-fixture')
       expect(String(error)).not.toContain('public-anon-fixture')
     }

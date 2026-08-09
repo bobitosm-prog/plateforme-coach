@@ -23,6 +23,23 @@ export function createSupabaseAdminClient(): SupabaseClient<Database> {
   })
 }
 
+let cachedSupabaseAdmin: SupabaseClient<Database> | undefined
+
+/**
+ * Returns the process-local admin client on first real server-side use.
+ * Importing this module alone never reads credentials or constructs a client.
+ */
+export function getSupabaseAdmin(): SupabaseClient<Database> {
+  cachedSupabaseAdmin ??= createSupabaseAdminClient()
+  return cachedSupabaseAdmin
+}
+
 // Compatibility export: keep the historical broad surface until each admin route
 // is migrated against the generated schema and its documented schema gaps.
-export const supabaseAdmin: SupabaseClient = createSupabaseAdminClient()
+export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, property) {
+    const client = getSupabaseAdmin() as SupabaseClient
+    const value = Reflect.get(client, property, client)
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+})

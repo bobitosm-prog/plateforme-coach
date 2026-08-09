@@ -1,16 +1,34 @@
 import 'server-only'
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY manquante dans .env')
+let cachedAdminStripe: Stripe | undefined
+
+/**
+ * Returns the process-local Stripe admin client on first real server-side use.
+ * Importing this module alone never reads credentials or constructs a client.
+ */
+export function getAdminStripe(): Stripe {
+  if (cachedAdminStripe) return cachedAdminStripe
+
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!secretKey || !/^sk_(?:test|live)_\S+$/.test(secretKey)) {
+    throw new Error('Stripe server configuration is incomplete')
+  }
+
+  cachedAdminStripe = new Stripe(secretKey, { typescript: true })
+  return cachedAdminStripe
 }
 
 /**
  * Client Stripe singleton server-side.
  * ⚠️ En local, sk_live_ → tape la VRAIE prod Stripe.
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  typescript: true,
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, property) {
+    const client = getAdminStripe()
+    const value = Reflect.get(client, property, client)
+    return typeof value === 'function' ? value.bind(client) : value
+  },
 })
 
 /**
