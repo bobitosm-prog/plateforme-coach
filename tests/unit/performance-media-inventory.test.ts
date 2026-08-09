@@ -42,6 +42,17 @@ function generateInventory(): Inventory {
 describe('runtime media inventory', () => {
   const inventory = generateInventory()
 
+  it('reads the favicon ICO deterministically without ImageMagick', () => {
+    const favicon = inventory.items.find(item => item.path === 'app/favicon.ico')
+    expect(favicon?.metadata).toMatchObject({
+      kind: 'image',
+      width: 16,
+      height: 16,
+      ratio: 1,
+    })
+    expect(readFileSync('scripts/inventory-runtime-media.ts', 'utf8')).not.toMatch(/['"]identify['"]/)
+  })
+
   it('excludes concurrent files before inspection and never downloads remote media', () => {
     expect(inventory.protectedPaths).toEqual([
       'scripts/enrich-parent-exercises.mjs',

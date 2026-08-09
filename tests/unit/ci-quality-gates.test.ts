@@ -82,6 +82,7 @@ describe('progressive CI quality gates contract', () => {
   it('runs the standard gate independently with the complete bounded checks', () => {
     expect(standardJob).toMatch(/^\n  standard:\n    name: Gate B - Standard/m)
     expect(standardJob).toContain('runs-on: ubuntu-latest')
+    expect(standardJob).toMatch(/uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0/)
     expect(standardJob).toContain("node-version: '24'")
     expect(standardJob).toContain('cache: npm')
     expect(standardJob).toContain('npm ci --legacy-peer-deps --no-audit --no-fund')

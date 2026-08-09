@@ -84,35 +84,43 @@ function finiteNumber(value: unknown): number | null {
   return Number.isFinite(number) && number >= 0 ? number : null
 }
 
+function inspectIco(path: string): ImageMetadata {
+  const buffer = readFileSync(resolve(ROOT, path))
+  const minimumHeaderBytes = 6 + 16
+  if (
+    buffer.length < minimumHeaderBytes
+    || buffer.readUInt16LE(0) !== 0
+    || buffer.readUInt16LE(2) !== 1
+    || buffer.readUInt16LE(4) < 1
+  ) {
+    throw new Error(`Invalid ICO header: ${path}`)
+  }
+
+  const width = buffer.readUInt8(6) || 256
+  const height = buffer.readUInt8(7) || 256
+  return {
+    kind: 'image',
+    width,
+    height,
+    ratio: Number((width / height).toFixed(6)),
+    hasAlpha: null,
+    orientation: null,
+  }
+}
+
 async function inspectImage(path: string): Promise<ImageMetadata> {
-  try {
-    const metadata = await sharp(resolve(ROOT, path), { animated: true }).metadata()
-    const width = finiteNumber(metadata.width)
-    const height = finiteNumber(metadata.height)
-    return {
-      kind: 'image',
-      width,
-      height,
-      ratio: width !== null && height ? Number((width / height).toFixed(6)) : null,
-      hasAlpha: metadata.hasAlpha ?? null,
-      orientation: finiteNumber(metadata.orientation),
-    }
-  } catch {
-    const [widthValue, heightValue] = execFileSync(
-      'identify',
-      ['-format', '%w %h', `${resolve(ROOT, path)}[0]`],
-      { encoding: 'utf8' },
-    ).trim().split(/\s+/)
-    const width = finiteNumber(widthValue)
-    const height = finiteNumber(heightValue)
-    return {
-      kind: 'image',
-      width,
-      height,
-      ratio: width !== null && height ? Number((width / height).toFixed(6)) : null,
-      hasAlpha: null,
-      orientation: null,
-    }
+  if (extname(path).toLowerCase() === '.ico') return inspectIco(path)
+
+  const metadata = await sharp(resolve(ROOT, path), { animated: true }).metadata()
+  const width = finiteNumber(metadata.width)
+  const height = finiteNumber(metadata.height)
+  return {
+    kind: 'image',
+    width,
+    height,
+    ratio: width !== null && height ? Number((width / height).toFixed(6)) : null,
+    hasAlpha: metadata.hasAlpha ?? null,
+    orientation: finiteNumber(metadata.orientation),
   }
 }
 
