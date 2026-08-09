@@ -133,3 +133,209 @@ jobs:
 
       - name: Check static performance budgets
         run: npm run perf:budget:check
+
+  database-heavy:
+    name: Gate C1 - Database Heavy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Verify local infrastructure
+        run: |
+          docker info --format '{{.ServerVersion}}'
+          psql --version
+
+      - name: Reset canonical local Supabase
+        run: npm run supabase:local:reset
+
+      - name: Rebuild migrations from empty databases
+        run: npm run test:migrations:empty-db
+
+      - name: Check generated Supabase types
+        run: npm run supabase:types:check
+
+      - name: Run RLS integration contract
+        run: npm run test:integration:rls
+
+      - name: Audit synthetic database cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pg_isready -h 127.0.0.1 -p 55322 -U postgres >/dev/null 2>&1; then
+            psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $audit$
+          BEGIN
+            IF EXISTS (SELECT 1 FROM auth.users WHERE email LIKE '%@moovx.example.test')
+              OR EXISTS (SELECT 1 FROM public.profiles WHERE email LIKE '%@moovx.example.test')
+              OR EXISTS (SELECT 1 FROM public.coach_clients relation WHERE relation.coach_id IN (SELECT id FROM test.personas) OR relation.client_id IN (SELECT id FROM test.personas))
+              OR EXISTS (SELECT 1 FROM public.ai_usage_logs WHERE correlation_id LIKE 'concurrency-%') THEN
+              RAISE EXCEPTION 'DATABASE_HEAVY_SYNTHETIC_RESIDUE';
+            END IF;
+          END
+          $audit$;
+          SQL
+          fi
+
+      - name: Stop local Supabase resources
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker ps -a --format '{{.Names}}' | grep -Eq '^supabase_.*_plateforme-coach$'; then
+            npx supabase stop --no-backup
+          fi
+          rm -f .env.e2e.local .critical-e2e.lock .supabase-local-reset.lock
+
+      - name: Verify local resource cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker ps -a --format '{{.Names}}' | grep -Eq 'plateforme-coach|moovx-empty-db-'; then
+            echo 'Residual Gate C1 container detected' >&2
+            exit 1
+          fi
+          if docker volume ls --format '{{.Name}}' | grep -Eq 'plateforme-coach|moovx-empty-db-'; then
+            echo 'Residual Gate C1 volume detected' >&2
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import { connect } from 'node:net'
+          const ports = [54329, 55320, 55321, 55322, 55323, 55324, 55325, 55327, 60320, 60321, 60322, 60323, 60324, 60325, 60327, 60329, 61320, 61321, 61322, 61323, 61324, 61325, 61327, 61329]
+          const open = await Promise.all(ports.map(port => new Promise(resolve => {
+            const socket = connect({ host: '127.0.0.1', port })
+            const finish = value => { socket.destroy(); resolve(value) }
+            socket.setTimeout(300)
+            socket.once('connect', () => finish(port))
+            socket.once('timeout', () => finish(null))
+            socket.once('error', () => finish(null))
+          })))
+          const residual = open.filter(Boolean)
+          if (residual.length) throw new Error(`Residual Gate C1 ports: ${residual.join(', ')}`)
+          NODE
+
+  browser-heavy:
+    name: Gate C2 - Browser Heavy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify local infrastructure
+        run: |
+          docker info --format '{{.ServerVersion}}'
+          psql --version
+
+      - name: Run critical browser journeys
+        run: npm run test:e2e:critical
+
+      - name: Audit synthetic browser cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pg_isready -h 127.0.0.1 -p 55322 -U postgres >/dev/null 2>&1; then
+            psql postgresql://postgres:postgres@127.0.0.1:55322/postgres -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $audit$
+          DECLARE
+            table_name text;
+            residual_count bigint;
+          BEGIN
+            IF EXISTS (SELECT 1 FROM auth.users WHERE email ~ '@(moovx[.])?example[.]test$') THEN
+              RAISE EXCEPTION 'BROWSER_HEAVY_SYNTHETIC_AUTH_RESIDUE';
+            END IF;
+            FOREACH table_name IN ARRAY ARRAY[
+              'profiles', 'coach_clients', 'coach_invitations', 'payments', 'push_subscriptions',
+              'messages', 'chat_ai_messages', 'ai_usage_logs', 'client_programs', 'custom_programs',
+              'workout_sessions', 'workout_sets', 'personal_records', 'weight_logs', 'body_measurements',
+              'completed_sessions', 'daily_food_logs', 'scheduled_sessions', 'user_badges', 'user_xp',
+              'weekly_diagnostics'
+            ] LOOP
+              EXECUTE format('SELECT count(*) FROM public.%I', table_name) INTO residual_count;
+              IF residual_count <> 0 THEN
+                RAISE EXCEPTION 'BROWSER_HEAVY_SYNTHETIC_TABLE_RESIDUE [%]', table_name;
+              END IF;
+            END LOOP;
+          END
+          $audit$;
+          SQL
+          fi
+
+      - name: Stop local browser resources
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker ps -a --format '{{.Names}}' | grep -Eq '^supabase_.*_plateforme-coach$'; then
+            npx supabase stop --no-backup
+          fi
+          rm -f .env.e2e.local .critical-e2e.lock .supabase-local-reset.lock
+
+      - name: Verify browser resource cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker ps -a --format '{{.Names}}' | grep -Eq 'plateforme-coach|moovx-empty-db-'; then
+            echo 'Residual Gate C2 container detected' >&2
+            exit 1
+          fi
+          if docker volume ls --format '{{.Name}}' | grep -Eq 'plateforme-coach|moovx-empty-db-'; then
+            echo 'Residual Gate C2 volume detected' >&2
+            exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import { connect } from 'node:net'
+          const ports = [3210, 54329, 55320, 55321, 55322, 55323, 55324, 55325, 55326, 55327, 55328, 55329, 55330]
+          const open = await Promise.all(ports.map(port => new Promise(resolve => {
+            const socket = connect({ host: '127.0.0.1', port })
+            const finish = value => { socket.destroy(); resolve(value) }
+            socket.setTimeout(300)
+            socket.once('connect', () => finish(port))
+            socket.once('timeout', () => finish(null))
+            socket.once('error', () => finish(null))
+          })))
+          const residual = open.filter(Boolean)
+          if (residual.length) throw new Error(`Residual Gate C2 ports: ${residual.join(', ')}`)
+          NODE

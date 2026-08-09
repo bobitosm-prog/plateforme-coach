@@ -366,19 +366,38 @@ mesurées séparément, la suite Vitest complète (`npm test`), le build
 E2E. Le build reçoit uniquement une URL localhost et une clé publique
 synthétique afin de compiler les consommateurs navigateur ; aucun service
 Supabase n'est démarré et aucun secret serveur ou Stripe n'est fourni. Gate C —
-Heavy, destiné aux validations locales isolées plus coûteuses, reste à ajouter
-dans un sous-batch séparé.
+Heavy sépare les validations locales coûteuses sur deux runners indépendants.
+
+**Gate C1 — Database Heavy** démarre uniquement pour un push vers
+`phase-6-staging` ou un déclenchement manuel. Il reconstruit la stack Supabase
+canonique, vérifie deux reconstructions depuis une base vide, les types
+Supabase puis les contrats RLS/PostgREST. Son cleanup `always()` contrôle les
+données synthétiques, arrête la stack sans backup et refuse tout conteneur,
+volume ou port local résiduel.
+
+**Gate C2 — Browser Heavy** utilise un runner distinct avec Chromium installé
+explicitement. Il exécute la suite canonique `test:e2e:critical` avec ses quinze
+parcours séquentiels, un worker, aucun retry et uniquement des fournisseurs
+locaux simulés. Son audit final refuse les comptes ou tables synthétiques non
+nettoyés, puis un cleanup `always()` ferme Supabase et contrôle les processus,
+volumes et ports réservés.
+
+Les deux jobs Heavy sont indépendants de Gates A/B et l'un de l'autre : ils
+peuvent donc s'exécuter en parallèle sur des runners isolés. Ils sont ignorés
+sur les pull requests ordinaires, où seuls les contrôles Fast et Standard sont
+requis. Gate C ne contacte ni staging ni Production, ne déploie rien et
+n'exécute jamais `--linked`, `db push` ou `migration repair`.
 
 L'inventaire vidéo exécuté par Vitest dépend de `ffprobe`. Gate B installe donc
 explicitement le paquet Ubuntu `ffmpeg`, sans ImageMagick ni autre paquet
 système. Cette dépendance bornée concerne uniquement Gate B ; Gate A ne réalise
 aucune installation système.
 
-Ces gates restent en observation : la stabilité de la CI, une durée complète
+Ces quatre jobs restent en observation : la stabilité de la CI, une durée complète
 inférieure à 20 minutes et un flaky rate inférieur à 2 % ne sont pas encore
 attestés. Le warning de compatibilité Node 20 émis par les actions GitHub v4
 reste à qualifier séparément. Aucun accès distant, secret fournisseur ou
-déploiement n'est effectué par Gate A ou Gate B.
+déploiement n'est effectué par les quality gates.
 
 ### Préflight de rollback Phase 9
 
