@@ -33,9 +33,6 @@ export function formatCurrencyFromMajor(
   }).format(amountMajor)
 }
 
-/** @deprecated Utiliser formatCurrencyFromCents ou formatCurrencyFromMajor */
-export const formatCurrency = formatCurrencyFromCents
-
 export function formatDate(iso: string | null, locale = 'fr-CH'): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString(locale, {
