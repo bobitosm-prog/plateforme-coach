@@ -369,6 +369,11 @@ Supabase n'est démarré et aucun secret serveur ou Stripe n'est fourni. Gate C 
 Heavy, destiné aux validations locales isolées plus coûteuses, reste à ajouter
 dans un sous-batch séparé.
 
+L'inventaire vidéo exécuté par Vitest dépend de `ffprobe`. Gate B installe donc
+explicitement le paquet Ubuntu `ffmpeg`, sans ImageMagick ni autre paquet
+système. Cette dépendance bornée concerne uniquement Gate B ; Gate A ne réalise
+aucune installation système.
+
 Ces gates restent en observation : la stabilité de la CI, une durée complète
 inférieure à 20 minutes et un flaky rate inférieur à 2 % ne sont pas encore
 attestés. Le warning de compatibilité Node 20 émis par les actions GitHub v4

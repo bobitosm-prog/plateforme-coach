@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const root = resolve(import.meta.dirname, '../..')
 const workflow = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
+const fastJob = workflow.slice(workflow.indexOf('\n  fast:'), workflow.indexOf('\n  standard:'))
 const standardJob = workflow.slice(workflow.indexOf('\n  standard:'))
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   engines?: { node?: string }
@@ -91,6 +92,20 @@ describe('progressive CI quality gates contract', () => {
     expect(standardJob).toContain('run: npm run perf:budget:check')
     expect(standardJob).not.toMatch(/^    needs:/m)
     expect(workflow).not.toMatch(/^  heavy:/m)
+  })
+
+  it('declares ffprobe through a bounded ffmpeg install in Gate B only', () => {
+    const ffmpegInstall = 'sudo apt-get install -y --no-install-recommends ffmpeg'
+    const installIndex = standardJob.indexOf(ffmpegInstall)
+    const vitestIndex = standardJob.indexOf('run: npm test')
+
+    expect(standardJob).toContain('sudo apt-get update')
+    expect(standardJob).toContain(ffmpegInstall)
+    expect(installIndex).toBeGreaterThan(-1)
+    expect(installIndex).toBeLessThan(vitestIndex)
+    expect(workflow.match(/sudo apt-get install/g)).toHaveLength(1)
+    expect(standardJob).not.toMatch(/imagemagick|identify/i)
+    expect(fastJob).not.toMatch(/apt-get|ffmpeg|ffprobe|imagemagick|identify/i)
   })
 
   it('provides only synthetic public Supabase build configuration to Gate B', () => {

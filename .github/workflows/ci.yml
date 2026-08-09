@@ -120,6 +120,11 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --legacy-peer-deps --no-audit --no-fund
 
+      - name: Install video metadata tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Run complete Vitest suite
         run: npm test
 
