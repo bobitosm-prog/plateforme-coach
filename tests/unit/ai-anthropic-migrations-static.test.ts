@@ -39,7 +39,8 @@ describe('Anthropic provider migration boundaries', () => {
   it('isolates SDK/network details in the server-only adapter', () => {
     const provider = fs.readFileSync(path.join(root, 'lib/ai/providers/anthropic/provider.ts'), 'utf8')
     expect(provider).toContain("import 'server-only'")
-    expect(provider).not.toMatch(/console\.|prompt|response\.body/)
+    expect(provider).toContain('console.error(JSON.stringify(record))')
+    expect(provider).not.toMatch(/console\.(?:log|warn|info)|prompt|response\.body/)
     for (const folder of ['lib/ai/provider', 'lib/ai/prompts', 'lib/ai/schemas', 'lib/ai/parsing', 'lib/ai/usage', 'lib/ai/models']) {
       const files = fs.readdirSync(path.join(root, folder)).filter(file => file.endsWith('.ts'))
       for (const file of files) expect(fs.readFileSync(path.join(root, folder, file), 'utf8')).not.toMatch(/@anthropic-ai\/sdk/)
@@ -56,5 +57,9 @@ describe('Anthropic provider migration boundaries', () => {
     expect(fs.readFileSync(path.join(root, 'app/api/weekly-diagnostic/route.ts'), 'utf8')).toContain('createWeeklyDiagnostic')
     expect(fs.readFileSync(path.join(root, 'app/api/weekly-diagnostic/service.ts'), 'utf8')).toContain('generateWeeklyDiagnostic')
     expect(fs.readFileSync(path.join(root, 'app/api/weekly-diagnostic/cron/route.ts'), 'utf8')).toContain('generateWeeklyDiagnostic')
+    expect(routeFiles('app/api/admin/seedance').filter(file => fs.readFileSync(path.join(root, file), 'utf8').includes('generateSeedanceText')).sort()).toEqual([
+      'app/api/admin/seedance/image/route.ts',
+      'app/api/admin/seedance/prompt/route.ts',
+    ])
   })
 })

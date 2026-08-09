@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { generateImage } from '@/lib/gemini/image'
 import { slugify } from '@/lib/seedance/slug'
 import { resolveCorrelationId } from '@/lib/security/audit-log'
+import { generateSeedanceText } from '@/lib/seedance/anthropic'
 import {
   isSeedanceReferenceStorageEnabled,
   SeedanceReferenceStorageError,
@@ -40,16 +40,16 @@ function isExplicitLocalStorageFallbackAllowed(): boolean {
   }
 }
 
-async function buildImagePrompt(anthropic: Anthropic, exerciseName: string, muscleGroup: string, equipment: string): Promise<string> {
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
-    messages: [{
-      role: 'user',
-      content: `Décris en anglais, en 1 à 2 phrases, la POSITION DE DÉPART correcte d'un athlète masculin réaliste exécutant l'exercice de musculation "${exerciseName}" (groupe musculaire : ${muscleGroup || 'non précisé'}, équipement : ${equipment || 'non précisé'}). Précise la machine/équipement, la position du corps et la prise, de façon anatomiquement correcte. Réponds UNIQUEMENT avec cette description, sans préambule ni guillemets.`,
-    }],
+async function buildImagePrompt(req: Request, exerciseName: string, muscleGroup: string, equipment: string): Promise<string> {
+  const generated = await generateSeedanceText({
+    apiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    correlationId: resolveCorrelationId(req),
+    maxTokens: 300,
+    prompt: `Décris en anglais, en 1 à 2 phrases, la POSITION DE DÉPART correcte d'un athlète masculin réaliste exécutant l'exercice de musculation "${exerciseName}" (groupe musculaire : ${muscleGroup || 'non précisé'}, équipement : ${equipment || 'non précisé'}). Précise la machine/équipement, la position du corps et la prise, de façon anatomiquement correcte. Réponds UNIQUEMENT avec cette description, sans préambule ni guillemets.`,
+    signal: req.signal,
   })
-  const desc = res.content[0]?.type === 'text' ? res.content[0].text.trim() : ''
+  if (!generated.ok) throw new Error('SEEDANCE_IMAGE_PROMPT_PROVIDER_FAILED')
+  const desc = generated.value.trim()
   return `Photorealistic cinematic photo. ${desc} ${STYLE_SUFFIX}`
 }
 
@@ -85,11 +85,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing ANTHROPIC_API_KEY' }, { status: 500 })
   }
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   let imagePrompt: string
   try {
-    imagePrompt = customPrompt || await buildImagePrompt(anthropic, exerciseName, muscleGroup, equipment)
+    imagePrompt = customPrompt || await buildImagePrompt(req, exerciseName, muscleGroup, equipment)
   } catch {
     console.error(JSON.stringify({ event: 'SEEDANCE_IMAGE_PROMPT_FAILED', result: 'failed', errorCode: 'PROMPT_BUILD_FAILED' }))
     return NextResponse.json({ error: 'Échec de la construction du prompt image' }, { status: 502 })

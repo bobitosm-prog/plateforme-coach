@@ -6,8 +6,8 @@ vi.mock('@/lib/admin/auth', () => ({
   handleAdminAuthError: () => new Response(JSON.stringify({ error: 'unauth' }), { status: 401 }),
 }))
 
-const createMock = vi.fn()
-vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create: createMock } } }))
+const { generateSeedanceTextMock } = vi.hoisted(() => ({ generateSeedanceTextMock: vi.fn() }))
+vi.mock('@/lib/seedance/anthropic', () => ({ generateSeedanceText: generateSeedanceTextMock }))
 
 const { generateImageMock } = vi.hoisted(() => ({ generateImageMock: vi.fn() }))
 vi.mock('@/lib/gemini/image', () => ({ generateImage: generateImageMock }))
@@ -58,7 +58,7 @@ it('400 when exerciseName missing', async () => {
 it('builds prompt via Claude, generates image, uploads, returns url', async () => {
   vi.stubEnv('SEEDANCE_LOCAL_STORAGE_FALLBACK_ENABLED', 'true')
   vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a' })
-  createMock.mockResolvedValueOnce({ content: [{ type: 'text', text: 'A man seated at a lat pulldown machine' }] })
+  generateSeedanceTextMock.mockResolvedValueOnce({ ok: true, value: 'A man seated at a lat pulldown machine' })
   generateImageMock.mockResolvedValueOnce({ bytes: new Uint8Array([1, 2, 3]), mimeType: 'image/jpeg' })
 
   const res = await POST(req({ exerciseName: 'Tirage', muscleGroup: 'Dos' }))
@@ -80,7 +80,7 @@ it('uses a custom imagePrompt without calling Claude', async () => {
   expect(res.status).toBe(200)
   const json = await res.json()
   expect(json.imagePrompt).toBe('my custom prompt')
-  expect(createMock).not.toHaveBeenCalled()
+  expect(generateSeedanceTextMock).not.toHaveBeenCalled()
 })
 
 it('returns the staging signed URL without exposing the object path', async () => {

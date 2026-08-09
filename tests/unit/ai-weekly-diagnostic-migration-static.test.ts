@@ -38,5 +38,9 @@ describe('weekly diagnostic provider migration boundary', () => {
     expect(providerRoutes).toHaveLength(13)
     expect(read('lib/weekly-diagnostic/generator.ts')).toContain('createAnthropicProvider')
     expect(13 + 2).toBe(15)
+    expect(tsFiles('app/api/admin/seedance').filter(file => read(file).includes('generateSeedanceText')).sort()).toEqual([
+      'app/api/admin/seedance/image/route.ts',
+      'app/api/admin/seedance/prompt/route.ts',
+    ])
   })
 })

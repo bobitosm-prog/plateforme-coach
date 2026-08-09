@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { verifyAdmin, handleAdminAuthError } from '@/lib/admin/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { generateSeedanceText } from '@/lib/seedance/anthropic'
+import { resolveCorrelationId } from '@/lib/security/audit-log'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,20 +31,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing ANTHROPIC_API_KEY' }, { status: 500 })
   }
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
-    messages: [{
-      role: 'user',
-      content: `Tu écris un prompt en anglais pour un modèle de génération vidéo (Seedance) qui doit produire une démonstration d'un exercice de musculation.
+  const generated = await generateSeedanceText({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    correlationId: resolveCorrelationId(req),
+    maxTokens: 400,
+    prompt: `Tu écris un prompt en anglais pour un modèle de génération vidéo (Seedance) qui doit produire une démonstration d'un exercice de musculation.
 Exercice : "${exerciseName}" (groupe musculaire : ${muscleGroup || 'non précisé'}, équipement : ${equipment || 'non précisé'}).
 Le prompt doit décrire : un athlète réaliste exécutant UNE répétition lente et correcte du mouvement, salle de sport moderne épurée, éclairage neutre, plan qui montre bien la forme (angle de côté ou 3/4), fond simple, pas de texte à l'écran.
 Réponds UNIQUEMENT avec le prompt en anglais, une seule ligne, sans guillemets ni préambule.`,
-    }],
+    signal: req.signal,
   })
+  if (!generated.ok) throw new Error('SEEDANCE_PROMPT_PROVIDER_FAILED')
 
-  const text = res.content[0]?.type === 'text' ? res.content[0].text.trim() : ''
+  const text = generated.value.trim()
   if (!text) {
     return NextResponse.json({ error: 'Génération du prompt vide' }, { status: 502 })
   }

@@ -7,10 +7,8 @@ vi.mock('@/lib/admin/auth', () => ({
   AdminAuthError: class extends Error {},
 }))
 
-const createMock = vi.fn()
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: class { messages = { create: createMock } },
-}))
+const { generateSeedanceTextMock } = vi.hoisted(() => ({ generateSeedanceTextMock: vi.fn() }))
+vi.mock('@/lib/seedance/anthropic', () => ({ generateSeedanceText: generateSeedanceTextMock }))
 
 import { POST } from '@/app/api/admin/seedance/prompt/route'
 import { verifyAdmin } from '@/lib/admin/auth'
@@ -34,12 +32,12 @@ it('rejects non-admin', async () => {
 
 it('returns a Claude-generated prompt for an authed admin', async () => {
   vi.mocked(verifyAdmin).mockResolvedValueOnce({ userId: 'u1', email: 'a@b.c' })
-  createMock.mockResolvedValueOnce({ content: [{ type: 'text', text: 'Démo fitness du Squat, plan large...' }] })
+  generateSeedanceTextMock.mockResolvedValueOnce({ ok: true, value: 'Démo fitness du Squat, plan large...' })
   const res = await POST(req({ exerciseName: 'Squat', muscleGroup: 'Jambes' }))
   expect(res.status).toBe(200)
   const json = await res.json()
   expect(json.prompt).toContain('Squat')
-  expect(createMock).toHaveBeenCalledOnce()
+  expect(generateSeedanceTextMock).toHaveBeenCalledOnce()
 })
 
 it('400 when exerciseName missing', async () => {

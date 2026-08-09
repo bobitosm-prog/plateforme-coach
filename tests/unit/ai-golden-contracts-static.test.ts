@@ -38,6 +38,14 @@ describe('AI golden fixture architecture', () => {
       'app/api/weekly-diagnostic/service.ts',
       'lib/weekly-diagnostic/generator.ts',
     ])
+
+    const seedanceAdminFiles = walk(path.join(root, 'app/api/admin/seedance'))
+      .filter(file => fs.readFileSync(file, 'utf8').includes('generateSeedanceText'))
+      .map(file => path.relative(root, file)).sort()
+    expect(seedanceAdminFiles).toEqual([
+      'app/api/admin/seedance/image/route.ts',
+      'app/api/admin/seedance/prompt/route.ts',
+    ])
   })
 })
 
