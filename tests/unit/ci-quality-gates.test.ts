@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 const root = resolve(import.meta.dirname, '../..')
 const workflow = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
+const testingStrategy = readFileSync(resolve(root, 'docs/TESTING_STRATEGY.md'), 'utf8')
+const contributingGuide = readFileSync(resolve(root, 'docs/CONTRIBUTING.md'), 'utf8')
 const fastJob = workflow.slice(workflow.indexOf('\n  fast:'), workflow.indexOf('\n  standard:'))
 const standardJob = workflow.slice(workflow.indexOf('\n  standard:'), workflow.indexOf('\n  database-heavy:'))
 const databaseHeavyJob = workflow.slice(workflow.indexOf('\n  database-heavy:'), workflow.indexOf('\n  browser-heavy:'))
@@ -14,6 +16,18 @@ const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8
 }
 
 describe('progressive CI quality gates contract', () => {
+  it('documents the first complete run without claiming CI stability', () => {
+    for (const document of [testingStrategy, contributingGuide]) {
+      expect(document).toContain('31317128115')
+      expect(document).toContain('16 min 07 s')
+      expect(document).toContain('Cette preuve démontre une exécution complète verte.')
+      expect(document).toContain("Elle ne constitue pas encore une attestation de stabilité CI.")
+      expect(document).toMatch(/p95[\s\S]{0,80}20\s+minutes/i)
+      expect(document).toMatch(/flaky rate[\s\S]{0,80}2 %/i)
+      expect(document).not.toMatch(/(?:la )?CI (?:est|désormais) stable/i)
+    }
+  })
+
   it('pins the Node and npm runtime used by the CI gates', () => {
     expect(packageJson.engines?.node).toBe('24.x')
     expect(packageJson.packageManager).toBe('npm@11.9.0')

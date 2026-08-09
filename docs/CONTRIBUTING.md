@@ -61,10 +61,17 @@ Gate B — Standard démarre en parallèle de Gate A et exécute la suite Vitest
 complète, le build puis le budget performance statique. Il ne lance ni Docker,
 ni Supabase local, ni E2E. Le build utilise uniquement une origine localhost et
 une clé publique synthétique de compilation, sans service role Supabase ni clé
-Stripe. Gate C — Heavy reste à versionner séparément. Ces premiers gates ne
-démontrent encore ni une CI stable et complète sous 20 minutes, ni un flaky
-rate inférieur à 2 %. Le warning de compatibilité Node 20 des actions GitHub v4
-reste une dette séparée, hors de ce sous-batch.
+Stripe. Gate C est versionné sous deux jobs indépendants : Database Heavy
+reconstruit les migrations et vérifie types et RLS/PostgREST ; Browser Heavy
+exécute les quinze parcours E2E critiques avec cleanup local systématique.
+
+Le premier run complet (`31317128115`) a validé Gate A, Gate B, Gate C1 et Gate
+C2 en `16 min 07 s`, avec reconstruction depuis une base vide, E2E `15/15` et
+cleanups verts. Cette preuve démontre une exécution complète verte.
+Elle ne constitue pas encore une attestation de stabilité CI. Le p95 inférieur à 20
+minutes et le flaky rate inférieur à 2 % restent à mesurer sur plusieurs runs.
+Le warning de compatibilité Node 20 des actions GitHub v4 reste une dette
+séparée.
 
 Lancer un seul E2E pendant une boucle ciblée ; lancer la suite critique complète lorsqu'un changement traverse plusieurs frontières ou avant fusion/déploiement. La suite critique exécute 15/15 parcours dans un ordre stable sur Chromium, Next.js et Supabase locaux ; la matrice canonique détaillée reste dans la [stratégie de tests](TESTING_STRATEGY.md).
 

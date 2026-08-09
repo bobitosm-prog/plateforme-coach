@@ -340,13 +340,14 @@ Le comparateur doit retourner exactement `ALIGNED`. L'état staging documenté
 `NO_GO` sans lancer de remédiation. Le préflight ne charge aucun `.env`, ne
 lance aucune commande, ne contacte aucun service et ne déploie rien.
 
-Ces preuves locales ne remplacent pas encore une CI stable : aucune
-configuration CI versionnée et aucune mesure de flaky rate ne sont attestées.
+Ces preuves locales et la première exécution complète de la CI ne remplacent
+pas encore une attestation de stabilité : aucune mesure multi-runs du p95 ou du
+flaky rate n'est encore disponible.
 Un verdict technique `GO` requiert toujours une approbation humaine avant
 toute action distante, et Production demeure soumise à une autorisation
 séparée.
 
-### Gates CI progressifs — observation initiale
+### Gates CI progressifs — première preuve complète
 
 Le workflow `MoovX Quality Gates` introduit uniquement un premier gate rapide
 sur les pull requests, les pushes vers `phase-6-staging` et les déclenchements
@@ -388,16 +389,28 @@ sur les pull requests ordinaires, où seuls les contrôles Fast et Standard sont
 requis. Gate C ne contacte ni staging ni Production, ne déploie rien et
 n'exécute jamais `--linked`, `db push` ou `migration repair`.
 
+La première exécution réelle des quatre gates, le run GitHub Actions
+`31317128115`, est entièrement verte : Gate A, Gate B, Gate C1 et Gate C2 sont
+`PASS`. Sa durée murale est de `16 min 07 s`. Gate C1 a validé la
+reconstruction depuis une base vide, les types Supabase, les contrats
+RLS/PostgREST et son cleanup. Gate C2 a validé les quinze parcours E2E critiques
+sur quinze et son cleanup. Cette preuve démontre une exécution complète verte.
+Elle ne constitue pas encore une attestation de stabilité CI.
+
+Les objectifs restent un p95 strictement inférieur à 20 minutes et un flaky
+rate strictement inférieur à 2 %. Ils nécessitent plusieurs observations
+indépendantes ; ce premier run ne suffit pas à les attester.
+
 L'inventaire vidéo exécuté par Vitest dépend de `ffprobe`. Gate B installe donc
 explicitement le paquet Ubuntu `ffmpeg`, sans ImageMagick ni autre paquet
 système. Cette dépendance bornée concerne uniquement Gate B ; Gate A ne réalise
 aucune installation système.
 
-Ces quatre jobs restent en observation : la stabilité de la CI, une durée complète
-inférieure à 20 minutes et un flaky rate inférieur à 2 % ne sont pas encore
-attestés. Le warning de compatibilité Node 20 émis par les actions GitHub v4
-reste à qualifier séparément. Aucun accès distant, secret fournisseur ou
-déploiement n'est effectué par les quality gates.
+Ces quatre jobs restent en observation : le seuil de 20 minutes est atteint sur
+la première preuve complète, mais son p95 et le flaky rate inférieur à 2 % ne
+sont pas encore attestés. Le warning de compatibilité Node 20 émis par les
+actions GitHub v4 reste à qualifier séparément. Aucun accès distant, secret
+fournisseur ou déploiement n'est effectué par les quality gates.
 
 ### Préflight de rollback Phase 9
 
