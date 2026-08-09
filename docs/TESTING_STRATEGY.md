@@ -89,6 +89,10 @@ npm run test:e2e -- e2e/billing-subscription-reconciliation.spec.ts --stripe
 
 `npm run test:e2e:critical` est la validation canonique avant fusion ou déploiement. Elle effectue un reset Supabase, puis exécute séquentiellement les quinze parcours intégrés avec un seul worker. Les commandes dédiées restent préférables pendant le développement d'un seul flux. `npm run test:e2e` lance les spécifications sans orchestrer toutes les frontières optionnelles et ne remplace donc pas la suite critique.
 
+### Frontière de stockage Seedance en développement
+
+Preview sur `phase-6-staging` utilise le stockage HTTPS privé dédié aux références Seedance. Le fallback local reste absent par défaut et `SEEDANCE_LOCAL_STORAGE_FALLBACK_ENABLED` est classé `TEMPORARY_ACTIVE` : il n'est accepté qu'avec `NODE_ENV=development`, une URL Supabase HTTP sur `localhost` ou `127.0.0.1` avec port explicite et sans credentials. Production et toute origine distante sont refusées. Deux cas positifs de `tests/unit/seedance-image-route.test.ts` dépendent encore de ce chemin local. Sa suppression est donc différée tant qu'un parcours local canonique de remplacement n'est pas défini et couvert ; cette décision n'autorise aucun fallback vers un stockage distant ou Production.
+
 ### Suite E2E critique canonique
 
 Prérequis : Docker actif, dépendances installées et ports locaux libres. La commande refuse tout contexte Supabase lié ou distant, sérialise les exécutions avec `.critical-e2e.lock`, vérifie automatiquement les **149 migrations actuelles** et laisse la stack Supabase locale active à la fin, comme les autres lanceurs locaux.
