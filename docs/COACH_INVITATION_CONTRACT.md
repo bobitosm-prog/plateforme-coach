@@ -374,32 +374,34 @@ Pour la validation publique, toutes les causes terminales se réduisent à `vali
 | Anciens liens envoyés | Non sécurisables car ils ne contiennent qu'un UUID. Afficher « lien expiré, demander un nouveau lien ». Aucun délai ne peut rendre un UUID sûr. |
 | Utilisateurs déjà `invited` | Aucun backfill d'invitation fictive. Conserver profil/relation existants et les auditer séparément. |
 
-Stratégie de transition :
+Invariants actuels :
 
-1. Activer la création de nouveaux liens tokenisés derrière `coach_invitations_v1` pour un petit périmètre coach.
-2. Continuer à afficher les liens UUID existants uniquement jusqu'à disponibilité du nouvel écran, mais ne pas les présenter comme sûrs.
-3. Dès que les nouvelles routes et le frontend sont déployés, désactiver l'octroi `invited` par UUID avec un flag serveur indépendant.
-4. Les anciens liens renvoient `410` et proposent au destinataire de contacter son coach.
-5. Ne jamais créer automatiquement des invitations à partir d'anciens liens : le destinataire n'est pas connu.
+1. Le parcours d'invitation tokenisé est le comportement canonique pour toute nouvelle invitation coach-client.
+2. La création, la validation, la consommation et la révocation utilisent exclusivement le contrat actuel fondé sur un token opaque.
+3. Les anciens liens UUID ne constituent jamais une preuve et ne permettent aucun octroi `invited`.
+4. Les anciens liens renvoient volontairement `410` et proposent au destinataire de contacter son coach ; ce tombstone fait partie du contrat de compatibilité.
+5. La route historique d'attribution sans token n'est plus disponible et ne peut pas être réactivée par configuration.
+6. Ne jamais créer automatiquement des invitations à partir d'anciens liens : le destinataire n'est pas connu.
+7. Le parcours canonique et la fermeture du chemin historique sont couverts par les tests E2E et les tests de contrat Invitation existants.
 
-## 15. Séquence de migration future
+## 15. Contrat canonique déployé
 
-Approche expand → migrate → contract :
+Trajectoire expand → migrate → contract désormais appliquée :
 
-1. **Expand DB** : table, contraintes, index, RLS et colonnes d'audit additives. Aucun appel applicatif.
-2. **RPC** : fonction transactionnelle et tests DB ; pas encore exposée au frontend.
-3. **API** : création, validation, consommation, révocation derrière `coach_invitations_v1` désactivé par défaut.
-4. **Frontend** : génération email/lien tokenisé et `/join` compatible token ; ancien flux toujours disponible pour rollback, sans mélanger les payloads.
-5. **Coexistence observée** : métriques création/envoi/validation/consommation/erreurs et trafic legacy.
-6. **Bascule** : nouvelles invitations exclusivement tokenisées.
-7. **Fermeture P0** : flag `legacy_invitation_grant_enabled=false`; `coachId` seul renvoie `410`.
-8. **Contract** : retrait futur de l'ancien mode invitation de `assign-coach`, de `?coach=`, des métadonnées `invited_coach_id` et de `invite-client`.
+1. **Expand DB** : table, contraintes, index, RLS et colonnes d'audit ajoutés sans couplage initial au frontend.
+2. **RPC** : fonction transactionnelle établie et couverte par les tests DB avant son exposition applicative.
+3. **API** : création, validation, consommation et révocation exposent le contrat tokenisé canonique.
+4. **Frontend** : génération email/lien tokenisé et `/join` compatible token, sans mélanger les anciens payloads UUID.
+5. **Observation** : métriques création/envoi/validation/consommation/erreurs et trafic dirigé vers le tombstone legacy.
+6. **Bascule acquise** : les nouvelles invitations sont exclusivement tokenisées.
+7. **Fermeture P0 acquise** : l'attribution sans token est définitivement désactivée ; `coachId` seul renvoie volontairement `410`.
+8. **Contract** : l'ancien mode invitation de `assign-coach`, `?coach=`, les métadonnées `invited_coach_id` et `invite-client` ne constituent plus un chemin de compatibilité réactivable.
 
 Rétrocompatibilité et rollback :
 
-- Les étapes 1 à 3 sont additives et rollbackables par désactivation du flag, sans suppression immédiate de DB.
-- Le frontend tokenisé peut être rollbacké tant que l'API reste disponible.
-- La désactivation legacy possède son propre flag et ne doit intervenir qu'après métriques et support préparé.
+- Les éléments additifs du contrat tokenisé restent compatibles avec les invitations déjà créées, sans restaurer le mécanisme UUID historique.
+- Le frontend tokenisé peut être rollbacké tant que l'API canonique reste disponible.
+- Le tombstone legacy `410` est un invariant de sécurité et non un mécanisme temporaire de bascule.
 - Une invitation créée demeure valide même si l'envoi a échoué ; le support peut déclencher un renvoi, pas lire le token.
 - Ne jamais déployer dans la même étape : table + bascule frontend ; nouvelle RPC + suppression legacy ; changement du callback + désactivation des anciens liens.
 
