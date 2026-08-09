@@ -14237,3 +14237,27 @@ sont compréhensibles depuis la carte et l'ADR 0008 : `PASS`.
 ou déploiement n'est ajouté. La tâche « Finaliser les ADR et cartes de
 domaines » est clôturée. Phase 9 reste active et la tâche suivante « Ajouter
 les quality gates CI progressifs » reste ouverte et non commencée.
+
+## Entrée — 2026-08-09 — Phase 9 — réconciliation CI et feature flags
+
+**CI progressive :** les Gates A, B, C1 et C2 sont versionnés et deux runs
+complets sur deux sont verts. Le statut reste `CI_STABILITY_CANDIDATE`, avec
+un p95 provisoire de `16:07` et un flaky rate provisoire de `0 %`. Ces mesures
+ne constituent pas encore un échantillon suffisant : la tâche « Ajouter les
+quality gates CI progressifs » demeure ouverte en observation.
+
+**Feature flags :** l'audit global n'a identifié aucun flag runtime dont la
+suppression soit démontrée. Les pseudo-flags documentaires
+`coach_invitations_v1` et `legacy_invitation_grant_enabled` ont été retirés du
+contrat Invitation par `a08cad4`; le parcours tokenisé est canonique et le
+tombstone legacy `410` reste un invariant. Le commit `61af8bf` consigne que
+`SEEDANCE_LOCAL_STORAGE_FALLBACK_ENABLED` demeure `TEMPORARY_ACTIVE` : absent
+par défaut, borné au développement local et conservé tant qu'aucun parcours
+local canonique de remplacement n'est défini et couvert.
+
+**Décision Phase 9 :** la tâche « Supprimer les feature flags arrivés à
+expiration » est clôturée sans modification runtime, test, environnement ou
+CI et sans suppression de flag runtime sans preuve. Phase 9 reste active. La
+tâche suivante après les feature flags, « Supprimer les adaptateurs legacy
+sans trafic », reste ouverte et non commencée; la tâche CI antérieure reste
+également ouverte jusqu'à preuve statistique suffisante.
