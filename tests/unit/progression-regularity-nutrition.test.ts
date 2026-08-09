@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { activeMondayWeeks, aggregateLegacyNutritionByDate, aggregateLegacyWaterByDate, aggregateNutritionByDate, aggregateWaterByDate, legacyCoachStreak, trainingStreak } from '../../lib/progression'
+import { activeMondayWeeks, aggregateLegacyNutritionByDate, aggregateLegacyWaterByDate, aggregateNutritionByDate, aggregateWaterByDate, trainingStreak } from '../../lib/progression'
 
 describe('regularity and nutrition aggregations', () => {
-  it('keeps canonical training and coach legacy streak strategies separate', () => {
+  it('uses the canonical streak strategy with planned rest days', () => {
     expect(trainingStreak({ completedLocalDates: ['2026-01-05'], restLocalDates: ['2026-01-04'], todayLocal: '2026-01-05' })).toMatchObject({ status: 'complete', value: { current: 2 } })
-    expect(legacyCoachStreak(['2026-01-05T08:00:00Z'], new Date('2026-01-05T12:00:00Z'))).toEqual({ status: 'complete', value: 1, issues: [] })
   })
   it('deduplicates and orders active Monday weeks', () => {
     expect(activeMondayWeeks(['2026-01-06', '2025-12-31', '2026-01-05'])).toEqual({ status: 'complete', value: ['2025-12-29', '2026-01-05'], issues: [] })

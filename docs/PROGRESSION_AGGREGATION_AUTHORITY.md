@@ -27,7 +27,7 @@ contractuellement différentes.
 | e1RM / meilleur set | `estimatedOneRepMax`, `bestSetByEstimatedOneRepMax`, `buildLegacyExerciseProgression` | sets positifs, Epley, dixième | `useAnalytics`, fin de séance, `AnalyticsSection` | regroupement historique par nom |
 | Poids/delta/moyenne/objectif | `sortWeights`, `weightDelta`, `movingAverageByObservation`, `weightGoalProgress` | `weight_logs`, fenêtre/observations explicites | ProgressTab/read models/analytics presenter | mois civil, période UI et 30 jours restent distincts |
 | Mensurations | `measurementDelta` | `body_measurements`, cm | Progression | lignes d'export : présentation seulement |
-| Streaks/régularité | `trainingStreak`, `activeMondayWeeks`, `legacyCoachStreak` | dates locales ou UTC explicitement nommées | dashboard client/coach | repos local et streak coach UTC non fusionnés |
+| Streaks/régularité | `computeStreak`, `trainingStreak`, `activeMondayWeeks` | dates civiles locales ou UTC explicitement projetées | dashboard client/coach | même moteur ; repos locaux côté client, dates UTC sans repos côté coach |
 | Calories/macros | `aggregateNutritionByDate`, `aggregateLegacyNutritionByDate` | `daily_food_logs`, zéro legacy explicite | read model/analytics | diagnostic sur jours renseignés |
 | Eau | `aggregateWaterByDate`, `aggregateLegacyWaterByDate` | `water_intake`, ml | read model/presenter CSV | conversion litres uniquement en présentation |
 | Comptages de séances | read models séparés | `workout_sessions`, `completed_sessions`, `scheduled_sessions` | ProgressTab, coach, diagnostic | trois faits indépendants |
@@ -55,7 +55,9 @@ duplication et l'acceptation des transformations purement visuelles.
 - semaine locale canonique et regroupement hebdomadaire local/UTC restent
   nommés séparément ;
 - fenêtres 7, 28 et 30 jours et mois civil restent distinctes ;
-- le streak local avec repos et le streak coach UTC restent différents ;
+- le coach et le client utilisent `computeStreak`, avec des sources distinctes :
+  dates civiles UTC sans repos côté coach, dates civiles locales et repos
+  planifiés côté client ;
 - les inconnus Nutrition ne deviennent zéro que dans les fonctions `legacy*`.
 
 La concordance des anciennes et nouvelles métriques sur toutes les fixtures

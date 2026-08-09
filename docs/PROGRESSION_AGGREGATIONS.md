@@ -33,7 +33,7 @@ un fallback historique.
 | Training legacy | `legacyTonnage`, `groupLegacyWeeklyTonnage`, `percentageChangeLegacy` | #7–9, avec les zéros et arrondis historiques explicitement conservés |
 | Poids/mesures | `sortWeights`, `latestWeight`, `weightDelta`, `movingAverageByObservation`, `weightGoalProgress`, `measurementDelta` | #17–22 |
 | Records | `estimatedOneRepMax`, `groupBestRecords` | #14–16 |
-| Régularité | `trainingStreak`, `activeMondayWeeks`, `legacyCoachStreak` | #27–29 ; les variantes divergentes restent séparées |
+| Régularité | `trainingStreak`, `activeMondayWeeks`, `computeStreak` | #27–29 ; moteur canonique partagé, sources de dates explicites |
 | Nutrition/eau | `aggregateNutritionByDate`, `aggregateWaterByDate` | #32–36, en réutilisant les invariants Nutrition |
 
 Les compteurs de `workout_sessions`, `completed_sessions` et
@@ -63,6 +63,13 @@ dernières semaines présentes. `useAnalytics`, la fin de séance et les vues
 dashboard réutilisent maintenant les mêmes autorités Epley/tonnage. Les
 lectures, filtres, props, textes, formes de sortie et valeurs visibles ne
 changent pas.
+
+`computeStreak` est l'autorité canonique commune au coach et au client. Le
+coach lui fournit les dates civiles UTC de ses séances, sans jours de repos ;
+le client lui fournit ses dates civiles locales et les repos projetés depuis
+son programme. Cette différence de source ne justifie plus un helper legacy
+séparé. Le moteur compare des dates civiles et calcule le jour précédent à
+midi, ce qui évite les décalages aux frontières DST.
 
 L'agrégation Nutrition Analytics utilise désormais
 `aggregateAnalyticsNutritionByDate`, documentée dans
@@ -110,8 +117,9 @@ des duplications de formules couvertes dans les composants et hooks.
   déduit.
 - Le tonnage legacy transforme encore poids/répétitions absents en zéro ; le
   résultat canonique correspondant devient `partial`.
-- Le streak coach UTC et le streak Training local avec repos restent deux
-  stratégies distinctes.
+- Le coach projette ses séances en dates civiles UTC sans repos, tandis que le
+  client utilise ses dates civiles locales et les repos planifiés ; les deux
+  projections utilisent le même moteur `computeStreak`.
 - Les métriques IA ou sans formule locale (`symmetry_score`, `fitness_score`,
   `score_semaine`, analyses photo et tendances qualitatives) restent non
   reproductibles.
