@@ -97,3 +97,32 @@ jobs:
           tests/unit/developer-onboarding.test.ts
           tests/unit/code-review-checklist.test.ts
           tests/unit/domain-documentation.test.ts
+
+  standard:
+    name: Gate B - Standard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:55321'
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-anon-synthetic-build'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Run complete Vitest suite
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Check static performance budgets
+        run: npm run perf:budget:check

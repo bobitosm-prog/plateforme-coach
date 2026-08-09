@@ -4,13 +4,14 @@ import { describe, expect, it } from 'vitest'
 
 const root = resolve(import.meta.dirname, '../..')
 const workflow = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
+const standardJob = workflow.slice(workflow.indexOf('\n  standard:'))
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   engines?: { node?: string }
   packageManager?: string
 }
 
 describe('progressive CI quality gates contract', () => {
-  it('pins the Node and npm runtime used by Gate A', () => {
+  it('pins the Node and npm runtime used by the CI gates', () => {
     expect(packageJson.engines?.node).toBe('24.x')
     expect(packageJson.packageManager).toBe('npm@11.9.0')
     expect(workflow).toContain("node-version: '24'")
@@ -36,10 +37,11 @@ describe('progressive CI quality gates contract', () => {
     expect(workflow).toContain('cancel-in-progress: true')
   })
 
-  it('defines only the bounded fast job', () => {
+  it('defines only the bounded fast and standard jobs', () => {
     expect(workflow).toMatch(/^jobs:\n  fast:/m)
-    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(1)
+    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(2)
     expect(workflow).toContain('timeout-minutes: 10')
+    expect(standardJob).toContain('timeout-minutes: 15')
   })
 
   it('installs the exact lockfile dependency graph', () => {
@@ -75,6 +77,50 @@ describe('progressive CI quality gates contract', () => {
       'tests/unit/code-review-checklist.test.ts',
       'tests/unit/domain-documentation.test.ts',
     ]) expect(workflow).toContain(command)
+  })
+
+  it('runs the standard gate independently with the complete bounded checks', () => {
+    expect(standardJob).toMatch(/^\n  standard:\n    name: Gate B - Standard/m)
+    expect(standardJob).toContain('runs-on: ubuntu-latest')
+    expect(standardJob).toContain("node-version: '24'")
+    expect(standardJob).toContain('cache: npm')
+    expect(standardJob).toContain('npm ci --legacy-peer-deps --no-audit --no-fund')
+    expect(standardJob).toContain('run: npm test')
+    expect(standardJob).toContain('run: npm run build')
+    expect(standardJob).toContain('run: npm run perf:budget:check')
+    expect(standardJob).not.toMatch(/^    needs:/m)
+    expect(workflow).not.toMatch(/^  heavy:/m)
+  })
+
+  it('provides only synthetic public Supabase build configuration to Gate B', () => {
+    const environmentNames = [...standardJob.matchAll(/^      ([A-Z][A-Z0-9_]+):/gm)]
+      .map(match => match[1])
+    expect(environmentNames).toEqual([
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    ])
+    expect(standardJob).toContain("NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:55321'")
+    expect(standardJob).toContain("NEXT_PUBLIC_SUPABASE_ANON_KEY: 'public-anon-synthetic-build'")
+    expect(standardJob).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY|STRIPE_SECRET_KEY/)
+    expect(standardJob).not.toMatch(/https?:\/\/(?:[^\s'\"]+\.)?(?:supabase\.co|moovx\.ch)/)
+  })
+
+  it('keeps Docker, Supabase services, E2E, baselines and deployments out of Gate B', () => {
+    for (const forbidden of [
+      'docker',
+      'supabase start',
+      'supabase:local',
+      'test:e2e',
+      'perf:baseline',
+      '--linked',
+      'db push',
+      'migration repair',
+      '--prod',
+      'stripe live',
+      'vercel',
+      'deploy',
+    ]) expect(standardJob.toLowerCase()).not.toContain(forbidden.toLowerCase())
+    expect(standardJob).not.toContain('secrets.')
   })
 
   it('contains no heavy, distant or deployment operation', () => {

@@ -54,9 +54,17 @@ git diff --check
 Le Gate A du workflow `MoovX Quality Gates` automatise en observation le
 contrôle du diff, TypeScript, le lint différentiel, i18n, les factories
 Supabase et les contrats documentaires rapides. Le lint global n'est pas un
-gate bloquant tant que sa dette historique subsiste. Gate A ne démontre encore
-ni une CI complète sous 20 minutes ni un flaky rate inférieur à 2 %; les gates
-Standard et Heavy restent à versionner séparément.
+gate bloquant tant que sa dette historique subsiste. Son premier run réel a
+réussi sans retry en `83 s`.
+
+Gate B — Standard démarre en parallèle de Gate A et exécute la suite Vitest
+complète, le build puis le budget performance statique. Il ne lance ni Docker,
+ni Supabase local, ni E2E. Le build utilise uniquement une origine localhost et
+une clé publique synthétique de compilation, sans service role Supabase ni clé
+Stripe. Gate C — Heavy reste à versionner séparément. Ces premiers gates ne
+démontrent encore ni une CI stable et complète sous 20 minutes, ni un flaky
+rate inférieur à 2 %. Le warning de compatibilité Node 20 des actions GitHub v4
+reste une dette séparée, hors de ce sous-batch.
 
 Lancer un seul E2E pendant une boucle ciblée ; lancer la suite critique complète lorsqu'un changement traverse plusieurs frontières ou avant fusion/déploiement. La suite critique exécute 15/15 parcours dans un ordre stable sur Chromium, Next.js et Supabase locaux ; la matrice canonique détaillée reste dans la [stratégie de tests](TESTING_STRATEGY.md).
 

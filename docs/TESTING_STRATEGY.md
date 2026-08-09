@@ -346,7 +346,7 @@ Un verdict technique `GO` requiert toujours une approbation humaine avant
 toute action distante, et Production demeure soumise à une autorisation
 séparée.
 
-### Gate A CI — observation initiale
+### Gates CI progressifs — observation initiale
 
 Le workflow `MoovX Quality Gates` introduit uniquement un premier gate rapide
 sur les pull requests, les pushes vers `phase-6-staging` et les déclenchements
@@ -357,11 +357,23 @@ documentaires rapides.
 
 Le lint global reste non bloquant tant que sa dette historique n'est pas
 résorbée; le lint différentiel refuse néanmoins toute nouvelle erreur dans les
-fichiers touchés. Ce gate est en observation : il n'atteste encore ni une CI
-complète sous 20 minutes, ni un flaky rate inférieur à 2 %. Les gates Standard
-et Heavy, incluant build, Docker, Supabase local et E2E, restent à ajouter dans
-des sous-batchs séparés. Aucun accès distant, secret fournisseur ou déploiement
-n'est effectué par Gate A.
+fichiers touchés. Son premier run réel a réussi sans retry en `83 s`.
+
+Gate B — Standard s'exécute en parallèle de Gate A et lance, dans trois étapes
+mesurées séparément, la suite Vitest complète (`npm test`), le build
+(`npm run build`) puis le contrôle statique des budgets performance
+(`npm run perf:budget:check`). Il n'utilise ni Docker, ni Supabase local, ni
+E2E. Le build reçoit uniquement une URL localhost et une clé publique
+synthétique afin de compiler les consommateurs navigateur ; aucun service
+Supabase n'est démarré et aucun secret serveur ou Stripe n'est fourni. Gate C —
+Heavy, destiné aux validations locales isolées plus coûteuses, reste à ajouter
+dans un sous-batch séparé.
+
+Ces gates restent en observation : la stabilité de la CI, une durée complète
+inférieure à 20 minutes et un flaky rate inférieur à 2 % ne sont pas encore
+attestés. Le warning de compatibilité Node 20 émis par les actions GitHub v4
+reste à qualifier séparément. Aucun accès distant, secret fournisseur ou
+déploiement n'est effectué par Gate A ou Gate B.
 
 ### Préflight de rollback Phase 9
 
