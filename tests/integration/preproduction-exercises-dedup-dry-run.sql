@@ -39,6 +39,67 @@ TRUNCATE TABLE public.exercises_db CASCADE;
 \ir ../../supabase/migrations/20260422_elevations_frontales_halteres_video.sql
 \ir ../../supabase/migrations/20260518180000_add_missing_parent_exercises.sql
 \ir ../../supabase/migrations/20260530145524_normalize_exercises_equipment.sql
+
+DO $proof$
+DECLARE
+  v_rows integer;
+  v_invalid integer;
+  v_legacy_preserved integer;
+  v_recoverable integer;
+  v_constraint_count integer;
+  v_values text[];
+BEGIN
+  SELECT
+    count(*),
+    count(*) FILTER (
+      WHERE equipment IS NULL
+         OR equipment NOT IN (
+           'barbell', 'dumbbell', 'kettlebell',
+           'band', 'bodyweight', 'machine_gym'
+         )
+    ),
+    count(*) FILTER (WHERE equipment_legacy IS NOT NULL),
+    count(*) FILTER (WHERE equipment_legacy IS DISTINCT FROM equipment),
+    array_agg(DISTINCT equipment ORDER BY equipment)
+  INTO v_rows, v_invalid, v_legacy_preserved, v_recoverable, v_values
+  FROM public.exercises_db;
+
+  SELECT count(*) INTO v_constraint_count
+  FROM pg_constraint
+  WHERE conrelid = 'public.exercises_db'::regclass
+    AND conname = 'exercises_db_equipment_check'
+    AND contype = 'c'
+    AND convalidated;
+
+  IF v_values <> ARRAY[
+    'band', 'barbell', 'bodyweight',
+    'dumbbell', 'kettlebell', 'machine_gym'
+  ]::text[]
+     OR v_invalid <> 0
+     OR v_legacy_preserved <> v_rows
+     OR v_recoverable = 0
+     OR v_constraint_count <> 1 THEN
+    RAISE EXCEPTION
+      'unexpected equipment normalization: values=% invalid=% legacy=%/% recoverable=% constraints=%',
+      v_values, v_invalid, v_legacy_preserved, v_rows, v_recoverable,
+      v_constraint_count;
+  END IF;
+
+  BEGIN
+    UPDATE public.exercises_db
+    SET equipment = '__invalid_equipment__'
+    WHERE id = (SELECT id FROM public.exercises_db ORDER BY id LIMIT 1);
+    RAISE EXCEPTION 'equipment CHECK accepted an invalid value';
+  EXCEPTION
+    WHEN check_violation THEN NULL;
+  END;
+
+  RAISE NOTICE
+    'equipment proof: categories=6 invalid=0 legacy_preserved=% recoverable=% constraint=validated',
+    v_legacy_preserved, v_recoverable;
+END
+$proof$;
+
 \ir ../../supabase/migrations/20260531043341_complete_variant_group.sql
 \ir ../../supabase/migrations/20260622120000_normalize_abdos_muscle_group.sql
 

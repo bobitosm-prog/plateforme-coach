@@ -87,6 +87,15 @@ puis des migrations de média, traduction et enrichissement complètent les
 lignes. Des scripts dans `scripts/` réalisent aussi des backfills. Il faut donc
 distinguer le schéma du catalogue, son contenu seedé et ses enrichissements.
 
+La migration historique
+[`20260530145524_normalize_exercises_equipment.sql`](../supabase/migrations/20260530145524_normalize_exercises_equipment.sql)
+convertit ses 43 valeurs d'équipement historiques vers six catégories
+canoniques : `barbell`, `dumbbell`, `kettlebell`, `band`, `bodyweight` et
+`machine_gym`. La colonne `equipment_legacy` conserve la valeur source exacte.
+Les anciens helpers TypeScript de compatibilité, sans appelant runtime, ont été
+supprimés : la migration, sa contrainte CHECK et la preuve SQL locale avec
+rollback sont désormais l'autorité de ce contrat.
+
 `custom_exercises` utilise un format plus petit : `name`, `muscle_group`,
 `equipment`, `description`, `sets`, `reps`, `rest_seconds`, `image_url` et
 `is_private`. Ces valeurs de prescription sont attachées au catalogue
@@ -468,4 +477,3 @@ conception.
 - [`lib/program-excel.ts`](../lib/program-excel.ts)
 - [`lib/training/generate-program.ts`](../lib/training/generate-program.ts)
 - [`lib/training/compute-progression.ts`](../lib/training/compute-progression.ts)
-
