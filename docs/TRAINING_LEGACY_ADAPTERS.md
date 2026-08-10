@@ -6,6 +6,28 @@ Les adaptateurs read-only décrits ici sont implémentés depuis le 17 juillet
 2026. Ils convertissent des fixtures et objets déjà chargés en mémoire. Ils ne
 sont encore appelés par aucun écran, hook, route ou repository.
 
+### Statut de la migration runtime
+
+La migration est classée `TRAINING_CANONICAL_MIGRATION_NOT_STARTED`. Le modèle
+et les adaptateurs sont prêts et testés, mais aucun producteur ou consommateur
+runtime n'utilise encore le modèle canonique. Il n'existe ni double lecture,
+ni comparaison legacy/canonique, ni coexistence runtime. Aucune décision
+d'abandon n'a été prise.
+
+Les formats legacy restent réellement lus et écrits par l'application. Les
+adaptateurs de `lib/training/adapters/*` sont donc
+`FUTURE_MIGRATION_RESERVED` et ne relèvent pas de la suppression Phase 9 des
+adaptateurs démontrés sans trafic. Avant toute suppression future, la tâche
+« Achever la migration runtime Training vers le modèle canonique » doit :
+
+1. valider les formats entrants à leurs frontières ;
+2. brancher les adaptateurs aux repositories ;
+3. établir une double lecture et comparer les résultats legacy/canoniques ;
+4. ajouter une persistance additive si elle est nécessaire ;
+5. basculer les consommateurs un par un ;
+6. observer la coexistence avec un rollback applicatif disponible ;
+7. démontrer l'absence de trafic legacy.
+
 Le contrat cible est défini dans le
 [modèle Training canonique](TRAINING_CANONICAL_MODEL.md) et les formes sources
 dans l'[inventaire Training](TRAINING_FORMATS_INVENTORY.md).

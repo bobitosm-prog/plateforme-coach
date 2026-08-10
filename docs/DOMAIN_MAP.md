@@ -116,7 +116,12 @@ pas un modèle de placement pour le nouveau code.
   [adaptateurs legacy](TRAINING_LEGACY_ADAPTERS.md) et
   [cycle de séance](TRAINING_WORKOUT_SESSION_LIFECYCLE.md).
 - **Legacy :** plusieurs JSON de programme et historiques restent distincts ;
-  aucun adaptateur ne doit les fusionner silencieusement.
+  aucun adaptateur ne doit les fusionner silencieusement. La migration runtime
+  canonique est `TRAINING_CANONICAL_MIGRATION_NOT_STARTED` : le modèle et les
+  adaptateurs sont prêts, mais aucun producteur ou consommateur canonique,
+  double lecture ou chemin de coexistence n'est branché. Les adaptateurs sont
+  `FUTURE_MIGRATION_RESERVED` jusqu'à la bascule et à la preuve d'absence de
+  trafic legacy ; aucune décision d'abandon n'a été prise.
 
 ## Nutrition
 

@@ -14261,3 +14261,36 @@ CI et sans suppression de flag runtime sans preuve. Phase 9 reste active. La
 tâche suivante après les feature flags, « Supprimer les adaptateurs legacy
 sans trafic », reste ouverte et non commencée; la tâche CI antérieure reste
 également ouverte jusqu'à preuve statistique suffisante.
+
+## Entrée — 2026-08-10 — Phase 9 — réconciliation des adaptateurs legacy
+
+**Suppressions démontrées :** l'audit puis les sous-batchs isolés ont retiré
+uniquement les candidats `LEGACY_NO_TRAFFIC_REMOVE` : l'alias admin
+`formatCurrency`, `legacyCoachStreak`, `aggregateLegacyNutritionByDate`,
+`normalizeEquipment`, `getLegacyValuesForEquipment` et
+`EQUIPMENT_LEGACY_MAP`. Les moteurs et agrégateurs canoniques, les protections
+Nutrition et la preuve SQL de migration des équipements ont été conservés.
+
+**Exclusions conservées :** le mapping d'erreurs API reste
+`LEGACY_TEST_ONLY_KEEP`; les tombstones de sécurité et les compatibilités
+runtime actives restent nécessaires. Cette clôture ne signifie donc pas que
+tout le legacy a disparu, mais qu'aucun autre candidat démontré
+`LEGACY_NO_TRAFFIC_REMOVE` ne subsiste dans le périmètre audité.
+
+**Training :** `lib/training/adapters/*` est
+`FUTURE_MIGRATION_RESERVED`. L'état est
+`TRAINING_CANONICAL_MIGRATION_NOT_STARTED` : modèle et adaptateurs prêts et
+testés, mais aucun producteur ou consommateur canonique runtime, aucune double
+lecture, aucune coexistence runtime et aucune décision d'abandon. Une tâche
+dédiée « Achever la migration runtime Training vers le modèle canonique »
+reste ouverte pour valider les entrées, brancher les repositories, comparer
+legacy/canonique, ajouter une persistance additive si nécessaire, basculer les
+consommateurs, observer avec rollback et prouver l'absence de trafic avant
+toute suppression des adaptateurs Training.
+
+**Décision Phase 9 :** la tâche « Supprimer les adaptateurs legacy sans
+trafic » est clôturée dans ce sens borné. Phase 9 reste active; la CI conserve
+le statut `CI_STABILITY_CANDIDATE` et la migration runtime Training reste une
+tâche distincte non commencée. Aucun runtime, test métier, workflow CI,
+migration, environnement distant ou déploiement n'est modifié par cette
+réconciliation documentaire.
