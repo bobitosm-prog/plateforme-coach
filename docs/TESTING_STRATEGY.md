@@ -296,6 +296,15 @@ démarrer build, navigateur, Supabase ou réseau. Le comparateur et ses limites
 sont documentés dans la
 [comparaison Core Web Vitals Phase 8](./PERFORMANCE_CWV_COMPARISON.md).
 
+Le [test de charge ciblé Phase 9](./PHASE_9_TARGETED_LOAD_TEST.md) prépare une
+baseline locale de `GET /api/feedback/mine`. `npm run perf:load:targeted` refuse
+toute origine distante et utilise cinq clients avec cent rapports synthétiques,
+un profil borné à cinq utilisateurs virtuels, cinq requêtes par seconde et cinq
+minutes, puis exige un cleanup sans résidu. Son mode `--smoke` reste limité à
+deux secondes. Le protocole collecte débit, p50/p95/p99 et erreurs, mais aucun
+seuil de performance définitif n'est encore fixé. Cette commande ne fait pas
+partie des quality gates CI.
+
 ### À chaque modification
 
 - test Vitest du fichier ou domaine touché;
