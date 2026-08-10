@@ -34,9 +34,9 @@ Les scénarios couvrent :
 effets chargent directement programmes personnels, historique et catalogue.
 Cette absence est un comportement actuel, pas une garantie cible.
 
-Le dépôt possède React Testing Library et jsdom, mais `jsdom@29` ne démarre pas
-sous le graphe ESM de Node 24 utilisé pendant cette tranche. Ajouter ou changer
-une dépendance aurait élargi une tâche de caractérisation. Les transitions DOM
+Aucun environnement DOM interactif n'est configuré dans Vitest. Une tentative
+historique avec React Testing Library et jsdom 29 avait échoué sous Node 24 ;
+ces dépendances restées inactives ont depuis été retirées. Les transitions DOM
 après effets — activation d'un programme personnel, modales, saisie de séries
 et minuteur — sont donc protégées ici par les contrats statiques et les props
 capturées, pas par une interaction navigateur complète.
@@ -55,4 +55,5 @@ requêtes et le rendu des composants restent inchangés.
 
 Les overlays auparavant inline suivent désormais l'[inventaire des modales de
 `TrainingTab`](TRAINING_TAB_MODALS.md). Les tests serveur et statiques évitent
-un contournement fragile de la limite jsdom/Node connue.
+un faux environnement DOM ; tout futur harnais interactif devra être configuré
+explicitement avec une dépendance compatible.

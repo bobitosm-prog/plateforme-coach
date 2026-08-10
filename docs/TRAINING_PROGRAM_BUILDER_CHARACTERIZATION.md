@@ -102,11 +102,11 @@ et l'inventaire Supabase. Elle caractérise explicitement la mutation superficie
 de `padTo7Days` au lieu de la présenter comme une garantie cible.
 
 Le rendu interactif complet n'est pas monté : `ProgramBuilder` dépend de
-`document`, de Framer Motion et de plusieurs frontières navigateur, tandis que
-la combinaison jsdom 29/Node 24 reste instable dans ce dépôt. Les tests ne
-simulent donc pas artificiellement l'interface ni Supabase. Les callbacks sont
-vérifiés à leur frontière réelle, et les transformations pures sont exécutées
-avec des fixtures synthétiques sans donnée personnelle.
+`document`, de Framer Motion et de plusieurs frontières navigateur, et aucun
+environnement DOM interactif n'est configuré dans Vitest. Les tests ne simulent
+donc pas artificiellement l'interface ni Supabase. Les callbacks sont vérifiés à
+leur frontière réelle, et les transformations pures sont exécutées avec des
+fixtures synthétiques sans donnée personnelle.
 
 ## Modèle d'édition pur extrait
 

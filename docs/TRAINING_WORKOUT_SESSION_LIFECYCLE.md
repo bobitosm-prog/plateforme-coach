@@ -253,9 +253,9 @@ Les tests caractérisent aussi qu'un `savedAt` illisible est actuellement accept
 ce défaut n'est volontairement pas corrigé dans cette tranche.
 
 Les transitions du minuteur restent gardées statiquement : les exécuter comme
-hook nécessiterait l'environnement DOM actuellement bloqué par la combinaison
-jsdom 29 / Node 24. Aucun graphe ESM fragile n'a été ajouté. La prochaine tranche
-peut désormais extraire le modèle pur de session derrière cette couverture.
+hook nécessiterait un environnement DOM interactif qui n'est pas configuré dans
+Vitest. Aucun graphe DOM artificiel n'a été ajouté. La prochaine tranche peut
+désormais extraire le modèle pur de session derrière cette couverture.
 
 ## Modèle pur extrait
 
