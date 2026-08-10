@@ -28,7 +28,7 @@ contractuellement différentes.
 | Poids/delta/moyenne/objectif | `sortWeights`, `weightDelta`, `movingAverageByObservation`, `weightGoalProgress` | `weight_logs`, fenêtre/observations explicites | ProgressTab/read models/analytics presenter | mois civil, période UI et 30 jours restent distincts |
 | Mensurations | `measurementDelta` | `body_measurements`, cm | Progression | lignes d'export : présentation seulement |
 | Streaks/régularité | `computeStreak`, `trainingStreak`, `activeMondayWeeks` | dates civiles locales ou UTC explicitement projetées | dashboard client/coach | même moteur ; repos locaux côté client, dates UTC sans repos côté coach |
-| Calories/macros | `aggregateNutritionByDate`, `aggregateLegacyNutritionByDate` | `daily_food_logs`, zéro legacy explicite | read model/analytics | diagnostic sur jours renseignés |
+| Calories/macros | `aggregateNutritionByDate`, `aggregateAnalyticsNutritionByDate` | `daily_food_logs`, inconnus et invalides explicites | read model/analytics | diagnostic sur jours renseignés |
 | Eau | `aggregateWaterByDate`, `aggregateLegacyWaterByDate` | `water_intake`, ml | read model/presenter CSV | conversion litres uniquement en présentation |
 | Comptages de séances | read models séparés | `workout_sessions`, `completed_sessions`, `scheduled_sessions` | ProgressTab, coach, diagnostic | trois faits indépendants |
 | Séries graphiques/export | `analytics-presenter.ts` | agrégats déjà calculés | `AnalyticsSection`, CSV/XLSX | formatage, tri et labels seulement |
@@ -58,7 +58,8 @@ duplication et l'acceptation des transformations purement visuelles.
 - le coach et le client utilisent `computeStreak`, avec des sources distinctes :
   dates civiles UTC sans repos côté coach, dates civiles locales et repos
   planifiés côté client ;
-- les inconnus Nutrition ne deviennent zéro que dans les fonctions `legacy*`.
+- les inconnus et invalides Nutrition restent distincts et ne deviennent
+  jamais implicitement zéro dans l'autorité Analytics.
 
 La concordance des anciennes et nouvelles métriques sur toutes les fixtures
 reste un critère RC1 séparé : les résultats Nutrition `divergent` et `partial`

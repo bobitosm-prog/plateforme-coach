@@ -165,7 +165,7 @@ pas été ajoutée au générateur. Aucune écriture distante n'a été exécut�
 | résumé Home du jour | date UTC du navigateur, égalité, limite 20, refresh au retour Home | somme plan + logs; `null` calorique vaut zéro mais nombre invalide refuse le résumé |
 | mini-graphe Home | sept jours glissants UTC, limite 200 | somme calories legacy avec fallback zéro |
 | onglet Nutrition | date sélectionnée, ordre `created_at ASC`, état React et retry | expose les lignes; aucune moyenne hebdomadaire |
-| Analytics | fenêtre glissante du read model, ordre repository et limite bornée | `aggregateLegacyNutritionByDate`, null vers zéro explicitement legacy |
+| Analytics | fenêtre glissante du read model, ordre repository et limite bornée | `aggregateAnalyticsNutritionByDate`, inconnus et invalides distincts, jamais convertis implicitement en zéro |
 | diagnostic | dernière semaine civile complète Zurich, collection sans ordre ni limite | moyenne calories/protéines par jours connus, inconnues explicites |
 
 Owner, dates, limites, fraîcheur et sorties diffèrent. Aucun de ces

@@ -95,11 +95,12 @@ Les quatre comptages `IS NULL` observés valaient zéro. Le schéma généré re
 néanmoins `protein`, `carbs` et `fat` nullables; la correction protège donc le
 contrat, même si la fixture distante courante ne déclenche pas le cas.
 
-Avant C02, `aggregateLegacyNutritionByDate` appliquait `value || 0`.
-`null`, `undefined`, champ absent et `NaN` devenaient zéro; les chaînes
-étaient concaténées à l'accumulateur; infinis et négatifs traversaient. Une
+Avant C02, l'agrégation historique appliquait `value || 0`. `null`,
+`undefined`, champ absent et `NaN` devenaient zéro ; les chaînes étaient
+concaténées à l'accumulateur, tandis qu'infinis et négatifs traversaient. Une
 erreur de lecture produisait le même tableau vide que l'absence confirmée au
-niveau de l'état visible.
+niveau de l'état visible. Cette caractérisation sans appelant runtime a été
+retirée ; elle ne constitue plus un mécanisme disponible.
 
 Après C02 :
 

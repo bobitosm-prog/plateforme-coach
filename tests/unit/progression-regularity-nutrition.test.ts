@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeMondayWeeks, aggregateLegacyNutritionByDate, aggregateLegacyWaterByDate, aggregateNutritionByDate, aggregateWaterByDate, trainingStreak } from '../../lib/progression'
+import { activeMondayWeeks, aggregateLegacyWaterByDate, aggregateNutritionByDate, aggregateWaterByDate, trainingStreak } from '../../lib/progression'
 
 describe('regularity and nutrition aggregations', () => {
   it('uses the canonical streak strategy with planned rest days', () => {
@@ -22,8 +22,7 @@ describe('regularity and nutrition aggregations', () => {
     expect(aggregateWaterByDate([{ date: '2026-01-02', milliliters: 250 }, { date: '2026-01-02', milliliters: 500 }])).toMatchObject({ status: 'complete', value: [{ date: '2026-01-02', milliliters: 750 }] })
     expect(aggregateWaterByDate([{ date: '2026-01-02', milliliters: -1 }])).toMatchObject({ status: 'invalid' })
   })
-  it('keeps the historical null-to-zero analytics strategy named and deterministic', () => {
-    expect(aggregateLegacyNutritionByDate([{ date: '2026-01-01', calories: null, protein: 0, carbs: null, fat: 2 }])).toEqual([{ date: '2026-01-01', calories: 0, protein: 0, carbs: 0, fat: 2 }])
+  it('keeps the historical null-to-zero water strategy named and deterministic', () => {
     expect(aggregateLegacyWaterByDate([{ date: '2026-01-01', milliliters: null }, { date: '2026-01-01', milliliters: 250 }])).toEqual([{ date: '2026-01-01', ml: 250 }])
   })
 })

@@ -9,6 +9,9 @@ describe('C02 Analytics nutrition static contract', () => {
   const repository = source('lib/repositories/nutrition/journal.ts')
   const readModel = source('lib/progression/read-models/service.ts')
   const aggregation = source('lib/progression/analytics-nutrition.ts')
+  const progressionNutrition = source('lib/progression/nutrition.ts')
+  const removedLegacyAggregator = ['aggregate', 'Legacy', 'Nutrition', 'ByDate'].join('')
+  const removedLegacyRow = ['Legacy', 'Nutrition', 'Row'].join('')
 
   it('preserves the single owner-scoped bounded journal query', () => {
     expect(hook).toContain(
@@ -24,7 +27,9 @@ describe('C02 Analytics nutrition static contract', () => {
 
   it('uses the C02 aggregation without changing Home or the weekly diagnostic', () => {
     expect(readModel).toContain('aggregateAnalyticsNutritionByDate(nutrition.data)')
-    expect(readModel).not.toContain('aggregateLegacyNutritionByDate(nutrition.data')
+    expect(readModel).not.toContain(removedLegacyAggregator)
+    expect(progressionNutrition).not.toContain(removedLegacyAggregator)
+    expect(progressionNutrition).not.toContain(removedLegacyRow)
     expect(aggregation).not.toMatch(/\|\|\s*0|\?\?\s*0/)
     expect(aggregation).not.toMatch(/from\(['"]|insert\(|update\(|upsert\(|delete\(|rpc\(/)
   })

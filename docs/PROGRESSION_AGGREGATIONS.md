@@ -74,11 +74,11 @@ midi, ce qui évite les décalages aux frontières DST.
 L'agrégation Nutrition Analytics utilise désormais
 `aggregateAnalyticsNutritionByDate`, documentée dans
 [les calculs Analytics](PROGRESSION_ANALYTICS_CALCULATIONS.md#agrégation-nutrition-analytics--c02).
-Elle remplace uniquement le consommateur runtime C02. La fonction
-`aggregateLegacyNutritionByDate` reste disponible pour caractériser le
-comportement historique, mais n'alimente plus le read model Analytics.
-L'agrégateur du diagnostic reste séparé en raison de sa fenêtre, de ses
-moyennes et de son contrat IA différents.
+Elle est l'autorité canonique du consommateur runtime C02. Les anciennes
+caractérisations sans appelant runtime ont été retirées. Une métrique absente
+reste inconnue et une métrique incorrecte reste invalide ; aucune des deux
+n'est transformée implicitement en zéro. L'agrégateur du diagnostic reste
+séparé en raison de sa fenêtre, de ses moyennes et de son contrat IA différents.
 
 Le journal Nutrition desktop du jour utilise une autre frontière spécialisée,
 `lib/nutrition/desktop-nutrition-day.ts`, documentée dans
