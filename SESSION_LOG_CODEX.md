@@ -14294,3 +14294,39 @@ le statut `CI_STABILITY_CANDIDATE` et la migration runtime Training reste une
 tâche distincte non commencée. Aucun runtime, test métier, workflow CI,
 migration, environnement distant ou déploiement n'est modifié par cette
 réconciliation documentaire.
+
+## Entrée — 2026-08-10 — Phase 9 — nettoyage final des dépendances directes
+
+**Audit et bilan :** l'inventaire initial comptait 55 dépendances directes. Les
+quatre sous-batchs isolés en ont retiré 14, sans aucun ajout, pour un inventaire
+final de 27 `dependencies` et 14 `devDependencies`, soit 41 dépendances
+directes. Le lockfile contient 124 nœuds de moins. Le ré-audit final ne relève
+plus aucun `UNUSED_REMOVE` ni `UNKNOWN_REVIEW_REQUIRED` et conclut
+`DEPENDENCY_CLEANUP_COMPLETE`.
+
+**Batch 1 — dépendances historiques :** `nosleep.js`,
+`@next/bundle-analyzer`, `@supabase/auth-ui-react` et
+`@supabase/auth-ui-shared` ont été retirés. **Batch 2 — formulaires et UI :**
+`@hookform/resolvers`, `react-hook-form`, `@radix-ui/react-dialog`,
+`@radix-ui/react-select` et `@radix-ui/react-toast` ont été retirés.
+**Batch 3 — infrastructure DOM orpheline :** `@testing-library/react`,
+`@testing-library/jest-dom`, `@vitejs/plugin-react`, `jsdom` et le setup jamais
+chargé `tests/setup.ts` ont été retirés. **Batch 4 — Supabase :**
+`@supabase/auth-helpers-nextjs` a été retiré sans modifier la garde AST ni sa
+fixture négative.
+
+**Contrats conservés :** `server-only` n'est pas une dépendance npm manquante;
+ses types et sa résolution sont fournis par le contrat compilateur Next.
+`react-is@19.2.3` reste déclaré comme `PEER_REQUIRED` de Recharts. Aucun peer
+cassé nouveau ni import runtime orphelin n'est observé.
+
+**Validation et portée :** les installations propres, tests ciblés, suites
+Vitest complètes, TypeScript, builds Webpack hermétiques à 91/91 routes/pages
+et budgets de performance à 79 contrôles sur deux baselines sont restés verts
+au fil des quatre batchs. La dette préexistante des tests React serveur
+`.test.tsx`, dont l'attente de six skeletons contre sept observés, reste hors
+scope et inchangée. Aucune régression runtime, modification CI ou modification
+de configuration Vitest n'est introduite. La tâche « Retirer les dépendances
+réellement inutilisées » est clôturée; la CI reste
+`CI_STABILITY_CANDIDATE`. La prochaine tâche séquentielle « Exécuter un test de
+charge ciblé » reste ouverte et non commencée.
