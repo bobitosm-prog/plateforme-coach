@@ -75,3 +75,55 @@ Authorization, mots de passe, JWT et clés ne font jamais partie des mesures.
 
 Un résultat complet fournit `MEASURED_WITHOUT_CAPACITY_VERDICT` : il mesure un
 comportement, mais ne transforme pas encore les percentiles en seuil PASS/FAIL.
+
+## Première baseline locale — 11 août 2026
+
+La première exécution complète, strictement locale et sans modification du
+profil, est classée **`BASELINE_VALID`**. Cette classification signifie que la
+mesure est exploitable, que les gardes de sécurité ont tenu et que le cleanup
+est complet; elle ne valide pas encore la capacité du système.
+
+### Résultats globaux
+
+| Mesure | Résultat |
+|---|---:|
+| Durée murale | 301,412 s |
+| Fenêtre active | 298,462 s |
+| Requêtes tentées / terminées | 985 / 985 |
+| Throughput sur la fenêtre active | 3,300 req/s |
+| p50 | 82,53 ms |
+| p95 | 95,39 ms |
+| p99 | 213,94 ms |
+| Latence maximale | 589,38 ms |
+| HTTP 2xx | 985 |
+| HTTP 4xx / 429 / 5xx | 0 / 0 / 0 |
+| Timeouts / erreurs réseau | 0 / 0 |
+
+Le plateau a exécuté 599 requêtes à 4,99 req/s, avec un p50 de 81,44 ms,
+un p95 de 93,14 ms et un p99 de 158,34 ms. La rampe a montré un pic p99
+ponctuel à 277,08 ms qui ne persistait pas au plateau; cette seule observation
+ne permet aucune conclusion causale.
+
+### Ressources et cleanup
+
+Les sondes ponctuelles ont observé au maximum 13 connexions PostgreSQL, sans
+attente de lock et sans requête active de plus d'une seconde. Les mesures CPU
+et mémoire de Next, PostgreSQL, PostgREST et Kong sont des instantanés et non
+une télémétrie continue.
+
+Après le run, les rapports, profils et utilisateurs Auth synthétiques corrélés
+étaient chacun à zéro. Les compteurs globaux avant/après étaient identiques et
+le marqueur de cleanup ne contenait aucune erreur.
+
+### Limites et prochaine preuve
+
+Cette preuve repose sur une seule baseline dans un environnement local. Les
+logs structurés du serveur Next n'étaient pas attachés à la session de mesure;
+les `duration_ms` serveur et les requêtes lentes corrélées ne sont donc pas
+mesurés. Elle ne valide ni staging ni Production et aucun seuil définitif de
+capacité, p95 ou p99 n'est encore établi.
+
+La prochaine preuve recommandée est une deuxième exécution strictement
+identique : même code, même environnement, même profil et aucune modification
+intermédiaire. Elle comparera p50, p95, p99, throughput et erreurs. Un palier
+supérieur ne sera envisagé qu'après cette comparaison et une décision explicite.

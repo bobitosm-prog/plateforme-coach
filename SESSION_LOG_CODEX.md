@@ -14330,3 +14330,33 @@ de configuration Vitest n'est introduite. La tâche « Retirer les dépendances
 réellement inutilisées » est clôturée; la CI reste
 `CI_STABILITY_CANDIDATE`. La prochaine tâche séquentielle « Exécuter un test de
 charge ciblé » reste ouverte et non commencée.
+
+## Entrée — 2026-08-11 — Phase 9 — première baseline locale ciblée
+
+**Protocole :** le harnais versionné a exécuté une seule fois le profil complet
+local de `GET /api/feedback/mine` : 300 secondes, cinq utilisateurs virtuels et
+cinq requêtes par seconde au maximum, timeout de cinq secondes et aucun retry.
+Les gardes ont exclu toute origine distante, Production et tout fournisseur
+réel. Le verdict de validité de la mesure est **`BASELINE_VALID`**.
+
+**Résultats :** la durée murale est de `301,412 s` pour une fenêtre active de
+`298,462 s`. Les `985/985` requêtes se sont terminées, avec un throughput actif
+de `3,300 req/s`, un p50 de `82,53 ms`, un p95 de `95,39 ms`, un p99 de
+`213,94 ms` et un maximum de `589,38 ms`. Les 985 réponses sont des `2xx`;
+aucun `4xx`, `429`, `5xx`, timeout ou incident réseau n'est observé. Le plateau
+compte 599 requêtes à `4,99 req/s`, p50 `81,44 ms`, p95 `93,14 ms` et p99
+`158,34 ms`.
+
+**Ressources et cleanup :** les sondes ponctuelles relèvent au maximum 13
+connexions PostgreSQL, aucune attente de lock et aucune requête active de plus
+d'une seconde. Après le run, rapports, profils et utilisateurs Auth
+synthétiques sont chacun à zéro; les compteurs globaux avant/après sont
+identiques et le cleanup est confirmé.
+
+**Limites et décision :** il s'agit d'une seule baseline locale. Les logs
+serveur Next n'étaient pas corrélés et les mesures CPU/mémoire sont ponctuelles.
+Aucun seuil définitif n'est fixé, staging et Production ne sont pas validés, et
+aucune cause n'est attribuée au pic p99 transitoire de la rampe. La prochaine
+preuve sera un second run strictement identique, sans changement de code, avant
+toute décision concernant un palier supérieur. La tâche de charge reste ouverte
+jusqu'à comparaison et recommandations de capacité documentées.
