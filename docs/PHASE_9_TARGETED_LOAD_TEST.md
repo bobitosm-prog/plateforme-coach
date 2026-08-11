@@ -184,8 +184,59 @@ principalement serveur; les pics des Runs 1 et 2 ne sont pas rétro-corrélables
 La capacité maximale n'est pas connue, et ni staging ni Production ne sont
 validés par ces mesures locales.
 
-La prochaine preuve recommandée est un quatrième run strictement identique avec
-la même observabilité. Elle doit fournir deux runs directement comparables
-client/serveur, vérifier le p99 serveur, la stabilité de l'overhead et l'absence
-persistante de saturation. Le profil reste borné à 300 secondes, 5 req/s et
-5 VU; aucune augmentation de charge n'est autorisée à ce stade.
+La preuve de confirmation est le quatrième run ci-dessous, exécuté avec la même
+observabilité, sans augmentation de durée, débit ou VU.
+
+## Quatrième baseline locale corrélée — 11 août 2026
+
+Le Run 4 a repris strictement le profil du Run 3 et obtient le verdict
+**`BASELINE_REPRODUCIBLE`**. Les `985/985` requêtes sont des HTTP `200`, sans
+erreur ni timeout, et les `985/985` request IDs sont corrélés.
+
+| Mesure | Client | Serveur | Overhead client − serveur |
+|---|---:|---:|---:|
+| Throughput actif | 3,301 req/s | — | — |
+| p50 | 64,96 ms | 59 ms | 5,49 ms |
+| p95 | 69,48 ms | 63 ms | 7,23 ms |
+| p99 | 77,10 ms | 70 ms | 8,96 ms |
+| Maximum client | 130,87 ms | — | — |
+
+Le principal outlier associe `130,87 ms` client, `124 ms` serveur et
+`6,87 ms` d'overhead, avec HTTP `200`. PostgreSQL reste entre 8 et 9
+connexions, sans lock en attente ni requête active depuis plus d'une seconde;
+aucune saturation persistante n'est démontrée. Après le run, rapports, profils
+et utilisateurs Auth synthétiques sont chacun à zéro, les compteurs hors scope
+sont inchangés, le port `3212` est libre et le build temporaire est supprimé.
+
+### Comparaison directe Run 3 / Run 4
+
+| Mesure | Écart Run 4 contre Run 3 |
+|---|---:|
+| Throughput | −0,09 % |
+| Client p99 | +0,59 % |
+| Serveur p99 | +1,45 % |
+| Overhead p99 | +2,17 % |
+| Plateau client p99 | +2,25 % |
+
+Ces écarts bornés, la corrélation complète, l'absence d'erreur et le cleanup
+complet clôturent le premier scénario avec la formulation exacte suivante :
+
+> `GET /api/feedback/mine` constitue une baseline locale reproductible au
+> profil testé : 300 secondes, au maximum 5 req/s et 5 VU, sans retry. Aucune
+> saturation n'est démontrée au profil testé.
+
+Cette conclusion ne définit pas la capacité maximale, ne valide ni staging ni
+Production et ne garantit pas l'endpoint au-delà de 5 req/s.
+
+## Second scénario recommandé
+
+| Candidat | Coût DB et représentativité | Sécurité et observabilité | Décision |
+|---|---|---|---|
+| Training read path | Plusieurs projections et historiques, très représentatif du dashboard | Read-only local possible, mais formats legacy et consommateurs multiples compliquent fixtures et corrélation | Différer jusqu'à un périmètre runtime stabilisé |
+| Nutrition read model | Trois lectures parallèles sur journal, jours actifs et eau; parcours fréquent | Fixtures locales déterministes, RLS, aucun fournisseur externe; corrélation PostgREST à préparer | **Recommandé** |
+| `GET /api/ai-quota` | Identité et quota DB, coût borné | Observabilité HTTP déjà présente, mais rate limit 30/min incompatible avec 5 req/s sans changer le scénario | Ne pas retenir pour ce profil |
+
+Le second scénario recommandé est donc le **read model Nutrition**. Sa future
+implémentation devra rester locale, read-only pendant le chrono, utiliser des
+données synthétiques corrélées et ajouter une observabilité adaptée aux lectures
+Supabase directes. Aucun nouveau scénario n'est implémenté dans ce sous-batch.

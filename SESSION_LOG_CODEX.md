@@ -14392,3 +14392,37 @@ La tâche de charge reste ouverte. La prochaine preuve recommandée est un
 quatrième run strictement identique, sans augmentation de durée, débit ou VU,
 afin de comparer directement deux runs client/serveur et confirmer p99,
 overhead et absence persistante de saturation.
+
+## Entrée — 2026-08-11 — Phase 9 — quatrième baseline et clôture du premier scénario
+
+**Run 4 :** le profil du Run 3 est rejoué sans modification : 300 secondes,
+cinq VU et cinq requêtes par seconde au maximum, timeout de cinq secondes et
+aucun retry. Les `985/985` requêtes et request IDs sont terminés et corrélés,
+avec uniquement des HTTP `200`. Le throughput est de `3,301 req/s`; le client
+mesure p50 `64,96 ms`, p95 `69,48 ms`, p99 `77,10 ms` et maximum `130,87 ms`.
+Le serveur mesure p50 `59 ms`, p95 `63 ms` et p99 `70 ms`; l'overhead mesure
+p50 `5,49 ms`, p95 `7,23 ms` et p99 `8,96 ms`. Le principal outlier associe
+`130,87 ms` client, `124 ms` serveur et `6,87 ms` d'overhead avec HTTP `200`.
+
+**Comparaison Run 3 / Run 4 :** les écarts sont `−0,09 %` pour le throughput,
+`+0,59 %` pour le p99 client, `+1,45 %` pour le p99 serveur, `+2,17 %` pour le
+p99 overhead et `+2,25 %` pour le p99 client du plateau. PostgreSQL reste entre
+8 et 9 connexions, sans lock ni requête active depuis plus d'une seconde. Après
+le run, rapports, profils et utilisateurs Auth synthétiques sont à zéro, les
+compteurs hors scope sont inchangés, le port `3212` est libre et le build
+temporaire est supprimé.
+
+**Décision :** le Run 4 est **`BASELINE_REPRODUCIBLE`**. Le premier scénario
+`GET /api/feedback/mine` est caractérisé comme baseline locale reproductible
+uniquement au profil testé — 300 secondes, 5 req/s et 5 VU au maximum, sans
+retry — avec la conclusion « aucune saturation démontrée au profil testé ».
+Cela ne définit pas la capacité maximale, ne valide ni staging ni Production et
+ne garantit aucun comportement au-delà de 5 req/s.
+
+**Suite :** le read model Nutrition est recommandé comme second scénario : ses
+trois lectures parallèles sont représentatives, read-only pendant la mesure,
+compatibles avec des fixtures locales et sans fournisseur externe réel. Le read
+path Training reste plus complexe tant que formats legacy et migration runtime
+coexistent; `GET /api/ai-quota` reste borné par son rate limit de 30/min, qui
+rendrait le profil actuel artificiel. Aucun second scénario n'est implémenté et
+aucun runtime, workflow CI ou harnais n'est modifié dans cette passe.
