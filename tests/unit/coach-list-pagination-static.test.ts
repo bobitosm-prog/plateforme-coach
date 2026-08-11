@@ -13,6 +13,9 @@ describe('coach list pagination architecture', () => {
     expect(hook).toContain('mergeCoachProgramPage')
     expect(hook).toContain('generation.current')
     expect(hook).toContain('inFlight.current')
+    expect(repository).toContain('observeCoachTemplateShadowPage(items, coachUserId)')
+    expect(repository.indexOf('observeCoachTemplateShadowPage(items, coachUserId)'))
+      .toBeLessThan(repository.indexOf('return { ok: true, data: { items, hasMore, nextCursor } }'))
   })
 
   it('keeps the UI additive and preserves loaded items on next-page failure', () => {

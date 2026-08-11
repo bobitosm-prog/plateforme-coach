@@ -3,16 +3,24 @@
 ## Statut
 
 Les adaptateurs read-only décrits ici sont implémentés depuis le 17 juillet
-2026. Ils convertissent des fixtures et objets déjà chargés en mémoire. Ils ne
-sont encore appelés par aucun écran, hook, route ou repository.
+2026. Ils convertissent des fixtures et objets déjà chargés en mémoire. Depuis
+le premier sous-batch de migration runtime, la pagination des modèles coach
+appelle `adaptCoachTemplate` uniquement en shadow mode.
 
 ### Statut de la migration runtime
 
-La migration est classée `TRAINING_CANONICAL_MIGRATION_NOT_STARTED`. Le modèle
-et les adaptateurs sont prêts et testés, mais aucun producteur ou consommateur
-runtime n'utilise encore le modèle canonique. Il n'existe ni double lecture,
-ni comparaison legacy/canonique, ni coexistence runtime. Aucune décision
-d'abandon n'a été prise.
+La migration reste classée `TRAINING_CANONICAL_MIGRATION_NOT_STARTED` côté
+persistance et bascule de consommateurs. Le modèle et les adaptateurs sont
+prêts et testés. La liste paginée des modèles coach est le premier parcours à
+exécuter `adaptCoachTemplate` en shadow mode : après chaque lecture réussie,
+une projection sémantique legacy est comparée à la projection canonique.
+
+Cette observation ne constitue pas une bascule runtime : la liste et l'UI
+continuent à recevoir exclusivement les lignes legacy, même si l'adaptateur ou
+l'observateur échoue. Elle n'ajoute aucune lecture ou écriture de base, aucune
+persistance canonique et aucune migration SQL. Son seul objectif est de mesurer
+les divergences avant toute décision de bascule. Aucune décision d'abandon de
+la migration n'a été prise.
 
 Les formats legacy restent réellement lus et écrits par l'application. Les
 adaptateurs de `lib/training/adapters/*` sont donc
@@ -175,3 +183,18 @@ Avant tout branchement applicatif :
 
 La présente tranche n'autorise aucune écriture, migration SQL ou modification
 RLS.
+
+## Premier shadow read : modèles coach
+
+Le comparateur pur
+[`coach-template-shadow-read.ts`](../lib/training/coexistence/coach-template-shadow-read.ts)
+contrôle l'owner coach, le nom, le statut, les tags, l'ordre et le type des
+jours, les références et l'ordre des exercices, les séries, répétitions et
+repos. Il classe chaque ligne en `MATCH`, `WARNING`, `CRITICAL_MISMATCH` ou
+`UNSUPPORTED`.
+
+Les événements restent locaux et expurgés. Ils contiennent uniquement le
+format, le résultat, les codes de différence, les nombres de warnings et de
+champs non mappés, la durée d'adaptation et un identifiant de corrélation
+opaque. Aucun programme brut, email, cookie, JWT, header d'autorisation ou
+payload JSON n'est journalisé, et aucun service distant n'est appelé.

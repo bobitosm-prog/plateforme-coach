@@ -1,6 +1,7 @@
 import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
 import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type PageRequest, type PaginatedResult } from '@/lib/repositories/pagination'
+import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
 export const ASSIGNED_PROGRAM_PROJECTION = 'id,client_id,coach_id,training_program_id,program,created_at,updated_at' as const
@@ -38,6 +39,7 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       const rows = data ?? []
       const hasMore = rows.length > pageSize
       const items = rows.slice(0, pageSize)
+      observeCoachTemplateShadowPage(items, coachUserId)
       const last = items.at(-1)
       const nextCursor = hasMore && last
         ? encodeTimestampCursor({ timestamp: last.created_at, id: last.id })
