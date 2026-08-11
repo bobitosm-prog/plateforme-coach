@@ -32,10 +32,12 @@ describe('Nutrition domain hook contracts', () => {
   it('defines four isolated hooks with no wildcard projection, client construction or loose any', () => {
     const files = ['useNutritionJournal.ts', 'useNutritionPlans.ts', 'useNutritionRecipes.ts', 'useNutritionGoals.ts']
     const source = files.map(file => readFileSync(`app/hooks/nutrition/${file}`, 'utf8')).join('\n')
+    const journalReadModel = readFileSync('lib/nutrition/nutrition-journal-read-model.ts', 'utf8')
     expect(source).not.toMatch(/select\(['"]\*['"]|createClient|service_role|:\s*any\b|<any>/)
     expect(source).not.toMatch(/from ['"](?:@\/app|next\/|react-dom)/)
     expect(source).toContain('createNutritionRecipeRepository')
-    expect(source).toContain("from('daily_food_logs')")
+    expect(source).toContain('readNutritionJournalCycle({')
+    expect(journalReadModel).toContain("from('daily_food_logs')")
     expect(source).toContain('createActivePersonalMealPlanReader')
   })
 

@@ -305,6 +305,17 @@ deux secondes. Le protocole collecte débit, p50/p95/p99 et erreurs, mais aucun
 seuil de performance définitif n'est encore fixé. Cette commande ne fait pas
 partie des quality gates CI.
 
+Le second scénario local cible le cycle réel du journal Nutrition avec
+`npm run perf:load:nutrition`. Le hook et le runner appellent le même
+coordinateur read-only : journal du jour, calendrier sur 30 jours et eau du
+jour restent trois lectures Supabase parallèles. Le runner prépare cinq clients,
+`1 240 daily_food_logs` et `40 water_intake`, puis mesure avec des sessions
+utilisateur soumises aux RLS; le service-role local reste hors chrono et limité
+au setup/cleanup. Son instrumentation opt-in mesure total, trois lectures et
+agrégation sans journaliser de donnée sensible. `--smoke` exécute exactement une
+lecture logique; le profil complet de 300 secondes n'est pas lancé par les tests
+et la commande ne fait partie d'aucune Gate CI.
+
 ### À chaque modification
 
 - test Vitest du fichier ou domaine touché;

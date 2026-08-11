@@ -28,6 +28,7 @@
     "test:e2e:client-journey": "node scripts/run-coach-client-e2e.mjs e2e/coach-client-client.spec.ts",
     "perf:baseline": "node scripts/run-performance-baseline.ts",
     "perf:load:targeted": "node scripts/performance/run-observed-targeted-load.mjs",
+    "perf:load:nutrition": "node scripts/performance/run-targeted-nutrition-load.mjs",
     "perf:budget:check": "node scripts/check-performance-budgets.ts",
     "perf:compare": "node scripts/compare-performance-runs.ts",
     "perf:media:inventory": "node scripts/inventory-runtime-media.ts",

@@ -65,9 +65,9 @@ describe('Nutrition read-only closure inventory', () => {
     expect(executableReads('daily_food_logs')).toEqual([
       'app/(dashboard)/page-desktop.tsx',
       'app/components/tabs/HomeTab.tsx',
-      'app/hooks/nutrition/useNutritionJournal.ts',
       'lib/check-badges.ts',
       'lib/nutrition/macros-on-target-badge.ts',
+      'lib/nutrition/nutrition-journal-read-model.ts',
       'lib/repositories/nutrition/journal.ts',
       'lib/weekly-diagnostic/generator.ts',
     ])

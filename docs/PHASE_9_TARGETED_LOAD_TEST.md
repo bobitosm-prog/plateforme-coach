@@ -236,7 +236,62 @@ Production et ne garantit pas l'endpoint au-delà de 5 req/s.
 | Nutrition read model | Trois lectures parallèles sur journal, jours actifs et eau; parcours fréquent | Fixtures locales déterministes, RLS, aucun fournisseur externe; corrélation PostgREST à préparer | **Recommandé** |
 | `GET /api/ai-quota` | Identité et quota DB, coût borné | Observabilité HTTP déjà présente, mais rate limit 30/min incompatible avec 5 req/s sans changer le scénario | Ne pas retenir pour ce profil |
 
-Le second scénario recommandé est donc le **read model Nutrition**. Sa future
-implémentation devra rester locale, read-only pendant le chrono, utiliser des
-données synthétiques corrélées et ajouter une observabilité adaptée aux lectures
-Supabase directes. Aucun nouveau scénario n'est implémenté dans ce sous-batch.
+Le second scénario recommandé est donc le **read model Nutrition**. Son
+implémentation reste locale, read-only pendant le chrono et utilise des données
+synthétiques corrélées.
+
+### Harnais Nutrition instrumenté
+
+Le cycle runtime réel est maintenant partagé sans changer son contrat :
+
+```text
+NutritionTab
+  → useNutritionJournal.reload
+  → readNutritionJournalCycle
+      ├─ daily_food_logs, owner + selectedDate, created_at ASC
+      ├─ daily_food_logs(date), owner + UTC J-30
+      └─ water_intake(amount_ml), owner + selectedDate, limit 50
+  → readNutritionTabSummary
+```
+
+Les trois lectures restent lancées dans le même `Promise.all`. Aucun cache,
+retry, RPC, pagination, index ou appel supplémentaire n'est introduit. Le hook
+conserve ses états, son compteur de réponses obsolètes, ses callbacks et sa
+mutation d'eau séparée.
+
+L'instrumentation est opt-in et ne produit aucun log dans le runtime normal.
+Elle expose seulement `total_ms`, les durées `journal_ms`, `calendar_ms` et
+`water_ms`, `aggregation_ms`, les trois cardinalités et un identifiant de
+corrélation borné. Cookies, JWT, Authorization, mots de passe, clés et payloads
+Nutrition ne sont jamais intégrés aux métriques.
+
+Le runner direct s'exécute explicitement avec :
+
+```bash
+npm run perf:load:nutrition
+```
+
+Il refuse Production, Supabase distant, URL avec credentials, fournisseurs
+réels, cible/opération différente, timeout ou retry modifié et tout dépassement
+de cinq VU, cinq lectures logiques par seconde ou 300 secondes. Le service-role
+local sert uniquement au setup et au cleanup; la mesure utilise cinq sessions
+client réelles soumises aux RLS.
+
+Les fixtures contiennent cinq clients, 31 jours avec huit `daily_food_logs` par
+jour et par client (`1 240` lignes), ainsi que huit `water_intake` par client
+sur la date mesurée (`40` lignes). Le cleanup couvre succès, échec, `SIGINT` et
+`SIGTERM`, exige zéro ligne Nutrition/profil/Auth corrélée et compare les
+compteurs globaux avant/après.
+
+Le mode `--smoke` exécute exactement une lecture logique authentifiée, soit les
+trois lectures DB parallèles. Il valide les cardinalités `8/248/8`, les cinq
+durées instrumentées et le cleanup. Ce smoke ne constitue pas un profil de
+charge ni une preuve de capacité. Le profil complet Nutrition n'a pas encore
+été exécuté et la commande reste absente des Gates CI.
+
+Le smoke d'extraction du 11 août 2026 a terminé `1/1` lecture logique sans
+timeout : `8,66 ms` au total, `7,22 ms` pour le journal, `8,10 ms` pour le
+calendrier, `6,60 ms` pour l'eau et `0,38 ms` pour l'agrégation. Les
+cardinalités étaient `8/248/8`; les `daily_food_logs`, profils et utilisateurs
+Auth corrélés étaient à zéro après cleanup, et les compteurs globaux étaient
+identiques avant/après. Cette mesure est seulement une preuve de raccordement.

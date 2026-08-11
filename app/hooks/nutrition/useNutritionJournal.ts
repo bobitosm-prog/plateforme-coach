@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { DAILY_FOOD_LOG_PROJECTION, type DailyFoodLogRow } from '@/lib/repositories/nutrition'
+import { readNutritionJournalCycle } from '@/lib/nutrition/nutrition-journal-read-model'
+import type { DailyFoodLogRow } from '@/lib/repositories/nutrition'
 
 export type NutritionLoadState = 'idle' | 'loading' | 'ready' | 'empty' | 'error'
 
@@ -27,22 +28,16 @@ export function useNutritionJournal({ supabase, userId, selectedDate }: UseNutri
     }
     const current = ++requestId.current
     setState('loading')
-    const thirtyAgo = new Date(Date.now() - 30 * 86_400_000).toISOString().split('T')[0]
-    const [logs, days, water] = await Promise.all([
-      supabase.from('daily_food_logs').select(DAILY_FOOD_LOG_PROJECTION)
-        .eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true }),
-      supabase.from('daily_food_logs').select('date').eq('user_id', userId).gte('date', thirtyAgo),
-      supabase.from('water_intake').select('amount_ml').eq('user_id', userId).eq('date', selectedDate).limit(50),
-    ])
+    const result = await readNutritionJournalCycle({ client: supabase, userId, selectedDate })
     if (current !== requestId.current) return
-    if (logs.error || days.error || water.error) {
+    if (result.status === 'error') {
       setState('error')
       return
     }
-    const nextLogs = logs.data ?? []
+    const nextLogs: DailyFoodLogRow[] = [...result.dailyLogs]
     setDailyLogs(nextLogs)
-    setDaysWithMeals(new Set((days.data ?? []).map(item => item.date)))
-    setWaterToday((water.data ?? []).reduce((sum, item) => sum + (item.amount_ml ?? 0), 0))
+    setDaysWithMeals(new Set(result.calendarDates))
+    setWaterToday(result.waterTotal)
     setState(nextLogs.length ? 'ready' : 'empty')
   }, [selectedDate, supabase, userId])
 

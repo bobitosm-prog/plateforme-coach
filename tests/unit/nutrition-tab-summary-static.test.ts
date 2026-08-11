@@ -10,6 +10,10 @@ const journal = fs.readFileSync(
   path.join(process.cwd(), 'app/hooks/nutrition/useNutritionJournal.ts'),
   'utf8',
 )
+const journalReadModel = fs.readFileSync(
+  path.join(process.cwd(), 'lib/nutrition/nutrition-journal-read-model.ts'),
+  'utf8',
+)
 const dashboard = fs.readFileSync(
   path.join(process.cwd(), 'lib/client-dashboard/use-client-dashboard-data.ts'),
   'utf8',
@@ -25,9 +29,12 @@ describe('NutritionTab C05 runtime boundary', () => {
   })
 
   it('keeps the owner/date journal queries and stale-response protection', () => {
-    expect(journal).toContain(
-      ".eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true })",
+    expect(journalReadModel).toContain(
+      ".eq('user_id', input.userId).eq('date', input.selectedDate)",
     )
+    expect(journalReadModel).toContain(".order('created_at', { ascending: true })")
+    expect(journalReadModel).toContain('const [journal, calendar, water] = await Promise.all([')
+    expect(journal).toContain('readNutritionJournalCycle({ client: supabase, userId, selectedDate })')
     expect(journal).toContain('const current = ++requestId.current')
     expect(journal).toContain('if (current !== requestId.current) return')
     expect(journal).toContain('return () => { requestId.current += 1 }')
