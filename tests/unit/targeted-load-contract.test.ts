@@ -16,6 +16,8 @@ import {
 
 const root = process.cwd()
 const runner = readFileSync(resolve(root, 'scripts/performance/run-targeted-load.mjs'), 'utf8')
+const observedRunner = readFileSync(resolve(root, 'scripts/performance/run-observed-targeted-load.mjs'), 'utf8')
+const observability = readFileSync(resolve(root, 'scripts/performance/targeted-load-observability.mjs'), 'utf8')
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { scripts: Record<string, string> }
 const documentation = readFileSync(resolve(root, 'docs/PHASE_9_TARGETED_LOAD_TEST.md'), 'utf8')
 const workflow = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
@@ -132,15 +134,33 @@ describe('targeted local load contract', () => {
 
   it('has no CLI escape hatch for rate, duration, concurrency, route or method', () => {
     expect(runner).toContain("argument !== '--smoke'")
+    expect(observedRunner).toContain("argument) => argument !== '--smoke'")
     for (const option of ['--rate', '--rps', '--duration', '--concurrency', '--route', '--method', '--url']) {
       expect(runner).not.toContain(option)
+      expect(observedRunner).not.toContain(option)
     }
   })
 
   it('exposes a local-only npm command outside CI', () => {
-    expect(packageJson.scripts['perf:load:targeted']).toBe('node scripts/performance/run-targeted-load.mjs')
+    expect(packageJson.scripts['perf:load:targeted']).toBe('node scripts/performance/run-observed-targeted-load.mjs')
     expect(workflow).not.toContain('perf:load:targeted')
     expect(documentation).toContain('GET /api/feedback/mine')
     expect(documentation).toMatch(/aucun seuil de performance\s+définitif/)
+  })
+
+  it('owns a bounded local server and preserves the canonical load request contract', () => {
+    expect(observedRunner).toContain('const APP_PORT = 3212')
+    expect(observedRunner).toContain('http://127.0.0.1:${APP_PORT}')
+    expect(observedRunner).toContain("MOOVX_BUILD_DIR: BUILD_DIR")
+    expect(observedRunner).toContain("createTargetedLoadServerCollector()")
+    expect(observedRunner).toContain("process.once('SIGINT', handleSigint)")
+    expect(observedRunner).toContain("process.once('SIGTERM', handleSigterm)")
+    expect(observedRunner).toContain('await resourceSampler.stop()')
+    expect(observedRunner).toContain('serverCollector.stop()')
+    expect(observedRunner).toContain('await stopProcess(serverProcess)')
+    expect(observedRunner).toContain("rmSync(BUILD_DIR, { recursive: true, force: true })")
+    expect(observability).not.toMatch(/writeFileSync|appendFileSync|createWriteStream|tmpdir/)
+    expect(runner).toContain("'x-request-id': expectedRequestId")
+    expect(runner).not.toContain("'x-load-correlation-id'")
   })
 })

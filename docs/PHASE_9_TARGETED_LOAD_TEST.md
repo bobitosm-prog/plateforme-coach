@@ -73,6 +73,23 @@ Le rapport détaillé expurgé est écrit avec des permissions privées dans le
 répertoire temporaire du système. La sortie console reste agrégée. Cookies,
 Authorization, mots de passe, JWT et clés ne font jamais partie des mesures.
 
+Le lanceur possède désormais un serveur Next de production dédié, lié
+uniquement à `127.0.0.1:3212`. Il capture en mémoire les événements JSON
+`FEEDBACK_READ_REQUEST` émis par ce processus et ne conserve que timestamp,
+statut, request ID et `duration_ms`. Chaque requête de charge fournit un
+`x-request-id` unique : le rapport peut ainsi calculer les p50/p95/p99 client et
+serveur, l'écart client − serveur, les agrégats par phase et les dix requêtes
+client les plus lentes. Cette analyse est descriptive et n'attribue aucune
+cause aux outliers.
+
+Un échantillonnage borné toutes les cinq secondes relève aussi le RSS/CPU du
+processus Next et, via PostgreSQL local, connexions, attentes de lock et requêtes
+actives depuis plus d'une seconde. Les ressources CPU/mémoire des conteneurs
+PostgreSQL, PostgREST et Kong restent `NON_MESUREE` afin de ne pas perturber la
+baseline avec une sonde Docker lourde. Collecteur et échantillonneur sont
+arrêtés sur succès, échec, `SIGINT` ou `SIGTERM`; les logs restent en mémoire et
+le répertoire de build local dédié est supprimé à la fin.
+
 Un résultat complet fournit `MEASURED_WITHOUT_CAPACITY_VERDICT` : il mesure un
 comportement, mais ne transforme pas encore les percentiles en seuil PASS/FAIL.
 
@@ -117,13 +134,14 @@ le marqueur de cleanup ne contenait aucune erreur.
 
 ### Limites et prochaine preuve
 
-Cette preuve repose sur une seule baseline dans un environnement local. Les
-logs structurés du serveur Next n'étaient pas attachés à la session de mesure;
-les `duration_ms` serveur et les requêtes lentes corrélées ne sont donc pas
-mesurés. Elle ne valide ni staging ni Production et aucun seuil définitif de
-capacité, p95 ou p99 n'est encore établi.
+Les deux premières baselines locales ont été capturées avant que le lanceur ne
+possède les logs structurés du serveur Next. Leurs `duration_ms` serveur et leurs
+requêtes lentes ne peuvent donc pas être corrélés rétroactivement. La seconde a
+confirmé débit, p50 et p95, mais son p99 plus variable reste un constat client
+sans conclusion causale.
 
-La prochaine preuve recommandée est une deuxième exécution strictement
-identique : même code, même environnement, même profil et aucune modification
-intermédiaire. Elle comparera p50, p95, p99, throughput et erreurs. Un palier
-supérieur ne sera envisagé qu'après cette comparaison et une décision explicite.
+La prochaine preuve recommandée est une troisième exécution au profil strictement
+identique, sur le serveur local dédié au même HEAD, avec corrélation
+client/serveur active. Elle comparera p50, p95, p99, throughput, erreurs,
+overhead client − serveur et ressources locales. Elle ne valide ni staging ni
+Production et aucun seuil définitif de capacité, p95 ou p99 n'est encore établi.

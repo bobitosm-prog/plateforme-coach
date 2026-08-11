@@ -218,12 +218,13 @@ async function issueRead(phaseName, cookie, sequence) {
   const startedAt = performance.now()
   let status = 0
   let requestId = null
+  const expectedRequestId = `${correlationId}.${String(sequence).padStart(6, '0')}`
   let timeoutReached = false
   let networkError = null
   try {
     const response = await fetch(new URL(TARGETED_LOAD_ROUTE, appUrl), {
       method: TARGETED_LOAD_METHOD,
-      headers: { accept: 'application/json', cookie, 'x-load-correlation-id': correlationId },
+      headers: { accept: 'application/json', cookie, 'x-request-id': expectedRequestId },
       redirect: 'manual',
       signal: AbortSignal.any([controller.signal, runAbortController.signal]),
     })
@@ -247,6 +248,7 @@ async function issueRead(phaseName, cookie, sequence) {
     timeout: timeoutReached,
     networkError,
     requestId,
+    requestIdMatched: requestId === expectedRequestId,
   }
 }
 
