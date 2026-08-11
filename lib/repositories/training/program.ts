@@ -2,6 +2,10 @@ import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
 import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type PageRequest, type PaginatedResult } from '@/lib/repositories/pagination'
 import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
+import {
+  observeClientProgramShadow,
+  type ClientProgramShadowSelection,
+} from '@/lib/training/coexistence/client-program-shadow-contract'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
 export const ASSIGNED_PROGRAM_PROJECTION = 'id,client_id,coach_id,training_program_id,program,created_at,updated_at' as const
@@ -14,6 +18,10 @@ export type AssignedProgramRow = Pick<Tables<'client_programs'>,
 export type PersonalProgramRow = Pick<Tables<'custom_programs'>,
   'id' | 'user_id' | 'name' | 'description' | 'days' | 'phases' | 'source' | 'is_active' | 'scheduled' |
   'start_date' | 'current_week' | 'total_weeks' | 'created_at' | 'updated_at'>
+
+export type AssignedProgramReadOptions = {
+  readonly shadowSelection?: ClientProgramShadowSelection
+}
 
 export function createTrainingProgramRepository(client: DatabaseClient) {
   return {
@@ -60,10 +68,16 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       return data ? { ok: true, data } : { ok: false, kind: 'not_found' }
     },
 
-    async listAssignedProgramsForClient(clientUserId: string): Promise<RepositoryResult<AssignedProgramRow[]>> {
+    async listAssignedProgramsForClient(
+      clientUserId: string,
+      options: AssignedProgramReadOptions = {},
+    ): Promise<RepositoryResult<AssignedProgramRow[]>> {
       const { data, error } = await client.from('client_programs').select(ASSIGNED_PROGRAM_PROJECTION)
         .eq('client_id', clientUserId).order('created_at', { ascending: false })
-      return error ? repositoryFailure(error) : { ok: true, data: data ?? [] }
+      if (error) return repositoryFailure(error)
+      const rows = data ?? []
+      if (options.shadowSelection) observeClientProgramShadow(rows, options.shadowSelection)
+      return { ok: true, data: rows }
     },
 
     async listPersonalProgramsForClient(clientUserId: string): Promise<RepositoryResult<PersonalProgramRow[]>> {

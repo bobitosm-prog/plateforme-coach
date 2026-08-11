@@ -199,12 +199,12 @@ champs non mappés, la durée d'adaptation et un identifiant de corrélation
 opaque. Aucun programme brut, email, cookie, JWT, header d'autorisation ou
 payload JSON n'est journalisé, et aucun service distant n'est appelé.
 
-## Contrat préparatoire : affectations client
+## Shadow read borné : affectation du dashboard client
 
-`client_programs.program` n'exécute pas encore de comparaison shadow au
-runtime. Son contrat est préparé dans
+`client_programs.program` exécute désormais une comparaison shadow uniquement
+pour le programme consommé par le dashboard client. Son contrat est défini dans
 [`client-program-shadow-contract.ts`](../lib/training/coexistence/client-program-shadow-contract.ts)
-afin de figer les règles existantes avant tout branchement :
+et conserve les règles existantes :
 
 - le dashboard client consomme la première ligne rendue par le repository,
   déjà triée par `created_at DESC` ;
@@ -212,7 +212,15 @@ afin de figer les règles existantes avant tout branchement :
   courant ;
 - aucune de ces règles ne définit un statut `active` global, absent du
   stockage legacy ;
-- une seule ligne effectivement consommée pourra être observée par lecture.
+- une seule ligne effectivement consommée est observée par lecture.
+
+Le repository effectue toujours une seule lecture `client_programs`, filtrée
+par `client_id` et triée par `created_at DESC`. Après une lecture réussie, le
+loader dashboard demande explicitement l'observation de la première ligne. Le
+tableau legacy original, son identité, son ordre et tous ses objets sont
+retournés sans modification. Une erreur de lecture reste propagée normalement,
+alors qu'une erreur d'adaptation, de comparaison, de chronométrage ou
+d'observation est isolée et ne peut pas atteindre l'UI.
 
 Les deux writers runtime restent distincts. L'affectation depuis un template
 coach persiste directement un tableau ordonné de jours contenant
@@ -233,7 +241,7 @@ L'enveloppe pure transmet uniquement `program` et `created_at` comme entrée de
 `client_id`, `coach_id` et `training_program_id` ne peuvent pas être signalés
 artificiellement comme champs métier non mappés.
 
-Le premier shadow comparera comme divergences critiques l'owner client, le
+Le shadow compare comme divergences critiques l'owner client, le
 coach assignateur lorsqu'il existe, l'ordre des jours et exercices, les jours
 de repos, les références d'exercices, les séries, les répétitions et le repos.
 Une source absente, une référence par nom ou un champ non mappé non critique
@@ -241,6 +249,14 @@ restera un warning. Le statut d'affectation, la révision canonique et la
 timezone sont explicitement exclus : le stockage actuel ne permet pas de les
 comparer de manière autoritative.
 
-Ce contrat n'ajoute aucun appel à l'adaptateur dans les lecteurs runtime,
-aucune métrique, lecture ou écriture de base et aucune migration SQL. L'UI
-continue à recevoir exclusivement les valeurs legacy.
+Les métriques locales contiennent seulement le format, le résultat
+`MATCH`/`WARNING`/`CRITICAL_MISMATCH`/`UNSUPPORTED`, les codes de différence,
+les nombres de warnings et champs non mappés, la durée d'adaptation et une
+corrélation opaque. Elles n'incluent aucun identifiant client, coach ou source,
+programme JSON, nom, email, cookie, JWT ou token.
+
+Ce branchement n'ajoute aucune lecture ou écriture de base, aucun writer
+canonique et aucune migration SQL. L'UI continue à recevoir exclusivement les
+valeurs legacy. Le détail client côté coach reste hors shadow dans ce
+sous-batch : il sélectionne une affectation par coach courant, contexte que le
+repository partagé ne doit pas inventer.

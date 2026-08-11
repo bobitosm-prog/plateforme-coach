@@ -109,7 +109,10 @@ describe('client training dashboard loader', () => {
   it('passes the verified client scope to every repository call', async () => {
     const { loader, programRepository, sessionRepository } = setup()
     await loader.load('verified-client')
-    for (const method of Object.values(programRepository)) expect(method).toHaveBeenCalledWith('verified-client')
+    expect(programRepository.listAssignedProgramsForClient).toHaveBeenCalledWith('verified-client', {
+      shadowSelection: { consumer: 'dashboard-client' },
+    })
+    expect(programRepository.findActivePersonalProgramForClient).toHaveBeenCalledWith('verified-client')
     for (const [name, method] of Object.entries(sessionRepository)) {
       if (name !== 'listPersonalRecordsForClient') expect(method).toHaveBeenCalledWith('verified-client')
     }

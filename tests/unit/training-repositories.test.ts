@@ -61,6 +61,41 @@ describe('Training repositories', () => {
     expect(mock.chain.eq).toHaveBeenCalledWith('is_active', true)
   })
 
+  it('returns the identical legacy array while observing only the dashboard candidate', async () => {
+    const rows = [{
+      id: 'assignment-1', client_id: 'client-1', coach_id: 'coach-1', training_program_id: 'template-1',
+      program: [{ name: 'Push', exercises: [{ exercise_id: 'bench', name: 'Bench', sets: 3, reps: 8, rest: 90 }] }],
+      created_at: '2026-08-11T10:00:00.000Z', updated_at: '2026-08-11T10:00:00.000Z',
+    }, {
+      id: 'assignment-older', client_id: 'client-1', coach_id: 'coach-2', training_program_id: null,
+      program: { lundi: { repos: true, exercises: [] } },
+      created_at: '2026-08-10T10:00:00.000Z', updated_at: '2026-08-10T10:00:00.000Z',
+    }]
+    const mock = clientWith({ data: rows, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client).listAssignedProgramsForClient('client-1', {
+      shadowSelection: { consumer: 'dashboard-client' },
+    })
+    expect(result.ok && result.data).toBe(rows)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({ format: 'client-program-days-v1', result: 'MATCH' })
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/client-1|coach-1|template-1|Bench/)
+    consoleInfo.mockRestore()
+  })
+
+  it('propagates assigned-program read failures without invoking shadow observation', async () => {
+    const mock = clientWith({ data: null, error: { code: 'PGRST000', message: 'unavailable' } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client).listAssignedProgramsForClient('client-1', {
+      shadowSelection: { consumer: 'dashboard-client' },
+    })
+    expect(result).toMatchObject({ ok: false, kind: 'failure' })
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).not.toHaveBeenCalled()
+    consoleInfo.mockRestore()
+  })
+
   it('paginates coach templates with a stable timestamp/id cursor and strict bounds', async () => {
     const rows = Array.from({ length: 21 }, (_, index) => ({
       id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`,

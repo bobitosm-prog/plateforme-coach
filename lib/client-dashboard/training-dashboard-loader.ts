@@ -47,7 +47,9 @@ export function createTrainingDashboardLoader(dependencies: {
   return {
     async load(verifiedClientUserId: string): Promise<TrainingDashboardLoadResult> {
       const [assigned, personal, sessions, completions, trained, dates] = await Promise.all([
-        programRepository.listAssignedProgramsForClient(verifiedClientUserId),
+        programRepository.listAssignedProgramsForClient(verifiedClientUserId, {
+          shadowSelection: { consumer: 'dashboard-client' },
+        }),
         programRepository.findActivePersonalProgramForClient(verifiedClientUserId),
         sessionRepository.listDashboardWorkoutSessions(verifiedClientUserId),
         sessionRepository.listCompletionsForClient(verifiedClientUserId),
