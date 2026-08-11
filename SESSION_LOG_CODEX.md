@@ -14512,3 +14512,34 @@ sans saturation, et les gardes, l'observabilité comme les cleanup sont prouvés
 Cette clôture ne revendique aucune capacité maximale et ne valide ni staging ni
 Production. Aucun runtime, runner, workflow CI, migration ou index n'est
 modifié.
+
+## Entrée — 2026-08-11 — Phase 9 — baseline finale et roadmap suivante
+
+**Baseline consolidée :** `docs/PHASE_9_FINAL_BASELINE.md` fixe l'état de
+référence de `phase-6-staging` au SHA `25c7426`. Elle rassemble les preuves Git,
+Supabase, CI, tests, release/rollback, architecture, dépendances, legacy,
+feature flags et charge sans modifier le runtime. L'ancien constat staging
+`141/145 HISTORY_AND_STRUCTURE_DRIFT` est explicitement historique : le dernier
+état courant, confirmé par deux captures indépendantes après remédiation, est
+`145/145 ALIGNED`. Production reste non touchée.
+
+**Décision :** le verdict est **`PHASE9_NOT_READY_TO_CLOSE`**. Après production
+de la baseline et de `docs/ROADMAP_NEXT.md`, treize tâches Phase 9 sur quinze
+sont terminées. La CI reste `CI_STABILITY_CANDIDATE` avec `2/2 PASS`, p95
+provisoire `16:07` et flaky provisoire `0 %`, sans attestation statistique
+suffisante. Training reste `TRAINING_CANONICAL_MIGRATION_NOT_STARTED` et ses
+adaptateurs `FUTURE_MIGRATION_RESERVED` ; aucune migration runtime n'est
+déclarée accomplie ou abandonnée.
+
+**Roadmap suivante :** la proposition priorise en P0 l'achèvement de la
+migration runtime Training et l'attestation de stabilité CI, puis la couverture
+des `.test.tsx`, l'observabilité serveur, l'accessibilité des dialogs, la
+taxonomie d'erreurs API, le cycle de vie Seedance et la compatibilité des
+actions GitHub. Les index Nutrition restent conditionnés à une nouvelle preuve
+mesurée. Cette roadmap est préparée mais non activée tant que la Phase 9 reste
+ouverte.
+
+**Portée :** la tâche « Produire la baseline finale et la roadmap suivante »
+est clôturée. Les deux bloqueurs formels demeurent ouverts; aucune CI, migration,
+index, runner, endpoint, configuration distante ou donnée Production n'est
+modifié par ce sous-batch documentaire.
