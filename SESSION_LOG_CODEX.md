@@ -14360,3 +14360,35 @@ aucune cause n'est attribuée au pic p99 transitoire de la rampe. La prochaine
 preuve sera un second run strictement identique, sans changement de code, avant
 toute décision concernant un palier supérieur. La tâche de charge reste ouverte
 jusqu'à comparaison et recommandations de capacité documentées.
+
+## Entrée — 2026-08-11 — Phase 9 — troisième baseline locale corrélée
+
+**Protocole :** après une seconde baseline classée
+`BASELINE_VARIABILITY_REVIEW`, le Run 3 a repris sans modification
+`GET /api/feedback/mine`, 300 secondes, cinq VU et cinq requêtes par seconde au
+maximum, timeout de cinq secondes et aucun retry. Le harnais versionné a fourni
+une corrélation client/serveur complète de `986/986` request IDs.
+
+**Résultats :** les `986/986` requêtes sont des HTTP `200`, sans erreur ni
+timeout. Le throughput actif est de `3,304 req/s`; le client mesure p50
+`65,46 ms`, p95 `70,85 ms`, p99 `76,65 ms` et maximum `158,39 ms`. Le serveur
+mesure p50 `60 ms`, p95 `65 ms` et p99 `69 ms`; l'overhead client − serveur
+mesure p50 `5,44 ms`, p95 `7,26 ms` et p99 `8,77 ms`. Le principal outlier,
+pendant Ramp, associe `158,39 ms` client, `152 ms` serveur et `6,39 ms`
+d'overhead avec HTTP `200`.
+
+**Ressources et cleanup :** PostgreSQL reste entre 8 et 9 connexions, sans lock
+en attente ni requête active depuis plus d'une seconde. Les mesures CPU/RSS sont
+ponctuelles. Après le run, rapports, profils et utilisateurs Auth synthétiques
+sont à zéro, les compteurs hors scope sont inchangés, le port `3212` est libre
+et le build temporaire est supprimé.
+
+**Décision :** le verdict est **`BASELINE_SERVER_TAIL_VARIABILITY`**. Aucune
+saturation locale n'est démontrée à 5 req/s, le throughput reste stable sur les
+trois runs, les outliers du Run 3 sont principalement serveur et l'overhead
+client reste faible. Les anciens pics ne sont pas rétro-corrélables : cette
+preuve ne fixe pas la capacité maximale et ne valide ni staging ni Production.
+La tâche de charge reste ouverte. La prochaine preuve recommandée est un
+quatrième run strictement identique, sans augmentation de durée, débit ou VU,
+afin de comparer directement deux runs client/serveur et confirmer p99,
+overhead et absence persistante de saturation.

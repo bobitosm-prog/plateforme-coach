@@ -132,16 +132,60 @@ Après le run, les rapports, profils et utilisateurs Auth synthétiques corrél�
 étaient chacun à zéro. Les compteurs globaux avant/après étaient identiques et
 le marqueur de cleanup ne contenait aucune erreur.
 
-### Limites et prochaine preuve
+### Limites et seconde baseline
 
 Les deux premières baselines locales ont été capturées avant que le lanceur ne
 possède les logs structurés du serveur Next. Leurs `duration_ms` serveur et leurs
 requêtes lentes ne peuvent donc pas être corrélés rétroactivement. La seconde a
-confirmé débit, p50 et p95, mais son p99 plus variable reste un constat client
-sans conclusion causale.
+confirmé un throughput de `3,301 req/s`, un p50 de `80,84 ms` et un p95 de
+`89,95 ms`, mais son p99 de `342,52 ms` et son p99 plateau de `347,26 ms` ont
+motivé le verdict **`BASELINE_VARIABILITY_REVIEW`**. Ces pics restent des
+constats client sans conclusion causale.
 
-La prochaine preuve recommandée est une troisième exécution au profil strictement
-identique, sur le serveur local dédié au même HEAD, avec corrélation
-client/serveur active. Elle comparera p50, p95, p99, throughput, erreurs,
-overhead client − serveur et ressources locales. Elle ne valide ni staging ni
-Production et aucun seuil définitif de capacité, p95 ou p99 n'est encore établi.
+## Troisième baseline locale corrélée — 11 août 2026
+
+Le troisième run a repris exactement le même scénario, la même route et le
+même profil : 300 secondes, cinq VU et cinq requêtes par seconde au maximum,
+timeout de cinq secondes et aucun retry. Il est classé
+**`BASELINE_SERVER_TAIL_VARIABILITY`**.
+
+### Client, serveur et overhead
+
+| Mesure | Client | Serveur | Overhead client − serveur |
+|---|---:|---:|---:|
+| Requêtes / corrélations | 986 / 986 | 986 / 986 | 100 % |
+| Throughput actif | 3,304 req/s | — | — |
+| p50 | 65,46 ms | 60 ms | 5,44 ms |
+| p95 | 70,85 ms | 65 ms | 7,26 ms |
+| p99 | 76,65 ms | 69 ms | 8,77 ms |
+| Maximum client | 158,39 ms | — | — |
+
+Les 986 réponses sont des `2xx`; aucun `4xx`, `429`, `5xx`, timeout ou incident
+réseau n'est observé. Le principal outlier appartient à la phase Ramp :
+`158,39 ms` côté client, `152 ms` côté serveur et `6,39 ms` d'overhead, avec un
+statut HTTP `200`. Les outliers de ce run suivent donc principalement la durée
+serveur, tandis que l'overhead client reste faible et stable. Cette observation
+n'attribue pas de cause technique plus précise.
+
+### Ressources et cleanup
+
+Les 61 échantillons locaux ont observé entre 8 et 9 connexions PostgreSQL,
+aucune attente de lock et aucune requête active depuis plus d'une seconde. Les
+mesures CPU/RSS Next restent ponctuelles et ne démontrent aucune saturation.
+Après le run, rapports, profils et utilisateurs Auth synthétiques sont chacun à
+zéro; les compteurs hors scope sont inchangés, le serveur Next dédié est arrêté,
+le port `3212` est libre et son build temporaire est supprimé.
+
+### Conclusion et prochaine preuve
+
+Le throughput reste stable sur les trois runs et aucune saturation locale n'est
+démontrée à 5 req/s. Le Run 3 montre seulement que ses propres outliers sont
+principalement serveur; les pics des Runs 1 et 2 ne sont pas rétro-corrélables.
+La capacité maximale n'est pas connue, et ni staging ni Production ne sont
+validés par ces mesures locales.
+
+La prochaine preuve recommandée est un quatrième run strictement identique avec
+la même observabilité. Elle doit fournir deux runs directement comparables
+client/serveur, vérifier le p99 serveur, la stabilité de l'overhead et l'absence
+persistante de saturation. Le profil reste borné à 300 secondes, 5 req/s et
+5 VU; aucune augmentation de charge n'est autorisée à ce stade.
