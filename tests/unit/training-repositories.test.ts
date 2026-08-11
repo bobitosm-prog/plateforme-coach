@@ -49,6 +49,7 @@ describe('Training repositories', () => {
     expect(mock.from).toHaveBeenLastCalledWith('client_programs')
     expect(mock.chain.select).toHaveBeenLastCalledWith(ASSIGNED_PROGRAM_PROJECTION)
     expect(mock.chain.eq).toHaveBeenCalledWith('client_id', 'client-session-id')
+    expect(mock.chain.order).toHaveBeenLastCalledWith('created_at', { ascending: false })
 
     await repository.listPersonalProgramsForClient('client-session-id')
     expect(mock.from).toHaveBeenLastCalledWith('custom_programs')

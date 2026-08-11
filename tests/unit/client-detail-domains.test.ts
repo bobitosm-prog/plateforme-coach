@@ -49,7 +49,10 @@ describe('client detail domain boundaries', () => {
   })
 
   it('loads assigned and legacy programs through bounded repositories without mutating rows', async () => {
-    const assigned = [{ id: 'assigned', client_id: 'client-1', coach_id: 'coach-1', program: { lundi: { repos: false } }, created_at: '2026-01-02' }]
+    const assigned = [
+      { id: 'newer-foreign-coach', client_id: 'client-1', coach_id: 'coach-2', program: { lundi: { repos: false } }, created_at: '2026-01-03' },
+      { id: 'assigned', client_id: 'client-1', coach_id: 'coach-1', program: { lundi: { repos: false } }, created_at: '2026-01-02' },
+    ]
     const personal = [{ id: 'personal', user_id: 'client-1', name: 'Perso', days: [{ exercises: [{ name: 'Squat' }] }], is_active: true, created_at: '2026-01-01', updated_at: '2026-01-02', source: 'custom' }]
     const db = database({
       client_programs: { data: assigned }, custom_programs: { data: personal },

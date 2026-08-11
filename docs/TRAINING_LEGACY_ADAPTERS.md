@@ -198,3 +198,49 @@ format, le résultat, les codes de différence, les nombres de warnings et de
 champs non mappés, la durée d'adaptation et un identifiant de corrélation
 opaque. Aucun programme brut, email, cookie, JWT, header d'autorisation ou
 payload JSON n'est journalisé, et aucun service distant n'est appelé.
+
+## Contrat préparatoire : affectations client
+
+`client_programs.program` n'exécute pas encore de comparaison shadow au
+runtime. Son contrat est préparé dans
+[`client-program-shadow-contract.ts`](../lib/training/coexistence/client-program-shadow-contract.ts)
+afin de figer les règles existantes avant tout branchement :
+
+- le dashboard client consomme la première ligne rendue par le repository,
+  déjà triée par `created_at DESC` ;
+- le détail client coach consomme la première ligne appartenant au coach
+  courant ;
+- aucune de ces règles ne définit un statut `active` global, absent du
+  stockage legacy ;
+- une seule ligne effectivement consommée pourra être observée par lecture.
+
+Les deux writers runtime restent distincts. L'affectation depuis un template
+coach persiste directement un tableau ordonné de jours contenant
+`name`, `exercises`, `sets`, `reps` et `rest`. Cette forme ne possède pas de
+marqueur de repos explicite : un jour vide ne doit donc pas être inventé comme
+jour de repos par le shadow. Son payload d'écriture contient aussi
+`program_name` et, lorsqu'il existe, `training_program_id`; ces champs ne font
+pas partie de la projection de lecture du programme. La sauvegarde depuis le
+détail client persiste un
+objet indexé par les jours français, avec `repos`, `day_name` et les exercices
+ordonnés, ainsi que `week_start` hors de la projection de lecture. Le premier
+writer conserve normalement `training_program_id`, alors que la sauvegarde
+détaillée peut produire une affectation sans source.
+
+L'enveloppe pure transmet uniquement `program` et `created_at` comme entrée de
+`adaptClientAssignment`. L'owner client, le coach assignateur et le
+`training_program_id` sont passés séparément dans `AdapterContext`. Ainsi,
+`client_id`, `coach_id` et `training_program_id` ne peuvent pas être signalés
+artificiellement comme champs métier non mappés.
+
+Le premier shadow comparera comme divergences critiques l'owner client, le
+coach assignateur lorsqu'il existe, l'ordre des jours et exercices, les jours
+de repos, les références d'exercices, les séries, les répétitions et le repos.
+Une source absente, une référence par nom ou un champ non mappé non critique
+restera un warning. Le statut d'affectation, la révision canonique et la
+timezone sont explicitement exclus : le stockage actuel ne permet pas de les
+comparer de manière autoritative.
+
+Ce contrat n'ajoute aucun appel à l'adaptateur dans les lecteurs runtime,
+aucune métrique, lecture ou écriture de base et aucune migration SQL. L'UI
+continue à recevoir exclusivement les valeurs legacy.

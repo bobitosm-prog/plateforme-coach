@@ -62,6 +62,20 @@ describe('client training dashboard loader', () => {
     }
   })
 
+  it('uses the first assignment from the repository created_at-desc order as the current program', async () => {
+    const olderAssignment = {
+      ...assignedProgram,
+      id: 'assignment-older',
+      program: [{ name: 'Ancien', exercises: [] }],
+      created_at: '2026-07-16T10:00:00Z',
+    }
+    const { loader } = setup({
+      listAssignedProgramsForClient: vi.fn(async () => success([assignedProgram, olderAssignment])),
+    })
+    const result = await loader.load('client-1')
+    expect(result.ok && result.data.assignedProgram?.id).toBe('assignment-1')
+  })
+
   it('returns explicit empty values when repositories confirm no data', async () => {
     const { loader } = setup({
       listAssignedProgramsForClient: vi.fn(async () => success([])),
