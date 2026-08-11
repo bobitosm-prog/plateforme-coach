@@ -14426,3 +14426,42 @@ path Training reste plus complexe tant que formats legacy et migration runtime
 coexistent; `GET /api/ai-quota` reste borné par son rate limit de 30/min, qui
 rendrait le profil actuel artificiel. Aucun second scénario n'est implémenté et
 aucun runtime, workflow CI ou harnais n'est modifié dans cette passe.
+
+## Entrée — 2026-08-11 — Phase 9 — première baseline Nutrition locale
+
+**Protocole :** le read model `readNutritionJournalCycle` a exécuté exactement
+une baseline locale complète de 300 secondes, cinq VU et cinq requêtes logiques
+par seconde au maximum, timeout de cinq secondes et aucun retry. Chaque cycle
+conserve les trois lectures Supabase parallèles journal/calendrier/eau. Les
+fixtures comptent cinq clients, `1 240 daily_food_logs` et 40 lignes
+`water_intake`; aucun index, runtime, workflow CI ou fournisseur distant n'a
+été modifié ou sollicité.
+
+**Résultats :** les `985/985` cycles se terminent à `3,300 req/s`, sans erreur
+ni timeout. Le total mesure p50 `10,89 ms`, p95 `14,12 ms`, p99 `17,92 ms` et
+maximum `51,98 ms`. Le journal mesure p50/p95/p99 `8,64/11,39/14,61 ms`, le
+calendrier `10,61/13,77/17,52 ms` et l'eau `7,29/10,08/12,56 ms`;
+l'agrégation atteint p95 `0,09 ms`. Les cardinalités restent `8/248/8` et le
+calendrier est la lecture dominante.
+
+**Phases et PostgreSQL :** Warm-up, Low, Ramp, Plateau et Cooldown restent sans
+erreur ni timeout. De Low à Plateau, le throughput progresse de `1,983` à
+`4,991 req/s` tandis que le p95 total passe de `14,80` à `13,52 ms` : aucune
+dégradation p95 ni perte de throughput n'est observée. PostgreSQL reste à
+`9/9/9` connexions min/médiane/max, sans lock ni requête active de plus d'une
+seconde. `pg_stat_statements` ajoute 985 appels par lecture; les temps DB moyens
+estimés sont `~0,39 ms` journal, `~3,53 ms` calendrier et `~0,09 ms` eau.
+
+**Plans, limites et décision :** les plans confirment `Seq Scan + Sort` pour le
+journal, `Seq Scan` pour le calendrier et `Seq Scan` sous `Limit` pour l'eau,
+ainsi que l'absence d'index composite adapté. Aucun signal mesuré de saturation
+ou de dégradation cohérente avec ces scans n'apparaît au profil testé : aucun
+index n'est justifié sur le seul plan SQL et la classification reste
+**`NUTRITION_BASELINE_VALID`**, pas `NUTRITION_BASELINE_DB_SCAN_SIGNAL`. Cette
+preuve locale ne fixe pas la capacité maximale et ne valide ni staging ni
+Production. Le cleanup ramène logs, eau, profils et utilisateurs Auth
+synthétiques à zéro et conserve les compteurs globaux.
+
+**Suite :** exécuter un second run Nutrition strictement identique sur le même
+HEAD, avec dataset, profil, instrumentation et index inchangés, afin de vérifier
+la reproductibilité des p95/p99 et du coût dominant du calendrier.

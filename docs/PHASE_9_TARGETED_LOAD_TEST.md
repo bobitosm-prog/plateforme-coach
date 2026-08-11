@@ -286,8 +286,7 @@ compteurs globaux avant/après.
 Le mode `--smoke` exécute exactement une lecture logique authentifiée, soit les
 trois lectures DB parallèles. Il valide les cardinalités `8/248/8`, les cinq
 durées instrumentées et le cleanup. Ce smoke ne constitue pas un profil de
-charge ni une preuve de capacité. Le profil complet Nutrition n'a pas encore
-été exécuté et la commande reste absente des Gates CI.
+charge ni une preuve de capacité. La commande reste absente des Gates CI.
 
 Le smoke d'extraction du 11 août 2026 a terminé `1/1` lecture logique sans
 timeout : `8,66 ms` au total, `7,22 ms` pour le journal, `8,10 ms` pour le
@@ -295,3 +294,52 @@ calendrier, `6,60 ms` pour l'eau et `0,38 ms` pour l'agrégation. Les
 cardinalités étaient `8/248/8`; les `daily_food_logs`, profils et utilisateurs
 Auth corrélés étaient à zéro après cleanup, et les compteurs globaux étaient
 identiques avant/après. Cette mesure est seulement une preuve de raccordement.
+
+### Première baseline Nutrition locale — 11 août 2026
+
+Le profil complet borné a été exécuté exactement une fois sur la stack locale,
+sans modification du dataset, du profil, des index ou du code. La mesure est
+classée **`NUTRITION_BASELINE_VALID`** : les `985/985` cycles logiques se sont
+terminés à `3,300 req/s`, sans erreur ni timeout. La latence totale est p50
+`10,89 ms`, p95 `14,12 ms`, p99 `17,92 ms` et maximum `51,98 ms`.
+
+| Lecture | p50 | p95 | p99 | Observation |
+|---|---:|---:|---:|---|
+| Journal | `8,64 ms` | `11,39 ms` | `14,61 ms` | 8 lignes par cycle |
+| Calendrier | `10,61 ms` | `13,77 ms` | `17,52 ms` | Lecture dominante, 248 lignes par cycle |
+| Eau | `7,29 ms` | `10,08 ms` | `12,56 ms` | 8 lignes par cycle |
+| Agrégation | — | `0,09 ms` | — | Coût applicatif marginal |
+
+Les cinq phases conservent zéro erreur et zéro timeout :
+
+| Phase | Cycles | Throughput | Total p50 | Total p95 | Total p99 |
+|---|---:|---:|---:|---:|---:|
+| Warm-up | 29 | `0,964 req/s` | `11,42 ms` | `25,35 ms` | `28,59 ms` |
+| Low | 119 | `1,983 req/s` | `10,50 ms` | `14,80 ms` | `16,44 ms` |
+| Ramp | 209 | `3,483 req/s` | `11,23 ms` | `14,49 ms` | `17,26 ms` |
+| Plateau | 599 | `4,991 req/s` | `10,65 ms` | `13,52 ms` | `17,33 ms` |
+| Cooldown | 29 | `0,967 req/s` | `11,17 ms` | `14,75 ms` | `15,23 ms` |
+
+De Low à Plateau, le throughput suit la montée demandée, le p95 ne se dégrade
+pas et aucune erreur ou timeout n'apparaît. Le p99 augmente légèrement, sans
+signal de saturation associé.
+
+Les 61 sondes locales relèvent des connexions PostgreSQL min/médiane/max de
+`9/9/9`, aucune attente de lock et aucune requête active de plus d'une seconde.
+`pg_stat_statements` enregistre `+985` appels pour chacune des trois lectures.
+Les temps DB moyens estimés avant/après sont d'environ `0,39 ms` pour le
+journal, `3,53 ms` pour le calendrier et `0,09 ms` pour l'eau.
+
+Les plans en lecture seule confirment un `Seq Scan + Sort` pour le journal, un
+`Seq Scan` pour le calendrier et un `Seq Scan` sous `Limit` pour l'eau. Les
+tables ne possèdent pas d'index composite adapté à ces filtres. Cette absence
+et ces scans sont des observations, pas une preuve de défaut : aucune
+dégradation mesurable cohérente avec leur coût n'apparaît au profil testé. La
+baseline n'est donc pas classée `NUTRITION_BASELINE_DB_SCAN_SIGNAL` et aucun
+index ne doit être ajouté sur la seule base du plan SQL.
+
+Cette première mesure locale ne détermine aucune capacité maximale et ne valide
+ni staging ni Production. La preuve suivante recommandée est un deuxième run
+Nutrition strictement identique, sur le même HEAD, avec le même dataset, le
+même profil et la même instrumentation, sans modification d'index. Il doit
+vérifier la reproductibilité des p95/p99 et du coût dominant du calendrier.
