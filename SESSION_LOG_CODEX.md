@@ -14465,3 +14465,50 @@ synthétiques à zéro et conserve les compteurs globaux.
 **Suite :** exécuter un second run Nutrition strictement identique sur le même
 HEAD, avec dataset, profil, instrumentation et index inchangés, afin de vérifier
 la reproductibilité des p95/p99 et du coût dominant du calendrier.
+
+## Entrée — 2026-08-11 — Phase 9 — deuxième baseline Nutrition reproductible
+
+**Run 2 :** le même HEAD applicatif, le même profil de 300 secondes, le même
+dataset de cinq clients, `1 240 daily_food_logs` et 40 lignes `water_intake`, la
+même instrumentation et les mêmes index sont conservés. Les `985/985` cycles
+se terminent à `3,300 req/s`, sans erreur ni timeout. Le total mesure p50
+`10,69 ms`, p95 `13,26 ms` et p99 `15,75 ms`. Le journal mesure p95/p99
+`10,43/12,96 ms`, le calendrier `13,00/15,49 ms` et l'eau `9,49/11,86 ms`;
+l'agrégation reste à p95 `0,09 ms` et le calendrier demeure la lecture
+dominante.
+
+**Comparaison Run 1 / Run 2 :** les écarts sont `−0,01 %` pour le throughput,
+`−6,09 %` pour le p95 total, `−12,11 %` pour le p99 total, `−5,59 %` et
+`−11,59 %` pour les p95/p99 calendrier, puis `−3,77 %` et `−10,96 %` pour les
+p95/p99 du plateau. La classification est
+**`NUTRITION_BASELINE_REPRODUCIBLE`**.
+
+**PostgreSQL et scans :** les connexions restent `9/9/9` min/médiane/max, sans
+lock ni requête active de plus d'une seconde. Les compteurs ajoutent 985 appels
+par lecture; les temps DB moyens du run sont `~0,385 ms` journal, `~3,444 ms`
+calendrier et `~0,083 ms` eau. Les index sont inchangés et les scans
+séquentiels restent présents, mais aucun coût croissant, aucune saturation et
+aucun `NUTRITION_BASELINE_DB_SCAN_SIGNAL` ne sont mesurés. Aucun index n'est
+justifié par les données actuelles seules.
+
+**Clôture bornée :** le read model Nutrition est une baseline locale
+reproductible uniquement au profil testé — 300 secondes, 5 requêtes logiques
+par seconde, environ 15 lectures DB par seconde au plateau, 5 VU et zéro retry.
+La conclusion est « aucune saturation ni dégradation démontrée au profil
+testé »; elle ne fixe pas la capacité maximale, ne rend pas les index
+définitivement inutiles et ne valide ni staging ni Production.
+
+**Impact Phase 9 :** les scénarios feedback et Nutrition sont reproductibles;
+le tail serveur feedback et les scans Nutrition sont identifiés sans saturation,
+et l'observabilité comme les cleanup sont démontrés. Le critère de sortie de la
+tâche « Exécuter un test de charge ciblé » est satisfait : elle est
+**`CLOTURABLE`**. La roadmap n'est pas cochée dans ce sous-batch et devra être
+réconciliée séparément sur autorisation.
+
+**Clôture officielle Phase 9 :** après validation de la preuve finale, la tâche
+« Exécuter un test de charge ciblé » est cochée. Les deux scénarios locaux sont
+reproductibles au profil testé, leurs points de montée en charge sont identifiés
+sans saturation, et les gardes, l'observabilité comme les cleanup sont prouvés.
+Cette clôture ne revendique aucune capacité maximale et ne valide ni staging ni
+Production. Aucun runtime, runner, workflow CI, migration ou index n'est
+modifié.

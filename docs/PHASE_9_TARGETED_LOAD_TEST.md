@@ -339,7 +339,57 @@ baseline n'est donc pas classée `NUTRITION_BASELINE_DB_SCAN_SIGNAL` et aucun
 index ne doit être ajouté sur la seule base du plan SQL.
 
 Cette première mesure locale ne détermine aucune capacité maximale et ne valide
-ni staging ni Production. La preuve suivante recommandée est un deuxième run
+ni staging ni Production. La preuve suivante recommandée était un deuxième run
 Nutrition strictement identique, sur le même HEAD, avec le même dataset, le
-même profil et la même instrumentation, sans modification d'index. Il doit
+même profil et la même instrumentation, sans modification d'index, afin de
 vérifier la reproductibilité des p95/p99 et du coût dominant du calendrier.
+
+### Deuxième baseline Nutrition locale — 11 août 2026
+
+Le profil, le dataset, l'instrumentation, le schéma et les index sont restés
+strictement identiques. Les `985/985` cycles se terminent à `3,300 req/s`, sans
+erreur ni timeout. La latence totale est p50 `10,69 ms`, p95 `13,26 ms` et p99
+`15,75 ms`. Le verdict est **`NUTRITION_BASELINE_REPRODUCIBLE`**.
+
+| Lecture | p95 | p99 | Observation |
+|---|---:|---:|---|
+| Journal | `10,43 ms` | `12,96 ms` | Cardinalité 8 inchangée |
+| Calendrier | `13,00 ms` | `15,49 ms` | Lecture dominante, cardinalité 248 inchangée |
+| Eau | `9,49 ms` | `11,86 ms` | Cardinalité 8 inchangée |
+| Agrégation | `0,09 ms` | — | Coût applicatif stable |
+
+| Mesure | Écart Run 2 contre Run 1 |
+|---|---:|
+| Throughput | `−0,01 %` |
+| Total p95 | `−6,09 %` |
+| Total p99 | `−12,11 %` |
+| Calendrier p95 | `−5,59 %` |
+| Calendrier p99 | `−11,59 %` |
+| Plateau total p95 | `−3,77 %` |
+| Plateau total p99 | `−10,96 %` |
+
+Les 61 sondes relèvent à nouveau `9/9/9` connexions PostgreSQL
+min/médiane/max, zéro lock et zéro requête active de plus d'une seconde.
+`pg_stat_statements` ajoute 985 appels par lecture. Les temps DB moyens du Run 2
+sont d'environ `0,385 ms` pour le journal, `3,444 ms` pour le calendrier et
+`0,083 ms` pour l'eau.
+
+Les index restent inchangés et les scans séquentiels du Run 1 restent présents.
+Le coût ne croît ni avec le débit ni entre les deux runs : aucun
+`NUTRITION_BASELINE_DB_SCAN_SIGNAL` n'est mesuré et les données actuelles ne
+justifient pas l'ajout d'un index. Cela ne signifie pas que les index seraient
+définitivement inutiles à un volume supérieur.
+
+Le read model Nutrition dispose donc d'une baseline locale reproductible au
+profil testé : 300 secondes, au maximum 5 requêtes logiques par seconde — soit
+environ 15 lectures DB par seconde au plateau —, 5 VU, timeout de 5 secondes et
+aucun retry. La conclusion bornée est : **aucune saturation ni dégradation
+démontrée au profil testé**. La capacité maximale reste inconnue et ni staging
+ni Production ne sont validés.
+
+Avec le scénario HTTP feedback reproductible, le scénario Nutrition
+reproductible, le tail serveur feedback et les scans Nutrition identifiés sans
+saturation, ainsi que l'observabilité et les cleanup démontrés, la tâche Phase 9
+« Exécuter un test de charge ciblé » est **`CLOTURABLE`** selon son critère de
+sortie. La roadmap reste volontairement inchangée dans ce sous-batch
+documentaire.
