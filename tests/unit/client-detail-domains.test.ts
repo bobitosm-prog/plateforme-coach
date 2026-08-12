@@ -60,9 +60,82 @@ describe('client detail domain boundaries', () => {
       workout_sessions: { data: [{ id: 'session', user_id: 'client-1', created_at: '2026-01-03', completed: true, name: 'Jambes' }] },
     })
     const before = JSON.stringify(personal)
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
     const result = await loadClientDetailTraining(db.client, scope)
     expect(result).toMatchObject({ status: 'success', data: { assignedProgram: { id: 'assigned' }, totalSessionsCount: 1, customPrograms: [{ id: 'personal' }], coachTemplates: [{ id: 'tpl' }] } })
+    expect(result.status === 'success' && result.data.assignedProgram).toBe(assigned[1])
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(db.from.mock.calls.filter(call => call[0] === 'client_programs')).toHaveLength(1)
     expect(JSON.stringify(personal)).toBe(before)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps the first repository-ordered assignment for the current coach and emits one redacted shadow metric', async () => {
+    const firstCoachAssignment = {
+      id: 'coach-current-newest', client_id: 'client-1', coach_id: 'coach-1', training_program_id: 'template-secret',
+      program: [{ name: 'Push secret', exercises: [{ name: 'Squat secret', sets: 3, reps: 8, rest: 90 }] }],
+      created_at: '2026-01-03', updated_at: '2026-01-03',
+    }
+    const rows = [
+      { ...firstCoachAssignment, id: 'foreign-newer', coach_id: 'coach-2', created_at: '2026-01-04' },
+      firstCoachAssignment,
+      { ...firstCoachAssignment, id: 'coach-current-older', created_at: '2026-01-02' },
+    ]
+    const db = database({ client_programs: { data: rows } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await loadClientDetailTraining(db.client, scope)
+    expect(result.status === 'success' && result.data.assignedProgram).toBe(firstCoachAssignment)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'client-program-days-v1', result: 'WARNING',
+      difference_codes: ['LEGACY_NAME_REFERENCE'],
+    })
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/client-1|coach-1|template-secret|Push secret|Squat secret/)
+    expect(db.from.mock.calls.filter(call => call[0] === 'client_programs')).toHaveLength(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps no-match as null without shadow metric', async () => {
+    const foreign = {
+      id: 'foreign', client_id: 'client-1', coach_id: 'coach-2', training_program_id: null,
+      program: { lundi: { repos: true, exercises: [] } }, created_at: '2026-01-03', updated_at: '2026-01-03',
+    }
+    const db = database({ client_programs: { data: [foreign] } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await loadClientDetailTraining(db.client, scope)
+    expect(result.status === 'success' && result.data.assignedProgram).toBeNull()
+    expect(consoleInfo).not.toHaveBeenCalled()
+    expect(db.from.mock.calls.filter(call => call[0] === 'client_programs')).toHaveLength(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps repository failures authoritative and does not emit a shadow metric', async () => {
+    const db = database({ client_programs: { error: { code: 'PGRST000', message: 'private database detail' } } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await loadClientDetailTraining(db.client, scope)
+    expect(result).toEqual({ status: 'unavailable', source: 'training' })
+    expect(consoleInfo).not.toHaveBeenCalled()
+    expect(db.from.mock.calls.filter(call => call[0] === 'client_programs')).toHaveLength(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps the exact French-weekday legacy assignment when the observer throws', async () => {
+    const assignment = {
+      id: 'assigned-fr', client_id: 'client-1', coach_id: 'coach-1', training_program_id: null,
+      program: {
+        lundi: { day_name: 'Haut', repos: false, exercises: [{ name: 'Pompes', sets: 3, reps: 12, rest: '60s' }] },
+        mardi: { day_name: 'Repos', repos: true, exercises: [] },
+      },
+      created_at: '2026-01-03', updated_at: '2026-01-03',
+    }
+    const snapshot = structuredClone(assignment)
+    const db = database({ client_programs: { data: [assignment] } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer unavailable') })
+    const result = await loadClientDetailTraining(db.client, scope)
+    expect(result.status === 'success' && result.data.assignedProgram).toBe(assignment)
+    expect(assignment).toEqual(snapshot)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
   })
 
   it('keeps assigned, personal and tracking Nutrition formats distinct', async () => {

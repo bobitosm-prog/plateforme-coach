@@ -199,10 +199,11 @@ champs non mappés, la durée d'adaptation et un identifiant de corrélation
 opaque. Aucun programme brut, email, cookie, JWT, header d'autorisation ou
 payload JSON n'est journalisé, et aucun service distant n'est appelé.
 
-## Shadow read borné : affectation du dashboard client
+## Shadow reads bornés : affectations client
 
-`client_programs.program` exécute désormais une comparaison shadow uniquement
-pour le programme consommé par le dashboard client. Son contrat est défini dans
+`client_programs.program` exécute désormais une comparaison shadow pour les
+programmes consommés par le dashboard client et le détail client côté coach.
+Son contrat est défini dans
 [`client-program-shadow-contract.ts`](../lib/training/coexistence/client-program-shadow-contract.ts)
 et conserve les règles existantes :
 
@@ -221,6 +222,14 @@ tableau legacy original, son identité, son ordre et tous ses objets sont
 retournés sans modification. Une erreur de lecture reste propagée normalement,
 alors qu'une erreur d'adaptation, de comparaison, de chronométrage ou
 d'observation est isolée et ne peut pas atteindre l'UI.
+
+Le détail client coach conserve sa sélection dans le domaine
+`loadClientDetailTraining`. Le `coachUserId` provient du scope construit depuis
+l'identité authentifiée et une relation coach/client active validée. Après le
+tri repository, le domaine conserve la première ligne dont `coach_id`
+correspond à ce coach. Seule cette référence est transmise à l'observateur ;
+une absence de correspondance reste `null` et n'émet aucune métrique. Aucun
+contexte coach n'est dérivé du payload programme ou inventé par le repository.
 
 Les deux writers runtime restent distincts. L'affectation depuis un template
 coach persiste directement un tableau ordonné de jours contenant
@@ -257,6 +266,6 @@ programme JSON, nom, email, cookie, JWT ou token.
 
 Ce branchement n'ajoute aucune lecture ou écriture de base, aucun writer
 canonique et aucune migration SQL. L'UI continue à recevoir exclusivement les
-valeurs legacy. Le détail client côté coach reste hors shadow dans ce
-sous-batch : il sélectionne une affectation par coach courant, contexte que le
-repository partagé ne doit pas inventer.
+valeurs legacy. Le contrôleur du détail coach applique toujours
+`normalizeAndSanitize` à la même ligne et au même payload legacy qu'avant le
+shadow.

@@ -1,5 +1,6 @@
 import { createTrainingProgramRepository, PERSONAL_PROGRAM_PROJECTION } from '@/lib/repositories/training/program'
 import { createTrainingSessionRepository } from '@/lib/repositories/training/session'
+import { observeClientProgramShadow } from '@/lib/training/coexistence/client-program-shadow-contract'
 import type { Json } from '@/lib/supabase/types'
 import type { DatabaseClient } from '@/lib/supabase/types'
 import type { ClientDetailLoadResult, ClientDetailMutationResult, ClientDetailScope, ClientDetailWorkoutSession } from './types'
@@ -38,10 +39,17 @@ export async function loadClientDetailTraining(client: DatabaseClient, scope: Cl
   ])
   if (!assigned.ok || personal.error || !templates.ok || !workouts.ok) return { status: 'unavailable', source: 'training' }
   const completed = workouts.data.filter(row => row.completed).slice(0, 100) as ClientDetailWorkoutSession[]
+  const assignedProgram = assigned.data.find(row => row.coach_id === scope.coachUserId) ?? null
+  if (assignedProgram) {
+    observeClientProgramShadow(
+      [assignedProgram],
+      { consumer: 'coach-client-detail', coachUserId: scope.coachUserId },
+    )
+  }
   return {
     status: 'success',
     data: {
-      assignedProgram: assigned.data.find(row => row.coach_id === scope.coachUserId) ?? null,
+      assignedProgram,
       customPrograms: (personal.data ?? []).filter(row => hasExercises(row.days)),
       coachTemplates: templates.data.filter(row => row.is_template).map(({ id, name, program }) => ({ id, name, program })),
       sessions: completed,
