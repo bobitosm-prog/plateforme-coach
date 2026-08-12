@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { adaptCustomProgram } from '../../lib/training/adapters'
 import {
   buildCustomProgramAdaptationEnvelope,
@@ -8,6 +8,7 @@ import {
   CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE,
   isAiCustomProgramShadowCandidate,
   isManualCustomProgramShadowCandidate,
+  observeActiveAiCustomProgramShadow,
   toCustomProgramShadowMetric,
 } from '../../lib/training/coexistence/custom-program-shadow-read'
 import type { PersonalProgramRow } from '../../lib/repositories/training/program'
@@ -146,6 +147,29 @@ describe('custom_programs AI persisted contract', () => {
     expect(toCustomProgramShadowMetric(compareCustomProgramShadow(manual), 1, 'opaque').provenance_bucket)
       .toBe('manual/editor-normalized')
   })
+
+  it('emits one expurgated AI metric and contains all observer-side failures', () => {
+    const { row } = buildPersistedAiCustomProgramFixture()
+    const observer = vi.fn()
+    expect(() => observeActiveAiCustomProgramShadow(row, observer, {
+      clock: vi.fn().mockReturnValueOnce(10).mockReturnValueOnce(12.5),
+      correlationId: () => 'opaque-ai-correlation',
+    })).not.toThrow()
+    expect(observer).toHaveBeenCalledTimes(1)
+    expect(observer).toHaveBeenCalledWith(expect.objectContaining({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'ai/program-builder',
+      result: 'WARNING',
+      adaptation_duration_ms: 2.5,
+      correlation_id: 'opaque-ai-correlation',
+    }))
+    expect(JSON.stringify(observer.mock.calls)).not.toMatch(/synthetic-ai-client|synthetic-ai-program|Programme IA|Développé|Rowing|Goblet/)
+    expect(() => observeActiveAiCustomProgramShadow(row, () => { throw new Error('observer failed') }))
+      .not.toThrow()
+    expect(() => observeActiveAiCustomProgramShadow(row, observer, {
+      clock: () => { throw new Error('clock failed') },
+    })).not.toThrow()
+  })
 })
 
 describe('custom_programs AI edit provenance characterization', () => {
@@ -169,10 +193,10 @@ describe('custom_programs AI edit provenance characterization', () => {
     expect(replacement).not.toMatch(/source\s*:/)
   })
 
-  it('keeps the AI observer disconnected from the runtime repository', () => {
+  it('wires the prepared AI observer only at the existing active-program read boundary', () => {
     const repository = source('lib/repositories/training/program.ts')
     expect(repository).toContain('observeActiveManualCustomProgramShadow(data)')
-    expect(repository).not.toContain('isAiCustomProgramShadowCandidate')
-    expect(repository).not.toContain('CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE')
+    expect(repository).toContain('observeActiveAiCustomProgramShadow(data)')
+    expect(repository).toContain(".eq('user_id', clientUserId).eq('is_active', true).maybeSingle()")
   })
 })

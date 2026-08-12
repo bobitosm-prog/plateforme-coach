@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseClient } from '../../lib/supabase/types'
+import { buildPersistedAiCustomProgramFixture } from '../fixtures/custom-program-ai'
 import {
   ASSIGNED_PROGRAM_PROJECTION,
   CATALOG_EXERCISE_PROJECTION,
@@ -108,8 +109,32 @@ describe('Training repositories', () => {
     consoleInfo.mockRestore()
   })
 
-  it('keeps non-manual active programs legacy-only and contains observer failures', async () => {
-    for (const source of ['ai', 'import', 'unknown', null]) {
+  it('returns the identical active AI program while emitting its distinct bucket after one read', async () => {
+    const { row } = buildPersistedAiCustomProgramFixture()
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client)
+      .findActivePersonalProgramForClient('synthetic-ai-client')
+    expect(result.ok && result.data).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'ai/program-builder',
+      result: 'WARNING',
+      difference_codes: expect.arrayContaining([
+        'LEGACY_NAME_REFERENCE', 'AI_MUSCLE_PRIMARY_UNMAPPED', 'AI_METADATA_UNMAPPED',
+        'AI_PROVIDER_METADATA_UNAVAILABLE', 'TECHNIQUE_SEMANTICS_UNMAPPED',
+      ]),
+    })
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/synthetic-ai-client|synthetic-ai-program|Programme IA|Développé|Rowing|Goblet/)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps non-manual/non-AI active programs legacy-only and contains observer failures', async () => {
+    for (const source of ['onboarding_auto', 'cron_auto', 'diagnostic_auto', 'free_session', 'import', 'unknown', null, undefined]) {
       const row = { id: `program-${source}`, user_id: 'client-id', name: 'Program', days: [], source, is_active: true }
       const mock = clientWith({ data: row, error: null })
       const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -130,6 +155,15 @@ describe('Training repositories', () => {
     expect(result.ok && result.data).toBe(row)
     expect(mock.from).toHaveBeenCalledTimes(1)
     consoleInfo.mockRestore()
+
+    const aiRow = buildPersistedAiCustomProgramFixture().row
+    const aiMock = clientWith({ data: aiRow, error: null })
+    const aiConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer failed') })
+    const aiResult = await createTrainingProgramRepository(aiMock.client)
+      .findActivePersonalProgramForClient('synthetic-ai-client')
+    expect(aiResult.ok && aiResult.data).toBe(aiRow)
+    expect(aiMock.from).toHaveBeenCalledTimes(1)
+    aiConsoleInfo.mockRestore()
   })
 
   it('keeps active-personal read failures authoritative and skips shadow observation', async () => {

@@ -6,7 +6,10 @@ import {
   observeClientProgramShadow,
   type ClientProgramShadowSelection,
 } from '@/lib/training/coexistence/client-program-shadow-contract'
-import { observeActiveManualCustomProgramShadow } from '@/lib/training/coexistence/custom-program-shadow-read'
+import {
+  observeActiveAiCustomProgramShadow,
+  observeActiveManualCustomProgramShadow,
+} from '@/lib/training/coexistence/custom-program-shadow-read'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
 export const ASSIGNED_PROGRAM_PROJECTION = 'id,client_id,coach_id,training_program_id,program,created_at,updated_at' as const
@@ -93,6 +96,7 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       if (error) return repositoryFailure(error)
       if (!data) return { ok: false, kind: 'not_found' }
       observeActiveManualCustomProgramShadow(data)
+      observeActiveAiCustomProgramShadow(data)
       return { ok: true, data }
     },
   }

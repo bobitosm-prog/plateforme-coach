@@ -304,22 +304,26 @@ Les métriques locales ajoutent uniquement le bucket de provenance au contrat
 expurgé existant. Elles ne contiennent ni `user_id`, ni identifiant de
 `custom_programs`, ni nom, payload `days`, email, cookie, JWT ou token.
 
-Les provenances `ai`, `onboarding_auto`, `cron_auto`, `diagnostic_auto`,
-`free_session`, `import`, absentes ou inconnues restent entièrement hors shadow
-dans ce sous-batch. Home, TrainingTab, badges, rappels et détail coach ne sont
-pas branchés ici. Aucun writer canonique, aucune migration SQL et aucune
-écriture supplémentaire ne sont introduits ; le dashboard reste servi depuis
-le programme legacy.
+Les provenances `onboarding_auto`, `cron_auto`, `diagnostic_auto`,
+`free_session`, `import`, absentes ou inconnues restent entièrement hors
+shadow. Home, TrainingTab, badges, rappels et détail coach ne sont pas branchés
+ici. Aucun writer canonique, aucune migration SQL et aucune écriture
+supplémentaire ne sont introduits ; le dashboard reste servi depuis le
+programme legacy.
 
-## Contrat préparatoire : programme personnel issu du Program Builder IA
+## Shadow read borné : programme personnel issu du Program Builder IA
 
 Le bucket `ai/program-builder` est défini séparément de
-`manual/editor-normalized`, mais il n'est pas encore branché au read path
-runtime. Son contrat est caractérisé sans base distante par une fixture qui
-traverse les mêmes frontières que la production : validation de la sortie
-`modernTrainingProgramOutputSchema`, résolution locale éventuelle des
-`exercise_id`, normalisation à sept jours par l'éditeur, puis préparation du
-payload legacy `custom_programs` avec `source = 'ai'`.
+`manual/editor-normalized`. Le dashboard observe désormais ce bucket au même
+point de lecture que le programme manuel, après le succès de
+`findActivePersonalProgramForClient`. La requête reste unique avec les mêmes
+filtres `user_id`, `is_active = true` et le même `maybeSingle()` ; la ligne
+legacy retournée reste la même référence. Son contrat est caractérisé sans
+base distante par une fixture qui traverse les mêmes frontières que la
+production : validation de la sortie `modernTrainingProgramOutputSchema`,
+résolution locale éventuelle des `exercise_id`, normalisation à sept jours par
+l'éditeur, puis préparation du payload legacy `custom_programs` avec
+`source = 'ai'`.
 
 La forme persistable contient le nom et la description à la racine, sept jours
 avec weekdays positionnels et repos explicites, ainsi que les exercices dans
@@ -343,11 +347,11 @@ fournisseur intact ». Une édition complète dans Program Builder recharge le
 programme en mode manuel et le sauvegarde avec `source = 'manual'`. À
 l'inverse, l'éditeur inline du Training Tab et le remplacement rapide d'un
 exercice ne mettent à jour que `days` et conservent donc `source = 'ai'`.
-Le futur shadow IA devra accepter ces programmes IA édités sans tenter de
-réattribuer au bucket IA une ligne déjà passée à `manual`.
+Le shadow IA accepte donc ces programmes IA édités sans tenter de réattribuer
+au bucket IA une ligne déjà passée à `manual`.
 
-Ce sous-batch ne modifie ni `findActivePersonalProgramForClient`, ni le
-repository, ni l'UI, ni les writers. Il n'ajoute aucune observation runtime,
-requête, écriture, migration ou dépendance CI. Le futur branchement restera
-borné à la seule ligne active réellement consommée et continuera à servir le
-legacy par identité.
+Le branchement reste borné à la seule ligne active réellement consommée. Une
+erreur de l'adaptateur, du comparateur, du chronomètre ou de l'observateur est
+isolée, tandis qu'une erreur Supabase reste autoritative. Il n'ajoute aucune
+requête, écriture, migration, modification UI/writer ou dépendance CI et
+continue à servir le legacy par identité.
