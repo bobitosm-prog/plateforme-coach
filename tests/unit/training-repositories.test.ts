@@ -84,6 +84,64 @@ describe('Training repositories', () => {
     consoleInfo.mockRestore()
   })
 
+  it('returns the identical active manual program while shadowing it after one read', async () => {
+    const row = {
+      id: 'personal-sensitive', user_id: 'client-sensitive', name: 'Private program', description: null,
+      days: [{ name: 'Push', exercises: [{ exercise_id: 'bench', name: 'Private bench', sets: 3, reps: 8, rest: 90 }] }],
+      phases: null, source: 'manual', is_active: true, scheduled: false, start_date: null,
+      current_week: 1, total_weeks: null, created_at: '2026-08-12T10:00:00.000Z', updated_at: '2026-08-12T10:00:00.000Z',
+    }
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client).findActivePersonalProgramForClient('client-sensitive')
+    expect(result.ok && result.data).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'manual/editor-normalized',
+      result: 'MATCH',
+    })
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/client-sensitive|personal-sensitive|Private program|Private bench/)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps non-manual active programs legacy-only and contains observer failures', async () => {
+    for (const source of ['ai', 'import', 'unknown', null]) {
+      const row = { id: `program-${source}`, user_id: 'client-id', name: 'Program', days: [], source, is_active: true }
+      const mock = clientWith({ data: row, error: null })
+      const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+      const result = await createTrainingProgramRepository(mock.client).findActivePersonalProgramForClient('client-id')
+      expect(result.ok && result.data).toBe(row)
+      expect(mock.from).toHaveBeenCalledTimes(1)
+      expect(consoleInfo).not.toHaveBeenCalled()
+      consoleInfo.mockRestore()
+    }
+
+    const row = {
+      id: 'manual', user_id: 'client-id', name: 'Program', source: 'manual', is_active: true,
+      days: [{ name: 'Push', exercises: [{ exercise_id: 'bench', name: 'Bench', sets: 3, reps: 8 }] }],
+    }
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer failed') })
+    const result = await createTrainingProgramRepository(mock.client).findActivePersonalProgramForClient('client-id')
+    expect(result.ok && result.data).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps active-personal read failures authoritative and skips shadow observation', async () => {
+    const mock = clientWith({ data: null, error: { code: 'PGRST000', message: 'unavailable' } })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client).findActivePersonalProgramForClient('client-id')
+    expect(result).toMatchObject({ ok: false, kind: 'failure' })
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).not.toHaveBeenCalled()
+    consoleInfo.mockRestore()
+  })
+
   it('propagates assigned-program read failures without invoking shadow observation', async () => {
     const mock = clientWith({ data: null, error: { code: 'PGRST000', message: 'unavailable' } })
     const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)

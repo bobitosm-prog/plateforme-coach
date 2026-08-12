@@ -269,3 +269,44 @@ canonique et aucune migration SQL. L'UI continue à recevoir exclusivement les
 valeurs legacy. Le contrôleur du détail coach applique toujours
 `normalizeAndSanitize` à la même ligne et au même payload legacy qu'avant le
 shadow.
+
+## Shadow read borné : programme personnel manuel du dashboard
+
+Le dashboard client observe désormais le programme personnel actif retourné
+par `findActivePersonalProgramForClient`, uniquement lorsque sa colonne
+`source` vaut exactement `manual`. Ce bucket est nommé
+`manual/editor-normalized` : il couvre un programme créé manuellement et une
+forme repassée par l'éditeur, sans prétendre reconstituer une provenance plus
+ancienne que le stockage ne permet plus d'établir.
+
+La requête reste unique, filtrée par `user_id` puis `is_active = true`, avec le
+même `maybeSingle()`. L'observation intervient seulement après une lecture
+réussie et retourne la même référence legacy. Une erreur Supabase conserve son
+comportement autoritatif ; une erreur de l'adaptateur, du comparateur, du
+chronomètre ou de l'observateur est isolée.
+
+L'enveloppe transmise à `adaptCustomProgram` contient seulement `name`,
+`description`, `days`, `source` et, lorsqu'elles existent, les phases. L'owner
+client est porté séparément par le contexte. Les identifiants de ligne et
+d'utilisateur, les champs d'activation/planification et les timestamps de base
+ne sont pas exposés comme payload adaptable et ne peuvent pas devenir des
+`unmappedFields` artificiels.
+
+La comparaison porte sur l'owner, le nom, l'ordre et le repos des jours,
+l'ordre et les références des exercices, les séries, répétitions et temps de
+repos. Les références seulement nominales, les indices d'une provenance
+antérieure, les phases et la sémantique technique/superset non représentable
+fidèlement restent des warnings. Une forme non tableau, un jour non repos sans
+exercice, une prescription ambiguë ou des références catalogue/custom
+contradictoires restent `UNSUPPORTED` et n'affectent pas le dashboard.
+
+Les métriques locales ajoutent uniquement le bucket de provenance au contrat
+expurgé existant. Elles ne contiennent ni `user_id`, ni identifiant de
+`custom_programs`, ni nom, payload `days`, email, cookie, JWT ou token.
+
+Les provenances `ai`, `onboarding_auto`, `cron_auto`, `diagnostic_auto`,
+`free_session`, `import`, absentes ou inconnues restent entièrement hors shadow
+dans ce sous-batch. Home, TrainingTab, badges, rappels et détail coach ne sont
+pas branchés ici. Aucun writer canonique, aucune migration SQL et aucune
+écriture supplémentaire ne sont introduits ; le dashboard reste servi depuis
+le programme legacy.

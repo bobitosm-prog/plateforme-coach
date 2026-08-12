@@ -6,6 +6,7 @@ import {
   observeClientProgramShadow,
   type ClientProgramShadowSelection,
 } from '@/lib/training/coexistence/client-program-shadow-contract'
+import { observeActiveManualCustomProgramShadow } from '@/lib/training/coexistence/custom-program-shadow-read'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
 export const ASSIGNED_PROGRAM_PROJECTION = 'id,client_id,coach_id,training_program_id,program,created_at,updated_at' as const
@@ -90,7 +91,9 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       const { data, error } = await client.from('custom_programs').select(PERSONAL_PROGRAM_PROJECTION)
         .eq('user_id', clientUserId).eq('is_active', true).maybeSingle()
       if (error) return repositoryFailure(error)
-      return data ? { ok: true, data } : { ok: false, kind: 'not_found' }
+      if (!data) return { ok: false, kind: 'not_found' }
+      observeActiveManualCustomProgramShadow(data)
+      return { ok: true, data }
     },
   }
 }
