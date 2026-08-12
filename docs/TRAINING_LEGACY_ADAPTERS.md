@@ -388,5 +388,43 @@ conservent donc `onboarding_auto`. Le repository conserve sa lecture unique,
 ses filtres `user_id`, `is_active = true` et son `maybeSingle()`, puis retourne
 la même référence legacy. Les erreurs du shadow sont isolées et l'erreur
 Supabase reste autoritative. Les sources `cron_auto`, `diagnostic_auto`,
-`import`, `free_session`, absentes ou inconnues restent hors shadow. Aucun
+`import`, `free_session`, absentes ou inconnues restent hors shadow runtime. Aucun
 writer, UI, schéma DB, migration ou workflow CI n'est modifié.
+
+## Contrat préparatoire : régénération `diagnostic_auto`
+
+Le bucket distinct `diagnostic-auto` est préparé sans observer le read path
+runtime. Sa fixture reproduit la chaîne réelle : sortie validée par
+`modernTrainingProgramOutputSchema`, résolution des références catalogue, puis
+persistance directe dans `custom_programs`. Comme `onboarding_auto`, ce writer
+ne passe ni par `normalizeProgramEditorDays`, ni par
+`prepareLegacyProgramPayload` : seuls les jours d'entraînement générés sont
+persistés, sans padding à sept jours, `weekday` ou repos artificiels.
+
+Le programme appartient au client et la génération est demandée par ce même
+client authentifié lorsqu'il applique un diagnostic contenant un delta de
+volume non nul. La provenance canonique est donc `kind = ai`,
+`provider = anthropic`, `createdBy = client` et `trigger = diagnostic`. Ce
+trigger optionnel est une extension additive du modèle et ne modifie aucun
+contrat manuel, Program Builder IA ou onboarding.
+
+La comparaison conserve comme dimensions critiques l'owner, le nom, l'ordre
+des jours et exercices, les références, prescriptions et groupes musculaires.
+L'absence de repos explicites, `day_number` non autoritatif, les références
+nominales, `muscle_primary`, les métadonnées provider/modèle non persistées et
+la sémantique technique/superset restent des warnings. Le `diagnostic_id`, le
+delta de volume et un éventuel lien au programme précédent ne sont pas stockés
+dans `custom_programs`; leur absence est une limite de traçabilité, jamais un
+mismatch critique ni une relation à ré-inférer.
+
+Le writer marque d'abord le diagnostic appliqué, génère le programme, puis
+désactive le programme actif avant d'insérer la nouvelle ligne avec
+`source = diagnostic_auto`. Une édition complète par Program Builder repasse
+ensuite la source à `manual`; les éditions inline, remplacements d'exercice,
+activations et planifications n'écrivent pas `source` et conservent donc
+`diagnostic_auto`.
+
+Aucun observer diagnostic n'est appelé par le repository dans ce sous-batch.
+Le dashboard reste legacy, et aucun repository, writer, UI, schéma DB,
+migration ou workflow CI n'est modifié. `cron_auto`, `import` et
+`free_session` restent hors contrat shadow runtime.

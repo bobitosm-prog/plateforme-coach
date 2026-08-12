@@ -89,7 +89,9 @@ export function adaptCustomProgram(input: unknown, context: AdapterContext): Ada
   const format = 'custom-program-days-v1' as const
   if (context.owner.kind !== 'client') return unsupported(format, 'Owner client explicite requis', context.sourceId)
   if (!isRecord(input) || !Array.isArray(input.days)) return unsupported(format, 'custom_programs.days doit être un tableau', context.sourceId)
-  const aiOrigin = input.source === 'ai' || input.source === 'onboarding_auto'
+  const aiOrigin = input.source === 'ai'
+    || input.source === 'onboarding_auto'
+    || input.source === 'diagnostic_auto'
   return programFromDays(input, input.days, format, context, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
 }
 

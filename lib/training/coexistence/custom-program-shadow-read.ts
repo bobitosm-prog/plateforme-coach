@@ -14,12 +14,14 @@ export const CUSTOM_PROGRAM_SHADOW_FORMAT = 'custom-program-days-v1' as const
 export const CUSTOM_PROGRAM_SHADOW_PROVENANCE = 'manual/editor-normalized' as const
 export const CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE = 'ai/program-builder' as const
 export const CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE = 'onboarding-auto' as const
+export const CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE = 'diagnostic-auto' as const
 
-export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto'
+export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto'
 export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -43,6 +45,9 @@ export type CustomProgramDifferenceCode =
   | 'TECHNIQUE_SEMANTICS_UNMAPPED'
   | 'REST_DAYS_NOT_PERSISTED'
   | 'DAY_NUMBER_NON_AUTHORITATIVE'
+  | 'DIAGNOSTIC_ID_NOT_PERSISTED'
+  | 'VOLUME_DELTA_NOT_PERSISTED'
+  | 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE'
   | 'ADAPTER_WARNINGS'
   | 'UNMAPPED_FIELDS'
   | 'CANONICAL_PARTIAL'
@@ -142,6 +147,12 @@ export function isOnboardingCustomProgramShadowCandidate(
   return row?.source === 'onboarding_auto'
 }
 
+export function isDiagnosticCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'diagnostic_auto' } {
+  return row?.source === 'diagnostic_auto'
+}
+
 /**
  * Keeps database ownership and technical columns out of the adapter payload.
  * Only the legacy program data needed for semantic adaptation crosses this
@@ -172,7 +183,12 @@ export function buildCustomProgramAdaptationEnvelope(
         sourceCreatedBy: { kind: 'system' as const },
         sourceTrigger: 'onboarding' as const,
       }
-    : {}
+    : row.source === 'diagnostic_auto'
+      ? {
+          sourceCreatedBy: { kind: 'client' as const, id: row.user_id },
+          sourceTrigger: 'diagnostic' as const,
+        }
+      : {}
 
   return {
     status: 'ready',
@@ -418,7 +434,7 @@ export function compareCustomProgramShadow(
     if (row.source === 'manual' && containsEditorNormalizedProvenanceSignals(row.days)) {
       differences.push({ code: 'PROVENANCE_UNCERTAIN', path: 'provenance' })
     }
-    if (row.source === 'ai' || row.source === 'onboarding_auto') {
+    if (row.source === 'ai' || row.source === 'onboarding_auto' || row.source === 'diagnostic_auto') {
       if (containsNestedValue(row.days, 'muscle_primary')) {
         differences.push({ code: 'AI_MUSCLE_PRIMARY_UNMAPPED', path: 'exercises.muscle_primary' })
       }
@@ -433,6 +449,15 @@ export function compareCustomProgramShadow(
         differences.push({ code: 'DAY_NUMBER_NON_AUTHORITATIVE', path: 'days.day_number' })
       }
     }
+    if (row.source === 'diagnostic_auto') {
+      differences.push({ code: 'REST_DAYS_NOT_PERSISTED', path: 'days' })
+      if (containsNestedField(row.days, 'day_number')) {
+        differences.push({ code: 'DAY_NUMBER_NON_AUTHORITATIVE', path: 'days.day_number' })
+      }
+      differences.push({ code: 'DIAGNOSTIC_ID_NOT_PERSISTED', path: 'source.diagnostic_id' })
+      differences.push({ code: 'VOLUME_DELTA_NOT_PERSISTED', path: 'source.volume_delta' })
+      differences.push({ code: 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', path: 'source.previous_program' })
+    }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
     }
@@ -444,6 +469,8 @@ export function compareCustomProgramShadow(
       'AI_METADATA_UNMAPPED', 'AI_PROVIDER_METADATA_UNAVAILABLE', 'PHASES_UNMAPPED',
       'TECHNIQUE_SEMANTICS_UNMAPPED', 'ADAPTER_WARNINGS', 'UNMAPPED_FIELDS',
       'REST_DAYS_NOT_PERSISTED', 'DAY_NUMBER_NON_AUTHORITATIVE',
+      'DIAGNOSTIC_ID_NOT_PERSISTED', 'VOLUME_DELTA_NOT_PERSISTED',
+      'PREVIOUS_PROGRAM_LINK_UNAVAILABLE',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
     return {
