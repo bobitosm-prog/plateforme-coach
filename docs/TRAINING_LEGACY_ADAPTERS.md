@@ -356,10 +356,11 @@ isolée, tandis qu'une erreur Supabase reste autoritative. Il n'ajoute aucune
 requête, écriture, migration, modification UI/writer ou dépendance CI et
 continue à servir le legacy par identité.
 
-## Contrat préparatoire : génération initiale `onboarding_auto`
+## Shadow read borné : génération initiale `onboarding_auto`
 
-Le bucket distinct `onboarding-auto` est préparé sans être branché au read path
-runtime. Sa fixture reproduit la chaîne réelle : sortie validée par
+Le dashboard observe désormais le bucket distinct `onboarding-auto` au même
+point post-lecture que les buckets manuel et Program Builder IA. Sa fixture
+reproduit la chaîne réelle : sortie validée par
 `modernTrainingProgramOutputSchema`, résolution des références catalogue, puis
 persistance directe dans `custom_programs`. Contrairement au Program Builder,
 ce writer ne passe ni par `normalizeProgramEditorDays`, ni par
@@ -383,6 +384,9 @@ de padding n'est pas un mismatch : elle fait partie du contrat réel du writer.
 Une édition complète par Program Builder sauvegarde ensuite la ligne comme
 `manual`; le contrat ne ré-infère jamais son origine onboarding. Les éditions
 inline, remplacements d'exercice et activations n'écrivent pas `source` et
-conservent donc `onboarding_auto`. Aucun observer onboarding n'est appelé par le
-repository dans ce sous-batch : aucun runtime, writer, UI, schéma DB, migration
-ou workflow CI n'est modifié.
+conservent donc `onboarding_auto`. Le repository conserve sa lecture unique,
+ses filtres `user_id`, `is_active = true` et son `maybeSingle()`, puis retourne
+la même référence legacy. Les erreurs du shadow sont isolées et l'erreur
+Supabase reste autoritative. Les sources `cron_auto`, `diagnostic_auto`,
+`import`, `free_session`, absentes ou inconnues restent hors shadow. Aucun
+writer, UI, schéma DB, migration ou workflow CI n'est modifié.

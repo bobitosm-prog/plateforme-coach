@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { adaptCustomProgram } from '../../lib/training/adapters'
 import {
   buildCustomProgramAdaptationEnvelope,
@@ -9,6 +9,7 @@ import {
   isAiCustomProgramShadowCandidate,
   isManualCustomProgramShadowCandidate,
   isOnboardingCustomProgramShadowCandidate,
+  observeActiveOnboardingCustomProgramShadow,
   toCustomProgramShadowMetric,
 } from '../../lib/training/coexistence/custom-program-shadow-read'
 import {
@@ -134,7 +135,7 @@ describe('custom_programs onboarding_auto persisted contract', () => {
     })
   })
 
-  it('defines a distinct expurgated bucket without enabling a runtime observer', () => {
+  it('emits one distinct expurgated onboarding metric and contains observer-side failures', () => {
     const { row } = buildPersistedOnboardingCustomProgramFixture()
     expect(isOnboardingCustomProgramShadowCandidate(row)).toBe(true)
     expect(isManualCustomProgramShadowCandidate(row)).toBe(false)
@@ -153,10 +154,30 @@ describe('custom_programs onboarding_auto persisted contract', () => {
     ])
     expect(JSON.stringify(metric)).not.toMatch(/synthetic-onboarding|Programme initial|Développé|Rowing|Goblet/)
 
+    const observer = vi.fn()
+    expect(() => observeActiveOnboardingCustomProgramShadow(row, observer, {
+      clock: vi.fn().mockReturnValueOnce(10).mockReturnValueOnce(12.5),
+      correlationId: () => 'opaque-onboarding-correlation',
+    })).not.toThrow()
+    expect(observer).toHaveBeenCalledTimes(1)
+    expect(observer).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'onboarding-auto',
+      result: 'WARNING',
+      adaptation_duration_ms: 2.5,
+      correlation_id: 'opaque-onboarding-correlation',
+    }))
+    expect(JSON.stringify(observer.mock.calls)).not.toMatch(/synthetic-onboarding|Programme initial|Développé|Rowing|Goblet/)
+    expect(() => observeActiveOnboardingCustomProgramShadow(row, () => { throw new Error('observer failed') }))
+      .not.toThrow()
+    expect(() => observeActiveOnboardingCustomProgramShadow(row, observer, {
+      clock: () => { throw new Error('clock failed') },
+    })).not.toThrow()
+
     const repository = source('lib/repositories/training/program.ts')
-    expect(repository).not.toContain('observeActiveOnboardingCustomProgramShadow')
+    expect(repository).toContain('observeActiveOnboardingCustomProgramShadow(data)')
     expect(repository).toContain('observeActiveManualCustomProgramShadow(data)')
     expect(repository).toContain('observeActiveAiCustomProgramShadow(data)')
+    expect(repository).toContain(".eq('user_id', clientUserId).eq('is_active', true).maybeSingle()")
   })
 })
 

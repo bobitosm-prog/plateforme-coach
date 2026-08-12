@@ -9,6 +9,7 @@ import {
 import {
   observeActiveAiCustomProgramShadow,
   observeActiveManualCustomProgramShadow,
+  observeActiveOnboardingCustomProgramShadow,
 } from '@/lib/training/coexistence/custom-program-shadow-read'
 
 export const COACH_PROGRAM_PROJECTION = 'id,coach_id,name,description,is_template,tags,program,created_at' as const
@@ -97,6 +98,7 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       if (!data) return { ok: false, kind: 'not_found' }
       observeActiveManualCustomProgramShadow(data)
       observeActiveAiCustomProgramShadow(data)
+      observeActiveOnboardingCustomProgramShadow(data)
       return { ok: true, data }
     },
   }

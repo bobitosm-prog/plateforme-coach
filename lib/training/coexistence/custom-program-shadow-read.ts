@@ -523,3 +523,25 @@ export function observeActiveAiCustomProgramShadow(
     // Shadow observability must never affect the legacy dashboard read.
   }
 }
+
+export function observeActiveOnboardingCustomProgramShadow(
+  row: PersonalProgramRow | null | undefined,
+  observer: CustomProgramShadowObserver = localConsoleObserver,
+  dependencies: ObserveDependencies = {},
+): void {
+  if (!isOnboardingCustomProgramShadowCandidate(row)) return
+  try {
+    const clock = dependencies.clock ?? (() => performance.now())
+    const correlationId = dependencies.correlationId ?? defaultCorrelationId
+    const startedAt = clock()
+    const result = compareCustomProgramShadow(row, dependencies)
+    observer(toCustomProgramShadowMetric(
+      result,
+      clock() - startedAt,
+      correlationId(),
+      CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE,
+    ))
+  } catch {
+    // Shadow observability must never affect the legacy dashboard read.
+  }
+}
