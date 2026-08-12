@@ -310,3 +310,44 @@ dans ce sous-batch. Home, TrainingTab, badges, rappels et détail coach ne sont
 pas branchés ici. Aucun writer canonique, aucune migration SQL et aucune
 écriture supplémentaire ne sont introduits ; le dashboard reste servi depuis
 le programme legacy.
+
+## Contrat préparatoire : programme personnel issu du Program Builder IA
+
+Le bucket `ai/program-builder` est défini séparément de
+`manual/editor-normalized`, mais il n'est pas encore branché au read path
+runtime. Son contrat est caractérisé sans base distante par une fixture qui
+traverse les mêmes frontières que la production : validation de la sortie
+`modernTrainingProgramOutputSchema`, résolution locale éventuelle des
+`exercise_id`, normalisation à sept jours par l'éditeur, puis préparation du
+payload legacy `custom_programs` avec `source = 'ai'`.
+
+La forme persistable contient le nom et la description à la racine, sept jours
+avec weekdays positionnels et repos explicites, ainsi que les exercices dans
+leur ordre de tableau avec séries, répétitions, repos, focus, groupes
+musculaires, tempo et technique. L'identifiant catalogue peut être résolu ou
+rester `null`, auquel cas l'exercice demeure référencé par son nom. Aucun
+modèle fournisseur, compteur de tokens ou identifiant de corrélation n'est
+inventé : ces métadonnées ne sont pas persistées par le writer actuel.
+
+`adaptCustomProgram` produit pour cette forme une provenance canonique `ai`
+avec provider `anthropic`. Les références uniquement nominales, les phases,
+`muscle_primary` non représenté séparément, les métadonnées IA non canoniques,
+les techniques dont la sémantique de bloc (notamment superset) n'est pas
+reconstructible fidèlement et l'absence de métadonnées provider/modèle restent
+des warnings. Les champs normaux de cette sortie IA ne doivent jamais produire
+artificiellement `PROVENANCE_UNCERTAIN`, réservé au bucket manuel lorsque son
+origine antérieure ne peut plus être établie.
+
+La colonne `source = 'ai'` signifie « origine IA connue », pas « payload
+fournisseur intact ». Une édition complète dans Program Builder recharge le
+programme en mode manuel et le sauvegarde avec `source = 'manual'`. À
+l'inverse, l'éditeur inline du Training Tab et le remplacement rapide d'un
+exercice ne mettent à jour que `days` et conservent donc `source = 'ai'`.
+Le futur shadow IA devra accepter ces programmes IA édités sans tenter de
+réattribuer au bucket IA une ligne déjà passée à `manual`.
+
+Ce sous-batch ne modifie ni `findActivePersonalProgramForClient`, ni le
+repository, ni l'UI, ni les writers. Il n'ajoute aucune observation runtime,
+requête, écriture, migration ou dépendance CI. Le futur branchement restera
+borné à la seule ligne active réellement consommée et continuera à servir le
+legacy par identité.

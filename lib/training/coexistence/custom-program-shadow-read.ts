@@ -12,6 +12,12 @@ import type {
 
 export const CUSTOM_PROGRAM_SHADOW_FORMAT = 'custom-program-days-v1' as const
 export const CUSTOM_PROGRAM_SHADOW_PROVENANCE = 'manual/editor-normalized' as const
+export const CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE = 'ai/program-builder' as const
+
+export type CustomProgramShadowSource = 'manual' | 'ai'
+export type CustomProgramShadowProvenance =
+  | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -27,6 +33,9 @@ export type CustomProgramDifferenceCode =
   | 'REST_SECONDS_MISMATCH'
   | 'LEGACY_NAME_REFERENCE'
   | 'PROVENANCE_UNCERTAIN'
+  | 'AI_MUSCLE_PRIMARY_UNMAPPED'
+  | 'AI_METADATA_UNMAPPED'
+  | 'AI_PROVIDER_METADATA_UNAVAILABLE'
   | 'PHASES_UNMAPPED'
   | 'TECHNIQUE_SEMANTICS_UNMAPPED'
   | 'ADAPTER_WARNINGS'
@@ -49,7 +58,7 @@ export type CustomProgramShadowResult = {
 
 export type CustomProgramShadowMetric = {
   readonly format: typeof CUSTOM_PROGRAM_SHADOW_FORMAT
-  readonly provenance_bucket: typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
+  readonly provenance_bucket: CustomProgramShadowProvenance
   readonly result: CustomProgramShadowStatus
   readonly difference_codes: readonly CustomProgramDifferenceCode[]
   readonly warning_count: number
@@ -65,7 +74,7 @@ export type CustomProgramAdaptationEnvelope =
         readonly name: string
         readonly description?: string
         readonly days: PersonalProgramRow['days']
-        readonly source: 'manual'
+        readonly source: CustomProgramShadowSource
         readonly phases?: PersonalProgramRow['phases']
       }
       readonly context: AdapterContext
@@ -115,13 +124,19 @@ export function isManualCustomProgramShadowCandidate(
   return row?.source === 'manual'
 }
 
+export function isAiCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'ai' } {
+  return row?.source === 'ai'
+}
+
 /**
  * Keeps database ownership and technical columns out of the adapter payload.
  * Only the legacy program data needed for semantic adaptation crosses this
  * boundary; the verified client owner is carried by AdapterContext.
  */
 export function buildCustomProgramAdaptationEnvelope(
-  row: PersonalProgramRow & { source: 'manual' },
+  row: PersonalProgramRow & { source: CustomProgramShadowSource },
   observedAt: string,
 ): CustomProgramAdaptationEnvelope {
   if (!row.user_id) return { status: 'unsupported', reason: 'MISSING_CLIENT_OWNER' }
@@ -130,12 +145,12 @@ export function buildCustomProgramAdaptationEnvelope(
     name: string
     description?: string
     days: PersonalProgramRow['days']
-    source: 'manual'
+    source: CustomProgramShadowSource
     phases?: PersonalProgramRow['phases']
   } = {
     name: row.name,
     days: row.days,
-    source: 'manual',
+    source: row.source,
   }
   if (row.description) input.description = row.description
   if (row.phases !== null) input.phases = row.phases
@@ -308,6 +323,18 @@ function containsNestedField(days: PersonalProgramRow['days'], field: string): b
   ))
 }
 
+function containsNestedValue(days: PersonalProgramRow['days'], field: string): boolean {
+  if (!Array.isArray(days)) return false
+  return days.some(day => isRecord(day) && (
+    (Object.hasOwn(day, field) && day[field] !== null && day[field] !== '' && day[field] !== undefined)
+    || (Array.isArray(day.exercises) && day.exercises.some(exercise => isRecord(exercise)
+      && Object.hasOwn(exercise, field)
+      && exercise[field] !== null
+      && exercise[field] !== ''
+      && exercise[field] !== undefined))
+  ))
+}
+
 function containsEditorNormalizedProvenanceSignals(days: PersonalProgramRow['days']): boolean {
   if (!Array.isArray(days)) return false
   return days.some(day => isRecord(day) && (
@@ -329,7 +356,7 @@ const unsupportedResult = (): CustomProgramShadowResult => ({
 })
 
 export function compareCustomProgramShadow(
-  row: PersonalProgramRow & { source: 'manual' },
+  row: PersonalProgramRow & { source: CustomProgramShadowSource },
   dependencies: CompareDependencies = {},
 ): CustomProgramShadowResult {
   const envelope = buildCustomProgramAdaptationEnvelope(
@@ -355,8 +382,22 @@ export function compareCustomProgramShadow(
     const warningCodes = new Set(adapted.warnings.map(warning => warning.code))
     if (warningCodes.has('legacy_name_reference')) differences.push({ code: 'LEGACY_NAME_REFERENCE', path: 'exercises' })
     if (row.phases !== null || containsNestedField(row.days, 'phases')) differences.push({ code: 'PHASES_UNMAPPED', path: 'phases' })
-    if (containsNestedField(row.days, 'technique')) differences.push({ code: 'TECHNIQUE_SEMANTICS_UNMAPPED', path: 'techniques' })
-    if (containsEditorNormalizedProvenanceSignals(row.days)) differences.push({ code: 'PROVENANCE_UNCERTAIN', path: 'provenance' })
+    const hasTechniqueSignal = row.source === 'manual'
+      ? containsNestedField(row.days, 'technique')
+      : containsNestedValue(row.days, 'technique')
+    if (hasTechniqueSignal) differences.push({ code: 'TECHNIQUE_SEMANTICS_UNMAPPED', path: 'techniques' })
+    if (row.source === 'manual' && containsEditorNormalizedProvenanceSignals(row.days)) {
+      differences.push({ code: 'PROVENANCE_UNCERTAIN', path: 'provenance' })
+    }
+    if (row.source === 'ai') {
+      if (containsNestedValue(row.days, 'muscle_primary')) {
+        differences.push({ code: 'AI_MUSCLE_PRIMARY_UNMAPPED', path: 'exercises.muscle_primary' })
+      }
+      if (containsNestedField(row.days, 'day_number') || containsNestedField(row.days, 'order')) {
+        differences.push({ code: 'AI_METADATA_UNMAPPED', path: 'ai.metadata' })
+      }
+      differences.push({ code: 'AI_PROVIDER_METADATA_UNAVAILABLE', path: 'source.provider_metadata' })
+    }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
     }
@@ -364,7 +405,8 @@ export function compareCustomProgramShadow(
       differences.push({ code: 'UNMAPPED_FIELDS', path: 'adapter.unmappedFields' })
     }
     const warningOnly = new Set<CustomProgramDifferenceCode>([
-      'LEGACY_NAME_REFERENCE', 'PROVENANCE_UNCERTAIN', 'PHASES_UNMAPPED',
+      'LEGACY_NAME_REFERENCE', 'PROVENANCE_UNCERTAIN', 'AI_MUSCLE_PRIMARY_UNMAPPED',
+      'AI_METADATA_UNMAPPED', 'AI_PROVIDER_METADATA_UNAVAILABLE', 'PHASES_UNMAPPED',
       'TECHNIQUE_SEMANTICS_UNMAPPED', 'ADAPTER_WARNINGS', 'UNMAPPED_FIELDS',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
@@ -384,10 +426,11 @@ export function toCustomProgramShadowMetric(
   shadow: CustomProgramShadowResult,
   adaptationDurationMs: number,
   correlationId: string,
+  provenanceBucket: CustomProgramShadowProvenance = CUSTOM_PROGRAM_SHADOW_PROVENANCE,
 ): CustomProgramShadowMetric {
   return {
     format: shadow.format,
-    provenance_bucket: CUSTOM_PROGRAM_SHADOW_PROVENANCE,
+    provenance_bucket: provenanceBucket,
     result: shadow.result,
     difference_codes: [...new Set(shadow.differences.map(difference => difference.code))],
     warning_count: shadow.warningCount,
