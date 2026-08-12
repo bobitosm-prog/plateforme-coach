@@ -31,6 +31,7 @@ export type TrainingSource = {
   kind: 'manual' | 'catalog-template' | 'ai' | 'import' | 'legacy'
   createdBy: { kind: 'platform' | 'coach' | 'client' | 'system'; id?: string }
   provider?: string
+  trigger?: 'onboarding'
   legacyFormat: LegacyFormatId
   createdAt: string
 }
@@ -265,4 +266,6 @@ export type AdapterContext = {
   timezone?: string
   sourceId?: string
   sourceProgramId?: string
+  sourceCreatedBy?: TrainingSource['createdBy']
+  sourceTrigger?: TrainingSource['trigger']
 }

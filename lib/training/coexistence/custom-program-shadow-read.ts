@@ -13,11 +13,13 @@ import type {
 export const CUSTOM_PROGRAM_SHADOW_FORMAT = 'custom-program-days-v1' as const
 export const CUSTOM_PROGRAM_SHADOW_PROVENANCE = 'manual/editor-normalized' as const
 export const CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE = 'ai/program-builder' as const
+export const CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE = 'onboarding-auto' as const
 
-export type CustomProgramShadowSource = 'manual' | 'ai'
+export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto'
 export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -31,6 +33,7 @@ export type CustomProgramDifferenceCode =
   | 'SETS_MISMATCH'
   | 'REPS_MISMATCH'
   | 'REST_SECONDS_MISMATCH'
+  | 'FOCUS_MUSCLES_MISMATCH'
   | 'LEGACY_NAME_REFERENCE'
   | 'PROVENANCE_UNCERTAIN'
   | 'AI_MUSCLE_PRIMARY_UNMAPPED'
@@ -38,6 +41,8 @@ export type CustomProgramDifferenceCode =
   | 'AI_PROVIDER_METADATA_UNAVAILABLE'
   | 'PHASES_UNMAPPED'
   | 'TECHNIQUE_SEMANTICS_UNMAPPED'
+  | 'REST_DAYS_NOT_PERSISTED'
+  | 'DAY_NUMBER_NON_AUTHORITATIVE'
   | 'ADAPTER_WARNINGS'
   | 'UNMAPPED_FIELDS'
   | 'CANONICAL_PARTIAL'
@@ -94,6 +99,7 @@ type SemanticExercise = {
 type SemanticDay = {
   readonly label: string
   readonly kind: 'rest' | 'training'
+  readonly focusMuscles: readonly string[]
   readonly exercises: readonly SemanticExercise[]
 }
 
@@ -130,6 +136,12 @@ export function isAiCustomProgramShadowCandidate(
   return row?.source === 'ai'
 }
 
+export function isOnboardingCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'onboarding_auto' } {
+  return row?.source === 'onboarding_auto'
+}
+
 /**
  * Keeps database ownership and technical columns out of the adapter payload.
  * Only the legacy program data needed for semantic adaptation crosses this
@@ -155,6 +167,13 @@ export function buildCustomProgramAdaptationEnvelope(
   if (row.description) input.description = row.description
   if (row.phases !== null) input.phases = row.phases
 
+  const sourceContext = row.source === 'onboarding_auto'
+    ? {
+        sourceCreatedBy: { kind: 'system' as const },
+        sourceTrigger: 'onboarding' as const,
+      }
+    : {}
+
   return {
     status: 'ready',
     input,
@@ -166,6 +185,7 @@ export function buildCustomProgramAdaptationEnvelope(
       sourceId: row.id,
       name: row.name,
       description: row.description ?? undefined,
+      ...sourceContext,
     },
   }
 }
@@ -217,7 +237,7 @@ function legacyProjection(row: PersonalProgramRow): SemanticProgram | null {
     const label = readNonEmptyString(rawDay, ['name', 'day_name', 'weekday']) ?? `Jour ${days.length + 1}`
     const isRest = rawDay.is_rest === true || rawDay.repos === true
     if (isRest) {
-      days.push({ label, kind: 'rest', exercises: [] })
+      days.push({ label, kind: 'rest', focusMuscles: [], exercises: [] })
       continue
     }
     if (!Array.isArray(rawDay.exercises) || rawDay.exercises.length === 0) return null
@@ -241,7 +261,12 @@ function legacyProjection(row: PersonalProgramRow): SemanticProgram | null {
         rest: restKey(restValue === undefined || restValue === null ? { kind: 'none' } : parseRest(restValue)),
       })
     }
-    days.push({ label, kind: 'training', exercises })
+    const focusMuscles = Array.isArray(rawDay.muscle_groups)
+      ? rawDay.muscle_groups.filter((value): value is string => typeof value === 'string')
+      : typeof rawDay.focus === 'string'
+        ? rawDay.focus.split(',').map(value => value.trim()).filter(Boolean)
+        : []
+    days.push({ label, kind: 'training', focusMuscles, exercises })
   }
   return { clientId: row.user_id, name: row.name, days }
 }
@@ -251,13 +276,14 @@ function canonicalProjection(program: TrainingProgram): SemanticProgram | null {
   const days: SemanticDay[] = []
   for (const day of program.weeks[0].days) {
     if (day.kind === 'rest') {
-      days.push({ label: day.label, kind: 'rest', exercises: [] })
+      days.push({ label: day.label, kind: 'rest', focusMuscles: [], exercises: [] })
       continue
     }
     if (day.sessions.length !== 1 || day.sessions[0].blocks.length !== 1) return null
     days.push({
       label: day.label,
       kind: 'training',
+      focusMuscles: day.sessions[0].focusMuscles,
       exercises: day.sessions[0].blocks[0].exercises.map(exercise => ({
         reference: canonicalReferenceKey(exercise.exercise),
         sets: exercise.prescriptions.length,
@@ -292,6 +318,9 @@ function compareProjections(legacy: SemanticProgram, canonical: SemanticProgram)
       continue
     }
     if (legacyDay.kind === 'rest' || canonicalDay.kind === 'rest') continue
+    if (!equalArray(legacyDay.focusMuscles, canonicalDay.focusMuscles)) {
+      add('FOCUS_MUSCLES_MISMATCH', `${path}.focusMuscles`)
+    }
     const legacyReferences = legacyDay.exercises.map(exercise => exercise.reference)
     const canonicalReferences = canonicalDay.exercises.map(exercise => exercise.reference)
     const sameReferenceSet = legacyReferences.length === canonicalReferences.length
@@ -389,7 +418,7 @@ export function compareCustomProgramShadow(
     if (row.source === 'manual' && containsEditorNormalizedProvenanceSignals(row.days)) {
       differences.push({ code: 'PROVENANCE_UNCERTAIN', path: 'provenance' })
     }
-    if (row.source === 'ai') {
+    if (row.source === 'ai' || row.source === 'onboarding_auto') {
       if (containsNestedValue(row.days, 'muscle_primary')) {
         differences.push({ code: 'AI_MUSCLE_PRIMARY_UNMAPPED', path: 'exercises.muscle_primary' })
       }
@@ -397,6 +426,12 @@ export function compareCustomProgramShadow(
         differences.push({ code: 'AI_METADATA_UNMAPPED', path: 'ai.metadata' })
       }
       differences.push({ code: 'AI_PROVIDER_METADATA_UNAVAILABLE', path: 'source.provider_metadata' })
+    }
+    if (row.source === 'onboarding_auto') {
+      differences.push({ code: 'REST_DAYS_NOT_PERSISTED', path: 'days' })
+      if (containsNestedField(row.days, 'day_number')) {
+        differences.push({ code: 'DAY_NUMBER_NON_AUTHORITATIVE', path: 'days.day_number' })
+      }
     }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
@@ -408,6 +443,7 @@ export function compareCustomProgramShadow(
       'LEGACY_NAME_REFERENCE', 'PROVENANCE_UNCERTAIN', 'AI_MUSCLE_PRIMARY_UNMAPPED',
       'AI_METADATA_UNMAPPED', 'AI_PROVIDER_METADATA_UNAVAILABLE', 'PHASES_UNMAPPED',
       'TECHNIQUE_SEMANTICS_UNMAPPED', 'ADAPTER_WARNINGS', 'UNMAPPED_FIELDS',
+      'REST_DAYS_NOT_PERSISTED', 'DAY_NUMBER_NON_AUTHORITATIVE',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
     return {

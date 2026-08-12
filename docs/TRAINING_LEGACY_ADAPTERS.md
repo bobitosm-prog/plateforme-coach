@@ -355,3 +355,34 @@ erreur de l'adaptateur, du comparateur, du chronomètre ou de l'observateur est
 isolée, tandis qu'une erreur Supabase reste autoritative. Il n'ajoute aucune
 requête, écriture, migration, modification UI/writer ou dépendance CI et
 continue à servir le legacy par identité.
+
+## Contrat préparatoire : génération initiale `onboarding_auto`
+
+Le bucket distinct `onboarding-auto` est préparé sans être branché au read path
+runtime. Sa fixture reproduit la chaîne réelle : sortie validée par
+`modernTrainingProgramOutputSchema`, résolution des références catalogue, puis
+persistance directe dans `custom_programs`. Contrairement au Program Builder,
+ce writer ne passe ni par `normalizeProgramEditorDays`, ni par
+`prepareLegacyProgramPayload` : seuls les jours d'entraînement générés sont
+persistés, sans padding à sept jours, `weekday` ou repos `is_rest` injectés.
+
+Le programme reste possédé par le client, mais la génération initiale est
+initiée par l'automatisation applicative. La provenance canonique retenue est
+donc `kind = ai`, `provider = anthropic`, `createdBy = system` et
+`trigger = onboarding`. Le trigger optionnel est l'évolution minimale du
+modèle nécessaire pour ne confondre ni owner, ni initiateur, ni fournisseur ;
+il n'accorde aucune autorité supplémentaire.
+
+La comparaison conserve comme dimensions critiques l'owner, le nom, l'ordre
+des jours et exercices, les références, prescriptions et groupes musculaires.
+L'absence de repos explicites, `day_number` non autoritatif, les références
+nominales, `muscle_primary`, les métadonnées IA/provider non persistées et la
+sémantique technique/superset restent des warnings. L'absence de `weekday` et
+de padding n'est pas un mismatch : elle fait partie du contrat réel du writer.
+
+Une édition complète par Program Builder sauvegarde ensuite la ligne comme
+`manual`; le contrat ne ré-infère jamais son origine onboarding. Les éditions
+inline, remplacements d'exercice et activations n'écrivent pas `source` et
+conservent donc `onboarding_auto`. Aucun observer onboarding n'est appelé par le
+repository dans ce sous-batch : aucun runtime, writer, UI, schéma DB, migration
+ou workflow CI n'est modifié.

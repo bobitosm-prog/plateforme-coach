@@ -10,12 +10,19 @@ import type {
 import { convertDays, isRecord, unknownKeys, unsupported, WEEKDAYS_FR } from './shared'
 
 function source(format: LegacyFormatId, context: AdapterContext, kind: TrainingSource['kind'], provider?: string): TrainingSource {
-  const createdBy = context.owner.kind === 'coach'
+  const createdBy = context.sourceCreatedBy ?? (context.owner.kind === 'coach'
     ? { kind: 'coach' as const, id: context.owner.coachId }
     : context.owner.kind === 'client'
       ? { kind: 'client' as const, id: context.owner.clientId }
-      : { kind: 'platform' as const }
-  return { kind, createdBy, provider, legacyFormat: format, createdAt: context.now }
+      : { kind: 'platform' as const })
+  return {
+    kind,
+    createdBy,
+    provider,
+    ...(context.sourceTrigger ? { trigger: context.sourceTrigger } : {}),
+    legacyFormat: format,
+    createdAt: context.now,
+  }
 }
 
 function programFromDays(
@@ -82,7 +89,8 @@ export function adaptCustomProgram(input: unknown, context: AdapterContext): Ada
   const format = 'custom-program-days-v1' as const
   if (context.owner.kind !== 'client') return unsupported(format, 'Owner client explicite requis', context.sourceId)
   if (!isRecord(input) || !Array.isArray(input.days)) return unsupported(format, 'custom_programs.days doit être un tableau', context.sourceId)
-  return programFromDays(input, input.days, format, context, 'personal', input.source === 'ai' ? 'ai' : 'manual', input.source === 'ai' ? 'anthropic' : undefined)
+  const aiOrigin = input.source === 'ai' || input.source === 'onboarding_auto'
+  return programFromDays(input, input.days, format, context, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
 }
 
 export function adaptAiGeneratedProgram(input: unknown, context: AdapterContext): AdapterResult<TrainingProgram> {

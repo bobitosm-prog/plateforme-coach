@@ -84,6 +84,7 @@ TrainingSource = {
   kind: "manual" | "catalog-template" | "ai" | "import" | "legacy";
   createdBy: { kind: "platform" | "coach" | "client" | "system"; id?: UUID };
   provider?: "anthropic" | "moovx-xlsx" | "strong" | "hevy" | string;
+  trigger?: "onboarding";
   legacyFormat?: LegacyFormatId;
   createdAt: Instant;
 }
@@ -91,6 +92,11 @@ TrainingSource = {
 
 La provenance n'accorde aucune autorité. Une sortie IA ou un import doit être
 validé exactement comme une saisie manuelle.
+
+Le trigger optionnel décrit uniquement une cause automatisée effectivement
+prouvée. `onboarding` est actuellement le seul trigger canonique préparé ; les
+autres régénérations automatiques restent hors contrat tant que leur provenance
+n'a pas été caractérisée séparément.
 
 ## Catalogue d'exercices
 
