@@ -215,7 +215,7 @@ describe('custom_programs free_session persisted contract', () => {
     }).result).toBe('UNSUPPORTED')
   })
 
-  it('prepares a distinct expurgated bucket without wiring it into the repository', () => {
+  it('provides a distinct expurgated bucket wired only at the existing active-program read', () => {
     const { row } = buildPersistedFreeSessionCustomProgramFixture()
     expect(isFreeSessionCustomProgramShadowCandidate(row)).toBe(true)
     expect(isManualCustomProgramShadowCandidate(row)).toBe(false)
@@ -253,10 +253,44 @@ describe('custom_programs free_session persisted contract', () => {
     }))
     expect(() => observeActiveFreeSessionCustomProgramShadow(row, () => { throw new Error('observer failed') }))
       .not.toThrow()
+    expect(() => observeActiveFreeSessionCustomProgramShadow(row, observer, {
+      clock: () => { throw new Error('clock failed') },
+    })).not.toThrow()
+    expect(() => observeActiveFreeSessionCustomProgramShadow(row, observer, {
+      correlationId: () => { throw new Error('correlation failed') },
+    })).not.toThrow()
+
+    const adaptationFailureObserver = vi.fn()
+    expect(() => observeActiveFreeSessionCustomProgramShadow(row, adaptationFailureObserver, {
+      adapter: () => { throw new Error('adapter failed') },
+      clock: vi.fn().mockReturnValueOnce(20).mockReturnValueOnce(21),
+      correlationId: () => 'opaque-adaptation-failure',
+    })).not.toThrow()
+    expect(adaptationFailureObserver).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'free-session', result: 'UNSUPPORTED',
+    }))
+
+    const comparisonFailureObserver = vi.fn()
+    expect(() => observeActiveFreeSessionCustomProgramShadow(row, comparisonFailureObserver, {
+      adapter: (input, context) => {
+        const adapted = adaptCustomProgram(input, context)
+        if (adapted.status === 'converted') {
+          Object.defineProperty(adapted.value, 'weeks', {
+            get: () => { throw new Error('comparison failed') },
+          })
+        }
+        return adapted
+      },
+      clock: vi.fn().mockReturnValueOnce(30).mockReturnValueOnce(31),
+      correlationId: () => 'opaque-comparison-failure',
+    })).not.toThrow()
+    expect(comparisonFailureObserver).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'free-session', result: 'UNSUPPORTED',
+    }))
 
     const repository = source('lib/repositories/training/program.ts')
-    expect(repository).not.toContain('observeActiveFreeSessionCustomProgramShadow')
-    expect(repository).not.toContain('isFreeSessionCustomProgramShadowCandidate')
+    expect(repository).toContain('observeActiveFreeSessionCustomProgramShadow(data)')
+    expect(repository).toContain(".eq('user_id', clientUserId).eq('is_active', true).maybeSingle()")
   })
 })
 

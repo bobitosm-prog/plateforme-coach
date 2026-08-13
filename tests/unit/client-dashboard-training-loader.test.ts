@@ -58,6 +58,7 @@ describe('client training dashboard loader', () => {
       },
     })
     if (result.ok) {
+      expect(result.data.activePersonalProgram).toBe(personalProgram)
       expect(result.data.coachProgram?.lundi?.exercises).toEqual([{ name: 'Squat' }])
     }
   })

@@ -4,6 +4,7 @@ import type { DatabaseClient } from '../../lib/supabase/types'
 import { buildPersistedAiCustomProgramFixture } from '../fixtures/custom-program-ai'
 import { buildPersistedCronCustomProgramFixture } from '../fixtures/custom-program-cron'
 import { buildPersistedDiagnosticCustomProgramFixture } from '../fixtures/custom-program-diagnostic'
+import { buildPersistedFreeSessionCustomProgramFixture } from '../fixtures/custom-program-free-session'
 import { buildPersistedOnboardingCustomProgramFixture } from '../fixtures/custom-program-onboarding'
 import {
   ASSIGNED_PROGRAM_PROJECTION,
@@ -219,8 +220,50 @@ describe('Training repositories', () => {
     consoleInfo.mockRestore()
   })
 
-  it('keeps unprepared active programs legacy-only and contains observer failures', async () => {
-    for (const source of ['free_session', 'import', 'unknown', null, undefined]) {
+  it('returns the identical free-session program while emitting its distinct expurgated bucket after one read', async () => {
+    const fixture = buildPersistedFreeSessionCustomProgramFixture()
+    const row = { ...fixture.row, is_active: true }
+    const before = structuredClone(row)
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client)
+      .findActivePersonalProgramForClient('synthetic-free-session-client')
+
+    expect(result.ok && result.data).toBe(row)
+    expect(row).toEqual(before)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.eq).toHaveBeenNthCalledWith(1, 'user_id', 'synthetic-free-session-client')
+    expect(mock.chain.eq).toHaveBeenNthCalledWith(2, 'is_active', true)
+    expect(mock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'free-session',
+      result: 'WARNING',
+      difference_codes: expect.arrayContaining([
+        'SINGLE_SESSION_NO_WEEKLY_SCHEDULE',
+        'LEGACY_NAME_REFERENCE',
+        'SOURCE_WORKOUT_SESSION_LINK_UNAVAILABLE',
+        'EXECUTION_DATA_NOT_PERSISTED',
+        'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE',
+        'EXERCISE_MUSCLE_GROUP_UNMAPPED',
+        'TARGET_REPS_NORMALIZED',
+        'TEMPO_NOT_PERSISTED',
+        'TECHNIQUE_NOT_PERSISTED',
+        'PHASES_NOT_PERSISTED',
+      ]),
+    })
+    expect(Object.keys(consoleInfo.mock.calls[0][1] as object).sort()).toEqual([
+      'adaptation_duration_ms', 'correlation_id', 'difference_codes', 'format',
+      'provenance_bucket', 'result', 'unmapped_field_count', 'warning_count',
+    ])
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/synthetic-free-session|Séance libre|Presse|Tirage/)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps excluded active programs legacy-only and contains observer failures', async () => {
+    for (const source of ['import', 'unknown', null, undefined]) {
       const row = { id: `program-${source}`, user_id: 'client-id', name: 'Program', days: [], source, is_active: true }
       const mock = clientWith({ data: row, error: null })
       const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -277,6 +320,17 @@ describe('Training repositories', () => {
     expect(cronResult.ok && cronResult.data).toBe(cronRow)
     expect(cronMock.from).toHaveBeenCalledTimes(1)
     cronConsoleInfo.mockRestore()
+
+    const freeSessionRow = { ...buildPersistedFreeSessionCustomProgramFixture().row, is_active: true }
+    const freeSessionMock = clientWith({ data: freeSessionRow, error: null })
+    const freeSessionConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer failed') })
+    const freeSessionResult = await createTrainingProgramRepository(freeSessionMock.client)
+      .findActivePersonalProgramForClient('synthetic-free-session-client')
+    expect(freeSessionResult.ok && freeSessionResult.data).toBe(freeSessionRow)
+    expect(freeSessionMock.from).toHaveBeenCalledTimes(1)
+    expect(freeSessionMock.chain.select).toHaveBeenCalledTimes(1)
+    expect(freeSessionMock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    freeSessionConsoleInfo.mockRestore()
   })
 
   it('keeps active-personal read failures authoritative and skips shadow observation', async () => {

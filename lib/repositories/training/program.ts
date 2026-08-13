@@ -10,6 +10,7 @@ import {
   observeActiveAiCustomProgramShadow,
   observeActiveCronCustomProgramShadow,
   observeActiveDiagnosticCustomProgramShadow,
+  observeActiveFreeSessionCustomProgramShadow,
   observeActiveManualCustomProgramShadow,
   observeActiveOnboardingCustomProgramShadow,
 } from '@/lib/training/coexistence/custom-program-shadow-read'
@@ -103,6 +104,7 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       observeActiveOnboardingCustomProgramShadow(data)
       observeActiveDiagnosticCustomProgramShadow(data)
       observeActiveCronCustomProgramShadow(data)
+      observeActiveFreeSessionCustomProgramShadow(data)
       return { ok: true, data }
     },
   }

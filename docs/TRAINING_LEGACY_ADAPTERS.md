@@ -304,12 +304,12 @@ Les métriques locales ajoutent uniquement le bucket de provenance au contrat
 expurgé existant. Elles ne contiennent ni `user_id`, ni identifiant de
 `custom_programs`, ni nom, payload `days`, email, cookie, JWT ou token.
 
-Les provenances `onboarding_auto`, `cron_auto`, `diagnostic_auto`,
-`free_session`, `import`, absentes ou inconnues restent entièrement hors
-shadow. Home, TrainingTab, badges, rappels et détail coach ne sont pas branchés
-ici. Aucun writer canonique, aucune migration SQL et aucune écriture
-supplémentaire ne sont introduits ; le dashboard reste servi depuis le
-programme legacy.
+Les provenances reconnues `ai`, `onboarding_auto`, `diagnostic_auto`,
+`cron_auto` et `free_session` disposent de buckets séparés au même point de
+lecture. `import`, les sources absentes ou inconnues restent hors shadow. Home,
+TrainingTab, badges, rappels et détail coach ne sont pas branchés directement.
+Aucun writer canonique, aucune migration SQL et aucune écriture supplémentaire
+ne sont introduits ; le dashboard reste servi depuis le programme legacy.
 
 ## Shadow read borné : programme personnel issu du Program Builder IA
 
@@ -387,9 +387,10 @@ inline, remplacements d'exercice et activations n'écrivent pas `source` et
 conservent donc `onboarding_auto`. Le repository conserve sa lecture unique,
 ses filtres `user_id`, `is_active = true` et son `maybeSingle()`, puis retourne
 la même référence legacy. Les erreurs du shadow sont isolées et l'erreur
-Supabase reste autoritative. Les sources `cron_auto`, `diagnostic_auto`,
-`import`, `free_session`, absentes ou inconnues restent hors shadow runtime. Aucun
-writer, UI, schéma DB, migration ou workflow CI n'est modifié.
+Supabase reste autoritative. Les autres sources reconnues utilisent leurs
+buckets distincts au même point de lecture. `import`, les sources absentes ou
+inconnues restent hors shadow runtime. Aucun writer, UI, schéma DB, migration
+ou workflow CI n'est modifié.
 
 ## Shadow read borné : régénération `diagnostic_auto`
 
@@ -429,9 +430,9 @@ Le repository conserve sa lecture unique, ses filtres `user_id`,
 `is_active = true` et son `maybeSingle()`, puis retourne la même référence
 legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
 l'observateur restent isolées ; l'erreur Supabase demeure autoritative. Aucun
-writer, UI, schéma DB, migration ou workflow CI n'est modifié. `cron_auto`,
-`import`, `free_session`, les sources absentes ou inconnues restent hors shadow
-runtime.
+writer, UI, schéma DB, migration ou workflow CI n'est modifié. Les autres
+sources reconnues utilisent leurs buckets distincts ; `import`, les sources
+absentes ou inconnues restent hors shadow runtime.
 
 ## Shadow read borné : régénération `cron_auto`
 
@@ -475,16 +476,20 @@ cron. Le repository conserve sa lecture unique, ses filtres `user_id`,
 `is_active = true` et son `maybeSingle()`, puis retourne la même référence
 legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
 l'observateur restent isolées ; l'erreur Supabase demeure autoritative.
-`import`, `free_session`, les sources absentes ou inconnues restent hors shadow
-runtime. Aucun writer, UI, schéma DB, migration ou workflow CI n'est modifié.
+Les autres sources reconnues utilisent leurs buckets distincts. `import`, les
+sources absentes ou inconnues restent hors shadow runtime. Aucun writer, UI,
+schéma DB, migration ou workflow CI n'est modifié.
 
-## Contrat préparatoire : modèle mono-séance `free_session`
+## Shadow read borné : modèle mono-séance `free_session`
 
-Le bucket `free-session` est défini dans le contrat de coexistence mais reste
-volontairement non branché dans `findActivePersonalProgramForClient`. Le
-dashboard ne l'observe pas encore et continue à servir la ligne legacy. La
-source `import`, les sources absentes et les sources inconnues restent aussi
-hors shadow runtime.
+Le dashboard observe désormais le bucket distinct `free-session` au même point
+post-lecture que les buckets manuel, Program Builder IA, onboarding,
+diagnostic et cron. `findActivePersonalProgramForClient` conserve exactement
+sa lecture unique filtrée par `user_id`, `is_active = true` et son
+`maybeSingle()`, puis retourne la même référence legacy. Le shadow n'enrichit
+ni ne remplace la donnée servie. `import` reste la dernière provenance nommée
+de `custom_programs` hors shadow ; les sources absentes ou inconnues restent
+également exclues.
 
 Le writer réel est `saveAsTemplate` dans `WorkoutSession`. Après une séance
 contenant au moins un exercice, le client peut enregistrer un modèle
@@ -521,4 +526,8 @@ ré-inférence de l'origine antérieure n'est ensuite effectuée.
 Le writer conserve une dette distincte, seulement caractérisée dans ce
 sous-batch : il ne contrôle pas le résultat de l'insertion avant d'afficher le
 toast de succès. Une insertion échouée peut donc être présentée comme réussie.
-Le contrat shadow ne corrige ni ce comportement, ni le writer, ni la base.
+Le contrat shadow ne corrige ni ce comportement, ni le writer, ni la base. Les
+erreurs d'adaptation, de comparaison, de chronométrage ou d'observation restent
+isolées ; une erreur Supabase demeure autoritative. Aucune requête, mutation,
+écriture canonique, migration ou modification UI/CI supplémentaire n'est
+introduite.
