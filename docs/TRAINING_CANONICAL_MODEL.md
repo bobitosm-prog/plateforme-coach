@@ -103,6 +103,14 @@ terminée comme modèle mono-séance réutilisable. Le trigger ne reconstitue
 aucune relation absente du stockage et ne transforme pas l'acteur technique en
 owner métier.
 
+Une ligne historique `custom_programs.source = import` prouve uniquement une
+origine importée. Elle produit `kind = import`, appartient au client et a été
+créée par ce client, mais son provider reste absent : le writer historique ne
+persiste ni le parser, ni le fichier, ni une origine MoovX, Strong ou Hevy.
+Cette provenance est nommée `import-unknown` au niveau du bucket d'observation.
+Elle n'utilise pas de trigger et ne doit jamais être précisée depuis le nom du
+fichier, le nom du programme ou le payload déjà normalisé.
+
 ## Catalogue d'exercices
 
 ### `ExerciseCatalogEntry`

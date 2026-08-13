@@ -17,8 +17,9 @@ export const CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE = 'onboarding-auto' as 
 export const CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE = 'diagnostic-auto' as const
 export const CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE = 'cron-auto' as const
 export const CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE = 'free-session' as const
+export const CUSTOM_PROGRAM_IMPORT_SHADOW_PROVENANCE = 'import-unknown' as const
 
-export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto' | 'cron_auto' | 'free_session'
+export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto' | 'cron_auto' | 'free_session' | 'import'
 export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
@@ -26,6 +27,7 @@ export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_IMPORT_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -63,6 +65,10 @@ export type CustomProgramDifferenceCode =
   | 'TEMPO_NOT_PERSISTED'
   | 'TECHNIQUE_NOT_PERSISTED'
   | 'PHASES_NOT_PERSISTED'
+  | 'IMPORT_SOURCE_UNKNOWN'
+  | 'IMPORT_ORIGINAL_FILE_UNAVAILABLE'
+  | 'IMPORT_FIELDS_UNMAPPED'
+  | 'IMPORT_WEIGHT_UNMAPPED'
   | 'ADAPTER_WARNINGS'
   | 'UNMAPPED_FIELDS'
   | 'CANONICAL_PARTIAL'
@@ -178,6 +184,12 @@ export function isFreeSessionCustomProgramShadowCandidate(
   row: PersonalProgramRow | null | undefined,
 ): row is PersonalProgramRow & { source: 'free_session' } {
   return row?.source === 'free_session'
+}
+
+export function isImportCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'import' } {
+  return row?.source === 'import'
 }
 
 /**
@@ -452,7 +464,7 @@ export function compareCustomProgramShadow(
     const legacy = legacyProjection(row)
     const canonical = canonicalProjection(adapted.value)
     if (!legacy || !canonical) {
-      if (row.source === 'cron_auto' || row.source === 'free_session') return unsupportedResult()
+      if (row.source === 'cron_auto' || row.source === 'free_session' || row.source === 'import') return unsupportedResult()
       return {
         format: CUSTOM_PROGRAM_SHADOW_FORMAT,
         result: 'CRITICAL_MISMATCH',
@@ -520,6 +532,16 @@ export function compareCustomProgramShadow(
         differences.push({ code: 'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE', path: 'days.exercises.exercise_id' })
       }
     }
+    if (row.source === 'import') {
+      differences.push({ code: 'IMPORT_SOURCE_UNKNOWN', path: 'source.provider' })
+      differences.push({ code: 'IMPORT_ORIGINAL_FILE_UNAVAILABLE', path: 'source.original_file' })
+      if (row.phases !== null || containsNestedField(row.days, 'phases') || containsNestedField(row.days, 'technique') || containsNestedField(row.days, 'weight')) {
+        differences.push({ code: 'IMPORT_FIELDS_UNMAPPED', path: 'import.fields' })
+      }
+      if (containsNestedValue(row.days, 'weight')) {
+        differences.push({ code: 'IMPORT_WEIGHT_UNMAPPED', path: 'days.exercises.weight' })
+      }
+    }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
     }
@@ -538,6 +560,8 @@ export function compareCustomProgramShadow(
       'EXECUTION_DATA_NOT_PERSISTED', 'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE',
       'EXERCISE_MUSCLE_GROUP_UNMAPPED', 'TARGET_REPS_NORMALIZED',
       'TEMPO_NOT_PERSISTED', 'TECHNIQUE_NOT_PERSISTED', 'PHASES_NOT_PERSISTED',
+      'IMPORT_SOURCE_UNKNOWN', 'IMPORT_ORIGINAL_FILE_UNAVAILABLE',
+      'IMPORT_FIELDS_UNMAPPED', 'IMPORT_WEIGHT_UNMAPPED',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
     return {
@@ -700,6 +724,28 @@ export function observeActiveFreeSessionCustomProgramShadow(
       clock() - startedAt,
       correlationId(),
       CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE,
+    ))
+  } catch {
+    // Prepared shadow observability must never affect a future legacy dashboard read.
+  }
+}
+
+export function observeActiveImportCustomProgramShadow(
+  row: PersonalProgramRow | null | undefined,
+  observer: CustomProgramShadowObserver = localConsoleObserver,
+  dependencies: ObserveDependencies = {},
+): void {
+  if (!isImportCustomProgramShadowCandidate(row)) return
+  try {
+    const clock = dependencies.clock ?? (() => performance.now())
+    const correlationId = dependencies.correlationId ?? defaultCorrelationId
+    const startedAt = clock()
+    const result = compareCustomProgramShadow(row, dependencies)
+    observer(toCustomProgramShadowMetric(
+      result,
+      clock() - startedAt,
+      correlationId(),
+      CUSTOM_PROGRAM_IMPORT_SHADOW_PROVENANCE,
     ))
   } catch {
     // Prepared shadow observability must never affect a future legacy dashboard read.

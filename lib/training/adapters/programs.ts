@@ -96,7 +96,12 @@ export function adaptCustomProgram(input: unknown, context: AdapterContext): Ada
   const sourceContext = input.source === 'free_session'
     ? { ...context, sourceTrigger: 'free_session' as const }
     : context
-  return programFromDays(input, input.days, format, sourceContext, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
+  const sourceKind: TrainingSource['kind'] = aiOrigin
+    ? 'ai'
+    : input.source === 'import'
+      ? 'import'
+      : 'manual'
+  return programFromDays(input, input.days, format, sourceContext, 'personal', sourceKind, aiOrigin ? 'anthropic' : undefined)
 }
 
 export function adaptAiGeneratedProgram(input: unknown, context: AdapterContext): AdapterResult<TrainingProgram> {

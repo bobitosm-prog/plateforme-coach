@@ -531,3 +531,42 @@ erreurs d'adaptation, de comparaison, de chronométrage ou d'observation restent
 isolées ; une erreur Supabase demeure autoritative. Aucune requête, mutation,
 écriture canonique, migration ou modification UI/CI supplémentaire n'est
 introduite.
+
+## Contrat préparatoire : import historique `import-unknown`
+
+Le bucket `import-unknown` est défini dans le contrat de coexistence mais reste
+volontairement non branché dans `findActivePersonalProgramForClient`. Le
+dashboard continue donc à servir la ligne legacy sans observer `source =
+import`. Aucun changement n'est apporté au parser XLSX, à la preview, au writer
+TrainingTab, au repository, à l'UI ou à la base.
+
+Une ligne historique `source = import` ne conserve que la forme normalisée
+déjà persistée. Le fichier original, le type de parser, les feuilles ignorées
+et l'origine MoovX, Strong ou Hevy ne sont pas stockés. Le nom du programme est
+modifiable pendant la preview et peut provenir du nom du fichier : il n'est
+donc jamais une preuve de provenance. `adaptCustomProgram` classe explicitement
+ces lignes comme `kind = import`, avec owner et `createdBy` client, provider
+absent et aucun trigger artificiel. Il ne réutilise pas
+`adaptImportedProgram`, réservé à une frontière où le provider est encore
+prouvé.
+
+La comparaison conserve comme dimensions critiques l'ownership, le nom
+racine, l'ordre et le repos des jours, l'ordre et les références des exercices,
+ainsi que les séries, répétitions et repos déjà persistés. L'origine inconnue,
+l'absence du fichier, les références nominales, les champs d'import non
+mappés, les phases, la sémantique technique et un éventuel `weight` non mappé
+restent des warnings. `IMPORT_SERIES_DETAIL_LOST` n'est pas émis pour une ligne
+historique : sans provenance tierce autoritative, cela inventerait une
+agrégation Strong/Hevy qui n'est pas démontrable.
+
+L'activation, la planification, l'édition inline et le remplacement d'exercice
+omettent `source` et conservent donc `import`. Une édition complète dans Program
+Builder sauvegarde la ligne comme `manual` et aucune origine import n'est
+ré-inférée ensuite.
+
+Un sous-batch writer futur pourra éventuellement persister les valeurs
+additives `import_moovx`, `import_strong` et `import_hevy` sans nouvelle
+colonne, après caractérisation autoritative de chaque format. Les anciennes
+lignes resteront `source = import`, donc `import-unknown`, sans backfill ni
+inférence rétroactive. Ces sources futures ne sont ni reconnues ni écrites par
+le présent contrat.
