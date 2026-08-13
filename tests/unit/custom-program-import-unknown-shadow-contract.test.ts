@@ -200,7 +200,7 @@ describe('historical custom_programs import-unknown contract', () => {
     }).result).toBe('UNSUPPORTED')
   })
 
-  it('prepares a distinct expurgated metric without wiring import into the repository', () => {
+  it('provides a distinct expurgated metric wired only at the existing active-program read', () => {
     const row = buildPersistedImportUnknownFixture()
     expect(isImportCustomProgramShadowCandidate(row)).toBe(true)
     expect(isManualCustomProgramShadowCandidate(row)).toBe(false)
@@ -238,10 +238,44 @@ describe('historical custom_programs import-unknown contract', () => {
     }))
     expect(() => observeActiveImportCustomProgramShadow(row, () => { throw new Error('observer failed') }))
       .not.toThrow()
+    expect(() => observeActiveImportCustomProgramShadow(row, observer, {
+      clock: () => { throw new Error('clock failed') },
+    })).not.toThrow()
+    expect(() => observeActiveImportCustomProgramShadow(row, observer, {
+      correlationId: () => { throw new Error('correlation failed') },
+    })).not.toThrow()
+
+    const adaptationFailureObserver = vi.fn()
+    expect(() => observeActiveImportCustomProgramShadow(row, adaptationFailureObserver, {
+      adapter: () => { throw new Error('adapter failed') },
+      clock: vi.fn().mockReturnValueOnce(20).mockReturnValueOnce(21),
+      correlationId: () => 'opaque-adaptation-failure',
+    })).not.toThrow()
+    expect(adaptationFailureObserver).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'import-unknown', result: 'UNSUPPORTED',
+    }))
+
+    const comparisonFailureObserver = vi.fn()
+    expect(() => observeActiveImportCustomProgramShadow(row, comparisonFailureObserver, {
+      adapter: (input, context) => {
+        const adapted = adaptCustomProgram(input, context)
+        if (adapted.status === 'converted') {
+          Object.defineProperty(adapted.value, 'weeks', {
+            get: () => { throw new Error('comparison failed') },
+          })
+        }
+        return adapted
+      },
+      clock: vi.fn().mockReturnValueOnce(30).mockReturnValueOnce(31),
+      correlationId: () => 'opaque-comparison-failure',
+    })).not.toThrow()
+    expect(comparisonFailureObserver).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'import-unknown', result: 'UNSUPPORTED',
+    }))
 
     const repository = source('lib/repositories/training/program.ts')
-    expect(repository).not.toContain('observeActiveImportCustomProgramShadow')
-    expect(repository).not.toContain('isImportCustomProgramShadowCandidate')
+    expect(repository).toContain('observeActiveImportCustomProgramShadow(data)')
+    expect(repository).toContain(".eq('user_id', clientUserId).eq('is_active', true).maybeSingle()")
   })
 })
 

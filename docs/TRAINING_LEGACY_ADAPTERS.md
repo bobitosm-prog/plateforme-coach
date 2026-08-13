@@ -305,8 +305,8 @@ expurgé existant. Elles ne contiennent ni `user_id`, ni identifiant de
 `custom_programs`, ni nom, payload `days`, email, cookie, JWT ou token.
 
 Les provenances reconnues `ai`, `onboarding_auto`, `diagnostic_auto`,
-`cron_auto` et `free_session` disposent de buckets séparés au même point de
-lecture. `import`, les sources absentes ou inconnues restent hors shadow. Home,
+`cron_auto`, `free_session` et `import` disposent de buckets séparés au même
+point de lecture. Les sources absentes ou inconnues restent hors shadow. Home,
 TrainingTab, badges, rappels et détail coach ne sont pas branchés directement.
 Aucun writer canonique, aucune migration SQL et aucune écriture supplémentaire
 ne sont introduits ; le dashboard reste servi depuis le programme legacy.
@@ -388,9 +388,9 @@ conservent donc `onboarding_auto`. Le repository conserve sa lecture unique,
 ses filtres `user_id`, `is_active = true` et son `maybeSingle()`, puis retourne
 la même référence legacy. Les erreurs du shadow sont isolées et l'erreur
 Supabase reste autoritative. Les autres sources reconnues utilisent leurs
-buckets distincts au même point de lecture. `import`, les sources absentes ou
-inconnues restent hors shadow runtime. Aucun writer, UI, schéma DB, migration
-ou workflow CI n'est modifié.
+buckets distincts au même point de lecture. Les sources absentes ou inconnues
+restent hors shadow runtime. Aucun writer, UI, schéma DB, migration ou workflow
+CI n'est modifié.
 
 ## Shadow read borné : régénération `diagnostic_auto`
 
@@ -476,9 +476,9 @@ cron. Le repository conserve sa lecture unique, ses filtres `user_id`,
 `is_active = true` et son `maybeSingle()`, puis retourne la même référence
 legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
 l'observateur restent isolées ; l'erreur Supabase demeure autoritative.
-Les autres sources reconnues utilisent leurs buckets distincts. `import`, les
-sources absentes ou inconnues restent hors shadow runtime. Aucun writer, UI,
-schéma DB, migration ou workflow CI n'est modifié.
+Les autres sources reconnues utilisent leurs buckets distincts. Les sources
+absentes ou inconnues restent hors shadow runtime. Aucun writer, UI, schéma DB,
+migration ou workflow CI n'est modifié.
 
 ## Shadow read borné : modèle mono-séance `free_session`
 
@@ -487,9 +487,8 @@ post-lecture que les buckets manuel, Program Builder IA, onboarding,
 diagnostic et cron. `findActivePersonalProgramForClient` conserve exactement
 sa lecture unique filtrée par `user_id`, `is_active = true` et son
 `maybeSingle()`, puis retourne la même référence legacy. Le shadow n'enrichit
-ni ne remplace la donnée servie. `import` reste la dernière provenance nommée
-de `custom_programs` hors shadow ; les sources absentes ou inconnues restent
-également exclues.
+ni ne remplace la donnée servie. Les autres provenances connues utilisent leurs
+buckets distincts ; les sources absentes ou inconnues restent exclues.
 
 Le writer réel est `saveAsTemplate` dans `WorkoutSession`. Après une séance
 contenant au moins un exercice, le client peut enregistrer un modèle
@@ -532,13 +531,15 @@ isolées ; une erreur Supabase demeure autoritative. Aucune requête, mutation,
 écriture canonique, migration ou modification UI/CI supplémentaire n'est
 introduite.
 
-## Contrat préparatoire : import historique `import-unknown`
+## Shadow read borné : import historique `import-unknown`
 
-Le bucket `import-unknown` est défini dans le contrat de coexistence mais reste
-volontairement non branché dans `findActivePersonalProgramForClient`. Le
-dashboard continue donc à servir la ligne legacy sans observer `source =
-import`. Aucun changement n'est apporté au parser XLSX, à la preview, au writer
-TrainingTab, au repository, à l'UI ou à la base.
+Le dashboard observe désormais le bucket `import-unknown` au même point
+post-lecture que les six autres buckets `custom_programs`. Les sept sources
+connues sont donc observables en shadow. `findActivePersonalProgramForClient`
+conserve sa lecture unique filtrée par `user_id`, `is_active = true` et son
+`maybeSingle()`, puis retourne la même référence legacy. Les sources absentes
+ou inconnues restent hors shadow. Aucun changement n'est apporté au parser
+XLSX, à la preview, au writer TrainingTab, à l'UI ou à la base.
 
 Une ligne historique `source = import` ne conserve que la forme normalisée
 déjà persistée. Le fichier original, le type de parser, les feuilles ignorées
@@ -569,4 +570,7 @@ additives `import_moovx`, `import_strong` et `import_hevy` sans nouvelle
 colonne, après caractérisation autoritative de chaque format. Les anciennes
 lignes resteront `source = import`, donc `import-unknown`, sans backfill ni
 inférence rétroactive. Ces sources futures ne sont ni reconnues ni écrites par
-le présent contrat.
+le présent contrat. Les erreurs d'adaptation, de comparaison, de chronométrage
+ou d'observation restent isolées ; une erreur Supabase demeure autoritative.
+Aucune requête, mutation ou valeur canonique servie n'est ajoutée : le
+dashboard continue à consommer exclusivement la ligne legacy.

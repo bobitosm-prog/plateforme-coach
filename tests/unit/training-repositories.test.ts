@@ -5,6 +5,7 @@ import { buildPersistedAiCustomProgramFixture } from '../fixtures/custom-program
 import { buildPersistedCronCustomProgramFixture } from '../fixtures/custom-program-cron'
 import { buildPersistedDiagnosticCustomProgramFixture } from '../fixtures/custom-program-diagnostic'
 import { buildPersistedFreeSessionCustomProgramFixture } from '../fixtures/custom-program-free-session'
+import { buildPersistedImportUnknownFixture } from '../fixtures/custom-program-import-unknown'
 import { buildPersistedOnboardingCustomProgramFixture } from '../fixtures/custom-program-onboarding'
 import {
   ASSIGNED_PROGRAM_PROJECTION,
@@ -262,8 +263,48 @@ describe('Training repositories', () => {
     consoleInfo.mockRestore()
   })
 
+  it('returns the identical historical import while emitting import-unknown after one read', async () => {
+    const row = buildPersistedImportUnknownFixture()
+    const before = structuredClone(row)
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client)
+      .findActivePersonalProgramForClient('synthetic-import-client')
+
+    expect(result.ok && result.data).toBe(row)
+    expect(row).toEqual(before)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.eq).toHaveBeenNthCalledWith(1, 'user_id', 'synthetic-import-client')
+    expect(mock.chain.eq).toHaveBeenNthCalledWith(2, 'is_active', true)
+    expect(mock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'import-unknown',
+      result: 'WARNING',
+      difference_codes: expect.arrayContaining([
+        'IMPORT_SOURCE_UNKNOWN',
+        'IMPORT_ORIGINAL_FILE_UNAVAILABLE',
+        'LEGACY_NAME_REFERENCE',
+        'IMPORT_FIELDS_UNMAPPED',
+        'PHASES_UNMAPPED',
+        'TECHNIQUE_SEMANTICS_UNMAPPED',
+        'IMPORT_WEIGHT_UNMAPPED',
+      ]),
+    })
+    expect((consoleInfo.mock.calls[0][1] as { difference_codes: string[] }).difference_codes)
+      .not.toContain('IMPORT_SERIES_DETAIL_LOST')
+    expect(Object.keys(consoleInfo.mock.calls[0][1] as object).sort()).toEqual([
+      'adaptation_duration_ms', 'correlation_id', 'difference_codes', 'format',
+      'provenance_bucket', 'result', 'unmapped_field_count', 'warning_count',
+    ])
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/synthetic-import|Programme importé|Mouvement poussé|Mouvement tiré|MoovX|Strong|Hevy/)
+    consoleInfo.mockRestore()
+  })
+
   it('keeps excluded active programs legacy-only and contains observer failures', async () => {
-    for (const source of ['import', 'unknown', null, undefined]) {
+    for (const source of ['unknown', null, undefined]) {
       const row = { id: `program-${source}`, user_id: 'client-id', name: 'Program', days: [], source, is_active: true }
       const mock = clientWith({ data: row, error: null })
       const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -331,6 +372,17 @@ describe('Training repositories', () => {
     expect(freeSessionMock.chain.select).toHaveBeenCalledTimes(1)
     expect(freeSessionMock.chain.maybeSingle).toHaveBeenCalledTimes(1)
     freeSessionConsoleInfo.mockRestore()
+
+    const importRow = buildPersistedImportUnknownFixture()
+    const importMock = clientWith({ data: importRow, error: null })
+    const importConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer failed') })
+    const importResult = await createTrainingProgramRepository(importMock.client)
+      .findActivePersonalProgramForClient('synthetic-import-client')
+    expect(importResult.ok && importResult.data).toBe(importRow)
+    expect(importMock.from).toHaveBeenCalledTimes(1)
+    expect(importMock.chain.select).toHaveBeenCalledTimes(1)
+    expect(importMock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    importConsoleInfo.mockRestore()
   })
 
   it('keeps active-personal read failures authoritative and skips shadow observation', async () => {
