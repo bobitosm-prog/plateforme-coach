@@ -22,6 +22,8 @@ import {
   createTrainingProgramRepository,
   createTrainingSessionRepository,
 } from '../../lib/repositories/training'
+import { adaptCoachTemplate } from '../../lib/training/adapters'
+import { createCoachTemplateCanonicalServingValidationControl } from '../../lib/training/coexistence/coach-template-serving-contract'
 
 type QueryResult = { data: unknown; error: unknown }
 
@@ -481,7 +483,7 @@ describe('Training repositories', () => {
     const mock = clientWith({ data: [row], error: null })
     const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
     const result = await createTrainingProgramRepository(mock.client, {
-      coachTemplateServingMode: 'canonical-when-identical',
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl(),
     }).listCoachProgramPage('coach-id')
 
     expect(result.ok && result.data.items[0]).not.toBe(row)
@@ -499,7 +501,7 @@ describe('Training repositories', () => {
     const warningMock = clientWith({ data: [warning], error: null })
     const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
     const warningResult = await createTrainingProgramRepository(warningMock.client, {
-      coachTemplateServingMode: 'canonical-when-identical',
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl(),
     }).listCoachProgramPage('coach-id')
     expect(warningResult.ok && warningResult.data.items[0]).toBe(warning)
     expect(warningMock.from).toHaveBeenCalledTimes(1)
@@ -507,10 +509,57 @@ describe('Training repositories', () => {
     const unsupported = coachTemplateRow('template-unsupported', { someday: [] })
     const unsupportedMock = clientWith({ data: [unsupported], error: null })
     const unsupportedResult = await createTrainingProgramRepository(unsupportedMock.client, {
-      coachTemplateServingMode: 'canonical-when-identical',
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl(),
     }).listCoachProgramPage('coach-id')
     expect(unsupportedResult.ok && unsupportedResult.data.items[0]).toBe(unsupported)
     expect(unsupportedMock.from).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('contains controlled serving adapter failures and keeps the one legacy read authoritative', async () => {
+    const row = coachTemplateRow('template-adapter-error')
+    const mock = clientWith({ data: [row], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client, {
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl({
+        adapter: () => { throw new Error('validation adapter unavailable') },
+      }),
+    }).listCoachProgramPage('coach-id')
+
+    expect(result.ok && result.data.items[0]).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('contains controlled critical mismatches and presentation differences by legacy identity', async () => {
+    const critical = coachTemplateRow('template-critical')
+    const criticalMock = clientWith({ data: [critical], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const criticalResult = await createTrainingProgramRepository(criticalMock.client, {
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl({
+        adapter: (input, context) => {
+          const adapted = adaptCoachTemplate(input, context)
+          if (adapted.status !== 'converted') return adapted
+          return { ...adapted, value: { ...adapted.value, owner: { kind: 'coach', coachId: 'another-coach' } } }
+        },
+      }),
+    }).listCoachProgramPage('coach-id')
+    expect(criticalResult.ok && criticalResult.data.items[0]).toBe(critical)
+    expect(criticalMock.from).toHaveBeenCalledTimes(1)
+
+    const representation = coachTemplateRow('template-representation', {
+      days: [{
+        name: 'Push',
+        exercises: [{ exercise_id: 'bench', name: 'Développé couché', sets: 3, reps: '8', rest: 90 }],
+      }],
+    })
+    const representationMock = clientWith({ data: [representation], error: null })
+    const representationResult = await createTrainingProgramRepository(representationMock.client, {
+      coachTemplateServingControl: createCoachTemplateCanonicalServingValidationControl(),
+    }).listCoachProgramPage('coach-id')
+    expect(representationResult.ok && representationResult.data.items[0]).toBe(representation)
+    expect(representationMock.from).toHaveBeenCalledTimes(1)
     consoleInfo.mockRestore()
   })
 

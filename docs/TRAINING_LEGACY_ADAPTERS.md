@@ -606,6 +606,8 @@ d'adaptation ou une projection UI différente conservent la ligne legacy
 originale par identité. La page conserve l'ordre, `hasMore` et `nextCursor` ;
 aucune entrée n'est supprimée et aucun tri n'est rejoué. Ce contrat ne change
 ni la requête Supabase, ni la pagination runtime, ni le serving actuel. Le
-repository ne rend le mode `canonical-when-identical` accessible que par sa
-configuration interne ; sans cette configuration, `legacy-only` est toujours
-utilisé.
+repository ne rend le mode `canonical-when-identical` accessible que par un
+contrôle interne créé explicitement avec
+`createCoachTemplateCanonicalServingValidationControl`. Aucun hook, composant,
+flag d'environnement ou configuration distante ne construit ce contrôle. Sans
+lui, `legacy-only` est toujours utilisé.

@@ -5,7 +5,7 @@ import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
   prepareCoachTemplatePageForServing,
-  type CoachTemplateServingMode,
+  type CoachTemplateCanonicalServingValidationControl,
 } from '@/lib/training/coexistence/coach-template-serving-contract'
 import {
   observeClientProgramShadow,
@@ -38,15 +38,14 @@ export type AssignedProgramReadOptions = {
 }
 
 type TrainingProgramRepositoryInternalOptions = {
-  readonly coachTemplateServingMode?: CoachTemplateServingMode
+  readonly coachTemplateServingControl?: CoachTemplateCanonicalServingValidationControl
 }
 
 export function createTrainingProgramRepository(
   client: DatabaseClient,
   internalOptions: TrainingProgramRepositoryInternalOptions = {},
 ) {
-  const coachTemplateServingMode = internalOptions.coachTemplateServingMode
-    ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE
+  const coachTemplateServingControl = internalOptions.coachTemplateServingControl
   return {
     async listCoachProgramPage(
       coachUserId: string,
@@ -79,7 +78,8 @@ export function createTrainingProgramRepository(
       const serving = prepareCoachTemplatePageForServing(
         legacyPage,
         coachUserId,
-        coachTemplateServingMode,
+        coachTemplateServingControl?.mode ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+        coachTemplateServingControl?.dependencies,
       )
       return { ok: true, data: serving.page }
     },

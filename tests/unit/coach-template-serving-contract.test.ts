@@ -2,8 +2,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import type { PaginatedResult } from '../../lib/repositories/pagination'
 import type { CoachProgramRow } from '../../lib/repositories/training/program'
+import { adaptCoachTemplate } from '../../lib/training/adapters'
+import type { AdapterContext, AdapterResult, TrainingProgram } from '../../lib/training/model'
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+  createCoachTemplateCanonicalServingValidationControl,
   prepareCoachTemplatePageForServing,
 } from '../../lib/training/coexistence/coach-template-serving-contract'
 
@@ -32,6 +35,17 @@ const page = (items: readonly CoachProgramRow[]): PaginatedResult<CoachProgramRo
   nextCursor: 'opaque-next-cursor',
 })
 
+const adapterWith = (mutate: (program: TrainingProgram) => void) => (
+  input: unknown,
+  context: AdapterContext,
+): AdapterResult<TrainingProgram> => {
+  const result = adaptCoachTemplate(input, context)
+  if (result.status !== 'converted') return result
+  const value = structuredClone(result.value)
+  mutate(value)
+  return { ...result, value }
+}
+
 describe('future coach-template canonical serving contract', () => {
   it('keeps legacy-only as the default and returns the original page for an immediate rollback', () => {
     const input = page([row('template-1')])
@@ -50,6 +64,14 @@ describe('future coach-template canonical serving contract', () => {
     expect(result.decisions).toEqual([{ id: 'template-1', source: 'canonical', shadowResult: 'MATCH' }])
     expect(result.page.items[0]).not.toBe(input)
     expect(result.page.items[0]).toEqual(input)
+  })
+
+  it('creates an explicit validation-only activation without changing the default mode', () => {
+    expect(createCoachTemplateCanonicalServingValidationControl()).toEqual({
+      mode: 'canonical-when-identical',
+      dependencies: {},
+    })
+    expect(COACH_TEMPLATE_SERVING_DEFAULT_MODE).toBe('legacy-only')
   })
 
   it('preserves page order, cursor and hasMore without mutating either page', () => {
@@ -81,6 +103,17 @@ describe('future coach-template canonical serving contract', () => {
     expect(result.page.items[0]).toBe(input)
     expect(result.decisions).toEqual([{
       id: 'unsupported', source: 'legacy-fallback', reason: 'UNSUPPORTED', shadowResult: 'UNSUPPORTED',
+    }])
+  })
+
+  it('falls back by identity for a CRITICAL_MISMATCH', () => {
+    const input = row('critical')
+    const result = prepareCoachTemplatePageForServing(page([input]), 'coach-1', 'canonical-when-identical', {
+      adapter: adapterWith(program => { program.owner = { kind: 'coach', coachId: 'another-coach' } }),
+    })
+    expect(result.page.items[0]).toBe(input)
+    expect(result.decisions).toEqual([{
+      id: 'critical', source: 'legacy-fallback', reason: 'CRITICAL_MISMATCH', shadowResult: 'CRITICAL_MISMATCH',
     }])
   })
 

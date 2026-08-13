@@ -43,8 +43,19 @@ type CoachTemplateAdapter = (
   context: AdapterContext,
 ) => AdapterResult<TrainingProgram>
 
-type ServingDependencies = {
+export type CoachTemplateServingDependencies = {
   readonly adapter?: CoachTemplateAdapter
+}
+
+export type CoachTemplateCanonicalServingValidationControl = {
+  readonly mode: 'canonical-when-identical'
+  readonly dependencies: CoachTemplateServingDependencies
+}
+
+export function createCoachTemplateCanonicalServingValidationControl(
+  dependencies: CoachTemplateServingDependencies = {},
+): CoachTemplateCanonicalServingValidationControl {
+  return { mode: 'canonical-when-identical', dependencies }
 }
 
 type JsonObject = { [key: string]: Json | undefined }
@@ -214,7 +225,7 @@ function prepareItem(
   row: CoachProgramRow,
   coachId: string,
   mode: CoachTemplateServingMode,
-  dependencies: ServingDependencies,
+  dependencies: CoachTemplateServingDependencies,
 ): { readonly item: CoachProgramRow; readonly decision: CoachTemplateServingDecision } {
   if (mode === 'legacy-only') {
     return {
@@ -267,7 +278,7 @@ export function prepareCoachTemplatePageForServing(
   page: PaginatedResult<CoachProgramRow>,
   coachId: string,
   mode: CoachTemplateServingMode = COACH_TEMPLATE_SERVING_DEFAULT_MODE,
-  dependencies: ServingDependencies = {},
+  dependencies: CoachTemplateServingDependencies = {},
 ): CoachTemplateServingPage {
   if (mode === 'legacy-only') {
     return {
