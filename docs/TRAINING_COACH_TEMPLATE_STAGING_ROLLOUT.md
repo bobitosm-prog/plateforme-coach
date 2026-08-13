@@ -54,6 +54,12 @@ Même après activation staging, chaque ligne reste soumise au contrat actuel :
 Une activation globale du mode n'autorise donc jamais une ligne individuelle
 à contourner les conditions `MATCH` et identité UI.
 
+Le mode interne `assessment-only` exécute exactement cette évaluation
+`canonical-when-identical`, mais écarte toujours la page évaluée et retourne la
+page legacy et toutes ses lignes par identité. Il n'est construit que par
+`createCoachTemplateAssessmentControl` et n'est branché par aucun hook, UI,
+flag d'environnement ou configuration distante.
+
 ## Observabilité obligatoire avant activation
 
 Les métriques shadow actuelles indiquent le format, le résultat, les codes de
@@ -70,6 +76,13 @@ exercices, payload JSON, email, cookie, JWT, token ou header d'autorisation.
 L'observateur est fail-safe et n'ajoute ni requête distante ni effet sur la
 réponse legacy. Une page vide, une erreur de lecture et les autres readers
 Training n'émettent aucun événement de décision.
+
+En `assessment-only`, un événement agrégé par page contient exclusivement un
+identifiant de run opaque généré dans le contrôle, la séquence de page, le
+nombre de lignes, le marqueur de page terminale, les six compteurs de décision
+et le compteur d'erreur observateur. Il ne contient ni curseur, timestamp
+métier, identifiant, nom ou payload. Le même contrôle conserve son run opaque
+et incrémente la séquence entre les pages d'un parcours.
 
 ## Baseline avant activation
 

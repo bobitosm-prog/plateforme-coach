@@ -23,7 +23,10 @@ import {
   createTrainingSessionRepository,
 } from '../../lib/repositories/training'
 import { adaptCoachTemplate } from '../../lib/training/adapters'
-import { createCoachTemplateCanonicalServingValidationControl } from '../../lib/training/coexistence/coach-template-serving-contract'
+import {
+  createCoachTemplateAssessmentControl,
+  createCoachTemplateCanonicalServingValidationControl,
+} from '../../lib/training/coexistence/coach-template-serving-contract'
 
 type QueryResult = { data: unknown; error: unknown }
 
@@ -539,6 +542,123 @@ describe('Training repositories', () => {
     const failed = clientWith({ data: null, error: { code: 'PGRST000', message: 'unavailable' } })
     await createTrainingProgramRepository(failed.client).listCoachProgramPage('coach-id')
     expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([])
+    consoleInfo.mockRestore()
+  })
+
+  it('assesses all six categories per page while returning every legacy row by identity after one read', async () => {
+    const rows = [
+      coachTemplateRow('canonical'),
+      coachTemplateRow('warning', {
+        split: 'PPL',
+        days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
+      }),
+      coachTemplateRow('critical'),
+      coachTemplateRow('unsupported', { someday: [] }),
+      coachTemplateRow('presentation', {
+        days: [{ name: 'Push', exercises: [{ exercise_id: 'bench', name: 'Développé couché', sets: 3, reps: '8', rest: 90 }] }],
+      }),
+      coachTemplateRow('adaptation-error'),
+    ]
+    const assessmentEvents: unknown[] = []
+    const control = createCoachTemplateAssessmentControl({
+      observer: event => assessmentEvents.push(event),
+      adapter: (input, context) => {
+        const id = typeof input === 'object' && input !== null && 'id' in input ? input.id : undefined
+        if (id === 'adaptation-error') throw new Error('assessment adapter unavailable')
+        const adapted = adaptCoachTemplate(input, context)
+        if (id !== 'critical' || adapted.status !== 'converted') return adapted
+        return { ...adapted, value: { ...adapted.value, owner: { kind: 'coach', coachId: 'another-coach' } } }
+      },
+    })
+    const mock = clientWith({ data: rows, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client, {
+      coachTemplateServingControl: control,
+    }).listCoachProgramPage('coach-id')
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('assessment page expected')
+    expect(result.data.items).toHaveLength(rows.length)
+    result.data.items.forEach((item, index) => expect(item).toBe(rows[index]))
+    expect(result.data.hasMore).toBe(false)
+    expect(result.data.nextCursor).toBeNull()
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.limit).toHaveBeenCalledTimes(1)
+    expect(assessmentEvents).toEqual([{
+      assessment_run_id: control.assessmentRunId,
+      page_sequence: 1,
+      item_count: 6,
+      terminal_page: true,
+      canonical_eligible: 1,
+      warning: 1,
+      critical_mismatch: 1,
+      unsupported: 1,
+      presentation_mismatch: 1,
+      adaptation_error: 1,
+      observer_error: 0,
+    }])
+    expect(JSON.stringify(assessmentEvents)).not.toMatch(/coach-id|Template canonical|Description|Push|Développé|PPL|someday/)
+    expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([])
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps one opaque assessment run across ordered pages and marks only the last page terminal', async () => {
+    const events: Array<Record<string, unknown>> = []
+    const control = createCoachTemplateAssessmentControl({ observer: event => events.push(event) })
+    const firstRows = Array.from({ length: 21 }, (_, index) => ({
+      ...coachTemplateRow(`00000000-0000-0000-0000-${String(index).padStart(12, '0')}`),
+      created_at: '2026-08-13T10:00:00.000Z',
+    }))
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const firstMock = clientWith({ data: firstRows, error: null })
+    const first = await createTrainingProgramRepository(firstMock.client, {
+      coachTemplateServingControl: control,
+    }).listCoachProgramPage('coach-id', { limit: 20 })
+    expect(first.ok && first.data.items).toHaveLength(20)
+    expect(first.ok && first.data.items[0]).toBe(firstRows[0])
+    if (!first.ok || !first.data.nextCursor) throw new Error('assessment cursor expected')
+
+    const lastRow = coachTemplateRow('00000000-0000-0000-0000-999999999999')
+    const lastMock = clientWith({ data: [lastRow], error: null })
+    const last = await createTrainingProgramRepository(lastMock.client, {
+      coachTemplateServingControl: control,
+    }).listCoachProgramPage('coach-id', { cursor: first.data.nextCursor, limit: 20 })
+    expect(last.ok && last.data.items[0]).toBe(lastRow)
+    expect(events).toHaveLength(2)
+    expect(events[0]).toMatchObject({
+      assessment_run_id: control.assessmentRunId, page_sequence: 1, item_count: 20, terminal_page: false,
+    })
+    expect(events[1]).toMatchObject({
+      assessment_run_id: control.assessmentRunId, page_sequence: 2, item_count: 1, terminal_page: true,
+    })
+    expect(firstMock.from).toHaveBeenCalledTimes(1)
+    expect(lastMock.from).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('reports an assessment observer error through fallback without affecting the legacy page', async () => {
+    const fallbackEvents: unknown[] = []
+    const control = createCoachTemplateAssessmentControl({
+      observer: () => { throw new Error('assessment observer unavailable') },
+      fallbackObserver: event => fallbackEvents.push(event),
+    })
+    const row = coachTemplateRow('observer-error')
+    const mock = clientWith({ data: [row], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client, {
+      coachTemplateServingControl: control,
+    }).listCoachProgramPage('coach-id')
+    expect(result.ok && result.data.items[0]).toBe(row)
+    expect(fallbackEvents).toEqual([expect.objectContaining({
+      assessment_run_id: control.assessmentRunId,
+      page_sequence: 1,
+      item_count: 1,
+      terminal_page: true,
+      observer_error: 1,
+    })])
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
     consoleInfo.mockRestore()
   })
 

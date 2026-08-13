@@ -6,9 +6,12 @@ import { adaptCoachTemplate } from '../../lib/training/adapters'
 import type { AdapterContext, AdapterResult, TrainingProgram } from '../../lib/training/model'
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+  createCoachTemplateAssessmentControl,
   createCoachTemplateCanonicalServingValidationControl,
+  observeCoachTemplateAssessmentPage,
   observeCoachTemplateServingDecisions,
   prepareCoachTemplatePageForServing,
+  toCoachTemplateAssessmentPageTelemetry,
   toCoachTemplateServingDecisionTelemetry,
 } from '../../lib/training/coexistence/coach-template-serving-contract'
 
@@ -180,6 +183,56 @@ describe('future coach-template canonical serving contract', () => {
     }], () => { throw new Error('telemetry unavailable') })).not.toThrow()
   })
 
+  it('aggregates all assessment categories into the exact safe page schema', () => {
+    const control = createCoachTemplateAssessmentControl()
+    const telemetry = toCoachTemplateAssessmentPageTelemetry(
+      control.assessmentRunId,
+      control.nextPageSequence(),
+      6,
+      true,
+      [
+        { id: 'private-canonical', source: 'canonical', shadowResult: 'MATCH' },
+        { id: 'private-warning', source: 'legacy-fallback', reason: 'WARNING', shadowResult: 'WARNING' },
+        { id: 'private-critical', source: 'legacy-fallback', reason: 'CRITICAL_MISMATCH', shadowResult: 'CRITICAL_MISMATCH' },
+        { id: 'private-unsupported', source: 'legacy-fallback', reason: 'UNSUPPORTED', shadowResult: 'UNSUPPORTED' },
+        { id: 'private-presentation', source: 'legacy-fallback', reason: 'PRESENTATION_MISMATCH', shadowResult: 'MATCH' },
+        { id: 'private-error', source: 'legacy-fallback', reason: 'ADAPTATION_ERROR' },
+      ],
+    )
+    expect(telemetry).toEqual({
+      assessment_run_id: control.assessmentRunId,
+      page_sequence: 1,
+      item_count: 6,
+      terminal_page: true,
+      canonical_eligible: 1,
+      warning: 1,
+      critical_mismatch: 1,
+      unsupported: 1,
+      presentation_mismatch: 1,
+      adaptation_error: 1,
+      observer_error: 0,
+    })
+    expect(Object.keys(telemetry).sort()).toEqual([
+      'adaptation_error', 'assessment_run_id', 'canonical_eligible', 'critical_mismatch',
+      'item_count', 'observer_error', 'page_sequence', 'presentation_mismatch',
+      'terminal_page', 'unsupported', 'warning',
+    ])
+    expect(JSON.stringify(telemetry)).not.toMatch(/private-|coach|user|template|program|payload|cursor|timestamp/i)
+  })
+
+  it('counts an assessment observer failure through its fallback without throwing', () => {
+    const fallback: unknown[] = []
+    const telemetry = toCoachTemplateAssessmentPageTelemetry('opaque-assessment-run', 2, 1, false, [{
+      id: 'private-template', source: 'canonical', shadowResult: 'MATCH',
+    }])
+    expect(() => observeCoachTemplateAssessmentPage(
+      telemetry,
+      () => { throw new Error('observer unavailable') },
+      event => fallback.push(event),
+    )).not.toThrow()
+    expect(fallback).toEqual([{ ...telemetry, observer_error: 1 }])
+  })
+
   it('has no database or network boundary and is wired only from the program repository', () => {
     const contract = readFileSync('lib/training/coexistence/coach-template-serving-contract.ts', 'utf8')
     const repository = readFileSync('lib/repositories/training/program.ts', 'utf8')
@@ -188,6 +241,7 @@ describe('future coach-template canonical serving contract', () => {
     expect(repository).toContain("from '@/lib/training/coexistence/coach-template-serving-contract'")
     expect(repository).toContain('prepareCoachTemplatePageForServing(')
     expect(repository).toContain('observeCoachTemplateServingDecisions(servingMode, serving.decisions)')
+    expect(repository).toContain("coachTemplateServingControl?.mode === 'assessment-only'")
     expect(hook).not.toContain('coach-template-serving-contract')
   })
 })

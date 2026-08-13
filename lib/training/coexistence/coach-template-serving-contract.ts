@@ -43,6 +43,24 @@ export type CoachTemplateServingDecisionObserver = (
   telemetry: CoachTemplateServingDecisionTelemetry,
 ) => void
 
+export type CoachTemplateAssessmentPageTelemetry = {
+  readonly assessment_run_id: string
+  readonly page_sequence: number
+  readonly item_count: number
+  readonly terminal_page: boolean
+  readonly canonical_eligible: number
+  readonly warning: number
+  readonly critical_mismatch: number
+  readonly unsupported: number
+  readonly presentation_mismatch: number
+  readonly adaptation_error: number
+  readonly observer_error: number
+}
+
+export type CoachTemplateAssessmentPageObserver = (
+  telemetry: CoachTemplateAssessmentPageTelemetry,
+) => void
+
 export type CoachTemplateServingPage = {
   readonly page: PaginatedResult<CoachProgramRow>
   readonly decisions: readonly CoachTemplateServingDecision[]
@@ -62,10 +80,52 @@ export type CoachTemplateCanonicalServingValidationControl = {
   readonly dependencies: CoachTemplateServingDependencies
 }
 
+export type CoachTemplateAssessmentControl = {
+  readonly mode: 'assessment-only'
+  readonly assessmentRunId: string
+  readonly dependencies: CoachTemplateServingDependencies
+  readonly observer: CoachTemplateAssessmentPageObserver
+  readonly fallbackObserver: CoachTemplateAssessmentPageObserver
+  readonly nextPageSequence: () => number
+}
+
+export type CoachTemplateAssessmentControlOptions = CoachTemplateServingDependencies & {
+  readonly observer?: CoachTemplateAssessmentPageObserver
+  readonly fallbackObserver?: CoachTemplateAssessmentPageObserver
+}
+
 export function createCoachTemplateCanonicalServingValidationControl(
   dependencies: CoachTemplateServingDependencies = {},
 ): CoachTemplateCanonicalServingValidationControl {
   return { mode: 'canonical-when-identical', dependencies }
+}
+
+const defaultOpaqueAssessmentRunId = (): string => globalThis.crypto?.randomUUID?.()
+  ?? `assessment-${Math.random().toString(36).slice(2, 14)}-${Math.random().toString(36).slice(2, 14)}`
+
+const localAssessmentPageObserver: CoachTemplateAssessmentPageObserver = telemetry => {
+  console.info('[training.coach-template.assessment]', telemetry)
+}
+
+const localAssessmentFallbackObserver: CoachTemplateAssessmentPageObserver = telemetry => {
+  console.warn('[training.coach-template.assessment]', telemetry)
+}
+
+export function createCoachTemplateAssessmentControl(
+  options: CoachTemplateAssessmentControlOptions = {},
+): CoachTemplateAssessmentControl {
+  let pageSequence = 0
+  return {
+    mode: 'assessment-only',
+    assessmentRunId: defaultOpaqueAssessmentRunId(),
+    dependencies: { ...(options.adapter ? { adapter: options.adapter } : {}) },
+    observer: options.observer ?? localAssessmentPageObserver,
+    fallbackObserver: options.fallbackObserver ?? localAssessmentFallbackObserver,
+    nextPageSequence: () => {
+      pageSequence += 1
+      return pageSequence
+    },
+  }
 }
 
 export function toCoachTemplateServingDecisionTelemetry(
@@ -93,6 +153,59 @@ export function observeCoachTemplateServingDecisions(
       observer(toCoachTemplateServingDecisionTelemetry(mode, decision))
     } catch {
       // Serving telemetry must never affect the selected legacy/canonical page.
+    }
+  }
+}
+
+export function toCoachTemplateAssessmentPageTelemetry(
+  assessmentRunId: string,
+  pageSequence: number,
+  itemCount: number,
+  terminalPage: boolean,
+  decisions: readonly CoachTemplateServingDecision[],
+  observerError = 0,
+): CoachTemplateAssessmentPageTelemetry {
+  let canonicalEligible = 0
+  let warning = 0
+  let criticalMismatch = 0
+  let unsupported = 0
+  let presentationMismatch = 0
+  let adaptationError = 0
+  for (const decision of decisions) {
+    if (decision.source === 'canonical') canonicalEligible += 1
+    else if (decision.reason === 'WARNING') warning += 1
+    else if (decision.reason === 'CRITICAL_MISMATCH') criticalMismatch += 1
+    else if (decision.reason === 'UNSUPPORTED') unsupported += 1
+    else if (decision.reason === 'PRESENTATION_MISMATCH') presentationMismatch += 1
+    else if (decision.reason === 'ADAPTATION_ERROR') adaptationError += 1
+  }
+  return {
+    assessment_run_id: assessmentRunId,
+    page_sequence: pageSequence,
+    item_count: itemCount,
+    terminal_page: terminalPage,
+    canonical_eligible: canonicalEligible,
+    warning,
+    critical_mismatch: criticalMismatch,
+    unsupported,
+    presentation_mismatch: presentationMismatch,
+    adaptation_error: adaptationError,
+    observer_error: observerError,
+  }
+}
+
+export function observeCoachTemplateAssessmentPage(
+  telemetry: CoachTemplateAssessmentPageTelemetry,
+  observer: CoachTemplateAssessmentPageObserver,
+  fallbackObserver: CoachTemplateAssessmentPageObserver,
+): void {
+  try {
+    observer(telemetry)
+  } catch {
+    try {
+      fallbackObserver({ ...telemetry, observer_error: telemetry.observer_error + 1 })
+    } catch {
+      // Assessment observability must never affect the legacy page.
     }
   }
 }

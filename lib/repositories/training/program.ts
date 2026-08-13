@@ -4,8 +4,11 @@ import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type Pag
 import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+  observeCoachTemplateAssessmentPage,
   observeCoachTemplateServingDecisions,
   prepareCoachTemplatePageForServing,
+  toCoachTemplateAssessmentPageTelemetry,
+  type CoachTemplateAssessmentControl,
   type CoachTemplateCanonicalServingValidationControl,
 } from '@/lib/training/coexistence/coach-template-serving-contract'
 import {
@@ -39,7 +42,9 @@ export type AssignedProgramReadOptions = {
 }
 
 type TrainingProgramRepositoryInternalOptions = {
-  readonly coachTemplateServingControl?: CoachTemplateCanonicalServingValidationControl
+  readonly coachTemplateServingControl?:
+    | CoachTemplateCanonicalServingValidationControl
+    | CoachTemplateAssessmentControl
 }
 
 export function createTrainingProgramRepository(
@@ -76,6 +81,26 @@ export function createTrainingProgramRepository(
         ? encodeTimestampCursor({ timestamp: last.created_at, id: last.id })
         : null
       const legacyPage = { items, hasMore, nextCursor }
+      if (coachTemplateServingControl?.mode === 'assessment-only') {
+        const assessment = prepareCoachTemplatePageForServing(
+          legacyPage,
+          coachUserId,
+          'canonical-when-identical',
+          coachTemplateServingControl.dependencies,
+        )
+        observeCoachTemplateAssessmentPage(
+          toCoachTemplateAssessmentPageTelemetry(
+            coachTemplateServingControl.assessmentRunId,
+            coachTemplateServingControl.nextPageSequence(),
+            legacyPage.items.length,
+            !legacyPage.hasMore,
+            assessment.decisions,
+          ),
+          coachTemplateServingControl.observer,
+          coachTemplateServingControl.fallbackObserver,
+        )
+        return { ok: true, data: legacyPage }
+      }
       const servingMode = coachTemplateServingControl?.mode ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE
       const serving = prepareCoachTemplatePageForServing(
         legacyPage,

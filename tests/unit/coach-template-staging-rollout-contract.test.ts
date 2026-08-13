@@ -17,6 +17,8 @@ describe('coach-template staging rollout contract', () => {
     }
     expect(hook).not.toContain('createCoachTemplateCanonicalServingValidationControl')
     expect(view).not.toContain('createCoachTemplateCanonicalServingValidationControl')
+    expect(hook).not.toContain('createCoachTemplateAssessmentControl')
+    expect(view).not.toContain('createCoachTemplateAssessmentControl')
   })
 
   it('requires staging, preview, branch and explicit mode while refusing Production', () => {
