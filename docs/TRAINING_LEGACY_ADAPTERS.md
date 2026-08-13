@@ -391,10 +391,11 @@ Supabase reste autoritative. Les sources `cron_auto`, `diagnostic_auto`,
 `import`, `free_session`, absentes ou inconnues restent hors shadow runtime. Aucun
 writer, UI, schéma DB, migration ou workflow CI n'est modifié.
 
-## Contrat préparatoire : régénération `diagnostic_auto`
+## Shadow read borné : régénération `diagnostic_auto`
 
-Le bucket distinct `diagnostic-auto` est préparé sans observer le read path
-runtime. Sa fixture reproduit la chaîne réelle : sortie validée par
+Le dashboard observe désormais le bucket distinct `diagnostic-auto` au même
+point post-lecture que les buckets manuel, Program Builder IA et onboarding.
+Sa fixture reproduit la chaîne réelle : sortie validée par
 `modernTrainingProgramOutputSchema`, résolution des références catalogue, puis
 persistance directe dans `custom_programs`. Comme `onboarding_auto`, ce writer
 ne passe ni par `normalizeProgramEditorDays`, ni par
@@ -424,7 +425,10 @@ ensuite la source à `manual`; les éditions inline, remplacements d'exercice,
 activations et planifications n'écrivent pas `source` et conservent donc
 `diagnostic_auto`.
 
-Aucun observer diagnostic n'est appelé par le repository dans ce sous-batch.
-Le dashboard reste legacy, et aucun repository, writer, UI, schéma DB,
-migration ou workflow CI n'est modifié. `cron_auto`, `import` et
-`free_session` restent hors contrat shadow runtime.
+Le repository conserve sa lecture unique, ses filtres `user_id`,
+`is_active = true` et son `maybeSingle()`, puis retourne la même référence
+legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
+l'observateur restent isolées ; l'erreur Supabase demeure autoritative. Aucun
+writer, UI, schéma DB, migration ou workflow CI n'est modifié. `cron_auto`,
+`import`, `free_session`, les sources absentes ou inconnues restent hors shadow
+runtime.
