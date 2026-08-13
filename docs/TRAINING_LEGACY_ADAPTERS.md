@@ -433,9 +433,11 @@ writer, UI, schéma DB, migration ou workflow CI n'est modifié. `cron_auto`,
 `import`, `free_session`, les sources absentes ou inconnues restent hors shadow
 runtime.
 
-## Contrat préparatoire : régénération `cron_auto`
+## Shadow read borné : régénération `cron_auto`
 
-Le bucket distinct `cron-auto` est défini sans observer le read path runtime.
+Le dashboard observe désormais le bucket distinct `cron-auto` au même point
+post-lecture que les buckets manuel, Program Builder IA, onboarding et
+diagnostic.
 Sa fixture reproduit la chaîne réelle du writer serveur : sortie validée par
 `modernTrainingProgramOutputSchema`, résolution des références catalogue, puis
 persistance directe dans `custom_programs`. Comme les writers onboarding et
@@ -469,7 +471,9 @@ programme actif. Ce contrat caractérise ces risques sans modifier le writer.
 Une édition complète par Program Builder sauvegarde la ligne comme `manual` et
 ne ré-infère jamais `cron_auto`. Les éditions inline, remplacements d'exercice,
 activations et planifications omettent `source` et conservent donc la provenance
-cron. Aucun observer cron n'est appelé par le repository dans ce sous-batch :
-le dashboard reste legacy, et `cron_auto`, `import`, `free_session`, les sources
-absentes ou inconnues restent hors shadow runtime. Aucun writer, UI, schéma DB,
-migration ou workflow CI n'est modifié.
+cron. Le repository conserve sa lecture unique, ses filtres `user_id`,
+`is_active = true` et son `maybeSingle()`, puis retourne la même référence
+legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
+l'observateur restent isolées ; l'erreur Supabase demeure autoritative.
+`import`, `free_session`, les sources absentes ou inconnues restent hors shadow
+runtime. Aucun writer, UI, schéma DB, migration ou workflow CI n'est modifié.

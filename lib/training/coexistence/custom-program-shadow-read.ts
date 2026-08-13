@@ -620,3 +620,25 @@ export function observeActiveDiagnosticCustomProgramShadow(
     // Shadow observability must never affect the legacy dashboard read.
   }
 }
+
+export function observeActiveCronCustomProgramShadow(
+  row: PersonalProgramRow | null | undefined,
+  observer: CustomProgramShadowObserver = localConsoleObserver,
+  dependencies: ObserveDependencies = {},
+): void {
+  if (!isCronCustomProgramShadowCandidate(row)) return
+  try {
+    const clock = dependencies.clock ?? (() => performance.now())
+    const correlationId = dependencies.correlationId ?? defaultCorrelationId
+    const startedAt = clock()
+    const result = compareCustomProgramShadow(row, dependencies)
+    observer(toCustomProgramShadowMetric(
+      result,
+      clock() - startedAt,
+      correlationId(),
+      CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE,
+    ))
+  } catch {
+    // Shadow observability must never affect the legacy dashboard read.
+  }
+}

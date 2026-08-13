@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { adaptCustomProgram } from '../../lib/training/adapters'
 import {
   buildCustomProgramAdaptationEnvelope,
@@ -11,6 +11,7 @@ import {
   isDiagnosticCustomProgramShadowCandidate,
   isManualCustomProgramShadowCandidate,
   isOnboardingCustomProgramShadowCandidate,
+  observeActiveCronCustomProgramShadow,
   toCustomProgramShadowMetric,
 } from '../../lib/training/coexistence/custom-program-shadow-read'
 import {
@@ -183,7 +184,7 @@ describe('custom_programs cron_auto persisted contract', () => {
     }).result).toBe('UNSUPPORTED')
   })
 
-  it('defines an expurgated cron bucket without enabling a repository observer', () => {
+  it('emits one expurgated cron metric and contains observer-side failures', () => {
     const { row } = buildPersistedCronCustomProgramFixture()
     expect(isCronCustomProgramShadowCandidate(row)).toBe(true)
     expect(isManualCustomProgramShadowCandidate(row)).toBe(false)
@@ -208,13 +209,40 @@ describe('custom_programs cron_auto persisted contract', () => {
     ])
     expect(JSON.stringify(metric)).not.toMatch(/synthetic-cron|Programme cron|Développé|Rowing|Goblet/)
 
+    const observer = vi.fn()
+    expect(() => observeActiveCronCustomProgramShadow(row, observer, {
+      clock: vi.fn().mockReturnValueOnce(10).mockReturnValueOnce(12.5),
+      correlationId: () => 'opaque-cron-correlation',
+    })).not.toThrow()
+    expect(observer).toHaveBeenCalledTimes(1)
+    expect(observer).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'cron-auto',
+      result: 'WARNING',
+      adaptation_duration_ms: 2.5,
+      correlation_id: 'opaque-cron-correlation',
+    }))
+    expect(JSON.stringify(observer.mock.calls)).not.toMatch(/synthetic-cron|Programme cron|Développé|Rowing|Goblet/)
+    expect(() => observeActiveCronCustomProgramShadow(row, () => { throw new Error('observer failed') }))
+      .not.toThrow()
+    expect(() => observeActiveCronCustomProgramShadow(row, observer, {
+      clock: () => { throw new Error('clock failed') },
+    })).not.toThrow()
+    const adaptationFailureObserver = vi.fn()
+    expect(() => observeActiveCronCustomProgramShadow(row, adaptationFailureObserver, {
+      adapter: () => { throw new Error('adapter failed') },
+      clock: vi.fn().mockReturnValueOnce(20).mockReturnValueOnce(21),
+      correlationId: () => 'opaque-adaptation-failure',
+    })).not.toThrow()
+    expect(adaptationFailureObserver).toHaveBeenCalledWith(expect.objectContaining({
+      provenance_bucket: 'cron-auto', result: 'UNSUPPORTED',
+    }))
+    expect(() => observeActiveCronCustomProgramShadow(row, observer, {
+      correlationId: () => { throw new Error('correlation failed') },
+    })).not.toThrow()
+
     const repository = source('lib/repositories/training/program.ts')
-    expect(repository).not.toMatch(/observeActiveCronCustomProgramShadow|isCronCustomProgramShadowCandidate/)
-    expect(repository).not.toContain('CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE')
-    const shadowRead = source('lib/training/coexistence/custom-program-shadow-read.ts')
-    expect(shadowRead).not.toContain('observeActiveCronCustomProgramShadow')
-    const repositoryTests = source('tests/unit/training-repositories.test.ts')
-    expect(repositoryTests).toContain("['cron_auto', 'free_session', 'import', 'unknown', null, undefined]")
+    expect(repository).toContain('observeActiveCronCustomProgramShadow(data)')
+    expect(repository).toContain(".eq('user_id', clientUserId).eq('is_active', true).maybeSingle()")
   })
 })
 

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseClient } from '../../lib/supabase/types'
 import { buildPersistedAiCustomProgramFixture } from '../fixtures/custom-program-ai'
+import { buildPersistedCronCustomProgramFixture } from '../fixtures/custom-program-cron'
 import { buildPersistedDiagnosticCustomProgramFixture } from '../fixtures/custom-program-diagnostic'
 import { buildPersistedOnboardingCustomProgramFixture } from '../fixtures/custom-program-onboarding'
 import {
@@ -187,8 +188,39 @@ describe('Training repositories', () => {
     consoleInfo.mockRestore()
   })
 
+  it('returns the identical cron program while emitting its distinct bucket after one read', async () => {
+    const { row } = buildPersistedCronCustomProgramFixture()
+    const mock = clientWith({ data: row, error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client)
+      .findActivePersonalProgramForClient('synthetic-cron-client')
+    expect(result.ok && result.data).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.maybeSingle).toHaveBeenCalledTimes(1)
+    expect(consoleInfo).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls[0][1]).toMatchObject({
+      format: 'custom-program-days-v1',
+      provenance_bucket: 'cron-auto',
+      result: 'WARNING',
+      difference_codes: expect.arrayContaining([
+        'AI_MUSCLE_PRIMARY_UNMAPPED', 'AI_METADATA_UNMAPPED',
+        'AI_PROVIDER_METADATA_UNAVAILABLE', 'TECHNIQUE_SEMANTICS_UNMAPPED',
+        'REST_DAYS_NOT_PERSISTED', 'DAY_NUMBER_NON_AUTHORITATIVE',
+        'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE',
+        'CRON_TRIGGER_AT_NOT_PERSISTED',
+      ]),
+    })
+    expect(Object.keys(consoleInfo.mock.calls[0][1] as object).sort()).toEqual([
+      'adaptation_duration_ms', 'correlation_id', 'difference_codes', 'format',
+      'provenance_bucket', 'result', 'unmapped_field_count', 'warning_count',
+    ])
+    expect(JSON.stringify(consoleInfo.mock.calls)).not.toMatch(/synthetic-cron|Programme cron|Développé|Rowing|Goblet/)
+    consoleInfo.mockRestore()
+  })
+
   it('keeps unprepared active programs legacy-only and contains observer failures', async () => {
-    for (const source of ['cron_auto', 'free_session', 'import', 'unknown', null, undefined]) {
+    for (const source of ['free_session', 'import', 'unknown', null, undefined]) {
       const row = { id: `program-${source}`, user_id: 'client-id', name: 'Program', days: [], source, is_active: true }
       const mock = clientWith({ data: row, error: null })
       const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -236,6 +268,15 @@ describe('Training repositories', () => {
     expect(diagnosticResult.ok && diagnosticResult.data).toBe(diagnosticRow)
     expect(diagnosticMock.from).toHaveBeenCalledTimes(1)
     diagnosticConsoleInfo.mockRestore()
+
+    const cronRow = buildPersistedCronCustomProgramFixture().row
+    const cronMock = clientWith({ data: cronRow, error: null })
+    const cronConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => { throw new Error('observer failed') })
+    const cronResult = await createTrainingProgramRepository(cronMock.client)
+      .findActivePersonalProgramForClient('synthetic-cron-client')
+    expect(cronResult.ok && cronResult.data).toBe(cronRow)
+    expect(cronMock.from).toHaveBeenCalledTimes(1)
+    cronConsoleInfo.mockRestore()
   })
 
   it('keeps active-personal read failures authoritative and skips shadow observation', async () => {
