@@ -16,14 +16,16 @@ export const CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE = 'ai/program-builder' as const
 export const CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE = 'onboarding-auto' as const
 export const CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE = 'diagnostic-auto' as const
 export const CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE = 'cron-auto' as const
+export const CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE = 'free-session' as const
 
-export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto' | 'cron_auto'
+export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto' | 'cron_auto' | 'free_session'
 export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -52,6 +54,15 @@ export type CustomProgramDifferenceCode =
   | 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE'
   | 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE'
   | 'CRON_TRIGGER_AT_NOT_PERSISTED'
+  | 'SINGLE_SESSION_NO_WEEKLY_SCHEDULE'
+  | 'SOURCE_WORKOUT_SESSION_LINK_UNAVAILABLE'
+  | 'EXECUTION_DATA_NOT_PERSISTED'
+  | 'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE'
+  | 'EXERCISE_MUSCLE_GROUP_UNMAPPED'
+  | 'TARGET_REPS_NORMALIZED'
+  | 'TEMPO_NOT_PERSISTED'
+  | 'TECHNIQUE_NOT_PERSISTED'
+  | 'PHASES_NOT_PERSISTED'
   | 'ADAPTER_WARNINGS'
   | 'UNMAPPED_FIELDS'
   | 'CANONICAL_PARTIAL'
@@ -163,6 +174,12 @@ export function isCronCustomProgramShadowCandidate(
   return row?.source === 'cron_auto'
 }
 
+export function isFreeSessionCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'free_session' } {
+  return row?.source === 'free_session'
+}
+
 /**
  * Keeps database ownership and technical columns out of the adapter payload.
  * Only the legacy program data needed for semantic adaptation crosses this
@@ -203,6 +220,11 @@ export function buildCustomProgramAdaptationEnvelope(
           sourceCreatedBy: { kind: 'client' as const, id: row.user_id },
           sourceTrigger: 'diagnostic' as const,
         }
+      : row.source === 'free_session'
+        ? {
+            sourceCreatedBy: { kind: 'client' as const, id: row.user_id },
+            sourceTrigger: 'free_session' as const,
+          }
       : {}
 
   return {
@@ -430,7 +452,7 @@ export function compareCustomProgramShadow(
     const legacy = legacyProjection(row)
     const canonical = canonicalProjection(adapted.value)
     if (!legacy || !canonical) {
-      if (row.source === 'cron_auto') return unsupportedResult()
+      if (row.source === 'cron_auto' || row.source === 'free_session') return unsupportedResult()
       return {
         format: CUSTOM_PROGRAM_SHADOW_FORMAT,
         result: 'CRITICAL_MISMATCH',
@@ -483,6 +505,21 @@ export function compareCustomProgramShadow(
       differences.push({ code: 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE', path: 'source.anti_stagnation_context' })
       differences.push({ code: 'CRON_TRIGGER_AT_NOT_PERSISTED', path: 'source.triggered_at' })
     }
+    if (row.source === 'free_session') {
+      differences.push({ code: 'SINGLE_SESSION_NO_WEEKLY_SCHEDULE', path: 'days' })
+      differences.push({ code: 'SOURCE_WORKOUT_SESSION_LINK_UNAVAILABLE', path: 'source.workout_session_id' })
+      differences.push({ code: 'EXECUTION_DATA_NOT_PERSISTED', path: 'source.execution' })
+      differences.push({ code: 'TARGET_REPS_NORMALIZED', path: 'days.exercises.reps' })
+      differences.push({ code: 'TEMPO_NOT_PERSISTED', path: 'days.exercises.tempo' })
+      differences.push({ code: 'TECHNIQUE_NOT_PERSISTED', path: 'days.exercises.technique' })
+      differences.push({ code: 'PHASES_NOT_PERSISTED', path: 'phases' })
+      if (containsNestedValue(row.days, 'muscle_group')) {
+        differences.push({ code: 'EXERCISE_MUSCLE_GROUP_UNMAPPED', path: 'days.exercises.muscle_group' })
+      }
+      if (adapted.warnings.some(warning => warning.code === 'legacy_name_reference')) {
+        differences.push({ code: 'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE', path: 'days.exercises.exercise_id' })
+      }
+    }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
     }
@@ -497,6 +534,10 @@ export function compareCustomProgramShadow(
       'DIAGNOSTIC_ID_NOT_PERSISTED', 'VOLUME_DELTA_NOT_PERSISTED',
       'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE',
       'CRON_TRIGGER_AT_NOT_PERSISTED',
+      'SINGLE_SESSION_NO_WEEKLY_SCHEDULE', 'SOURCE_WORKOUT_SESSION_LINK_UNAVAILABLE',
+      'EXECUTION_DATA_NOT_PERSISTED', 'EXERCISE_CATALOG_REFERENCE_UNAVAILABLE',
+      'EXERCISE_MUSCLE_GROUP_UNMAPPED', 'TARGET_REPS_NORMALIZED',
+      'TEMPO_NOT_PERSISTED', 'TECHNIQUE_NOT_PERSISTED', 'PHASES_NOT_PERSISTED',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
     return {
@@ -640,5 +681,27 @@ export function observeActiveCronCustomProgramShadow(
     ))
   } catch {
     // Shadow observability must never affect the legacy dashboard read.
+  }
+}
+
+export function observeActiveFreeSessionCustomProgramShadow(
+  row: PersonalProgramRow | null | undefined,
+  observer: CustomProgramShadowObserver = localConsoleObserver,
+  dependencies: ObserveDependencies = {},
+): void {
+  if (!isFreeSessionCustomProgramShadowCandidate(row)) return
+  try {
+    const clock = dependencies.clock ?? (() => performance.now())
+    const correlationId = dependencies.correlationId ?? defaultCorrelationId
+    const startedAt = clock()
+    const result = compareCustomProgramShadow(row, dependencies)
+    observer(toCustomProgramShadowMetric(
+      result,
+      clock() - startedAt,
+      correlationId(),
+      CUSTOM_PROGRAM_FREE_SESSION_SHADOW_PROVENANCE,
+    ))
+  } catch {
+    // Prepared shadow observability must never affect a future legacy dashboard read.
   }
 }

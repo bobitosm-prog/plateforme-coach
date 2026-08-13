@@ -84,7 +84,7 @@ TrainingSource = {
   kind: "manual" | "catalog-template" | "ai" | "import" | "legacy";
   createdBy: { kind: "platform" | "coach" | "client" | "system"; id?: UUID };
   provider?: "anthropic" | "moovx-xlsx" | "strong" | "hevy" | string;
-  trigger?: "onboarding" | "diagnostic";
+  trigger?: "onboarding" | "diagnostic" | "cron" | "free_session";
   legacyFormat?: LegacyFormatId;
   createdAt: Instant;
 }
@@ -96,9 +96,12 @@ validé exactement comme une saisie manuelle.
 Le trigger optionnel décrit uniquement une cause effectivement prouvée.
 `onboarding` identifie la génération initiale initiée par le système ;
 `diagnostic` identifie la régénération demandée par le client authentifié lors
-de l'application de son diagnostic. Les autres régénérations automatiques
-restent hors contrat tant que leur provenance n'a pas été caractérisée
-séparément.
+de l'application de son diagnostic ; `cron` identifie la régénération
+automatique exécutée techniquement par le serveur pour le compte du client ;
+`free_session` identifie la sauvegarde manuelle, par le client, d'une séance
+terminée comme modèle mono-séance réutilisable. Le trigger ne reconstitue
+aucune relation absente du stockage et ne transforme pas l'acteur technique en
+owner métier.
 
 ## Catalogue d'exercices
 

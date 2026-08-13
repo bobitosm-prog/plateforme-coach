@@ -477,3 +477,48 @@ legacy. Les erreurs de l'adaptateur, du comparateur, du chronomètre et de
 l'observateur restent isolées ; l'erreur Supabase demeure autoritative.
 `import`, `free_session`, les sources absentes ou inconnues restent hors shadow
 runtime. Aucun writer, UI, schéma DB, migration ou workflow CI n'est modifié.
+
+## Contrat préparatoire : modèle mono-séance `free_session`
+
+Le bucket `free-session` est défini dans le contrat de coexistence mais reste
+volontairement non branché dans `findActivePersonalProgramForClient`. Le
+dashboard ne l'observe pas encore et continue à servir la ligne legacy. La
+source `import`, les sources absentes et les sources inconnues restent aussi
+hors shadow runtime.
+
+Le writer réel est `saveAsTemplate` dans `WorkoutSession`. Après une séance
+contenant au moins un exercice, le client peut enregistrer un modèle
+réutilisable. L'insertion navigateur utilise l'utilisateur authentifié et
+persiste `source = free_session`, `is_active = false`, un nom racine et
+exactement un jour `is_rest = false`. Les exercices contiennent uniquement
+`exercise_name`, `muscle_group`, les séries cibles, le résultat de
+`parseInt(targetReps) || 10` et `rest_seconds`. Il n'ajoute ni semaine
+calendaire, weekday, ordre explicite, identifiant catalogue, tempo, technique,
+phases ou données d'exécution.
+
+Cette ligne représente donc un modèle manuel mono-séance, et non un programme
+hebdomadaire complet. Elle appartient au client, a été créée par ce client et
+n'a pas de provider. Sa provenance canonique reste `kind = manual` et
+`createdBy = client`, avec le trigger optionnel distinct
+`trigger = free_session`. Elle ne doit pas être confondue avec le bucket
+`manual/editor-normalized` du Program Builder.
+
+La sauvegarde du modèle n'enregistre aucun `workout_session_id` ni autre lien
+vers la séance source. Les poids, répétitions réalisées, séries terminées,
+RIR, volume et durée sont persistés séparément dans l'historique lorsqu'il
+réussit, mais jamais dans `custom_programs`. Aucune relation rétroactive fiable
+ne peut être inventée. L'absence de planning hebdomadaire, les références
+nominales, l'absence de lien source et de données d'exécution, la perte de
+l'identifiant catalogue et de `muscle_group`, la normalisation possible d'une
+plage de répétitions et l'absence de tempo, technique et phases sont des
+warnings de traçabilité, pas des mismatches critiques.
+
+L'activation, la planification, l'édition inline et le remplacement d'exercice
+n'écrivent pas `source` et conservent donc `free_session`. Une édition complète
+dans Program Builder sauvegarde en revanche `source = manual`; aucune
+ré-inférence de l'origine antérieure n'est ensuite effectuée.
+
+Le writer conserve une dette distincte, seulement caractérisée dans ce
+sous-batch : il ne contrôle pas le résultat de l'insertion avant d'afficher le
+toast de succès. Une insertion échouée peut donc être présentée comme réussie.
+Le contrat shadow ne corrige ni ce comportement, ni le writer, ni la base.

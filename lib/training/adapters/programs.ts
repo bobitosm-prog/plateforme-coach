@@ -18,7 +18,7 @@ function source(format: LegacyFormatId, context: AdapterContext, kind: TrainingS
   return {
     kind,
     createdBy,
-    provider,
+    ...(provider ? { provider } : {}),
     ...(context.sourceTrigger ? { trigger: context.sourceTrigger } : {}),
     legacyFormat: format,
     createdAt: context.now,
@@ -93,7 +93,10 @@ export function adaptCustomProgram(input: unknown, context: AdapterContext): Ada
     || input.source === 'onboarding_auto'
     || input.source === 'diagnostic_auto'
     || input.source === 'cron_auto'
-  return programFromDays(input, input.days, format, context, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
+  const sourceContext = input.source === 'free_session'
+    ? { ...context, sourceTrigger: 'free_session' as const }
+    : context
+  return programFromDays(input, input.days, format, sourceContext, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
 }
 
 export function adaptAiGeneratedProgram(input: unknown, context: AdapterContext): AdapterResult<TrainingProgram> {
