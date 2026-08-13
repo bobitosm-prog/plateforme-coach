@@ -7,7 +7,9 @@ import type { AdapterContext, AdapterResult, TrainingProgram } from '../../lib/t
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
   createCoachTemplateCanonicalServingValidationControl,
+  observeCoachTemplateServingDecisions,
   prepareCoachTemplatePageForServing,
+  toCoachTemplateServingDecisionTelemetry,
 } from '../../lib/training/coexistence/coach-template-serving-contract'
 
 const row = (id: string, program: unknown = {
@@ -139,6 +141,45 @@ describe('future coach-template canonical serving contract', () => {
     }])
   })
 
+  it('emits exactly the three authorized decision fields for canonical and every fallback', () => {
+    const decisions = [
+      { id: 'private-canonical', source: 'canonical', shadowResult: 'MATCH' },
+      { id: 'private-default', source: 'legacy-fallback', reason: 'ROLLBACK_LEGACY_ONLY' },
+      { id: 'private-warning', source: 'legacy-fallback', reason: 'WARNING', shadowResult: 'WARNING' },
+      { id: 'private-critical', source: 'legacy-fallback', reason: 'CRITICAL_MISMATCH', shadowResult: 'CRITICAL_MISMATCH' },
+      { id: 'private-unsupported', source: 'legacy-fallback', reason: 'UNSUPPORTED', shadowResult: 'UNSUPPORTED' },
+      { id: 'private-presentation', source: 'legacy-fallback', reason: 'PRESENTATION_MISMATCH', shadowResult: 'MATCH' },
+      { id: 'private-error', source: 'legacy-fallback', reason: 'ADAPTATION_ERROR' },
+    ] as const
+    const telemetry: unknown[] = []
+    observeCoachTemplateServingDecisions('canonical-when-identical', decisions, event => telemetry.push(event))
+
+    expect(telemetry).toEqual([
+      { serving_mode: 'canonical-when-identical', served_source: 'canonical', fallback_reason: null },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'ROLLBACK_LEGACY_ONLY' },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'WARNING' },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'CRITICAL_MISMATCH' },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'UNSUPPORTED' },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'PRESENTATION_MISMATCH' },
+      { serving_mode: 'canonical-when-identical', served_source: 'legacy-fallback', fallback_reason: 'ADAPTATION_ERROR' },
+    ])
+    for (const event of telemetry) {
+      expect(Object.keys(event as object).sort()).toEqual(['fallback_reason', 'served_source', 'serving_mode'])
+    }
+    expect(JSON.stringify(telemetry)).not.toMatch(/private-|coach|user|program|payload|Description|Développé/i)
+  })
+
+  it('keeps telemetry conversion redacted and contains observer failures', () => {
+    expect(toCoachTemplateServingDecisionTelemetry('legacy-only', {
+      id: 'secret-template-id', source: 'legacy-fallback', reason: 'ROLLBACK_LEGACY_ONLY',
+    })).toEqual({
+      serving_mode: 'legacy-only', served_source: 'legacy-fallback', fallback_reason: 'ROLLBACK_LEGACY_ONLY',
+    })
+    expect(() => observeCoachTemplateServingDecisions('legacy-only', [{
+      id: 'secret-template-id', source: 'legacy-fallback', reason: 'ROLLBACK_LEGACY_ONLY',
+    }], () => { throw new Error('telemetry unavailable') })).not.toThrow()
+  })
+
   it('has no database or network boundary and is wired only from the program repository', () => {
     const contract = readFileSync('lib/training/coexistence/coach-template-serving-contract.ts', 'utf8')
     const repository = readFileSync('lib/repositories/training/program.ts', 'utf8')
@@ -146,6 +187,7 @@ describe('future coach-template canonical serving contract', () => {
     expect(contract).not.toMatch(/\.from\(|\bfetch\(|createClient|XMLHttpRequest|WebSocket/)
     expect(repository).toContain("from '@/lib/training/coexistence/coach-template-serving-contract'")
     expect(repository).toContain('prepareCoachTemplatePageForServing(')
+    expect(repository).toContain('observeCoachTemplateServingDecisions(servingMode, serving.decisions)')
     expect(hook).not.toContain('coach-template-serving-contract')
   })
 })

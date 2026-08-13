@@ -33,6 +33,16 @@ export type CoachTemplateServingDecision =
       readonly shadowResult?: CoachTemplateShadowStatus
     }
 
+export type CoachTemplateServingDecisionTelemetry = {
+  readonly serving_mode: CoachTemplateServingMode
+  readonly served_source: CoachTemplateServingDecision['source']
+  readonly fallback_reason: CoachTemplateServingFallbackReason | null
+}
+
+export type CoachTemplateServingDecisionObserver = (
+  telemetry: CoachTemplateServingDecisionTelemetry,
+) => void
+
 export type CoachTemplateServingPage = {
   readonly page: PaginatedResult<CoachProgramRow>
   readonly decisions: readonly CoachTemplateServingDecision[]
@@ -56,6 +66,35 @@ export function createCoachTemplateCanonicalServingValidationControl(
   dependencies: CoachTemplateServingDependencies = {},
 ): CoachTemplateCanonicalServingValidationControl {
   return { mode: 'canonical-when-identical', dependencies }
+}
+
+export function toCoachTemplateServingDecisionTelemetry(
+  mode: CoachTemplateServingMode,
+  decision: CoachTemplateServingDecision,
+): CoachTemplateServingDecisionTelemetry {
+  return {
+    serving_mode: mode,
+    served_source: decision.source,
+    fallback_reason: decision.source === 'legacy-fallback' ? decision.reason : null,
+  }
+}
+
+const localServingDecisionObserver: CoachTemplateServingDecisionObserver = telemetry => {
+  console.info('[training.coach-template.serving]', telemetry)
+}
+
+export function observeCoachTemplateServingDecisions(
+  mode: CoachTemplateServingMode,
+  decisions: readonly CoachTemplateServingDecision[],
+  observer: CoachTemplateServingDecisionObserver = localServingDecisionObserver,
+): void {
+  for (const decision of decisions) {
+    try {
+      observer(toCoachTemplateServingDecisionTelemetry(mode, decision))
+    } catch {
+      // Serving telemetry must never affect the selected legacy/canonical page.
+    }
+  }
 }
 
 type JsonObject = { [key: string]: Json | undefined }

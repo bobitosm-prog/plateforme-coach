@@ -4,6 +4,7 @@ import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type Pag
 import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+  observeCoachTemplateServingDecisions,
   prepareCoachTemplatePageForServing,
   type CoachTemplateCanonicalServingValidationControl,
 } from '@/lib/training/coexistence/coach-template-serving-contract'
@@ -75,12 +76,14 @@ export function createTrainingProgramRepository(
         ? encodeTimestampCursor({ timestamp: last.created_at, id: last.id })
         : null
       const legacyPage = { items, hasMore, nextCursor }
+      const servingMode = coachTemplateServingControl?.mode ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE
       const serving = prepareCoachTemplatePageForServing(
         legacyPage,
         coachUserId,
-        coachTemplateServingControl?.mode ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+        servingMode,
         coachTemplateServingControl?.dependencies,
       )
+      observeCoachTemplateServingDecisions(servingMode, serving.decisions)
       return { ok: true, data: serving.page }
     },
 

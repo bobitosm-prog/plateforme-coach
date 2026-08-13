@@ -58,22 +58,18 @@ Une activation globale du mode n'autorise donc jamais une ligne individuelle
 
 Les métriques shadow actuelles indiquent le format, le résultat, les codes de
 différence, les compteurs de warnings et champs non mappés, la durée et une
-corrélation opaque. Elles ne disent pas encore si le serving a choisi le
-canonique ou le fallback.
-
-Avant tout GO, le sous-batch d'activation doit ajouter un événement local et
-expurgé contenant uniquement :
+corrélation opaque. Un événement local séparé observe désormais la décision de
+serving avec exactement :
 
 - `serving_mode` : `legacy-only` ou `canonical-when-identical` ;
 - `served_source` : `canonical` ou `legacy-fallback` ;
-- `fallback_reason` parmi les raisons déjà typées, absent si canonique ;
-- le format, résultat et codes de différence shadow ;
-- les compteurs, durée et corrélation opaque déjà autorisés.
+- `fallback_reason` parmi les raisons déjà typées, `null` si canonique.
 
 Sont interdits : identifiants coach/template, nom, description, tags, jours,
 exercices, payload JSON, email, cookie, JWT, token ou header d'autorisation.
-L'observateur doit être fail-safe et ne doit ajouter ni requête distante ni
-effet sur la réponse legacy.
+L'observateur est fail-safe et n'ajoute ni requête distante ni effet sur la
+réponse legacy. Une page vide, une erreur de lecture et les autres readers
+Training n'émettent aucun événement de décision.
 
 ## Baseline avant activation
 
@@ -170,10 +166,9 @@ Il ne nécessite aucun revert de migration, backfill ou restauration de donnée.
 Le prochain sous-batch, séparé du présent contrat, devra uniquement :
 
 1. ajouter le résolveur pur des quatre verrous ;
-2. ajouter l'observabilité expurgée de décision ;
-3. brancher le contrôle dans la composition staging sans toucher hook/UI ;
-4. prouver le refus Production et le défaut `legacy-only` ;
-5. exécuter la baseline, décider GO/NO-GO, puis seulement activer staging sous
+2. brancher le contrôle dans la composition staging sans toucher hook/UI ;
+3. prouver le refus Production et le défaut `legacy-only` ;
+4. exécuter la baseline, décider GO/NO-GO, puis seulement activer staging sous
    autorisation explicite.
 
 Le présent document n'autorise ni ce branchement ni un déploiement.

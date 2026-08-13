@@ -475,6 +475,12 @@ describe('Training repositories', () => {
     ])
     expect(mock.chain.limit).toHaveBeenCalledTimes(1)
     expect(mock.chain.limit).toHaveBeenCalledWith(21)
+    const servingTelemetry = consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')
+    expect(servingTelemetry).toEqual([[
+      '[training.coach-template.serving]',
+      { serving_mode: 'legacy-only', served_source: 'legacy-fallback', fallback_reason: 'ROLLBACK_LEGACY_ONLY' },
+    ]])
+    expect(JSON.stringify(servingTelemetry)).not.toMatch(/template-default|coach-id|Template|Description|Push|Développé/)
     consoleInfo.mockRestore()
   })
 
@@ -490,6 +496,10 @@ describe('Training repositories', () => {
     expect(result.ok && result.data.items[0]).toEqual(row)
     expect(mock.from).toHaveBeenCalledTimes(1)
     expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([[
+      '[training.coach-template.serving]',
+      { serving_mode: 'canonical-when-identical', served_source: 'canonical', fallback_reason: null },
+    ]])
     consoleInfo.mockRestore()
   })
 
@@ -513,6 +523,22 @@ describe('Training repositories', () => {
     }).listCoachProgramPage('coach-id')
     expect(unsupportedResult.ok && unsupportedResult.data.items[0]).toBe(unsupported)
     expect(unsupportedMock.from).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('does not emit serving decision telemetry for unrelated readers, empty pages or failed reads', async () => {
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const unrelated = clientWith({ data: [], error: null })
+    await createTrainingProgramRepository(unrelated.client).listCoachPrograms('coach-id')
+    expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([])
+
+    const empty = clientWith({ data: [], error: null })
+    await createTrainingProgramRepository(empty.client).listCoachProgramPage('coach-id')
+    expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([])
+
+    const failed = clientWith({ data: null, error: { code: 'PGRST000', message: 'unavailable' } })
+    await createTrainingProgramRepository(failed.client).listCoachProgramPage('coach-id')
+    expect(consoleInfo.mock.calls.filter(call => call[0] === '[training.coach-template.serving]')).toEqual([])
     consoleInfo.mockRestore()
   })
 
