@@ -260,8 +260,8 @@ function prepareItem(
 }
 
 /**
- * Dormant serving contract. No runtime reader imports it yet.
- * Switching the mode back to `legacy-only` is the complete rollback.
+ * Runtime serving boundary for the paginated coach-template reader only.
+ * Its default mode is legacy-only; switching back to it is the complete rollback.
  */
 export function prepareCoachTemplatePageForServing(
   page: PaginatedResult<CoachProgramRow>,

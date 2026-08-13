@@ -42,6 +42,22 @@ function clientWith(result: QueryResult) {
 }
 
 describe('Training repositories', () => {
+  const coachTemplateRow = (id: string, program: unknown = {
+    days: [{
+      name: 'Push',
+      exercises: [{ exercise_id: 'bench', name: 'Développé couché', sets: 3, reps: '8-12', rest: 90 }],
+    }],
+  }) => ({
+    id,
+    coach_id: 'coach-id',
+    name: `Template ${id}`,
+    description: 'Description',
+    is_template: true,
+    tags: ['PPL'],
+    program,
+    created_at: '2026-08-13T10:00:00.000Z',
+  })
+
   it('uses explicit program projections and owner/client scopes', async () => {
     const mock = clientWith({ data: [], error: null })
     const repository = createTrainingProgramRepository(mock.client)
@@ -434,6 +450,68 @@ describe('Training repositories', () => {
     const result = await createTrainingProgramRepository(mock.client).listCoachProgramPage('coach-id', { cursor: 'invalid' })
     expect(result).toEqual({ ok: false, kind: 'failure', error: { kind: 'unexpected', contextCode: 'INVALID_CURSOR' } })
     expect(mock.from).not.toHaveBeenCalled()
+  })
+
+  it('keeps the paginated coach-template runtime legacy-only by default after one unchanged read', async () => {
+    const row = coachTemplateRow('template-default')
+    const mock = clientWith({ data: [row], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client)
+      .listCoachProgramPage('coach-id', { limit: 20 })
+
+    expect(result.ok && result.data.items[0]).toBe(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.from).toHaveBeenCalledWith('training_programs')
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledWith(COACH_PROGRAM_PROJECTION)
+    expect(mock.calls.filter(call => call.method === 'eq').map(call => call.args)).toEqual([
+      ['coach_id', 'coach-id'], ['is_template', true],
+    ])
+    expect(mock.calls.filter(call => call.method === 'order').map(call => call.args)).toEqual([
+      ['created_at', { ascending: false, nullsFirst: false }],
+      ['id', { ascending: true }],
+    ])
+    expect(mock.chain.limit).toHaveBeenCalledTimes(1)
+    expect(mock.chain.limit).toHaveBeenCalledWith(21)
+    consoleInfo.mockRestore()
+  })
+
+  it('allows the internal canonical mode only for MATCH and UI-identical template rows', async () => {
+    const row = coachTemplateRow('template-canonical')
+    const mock = clientWith({ data: [row], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const result = await createTrainingProgramRepository(mock.client, {
+      coachTemplateServingMode: 'canonical-when-identical',
+    }).listCoachProgramPage('coach-id')
+
+    expect(result.ok && result.data.items[0]).not.toBe(row)
+    expect(result.ok && result.data.items[0]).toEqual(row)
+    expect(mock.from).toHaveBeenCalledTimes(1)
+    expect(mock.chain.select).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
+  })
+
+  it('keeps WARNING and UNSUPPORTED template rows on the identical legacy references in internal mode', async () => {
+    const warning = coachTemplateRow('template-warning', {
+      split: 'PPL',
+      days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
+    })
+    const warningMock = clientWith({ data: [warning], error: null })
+    const consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const warningResult = await createTrainingProgramRepository(warningMock.client, {
+      coachTemplateServingMode: 'canonical-when-identical',
+    }).listCoachProgramPage('coach-id')
+    expect(warningResult.ok && warningResult.data.items[0]).toBe(warning)
+    expect(warningMock.from).toHaveBeenCalledTimes(1)
+
+    const unsupported = coachTemplateRow('template-unsupported', { someday: [] })
+    const unsupportedMock = clientWith({ data: [unsupported], error: null })
+    const unsupportedResult = await createTrainingProgramRepository(unsupportedMock.client, {
+      coachTemplateServingMode: 'canonical-when-identical',
+    }).listCoachProgramPage('coach-id')
+    expect(unsupportedResult.ok && unsupportedResult.data.items[0]).toBe(unsupported)
+    expect(unsupportedMock.from).toHaveBeenCalledTimes(1)
+    consoleInfo.mockRestore()
   })
 
   it('marks an exactly full or empty final template page as complete', async () => {

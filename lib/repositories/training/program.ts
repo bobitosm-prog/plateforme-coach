@@ -3,6 +3,11 @@ import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/res
 import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type PageRequest, type PaginatedResult } from '@/lib/repositories/pagination'
 import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
 import {
+  COACH_TEMPLATE_SERVING_DEFAULT_MODE,
+  prepareCoachTemplatePageForServing,
+  type CoachTemplateServingMode,
+} from '@/lib/training/coexistence/coach-template-serving-contract'
+import {
   observeClientProgramShadow,
   type ClientProgramShadowSelection,
 } from '@/lib/training/coexistence/client-program-shadow-contract'
@@ -32,7 +37,16 @@ export type AssignedProgramReadOptions = {
   readonly shadowSelection?: ClientProgramShadowSelection
 }
 
-export function createTrainingProgramRepository(client: DatabaseClient) {
+type TrainingProgramRepositoryInternalOptions = {
+  readonly coachTemplateServingMode?: CoachTemplateServingMode
+}
+
+export function createTrainingProgramRepository(
+  client: DatabaseClient,
+  internalOptions: TrainingProgramRepositoryInternalOptions = {},
+) {
+  const coachTemplateServingMode = internalOptions.coachTemplateServingMode
+    ?? COACH_TEMPLATE_SERVING_DEFAULT_MODE
   return {
     async listCoachProgramPage(
       coachUserId: string,
@@ -61,7 +75,13 @@ export function createTrainingProgramRepository(client: DatabaseClient) {
       const nextCursor = hasMore && last
         ? encodeTimestampCursor({ timestamp: last.created_at, id: last.id })
         : null
-      return { ok: true, data: { items, hasMore, nextCursor } }
+      const legacyPage = { items, hasMore, nextCursor }
+      const serving = prepareCoachTemplatePageForServing(
+        legacyPage,
+        coachUserId,
+        coachTemplateServingMode,
+      )
+      return { ok: true, data: serving.page }
     },
 
     async listCoachPrograms(coachUserId: string): Promise<RepositoryResult<CoachProgramRow[]>> {

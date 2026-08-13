@@ -575,15 +575,16 @@ ou d'observation restent isolées ; une erreur Supabase demeure autoritative.
 Aucune requête, mutation ou valeur canonique servie n'est ajoutée : le
 dashboard continue à consommer exclusivement la ligne legacy.
 
-## Contrat dormant de serving : liste paginée des templates coach
+## Branchement runtime inactif de serving : liste paginée des templates coach
 
 Le futur point de bascule le plus borné est uniquement
 `listCoachProgramPage`. Le contrat pur
 [`coach-template-serving-contract.ts`](../lib/training/coexistence/coach-template-serving-contract.ts)
 prépare une page compatible avec la forme actuellement reçue par
-`useCoachProgramPagination`, mais aucun repository, hook ou composant ne
-l'appelle encore. `listCoachPrograms` et `findProgramByIdForOwner` restent hors
-de ce contrat.
+`useCoachProgramPagination`. Seul `listCoachProgramPage` appelle cette frontière
+après sa lecture et sa pagination existantes. Le hook et le composant restent
+inchangés ; `listCoachPrograms` et `findProgramByIdForOwner` restent hors de ce
+contrat.
 
 Le mode par défaut `legacy-only` retourne la page et les lignes legacy par
 identité. Il constitue aussi le rollback complet : aucun autre état, writer,
@@ -604,4 +605,7 @@ Les résultats `WARNING`, `CRITICAL_MISMATCH` et `UNSUPPORTED`, une erreur
 d'adaptation ou une projection UI différente conservent la ligne legacy
 originale par identité. La page conserve l'ordre, `hasMore` et `nextCursor` ;
 aucune entrée n'est supprimée et aucun tri n'est rejoué. Ce contrat ne change
-ni la requête Supabase, ni la pagination runtime, ni le serving actuel.
+ni la requête Supabase, ni la pagination runtime, ni le serving actuel. Le
+repository ne rend le mode `canonical-when-identical` accessible que par sa
+configuration interne ; sans cette configuration, `legacy-only` est toujours
+utilisé.

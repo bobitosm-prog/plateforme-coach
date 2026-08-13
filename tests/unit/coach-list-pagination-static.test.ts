@@ -14,8 +14,12 @@ describe('coach list pagination architecture', () => {
     expect(hook).toContain('generation.current')
     expect(hook).toContain('inFlight.current')
     expect(repository).toContain('observeCoachTemplateShadowPage(items, coachUserId)')
+    expect(repository).toContain('const legacyPage = { items, hasMore, nextCursor }')
+    expect(repository).toContain('prepareCoachTemplatePageForServing(')
     expect(repository.indexOf('observeCoachTemplateShadowPage(items, coachUserId)'))
-      .toBeLessThan(repository.indexOf('return { ok: true, data: { items, hasMore, nextCursor } }'))
+      .toBeLessThan(repository.indexOf('prepareCoachTemplatePageForServing('))
+    expect(repository.indexOf('prepareCoachTemplatePageForServing('))
+      .toBeLessThan(repository.indexOf('return { ok: true, data: serving.page }'))
   })
 
   it('keeps the UI additive and preserves loaded items on next-page failure', () => {

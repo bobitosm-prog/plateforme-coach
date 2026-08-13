@@ -106,12 +106,13 @@ describe('future coach-template canonical serving contract', () => {
     }])
   })
 
-  it('remains dormant and has no database, network or runtime repository boundary', () => {
+  it('has no database or network boundary and is wired only from the program repository', () => {
     const contract = readFileSync('lib/training/coexistence/coach-template-serving-contract.ts', 'utf8')
     const repository = readFileSync('lib/repositories/training/program.ts', 'utf8')
     const hook = readFileSync('app/coach/hooks/useCoachProgramPagination.ts', 'utf8')
     expect(contract).not.toMatch(/\.from\(|\bfetch\(|createClient|XMLHttpRequest|WebSocket/)
-    expect(repository).not.toContain('coach-template-serving-contract')
+    expect(repository).toContain("from '@/lib/training/coexistence/coach-template-serving-contract'")
+    expect(repository).toContain('prepareCoachTemplatePageForServing(')
     expect(hook).not.toContain('coach-template-serving-contract')
   })
 })
