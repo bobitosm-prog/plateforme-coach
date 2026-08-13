@@ -574,3 +574,34 @@ le présent contrat. Les erreurs d'adaptation, de comparaison, de chronométrage
 ou d'observation restent isolées ; une erreur Supabase demeure autoritative.
 Aucune requête, mutation ou valeur canonique servie n'est ajoutée : le
 dashboard continue à consommer exclusivement la ligne legacy.
+
+## Contrat dormant de serving : liste paginée des templates coach
+
+Le futur point de bascule le plus borné est uniquement
+`listCoachProgramPage`. Le contrat pur
+[`coach-template-serving-contract.ts`](../lib/training/coexistence/coach-template-serving-contract.ts)
+prépare une page compatible avec la forme actuellement reçue par
+`useCoachProgramPagination`, mais aucun repository, hook ou composant ne
+l'appelle encore. `listCoachPrograms` et `findProgramByIdForOwner` restent hors
+de ce contrat.
+
+Le mode par défaut `legacy-only` retourne la page et les lignes legacy par
+identité. Il constitue aussi le rollback complet : aucun autre état, writer,
+requête ou migration ne doit être inversé. Le mode futur
+`canonical-when-identical` ne peut présenter une ligne issue du modèle
+canonique que si le shadow la classe `MATCH` et si sa projection fonctionnelle
+est strictement identique à celle consommée par l'UI actuelle.
+
+Cette projection couvre l'identifiant et l'owner nécessaires aux actions, le
+nom, la date, les tags, l'ordre des jours et exercices, leurs noms, séries,
+répétitions et repos, ainsi que `split` et `duration` affichés dans les cartes.
+Ces deux derniers champs ne sont pas encore représentés dans le modèle
+canonique : leur présence produit actuellement un `WARNING` et impose le
+fallback legacy. Toute normalisation de représentation visible, par exemple
+`"8"` vers `8`, impose également le fallback.
+
+Les résultats `WARNING`, `CRITICAL_MISMATCH` et `UNSUPPORTED`, une erreur
+d'adaptation ou une projection UI différente conservent la ligne legacy
+originale par identité. La page conserve l'ordre, `hasMore` et `nextCursor` ;
+aucune entrée n'est supprimée et aucun tri n'est rejoué. Ce contrat ne change
+ni la requête Supabase, ni la pagination runtime, ni le serving actuel.
