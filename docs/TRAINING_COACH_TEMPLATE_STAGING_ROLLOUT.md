@@ -84,6 +84,30 @@ et le compteur d'erreur observateur. Il ne contient ni curseur, timestamp
 métier, identifiant, nom ou payload. Le même contrôle conserve son run opaque
 et incrémente la séquence entre les pages d'un parcours.
 
+Le runner interne `runCoachTemplateStagingAssessment` orchestre un parcours
+complet sans ouvrir une seconde voie de lecture. Il exige explicitement
+`staging`, `preview`, la branche `phase-6-staging` et la demande
+`assessment-only` avant même de construire le reader. Il crée un contrôle
+`assessment-only` unique, appelle exclusivement `listCoachProgramPage`, puis
+suit son `nextCursor` en mémoire jusqu'à la page terminale. Le curseur n'est
+jamais copié dans un événement, un bilan ou une erreur.
+
+Le bilan final contient seulement le run opaque, les nombres de pages et de
+lignes, les sept compteurs cumulés, le taux `warning / lignes` (zéro pour un
+parcours vide) et la confirmation de page terminale. Une erreur de création du
+reader, de lecture, de séquence, d'événement ou de pagination arrête le parcours
+avec une raison fermée et sans bilan partiel. Une boucle de curseur et un
+plafond défensif de 1 000 pages sont également fail-closed. Le runner ne logue
+rien et n'expose ni identité métier, ligne, payload, nom, curseur ou erreur
+Supabase brute.
+
+Le caller staging fournit le reader existant déjà lié à son client authentifié.
+Le runner ne construit aucun client Supabase, n'ajoute aucune requête et ne
+connaît aucune configuration Production. Chaque itération correspond donc
+strictement à la lecture paginée normale d'une page. La représentation
+canonique évaluée est toujours écartée par le mode `assessment-only` ; le
+repository continue de retourner les lignes legacy par identité.
+
 ## Baseline avant activation
 
 La baseline staging doit couvrir au minimum trois parcours paginés complets et
