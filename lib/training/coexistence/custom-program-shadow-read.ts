@@ -15,13 +15,15 @@ export const CUSTOM_PROGRAM_SHADOW_PROVENANCE = 'manual/editor-normalized' as co
 export const CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE = 'ai/program-builder' as const
 export const CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE = 'onboarding-auto' as const
 export const CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE = 'diagnostic-auto' as const
+export const CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE = 'cron-auto' as const
 
-export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto'
+export type CustomProgramShadowSource = 'manual' | 'ai' | 'onboarding_auto' | 'diagnostic_auto' | 'cron_auto'
 export type CustomProgramShadowProvenance =
   | typeof CUSTOM_PROGRAM_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_AI_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_ONBOARDING_SHADOW_PROVENANCE
   | typeof CUSTOM_PROGRAM_DIAGNOSTIC_SHADOW_PROVENANCE
+  | typeof CUSTOM_PROGRAM_CRON_SHADOW_PROVENANCE
 
 export type CustomProgramShadowStatus = 'MATCH' | 'WARNING' | 'CRITICAL_MISMATCH' | 'UNSUPPORTED'
 
@@ -48,6 +50,8 @@ export type CustomProgramDifferenceCode =
   | 'DIAGNOSTIC_ID_NOT_PERSISTED'
   | 'VOLUME_DELTA_NOT_PERSISTED'
   | 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE'
+  | 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE'
+  | 'CRON_TRIGGER_AT_NOT_PERSISTED'
   | 'ADAPTER_WARNINGS'
   | 'UNMAPPED_FIELDS'
   | 'CANONICAL_PARTIAL'
@@ -153,6 +157,12 @@ export function isDiagnosticCustomProgramShadowCandidate(
   return row?.source === 'diagnostic_auto'
 }
 
+export function isCronCustomProgramShadowCandidate(
+  row: PersonalProgramRow | null | undefined,
+): row is PersonalProgramRow & { source: 'cron_auto' } {
+  return row?.source === 'cron_auto'
+}
+
 /**
  * Keeps database ownership and technical columns out of the adapter payload.
  * Only the legacy program data needed for semantic adaptation crosses this
@@ -183,6 +193,11 @@ export function buildCustomProgramAdaptationEnvelope(
         sourceCreatedBy: { kind: 'system' as const },
         sourceTrigger: 'onboarding' as const,
       }
+    : row.source === 'cron_auto'
+      ? {
+          sourceCreatedBy: { kind: 'system' as const },
+          sourceTrigger: 'cron' as const,
+        }
     : row.source === 'diagnostic_auto'
       ? {
           sourceCreatedBy: { kind: 'client' as const, id: row.user_id },
@@ -415,6 +430,7 @@ export function compareCustomProgramShadow(
     const legacy = legacyProjection(row)
     const canonical = canonicalProjection(adapted.value)
     if (!legacy || !canonical) {
+      if (row.source === 'cron_auto') return unsupportedResult()
       return {
         format: CUSTOM_PROGRAM_SHADOW_FORMAT,
         result: 'CRITICAL_MISMATCH',
@@ -434,7 +450,7 @@ export function compareCustomProgramShadow(
     if (row.source === 'manual' && containsEditorNormalizedProvenanceSignals(row.days)) {
       differences.push({ code: 'PROVENANCE_UNCERTAIN', path: 'provenance' })
     }
-    if (row.source === 'ai' || row.source === 'onboarding_auto' || row.source === 'diagnostic_auto') {
+    if (row.source === 'ai' || row.source === 'onboarding_auto' || row.source === 'diagnostic_auto' || row.source === 'cron_auto') {
       if (containsNestedValue(row.days, 'muscle_primary')) {
         differences.push({ code: 'AI_MUSCLE_PRIMARY_UNMAPPED', path: 'exercises.muscle_primary' })
       }
@@ -458,6 +474,15 @@ export function compareCustomProgramShadow(
       differences.push({ code: 'VOLUME_DELTA_NOT_PERSISTED', path: 'source.volume_delta' })
       differences.push({ code: 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', path: 'source.previous_program' })
     }
+    if (row.source === 'cron_auto') {
+      differences.push({ code: 'REST_DAYS_NOT_PERSISTED', path: 'days' })
+      if (containsNestedField(row.days, 'day_number')) {
+        differences.push({ code: 'DAY_NUMBER_NON_AUTHORITATIVE', path: 'days.day_number' })
+      }
+      differences.push({ code: 'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', path: 'source.previous_program' })
+      differences.push({ code: 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE', path: 'source.anti_stagnation_context' })
+      differences.push({ code: 'CRON_TRIGGER_AT_NOT_PERSISTED', path: 'source.triggered_at' })
+    }
     if ([...warningCodes].some(code => code !== 'legacy_name_reference' && code !== 'unmapped_field')) {
       differences.push({ code: 'ADAPTER_WARNINGS', path: 'adapter.warnings' })
     }
@@ -470,7 +495,8 @@ export function compareCustomProgramShadow(
       'TECHNIQUE_SEMANTICS_UNMAPPED', 'ADAPTER_WARNINGS', 'UNMAPPED_FIELDS',
       'REST_DAYS_NOT_PERSISTED', 'DAY_NUMBER_NON_AUTHORITATIVE',
       'DIAGNOSTIC_ID_NOT_PERSISTED', 'VOLUME_DELTA_NOT_PERSISTED',
-      'PREVIOUS_PROGRAM_LINK_UNAVAILABLE',
+      'PREVIOUS_PROGRAM_LINK_UNAVAILABLE', 'ANTI_STAGNATION_CONTEXT_UNAVAILABLE',
+      'CRON_TRIGGER_AT_NOT_PERSISTED',
     ])
     const critical = differences.some(difference => !warningOnly.has(difference.code))
     return {

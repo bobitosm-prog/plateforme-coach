@@ -31,7 +31,7 @@ export type TrainingSource = {
   kind: 'manual' | 'catalog-template' | 'ai' | 'import' | 'legacy'
   createdBy: { kind: 'platform' | 'coach' | 'client' | 'system'; id?: string }
   provider?: string
-  trigger?: 'onboarding' | 'diagnostic'
+  trigger?: 'onboarding' | 'diagnostic' | 'cron'
   legacyFormat: LegacyFormatId
   createdAt: string
 }

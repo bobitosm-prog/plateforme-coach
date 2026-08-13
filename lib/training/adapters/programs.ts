@@ -92,6 +92,7 @@ export function adaptCustomProgram(input: unknown, context: AdapterContext): Ada
   const aiOrigin = input.source === 'ai'
     || input.source === 'onboarding_auto'
     || input.source === 'diagnostic_auto'
+    || input.source === 'cron_auto'
   return programFromDays(input, input.days, format, context, 'personal', aiOrigin ? 'ai' : 'manual', aiOrigin ? 'anthropic' : undefined)
 }
 
