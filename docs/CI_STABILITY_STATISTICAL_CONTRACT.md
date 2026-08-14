@@ -67,6 +67,46 @@ Les catégories d'échec sont `TYPECHECK_LINT`, `TEST`, `BUILD`, `DATABASE`,
 `UNKNOWN` est conservable pour ne pas perdre la preuve, mais bloque
 `CI_STABLE` jusqu'à qualification additive par un futur contrat explicite.
 
+### Collecte et persistance
+
+Un cinquième job non bloquant, `CI Stability Observation`, dépend des quatre
+gates sans modifier leurs commandes, timeouts ou seuils. Il s'exécute seulement
+pour les pushes `phase-6-staging` et les dispatches explicites, car les gates
+Heavy sont volontairement absentes des pull requests. Avec une permission
+GitHub Actions read-only, il lit l'attempt courant, calcule la durée jusqu'à la
+dernière gate terminale et produit un fragment
+`collected_observation`. `github.run_attempt=1` produit un primaire ; les
+attempts suivants produisent un `rerun_of` vers l'attempt 1 et conservent le
+même SHA.
+
+Un rerun GitHub partiel qui ne réexécute pas les quatre gates reste
+`incomplete_collection`. Pour être importable, un rerun doit être un attempt
+complet A/B/C1/C2 ; cette règle empêche de reconstruire artificiellement une
+preuve verte à partir de jobs provenant d'attempts différents.
+
+Le fragment du filesystem éphémère n'est **pas** considéré durable. Le job le
+transfère dans un artefact immuable nommé avec run ID et attempt, conservé 90
+jours. Une collecte incomplète produit seulement un artefact
+`incomplete_collection`; elle n'est jamais importable comme observation et le
+statut reste fail-closed.
+
+Un artefact GitHub n'est pas le registre canonique. Sa persistance définitive
+exige une revue opérateur locale avant expiration :
+
+```bash
+npm run ci:stability:import -- /chemin/observation.json --confirm-append
+npm run ci:stability:check
+git diff -- ci/stability/observations.jsonl
+```
+
+L'import assigne uniquement le prochain `sequence`, vérifie le préfixe
+historique, l'unicité, la chronologie et la relation rerun/SHA, puis ouvre le
+registre en mode append et écrit seulement le suffixe validé d'une ligne.
+L'historique existant n'est jamais réécrit. Il ne lance ni `git add`, commit ou
+push. La revue et le commit humain du registre constituent la seule persistance
+Git autorisée dans ce sous-batch. Aucun token GitHub, payload d'API ou détail
+de job n'entre dans le registre.
+
 ## Fenêtre statistique
 
 La fenêtre est déterministe : en partant du dernier run primaire, prendre le

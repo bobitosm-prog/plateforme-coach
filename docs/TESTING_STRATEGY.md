@@ -431,6 +431,12 @@ UTC distinctes, la méthode nearest-rank, le registre append-only et le retour
 automatique à `CI_STABILITY_CANDIDATE` en cas de dégradation. Il ne déclare pas
 la CI stable : le registre formel démarre sans backfill spéculatif.
 
+Le job séparé `CI Stability Observation` collecte après A/B/C1/C2 un fragment
+par attempt et le conserve comme artefact 90 jours. Il est non bloquant et ne
+change aucun gate. L'intégration au registre Git reste un import local explicite
+et revu : le workflow ne possède aucune permission d'écriture repository et ne
+commit/push jamais automatiquement.
+
 L'inventaire vidéo exécuté par Vitest dépend de `ffprobe`. Gate B installe donc
 explicitement le paquet Ubuntu `ffmpeg`, sans ImageMagick ni autre paquet
 système. Cette dépendance bornée concerne uniquement Gate B ; Gate A ne réalise

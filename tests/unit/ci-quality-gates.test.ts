@@ -9,7 +9,8 @@ const contributingGuide = readFileSync(resolve(root, 'docs/CONTRIBUTING.md'), 'u
 const fastJob = workflow.slice(workflow.indexOf('\n  fast:'), workflow.indexOf('\n  standard:'))
 const standardJob = workflow.slice(workflow.indexOf('\n  standard:'), workflow.indexOf('\n  database-heavy:'))
 const databaseHeavyJob = workflow.slice(workflow.indexOf('\n  database-heavy:'), workflow.indexOf('\n  browser-heavy:'))
-const browserHeavyJob = workflow.slice(workflow.indexOf('\n  browser-heavy:'))
+const browserHeavyJob = workflow.slice(workflow.indexOf('\n  browser-heavy:'), workflow.indexOf('\n  stability-observation:'))
+const stabilityObservationJob = workflow.slice(workflow.indexOf('\n  stability-observation:'))
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   engines?: { node?: string }
   packageManager?: string
@@ -54,13 +55,15 @@ describe('progressive CI quality gates contract', () => {
     expect(workflow).toContain('cancel-in-progress: true')
   })
 
-  it('defines the bounded fast, standard and two isolated heavy jobs', () => {
+  it('defines the bounded gates plus a separate non-blocking observation job', () => {
     expect(workflow).toMatch(/^jobs:\n  fast:/m)
-    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(4)
+    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(5)
     expect(workflow).toContain('timeout-minutes: 10')
     expect(standardJob).toContain('timeout-minutes: 15')
     expect(databaseHeavyJob).toContain('timeout-minutes: 20')
     expect(browserHeavyJob).toContain('timeout-minutes: 20')
+    expect(stabilityObservationJob).toContain('timeout-minutes: 5')
+    expect(stabilityObservationJob).toContain('continue-on-error: true')
   })
 
   it('installs the exact lockfile dependency graph', () => {
@@ -222,6 +225,21 @@ describe('progressive CI quality gates contract', () => {
     expect(browserHeavyJob).toContain("email ~ '@(moovx[.])?example[.]test$'")
     expect(browserHeavyJob).toContain('BROWSER_HEAVY_SYNTHETIC_AUTH_RESIDUE')
     expect(browserHeavyJob).toContain('BROWSER_HEAVY_SYNTHETIC_TABLE_RESIDUE')
+  })
+
+  it('collects stability evidence after all gates without changing their commands or auto-pushing', () => {
+    expect(stabilityObservationJob).toContain('needs: [fast, standard, database-heavy, browser-heavy]')
+    expect(stabilityObservationJob).toContain("if: ${{ always() && github.event_name != 'pull_request' }}")
+    expect(stabilityObservationJob).toContain('actions: read')
+    expect(stabilityObservationJob).toContain('contents: read')
+    expect(stabilityObservationJob).toContain('node scripts/collect-ci-stability-observation.ts')
+    expect(stabilityObservationJob).toContain('uses: actions/upload-artifact@v4')
+    expect(stabilityObservationJob).toContain('retention-days: 90')
+    expect(stabilityObservationJob).not.toMatch(/git (?:add|commit|push)|contents: write/)
+    for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
+      expect(gate).not.toContain('collect-ci-stability-observation')
+      expect(gate).not.toContain('upload-artifact')
+    }
   })
 
   it('keeps all heavy jobs local-only, read-only toward the repository and deployment-free', () => {

@@ -339,3 +339,37 @@ jobs:
           const residual = open.filter(Boolean)
           if (residual.length) throw new Error(`Residual Gate C2 ports: ${residual.join(', ')}`)
           NODE
+
+  stability-observation:
+    name: CI Stability Observation
+    if: ${{ always() && github.event_name != 'pull_request' }}
+    needs: [fast, standard, database-heavy, browser-heavy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Collect complete gate observation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/collect-ci-stability-observation.ts
+          --output "${{ runner.temp }}/ci-stability-observation.json"
+
+      - name: Persist immutable observation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-stability-observation-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-stability-observation.json
+          if-no-files-found: error
+          retention-days: 90

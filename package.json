@@ -34,6 +34,7 @@
     "perf:media:inventory": "node scripts/inventory-runtime-media.ts",
     "progression:authority:check": "node scripts/check-progression-aggregation-authority.ts",
     "ci:stability:check": "node scripts/check-ci-stability-registry.ts",
+    "ci:stability:import": "node scripts/import-ci-stability-observation.ts",
     "supabase:local:start": "node scripts/supabase-local.mjs start",
     "supabase:local:status": "node scripts/supabase-local.mjs status",
     "supabase:local:reset": "node scripts/supabase-local.mjs reset",
