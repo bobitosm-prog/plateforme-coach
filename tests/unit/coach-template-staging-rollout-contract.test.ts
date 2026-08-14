@@ -53,4 +53,13 @@ describe('coach-template staging rollout contract', () => {
     expect(rollout).toMatch(/redéployer\s+le même SHA/)
     expect(rollout).toMatch(/n'ajoute aucune lecture Supabase/)
   })
+
+  it('reconciles the technical activation while preserving the safe final state', () => {
+    expect(rollout).toContain('`STAGING_SERVING_ACTIVATION_TECHNICALLY_VALIDATED`')
+    expect(rollout).toContain('mode runtime final : `legacy-only`')
+    expect(rollout).toContain('corpus organique : `REAL_CORPUS_VALIDATION_PENDING`')
+    expect(rollout).toContain('Production : `PRODUCTION_PROMOTION_FORBIDDEN`')
+    expect(rollout).toContain('redéployé le même SHA')
+    expect(rollout).toContain('Aucun template organique')
+  })
 })

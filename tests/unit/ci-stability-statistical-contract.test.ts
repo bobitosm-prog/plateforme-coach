@@ -46,11 +46,13 @@ const stableRuns = () => Array.from(
 )
 
 describe('Phase 9 CI stability statistical contract', () => {
-  it('keeps the versioned empty registry as a candidate without backfilling incomplete history', () => {
+  it('keeps the one-run versioned registry as a candidate without backfilling incomplete history', () => {
     const source = readFileSync('ci/stability/observations.jsonl', 'utf8')
     expect(evaluateCiStability(parseCiStabilityRegistry(source))).toMatchObject({
       status: 'CI_STABILITY_CANDIDATE',
-      completeRunCount: 0,
+      completeRunCount: 1,
+      calendarDayCount: 1,
+      passCount: 1,
       reasons: expect.arrayContaining(['MINIMUM_RUNS_NOT_MET', 'MINIMUM_DAYS_NOT_MET']),
     })
   })
@@ -154,6 +156,10 @@ describe('Phase 9 CI stability statistical contract', () => {
     expect(contract).toContain('p95 strictement inférieur')
     expect(contract).toContain('flaky rate strictement inférieur')
     expect(contract).toContain('retombe immédiatement à `CI_STABILITY_CANDIDATE`')
+    expect(contract).toContain('`1/150` run complet primaire')
+    expect(contract).toContain('`1/7` jour UTC')
+    expect(contract).toContain('`979000 ms`')
+    expect(contract).toContain('import append-only en `sequence=1`')
     expect(contract).not.toMatch(/statut (?:actuel|est) `CI_STABLE`/i)
     for (const source of [testingStrategy, nextRoadmap, phaseNine]) {
       expect(source).toContain('CI_STABILITY_STATISTICAL_CONTRACT.md')

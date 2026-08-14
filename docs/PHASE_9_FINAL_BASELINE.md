@@ -13,6 +13,25 @@ dépendances, compatibilités et mesures de charge. **Production n'a pas été
 touchée ni déclarée validée.** Cette baseline ne ferme pas artificiellement la
 Phase 9 : elle distingue les acquis des critères encore ouverts.
 
+### Réconciliation additive du 14 août 2026
+
+La capture du 11 août reste historique et n'est pas réécrite. Une
+réconciliation bornée au SHA `554575c` ajoute les preuves obtenues depuis :
+
+- Training : couverture shadow du périmètre planifié, frontière de serving,
+  assessment, runner et fixture terminés; activation réelle
+  `canonical-when-identical` validée sur Preview puis rollback même SHA réussi;
+- état Training final : `legacy-only`, avec
+  `REAL_CORPUS_VALIDATION_PENDING` et `PRODUCTION_PROMOTION_FORBIDDEN` ;
+- CI : contrat statistique formel, collecte automatique validée sur un vrai
+  run, registre append-only actif avec `1/150` run primaire et `1/7` jour UTC ;
+- statut CI inchangé : `CI_STABILITY_CANDIDATE`, sans revendication de
+  stabilité statistique.
+
+Ces deux attentes dépendent désormais d'observations temporelles ou organiques,
+pas d'un développement structurel Phase 9. Le statut réconcilié est donc
+`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`. Il n'autorise aucune Production.
+
 ## Git et Supabase
 
 - branche : `phase-6-staging` ;
@@ -48,6 +67,14 @@ provisoire est `16:07` et le flaky rate provisoire est `0 %`. Le statut reste
 p95 statistique strictement inférieur à 20 minutes ni un flaky rate strictement
 inférieur à 2 %. Aucun retry ne doit masquer un échec et aucun job ne déploie ou
 ne contacte staging/Production.
+
+Ces deux runs historiques restent volontairement hors registre faute de preuve
+complète. Depuis la capture, le job `CI Stability Observation` a produit un
+premier artefact réel conforme, revu puis importé une seule fois par le
+mécanisme append-only. Le registre contient exactement un primaire `PASS` :
+`completeRunCount=1`, `calendarDayCount=1`, p50 et p95 provisoires à
+`979000 ms`, flaky rate `0`. Il manque encore 149 runs primaires et 6 jours UTC;
+le statut demeure `CI_STABILITY_CANDIDATE`.
 
 ## Qualité et tests
 
@@ -87,12 +114,24 @@ UI/HTTP → orchestration → domaine/services → repositories/ports →
 infrastructure. Les frontières Auth serveur, RLS et service-role restent
 obligatoires.
 
-Training reste dans l'état **`TRAINING_CANONICAL_MIGRATION_NOT_STARTED`** : le
-modèle et les adaptateurs sont prêts et testés, mais aucun producteur ou
-consommateur runtime n'utilise le modèle canonique, et aucune double lecture ou
-coexistence runtime n'est active. Les adaptateurs de
-`lib/training/adapters/*` restent **`FUTURE_MIGRATION_RESERVED`** jusqu'à une
-bascule observée et réversible puis une preuve d'absence de trafic legacy.
+Au moment de la capture initiale, Training était dans l'état historique
+**`TRAINING_CANONICAL_MIGRATION_NOT_STARTED`**. La réconciliation additive ne
+réécrit pas ce constat; elle établit que le périmètre structurel Phase 9 est
+désormais terminé :
+
+- shadow coverage terminé pour les readers et buckets planifiés ;
+- serving boundary `listCoachProgramPage` terminé, avec une seule lecture et
+  fallback legacy par identité hors `MATCH`/projection UI identique ;
+- assessment, runner, fixture déterministe et télémétrie expurgée terminés ;
+- rollout technique staging validé par activation réelle puis rollback réussi
+  au même SHA ;
+- état runtime final `legacy-only`.
+
+La preuve synthétique ne vaut pas corpus réel : le statut reste
+`REAL_CORPUS_VALIDATION_PENDING`. La promotion Production reste
+`PRODUCTION_PROMOTION_FORBIDDEN` et hors du périmètre actuel. Les adaptateurs de
+`lib/training/adapters/*` restent **`FUTURE_MIGRATION_RESERVED`**; aucune
+suppression legacy n'est autorisée par cette réconciliation.
 
 ## Dépendances
 
@@ -145,15 +184,16 @@ aucune charge staging ou Production.
 
 ## Critères non attestés et risques ouverts
 
-- stabilité CI statistique : p95 <20 minutes et flaky rate <2 % ;
+- stabilité CI statistique : fenêtre à `1/150` runs et `1/7` jours UTC, avant
+  attestation p95 <20 minutes et flaky rate <2 % ;
+- validation Training sur corpus organique staging, actuellement indisponible ;
 - capacité maximale des endpoints et read models ;
 - comportement de charge staging ou Production ;
 - rollback de données et PITR ;
-- migration runtime Training canonique ;
 - intégration des tests React serveur `.test.tsx` au lancement standard ;
 - cycle de vie final du fallback Seedance et des compatibilités conservées.
 
-## Verdict Phase 9
+## Verdict historique de la capture du 11 août
 
 **`PHASE9_NOT_READY_TO_CLOSE`**
 
@@ -167,3 +207,18 @@ formels restent ouverts :
 
 La Phase 9 reste active jusqu'à satisfaction de ces critères ou décision
 explicite de gouvernance qui les transfère sans les déclarer accomplis.
+
+## Verdict Phase 9 réconcilié
+
+**`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`**
+
+Les quinze tâches structurelles du périmètre Phase 9 sont terminées. Les deux
+preuves encore ouvertes sont strictement dépendantes du temps ou de données
+organiques externes : compléter la fenêtre CI à 150 runs sur 7 jours UTC et
+rejouer l'assessment lorsqu'un template non-fixture apparaîtra en staging.
+
+Cette classification ne transforme ni `CI_STABILITY_CANDIDATE` en stabilité
+attestée, ni `REAL_CORPUS_VALIDATION_PENDING` en validation réelle. Elle laisse
+le runtime Training en `legacy-only` et maintient
+`PRODUCTION_PROMOTION_FORBIDDEN`. Toute activation Production ou extension de
+périmètre exige un nouveau contrat explicite.

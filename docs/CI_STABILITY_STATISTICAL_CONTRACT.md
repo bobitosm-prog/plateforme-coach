@@ -3,10 +3,13 @@
 ## Statut
 
 Ce contrat définit la transition de `CI_STABILITY_CANDIDATE` vers `CI_STABLE`.
-Il ne réalise pas cette transition : le registre formel ne contient encore
-aucune observation complète et les deux runs historiques ne sont pas
-rétro-enregistrés, car leur SHA, leur horodatage et, pour le second, leur durée
-ne sont pas tous versionnés.
+Il ne réalise pas cette transition. La collecte automatique a été validée sur
+le run GitHub Actions `31784233843`, attempt `1`, puis son artefact primaire
+`PASS` a été importé exactement une fois. Le registre append-only contient donc
+`1/150` run complet primaire sur `1/7` jour UTC. Les deux runs historiques ne
+sont pas rétro-enregistrés, car leur SHA, leur horodatage et, pour le second,
+leur durée ne sont pas tous versionnés. Le statut reste
+`CI_STABILITY_CANDIDATE`.
 
 ## Unité d'observation
 
@@ -107,6 +110,12 @@ push. La revue et le commit humain du registre constituent la seule persistance
 Git autorisée dans ce sous-batch. Aucun token GitHub, payload d'API ou détail
 de job n'entre dans le registre.
 
+La première collecte réelle confirme opérationnellement cette chaîne : quatre
+gates terminales `PASS`, artefact `collected_observation`, durée primaire
+`979000 ms`, validation structurelle et import append-only en `sequence=1`.
+Cette preuve valide le mécanisme de collecte et de persistance, pas la stabilité
+statistique. Il manque encore 149 runs primaires et 6 dates UTC distinctes.
+
 ## Fenêtre statistique
 
 La fenêtre est déterministe : en partant du dernier run primaire, prendre le
@@ -162,7 +171,7 @@ L'évaluateur peut retourner `CI_STABLE` si et seulement si, sur la fenêtre :
 Une égalité à 20 minutes ou 2 % est un échec du critère strict. Le p50 est
 informatif mais obligatoire dans le bilan. `CI_STABLE` doit être matérialisé
 par un sous-batch documentaire séparé après revue du registre ; ce document et
-le registre vide conservent `CI_STABILITY_CANDIDATE`.
+la fenêtre encore incomplète conservent `CI_STABILITY_CANDIDATE`.
 
 ## Recalcul et régression
 

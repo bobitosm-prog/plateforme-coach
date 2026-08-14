@@ -2,10 +2,13 @@
 
 ## Statut
 
-Cette roadmap est **préparée mais non activée** au SHA `25c7426`. La Phase 9
-reste active avec le verdict `PHASE9_NOT_READY_TO_CLOSE`. Les deux P0 déjà
-ouverts — stabilité CI et migration runtime Training — ne sont ni fermés ni
-reportés implicitement par ce document.
+Cette roadmap est **préparée mais non activée**. La capture initiale au SHA
+`25c7426` est conservée dans la baseline; sa réconciliation au SHA `554575c`
+classe désormais la Phase 9
+`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`. Les travaux structurels CI et
+Training sont terminés. Les deux suivis P0 ci-dessous restent ouverts sans être
+déclarés accomplis : fenêtre statistique CI et validation Training sur corpus
+organique staging.
 
 Les estimations correspondent à du travail concentré pour une personne assistée
 par l'IA et devront être recalibrées après l'audit terrain de chaque tâche.
@@ -14,8 +17,8 @@ par l'IA et devront être recalibrées après l'audit terrain de chaque tâche.
 
 | Tâche | Objectif et raison | Estimation | Risque | Dépendances | Critère de sortie |
 |---|---|---:|---|---|---|
-| Achever la migration runtime Training canonique | Brancher progressivement le modèle et les adaptateurs déjà prêts sans casser les formats encore actifs. L'impact métier est critique et aucun producteur/consommateur canonique runtime n'existe aujourd'hui. | 7–10 j | Élevé | Modèle canonique, adaptateurs, repositories Training, fixtures et rollback | Entrées validées, double lecture comparée, persistance additive si nécessaire, consommateurs basculés un par un, observation et rollback prouvés, absence de trafic legacy démontrée avant suppression. |
-| [Attester la stabilité CI](CI_STABILITY_STATISTICAL_CONTRACT.md) | Transformer `CI_STABILITY_CANDIDATE` en preuve statistique sans retry masquant. | Observation multi-runs | Moyen | Gates A/B/C1/C2 inchangés et collecte de durées fiable | Au moins 150 runs primaires complets sur 7 dates UTC distinctes, p95 nearest-rank <20 min, flaky rate des premiers résultats <2 %, zéro échec non résolu, échecs et reruns même SHA correctement classifiés. |
+| Valider le serving Training sur corpus organique staging | Dès qu'au moins un template non-fixture apparaît organiquement, exécuter l'assessment read-only existant sans nouvelle donnée ni corrélation métier. Le rollout technique et son rollback sont déjà validés; l'état runtime final reste `legacy-only`. | Observation conditionnelle | Faible | Corpus organique staging disponible, runner et télémétrie expurgée existants | Trois parcours complets conformes, `REAL_CORPUS_VALIDATION_PENDING` levé uniquement par preuve réussie; toute promotion Production reste interdite et exige un contrat séparé. |
+| [Attester la stabilité CI](CI_STABILITY_STATISTICAL_CONTRACT.md) | Faire progresser le registre append-only actuellement à `1/150` runs primaires et `1/7` jours UTC, sans retry masquant. La collecte automatique est déjà opérationnelle. | Observation multi-runs | Moyen | Gates A/B/C1/C2 inchangés, artefacts importables et revue append-only | Au moins 150 runs primaires complets sur 7 dates UTC distinctes, p95 nearest-rank <20 min, flaky rate des premiers résultats <2 %, zéro échec non résolu, échecs et reruns même SHA correctement classifiés. |
 
 ## P1 — Haute
 
@@ -47,6 +50,8 @@ par l'IA et devront être recalibrées après l'audit terrain de chaque tâche.
 - chaque changement est isolé, réversible et validé au runtime avant commit ;
 - aucune suppression legacy ou optimisation d'index sans preuve d'usage ou de
   performance.
+- aucun rollout Training Production n'est autorisé par la validation technique
+  staging; il exige une décision et un contrat de release séparés.
 
 La [baseline finale Phase 9](PHASE_9_FINAL_BASELINE.md) constitue l'entrée de
 référence de cette proposition.

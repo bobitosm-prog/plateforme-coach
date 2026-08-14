@@ -260,3 +260,35 @@ Le présent sous-batch n'autorise aucune modification distante. L'activation
 effective requiert un sous-batch opérateur séparé qui ajoute uniquement les
 variables publiques bornées au scope Preview/`phase-6-staging`. Leur retrait
 est le rollback documenté.
+
+## Réconciliation opérationnelle Phase 9
+
+Le sous-batch opérateur séparé a depuis exécuté le protocole sans modifier le
+code, Supabase ou une donnée métier. Les trois verrous d'autorité ont été
+configurés uniquement dans le scope Vercel Preview/`phase-6-staging`; le
+project ref effectif `cycbnnojcymjnaqomlyj` a été prouvé depuis les bundles
+publics servis par l'alias staging, tandis que le ref Production
+`njlzossopgknanhkzcbk` est resté absent.
+
+L'opt-in `canonical-when-identical` a ensuite été appliqué seul, le même SHA
+`554575c` redéployé en Preview et l'alias staging rattaché au déploiement prêt.
+Les conditions exactes résolvent vers le contrôle canonique; les contrats
+repository confirment que seules les lignes `MATCH` avec projection UI
+identique sont éligibles, et que tous les autres résultats conservent la ligne
+legacy par identité après l'unique lecture existante.
+
+Le rollback a retiré uniquement l'opt-in, redéployé le même SHA et rattaché
+l'alias au Preview de rollback. L'état distant final est donc explicitement :
+
+- shadow coverage du périmètre planifié : terminé ;
+- serving boundary : terminé ;
+- assessment, runner et fixture : terminés ;
+- technical staging rollout : `STAGING_SERVING_ACTIVATION_TECHNICALLY_VALIDATED` ;
+- mode runtime final : `legacy-only` ;
+- corpus organique : `REAL_CORPUS_VALIDATION_PENDING` ;
+- Production : `PRODUCTION_PROMOTION_FORBIDDEN`, hors scope actuel.
+
+Aucun template organique n'était disponible pour transformer cette validation
+technique en preuve réelle. Dès qu'un template non-fixture apparaîtra en
+staging, le runner read-only existant devra être rejoué. D'ici là, aucune
+activation persistante ni promotion Production n'est autorisée.

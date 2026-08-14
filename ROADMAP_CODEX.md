@@ -2,7 +2,7 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **30 juillet 2026**.
+> Dernière mise à jour : **14 août 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase active : **Phase 9 — Industrialisation et équipe future**.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
@@ -803,8 +803,9 @@ le 30 juillet 2026. Phase 9 est autorisée et active.**
 
 ## Phase 9 — Industrialisation et équipe future
 
-**Statut : active — démarrage autorisé le 30 juillet 2026 après validation
-explicite de RC1.**
+**Statut : `PHASE_9_COMPLETE_WITH_MONITORING_PENDING` — travaux structurels
+terminés; seules les fenêtres d'observation CI et corpus Training restent
+ouvertes.**
 
 **Durée cible : 4 à 6 semaines**  
 **Priorité : P1/P3**
@@ -825,13 +826,13 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 | [x] Créer la checklist de revue de code — checklist canonique orientée preuve, liée au guide de contribution et protégée par un garde statique; self-review, revue indépendante, `N/A` justifiés et validations proportionnées au risque, sans CI, CODEOWNERS ni template PR | 0,5 j | Faible | Faible | Moyen | Conventions |
 | [x] Finaliser le guide d'onboarding développeur — guide canonique local-first, README MoovX, contribution alignée sur 15/15 E2E et garde statique de 16 tests; installation, Supabase local, comptes, architecture, validations, sécurité et premier jour documentés sans accès distant | 1 j | Faible | Faible | Moyen | Architecture stable |
 | [x] Finaliser les ADR et cartes de domaines — carte canonique de 10 domaines, ADR 0008 sur le placement UI/HTTP → orchestration → domaine/services → repositories/ports → infrastructure, états historiques réconciliés et garde documentaire de 22 tests | 1,5 j | Moyenne | Faible | Élevé | Domaines stabilisés |
-| [ ] Ajouter les quality gates CI progressifs — `CI_STABILITY_CANDIDATE`; Gates A/B/C1/C2 versionnés, 2/2 runs historiques `PASS` non backfillés faute de champs complets; [contrat formel](docs/CI_STABILITY_STATISTICAL_CONTRACT.md) fixé à 150 runs primaires sur 7 dates UTC, p95 nearest-rank <20 min et flaky des premiers résultats <2 % | 2 j | Moyenne | Moyen | Élevé | Tests stables |
+| [x] Ajouter les quality gates CI progressifs — Gates A/B/C1/C2, collecte automatique, artefact importable et registre append-only sont opérationnels; statut courant `CI_STABILITY_CANDIDATE`, progression `1/150` runs primaires et `1/7` jours UTC sur un seuil formel de 150 runs et 7 jours UTC selon le [contrat](docs/CI_STABILITY_STATISTICAL_CONTRACT.md); la transition statistique relève désormais du monitoring temporel et aucune stabilité n'est revendiquée | 2 j | Moyenne | Moyen | Élevé | Tests stables |
 | [x] Supprimer les feature flags arrivés à expiration — les deux pseudo-flags Invitation ont été retirés; `SEEDANCE_LOCAL_STORAGE_FALLBACK_ENABLED` reste `TEMPORARY_ACTIVE`, borné au développement local et conservé faute de parcours local canonique de remplacement; aucun flag runtime supprimé sans preuve | 1 j | Moyenne | Moyen | Moyen | Métriques de trafic |
 | [x] Supprimer les adaptateurs legacy sans trafic — tous les candidats démontrés `LEGACY_NO_TRAFFIC_REMOVE` ont été retirés : `formatCurrency`, `legacyCoachStreak`, `aggregateLegacyNutritionByDate`, `normalizeEquipment`, `getLegacyValuesForEquipment` et `EQUIPMENT_LEGACY_MAP`. Cette clôture ne signifie pas que tout le legacy a disparu : le mapping d'erreurs API reste `LEGACY_TEST_ONLY_KEEP`, les tombstones et compatibilités runtime actives restent conservés, et `lib/training/adapters/*` reste `FUTURE_MIGRATION_RESERVED` | 2 j | Élevée | Élevé | Moyen | Audit d'usage |
-| [ ] [Achever la migration runtime Training vers le modèle canonique](docs/TRAINING_LEGACY_ADAPTERS.md#statut-de-la-migration-runtime) — valider les formats entrants, brancher les adaptateurs aux repositories, établir la double lecture et la comparaison legacy/canonique, ajouter une persistance additive si nécessaire, basculer les consommateurs un par un, observer la coexistence avec rollback puis prouver l'absence de trafic legacy avant toute suppression dans `lib/training/adapters/*` | À estimer | Élevée | Élevé | Critique | Modèle et adaptateurs Training |
+| [x] [Établir la coexistence et la frontière de serving canonique Training prévues pour Phase 9](docs/TRAINING_LEGACY_ADAPTERS.md#statut-de-la-migration-runtime) — couverture shadow du périmètre planifié terminée, frontière `listCoachProgramPage`, assessment, runner et fixture validés, puis activation `canonical-when-identical` et rollback même SHA prouvés en Preview; état final `legacy-only`, `REAL_CORPUS_VALIDATION_PENDING` et `PRODUCTION_PROMOTION_FORBIDDEN`; la validation organique restante relève du monitoring et non d'un développement structurel | À estimer | Élevée | Élevé | Critique | Modèle et adaptateurs Training |
 | [x] Retirer les dépendances réellement inutilisées — audit initial de 55 dépendances directes ramenées à 41 : 14 dépendances directes et 124 nœuds du lockfile retirés, aucun package ajouté et aucun `UNUSED_REMOVE` restant; verdict `DEPENDENCY_CLEANUP_COMPLETE`. `server-only` reste fourni par le contrat compilateur Next, `react-is` reste `PEER_REQUIRED` via Recharts et aucun peer cassé nouveau n'est observé | 1 j | Faible | Faible | Faible | Vérification imports |
 | [x] Exécuter un test de charge ciblé — deux scénarios locaux reproductibles (`GET /api/feedback/mine` et read model Nutrition), observabilité corrélée, points de montée en charge identifiés et cleanup démontré; aucune saturation au profil testé et aucun seuil de capacité maximale revendiqué | 2 j | Élevée | Faible | Élevé | Observabilité |
-| [x] [Produire la baseline finale](docs/PHASE_9_FINAL_BASELINE.md) et la [roadmap suivante](docs/ROADMAP_NEXT.md) — baseline consolidée au SHA `25c7426`, staging `145/145 ALIGNED` et verdict `PHASE9_NOT_READY_TO_CLOSE`; la Phase 9 reste active avec CI `CI_STABILITY_CANDIDATE` et Training `TRAINING_CANONICAL_MIGRATION_NOT_STARTED` | 1 j | Moyenne | Faible | Élevé | Toutes phases retenues |
+| [x] [Produire la baseline finale](docs/PHASE_9_FINAL_BASELINE.md) et la [roadmap suivante](docs/ROADMAP_NEXT.md) — capture historique au SHA `25c7426` conservée, puis réconciliation additive au SHA `554575c`; staging `145/145 ALIGNED`, Training techniquement validé avec retour `legacy-only`, CI `CI_STABILITY_CANDIDATE` à `1/150` runs et `1/7` jours, verdict global `PHASE_9_COMPLETE_WITH_MONITORING_PENDING` | 1 j | Moyenne | Faible | Élevé | Toutes phases retenues |
 
 ### Définition de terminé
 
