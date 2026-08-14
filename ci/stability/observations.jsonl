@@ -1,1 +1,2 @@
 {"record_type":"registry","schema_version":1,"contract":"phase-9-ci-stability-v1"}
+{"record_type":"observation","schema_version":1,"run_id":"github-31784233843-attempt-1","sha":"5a919adf04cde4f78e3407798b3b039eecdb0484","started_at":"2026-08-14T08:31:17.000Z","duration_ms":979000,"result":"PASS","rerun_of":null,"failure_classification":null,"retry_masked":false,"gates":{"A":"PASS","B":"PASS","C1":"PASS","C2":"PASS"},"sequence":1}
