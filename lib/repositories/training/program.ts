@@ -2,6 +2,7 @@ import type { DatabaseClient, Tables } from '@/lib/supabase/types'
 import { repositoryFailure, type RepositoryResult } from '@/lib/repositories/result'
 import { boundedPageSize, decodeTimestampCursor, encodeTimestampCursor, type PageRequest, type PaginatedResult } from '@/lib/repositories/pagination'
 import { observeCoachTemplateShadowPage } from '@/lib/training/coexistence/coach-template-shadow-read'
+import { resolveCoachTemplateStagingServingRuntimeControl } from '@/lib/training/coexistence/coach-template-staging-serving-activation'
 import {
   COACH_TEMPLATE_SERVING_DEFAULT_MODE,
   observeCoachTemplateAssessmentPage,
@@ -52,6 +53,7 @@ export function createTrainingProgramRepository(
   internalOptions: TrainingProgramRepositoryInternalOptions = {},
 ) {
   const coachTemplateServingControl = internalOptions.coachTemplateServingControl
+    ?? resolveCoachTemplateStagingServingRuntimeControl()
   return {
     async listCoachProgramPage(
       coachUserId: string,

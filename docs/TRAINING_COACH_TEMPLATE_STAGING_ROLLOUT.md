@@ -2,10 +2,10 @@
 
 ## Statut et périmètre
 
-Ce document est un contrat de préparation. Il n'active aucun runtime.
-`listCoachProgramPage` reste en `legacy-only` tant qu'un sous-batch ultérieur
-n'a pas satisfait tous les critères GO ci-dessous et branché explicitement le
-contrôle `createCoachTemplateCanonicalServingValidationControl`.
+Ce document est le contrat du mécanisme d'activation staging. Le code reste
+inactif tant que l'opt-in staging dédié n'est pas fourni : en configuration
+committée, `listCoachProgramPage` reste donc en `legacy-only`. Aucune variable
+Vercel ou Supabase distante n'est modifiée par ce sous-batch.
 
 Le périmètre est exclusivement la page paginée des templates coach. Sont hors
 périmètre `useCoachProgramPagination`, l'UI, `listCoachPrograms`,
@@ -14,26 +14,36 @@ la base, les migrations et la CI.
 
 ## Contrat d'activation staging
 
-L'activation future doit être fail-closed et exiger simultanément quatre
-preuves fournies à un résolveur pur de configuration :
+L'activation est fail-closed et exige simultanément six preuves :
 
 1. autorité applicative exactement `staging` ;
 2. environnement de déploiement exactement `preview`, jamais `production` ;
 3. branche déployée exactement `phase-6-staging` ;
-4. demande explicite exactement `canonical-when-identical`.
+4. project ref Supabase extrait d'une URL HTTPS et exactement égal au projet
+   staging attendu ;
+5. attestation source-controlled `TECHNICAL_STAGING_GO` valide, avec cleanup,
+   baseline et seuil de warning conformes ;
+6. opt-in staging dédié exactement `canonical-when-identical`.
 
 Toute valeur absente, inconnue, contradictoire ou égale à `production` doit
 résoudre vers l'absence de contrôle, donc `legacy-only`. Aucun nom d'hôte,
 cookie, payload programme, identité utilisateur ou heuristique UI ne peut
 servir de preuve d'environnement.
 
-Le futur sous-batch d'activation devra fournir ces quatre entrées depuis la
-composition de déploiement, sans modifier le hook ou l'UI et sans ajouter de
-lecture Supabase. Il devra appeler l'unique constructeur contrôlé existant ; il
-ne devra pas créer une seconde voie permettant de passer directement une
-chaîne de mode au repository.
+Le résolveur lit seulement les cinq entrées publiques littérales suivantes au
+moment de la construction du repository :
 
-La configuration Production doit omettre la demande explicite. Une garde dure
+- `NEXT_PUBLIC_COACH_TEMPLATE_STAGING_AUTHORITY=staging` ;
+- `NEXT_PUBLIC_COACH_TEMPLATE_STAGING_DEPLOYMENT=preview` ;
+- `NEXT_PUBLIC_COACH_TEMPLATE_STAGING_BRANCH=phase-6-staging` ;
+- `NEXT_PUBLIC_SUPABASE_URL`, dont le host doit porter le project ref staging ;
+- `NEXT_PUBLIC_COACH_TEMPLATE_STAGING_OPT_IN=canonical-when-identical`.
+
+Il associe ces entrées à l'attestation technique source-controlled et appelle
+l'unique constructeur contrôlé existant. Il ne fournit aucune seconde voie de
+serving, ne modifie ni hook ni UI et n'ajoute aucune lecture Supabase.
+
+La configuration Production doit omettre l'opt-in explicite. Une garde dure
 doit en plus refuser `canonical-when-identical` dès qu'une entrée indique
 `production`, même si les trois autres entrées sont mal configurées comme
 staging.
@@ -149,8 +159,9 @@ d'adaptation ou d'observateur, et un taux global de warning inférieur ou égal
 Un `TECHNICAL_STAGING_GO` porte toujours simultanément le statut
 `REAL_CORPUS_VALIDATION_PENDING` et `PRODUCTION_PROMOTION_FORBIDDEN`. Il ne
 remplace pas la règle selon laquelle un succès synthétique seul ne constitue
-pas un GO réel. Il n'active aucun mode runtime et ne peut jamais être interprété
-comme une autorisation de promotion Production.
+pas un GO réel. Il permet seulement l'activation bornée en staging lorsque tous
+les autres verrous sont présents et ne peut jamais être interprété comme une
+autorisation de promotion Production.
 
 Dès qu'un compteur read-only détecte au moins un template organique non-fixture
 en staging, le prochain état requis est `RUN_READ_ONLY_ASSESSMENT`. Trois
@@ -168,7 +179,7 @@ Production exige un contrat de release distinct.
 
 Le GO exige toutes les conditions suivantes :
 
-- cible staging et branche prouvées par les quatre verrous ;
+- cible staging et branche prouvées par les six verrous ;
 - tests contrat/repository, TypeScript, ESLint et contrôles statiques verts ;
 - observabilité de décision de serving disponible et expurgée ;
 - au moins une ligne `MATCH` avec projection UI identique sur chaque parcours ;
@@ -214,14 +225,15 @@ moins 30 minutes d'observation staging. Pendant cette fenêtre :
 - les actions de liste ne doivent recevoir aucune forme différente ;
 - aucune donnée Production ne doit être consultée.
 
-Le succès local ou synthétique seul ne constitue pas un GO staging.
+Le succès local ou synthétique constitue uniquement le GO technique staging ;
+il ne lève ni `REAL_CORPUS_VALIDATION_PENDING` ni l'interdiction Production.
 
 ## Rollback
 
-Le rollback ne touche ni la base ni les données. Il consiste à supprimer la
-demande explicite `canonical-when-identical` du scope staging, puis redéployer
-le même SHA. L'absence de contrôle ramène immédiatement le repository à
-`legacy-only` par son défaut actuel.
+Le rollback ne touche ni la base ni les données. Il consiste à supprimer
+`NEXT_PUBLIC_COACH_TEMPLATE_STAGING_OPT_IN` du scope staging, puis redéployer
+le même SHA. L'absence d'opt-in produit l'absence de contrôle et ramène
+immédiatement le repository à `legacy-only` par son défaut actuel.
 
 Après rollback, vérifier sur un parcours paginé complet :
 
@@ -234,14 +246,17 @@ Après rollback, vérifier sur un parcours paginé complet :
 Le rollback est déclaré incomplet tant que ces preuves ne sont pas capturées.
 Il ne nécessite aucun revert de migration, backfill ou restauration de donnée.
 
-## Sous-batch d'activation ultérieur
+## État du sous-batch d'activation
 
-Le prochain sous-batch, séparé du présent contrat, devra uniquement :
+Le mécanisme committé :
 
-1. ajouter le résolveur pur des quatre verrous ;
-2. brancher le contrôle dans la composition staging sans toucher hook/UI ;
-3. prouver le refus Production et le défaut `legacy-only` ;
-4. exécuter la baseline, décider GO/NO-GO, puis seulement activer staging sous
-   autorisation explicite.
+1. résout les six verrous sans toucher hook/UI ;
+2. ne construit le contrôle `canonical-when-identical` qu'en cible exacte ;
+3. refuse Production et conserve le défaut `legacy-only` ;
+4. maintient `REAL_CORPUS_VALIDATION_PENDING` et
+   `PRODUCTION_PROMOTION_FORBIDDEN` dans les deux issues.
 
-Le présent document n'autorise ni ce branchement ni un déploiement.
+Le présent sous-batch n'autorise aucune modification distante. L'activation
+effective requiert un sous-batch opérateur séparé qui ajoute uniquement les
+variables publiques bornées au scope Preview/`phase-6-staging`. Leur retrait
+est le rollback documenté.

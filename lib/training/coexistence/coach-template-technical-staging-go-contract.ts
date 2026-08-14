@@ -5,8 +5,8 @@ export const COACH_TEMPLATE_REAL_CORPUS_VALIDATION_PENDING = 'REAL_CORPUS_VALIDA
 export const COACH_TEMPLATE_REAL_CORPUS_VALIDATED = 'REAL_CORPUS_VALIDATED' as const
 export const COACH_TEMPLATE_ROLLOUT_WARNING_RATE_THRESHOLD = 0.05
 export const COACH_TEMPLATE_TECHNICAL_FIXTURE_SIZE = 17
+export const COACH_TEMPLATE_STAGING_PROJECT_REF = 'cycbnnojcymjnaqomlyj' as const
 
-const STAGING_PROJECT_REF = 'cycbnnojcymjnaqomlyj'
 const PRODUCTION_PROJECT_REF = 'njlzossopgknanhkzcbk'
 
 export type CoachTemplateTechnicalStagingTarget = {
@@ -72,7 +72,7 @@ const isExactStagingTarget = (target: CoachTemplateTechnicalStagingTarget): bool
   && target.deploymentEnvironment === 'preview'
   && target.branch === 'phase-6-staging'
   && target.projectRef !== PRODUCTION_PROJECT_REF
-  && target.projectRef === STAGING_PROJECT_REF
+  && target.projectRef === COACH_TEMPLATE_STAGING_PROJECT_REF
 )
 
 const categoryTotal = (report: CoachTemplateStagingAssessmentReport): number => (
