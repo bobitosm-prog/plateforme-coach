@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { BG_BASE, GOLD, GOLD_DIM, GOLD_RULE, TEXT_MUTED, FONT_ALT, FONT_DISPLAY } from '@/lib/design-tokens'
-import { WP_ITEM_H } from '../../hooks/useCoachDashboard'
+import { WP_ITEM_H } from '../../hooks/coach-dashboard-contract'
 
 export default function CoachSessionWheelPicker({ items, value, onChange, label, width = 72 }: { items: string[]; value: string; onChange(value: string): void; label?: string; width?: number }) {
   const ref = useRef<HTMLDivElement>(null)

@@ -6,7 +6,7 @@ import { ClientDetailLoadingView, ClientDetailUnavailableView } from '../../app/
 describe('client detail page states', () => {
   it('renders the existing loading skeleton', () => {
     const html = renderToStaticMarkup(<ClientDetailLoadingView />)
-    expect(html.match(/class="skeleton"/g)).toHaveLength(6)
+    expect(html.match(/class="skeleton"/g)).toHaveLength(7)
   })
 
   it('renders the unavailable message and wires the back callback', () => {
