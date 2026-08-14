@@ -425,6 +425,12 @@ Les objectifs restent un p95 strictement inférieur à 20 minutes et un flaky
 rate strictement inférieur à 2 %. Ils nécessitent plusieurs observations
 indépendantes ; ce premier run ne suffit pas à les attester.
 
+Le [contrat statistique Phase 9](CI_STABILITY_STATISTICAL_CONTRACT.md) fixe
+désormais l'échantillon à 150 runs primaires complets sur au moins 7 dates
+UTC distinctes, la méthode nearest-rank, le registre append-only et le retour
+automatique à `CI_STABILITY_CANDIDATE` en cas de dégradation. Il ne déclare pas
+la CI stable : le registre formel démarre sans backfill spéculatif.
+
 L'inventaire vidéo exécuté par Vitest dépend de `ffprobe`. Gate B installe donc
 explicitement le paquet Ubuntu `ffmpeg`, sans ImageMagick ni autre paquet
 système. Cette dépendance bornée concerne uniquement Gate B ; Gate A ne réalise

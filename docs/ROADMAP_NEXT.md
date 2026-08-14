@@ -15,7 +15,7 @@ par l'IA et devront être recalibrées après l'audit terrain de chaque tâche.
 | Tâche | Objectif et raison | Estimation | Risque | Dépendances | Critère de sortie |
 |---|---|---:|---|---|---|
 | Achever la migration runtime Training canonique | Brancher progressivement le modèle et les adaptateurs déjà prêts sans casser les formats encore actifs. L'impact métier est critique et aucun producteur/consommateur canonique runtime n'existe aujourd'hui. | 7–10 j | Élevé | Modèle canonique, adaptateurs, repositories Training, fixtures et rollback | Entrées validées, double lecture comparée, persistance additive si nécessaire, consommateurs basculés un par un, observation et rollback prouvés, absence de trafic legacy démontrée avant suppression. |
-| Attester la stabilité CI | Transformer `CI_STABILITY_CANDIDATE` en preuve statistique sans retry masquant. | Observation multi-runs | Moyen | Gates A/B/C1/C2 inchangés et collecte de durées fiable | Échantillon suffisant et documenté, p95 complet <20 min, flaky rate <2 %, échecs et reruns même SHA correctement classifiés. |
+| [Attester la stabilité CI](CI_STABILITY_STATISTICAL_CONTRACT.md) | Transformer `CI_STABILITY_CANDIDATE` en preuve statistique sans retry masquant. | Observation multi-runs | Moyen | Gates A/B/C1/C2 inchangés et collecte de durées fiable | Au moins 150 runs primaires complets sur 7 dates UTC distinctes, p95 nearest-rank <20 min, flaky rate des premiers résultats <2 %, zéro échec non résolu, échecs et reruns même SHA correctement classifiés. |
 
 ## P1 — Haute
 
