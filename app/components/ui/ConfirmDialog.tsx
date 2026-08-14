@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import {
   BG_CARD, BORDER, GOLD, GOLD_RULE, RED,
   TEXT_PRIMARY, TEXT_MUTED, FONT_ALT, FONT_BODY,
@@ -17,10 +17,78 @@ type Props = {
   onCancel: () => void;
 };
 
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+  '[contenteditable="true"]',
+].join(",");
+
+const openDialogs: HTMLElement[] = [];
+let bodyScrollLockCount = 0;
+let previousBodyOverflow = "";
+let stackInitialFocus: HTMLElement | null = null;
+
+function getTopDialog() {
+  return openDialogs.at(-1) ?? null;
+}
+
+function refreshDialogStack() {
+  const topDialog = getTopDialog();
+  for (const dialog of openDialogs) {
+    if (dialog === topDialog) {
+      dialog.removeAttribute("aria-hidden");
+      dialog.removeAttribute("inert");
+    } else {
+      dialog.setAttribute("aria-hidden", "true");
+      dialog.setAttribute("inert", "");
+    }
+  }
+}
+
+function registerDialog(dialog: HTMLElement, previouslyFocused: HTMLElement | null) {
+  if (openDialogs.length === 0) stackInitialFocus = previouslyFocused;
+  openDialogs.push(dialog);
+  refreshDialogStack();
+}
+
+function unregisterDialog(dialog: HTMLElement) {
+  const index = openDialogs.lastIndexOf(dialog);
+  if (index !== -1) openDialogs.splice(index, 1);
+  dialog.removeAttribute("aria-hidden");
+  dialog.removeAttribute("inert");
+  refreshDialogStack();
+  if (openDialogs.length !== 0) return null;
+  const focusToRestore = stackInitialFocus;
+  stackInitialFocus = null;
+  return focusToRestore;
+}
+
+function lockBodyScroll() {
+  if (bodyScrollLockCount === 0) previousBodyOverflow = document.body.style.overflow;
+  bodyScrollLockCount += 1;
+  document.body.style.overflow = "hidden";
+}
+
+function unlockBodyScroll() {
+  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+  if (bodyScrollLockCount === 0) document.body.style.overflow = previousBodyOverflow;
+}
+
+function getFocusableElements(dialog: HTMLElement) {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) => element.getAttribute("aria-hidden") !== "true" && !element.hasAttribute("hidden"),
+  );
+}
+
 /**
  * Modale de confirmation générique et accessible.
  * - Fermeture via Escape
- * - Focus trap sur le bouton d'annulation (safer default)
+ * - Focus initial sur le bouton d'annulation (safer default)
+ * - Focus trap cyclique et restitution au déclencheur
  * - Backdrop cliquable pour annuler
  * - ARIA role="dialog" + aria-modal
  */
@@ -34,20 +102,83 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const reactId = useId();
+  const titleId = `confirm-dialog-title-${reactId}`;
+  const messageId = `confirm-dialog-message-${reactId}`;
+  const dialogRef = useRef<HTMLDivElement>(null);
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const onCancelRef = useRef(onCancel);
 
   useEffect(() => {
-    if (open && cancelBtnRef.current) cancelBtnRef.current.focus();
-  }, [open]);
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
 
   useEffect(() => {
     if (!open) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const activeElement = document.activeElement as HTMLElement | null;
+    previouslyFocusedRef.current = activeElement && typeof activeElement.focus === "function"
+      ? activeElement
+      : null;
+
+    registerDialog(dialog, previouslyFocusedRef.current);
+    lockBodyScroll();
+    cancelBtnRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (getTopDialog() !== dialog) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancelRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusableElements = getFocusableElements(dialog);
+      const firstElement = focusableElements[0] ?? dialog;
+      const lastElement = focusableElements.at(-1) ?? dialog;
+      const currentElement = document.activeElement;
+
+      if (event.shiftKey && (currentElement === firstElement || !dialog.contains(currentElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (currentElement === lastElement || !dialog.contains(currentElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
     };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [open, onCancel]);
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (getTopDialog() !== dialog || dialog.contains(event.target as Node | null)) return;
+      (getFocusableElements(dialog)[0] ?? dialog).focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("focusin", handleFocusIn);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("focusin", handleFocusIn);
+      const stackFocusToRestore = unregisterDialog(dialog);
+      unlockBodyScroll();
+
+      const previouslyFocused = previouslyFocusedRef.current;
+      const topDialog = getTopDialog();
+      if (topDialog) {
+        if (previouslyFocused && previouslyFocused.isConnected !== false && topDialog.contains(previouslyFocused)) {
+          previouslyFocused.focus();
+        } else {
+          (getFocusableElements(topDialog)[0] ?? topDialog).focus();
+        }
+      } else if (stackFocusToRestore && stackFocusToRestore.isConnected !== false) {
+        stackFocusToRestore.focus();
+      }
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -55,10 +186,12 @@ export default function ConfirmDialog({
 
   return (
     <div
-      role="dialog"
+      ref={dialogRef}
+      role={isDanger ? "alertdialog" : "dialog"}
       aria-modal="true"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-message"
+      aria-labelledby={titleId}
+      aria-describedby={messageId}
+      tabIndex={-1}
       style={{
         position: "fixed",
         inset: 0,
@@ -85,7 +218,7 @@ export default function ConfirmDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <h2
-          id="confirm-dialog-title"
+          id={titleId}
           style={{
             fontFamily: FONT_ALT,
             textTransform: "uppercase",
@@ -100,7 +233,7 @@ export default function ConfirmDialog({
           {title}
         </h2>
         <p
-          id="confirm-dialog-message"
+          id={messageId}
           style={{
             fontFamily: FONT_BODY,
             fontSize: "0.875rem",
