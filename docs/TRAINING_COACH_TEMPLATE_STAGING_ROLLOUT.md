@@ -128,6 +128,42 @@ Les templates comportant `split` ou `duration` sont actuellement susceptibles
 de rester en `WARNING` car ces champs affichés ne sont pas canoniques. Ils ne
 doivent pas être comptés comme lignes canoniques éligibles.
 
+## GO technique staging et validation réelle pending
+
+Le statut `TECHNICAL_STAGING_GO` reconnaît uniquement que la mécanique du
+rollout fonctionne en staging. Il est distinct d'un GO fondé sur un corpus
+organique. Le corpus déterministe de 17 fixtures a produit trois parcours
+complets, 51 observations, 17 lignes canoniques éligibles par parcours, zéro
+warning, mismatch, résultat unsupported ou erreur, puis une preuve de cleanup
+`0 → 17 → 0`. Cette preuve satisfait le GO technique.
+
+L'évaluateur pur exige exactement : cible `staging`/`preview`, branche
+`phase-6-staging`, project ref staging, trois run IDs opaques distincts, pages
+terminales, au moins 50 observations ou la totalité d'un corpus répétée trois
+fois, au moins une ligne `canonical_eligible` par parcours, zéro
+`CRITICAL_MISMATCH`, `UNSUPPORTED`, `PRESENTATION_MISMATCH`, erreur
+d'adaptation ou d'observateur, et un taux global de warning inférieur ou égal
+à 5 %. Pour le corpus déterministe, la preuve de cleanup doit être exactement
+`0 → 17 → 0`.
+
+Un `TECHNICAL_STAGING_GO` porte toujours simultanément le statut
+`REAL_CORPUS_VALIDATION_PENDING` et `PRODUCTION_PROMOTION_FORBIDDEN`. Il ne
+remplace pas la règle selon laquelle un succès synthétique seul ne constitue
+pas un GO réel. Il n'active aucun mode runtime et ne peut jamais être interprété
+comme une autorisation de promotion Production.
+
+Dès qu'un compteur read-only détecte au moins un template organique non-fixture
+en staging, le prochain état requis est `RUN_READ_ONLY_ASSESSMENT`. Trois
+parcours complets doivent alors être exécutés avec les mêmes bilans expurgés et
+les mêmes seuils. Aucun UUID, email, nom, payload ou lien utilisateur n'est
+nécessaire dans la télémétrie. Une absence de corpus, une absence de bilan ou
+un bilan en échec conserve `REAL_CORPUS_VALIDATION_PENDING`.
+
+Seul un assessment organique réussi peut produire `REAL_CORPUS_VALIDATED`.
+Même ce statut ne promeut rien : il retourne
+`PRODUCTION_PROMOTION_NOT_AUTHORIZED_BY_THIS_CONTRACT`, car une autorisation
+Production exige un contrat de release distinct.
+
 ## Critères GO
 
 Le GO exige toutes les conditions suivantes :
