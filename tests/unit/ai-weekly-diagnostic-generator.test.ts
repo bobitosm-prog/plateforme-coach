@@ -17,6 +17,20 @@ const DIAGNOSTIC_CONTEXT = {
   now: () => new Date('2026-07-24T12:00:00.000Z'),
 }
 
+function performanceContext(
+  records: Array<Record<string, number>>,
+  record: (phases: Record<string, number>) => void = phases => records.push(phases),
+) {
+  let elapsed = 0
+  return {
+    ...DIAGNOSTIC_CONTEXT,
+    performance: {
+      now: () => { elapsed += 10; return elapsed },
+      record,
+    },
+  }
+}
+
 function success(tokens?: { inputTokens: number; outputTokens: number }) {
   return {
     ok: true as const, output: 'tool' as const, value: structuredClone(validDiagnosticOutput),
@@ -103,6 +117,65 @@ beforeEach(() => {
 })
 
 describe('weekly diagnostic shared generator', () => {
+  it('measures the four non-overlapping phases on success with a monotonic clock', async () => {
+    const records: Array<Record<string, number>> = []
+    const database = createDatabase()
+    await generateWeeklyDiagnostic(
+      'synthetic-user',
+      database.client as never,
+      performanceContext(records),
+    )
+    expect(records).toEqual([{
+      source_reads_ms: 10,
+      analysis_ms: 10,
+      ai_provider_ms: 10,
+      persistence_ms: 10,
+    }])
+  })
+
+  it('keeps phase coverage accurate for source, AI and persistence failures', async () => {
+    const sourceRecords: Array<Record<string, number>> = []
+    await generateWeeklyDiagnostic(
+      'synthetic-user',
+      createDatabase({ profileError: new Error('private source') }).client as never,
+      performanceContext(sourceRecords),
+    )
+    expect(sourceRecords).toEqual([{
+      source_reads_ms: 10, analysis_ms: 0, ai_provider_ms: 0, persistence_ms: 0,
+    }])
+
+    const aiRecords: Array<Record<string, number>> = []
+    mocks.generate.mockResolvedValueOnce(failure('network_error'))
+    await generateWeeklyDiagnostic(
+      'synthetic-user',
+      createDatabase().client as never,
+      performanceContext(aiRecords),
+    )
+    expect(aiRecords).toEqual([{
+      source_reads_ms: 10, analysis_ms: 10, ai_provider_ms: 10, persistence_ms: 0,
+    }])
+
+    const persistenceRecords: Array<Record<string, number>> = []
+    await generateWeeklyDiagnostic(
+      'synthetic-user',
+      createDatabase({ insertError: true }).client as never,
+      performanceContext(persistenceRecords),
+    )
+    expect(persistenceRecords).toEqual([{
+      source_reads_ms: 10, analysis_ms: 10, ai_provider_ms: 10, persistence_ms: 10,
+    }])
+  })
+
+  it('contains a failing phase recorder without changing generation', async () => {
+    const database = createDatabase()
+    const result = await generateWeeklyDiagnostic(
+      'synthetic-user',
+      database.client as never,
+      performanceContext([], () => { throw new Error('observer unavailable') }),
+    )
+    expect(result).toMatchObject({ diagnostic_id: 'diag-synthetic' })
+  })
+
   it('preserves the prompt contract, validates once, persists, schedules and returns metadata', async () => {
     const database = createDatabase()
     const result = await generateWeeklyDiagnostic('synthetic-user', database.client as never, DIAGNOSTIC_CONTEXT)

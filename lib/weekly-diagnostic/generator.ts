@@ -28,6 +28,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+export function writeWeeklyDiagnosticPerformanceEvent(event: {
+  readonly request_id: string
+  readonly result: 'success' | 'skipped' | 'rejected' | 'failed'
+  readonly reason: string
+  readonly server_total_ms: number
+  readonly source_reads_ms: number
+  readonly analysis_ms: number
+  readonly ai_provider_ms: number
+  readonly persistence_ms: number
+  readonly application_overhead_ms: number
+}): void {
+  console.info(JSON.stringify(event))
+}
+
 export interface DiagnosticResult {
   diagnostic_id?: string
   diagnostic?: unknown
@@ -43,6 +57,15 @@ export interface WeeklyDiagnosticGenerationContext {
   correlationId: string
   signal?: AbortSignal
   now?: () => Date
+  performance?: {
+    now?: () => number
+    record(phases: {
+      readonly source_reads_ms: number
+      readonly analysis_ms: number
+      readonly ai_provider_ms: number
+      readonly persistence_ms: number
+    }): void
+  }
 }
 
 export async function generateWeeklyDiagnostic(
@@ -50,6 +73,20 @@ export async function generateWeeklyDiagnostic(
   supabase: SupabaseClient,
   context: WeeklyDiagnosticGenerationContext,
 ): Promise<DiagnosticResult> {
+  const phases = {
+    source_reads_ms: 0,
+    analysis_ms: 0,
+    ai_provider_ms: 0,
+    persistence_ms: 0,
+  }
+  const performanceInstrumentation = context.performance
+  const monotonicNow = performanceInstrumentation?.now ?? (() => globalThis.performance.now())
+  const boundedDuration = (value: number) => Math.min(86_400_000, Math.max(0, Math.round(value)))
+  const phaseStartedAt = () => performanceInstrumentation ? monotonicNow() : 0
+  const finishPhase = (phase: keyof typeof phases, startedAt: number) => {
+    if (performanceInstrumentation) phases[phase] = boundedDuration(monotonicNow() - startedAt)
+  }
+
   const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
   if (!apiKey) return { error: 'API key manquante' }
   const model = resolveAiModel('anthropic-opus-4.8')
@@ -76,6 +113,7 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 3. COLLECT DATA (parallel)
+    const sourceReadsStartedAt = phaseStartedAt()
     const profileRead = Promise.resolve(
       supabase.from('profiles')
         .select('*')
@@ -107,6 +145,7 @@ export async function generateWeeklyDiagnostic(
         .limit(1)
         .maybeSingle(),
     ])
+    finishPhase('source_reads_ms', sourceReadsStartedAt)
 
     if (profileRes.error) {
       return { error: 'Erreur lecture profil', reasonCode: 'profile_read_failed' }
@@ -130,6 +169,7 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 5. SERVER PRE-ANALYSIS (deterministic)
+    const analysisStartedAt = phaseStartedAt()
     const sessionsDone = workoutSessionsRes.data?.length || 0
     const onboardingAnswers = isRecord(profile.onboarding_answers) ? profile.onboarding_answers : null
     const sessionsPlanned = Number(onboardingAnswers?.sessions_per_week) || 4
@@ -191,7 +231,9 @@ export async function generateWeeklyDiagnostic(
       proteinAvgG, proteinCompliancePct,
       daysLogged, weightDeltaKg, coherenceFlags, previousDiagnostic: prevDiagRes.data,
     })
+    finishPhase('analysis_ms', analysisStartedAt)
     const provider = createAnthropicProvider({ apiKey, messagesUrl: getAnthropicMessagesUrl() })
+    const aiProviderStartedAt = phaseStartedAt()
     const generated = await provider.generate(
       promptInvocationToToolRequest(
         invocation,
@@ -204,6 +246,7 @@ export async function generateWeeklyDiagnostic(
         cancellation: context.signal ? abortSignalToAiCancellation(context.signal) : undefined,
       },
     )
+    finishPhase('ai_provider_ms', aiProviderStartedAt)
     const providerModel = generated.metadata.actualModel
     const tokens = generated.metadata.usage
     if (!generated.ok) {
@@ -223,7 +266,8 @@ export async function generateWeeklyDiagnostic(
       ? (tokens.inputTokens ?? 0) + (tokens.outputTokens ?? 0)
       : null
 
-    // 9. PERSIST
+    // 9. PERSIST — only the authoritative insert and scheduling update.
+    const persistenceStartedAt = phaseStartedAt()
     const { data: saved, error: insertErr } = await supabase
       .from('weekly_diagnostics')
       .insert({
@@ -252,6 +296,7 @@ export async function generateWeeklyDiagnostic(
       .single()
 
     if (insertErr) {
+      finishPhase('persistence_ms', persistenceStartedAt)
       return { error: 'Erreur sauvegarde', reasonCode: 'persistence_failed', providerModel, tokens }
     }
 
@@ -261,6 +306,7 @@ export async function generateWeeklyDiagnostic(
       .from('profiles')
       .update({ next_diagnostic_at: nextDiagAt })
       .eq('id', userId)
+    finishPhase('persistence_ms', persistenceStartedAt)
     if (nextErr) console.warn('[generator] next_diagnostic_at update failed')
 
     // Push notification (non-blocking, best effort)
@@ -271,6 +317,14 @@ export async function generateWeeklyDiagnostic(
 
   } catch {
     return { error: 'Erreur interne', reasonCode: 'unexpected_error' }
+  } finally {
+    if (performanceInstrumentation) {
+      try {
+        performanceInstrumentation.record(Object.freeze({ ...phases }))
+      } catch {
+        // Performance instrumentation must never alter diagnostic generation.
+      }
+    }
   }
 }
 

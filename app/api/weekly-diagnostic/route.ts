@@ -9,7 +9,12 @@ export async function POST(req: NextRequest) {
     event: 'WEEKLY_DIAGNOSTIC_REQUEST', domain: 'weekly_diagnostic', operation: 'POST /api/weekly-diagnostic',
   })
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const result = await createWeeklyDiagnostic({ ip, correlationId: aiUsageCorrelationId(req), signal: req.signal })
+  const result = await createWeeklyDiagnostic({
+    ip,
+    correlationId: aiUsageCorrelationId(req),
+    signal: req.signal,
+    performance: { requestId: observe.requestId },
+  })
   if (result.ok) {
     return observe.complete(NextResponse.json(result.data), {
       outcome: result.data.already_exists ? 'skipped' : 'success',

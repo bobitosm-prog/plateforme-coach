@@ -28,6 +28,7 @@ vi.mock('@/lib/rate-limit', () => ({
 }))
 vi.mock('@/lib/weekly-diagnostic/generator', () => ({
   generateWeeklyDiagnostic: mocks.generateWeeklyDiagnostic,
+  writeWeeklyDiagnosticPerformanceEvent: (event: unknown) => console.info(JSON.stringify(event)),
 }))
 vi.mock('@/lib/ai/usage', () => ({
   aiUsageCorrelationId: () => 'request-test',
@@ -38,11 +39,36 @@ import { GET as readFeedback } from '../../app/api/feedback/mine/route'
 import { POST as markFeedbackRead } from '../../app/api/feedback/mark-all-read/route'
 import { POST as recordVitals } from '../../app/api/vitals/route'
 import { POST as weeklyDiagnostic } from '../../app/api/weekly-diagnostic/route'
+import {
+  createWeeklyDiagnostic,
+  type WeeklyDiagnosticPerformanceEvent,
+} from '../../app/api/weekly-diagnostic/service'
 import { clientLogSchema } from '../../app/api/log-error/schema'
 import { updateLocaleSchema } from '../../app/api/user/locale/schema'
 import { webVitalSchema } from '../../app/api/vitals/schema'
 
 const routeRequest = (path: string, init?: RequestInit) => new Request(`http://localhost${path}`, init)
+
+const phases = (
+  sourceReads: number,
+  analysis: number,
+  aiProvider: number,
+  persistence: number,
+) => ({
+  source_reads_ms: sourceReads,
+  analysis_ms: analysis,
+  ai_provider_ms: aiProvider,
+  persistence_ms: persistence,
+})
+
+function performanceInput(observer: (event: WeeklyDiagnosticPerformanceEvent) => void) {
+  const ticks = [0, 100]
+  return {
+    requestId: 'request-performance-1',
+    now: () => ticks.shift() ?? 100,
+    observer,
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -160,6 +186,79 @@ describe('vitals route', () => {
 })
 
 describe('weekly diagnostic route', () => {
+  it('emits exactly one redacted coherent performance event on success', async () => {
+    const events: WeeklyDiagnosticPerformanceEvent[] = []
+    mocks.generateWeeklyDiagnostic.mockImplementation(async (_userId, _client, context) => {
+      context.performance.record(phases(10, 20, 30, 10))
+      return { diagnostic_id: 'private-diagnostic-id', diagnostic: { private: 'result' } }
+    })
+
+    const result = await createWeeklyDiagnostic({
+      ip: '192.0.2.1',
+      correlationId: 'private-correlation',
+      performance: performanceInput(event => events.push(event)),
+    })
+
+    expect(result).toMatchObject({ ok: true })
+    expect(events).toEqual([{
+      request_id: 'request-performance-1',
+      result: 'success',
+      reason: 'COMPLETED',
+      server_total_ms: 100,
+      source_reads_ms: 10,
+      analysis_ms: 20,
+      ai_provider_ms: 30,
+      persistence_ms: 10,
+      application_overhead_ms: 30,
+    }])
+    expect(Object.keys(events[0]).sort()).toEqual([
+      'ai_provider_ms', 'analysis_ms', 'application_overhead_ms', 'persistence_ms',
+      'reason', 'request_id', 'result', 'server_total_ms', 'source_reads_ms',
+    ].sort())
+    expect(JSON.stringify(events)).not.toMatch(
+      /session-user|private-diagnostic-id|private-correlation|profile|prompt|payload|secret|user_id|diagnostic_id/i,
+    )
+  })
+
+  it.each([
+    ['source', { error: 'Erreur lecture profil', reasonCode: 'profile_read_failed' }, phases(10, 0, 0, 0), 'PROFILE_READ_FAILED'],
+    ['AI', { error: 'Erreur IA', reasonCode: 'provider_error' }, phases(10, 20, 30, 0), 'PROVIDER_ERROR'],
+    ['persistence', { error: 'Erreur sauvegarde', reasonCode: 'persistence_failed' }, phases(10, 20, 30, 10), 'PERSISTENCE_FAILED'],
+  ] as const)('emits bounded phase metrics after a %s error', async (_name, generationResult, recordedPhases, reason) => {
+    const events: WeeklyDiagnosticPerformanceEvent[] = []
+    mocks.generateWeeklyDiagnostic.mockImplementation(async (_userId, _client, context) => {
+      context.performance.record(recordedPhases)
+      return generationResult
+    })
+    const result = await createWeeklyDiagnostic({
+      ip: '192.0.2.1',
+      correlationId: 'performance-correlation',
+      performance: performanceInput(event => events.push(event)),
+    })
+    expect(result).toMatchObject({ ok: false, code: 'INTERNAL_ERROR' })
+    expect(events).toHaveLength(1)
+    expect(events[0]).toMatchObject({ result: 'failed', reason, ...recordedPhases })
+    expect(events[0].application_overhead_ms).toBe(
+      events[0].server_total_ms
+        - events[0].source_reads_ms
+        - events[0].analysis_ms
+        - events[0].ai_provider_ms
+        - events[0].persistence_ms,
+    )
+  })
+
+  it('contains a failing performance observer and preserves the service result', async () => {
+    mocks.generateWeeklyDiagnostic.mockImplementation(async (_userId, _client, context) => {
+      context.performance.record(phases(10, 10, 10, 10))
+      return { diagnostic_id: 'diag-one', diagnostic: { score: 8 } }
+    })
+    await expect(createWeeklyDiagnostic({
+      ip: '192.0.2.1',
+      correlationId: 'performance-correlation',
+      performance: performanceInput(() => { throw new Error('observer unavailable') }),
+    })).resolves.toEqual({ ok: true, data: { diagnostic_id: 'diag-one', diagnostic: { score: 8 } } })
+  })
+
   it('derives the user from the server session and preserves success', async () => {
     mocks.generateWeeklyDiagnostic.mockResolvedValue({ diagnostic_id: 'diag-one', diagnostic: { score: 8 } })
     const response = await weeklyDiagnostic(new Request('http://localhost/api/weekly-diagnostic', {
@@ -170,6 +269,7 @@ describe('weekly diagnostic route', () => {
     expect(mocks.generateWeeklyDiagnostic).toHaveBeenCalledWith('session-user', expect.anything(), expect.objectContaining({ correlationId: 'request-test', signal: expect.any(AbortSignal) }))
     expect(mocks.startAiUsage).toHaveBeenCalledWith(expect.objectContaining({ feature: 'weekly-diagnostic', principal: { kind: 'user', id: 'session-user' }, logicalModel: 'anthropic-opus-4.8' }))
     expect(mocks.finalizeUsage).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'succeeded' }))
+    expect(mocks.generateWeeklyDiagnostic.mock.calls[0]?.[2]).toHaveProperty('performance')
   })
 
   it('preserves route and AI rate-limit statuses', async () => {
