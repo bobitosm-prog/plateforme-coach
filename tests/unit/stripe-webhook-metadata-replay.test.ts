@@ -191,15 +191,26 @@ describe('POST /api/stripe/webhook — signatures and event inventory', () => {
   it('returns 400 when the signature is absent without reserving an event', async () => {
     const response = await POST(request(null))
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'Missing signature' })
     expect(mocks.constructEvent).not.toHaveBeenCalled()
     expect(mocks.rpc).not.toHaveBeenCalled()
+    expectNoBusinessMutation()
   })
 
-  it('returns 400 for an invalid signature without reserving an event', async () => {
-    mocks.constructEvent.mockImplementation(() => { throw new Error('invalid signature') })
+  it('returns a controlled 400 for an invalid signature without leaking or reserving an event', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const providerMessage = 'Stripe provider internal detail: supplier-exception-marker'
+    mocks.constructEvent.mockImplementation(() => { throw new Error(providerMessage) })
     const response = await POST(request('invalid'))
+    const payload = await response.json()
+
     expect(response.status).toBe(400)
+    expect(payload).toEqual({ error: 'Invalid webhook request' })
+    expect(JSON.stringify(payload)).not.toContain(providerMessage)
+    expect(JSON.stringify(payload)).not.toContain('supplier-exception-marker')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('SIGNATURE_INVALID')
     expect(mocks.rpc).not.toHaveBeenCalled()
+    expectNoBusinessMutation()
   })
 
   it.each([

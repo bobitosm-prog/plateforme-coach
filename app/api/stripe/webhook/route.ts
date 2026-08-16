@@ -24,9 +24,8 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event
   try {
     event = getStripe().webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Signature verification failed'
-    return audit.reject(NextResponse.json({ error: message }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_INVALID', status: 400 })
+  } catch {
+    return audit.reject(NextResponse.json({ error: 'Invalid webhook request' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_INVALID', status: 400 })
   }
 
   const result = await deliverWebhookEvent({ event, stripe: getStripe(), supabase: getServiceSupabase() })
