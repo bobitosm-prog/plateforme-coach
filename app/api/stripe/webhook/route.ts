@@ -18,14 +18,14 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
   if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return audit.reject(NextResponse.json({ error: 'Missing signature' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_REQUIRED', status: 400 })
+    return audit.reject(NextResponse.json({ error: 'Missing signature' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'STRIPE_SIGNATURE_INVALID', status: 400 })
   }
 
   let event: Stripe.Event
   try {
     event = getStripe().webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET)
   } catch {
-    return audit.reject(NextResponse.json({ error: 'Invalid webhook request' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'SIGNATURE_INVALID', status: 400 })
+    return audit.reject(NextResponse.json({ error: 'Invalid webhook request' }, { status: 400 }), { event: 'STRIPE_WEBHOOK_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/webhook', outcome: 'rejected', reason: 'STRIPE_SIGNATURE_INVALID', status: 400 })
   }
 
   const result = await deliverWebhookEvent({ event, stripe: getStripe(), supabase: getServiceSupabase() })

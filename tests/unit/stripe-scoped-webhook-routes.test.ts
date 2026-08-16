@@ -330,23 +330,29 @@ describe('scoped Stripe webhook common guards', () => {
   })
 
   it('returns 400 for a missing signature', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const test = harness(
       'platform',
       stripeEvent('checkout.session.completed'),
     )
     const response = await test.POST(request('platform', null))
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid webhook request' })
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('STRIPE_SIGNATURE_INVALID')
     expect(test.constructEvent).not.toHaveBeenCalled()
     expectNoDurableWorkflow(test)
   })
 
   it('returns 400 for an invalid signature', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const test = harness(
       'platform',
       stripeEvent('checkout.session.completed'),
     )
     const response = await test.POST(request('platform', 'invalid'))
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid webhook request' })
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('STRIPE_SIGNATURE_INVALID')
     expectNoDurableWorkflow(test)
   })
 

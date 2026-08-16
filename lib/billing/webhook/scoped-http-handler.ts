@@ -242,7 +242,7 @@ export function createScopedStripeWebhookHandler(
       return requestError(
         request,
         config.operation,
-        'SIGNATURE_REQUIRED',
+        'STRIPE_SIGNATURE_INVALID',
       )
     }
 
@@ -255,7 +255,7 @@ export function createScopedStripeWebhookHandler(
       return requestError(
         request,
         config.operation,
-        'SIGNATURE_INVALID',
+        'STRIPE_SIGNATURE_INVALID',
       )
     }
 
