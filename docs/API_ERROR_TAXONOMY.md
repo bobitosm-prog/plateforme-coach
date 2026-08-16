@@ -82,8 +82,8 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 
 | Legacy | Canonique | Compatibilité |
 |---|---|---|
-| `IDENTITY_MISMATCH` | `STRIPE_IDENTITY_INVALID` | conserver le reason de log pendant la transition |
-| `PROFILE_UNAVAILABLE` | `RESOURCE_NOT_FOUND` | ne pas révéler erreur RLS ou absence réelle |
+| `IDENTITY_MISMATCH` | `STRIPE_IDENTITY_INVALID` | dual-read opérateur borné ; statut et corps Connect inchangés |
+| `PROFILE_UNAVAILABLE` | `RESOURCE_NOT_FOUND` | dual-read opérateur borné ; conserver le `403` historique et ne rien révéler |
 | `SIGNATURE_REQUIRED`, `SIGNATURE_INVALID` | `STRIPE_SIGNATURE_INVALID` | conserver le statut webhook actuel |
 | `PRICE_NOT_CONFIGURED` | `SERVER_MISCONFIGURED` | dual-read opérateur borné ; message public générique |
 | `CHECKOUT_FAILED` | `UPSTREAM_REJECTED` | ne pas exposer Stripe |
@@ -93,6 +93,8 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 Les codes déjà utilisés comme raisons de journaux (`AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, `INVITATION_INVALID`, `INVITATION_TERMINAL`, `WEBHOOK_ALREADY_PROCESSED`, `WEBHOOK_ALREADY_PROCESSING`, `SERVER_MISCONFIGURED`) sont conservés lorsqu'ils ont une sémantique consommable. Une raison de log peut rester plus précise qu'un code public pendant une release.
 
 Pour la configuration du checkout plateforme, le contrat consommateur temporaire accepte exactement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur émet désormais `SERVER_MISCONFIGURED`, sans modifier le statut `500` ni le corps `{ error: "Checkout unavailable" }`. `PRICE_NOT_CONFIGURED` reste accepté pendant au moins une release complète observée et jusqu'à expiration de la fenêtre de rollback.
+
+Pour Stripe Connect, le contrat opérateur temporaire accepte exactement les paires `IDENTITY_MISMATCH` ou `STRIPE_IDENTITY_INVALID`, et `PROFILE_UNAVAILABLE` ou `RESOURCE_NOT_FOUND`. Le producteur continue d'émettre les deux reasons legacy dans cette fenêtre de coexistence. Leur future bascule canonique doit conserver les corps publics actuels et ne doit jamais faire dériver le statut HTTP historique `403` vers `404`, même si le descriptor générique de `RESOURCE_NOT_FOUND` vaut `404`. Le dual-read reste requis pendant au moins une release complète observée après la bascule et jusqu'à expiration de la fenêtre de rollback.
 
 ## Migration route par route
 

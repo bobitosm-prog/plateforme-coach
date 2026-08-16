@@ -153,11 +153,13 @@ describe('POST /api/stripe/connect — authorization', () => {
   })
 
   it('returns 403 when a coach targets another profile', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     authenticatedAs(OTHER_ID, 'other-coach@example.test')
 
     const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(403)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('IDENTITY_MISMATCH')
     await expect(response.json()).resolves.toEqual({ error: 'Forbidden' })
     expect(mocks.authFrom).not.toHaveBeenCalled()
     expectNoExternalMutation()

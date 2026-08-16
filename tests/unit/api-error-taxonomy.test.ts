@@ -12,8 +12,17 @@ const CHECKOUT_CONFIGURATION_OPERATOR_REASONS = [
   'SERVER_MISCONFIGURED',
 ] as const
 
+const STRIPE_CONNECT_OPERATOR_REASON_PAIRS = [
+  ['IDENTITY_MISMATCH', 'STRIPE_IDENTITY_INVALID'],
+  ['PROFILE_UNAVAILABLE', 'RESOURCE_NOT_FOUND'],
+] as const
+
 function isCheckoutConfigurationOperatorReason(value: string): boolean {
   return CHECKOUT_CONFIGURATION_OPERATOR_REASONS.some(reason => reason === value)
+}
+
+function isStripeConnectOperatorReason(value: string): boolean {
+  return STRIPE_CONNECT_OPERATOR_REASON_PAIRS.flat().some(reason => reason === value)
 }
 
 describe('API error taxonomy', () => {
@@ -46,6 +55,7 @@ describe('API error taxonomy', () => {
 
   it('maps principal legacy codes to known canonical codes', () => {
     expect(mapLegacyApiErrorCode('IDENTITY_MISMATCH')).toBe('STRIPE_IDENTITY_INVALID')
+    expect(mapLegacyApiErrorCode('PROFILE_UNAVAILABLE')).toBe('RESOURCE_NOT_FOUND')
     expect(mapLegacyApiErrorCode('SIGNATURE_INVALID')).toBe('STRIPE_SIGNATURE_INVALID')
     expect(mapLegacyApiErrorCode('PRICE_NOT_CONFIGURED')).toBe('SERVER_MISCONFIGURED')
     for (const canonical of Object.values(LEGACY_API_ERROR_CODES)) expect(API_ERROR_CODES).toContain(canonical)
@@ -79,6 +89,40 @@ describe('API error taxonomy', () => {
     }
     expect(rollback).toContain('Fenêtre dual-read configuration checkout')
     expect(taxonomy).toContain('contrat consommateur temporaire')
+  })
+
+  it.each(STRIPE_CONNECT_OPERATOR_REASON_PAIRS.flat())(
+    'accepts Stripe Connect reason %s during the bounded dual-read window',
+    reason => {
+      expect(isStripeConnectOperatorReason(reason)).toBe(true)
+    },
+  )
+
+  it('keeps unrelated Stripe Connect reasons outside the dual-read window', () => {
+    expect(isStripeConnectOperatorReason('ROLE_FORBIDDEN')).toBe(false)
+  })
+
+  it('keeps Stripe Connect producers legacy while operator contracts are dual-read', () => {
+    const route = readFileSync('app/api/stripe/connect/route.ts', 'utf8')
+    const service = readFileSync('lib/billing/connect/service.ts', 'utf8')
+    const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
+    const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
+
+    expect(route).toContain("throw new ConnectServiceError('IDENTITY_MISMATCH')")
+    expect(route).toContain("case 'IDENTITY_MISMATCH': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })")
+    expect(route).toContain("case 'PROFILE_UNAVAILABLE': return NextResponse.json({ error: 'Profile not found' }, { status: 403 })")
+    expect(service).toContain("throw new ConnectServiceError('IDENTITY_MISMATCH')")
+    expect(service).toContain("throw new ConnectServiceError('PROFILE_UNAVAILABLE')")
+
+    for (const reasons of STRIPE_CONNECT_OPERATOR_REASON_PAIRS) {
+      for (const reason of reasons) {
+        expect(rollback).toContain(`\`${reason}\``)
+        expect(taxonomy).toContain(`\`${reason}\``)
+      }
+    }
+    expect(rollback).toContain('Fenêtre dual-read Stripe Connect')
+    expect(rollback).toContain('restent contractuellement `403`')
+    expect(taxonomy).toContain('ne doit jamais faire dériver le statut HTTP historique `403` vers `404`')
   })
 
   it('is coherent with ApiFailure', () => {
