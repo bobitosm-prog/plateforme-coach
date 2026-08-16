@@ -575,7 +575,7 @@ ou d'observation restent isolées ; une erreur Supabase demeure autoritative.
 Aucune requête, mutation ou valeur canonique servie n'est ajoutée : le
 dashboard continue à consommer exclusivement la ligne legacy.
 
-## Branchement runtime inactif de serving : liste paginée des templates coach
+## Serving staging borné : liste paginée des templates coach
 
 Le futur point de bascule le plus borné est uniquement
 `listCoachProgramPage`. Le contrat pur
@@ -605,9 +605,17 @@ Les résultats `WARNING`, `CRITICAL_MISMATCH` et `UNSUPPORTED`, une erreur
 d'adaptation ou une projection UI différente conservent la ligne legacy
 originale par identité. La page conserve l'ordre, `hasMore` et `nextCursor` ;
 aucune entrée n'est supprimée et aucun tri n'est rejoué. Ce contrat ne change
-ni la requête Supabase, ni la pagination runtime, ni le serving actuel. Le
-repository ne rend le mode `canonical-when-identical` accessible que par un
-contrôle interne créé explicitement avec
-`createCoachTemplateCanonicalServingValidationControl`. Aucun hook, composant,
-flag d'environnement ou configuration distante ne construit ce contrôle. Sans
-lui, `legacy-only` est toujours utilisé.
+ni la requête Supabase ni la pagination runtime.
+
+Depuis `49ef307`, un résolveur runtime borné peut construire le contrôle
+`canonical-when-identical` uniquement lorsque l'autorité staging, le
+déploiement Preview, la branche `phase-6-staging`, le project ref staging, le
+GO technique versionné et l'opt-in dédié correspondent tous exactement. Toute
+condition absente, inconnue ou contradictoire retombe sur `legacy-only`. Aucun
+hook ou composant ne porte cette activation et aucun serving canonique global
+n'existe.
+
+La validation technique staging a été suivie du rollback prévu : l'opt-in a
+été retiré. Dans l'état réconcilié de clôture Phase 9, aucun opt-in staging
+n'est actif et le comportement effectif reste `legacy-only`. Le monitoring du
+corpus réel demeure séparé et n'autorise aucune promotion Production.

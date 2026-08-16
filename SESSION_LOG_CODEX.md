@@ -14543,3 +14543,30 @@ ouverte.
 est clôturée. Les deux bloqueurs formels demeurent ouverts; aucune CI, migration,
 index, runner, endpoint, configuration distante ou donnée Production n'est
 modifié par ce sous-batch documentaire.
+
+## Entrée — 2026-08-16 — Réconciliation additive de clôture Phase 9
+
+**Validation finale :** la réconciliation documentaire versionnée par
+`45dfb36` confirme que les quinze travaux structurels de la Phase 9 sont
+terminés. Le verdict courant est
+**`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`**. Cette entrée est additive :
+elle ne réécrit ni la capture historique au SHA `25c7426`, ni son verdict
+initial `PHASE9_NOT_READY_TO_CLOSE` avant l'établissement des preuves Training
+et CI ultérieures.
+
+**Training :** la couverture shadow planifiée, la frontière de serving des
+templates coach, l'assessment, le runner, la fixture déterministe et le
+rollback Preview ont été validés. L'état effectif final reste `legacy-only` ;
+la validation sur un corpus Training réel reste
+`REAL_CORPUS_VALIDATION_PENDING` et aucune promotion Production n'est
+autorisée.
+
+**CI :** le contrat statistique, la collecte automatique et le registre
+append-only sont opérationnels, sans transformer l'échantillon courant en
+preuve de stabilité. Le statut reste `CI_STABILITY_CANDIDATE` jusqu'à
+satisfaction de la fenêtre formelle versionnée.
+
+**Décision :** les deux preuves ouvertes relèvent désormais du monitoring
+temporel ou organique, pas d'un développement structurel Phase 9. Aucun
+runtime, test, workflow CI, migration, variable d'environnement ou service
+distant n'est modifié par cette réconciliation documentaire.

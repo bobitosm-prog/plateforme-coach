@@ -4,7 +4,9 @@
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
 > Dernière mise à jour : **14 août 2026**.
 > Référence initiale : commit `aa53a6e`.
-> Phase active : **Phase 9 — Industrialisation et équipe future**.
+> Phase 9 : **`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`** — travaux
+> structurels terminés ; stabilité CI et validation Training sur corpus réel
+> maintenues en monitoring.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
