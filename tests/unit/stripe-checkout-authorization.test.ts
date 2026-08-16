@@ -122,6 +122,27 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     })
   })
 
+  it('returns a controlled 500 when the selected plan price is not configured', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const configuredPrice = process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY
+    process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY = ''
+
+    let response: Response
+    try {
+      response = await POST(request({ planId: 'client_monthly' }))
+    } finally {
+      process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY = configuredPrice
+    }
+    const payload = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(payload).toEqual({ error: 'Checkout unavailable' })
+    expect(typeof payload.error).toBe('string')
+    expect(JSON.stringify(payload)).not.toContain('Price ID')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('PRICE_NOT_CONFIGURED')
+    expectNoMutation()
+  })
+
   it('creates a coach plan only for the authenticated coach', async () => {
     authenticatedAs(USER_ID, 'coach')
     const response = await POST(request({ planId: 'coach_monthly' }))
@@ -237,6 +258,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
   it('returns 400 for an unknown offer before mutation', async () => {
     const response = await POST(request({ planId: 'foreign_plan' }))
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid planId' })
     expectNoMutation()
   })
 

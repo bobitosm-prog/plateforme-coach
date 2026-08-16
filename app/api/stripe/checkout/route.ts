@@ -18,7 +18,7 @@ function platformError(error: CheckoutServiceError) {
     case 'STRIPE_NOT_CONFIGURED': return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
     case 'INVALID_PLAN': return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
     case 'ROLE_FORBIDDEN': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    case 'PRICE_NOT_CONFIGURED': return NextResponse.json({ error: 'Price ID non configuré pour ce plan' }, { status: 500 })
+    case 'PRICE_NOT_CONFIGURED': return NextResponse.json({ error: 'Checkout unavailable' }, { status: 500 })
     case 'SUBSCRIPTION_ALREADY_ACTIVE': return NextResponse.json({ error: 'Subscription already active', code: error.code }, { status: 409 })
     case 'SUBSCRIPTION_STATE_UNVERIFIABLE': return NextResponse.json({ error: 'Subscription state unavailable', code: error.code }, { status: 503 })
     default: return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
