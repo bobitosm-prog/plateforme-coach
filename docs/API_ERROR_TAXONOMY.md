@@ -92,7 +92,7 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 
 Les codes déjà utilisés comme raisons de journaux (`AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, `INVITATION_INVALID`, `INVITATION_TERMINAL`, `WEBHOOK_ALREADY_PROCESSED`, `WEBHOOK_ALREADY_PROCESSING`, `SERVER_MISCONFIGURED`) sont conservés lorsqu'ils ont une sémantique consommable. Une raison de log peut rester plus précise qu'un code public pendant une release.
 
-Pour la configuration du checkout plateforme, le contrat consommateur temporaire accepte exactement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Cette tranche ne change pas le producteur, qui continue d'émettre `PRICE_NOT_CONFIGURED`, ni le statut `500`, ni le corps `{ error: "Checkout unavailable" }`. Après la future bascule du producteur, les deux valeurs restent acceptées pendant au moins une release complète observée et jusqu'à expiration de la fenêtre de rollback.
+Pour la configuration du checkout plateforme, le contrat consommateur temporaire accepte exactement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur émet désormais `SERVER_MISCONFIGURED`, sans modifier le statut `500` ni le corps `{ error: "Checkout unavailable" }`. `PRICE_NOT_CONFIGURED` reste accepté pendant au moins une release complète observée et jusqu'à expiration de la fenêtre de rollback.
 
 ## Migration route par route
 

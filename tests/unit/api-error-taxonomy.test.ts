@@ -62,13 +62,17 @@ describe('API error taxonomy', () => {
     expect(isCheckoutConfigurationOperatorReason('CHECKOUT_FAILED')).toBe(false)
   })
 
-  it('keeps the checkout producer legacy while operator contracts are dual-read', () => {
+  it('keeps operator contracts dual-read after the checkout producer becomes canonical', () => {
     const route = readFileSync('app/api/stripe/checkout/route.ts', 'utf8')
+    const service = readFileSync('lib/billing/checkout/service.ts', 'utf8')
     const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
     const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
 
-    expect(route).toContain("error.code === 'PRICE_NOT_CONFIGURED'")
-    expect(route).toContain("reason: error.code === 'STRIPE_NOT_CONFIGURED' ? 'SERVER_MISCONFIGURED' : 'PRICE_NOT_CONFIGURED'")
+    expect(service).toContain("if (!priceId) throw new CheckoutServiceError('SERVER_MISCONFIGURED')")
+    expect(service).not.toContain("throw new CheckoutServiceError('PRICE_NOT_CONFIGURED')")
+    expect(route).toContain("error.code === 'SERVER_MISCONFIGURED'")
+    expect(route).toContain("reason: 'SERVER_MISCONFIGURED'")
+    expect(route).toContain("reason: 'CHECKOUT_FAILED'")
     for (const reason of CHECKOUT_CONFIGURATION_OPERATOR_REASONS) {
       expect(rollback).toContain(`\`${reason}\``)
       expect(taxonomy).toContain(`\`${reason}\``)

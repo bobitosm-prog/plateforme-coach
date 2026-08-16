@@ -31,7 +31,6 @@ export type CheckoutErrorCode =
   | 'SERVER_MISCONFIGURED'
   | 'INVALID_PLAN'
   | 'ROLE_FORBIDDEN'
-  | 'PRICE_NOT_CONFIGURED'
   | 'RELATION_FORBIDDEN'
   | 'COACH_NOT_FOUND'
   | 'COACH_STRIPE_MISSING'
@@ -266,7 +265,7 @@ export async function createPlatformCheckout(input: {
   assertPlatformCheckoutAvailable(profile)
   if (!input.stripeConfigured) throw new CheckoutServiceError('STRIPE_NOT_CONFIGURED')
   const priceId = input.priceIds[plan.id]
-  if (!priceId) throw new CheckoutServiceError('PRICE_NOT_CONFIGURED')
+  if (!priceId) throw new CheckoutServiceError('SERVER_MISCONFIGURED')
 
   const destinationAccountId = await input.repository.findPlatformConnectAccount()
   const stripe = input.stripe()

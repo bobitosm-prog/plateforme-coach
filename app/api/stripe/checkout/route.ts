@@ -16,9 +16,9 @@ function platformError(error: CheckoutServiceError) {
     case 'INVALID_REQUEST': return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     case 'PROFILE_NOT_FOUND': return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     case 'STRIPE_NOT_CONFIGURED': return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
+    case 'SERVER_MISCONFIGURED': return NextResponse.json({ error: 'Checkout unavailable' }, { status: 500 })
     case 'INVALID_PLAN': return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
     case 'ROLE_FORBIDDEN': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    case 'PRICE_NOT_CONFIGURED': return NextResponse.json({ error: 'Checkout unavailable' }, { status: 500 })
     case 'SUBSCRIPTION_ALREADY_ACTIVE': return NextResponse.json({ error: 'Subscription already active', code: error.code }, { status: 409 })
     case 'SUBSCRIPTION_STATE_UNVERIFIABLE': return NextResponse.json({ error: 'Subscription state unavailable', code: error.code }, { status: 503 })
     default: return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       if (error.code === 'ROLE_FORBIDDEN') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'rejected', reason: 'ROLE_FORBIDDEN', status: 403 })
       if (error.code === 'SUBSCRIPTION_ALREADY_ACTIVE') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'rejected', reason: error.code, status: 409 })
       if (error.code === 'SUBSCRIPTION_STATE_UNVERIFIABLE') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: error.code, status: 503 })
-      if (error.code === 'STRIPE_NOT_CONFIGURED' || error.code === 'PRICE_NOT_CONFIGURED') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: error.code === 'STRIPE_NOT_CONFIGURED' ? 'SERVER_MISCONFIGURED' : 'PRICE_NOT_CONFIGURED', status: 500 })
+      if (error.code === 'STRIPE_NOT_CONFIGURED' || error.code === 'SERVER_MISCONFIGURED') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
       return response
     }
     return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'CHECKOUT_FAILED', status: 500 })

@@ -102,7 +102,7 @@ No-go si une migration distante est inconnue, si la sauvegarde est absente, si u
 
 **À surveiller.** Codes `AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, raisons de configuration checkout `PRICE_NOT_CONFIGURED` ou `SERVER_MISCONFIGURED`, statuts de `payments`, et présence des métadonnées serveur attendues.
 
-**Fenêtre dual-read configuration checkout.** Les requêtes de logs, alertes et procédures opérateur doivent accepter exclusivement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur plateforme continue d'émettre `PRICE_NOT_CONFIGURED` dans la tranche préparatoire. Après sa future bascule canonique, cette lecture tolérante reste obligatoire pendant au moins une release complète observée et jusqu'à la fermeture de la fenêtre de rollback. Le reason legacy ne peut être retiré des consommateurs qu'après preuve qu'aucun déploiement encore rollbackable ne l'émet.
+**Fenêtre dual-read configuration checkout.** Les requêtes de logs, alertes et procédures opérateur doivent accepter exclusivement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur plateforme émet désormais `SERVER_MISCONFIGURED`. Cette lecture tolérante reste obligatoire pendant au moins une release complète observée et jusqu'à la fermeture de la fenêtre de rollback. Le reason legacy ne peut être retiré des consommateurs qu'après preuve qu'aucun déploiement encore rollbackable ne l'émet.
 
 **Portée.** Création de nouvelles sessions uniquement ; les paiements et abonnements existants ne doivent pas être altérés.
 

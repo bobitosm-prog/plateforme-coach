@@ -146,6 +146,24 @@ describe('createPlatformCheckout', () => {
     expect(stripe.createSession).not.toHaveBeenCalled()
   })
 
+  it('classifies a missing platform price as a server misconfiguration before mutation', async () => {
+    const repository = platformRepository()
+
+    await expectCode(createPlatformCheckout({
+      userId: CLIENT_ID,
+      body: { planId: 'client_monthly' },
+      stripeConfigured: true,
+      stripe: () => stripe.port,
+      repository,
+      priceIds: {},
+      appUrl: 'unused-test-origin',
+    }), 'SERVER_MISCONFIGURED')
+
+    expect(repository.findPlatformConnectAccount).not.toHaveBeenCalled()
+    expect(repository.createPendingPayment).not.toHaveBeenCalled()
+    expect(stripe.createSession).not.toHaveBeenCalled()
+  })
+
   it.each(['active', 'trialing', 'past_due'])(
     'rejects a %s platform subscription before payment or Stripe',
     async subscriptionStatus => {

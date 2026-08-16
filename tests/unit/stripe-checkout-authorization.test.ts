@@ -139,7 +139,7 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     expect(payload).toEqual({ error: 'Checkout unavailable' })
     expect(typeof payload.error).toBe('string')
     expect(JSON.stringify(payload)).not.toContain('Price ID')
-    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('PRICE_NOT_CONFIGURED')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('SERVER_MISCONFIGURED')
     expectNoMutation()
   })
 
