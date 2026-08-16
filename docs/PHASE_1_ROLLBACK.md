@@ -100,11 +100,13 @@ No-go si une migration distante est inconnue, si la sauvegarde est absente, si u
 
 ### 5.2 Checkouts plateforme et coach
 
-**Déclencheurs.** Augmentation de `PLATFORM_CHECKOUT_REJECTED`, `COACH_CHECKOUT_REJECTED`, `CHECKOUT_FAILED`, paiements associés au mauvais compte, relation coach/client ignorée ou métadonnées incohérentes.
+**Déclencheurs.** Augmentation de `PLATFORM_CHECKOUT_REJECTED`, `COACH_CHECKOUT_REJECTED`, `CHECKOUT_FAILED` ou `UPSTREAM_REJECTED`, paiements associés au mauvais compte, relation coach/client ignorée ou métadonnées incohérentes.
 
 **À surveiller.** Codes `AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, raisons de configuration checkout `PRICE_NOT_CONFIGURED` ou `SERVER_MISCONFIGURED`, statuts de `payments`, et présence des métadonnées serveur attendues.
 
 **Fenêtre dual-read configuration checkout.** Les requêtes de logs, alertes et procédures opérateur doivent accepter exclusivement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur plateforme émet désormais `SERVER_MISCONFIGURED`. Cette lecture tolérante reste obligatoire pendant au moins une release complète observée et jusqu'à la fermeture de la fenêtre de rollback. Le reason legacy ne peut être retiré des consommateurs qu'après preuve qu'aucun déploiement encore rollbackable ne l'émet.
+
+**Fenêtre dual-read échec checkout.** Les requêtes de logs, alertes, tests de contrat et procédures opérateur acceptent temporairement exactement `CHECKOUT_FAILED` et `UPSTREAM_REJECTED`. Les producteurs plateforme et coach émettent encore `CHECKOUT_FAILED`. Les deux réponses restent contractuellement `500` avec leurs corps historiques inchangés ; le statut générique `502` du descriptor `UPSTREAM_REJECTED` ne s'applique pas à ces routes historiques. Cette tolérance reste obligatoire pendant au moins une release complète observée après la future bascule et jusqu'à la fermeture de la fenêtre de rollback.
 
 **Portée.** Création de nouvelles sessions uniquement ; les paiements et abonnements existants ne doivent pas être altérés.
 

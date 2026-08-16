@@ -108,6 +108,18 @@ describe('POST /api/stripe/checkout — secured authorization', () => {
     expectNoMutation()
   })
 
+  it('keeps the legacy checkout failure reason, status and body on an unexpected failure', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mocks.createSupabaseRouteClient.mockRejectedValueOnce(new Error('synthetic checkout failure'))
+
+    const response = await POST(request({ planId: 'client_monthly' }))
+
+    expect(response.status).toBe(500)
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('CHECKOUT_FAILED')
+    await expect(response.json()).resolves.toEqual({ error: 'Erreur lors de la création du paiement' })
+    expectNoMutation()
+  })
+
   it('creates a client checkout from the authenticated server identity', async () => {
     const response = await POST(request({ planId: 'client_monthly' }))
     expect(response.status).toBe(200)

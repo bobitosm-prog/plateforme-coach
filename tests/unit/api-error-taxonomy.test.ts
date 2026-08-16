@@ -17,12 +17,21 @@ const STRIPE_CONNECT_OPERATOR_REASON_PAIRS = [
   ['PROFILE_UNAVAILABLE', 'RESOURCE_NOT_FOUND'],
 ] as const
 
+const CHECKOUT_FAILURE_OPERATOR_REASONS = [
+  'CHECKOUT_FAILED',
+  'UPSTREAM_REJECTED',
+] as const
+
 function isCheckoutConfigurationOperatorReason(value: string): boolean {
   return CHECKOUT_CONFIGURATION_OPERATOR_REASONS.some(reason => reason === value)
 }
 
 function isStripeConnectOperatorReason(value: string): boolean {
   return STRIPE_CONNECT_OPERATOR_REASON_PAIRS.flat().some(reason => reason === value)
+}
+
+function isCheckoutFailureOperatorReason(value: string): boolean {
+  return CHECKOUT_FAILURE_OPERATOR_REASONS.some(reason => reason === value)
 }
 
 describe('API error taxonomy', () => {
@@ -125,6 +134,38 @@ describe('API error taxonomy', () => {
     expect(rollback).toContain('Fenêtre dual-read Stripe Connect')
     expect(rollback).toContain('restent contractuellement `403`')
     expect(taxonomy).toContain('sans faire dériver le statut HTTP historique `403` vers `404`')
+  })
+
+  it.each(CHECKOUT_FAILURE_OPERATOR_REASONS)(
+    'accepts checkout failure reason %s during the bounded dual-read window',
+    reason => {
+      expect(isCheckoutFailureOperatorReason(reason)).toBe(true)
+    },
+  )
+
+  it('keeps unrelated upstream reasons outside the checkout failure dual-read', () => {
+    expect(isCheckoutFailureOperatorReason('UPSTREAM_UNAVAILABLE')).toBe(false)
+  })
+
+  it('keeps both checkout producers legacy while failure contracts are dual-read', () => {
+    const platformRoute = readFileSync('app/api/stripe/checkout/route.ts', 'utf8')
+    const coachRoute = readFileSync('app/api/stripe/coach-checkout/route.ts', 'utf8')
+    const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
+    const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
+    const legacyResponse = "NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })"
+
+    for (const route of [platformRoute, coachRoute]) {
+      expect(route).toContain(legacyResponse)
+      expect(route).toContain("reason: 'CHECKOUT_FAILED', status: 500")
+      expect(route).not.toContain("reason: 'UPSTREAM_REJECTED'")
+    }
+    for (const reason of CHECKOUT_FAILURE_OPERATOR_REASONS) {
+      expect(rollback).toContain(`\`${reason}\``)
+      expect(taxonomy).toContain(`\`${reason}\``)
+    }
+    expect(rollback).toContain('Fenêtre dual-read échec checkout')
+    expect(rollback).toContain('restent contractuellement `500`')
+    expect(taxonomy).toContain('ne doit jamais faire dériver leur statut HTTP historique `500` vers `502`')
   })
 
   it('is coherent with ApiFailure', () => {
