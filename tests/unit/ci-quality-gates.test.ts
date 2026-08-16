@@ -36,6 +36,24 @@ describe('progressive CI quality gates contract', () => {
     expect(workflow).toContain('cache: npm')
   })
 
+  it('runs official JavaScript actions on Node 24 tags without changing gate cache policy', () => {
+    expect(workflow.match(/uses: actions\/checkout@v7/g)).toHaveLength(5)
+    expect(workflow.match(/uses: actions\/setup-node@v7/g)).toHaveLength(5)
+    expect(workflow.match(/uses: actions\/upload-artifact@v7/g)).toHaveLength(1)
+    expect(workflow).not.toMatch(/actions\/(?:checkout|setup-node|upload-artifact)@v4/)
+    for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
+      expect(gate).toContain('uses: actions/checkout@v7')
+      expect(gate).toContain('uses: actions/setup-node@v7')
+      expect(gate).toContain('cache: npm')
+      expect(gate).not.toContain('package-manager-cache: false')
+    }
+    expect(stabilityObservationJob).toContain('uses: actions/checkout@v7')
+    expect(stabilityObservationJob).toMatch(
+      /uses: actions\/setup-node@v7\n\s+with:\n\s+node-version: '24'\n\s+package-manager-cache: false/,
+    )
+    expect(stabilityObservationJob).not.toContain('cache: npm')
+  })
+
   it('runs on pull requests, staging pushes and explicit manual dispatches', () => {
     expect(workflow).toMatch(/^on:\n  pull_request:\n  push:/m)
     expect(workflow).toContain('- phase-6-staging')
@@ -104,7 +122,7 @@ describe('progressive CI quality gates contract', () => {
   it('runs the standard gate independently with the complete bounded checks', () => {
     expect(standardJob).toMatch(/^\n  standard:\n    name: Gate B - Standard/m)
     expect(standardJob).toContain('runs-on: ubuntu-latest')
-    expect(standardJob).toMatch(/uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0/)
+    expect(standardJob).toMatch(/uses: actions\/checkout@v7\n\s+with:\n\s+fetch-depth: 0/)
     expect(standardJob).toContain("node-version: '24'")
     expect(standardJob).toContain('cache: npm')
     expect(standardJob).toContain('npm ci --legacy-peer-deps --no-audit --no-fund')
@@ -233,7 +251,14 @@ describe('progressive CI quality gates contract', () => {
     expect(stabilityObservationJob).toContain('actions: read')
     expect(stabilityObservationJob).toContain('contents: read')
     expect(stabilityObservationJob).toContain('node scripts/collect-ci-stability-observation.ts')
-    expect(stabilityObservationJob).toContain('uses: actions/upload-artifact@v4')
+    expect(stabilityObservationJob).toContain('uses: actions/upload-artifact@v7')
+    expect(stabilityObservationJob).toContain(
+      'name: ci-stability-observation-${{ github.run_id }}-attempt-${{ github.run_attempt }}',
+    )
+    expect(stabilityObservationJob).toContain(
+      'path: ${{ runner.temp }}/ci-stability-observation.json',
+    )
+    expect(stabilityObservationJob).toContain('if-no-files-found: error')
     expect(stabilityObservationJob).toContain('retention-days: 90')
     expect(stabilityObservationJob).not.toMatch(/git (?:add|commit|push)|contents: write/)
     for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {

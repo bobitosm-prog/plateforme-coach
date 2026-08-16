@@ -444,9 +444,11 @@ aucune installation système.
 
 Ces quatre jobs restent en observation : le seuil de 20 minutes est atteint sur
 la première preuve complète, mais son p95 et le flaky rate inférieur à 2 % ne
-sont pas encore attestés. Le warning de compatibilité Node 20 émis par les
-actions GitHub v4 reste à qualifier séparément. Aucun accès distant, secret
-fournisseur ou déploiement n'est effectué par les quality gates.
+sont pas encore attestés. Les actions GitHub `checkout`, `setup-node` et
+`upload-artifact` utilisent désormais leurs versions v7 sous Node 24. Ce
+cutover ne redémarre pas la fenêtre statistique et reste identifiable par son
+SHA dans les futures observations. Aucun accès distant, secret fournisseur ou
+déploiement n'est effectué par les quality gates.
 
 ### Préflight de rollback Phase 9
 

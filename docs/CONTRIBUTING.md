@@ -70,8 +70,8 @@ C2 en `16 min 07 s`, avec reconstruction depuis une base vide, E2E `15/15` et
 cleanups verts. Cette preuve démontre une exécution complète verte.
 Elle ne constitue pas encore une attestation de stabilité CI. Le p95 inférieur à 20
 minutes et le flaky rate inférieur à 2 % restent à mesurer sur plusieurs runs.
-Le warning de compatibilité Node 20 des actions GitHub v4 reste une dette
-séparée.
+Les actions GitHub `checkout`, `setup-node` et `upload-artifact` sont alignées
+sur leurs versions v7 sous Node 24 sans réinitialiser la fenêtre statistique.
 
 Lancer un seul E2E pendant une boucle ciblée ; lancer la suite critique complète lorsqu'un changement traverse plusieurs frontières ou avant fusion/déploiement. La suite critique exécute 15/15 parcours dans un ordre stable sur Chromium, Next.js et Supabase locaux ; la matrice canonique détaillée reste dans la [stratégie de tests](TESTING_STRATEGY.md).
 
