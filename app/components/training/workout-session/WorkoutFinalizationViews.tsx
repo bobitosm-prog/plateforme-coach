@@ -1,6 +1,7 @@
 import { Check, CheckCircle2, Clock, Dumbbell, X } from 'lucide-react'
 import { SESSION_TYPES } from '../../../../lib/session-types'
 import { BG_BASE, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GOLD_RULE, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY, colors } from '../../../../lib/design-tokens'
+import ConfirmDialog from '../../ui/ConfirmDialog'
 import type { WorkoutTranslate } from './types'
 
 interface WorkoutEndConfirmationViewProps {
@@ -39,16 +40,17 @@ export function WorkoutEndConfirmationView(props: WorkoutEndConfirmationViewProp
 }
 
 export function WorkoutAbandonConfirmationView({ completedSets, t, onCancel, onConfirm }: { completedSets: number; t: WorkoutTranslate; onCancel(): void; onConfirm(): void }) {
-  return <div data-workout-phase="abandon-confirmation" style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-    <div style={{ background: colors.surface2, border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', textAlign: 'center' }}>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={28} color={colors.error} strokeWidth={2} /></div>
-      <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>{t('deleteModal.title')}</h3>
-      <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>{completedSets > 0 ? t('deleteModal.withSets', { count: completedSets }) : t('deleteModal.noSets')}</p>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={onCancel} className="active:scale-[0.98]" style={{ flex: 1, padding: 14, borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' }}>{t('cancel')}</button>
-        <button onClick={onConfirm} className="active:scale-[0.98]" style={{ flex: 1, padding: 14, borderRadius: 12, background: colors.error, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' }}>{t('delete')}</button>
-      </div>
-    </div>
+  return <div data-workout-phase="abandon-confirmation">
+    <ConfirmDialog
+      open
+      variant="danger"
+      title={t('deleteModal.title')}
+      message={completedSets > 0 ? t('deleteModal.withSets', { count: completedSets }) : t('deleteModal.noSets')}
+      cancelLabel={t('cancel')}
+      confirmLabel={t('delete')}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   </div>
 }
 

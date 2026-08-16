@@ -1,4 +1,4 @@
-import { createElement as h } from 'react'
+import { createElement as h, type ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { WorkoutActiveSessionFinishView, WorkoutActiveSessionHeaderView } from '../../app/components/training/workout-session/WorkoutActiveSessionViews'
@@ -6,6 +6,7 @@ import { WorkoutCompletionView } from '../../app/components/training/workout-ses
 import { WorkoutDraftResumeView } from '../../app/components/training/workout-session/WorkoutDraftResumeView'
 import { WorkoutAbandonConfirmationView, WorkoutEndConfirmationView, WorkoutRepetitionsWarningView, WorkoutTemplateSaveView } from '../../app/components/training/workout-session/WorkoutFinalizationViews'
 import { WorkoutActiveRestView, WorkoutRestCompleteView } from '../../app/components/training/workout-session/WorkoutRestViews'
+import ConfirmDialog from '../../app/components/ui/ConfirmDialog'
 import type { WorkoutPresentationExercise } from '../../app/components/training/workout-session/types'
 
 const translate = (key: string, values?: Record<string, string | number>) => values ? `${key}:${JSON.stringify(values)}` : key
@@ -55,9 +56,35 @@ describe('WorkoutSession phase presentation views', () => {
     expect(finalizing).toContain('12min 4s')
     expect(finalizing).toContain('420 kg')
     expect(abandon).toContain('data-workout-phase="abandon-confirmation"')
+    expect(abandon).toContain('role="alertdialog"')
+    expect(abandon).toContain('aria-modal="true"')
     expect(abandon).toContain('deleteModal.withSets')
     expect(warning).toContain('data-workout-phase="set-validation"')
     expect(warning).toContain('31')
+  })
+
+  it('binds abandon confirmation and every safe dismissal to separate callbacks', () => {
+    const onCancel = vi.fn()
+    const onConfirm = vi.fn()
+    const view = WorkoutAbandonConfirmationView({ completedSets: 0, t: translate, onCancel, onConfirm }) as ReactElement<{ children: ReactElement<Parameters<typeof ConfirmDialog>[0]> }>
+    const dialog = view.props.children
+
+    expect(dialog.type).toBe(ConfirmDialog)
+    expect(dialog.props).toMatchObject({
+      open: true,
+      variant: 'danger',
+      title: 'deleteModal.title',
+      message: 'deleteModal.noSets',
+      cancelLabel: 'cancel',
+      confirmLabel: 'delete',
+    })
+
+    dialog.props.onCancel()
+    expect(onCancel).toHaveBeenCalledOnce()
+    expect(onConfirm).not.toHaveBeenCalled()
+
+    dialog.props.onConfirm()
+    expect(onConfirm).toHaveBeenCalledOnce()
   })
 
   it('renders the optional template-save phase with deterministic choices', () => {
