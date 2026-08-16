@@ -149,10 +149,48 @@ describe('feedback routes', () => {
     expect(not).toHaveBeenCalledWith('admin_reply', 'is', null)
   })
 
+  it('keeps feedback read persistence failures generic without leaking Supabase details', async () => {
+    const databaseMessage = 'PostgREST persistence detail: feedback-read-marker'
+    const order = vi.fn().mockResolvedValue({ data: null, error: { message: databaseMessage } })
+    const eq = vi.fn(() => ({ order }))
+    mocks.from.mockReturnValue({ select: vi.fn(() => ({ eq })) })
+
+    const response = await readFeedback(routeRequest('/api/feedback/mine'))
+    const payload = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(payload).toEqual({ error: 'Internal error' })
+    expect(typeof payload.error).toBe('string')
+    expect(JSON.stringify(payload)).not.toContain(databaseMessage)
+    expect(JSON.stringify(payload)).not.toContain('feedback-read-marker')
+  })
+
+  it('keeps mark-read persistence failures generic without leaking Supabase details', async () => {
+    const databaseMessage = 'PostgREST persistence detail: feedback-mark-read-marker'
+    const select = vi.fn().mockResolvedValue({ data: null, error: { message: databaseMessage } })
+    const not = vi.fn(() => ({ select }))
+    const secondEq = vi.fn(() => ({ not }))
+    const firstEq = vi.fn(() => ({ eq: secondEq }))
+    mocks.from.mockReturnValue({ update: vi.fn(() => ({ eq: firstEq })) })
+
+    const response = await markFeedbackRead(routeRequest('/api/feedback/mark-all-read', { method: 'POST' }))
+    const payload = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(payload).toEqual({ error: 'Internal error' })
+    expect(typeof payload.error).toBe('string')
+    expect(JSON.stringify(payload)).not.toContain(databaseMessage)
+    expect(JSON.stringify(payload)).not.toContain('feedback-mark-read-marker')
+  })
+
   it('keeps anonymous feedback access rejected', async () => {
     mocks.identity.mockResolvedValue({ ok: false, kind: 'anonymous' })
-    expect((await readFeedback(routeRequest('/api/feedback/mine'))).status).toBe(401)
-    expect((await markFeedbackRead(routeRequest('/api/feedback/mark-all-read', { method: 'POST' }))).status).toBe(401)
+    const readResponse = await readFeedback(routeRequest('/api/feedback/mine'))
+    const markResponse = await markFeedbackRead(routeRequest('/api/feedback/mark-all-read', { method: 'POST' }))
+    expect(readResponse.status).toBe(401)
+    await expect(readResponse.json()).resolves.toEqual({ error: 'Not authenticated' })
+    expect(markResponse.status).toBe(401)
+    await expect(markResponse.json()).resolves.toEqual({ error: 'Not authenticated' })
     expect(mocks.from).not.toHaveBeenCalled()
   })
 })

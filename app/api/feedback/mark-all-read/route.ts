@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     })
   }
   if (result.code === 'PERSISTENCE_FAILED') {
-    return observe.complete(NextResponse.json({ error: result.internalMessage }, { status: 500 }), {
+    return observe.complete(NextResponse.json({ error: 'Internal error' }, { status: 500 }), {
       outcome: 'failed', reason: result.code,
     })
   }
