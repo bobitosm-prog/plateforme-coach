@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8')
 const join = read('app/join/JoinPageContent.tsx')
+const invitationState = read('app/join/invitation-state.ts')
 const joinPage = read('app/join/page.tsx')
 const callback = read('app/auth/callback/route.ts')
 const login = read('app/login/LoginPageContent.tsx')
@@ -28,6 +29,13 @@ describe('/join verified invitation cutover', () => {
     expect(join).not.toContain('/api/assign-coach')
     expect(join).not.toContain('invited_coach_id')
     expect(join).not.toContain('clientId')
+  })
+
+  it('keeps invitation persistence failures temporary during the dual-read window', () => {
+    expect(join).toContain('invitationTerminalState(payload.error?.code)')
+    expect(invitationState).toContain("code === 'INVITATION_CONSUMPTION_FAILED' || code === 'PERSISTENCE_FAILED'")
+    expect(invitationState).toContain("return 'temporary'")
+    expect(invitationState).toContain("return 'invalid'")
   })
 
   it('refuses coach UUID links without mutation or silent migration', () => {

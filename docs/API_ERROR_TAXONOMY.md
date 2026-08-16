@@ -87,7 +87,7 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 | `SIGNATURE_REQUIRED`, `SIGNATURE_INVALID` | `STRIPE_SIGNATURE_INVALID` | conserver le statut webhook actuel |
 | `PRICE_NOT_CONFIGURED` | `SERVER_MISCONFIGURED` | dual-read opérateur borné ; message public générique |
 | `CHECKOUT_FAILED` | `UPSTREAM_REJECTED` | dual-read opérateur borné ; conserver le `500` et ne pas exposer Stripe |
-| `INVITATION_CONSUMPTION_FAILED` | `PERSISTENCE_FAILED` | invitation publique inchangée |
+| `INVITATION_CONSUMPTION_FAILED` | `PERSISTENCE_FAILED` | dual-read consommateur borné ; invitation publique inchangée |
 | `WEBHOOK_FINALIZATION_FAILED` | `WEBHOOK_PROCESSING_FAILED` | reprise serveur idempotente |
 
 Les codes déjà utilisés comme raisons de journaux (`AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, `INVITATION_INVALID`, `INVITATION_TERMINAL`, `WEBHOOK_ALREADY_PROCESSED`, `WEBHOOK_ALREADY_PROCESSING`, `SERVER_MISCONFIGURED`) sont conservés lorsqu'ils ont une sémantique consommable. Une raison de log peut rester plus précise qu'un code public pendant une release.
@@ -97,6 +97,8 @@ Pour la configuration du checkout plateforme, le contrat consommateur temporaire
 Pour Stripe Connect, le contrat opérateur temporaire accepte exactement les paires `IDENTITY_MISMATCH` ou `STRIPE_IDENTITY_INVALID`, et `PROFILE_UNAVAILABLE` ou `RESOURCE_NOT_FOUND`. Le producteur émet désormais les reasons canoniques, sans modifier les corps publics actuels et sans faire dériver le statut HTTP historique `403` vers `404`, même si le descriptor générique de `RESOURCE_NOT_FOUND` vaut `404`. Le dual-read reste requis pendant au moins une release complète observée après la bascule et jusqu'à expiration de la fenêtre de rollback.
 
 Pour les échecs génériques des checkouts plateforme et coach, le contrat opérateur temporaire accepte exactement `CHECKOUT_FAILED` et `UPSTREAM_REJECTED`. Les deux producteurs émettent désormais `UPSTREAM_REJECTED`; leurs corps publics restent inchangés et la bascule canonique ne fait pas dériver leur statut HTTP historique `500` vers `502`, même si le descriptor générique de `UPSTREAM_REJECTED` vaut `502`. Le dual-read reste requis pendant au moins une release complète observée après la bascule et jusqu'à expiration de la fenêtre de rollback.
+
+Pour la persistance lors de la consommation d'une invitation, le consommateur `/join` accepte temporairement exactement `INVITATION_CONSUMPTION_FAILED` et `PERSISTENCE_FAILED`. Les producteurs validate/consume continuent d'émettre le code legacy avec leur statut et leur corps historiques. Les deux codes produisent le même état UX temporaire, jamais l'état invalide. Le dual-read reste requis pendant au moins une release complète observée après la future bascule et jusqu'à expiration de la fenêtre de rollback.
 
 ## Migration route par route
 

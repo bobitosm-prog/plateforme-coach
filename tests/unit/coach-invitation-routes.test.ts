@@ -77,6 +77,24 @@ describe('coach invitation validation route', () => {
     expect(JSON.stringify(payload)).not.toMatch(/token|email|coachId|status/i)
   })
 
+  it('keeps the legacy persistence response when server configuration is unavailable', async () => {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    let response: Response
+    try {
+      response = await validate(request({ token: TOKEN }))
+    } finally {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = serviceKey
+    }
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: { code: 'INVITATION_CONSUMPTION_FAILED', message: 'Invitation unavailable' },
+    })
+  })
+
   it.each([
     [{ data: null, error: null }, 'unknown'],
     [{ data: { status: 'revoked', expires_at: '2099-01-01T00:00:00.000Z' }, error: null }, 'revoked'],
@@ -146,6 +164,11 @@ describe('coach invitation consumption route', () => {
     mocks.rpc.mockResolvedValue({ data: null, error: { message: `SQL leaked ${TOKEN}` } })
     const response = await consume(request({ token: TOKEN }))
     expect(response.status).toBe(500)
-    expect(JSON.stringify(await response.json())).not.toContain(TOKEN)
+    const payload = await response.json()
+    expect(payload).toEqual({
+      success: false,
+      error: { code: 'INVITATION_CONSUMPTION_FAILED', message: 'Invitation unavailable' },
+    })
+    expect(JSON.stringify(payload)).not.toContain(TOKEN)
   })
 })

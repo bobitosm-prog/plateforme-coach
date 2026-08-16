@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { invitationTerminalState } from './invitation-state'
 import {
   BG_BASE, BG_CARD, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GREEN,
   RED, RADIUS_CARD, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY,
@@ -50,15 +51,6 @@ function JoinContent() {
     sessionStorage.removeItem(STORAGE_KEY)
   }
 
-  function terminalState(code?: string): JoinState {
-    if (code === 'INVITATION_EXPIRED') return 'expired'
-    if (code === 'INVITATION_REVOKED') return 'revoked'
-    if (code === 'INVITATION_ALREADY_USED') return 'used'
-    if (code === 'INVITATION_EMAIL_MISMATCH' || code === 'INVITATION_EMAIL_UNVERIFIED') return 'forbidden'
-    if (code === 'INVITATION_CONSUMPTION_FAILED') return 'temporary'
-    return 'invalid'
-  }
-
   async function consumeInvitation(token: string) {
     setState('consuming')
     try {
@@ -78,7 +70,7 @@ function JoinContent() {
         setState('ready')
         return
       }
-      const nextState = terminalState(payload.error?.code)
+      const nextState = invitationTerminalState(payload.error?.code)
       if (nextState !== 'temporary') clearToken()
       setState(nextState)
     } catch {

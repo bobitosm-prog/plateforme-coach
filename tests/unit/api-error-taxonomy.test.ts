@@ -22,6 +22,11 @@ const CHECKOUT_FAILURE_OPERATOR_REASONS = [
   'UPSTREAM_REJECTED',
 ] as const
 
+const INVITATION_PERSISTENCE_OPERATOR_REASONS = [
+  'INVITATION_CONSUMPTION_FAILED',
+  'PERSISTENCE_FAILED',
+] as const
+
 function isCheckoutConfigurationOperatorReason(value: string): boolean {
   return CHECKOUT_CONFIGURATION_OPERATOR_REASONS.some(reason => reason === value)
 }
@@ -32,6 +37,10 @@ function isStripeConnectOperatorReason(value: string): boolean {
 
 function isCheckoutFailureOperatorReason(value: string): boolean {
   return CHECKOUT_FAILURE_OPERATOR_REASONS.some(reason => reason === value)
+}
+
+function isInvitationPersistenceOperatorReason(value: string): boolean {
+  return INVITATION_PERSISTENCE_OPERATOR_REASONS.some(reason => reason === value)
 }
 
 describe('API error taxonomy', () => {
@@ -166,6 +175,34 @@ describe('API error taxonomy', () => {
     expect(rollback).toContain('Fenêtre dual-read échec checkout')
     expect(rollback).toContain('restent contractuellement `500`')
     expect(taxonomy).toContain('ne fait pas dériver leur statut HTTP historique `500` vers `502`')
+  })
+
+  it.each(INVITATION_PERSISTENCE_OPERATOR_REASONS)(
+    'accepts invitation persistence reason %s during the bounded dual-read window',
+    reason => {
+      expect(isInvitationPersistenceOperatorReason(reason)).toBe(true)
+    },
+  )
+
+  it('keeps invitation producers legacy while persistence contracts are dual-read', () => {
+    const validateRoute = readFileSync('app/api/coach/invitations/validate/route.ts', 'utf8')
+    const consumeRoute = readFileSync('app/api/coach/invitations/consume/route.ts', 'utf8')
+    const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
+    const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
+    const contract = readFileSync('docs/COACH_INVITATION_CONTRACT.md', 'utf8')
+
+    expect(validateRoute).toContain("invitationFailure('INVITATION_CONSUMPTION_FAILED')")
+    expect(consumeRoute).toContain("reason: 'INVITATION_CONSUMPTION_FAILED'")
+    expect(consumeRoute).toContain("'INVITATION_CONSUMPTION_FAILED', status: response.status")
+    expect(validateRoute).not.toContain("invitationFailure('PERSISTENCE_FAILED')")
+    expect(consumeRoute).not.toContain("reason: 'PERSISTENCE_FAILED'")
+    for (const reason of INVITATION_PERSISTENCE_OPERATOR_REASONS) {
+      expect(rollback).toContain(`\`${reason}\``)
+      expect(taxonomy).toContain(`\`${reason}\``)
+      expect(contract).toContain(`\`${reason}\``)
+    }
+    expect(rollback).toContain('Fenêtre dual-read persistance invitation')
+    expect(contract).toContain('état `temporary`')
   })
 
   it('is coherent with ApiFailure', () => {

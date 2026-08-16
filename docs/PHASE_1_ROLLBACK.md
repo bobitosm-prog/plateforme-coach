@@ -148,6 +148,8 @@ No-go si une migration distante est inconnue, si la sauvegarde est absente, si u
 
 **À surveiller.** `coach_invitations.status` (`pending`, `consumed`, `revoked`), `delivery_status` (`pending`, `sent`, `failed`, `skipped`), `expires_at`, `consumed_at`, `consumed_by`, `revoked_at`, `revoked_by`; relation `coach_clients.status = 'active'` et `coach_clients.invited_by_coach = true` après consommation.
 
+**Fenêtre dual-read persistance invitation.** Les consommateurs, tests de contrat et procédures opérateur acceptent temporairement exactement `INVITATION_CONSUMPTION_FAILED` et `PERSISTENCE_FAILED`. Les routes validate/consume émettent encore le code legacy. `/join` projette les deux codes vers le même état `temporary`, sans bascule vers `invalid`, sans changement de message public, de statut HTTP ou d'anti-énumération. Cette tolérance reste obligatoire pendant au moins une release complète observée après la future bascule et jusqu'à la fermeture de la fenêtre de rollback.
+
 **Portée.** Création, validation, consommation et révocation des invitations ; profil du destinataire et relation coach/client lors de la consommation atomique.
 
 **Action sûre.** Désactiver temporairement la création de nouvelles invitations tout en laissant validation, consommation et révocation disponibles si elles sont saines. Si la consommation est suspecte, désactiver également cette opération et conserver les lignes `pending` jusqu'au correctif.
