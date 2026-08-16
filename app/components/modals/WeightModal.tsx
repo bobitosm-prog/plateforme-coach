@@ -1,10 +1,10 @@
 'use client'
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useId, useRef, useState } from 'react'
 import {
-  BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
+  BG_CARD, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
 } from '../../../lib/design-tokens'
+import DashboardMeasurementDialogShell from './DashboardMeasurementDialogShell'
 
 interface WeightModalProps {
   currentWeight?: number
@@ -13,6 +13,10 @@ interface WeightModalProps {
 }
 
 export default function WeightModal({ currentWeight, onSave, onClose }: WeightModalProps) {
+  const reactId = useId()
+  const weightInputId = `dashboard-weight-input-${reactId}`
+  const dateInputId = `dashboard-weight-date-${reactId}`
+  const weightInputRef = useRef<HTMLInputElement>(null)
   const [weightForm, setWeightForm] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
@@ -22,28 +26,33 @@ export default function WeightModal({ currentWeight, onSave, onClose }: WeightMo
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
-      <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>ENREGISTRER MON POIDS</h3>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
-        </div>
+    <DashboardMeasurementDialogShell
+      title="ENREGISTRER MON POIDS"
+      initialFocusRef={weightInputRef}
+      onClose={onClose}
+      overlayStyle={{ display: 'flex', alignItems: 'flex-end' }}
+      panelStyle={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', width: '100%' }}
+      headerMarginBottom={20}
+    >
         <div style={{ position: 'relative', marginBottom: 16 }}>
+          <label htmlFor={weightInputId} style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>Poids en kilogrammes</label>
           <input
+            ref={weightInputRef}
+            id={weightInputId}
             type="number"
             step="0.1"
             value={weightForm}
             onChange={e => setWeightForm(e.target.value)}
             placeholder="0.0"
-            autoFocus
             style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 48px 20px 20px', color: GOLD, fontSize: '3rem', fontFamily: FONT_DISPLAY, fontWeight: 700, textAlign: 'center', outline: 'none' }}
           />
           <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 600, fontFamily: FONT_ALT }}>kg</span>
         </div>
         {currentWeight && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.75rem', marginBottom: 16, fontFamily: FONT_BODY, fontWeight: 300 }}>Précédent : <span style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{currentWeight}</span> kg</p>}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>Date</label>
+          <label htmlFor={dateInputId} style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>Date</label>
           <input
+            id={dateInputId}
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
@@ -65,7 +74,6 @@ export default function WeightModal({ currentWeight, onSave, onClose }: WeightMo
             Sauvegarder
           </button>
         </div>
-      </div>
-    </div>
+    </DashboardMeasurementDialogShell>
   )
 }

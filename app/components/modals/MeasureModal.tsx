@@ -1,15 +1,15 @@
 'use client'
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useId, useRef, useState } from 'react'
 import { format, type Locale } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
+  BG_CARD, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
 } from '../../../lib/design-tokens'
+import DashboardMeasurementDialogShell from './DashboardMeasurementDialogShell'
 
 interface MeasureModalProps {
   measurements: any[]
@@ -20,6 +20,8 @@ interface MeasureModalProps {
 const MEASURE_KEYS = ['waist', 'hips', 'chest', 'arms', 'thighs'] as const
 
 export default function MeasureModal({ measurements, onSave, onClose }: MeasureModalProps) {
+  const reactId = useId()
+  const firstMeasureInputRef = useRef<HTMLInputElement>(null)
   const t = useTranslations('progress')
   const locale = useLocale()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -46,19 +48,23 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
   const last5 = measurements.slice(0, 5)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 64, minHeight: '90vh' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{t('measureModal.title')}</h3>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
-        </div>
+    <DashboardMeasurementDialogShell
+      title={t('measureModal.title')}
+      initialFocusRef={firstMeasureInputRef}
+      onClose={onClose}
+      overlayStyle={{ overflowY: 'auto' }}
+      panelStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 64, minHeight: '90vh' }}
+      headerMarginBottom={24}
+    >
 
         {/* Inputs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {MEASURE_FIELDS.map(({ key, label, unit }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px' }}>
-              <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, flex: 1 }}>{label}</span>
+              <label htmlFor={`dashboard-measure-${key}-${reactId}`} style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, flex: 1 }}>{label}</label>
               <input
+                ref={key === MEASURE_KEYS[0] ? firstMeasureInputRef : undefined}
+                id={`dashboard-measure-${key}-${reactId}`}
                 type="number"
                 step="0.1"
                 value={measureForm[key]}
@@ -73,8 +79,9 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
 
         {/* Date */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>{t('measureModal.date')}</label>
+          <label htmlFor={`dashboard-measure-date-${reactId}`} style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>{t('measureModal.date')}</label>
           <input
+            id={`dashboard-measure-date-${reactId}`}
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
@@ -132,7 +139,6 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </DashboardMeasurementDialogShell>
   )
 }
