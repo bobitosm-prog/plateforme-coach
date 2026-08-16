@@ -9,6 +9,8 @@ const APP_HOST = 'app.moovx.ch'
 function isLandingPath(pathname: string): boolean {
   // Pages localisées : /fr/landing, /en/cgu, /de/privacy
   if (/^\/(fr|en|de)\/(landing|cgu|privacy)/.test(pathname)) return true
+  // Blog SEO localisé : index et articles restent sur le domaine marketing
+  if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
