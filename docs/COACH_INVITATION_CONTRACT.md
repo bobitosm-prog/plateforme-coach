@@ -354,13 +354,13 @@ Les messages utilisateur restent génériques. Les logs structurés contiennent 
 | `INVITATION_ALREADY_PENDING` | 409 | Une invitation est déjà en attente. | invitationId, coachId |
 | `INVITATION_RATE_LIMITED` | 429 | Trop de tentatives. Réessayez plus tard. | clé HMAC, fenêtre, compteur |
 | `INVITATION_DELIVERY_FAILED` | 502 | L'invitation a été créée mais l'email n'a pas pu être envoyé. | invitationId, erreur SMTP assainie |
-| `INVITATION_CONSUMPTION_FAILED` | 500 | L'invitation n'a pas pu être appliquée. | requestId et erreur DB assainie |
-| `PERSISTENCE_FAILED` | 500 historique pendant la migration | Même message public que `INVITATION_CONSUMPTION_FAILED`. | Code canonique futur, sans détail DB |
+| `INVITATION_CONSUMPTION_FAILED` | 500 historique | L'invitation n'a pas pu être appliquée. | Code SQL legacy normalisé par la route, erreur DB assainie |
+| `PERSISTENCE_FAILED` | 500 | Même message public que `INVITATION_CONSUMPTION_FAILED`. | Code canonique runtime, sans détail DB |
 | `LEGACY_INVITATION_DISABLED` | 410 | Ce lien doit être renouvelé par votre coach. | route/source legacy |
 
 Pour la validation publique, toutes les causes terminales se réduisent à `valid: false`. Les codes détaillés ne sont exposés qu'après authentification et tentative de consommation afin de limiter l'énumération.
 
-Fenêtre dual-read persistance : `/join` accepte temporairement `INVITATION_CONSUMPTION_FAILED` et `PERSISTENCE_FAILED` et les projette tous deux vers l'état `temporary`, avec le même message public. Les routes validate/consume émettent encore le code legacy. Un code inconnu conserve le fallback historique `invalid`; aucune réinterprétation des états terminaux ou de la politique anti-énumération n'est autorisée. Cette coexistence reste active pendant au moins une release complète observée après la future bascule et jusqu'à fermeture de la fenêtre de rollback.
+Fenêtre dual-read persistance : `/join` accepte temporairement `INVITATION_CONSUMPTION_FAILED` et `PERSISTENCE_FAILED` et les projette tous deux vers l'état `temporary`, avec le même message public. Les routes TypeScript validate/consume émettent désormais le code canonique. La RPC/migration historique reste inchangée et peut encore produire le code legacy, que consume normalise avant réponse. Un code inconnu conserve le fallback historique `invalid`; aucune réinterprétation des états terminaux ou de la politique anti-énumération n'est autorisée. Cette coexistence reste active pendant au moins une release complète observée après la bascule et jusqu'à fermeture de la fenêtre de rollback.
 
 ## 14. Compatibilité avec les parcours actuels
 

@@ -184,18 +184,20 @@ describe('API error taxonomy', () => {
     },
   )
 
-  it('keeps invitation producers legacy while persistence contracts are dual-read', () => {
+  it('keeps invitation contracts dual-read after runtime producers become canonical', () => {
     const validateRoute = readFileSync('app/api/coach/invitations/validate/route.ts', 'utf8')
     const consumeRoute = readFileSync('app/api/coach/invitations/consume/route.ts', 'utf8')
     const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
     const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
     const contract = readFileSync('docs/COACH_INVITATION_CONTRACT.md', 'utf8')
+    const historicalMigration = readFileSync('supabase/migrations/20260711190500_add_coach_invitations.sql', 'utf8')
 
-    expect(validateRoute).toContain("invitationFailure('INVITATION_CONSUMPTION_FAILED')")
-    expect(consumeRoute).toContain("reason: 'INVITATION_CONSUMPTION_FAILED'")
-    expect(consumeRoute).toContain("'INVITATION_CONSUMPTION_FAILED', status: response.status")
-    expect(validateRoute).not.toContain("invitationFailure('PERSISTENCE_FAILED')")
-    expect(consumeRoute).not.toContain("reason: 'PERSISTENCE_FAILED'")
+    expect(validateRoute).toContain("invitationFailure('PERSISTENCE_FAILED')")
+    expect(consumeRoute).toContain("reason: 'PERSISTENCE_FAILED'")
+    expect(consumeRoute).toContain("result.code === 'INVITATION_CONSUMPTION_FAILED'")
+    expect(consumeRoute).toContain("? 'PERSISTENCE_FAILED'")
+    expect(validateRoute).not.toContain("invitationFailure('INVITATION_CONSUMPTION_FAILED')")
+    expect(historicalMigration.match(/RAISE EXCEPTION 'INVITATION_CONSUMPTION_FAILED'/g)).toHaveLength(2)
     for (const reason of INVITATION_PERSISTENCE_OPERATOR_REASONS) {
       expect(rollback).toContain(`\`${reason}\``)
       expect(taxonomy).toContain(`\`${reason}\``)

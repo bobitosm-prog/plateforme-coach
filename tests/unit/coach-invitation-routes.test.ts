@@ -77,7 +77,7 @@ describe('coach invitation validation route', () => {
     expect(JSON.stringify(payload)).not.toMatch(/token|email|coachId|status/i)
   })
 
-  it('keeps the legacy persistence response when server configuration is unavailable', async () => {
+  it('returns the canonical persistence response when server configuration is unavailable', async () => {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     delete process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -91,7 +91,7 @@ describe('coach invitation validation route', () => {
     expect(response.status).toBe(500)
     await expect(response.json()).resolves.toEqual({
       success: false,
-      error: { code: 'INVITATION_CONSUMPTION_FAILED', message: 'Invitation unavailable' },
+      error: { code: 'PERSISTENCE_FAILED', message: 'Invitation unavailable' },
     })
   })
 
@@ -167,8 +167,23 @@ describe('coach invitation consumption route', () => {
     const payload = await response.json()
     expect(payload).toEqual({
       success: false,
-      error: { code: 'INVITATION_CONSUMPTION_FAILED', message: 'Invitation unavailable' },
+      error: { code: 'PERSISTENCE_FAILED', message: 'Invitation unavailable' },
     })
     expect(JSON.stringify(payload)).not.toContain(TOKEN)
+  })
+
+  it('canonicalizes the historical RPC persistence code without changing HTTP', async () => {
+    mocks.rpc.mockResolvedValue({
+      data: { success: false, code: 'INVITATION_CONSUMPTION_FAILED' },
+      error: null,
+    })
+
+    const response = await consume(request({ token: TOKEN }))
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: { code: 'PERSISTENCE_FAILED', message: 'Invitation unavailable' },
+    })
   })
 })

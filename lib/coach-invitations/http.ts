@@ -11,6 +11,7 @@ export type InvitationErrorCode =
   | 'INVITATION_RECIPIENT_INELIGIBLE'
   | 'INVITATION_ALREADY_LINKED'
   | 'INVITATION_CONSUMPTION_FAILED'
+  | 'PERSISTENCE_FAILED'
 
 const statusByCode: Record<InvitationErrorCode, number> = {
   INVITATION_INVALID: 404,
@@ -23,6 +24,7 @@ const statusByCode: Record<InvitationErrorCode, number> = {
   INVITATION_RECIPIENT_INELIGIBLE: 409,
   INVITATION_ALREADY_LINKED: 409,
   INVITATION_CONSUMPTION_FAILED: 500,
+  PERSISTENCE_FAILED: 500,
 }
 
 export function invitationFailure(code: InvitationErrorCode) {

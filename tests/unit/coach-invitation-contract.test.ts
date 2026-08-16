@@ -53,6 +53,7 @@ const contract = {
     'INVITATION_RATE_LIMITED',
     'INVITATION_DELIVERY_FAILED',
     'INVITATION_CONSUMPTION_FAILED',
+    'PERSISTENCE_FAILED',
     'LEGACY_INVITATION_DISABLED',
   ] as const,
 } as const
@@ -218,9 +219,10 @@ describe('one-time coach invitation contract', () => {
 
   describe('stable business errors', () => {
     it('defines the complete non-duplicated error-code vocabulary', () => {
-      expect(contract.errorCodes).toHaveLength(14)
+      expect(contract.errorCodes).toHaveLength(15)
       expect(new Set(contract.errorCodes).size).toBe(contract.errorCodes.length)
       expect(contract.errorCodes).toContain('INVITATION_CONSUMPTION_FAILED')
+      expect(contract.errorCodes).toContain('PERSISTENCE_FAILED')
       expect(contract.errorCodes).toContain('LEGACY_INVITATION_DISABLED')
     })
   })

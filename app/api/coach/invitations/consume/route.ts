@@ -30,15 +30,17 @@ export async function POST(request: Request) {
     p_token_hash: tokenHash,
   })
   if (error) {
-    const response = invitationFailure('INVITATION_CONSUMPTION_FAILED')
-    return audit.reject(response, { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'consume', outcome: 'failed', reason: 'INVITATION_CONSUMPTION_FAILED', status: response.status })
+    const response = invitationFailure('PERSISTENCE_FAILED')
+    return audit.reject(response, { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'consume', outcome: 'failed', reason: 'PERSISTENCE_FAILED', status: response.status })
   }
 
   const result = (data ?? {}) as RpcResult
   if (result.success === true) {
     return NextResponse.json({ success: true, data: { redirectTo: '/' } })
   }
-  const reason = isInvitationErrorCode(result.code) ? result.code : 'INVITATION_CONSUMPTION_FAILED'
+  const reason = result.code === 'INVITATION_CONSUMPTION_FAILED'
+    ? 'PERSISTENCE_FAILED'
+    : isInvitationErrorCode(result.code) ? result.code : 'PERSISTENCE_FAILED'
   const response = invitationFailure(reason)
   return audit.reject(response, { event: 'COACH_INVITATION_REJECTED', domain: 'coach_invitations', operation: 'consume', outcome: response.status >= 500 ? 'failed' : 'rejected', reason, status: response.status })
 }
