@@ -14570,3 +14570,22 @@ satisfaction de la fenêtre formelle versionnée.
 temporel ou organique, pas d'un développement structurel Phase 9. Aucun
 runtime, test, workflow CI, migration, variable d'environnement ou service
 distant n'est modifié par cette réconciliation documentaire.
+
+## Entrée — 2026-08-16 — Ouverture Phase 10 et validation CI Stability 10.1
+
+**Ouverture :** la Phase 10 « Stabilisation & préparation rollout » est ouverte
+après clôture structurelle de la Phase 9 avec le statut
+`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`. Le rapport CI Stability de la
+sous-phase 10.1 a été validé à partir du cutover
+`7736398 ci(phase-10): migrate github actions to node 24`.
+
+**Validation CI :** le workflow reste stable après la migration Node 24 : deux
+runs complets post-cutover sont `PASS`, les gates A/B/C1/C2 sont vertes, aucun
+flaky ni warning Node 20 n'est observé. Aucun changement fonctionnel, aucun
+échec post-cutover et aucune action corrective ne sont nécessaires. Le registre
+append-only poursuit son monitoring vers 150 runs et 7 jours UTC ; le statut
+reste `CI_STABILITY_CANDIDATE`.
+
+**Décision : `PASSAGE_AUTORISÉ_PHASE_10_2`.** La prochaine étape active est la
+validation Training `REAL_CORPUS_VALIDATION`, tandis que la stabilité CI
+continue d'être observée en parallèle.

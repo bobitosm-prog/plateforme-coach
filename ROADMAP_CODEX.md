@@ -845,6 +845,40 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 
 ---
 
+## Phase 10 — Stabilisation & préparation rollout
+
+**Statut : `OPEN`**
+
+### Objectif
+
+Transformer les validations techniques Phase 9 en préparation d'activation
+contrôlée.
+
+### Sous-phase terminée
+
+#### 10.1 CI Stability Monitoring
+
+**Résultat : `CI_STABILITY_CANDIDATE`**
+
+Validations :
+
+- migration Node 24 saine ;
+- 2 runs complets post-cutover `PASS` ;
+- aucun flaky détecté ;
+- aucun warning Node 20 ;
+- gates A/B/C1/C2 `PASS`.
+
+Monitoring restant :
+
+- progression du registre CI append-only ;
+- objectif formel de 150 runs et 7 jours UTC.
+
+### Prochaine étape
+
+**10.2 `REAL_CORPUS_VALIDATION` Training**
+
+---
+
 # 6. Dépendances générales
 
 ```text
