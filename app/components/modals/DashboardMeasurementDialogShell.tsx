@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { X } from 'lucide-react'
 import {
-  BG_CARD_2, BORDER, FONT_DISPLAY, TEXT_MUTED, TEXT_PRIMARY,
+  BG_CARD_2, BORDER, FONT_DISPLAY, TEXT_MUTED, TEXT_PRIMARY, titleStyle,
 } from '@/lib/design-tokens'
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
   overlayStyle: CSSProperties
   panelStyle: CSSProperties
   headerMarginBottom: number
+  headerVariant?: 'dashboard' | 'progress'
 }
 
 const FOCUSABLE_SELECTOR = [
@@ -40,11 +41,13 @@ export default function DashboardMeasurementDialogShell({
   overlayStyle,
   panelStyle,
   headerMarginBottom,
+  headerVariant = 'dashboard',
 }: Props) {
   const reactId = useId()
   const titleId = `dashboard-measurement-dialog-title-${reactId}`
   const dialogRef = useRef<HTMLDivElement>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+  const progressHeader = headerVariant === 'progress'
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -106,15 +109,15 @@ export default function DashboardMeasurementDialogShell({
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, ...overlayStyle }}
     >
       <div style={panelStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: headerMarginBottom }}>
-          <h3 id={titleId} style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{title}</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', ...(progressHeader ? {} : { alignItems: 'center' }), marginBottom: headerMarginBottom }}>
+          <h3 id={titleId} style={progressHeader ? { ...titleStyle, fontSize: 18 } : { fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{title}</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={progressHeader ? undefined : { width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <X size={14} color={TEXT_MUTED} />
+            <X size={progressHeader ? 16 : 14} color={progressHeader ? undefined : TEXT_MUTED} />
           </button>
         </div>
         {children}

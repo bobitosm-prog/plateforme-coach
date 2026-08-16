@@ -42,5 +42,22 @@ describe('ProgressTab extracted boundary rendering', () => {
     const overlays = renderToStaticMarkup(createElement(ProgressEntryOverlays, { showWeight: true, weight: '80', weightDate: '2026-01-01', previousWeight: 79, savingWeight: false, onWeightChange: vi.fn(), onWeightDateChange: vi.fn(), onCloseWeight: vi.fn(), onSaveWeight: vi.fn(), showMeasure: false, measureForm: {}, measureDate: '2026-01-01', savingMeasure: false, onMeasureChange: vi.fn(), onMeasureDateChange: vi.fn(), onCloseMeasure: vi.fn(), onSaveMeasure: vi.fn(), t }))
     expect(overlays).toContain('ENREGISTRER MON POIDS')
     expect(overlays).toContain('tab.previous')
+    expect(overlays).toContain('role="dialog"')
+    expect(overlays).toContain('aria-modal="true"')
+    expect(overlays).toMatch(/aria-labelledby="([^"]+)"[^>]*>[\s\S]*id="\1"/)
+    expect(overlays).toMatch(/<label for="([^"]+)"[^>]*>Poids en kilogrammes<\/label><input[^>]*id="\1"/)
+    expect(overlays).toMatch(/<label for="([^"]+)"[^>]*>tab\.date<\/label><input id="\1" type="date"/)
+  })
+
+  it('renders one named Measure dialog with linked field labels when both flags are set', () => {
+    const overlays = renderToStaticMarkup(createElement(ProgressEntryOverlays, { showWeight: true, weight: '80', weightDate: '2026-01-01', previousWeight: 79, savingWeight: false, onWeightChange: vi.fn(), onWeightDateChange: vi.fn(), onCloseWeight: vi.fn(), onSaveWeight: vi.fn(), showMeasure: true, measureForm: { waist: '80', hips: '', chest: '', arms: '', thighs: '' }, measureDate: '2026-01-01', savingMeasure: false, onMeasureChange: vi.fn(), onMeasureDateChange: vi.fn(), onCloseMeasure: vi.fn(), onSaveMeasure: vi.fn(), t }))
+
+    expect(overlays.match(/role="dialog"/g)).toHaveLength(1)
+    expect(overlays).toContain('tab.myMeasurements')
+    expect(overlays).not.toContain('ENREGISTRER MON POIDS')
+    for (const label of ['waist', 'hips', 'chest', 'arms', 'thighs']) {
+      expect(overlays).toMatch(new RegExp(`<label for="([^"]+)"[^>]*>tab\\.measureLabels\\.${label}</label><input[^>]*id="\\1"`))
+    }
+    expect(overlays).toMatch(/<label for="([^"]+)"[^>]*>tab\.date<\/label><input id="\1" type="date"/)
   })
 })
