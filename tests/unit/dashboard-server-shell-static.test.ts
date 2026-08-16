@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const page = readFileSync('app/page.tsx', 'utf8')
+const page = readFileSync('app/(application)/page.tsx', 'utf8')
 const fallback = readFileSync('app/components/dashboard/DashboardServerFallback.tsx', 'utf8')
 const island = readFileSync('app/components/dashboard/DashboardClientIsland.tsx', 'utf8')
 const runtime = readFileSync('app/components/dashboard/useDashboardClientRuntime.ts', 'utf8')

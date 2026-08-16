@@ -6,9 +6,9 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const fontModulePath = join(root, "app/fonts.ts");
 const fontModule = readFileSync(fontModulePath, "utf8");
-const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
+const layout = readFileSync(join(root, "app/components/layout/RootDocument.tsx"), "utf8");
 const landingHero = readFileSync(
-  join(root, "app/[locale]/landing/components/Hero.tsx"),
+  join(root, "app/(marketing)/[locale]/landing/components/Hero.tsx"),
   "utf8",
 );
 const loginPage = readFileSync(

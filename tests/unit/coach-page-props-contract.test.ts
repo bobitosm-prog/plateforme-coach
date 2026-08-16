@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const page = readFileSync('app/coach/page.tsx', 'utf8')
+const page = readFileSync('app/(application)/coach/page.tsx', 'utf8')
 const content = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
-const rootPage = readFileSync('app/page.tsx', 'utf8')
+const rootPage = readFileSync('app/(application)/page.tsx', 'utf8')
 const dashboardIsland = readFileSync('app/components/dashboard/DashboardClientIsland.tsx', 'utf8')
 const dashboardFacade = readFileSync('app/coach/hooks/useCoachDashboard.ts', 'utf8')
 

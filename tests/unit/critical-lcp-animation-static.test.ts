@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const hero = readFileSync('app/[locale]/landing/components/Hero.tsx', 'utf8')
-const heroAnimation = readFileSync('app/[locale]/landing/components/HeroAnimation.tsx', 'utf8')
+const hero = readFileSync('app/(marketing)/[locale]/landing/components/Hero.tsx', 'utf8')
+const heroAnimation = readFileSync('app/(marketing)/[locale]/landing/components/HeroAnimation.tsx', 'utf8')
 const login = readFileSync('app/login/LoginPageContent.tsx', 'utf8')
 
 function openingTag(source: string, marker: string) {

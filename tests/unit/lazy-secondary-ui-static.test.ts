@@ -36,7 +36,7 @@ describe('lazy secondary UI architecture', () => {
   it('does not introduce unsupported client-only dynamic boundaries', () => {
     const files = [
       'app/components/dashboard/DashboardClientIsland.tsx',
-      'app/client/[id]/page.tsx',
+      'app/(application)/client/[id]/page.tsx',
       'app/client/[id]/components/page/ClientDetailPageClient.tsx',
       'app/client/[id]/components/page/ClientDetailPageView.tsx',
     ]

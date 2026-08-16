@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest'
 const read = (path: string) => readFileSync(path, 'utf8')
 
 const serverBoundaries = [
-  'app/page.tsx',
-  'app/coach/page.tsx',
+  'app/(application)/page.tsx',
+  'app/(application)/coach/page.tsx',
   'app/coach/components/CoachStyles.tsx',
   'app/components/dashboard/DashboardStyles.tsx',
-  'app/client/[id]/page.tsx',
+  'app/(application)/client/[id]/page.tsx',
   'app/client/[id]/components/page/ClientDetailPageStyles.tsx',
 ]
 
@@ -32,9 +32,9 @@ describe('critical route client boundaries', () => {
   })
 
   it('does not pass data or callbacks through the new server compositions', () => {
-    expect(read('app/page.tsx')).toContain('<DashboardClientIsland />')
-    expect(read('app/coach/page.tsx')).toContain('<CoachPageContent />')
-    expect(read('app/client/[id]/page.tsx')).toContain('<ClientDetailPageClient />')
+    expect(read('app/(application)/page.tsx')).toContain('<DashboardClientIsland />')
+    expect(read('app/(application)/coach/page.tsx')).toContain('<CoachPageContent />')
+    expect(read('app/(application)/client/[id]/page.tsx')).toContain('<ClientDetailPageClient />')
     for (const path of serverBoundaries) {
       expect(read(path), path).not.toMatch(/service_role|on[A-Z][A-Za-z]+=/)
     }

@@ -4,7 +4,7 @@
 - **File**: `/images/new/hero-chalk.png`
 - **Source dimensions**: 1672 x 941 px
 - **File size**: 1.84 MB (PNG, 8-bit sRGB, non-interlaced)
-- **Component**: `app/[locale]/landing/components/Hero.tsx:107-116`
+- **Component**: `app/(marketing)/[locale]/landing/components/Hero.tsx:107-116`
 - **Next.js Image props**: `fill`, `priority`, `fetchPriority="high"`, `quality={85}`, `sizes="100vw"`
 
 ## Critical finding: opacity: 0

@@ -111,13 +111,13 @@
         "orientation": null
       },
       "consumers": [
-        "app/layout.tsx",
+        "app/components/layout/RootDocument.tsx",
         "public/manifest.json",
         "scripts/generate-icons.js"
       ],
       "delivery": [
         {
-          "consumer": "app/layout.tsx",
+          "consumer": "app/components/layout/RootDocument.tsx",
           "route": "/",
           "loading": "unknown",
           "preload": "unspecified",
@@ -1081,11 +1081,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/CoachIaSection.tsx"
+        "app/(marketing)/[locale]/landing/components/CoachIaSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/CoachIaSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/CoachIaSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1112,11 +1112,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/CoachIaSection.tsx"
+        "app/(marketing)/[locale]/landing/components/CoachIaSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/CoachIaSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/CoachIaSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1181,11 +1181,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/CoachingPro.tsx"
+        "app/(marketing)/[locale]/landing/components/CoachingPro.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/CoachingPro.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/CoachingPro.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1212,11 +1212,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/TrackingSection.tsx"
+        "app/(marketing)/[locale]/landing/components/TrackingSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/TrackingSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/TrackingSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1243,11 +1243,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/GenevaSection.tsx"
+        "app/(marketing)/[locale]/landing/components/GenevaSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/GenevaSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/GenevaSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1293,11 +1293,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/Hero.tsx"
+        "app/(marketing)/[locale]/landing/components/Hero.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/Hero.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/Hero.tsx",
           "route": "/[locale]/landing",
           "loading": "explicit-eager",
           "preload": "unspecified",
@@ -1324,11 +1324,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/Testimonials.tsx"
+        "app/(marketing)/[locale]/landing/components/Testimonials.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/Testimonials.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/Testimonials.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1355,11 +1355,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/NutritionSection.tsx"
+        "app/(marketing)/[locale]/landing/components/NutritionSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/NutritionSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/NutritionSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1386,11 +1386,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/TrainingSection.tsx"
+        "app/(marketing)/[locale]/landing/components/TrainingSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/TrainingSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/TrainingSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1417,11 +1417,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/Results.tsx"
+        "app/(marketing)/[locale]/landing/components/Results.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/Results.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/Results.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -1448,11 +1448,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/components/CtaSection.tsx"
+        "app/(marketing)/[locale]/landing/components/CtaSection.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/CtaSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/CtaSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -2465,11 +2465,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/layout.tsx"
+        "app/components/layout/RootDocument.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/layout.tsx",
+          "consumer": "app/components/layout/RootDocument.tsx",
           "route": "/",
           "loading": "unknown",
           "preload": "unspecified",
@@ -2537,11 +2537,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/layout.tsx"
+        "app/components/layout/RootDocument.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/layout.tsx",
+          "consumer": "app/components/layout/RootDocument.tsx",
           "route": "/",
           "loading": "unknown",
           "preload": "unspecified",
@@ -2681,7 +2681,7 @@
       },
       "consumers": [
         "app/(dashboard)/page-desktop.tsx",
-        "app/[locale]/landing/components/FooterSection.tsx",
+        "app/(marketing)/[locale]/landing/components/FooterSection.tsx",
         "app/coach/components/CoachPageContent.tsx",
         "app/coach/components/sections/CoachDesktopLayout.tsx",
         "app/components/dashboard/DashboardClientIsland.tsx",
@@ -2704,7 +2704,7 @@
           "aboveTheFold": "unknown"
         },
         {
-          "consumer": "app/[locale]/landing/components/FooterSection.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/FooterSection.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -2821,8 +2821,8 @@
         "orientation": 1
       },
       "consumers": [
-        "app/[locale]/landing/components/Navbar.tsx",
-        "app/layout.tsx",
+        "app/(marketing)/[locale]/landing/components/Navbar.tsx",
+        "app/components/layout/RootDocument.tsx",
         "lib/structured-data.ts",
         "public/guide-musculation.html",
         "public/guide-nutrition.html",
@@ -2830,7 +2830,7 @@
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/components/Navbar.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/components/Navbar.tsx",
           "route": "/[locale]/landing",
           "loading": "browser-default",
           "preload": "unspecified",
@@ -2839,7 +2839,7 @@
           "aboveTheFold": "unknown"
         },
         {
-          "consumer": "app/layout.tsx",
+          "consumer": "app/components/layout/RootDocument.tsx",
           "route": "/",
           "loading": "unknown",
           "preload": "unspecified",
@@ -2940,11 +2940,11 @@
         "orientation": null
       },
       "consumers": [
-        "app/[locale]/landing/page.tsx"
+        "app/(marketing)/[locale]/landing/page.tsx"
       ],
       "delivery": [
         {
-          "consumer": "app/[locale]/landing/page.tsx",
+          "consumer": "app/(marketing)/[locale]/landing/page.tsx",
           "route": "/[locale]/landing",
           "loading": "unknown",
           "preload": "unspecified",

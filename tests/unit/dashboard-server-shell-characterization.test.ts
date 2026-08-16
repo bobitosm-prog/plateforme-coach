@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const page = readFileSync('app/page.tsx', 'utf8')
+const page = readFileSync('app/(application)/page.tsx', 'utf8')
 const clientPath = 'app/components/dashboard/DashboardClientIsland.tsx'
 const client = existsSync(clientPath) ? readFileSync(clientPath, 'utf8') : page
 const profileError = existsSync('app/components/dashboard/DashboardProfileError.tsx')

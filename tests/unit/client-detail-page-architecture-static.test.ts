@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const pagePath = 'app/client/[id]/page.tsx'
+const pagePath = 'app/(application)/client/[id]/page.tsx'
 const boundaryPaths = [
   'app/client/[id]/components/page/ClientDetailPageClient.tsx',
   'app/client/[id]/components/page/ClientDetailPageStyles.tsx',

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const page = readFileSync('app/coach/page.tsx', 'utf8')
+const page = readFileSync('app/(application)/coach/page.tsx', 'utf8')
 const content = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
 const desktop = readFileSync('app/coach/components/sections/CoachDesktopLayout.tsx', 'utf8')
 const mobile = readFileSync('app/coach/components/sections/CoachMobileLayout.tsx', 'utf8')

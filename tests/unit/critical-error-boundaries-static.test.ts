@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 const boundaries = [
   'app/error.tsx',
-  'app/coach/error.tsx',
-  'app/client/[id]/error.tsx',
+  'app/(application)/coach/error.tsx',
+  'app/(application)/client/[id]/error.tsx',
 ] as const
 const support = [
   'app/components/errors/DomainErrorBoundary.tsx',
@@ -33,8 +33,8 @@ describe('critical domain error boundary architecture', () => {
       expect(sources[path]).toContain('DomainErrorBoundary')
     }
     expect(sources['app/error.tsx']).toContain('domain="global"')
-    expect(sources['app/coach/error.tsx']).toContain('domain="coach"')
-    expect(sources['app/client/[id]/error.tsx']).toContain('domain="client-detail"')
+    expect(sources['app/(application)/coach/error.tsx']).toContain('domain="coach"')
+    expect(sources['app/(application)/client/[id]/error.tsx']).toContain('domain="client-detail"')
   })
 
   it('never exposes or logs the raw error contract', () => {

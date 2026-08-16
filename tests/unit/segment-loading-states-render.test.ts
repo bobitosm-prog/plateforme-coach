@@ -1,8 +1,8 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import ClientDetailLoading from '../../app/client/[id]/loading'
-import CoachLoading from '../../app/coach/loading'
+import ClientDetailLoading from '../../app/(application)/client/[id]/loading'
+import CoachLoading from '../../app/(application)/coach/loading'
 
 describe('important segment loading states', () => {
   it.each([

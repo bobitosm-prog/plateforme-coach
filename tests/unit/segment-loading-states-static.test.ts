@@ -2,8 +2,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const selected = [
-  'app/coach/loading.tsx',
-  'app/client/[id]/loading.tsx',
+  'app/(application)/coach/loading.tsx',
+  'app/(application)/client/[id]/loading.tsx',
 ] as const
 const sharedPath = 'app/components/loading/DashboardSegmentLoading.tsx'
 const e2ePath = 'e2e/performance-segment-loading.spec.ts'
@@ -30,7 +30,7 @@ describe('segment loading architecture', () => {
       'app/onboarding-fitness/loading.tsx',
       'app/onboarding-photo/loading.tsx',
       'app/onboarding-v2/loading.tsx',
-      'app/[locale]/loading.tsx',
+      'app/(marketing)/[locale]/loading.tsx',
     ]) expect(existsSync(path), path).toBe(false)
   })
 

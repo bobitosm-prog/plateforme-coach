@@ -8,7 +8,7 @@ vi.mock('next/navigation', () => ({ notFound: navigation.notFound }))
 import GuidePage, {
   generateMetadata,
   generateStaticParams,
-} from '../../app/[locale]/guides/[slug]/page'
+} from '../../app/(marketing)/[locale]/guides/[slug]/page'
 import { getAllGuides, getGuide } from '../../content/guides/guides'
 import sitemap from '../../app/sitemap'
 

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const files = [
-  'app/coach/page.tsx',
+  'app/(application)/coach/page.tsx',
   'app/coach/components/CoachPageContent.tsx',
   'app/coach/hooks/useCoachDashboard.ts',
   'app/coach/components/ClientsList.tsx',

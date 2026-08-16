@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8')
 const join = read('app/join/JoinPageContent.tsx')
 const invitationState = read('app/join/invitation-state.ts')
-const joinPage = read('app/join/page.tsx')
+const joinPage = read('app/(application)/join/page.tsx')
 const callback = read('app/auth/callback/route.ts')
 const login = read('app/login/LoginPageContent.tsx')
 const registerClient = read('app/register-client/RegisterClientContent.tsx')

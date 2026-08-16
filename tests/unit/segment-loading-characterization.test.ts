@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const rootPage = readFileSync('app/page.tsx', 'utf8')
+const rootPage = readFileSync('app/(application)/page.tsx', 'utf8')
 const coachPage = readFileSync('app/coach/components/CoachPageContent.tsx', 'utf8')
-const clientPage = readFileSync('app/client/[id]/page.tsx', 'utf8')
+const clientPage = readFileSync('app/(application)/client/[id]/page.tsx', 'utf8')
 const clientIsland = readFileSync('app/client/[id]/components/page/ClientDetailPageClient.tsx', 'utf8')
 const performanceSpec = readFileSync('e2e/performance-baseline.spec.ts', 'utf8')
 
