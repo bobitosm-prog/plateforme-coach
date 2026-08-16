@@ -14609,3 +14609,25 @@ validation du corpus réel n'est pas acquise.
 **Décision :** l'architecture est prête, mais aucune activation n'est
 autorisée. Aucun opt-in canonical n'est actif dans l'état audité. Ces audits
 n'ont introduit aucun changement runtime, commit applicatif ou push technique.
+
+## Entrée — 2026-08-16 — Phase 10.4 Unlock Conditions Report
+
+**Statut : `UNLOCK_PATH_DEFINED`.** Le chemin de sortie de
+`STAGING_NOT_READY` est désormais explicite sans modifier les seuils existants.
+
+**CI :** la transition exige au moins 150 runs primaires complets sur au moins
+7 jours UTC, un p95 strictement inférieur à 20 minutes, un flaky rate
+strictement inférieur à 2 %, aucun échec non résolu et aucune classification
+`UNKNOWN`. Le registre reste append-only et le statut demeure
+`CI_STABILITY_CANDIDATE` jusqu'à satisfaction simultanée de ces critères.
+
+**Corpus Training :** la validation exige au moins un template coach staging
+organique hors fixtures, puis un assessment read-only complet confirmant zéro
+mismatch critique, une projection UI identique et un fallback legacy maîtrisé.
+L'absence actuelle de corpus maintient `REAL_CORPUS_VALIDATION_PENDING`.
+
+**Décision :** aucune activation canonical ni aucun opt-in staging ne sont
+autorisés. Le monitoring CI, le traitement append-only, l'observation passive
+du corpus et l'assessment dès apparition d'une donnée réelle peuvent continuer
+en parallèle. Cette analyse n'introduit aucun changement runtime, mutation,
+commit applicatif ou push technique.

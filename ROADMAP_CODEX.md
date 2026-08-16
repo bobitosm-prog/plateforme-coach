@@ -909,10 +909,37 @@ Bloqueurs :
 - `CI_STABILITY_CANDIDATE` n'est pas encore confirmé statistiquement ;
 - `REAL_CORPUS_VALIDATION_PENDING` reste actif.
 
+#### 10.4 Unlock Conditions
+
+**Statut : `UNLOCK_PATH_DEFINED`**
+
+Bloqueurs actuels et conditions de levée :
+
+- CI — `CI_STABILITY_CANDIDATE` : au moins 150 runs primaires sur au moins
+  7 jours UTC, p95 strictement inférieur à 20 minutes, flaky rate strictement
+  inférieur à 2 %, zéro échec non résolu et zéro classification `UNKNOWN` ;
+- corpus — `REAL_CORPUS_VALIDATION_PENDING` : au moins un template coach
+  staging organique hors fixtures, assessment read-only complet, zéro mismatch
+  critique, projection UI identique et fallback legacy maîtrisé.
+
+Actions autorisées :
+
+- monitoring CI ;
+- traitement append-only des observations validées ;
+- observation passive du corpus ;
+- assessment dès l'apparition d'un corpus réel.
+
+Actions interdites :
+
+- activation canonical ;
+- opt-in staging ;
+- création de données artificielles ;
+- utilisation de données Production.
+
 ### Prochaine condition
 
 Toute future autorisation d'opt-in exige la résolution préalable de ces deux
-bloqueurs.
+bloqueurs. Le statut `STAGING_NOT_READY` est maintenu.
 
 ---
 
