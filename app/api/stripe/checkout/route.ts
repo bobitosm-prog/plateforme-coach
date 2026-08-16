@@ -65,6 +65,6 @@ export async function POST(req: NextRequest) {
       if (error.code === 'STRIPE_NOT_CONFIGURED' || error.code === 'SERVER_MISCONFIGURED') return audit.reject(response, { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'SERVER_MISCONFIGURED', status: 500 })
       return response
     }
-    return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'CHECKOUT_FAILED', status: 500 })
+    return audit.reject(NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 }), { event: 'PLATFORM_CHECKOUT_FAILED', domain: 'stripe', operation: 'POST /api/stripe/checkout', outcome: 'failed', reason: 'UPSTREAM_REJECTED', status: 500 })
   }
 }

@@ -63,7 +63,7 @@ afterAll(() => {
 describe('POST /api/stripe/coach-checkout — secured authorization', () => {
   it('returns 401 anonymously before Stripe or mutation', async () => { mocks.authGetUser.mockResolvedValue({ data: { user: null } }); const response = await POST(request()); expect(response.status).toBe(401); expectNoMutation() })
 
-  it('keeps the legacy checkout failure reason, status and body on an unexpected failure', async () => {
+  it('emits the canonical checkout failure reason without changing status or body', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const malformedRequest = new Request('http://localhost/api/stripe/coach-checkout', {
       method: 'POST',
@@ -74,7 +74,7 @@ describe('POST /api/stripe/coach-checkout — secured authorization', () => {
     const response = await POST(malformedRequest)
 
     expect(response.status).toBe(500)
-    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('CHECKOUT_FAILED')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('UPSTREAM_REJECTED')
     await expect(response.json()).resolves.toEqual({ error: 'Erreur lors de la création du paiement' })
     expectNoMutation()
   })

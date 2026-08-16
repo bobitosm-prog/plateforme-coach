@@ -91,7 +91,7 @@ describe('API error taxonomy', () => {
     expect(service).not.toContain("throw new CheckoutServiceError('PRICE_NOT_CONFIGURED')")
     expect(route).toContain("error.code === 'SERVER_MISCONFIGURED'")
     expect(route).toContain("reason: 'SERVER_MISCONFIGURED'")
-    expect(route).toContain("reason: 'CHECKOUT_FAILED'")
+    expect(route).toContain("reason: 'UPSTREAM_REJECTED'")
     for (const reason of CHECKOUT_CONFIGURATION_OPERATOR_REASONS) {
       expect(rollback).toContain(`\`${reason}\``)
       expect(taxonomy).toContain(`\`${reason}\``)
@@ -147,7 +147,7 @@ describe('API error taxonomy', () => {
     expect(isCheckoutFailureOperatorReason('UPSTREAM_UNAVAILABLE')).toBe(false)
   })
 
-  it('keeps both checkout producers legacy while failure contracts are dual-read', () => {
+  it('keeps failure contracts dual-read after both checkout producers become canonical', () => {
     const platformRoute = readFileSync('app/api/stripe/checkout/route.ts', 'utf8')
     const coachRoute = readFileSync('app/api/stripe/coach-checkout/route.ts', 'utf8')
     const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
@@ -156,8 +156,8 @@ describe('API error taxonomy', () => {
 
     for (const route of [platformRoute, coachRoute]) {
       expect(route).toContain(legacyResponse)
-      expect(route).toContain("reason: 'CHECKOUT_FAILED', status: 500")
-      expect(route).not.toContain("reason: 'UPSTREAM_REJECTED'")
+      expect(route).toContain("reason: 'UPSTREAM_REJECTED', status: 500")
+      expect(route).not.toContain("reason: 'CHECKOUT_FAILED'")
     }
     for (const reason of CHECKOUT_FAILURE_OPERATOR_REASONS) {
       expect(rollback).toContain(`\`${reason}\``)
@@ -165,7 +165,7 @@ describe('API error taxonomy', () => {
     }
     expect(rollback).toContain('Fenêtre dual-read échec checkout')
     expect(rollback).toContain('restent contractuellement `500`')
-    expect(taxonomy).toContain('ne doit jamais faire dériver leur statut HTTP historique `500` vers `502`')
+    expect(taxonomy).toContain('ne fait pas dériver leur statut HTTP historique `500` vers `502`')
   })
 
   it('is coherent with ApiFailure', () => {
