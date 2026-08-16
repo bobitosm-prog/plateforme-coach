@@ -74,7 +74,6 @@ describe('API error taxonomy', () => {
   it('maps principal legacy codes to known canonical codes', () => {
     expect(mapLegacyApiErrorCode('IDENTITY_MISMATCH')).toBe('STRIPE_IDENTITY_INVALID')
     expect(mapLegacyApiErrorCode('PROFILE_UNAVAILABLE')).toBe('RESOURCE_NOT_FOUND')
-    expect(mapLegacyApiErrorCode('SIGNATURE_INVALID')).toBe('STRIPE_SIGNATURE_INVALID')
     expect(mapLegacyApiErrorCode('PRICE_NOT_CONFIGURED')).toBe('SERVER_MISCONFIGURED')
     for (const canonical of Object.values(LEGACY_API_ERROR_CODES)) expect(API_ERROR_CODES).toContain(canonical)
   })
@@ -83,8 +82,6 @@ describe('API error taxonomy', () => {
     expect(LEGACY_API_ERROR_CODES).toEqual({
       IDENTITY_MISMATCH: 'STRIPE_IDENTITY_INVALID',
       PROFILE_UNAVAILABLE: 'RESOURCE_NOT_FOUND',
-      SIGNATURE_REQUIRED: 'STRIPE_SIGNATURE_INVALID',
-      SIGNATURE_INVALID: 'STRIPE_SIGNATURE_INVALID',
       PRICE_NOT_CONFIGURED: 'SERVER_MISCONFIGURED',
       CHECKOUT_FAILED: 'UPSTREAM_REJECTED',
       INVITATION_CONSUMPTION_FAILED: 'PERSISTENCE_FAILED',
@@ -92,6 +89,10 @@ describe('API error taxonomy', () => {
     expect(getApiErrorDescriptor('WEBHOOK_PROCESSING_FAILED')).toMatchObject({
       status: 503,
       retry: 'server',
+      domains: ['stripe'],
+    })
+    expect(getApiErrorDescriptor('STRIPE_SIGNATURE_INVALID')).toMatchObject({
+      status: 400,
       domains: ['stripe'],
     })
   })

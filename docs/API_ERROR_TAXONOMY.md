@@ -84,7 +84,6 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 |---|---|---|
 | `IDENTITY_MISMATCH` | `STRIPE_IDENTITY_INVALID` | dual-read opérateur borné ; statut et corps Connect inchangés |
 | `PROFILE_UNAVAILABLE` | `RESOURCE_NOT_FOUND` | dual-read opérateur borné ; conserver le `403` historique et ne rien révéler |
-| `SIGNATURE_REQUIRED`, `SIGNATURE_INVALID` | `STRIPE_SIGNATURE_INVALID` | conserver le statut webhook actuel |
 | `PRICE_NOT_CONFIGURED` | `SERVER_MISCONFIGURED` | dual-read opérateur borné ; message public générique |
 | `CHECKOUT_FAILED` | `UPSTREAM_REJECTED` | dual-read opérateur borné ; conserver le `500` et ne pas exposer Stripe |
 | `INVITATION_CONSUMPTION_FAILED` | `PERSISTENCE_FAILED` | dual-read consommateur borné ; invitation publique inchangée |
