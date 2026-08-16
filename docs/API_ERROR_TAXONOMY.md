@@ -94,7 +94,7 @@ Les codes déjà utilisés comme raisons de journaux (`AUTH_REQUIRED`, `ROLE_FOR
 
 Pour la configuration du checkout plateforme, le contrat consommateur temporaire accepte exactement `PRICE_NOT_CONFIGURED` et `SERVER_MISCONFIGURED`. Le producteur émet désormais `SERVER_MISCONFIGURED`, sans modifier le statut `500` ni le corps `{ error: "Checkout unavailable" }`. `PRICE_NOT_CONFIGURED` reste accepté pendant au moins une release complète observée et jusqu'à expiration de la fenêtre de rollback.
 
-Pour Stripe Connect, le contrat opérateur temporaire accepte exactement les paires `IDENTITY_MISMATCH` ou `STRIPE_IDENTITY_INVALID`, et `PROFILE_UNAVAILABLE` ou `RESOURCE_NOT_FOUND`. Le producteur continue d'émettre les deux reasons legacy dans cette fenêtre de coexistence. Leur future bascule canonique doit conserver les corps publics actuels et ne doit jamais faire dériver le statut HTTP historique `403` vers `404`, même si le descriptor générique de `RESOURCE_NOT_FOUND` vaut `404`. Le dual-read reste requis pendant au moins une release complète observée après la bascule et jusqu'à expiration de la fenêtre de rollback.
+Pour Stripe Connect, le contrat opérateur temporaire accepte exactement les paires `IDENTITY_MISMATCH` ou `STRIPE_IDENTITY_INVALID`, et `PROFILE_UNAVAILABLE` ou `RESOURCE_NOT_FOUND`. Le producteur émet désormais les reasons canoniques, sans modifier les corps publics actuels et sans faire dériver le statut HTTP historique `403` vers `404`, même si le descriptor générique de `RESOURCE_NOT_FOUND` vaut `404`. Le dual-read reste requis pendant au moins une release complète observée après la bascule et jusqu'à expiration de la fenêtre de rollback.
 
 ## Migration route par route
 

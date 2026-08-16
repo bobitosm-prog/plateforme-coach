@@ -1,7 +1,7 @@
 export type ConnectErrorCode =
   | 'INVALID_REQUEST'
-  | 'IDENTITY_MISMATCH'
-  | 'PROFILE_UNAVAILABLE'
+  | 'STRIPE_IDENTITY_INVALID'
+  | 'RESOURCE_NOT_FOUND'
   | 'ROLE_FORBIDDEN'
   | 'STRIPE_NOT_CONFIGURED'
   | 'SERVER_MISCONFIGURED'
@@ -58,8 +58,8 @@ export function assertCoachAuthority(input: {
   requestedCoachId: string
   profile: ConnectCoachProfile | null
 }): ConnectCoachProfile {
-  if (input.requestedCoachId !== input.authenticatedUserId) throw new ConnectServiceError('IDENTITY_MISMATCH')
-  if (!input.profile) throw new ConnectServiceError('PROFILE_UNAVAILABLE')
+  if (input.requestedCoachId !== input.authenticatedUserId) throw new ConnectServiceError('STRIPE_IDENTITY_INVALID')
+  if (!input.profile) throw new ConnectServiceError('RESOURCE_NOT_FOUND')
   if (input.profile.role !== 'coach') throw new ConnectServiceError('ROLE_FORBIDDEN')
   return input.profile
 }

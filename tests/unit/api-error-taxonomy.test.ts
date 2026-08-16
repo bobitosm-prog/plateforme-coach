@@ -102,17 +102,19 @@ describe('API error taxonomy', () => {
     expect(isStripeConnectOperatorReason('ROLE_FORBIDDEN')).toBe(false)
   })
 
-  it('keeps Stripe Connect producers legacy while operator contracts are dual-read', () => {
+  it('keeps operator contracts dual-read after Stripe Connect producers become canonical', () => {
     const route = readFileSync('app/api/stripe/connect/route.ts', 'utf8')
     const service = readFileSync('lib/billing/connect/service.ts', 'utf8')
     const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
     const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
 
-    expect(route).toContain("throw new ConnectServiceError('IDENTITY_MISMATCH')")
-    expect(route).toContain("case 'IDENTITY_MISMATCH': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })")
-    expect(route).toContain("case 'PROFILE_UNAVAILABLE': return NextResponse.json({ error: 'Profile not found' }, { status: 403 })")
-    expect(service).toContain("throw new ConnectServiceError('IDENTITY_MISMATCH')")
-    expect(service).toContain("throw new ConnectServiceError('PROFILE_UNAVAILABLE')")
+    expect(route).toContain("throw new ConnectServiceError('STRIPE_IDENTITY_INVALID')")
+    expect(route).toContain("case 'STRIPE_IDENTITY_INVALID': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })")
+    expect(route).toContain("case 'RESOURCE_NOT_FOUND': return NextResponse.json({ error: 'Profile not found' }, { status: 403 })")
+    expect(service).toContain("throw new ConnectServiceError('STRIPE_IDENTITY_INVALID')")
+    expect(service).toContain("throw new ConnectServiceError('RESOURCE_NOT_FOUND')")
+    expect(route).not.toContain("throw new ConnectServiceError('IDENTITY_MISMATCH')")
+    expect(service).not.toContain("throw new ConnectServiceError('PROFILE_UNAVAILABLE')")
 
     for (const reasons of STRIPE_CONNECT_OPERATOR_REASON_PAIRS) {
       for (const reason of reasons) {
@@ -122,7 +124,7 @@ describe('API error taxonomy', () => {
     }
     expect(rollback).toContain('Fenêtre dual-read Stripe Connect')
     expect(rollback).toContain('restent contractuellement `403`')
-    expect(taxonomy).toContain('ne doit jamais faire dériver le statut HTTP historique `403` vers `404`')
+    expect(taxonomy).toContain('sans faire dériver le statut HTTP historique `403` vers `404`')
   })
 
   it('is coherent with ApiFailure', () => {

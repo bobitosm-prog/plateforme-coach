@@ -159,7 +159,7 @@ describe('POST /api/stripe/connect — authorization', () => {
     const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(403)
-    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('IDENTITY_MISMATCH')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('STRIPE_IDENTITY_INVALID')
     await expect(response.json()).resolves.toEqual({ error: 'Forbidden' })
     expect(mocks.authFrom).not.toHaveBeenCalled()
     expectNoExternalMutation()
@@ -181,7 +181,7 @@ describe('POST /api/stripe/connect — authorization', () => {
     const response = await POST(request({ coachId: OWNER_ID }))
 
     expect(response.status).toBe(403)
-    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('PROFILE_UNAVAILABLE')
+    expect(JSON.parse(String(warn.mock.calls[0][0])).reason).toBe('RESOURCE_NOT_FOUND')
     await expect(response.json()).resolves.toEqual({ error: 'Profile not found' })
     expectNoExternalMutation()
   })

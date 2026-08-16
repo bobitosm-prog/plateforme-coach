@@ -37,7 +37,7 @@ describe('Stripe Connect authority', () => {
       authenticatedUserId: COACH_ID,
       requestedCoachId: '00000000-0000-4000-8000-000000000002',
       profile: { role: 'coach', email: null, stripeAccountId: null },
-    })).toThrowError(new ConnectServiceError('IDENTITY_MISMATCH'))
+    })).toThrowError(new ConnectServiceError('STRIPE_IDENTITY_INVALID'))
   })
 
   it.each(['client', 'invited', 'admin'])("rejects the non-coach role '%s'", role => {
@@ -53,7 +53,7 @@ describe('Stripe Connect authority', () => {
       authenticatedUserId: COACH_ID,
       requestedCoachId: COACH_ID,
       profile: null,
-    })).toThrowError(new ConnectServiceError('PROFILE_UNAVAILABLE'))
+    })).toThrowError(new ConnectServiceError('RESOURCE_NOT_FOUND'))
   })
 })
 

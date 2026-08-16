@@ -14,8 +14,8 @@ import {
 function connectError(error: ConnectServiceError) {
   switch (error.code) {
     case 'INVALID_REQUEST': return NextResponse.json({ error: 'coachId required' }, { status: 400 })
-    case 'IDENTITY_MISMATCH': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    case 'PROFILE_UNAVAILABLE': return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
+    case 'STRIPE_IDENTITY_INVALID': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    case 'RESOURCE_NOT_FOUND': return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
     case 'ROLE_FORBIDDEN': return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     case 'STRIPE_NOT_CONFIGURED': return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
     case 'PROVIDER_ERROR': return NextResponse.json({
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       return audit.reject(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: 'AUTH_REQUIRED', status: 401 })
     }
     const requestedCoachId = readRequestedCoachId(await req.json())
-    if (requestedCoachId !== user.id) throw new ConnectServiceError('IDENTITY_MISMATCH')
+    if (requestedCoachId !== user.id) throw new ConnectServiceError('STRIPE_IDENTITY_INVALID')
     const { data: rawProfile, error: profileError } = await supabaseAuth
       .from('profiles')
       .select('role, email, stripe_account_id')
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof ConnectServiceError) {
       const response = connectError(error)
-      if (error.code === 'IDENTITY_MISMATCH' || error.code === 'PROFILE_UNAVAILABLE' || error.code === 'ROLE_FORBIDDEN') {
+      if (error.code === 'STRIPE_IDENTITY_INVALID' || error.code === 'RESOURCE_NOT_FOUND' || error.code === 'ROLE_FORBIDDEN') {
         return audit.reject(response, { event: 'STRIPE_CONNECT_REJECTED', domain: 'stripe', operation: 'POST /api/stripe/connect', outcome: 'rejected', reason: error.code, status: 403 })
       }
       return response
