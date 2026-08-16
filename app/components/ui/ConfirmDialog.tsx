@@ -12,6 +12,7 @@ type Props = {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  confirmDisabled?: boolean;
   variant?: "danger" | "default";
   onConfirm: () => void;
   onCancel: () => void;
@@ -98,6 +99,7 @@ export default function ConfirmDialog({
   message,
   confirmLabel = "Confirmer",
   cancelLabel = "Annuler",
+  confirmDisabled = false,
   variant = "default",
   onConfirm,
   onCancel,
@@ -267,6 +269,7 @@ export default function ConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
+            disabled={confirmDisabled}
             style={{
               background: isDanger ? RED : GOLD,
               border: "none",
@@ -278,7 +281,8 @@ export default function ConfirmDialog({
               fontWeight: 800,
               letterSpacing: "0.04em",
               textTransform: "uppercase",
-              cursor: "pointer",
+              cursor: confirmDisabled ? "not-allowed" : "pointer",
+              opacity: confirmDisabled ? 0.65 : 1,
             }}
           >
             {confirmLabel}

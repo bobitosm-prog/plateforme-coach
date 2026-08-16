@@ -1,11 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { RailOverlay } from '../../ui/RailOverlay'
+import ConfirmDialog from '../../ui/ConfirmDialog'
 import { useTranslations } from 'next-intl'
 import { Crown, UserMinus } from 'lucide-react'
-import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../../../lib/design-tokens'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import { BG_CARD, BORDER, GOLD, GREEN, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_ALT, FONT_BODY } from '../../../../lib/design-tokens'
 
-export default function CoachSection({ supabase, session, coachId }: { supabase: any; session: any; coachId: string | null }) {
+export default function CoachSection({ supabase, session, coachId }: { supabase: SupabaseClient; session: Session; coachId: string | null }) {
   const t = useTranslations('profile.coach')
   const [coachName, setCoachName] = useState<string | null>(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -13,17 +14,22 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
 
   useEffect(() => {
     if (!coachId) return
-    supabase.from('active_related_profiles').select('full_name').eq('id', coachId).single().then(({ data }: any) => {
+    supabase.from('active_related_profiles').select('full_name').eq('id', coachId).single().then(({ data }) => {
       if (data?.full_name) setCoachName(data.full_name)
     })
-  }, [coachId])
+  }, [coachId, supabase])
 
   async function leaveCoach() {
     if (!coachId || !session?.user?.id) return
     setLeaving(true)
-    await fetch('/api/coach/disconnect', { method: 'POST' })
-    setLeaving(false)
-    window.location.reload()
+    let requestCompleted = false
+    try {
+      await fetch('/api/coach/disconnect', { method: 'POST' })
+      requestCompleted = true
+    } finally {
+      setLeaving(false)
+    }
+    if (requestCompleted) window.location.reload()
   }
 
   return (
@@ -48,18 +54,17 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
           {t('noCoach')}
         </div>
       )}
-      {showLeaveModal && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', color: TEXT_PRIMARY, margin: '0 0 12px' }}>{t('changeModal.title')}</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY, fontWeight: 300 }}>{t('changeModal.description')}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={leaveCoach} disabled={leaving} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', border: `1px solid ${RED}`, borderRadius: 12, color: RED, fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>{leaving ? t('changeModal.leaving') : t('changeModal.leaveButton')}</button>
-              <button onClick={() => setShowLeaveModal(false)} style={{ width: '100%', padding: '12px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontSize: '0.85rem', cursor: 'pointer' }}>{t('changeModal.cancel')}</button>
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
+      <ConfirmDialog
+        open={showLeaveModal}
+        title={t('changeModal.title')}
+        message={t('changeModal.description')}
+        confirmLabel={leaving ? t('changeModal.leaving') : t('changeModal.leaveButton')}
+        cancelLabel={t('changeModal.cancel')}
+        confirmDisabled={leaving}
+        variant="danger"
+        onConfirm={leaveCoach}
+        onCancel={() => setShowLeaveModal(false)}
+      />
     </div>
   )
 }

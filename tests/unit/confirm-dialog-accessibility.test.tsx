@@ -96,7 +96,7 @@ type DialogTreeProps = {
   onClick: () => void
   children?: ReactNode
 }
-type ButtonTreeProps = { onClick: () => void; children?: ReactNode }
+type ButtonTreeProps = { onClick: () => void; disabled?: boolean; children?: ReactNode }
 
 function createProps(overrides: Partial<DialogProps> = {}): DialogProps {
   return {
@@ -178,6 +178,15 @@ describe('ConfirmDialog accessibility', () => {
 
   it('uses alertdialog for a danger confirmation', () => {
     expect(renderInstance(createProps({ variant: 'danger' })).tree.props.role).toBe('alertdialog')
+  })
+
+  it('can disable only the confirm action without changing the dialog contract', () => {
+    const instance = renderInstance(createProps({ confirmDisabled: true }))
+    const buttons = findButtons(instance.tree)
+
+    expect(buttons[0].props.disabled).toBeUndefined()
+    expect(buttons[1].props.disabled).toBe(true)
+    expect(instance.tree.props).toMatchObject({ role: 'dialog', 'aria-modal': 'true' })
   })
 
   it('focuses cancel, traps Tab in both directions, closes on Escape and restores focus', () => {
