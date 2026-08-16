@@ -1,11 +1,12 @@
 'use client'
-import React from 'react'
+import React, { useId, useRef, type KeyboardEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, CheckCircle, Dumbbell, Loader2, Moon, Search, Sparkles, X } from 'lucide-react'
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog'
 import { DAYS } from '../../hooks/useClientDetail'
 import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS, MUSCLE_GROUPS_FILTER as MUSCLE_FILTERS } from '@/lib/design-tokens'
 import type { ClientDetailState, ClientProgramTemplate } from './client-detail-page-types'
+import ClientProfileEditDialogShell from './ClientProfileEditDialogShell'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 0,
@@ -13,9 +14,11 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', transition: 'border-color 200ms ease',
 }
 
-function EditField({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{display:'block',fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:TEXT_MUTED,marginBottom:6,letterSpacing:'2px',textTransform:'uppercase'}}>{label}</label>{children}</div>
+function EditField({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
+  return <div><label htmlFor={htmlFor} style={{display:'block',fontFamily:FONT_ALT,fontSize:'11px',fontWeight:700,color:TEXT_MUTED,marginBottom:6,letterSpacing:'2px',textTransform:'uppercase'}}>{label}</label>{children}</div>
 }
+
+const EDIT_TABS = ['info', 'metrics', 'status'] as const
 
 interface ClientDetailPageOverlaysProps {
   detail: ClientDetailState
@@ -25,36 +28,58 @@ interface ClientDetailPageOverlaysProps {
 
 export default function ClientDetailPageOverlays({ detail: h, pendingTemplate, onClearPendingTemplate }: ClientDetailPageOverlaysProps) {
   const profile = h.profile!
+  const reactId = useId()
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const fieldId = (field: string) => `client-profile-edit-${field}-${reactId}`
+  const tabId = (tab: typeof EDIT_TABS[number]) => `client-profile-edit-tab-${tab}-${reactId}`
+  const panelId = (tab: typeof EDIT_TABS[number]) => `client-profile-edit-panel-${tab}-${reactId}`
+  const labels = { info:'Informations', metrics:'Métriques', status:'Statut & Objectif' }
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, tab: typeof EDIT_TABS[number]) {
+    const currentIndex = EDIT_TABS.indexOf(tab)
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % EDIT_TABS.length
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + EDIT_TABS.length) % EDIT_TABS.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = EDIT_TABS.length - 1
+    if (nextIndex === null) return
+    event.preventDefault()
+    const nextTab = EDIT_TABS[nextIndex]
+    h.setEditTab(nextTab)
+    document.getElementById(tabId(nextTab))?.focus()
+  }
+
   return (
     <>
       {/* EDIT MODAL */}
-      <div className={`modal-overlay${h.editOpen?' open':''}`} onClick={()=>h.setEditOpen(false)}>
-        <div className="modal" style={{maxWidth:560,padding:0,overflow:'hidden'}} onClick={e=>e.stopPropagation()}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderBottom:`1px solid ${BORDER}`}}>
-            <h2 style={{fontFamily:FONT_DISPLAY,fontSize:'1.6rem',fontWeight:400,margin:0,color:TEXT_PRIMARY,letterSpacing:'1px',textTransform:'uppercase'}}>Modifier le profil</h2>
-            <button style={{background:BG_CARD_2,border:'none',borderRadius:0,width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}} onClick={()=>h.setEditOpen(false)}>
-              <X size={16} color={TEXT_MUTED} strokeWidth={2}/>
-            </button>
+      <ClientProfileEditDialogShell open={h.editOpen} title="Modifier le profil" initialFocusRef={nameInputRef} onClose={()=>h.setEditOpen(false)}>
+          <div role="tablist" aria-label="Sections du profil" style={{display:'flex',gap:0,borderBottom:`1px solid ${BORDER}`,background:BG_BASE}}>
+            {EDIT_TABS.map(tab => (
+              <button
+                key={tab}
+                type="button"
+                id={tabId(tab)}
+                role="tab"
+                aria-selected={h.editTab===tab}
+                aria-controls={panelId(tab)}
+                tabIndex={h.editTab===tab ? 0 : -1}
+                onClick={()=>h.setEditTab(tab)}
+                onKeyDown={event=>handleTabKeyDown(event, tab)}
+                style={{flex:1,padding:'12px 8px',border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',transition:'all 150ms ease',background:'transparent',color:h.editTab===tab?GOLD:TEXT_MUTED,borderBottom:h.editTab===tab?`2px solid ${GOLD}`:'2px solid transparent',marginBottom:-1}}
+              >
+                {labels[tab]}
+              </button>
+            ))}
           </div>
-          <div style={{display:'flex',gap:0,borderBottom:`1px solid ${BORDER}`,background:BG_BASE}}>
-            {(['info','metrics','status'] as const).map(tab => {
-              const labels = { info:'Informations', metrics:'Métriques', status:'Statut & Objectif' }
-              return (
-                <button key={tab} onClick={()=>h.setEditTab(tab)} style={{flex:1,padding:'12px 8px',border:'none',cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.82rem',fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',transition:'all 150ms ease',background:'transparent',color:h.editTab===tab?GOLD:TEXT_MUTED,borderBottom:h.editTab===tab?`2px solid ${GOLD}`:'2px solid transparent',marginBottom:-1}}>
-                  {labels[tab]}
-                </button>
-              )
-            })}
-          </div>
-          <div style={{padding:'20px 24px',display:'flex',flexDirection:'column',gap:14,maxHeight:'60vh',overflowY:'auto'}}>
+          <div id={panelId(h.editTab)} role="tabpanel" aria-labelledby={tabId(h.editTab)} style={{padding:'20px 24px',display:'flex',flexDirection:'column',gap:14,maxHeight:'60vh',overflowY:'auto'}}>
             {h.editTab === 'info' && (<>
-              <EditField label="Nom complet"><input value={h.editName} onChange={e=>h.setEditName(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
-              <EditField label="Email"><input type="email" value={h.editEmail} onChange={e=>h.setEditEmail(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
-              <EditField label="Téléphone"><input type="tel" value={h.editPhone} onChange={e=>h.setEditPhone(e.target.value)} placeholder="+33 6 00 00 00 00" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+              <EditField label="Nom complet" htmlFor={fieldId('name')}><input ref={nameInputRef} id={fieldId('name')} value={h.editName} onChange={e=>h.setEditName(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+              <EditField label="Email" htmlFor={fieldId('email')}><input id={fieldId('email')} type="email" value={h.editEmail} onChange={e=>h.setEditEmail(e.target.value)} style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+              <EditField label="Téléphone" htmlFor={fieldId('phone')}><input id={fieldId('phone')} type="tel" value={h.editPhone} onChange={e=>h.setEditPhone(e.target.value)} placeholder="+33 6 00 00 00 00" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                <EditField label="Date de naissance"><input type="date" value={h.editBirth} onChange={e=>h.setEditBirth(e.target.value)} style={{...inputStyle,colorScheme:'dark'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor=GOLD}} onBlur={e=>{e.target.style.borderColor=BORDER}}/></EditField>
-                <EditField label="Genre">
-                  <select value={h.editGender} onChange={e=>h.setEditGender(e.target.value)} style={{...inputStyle,appearance:'none',cursor:'pointer'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor=GOLD}} onBlur={e=>{e.target.style.borderColor=BORDER}}>
+                <EditField label="Date de naissance" htmlFor={fieldId('birth')}><input id={fieldId('birth')} type="date" value={h.editBirth} onChange={e=>h.setEditBirth(e.target.value)} style={{...inputStyle,colorScheme:'dark'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor=GOLD}} onBlur={e=>{e.target.style.borderColor=BORDER}}/></EditField>
+                <EditField label="Genre" htmlFor={fieldId('gender')}>
+                  <select id={fieldId('gender')} value={h.editGender} onChange={e=>h.setEditGender(e.target.value)} style={{...inputStyle,appearance:'none',cursor:'pointer'} as React.CSSProperties} onFocus={e=>{e.target.style.borderColor=GOLD}} onBlur={e=>{e.target.style.borderColor=BORDER}}>
                     <option value="">Non précisé</option><option value="homme">Homme</option><option value="femme">Femme</option><option value="autre">Autre</option>
                   </select>
                 </EditField>
@@ -62,10 +87,10 @@ export default function ClientDetailPageOverlays({ detail: h, pendingTemplate, o
             </>)}
             {h.editTab === 'metrics' && (<>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                <EditField label="Poids actuel (kg)"><input type="number" step="0.1" value={h.editWeight} onChange={e=>h.setEditWeight(e.target.value)} placeholder="70" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
-                <EditField label="Taille (cm)"><input type="number" step="1" value={h.editHeight} onChange={e=>h.setEditHeight(e.target.value)} placeholder="175" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
-                <EditField label="Poids cible (kg)"><input type="number" step="0.1" value={h.editTargetW} onChange={e=>h.setEditTargetW(e.target.value)} placeholder="65" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
-                <EditField label="% Graisse corporelle"><input type="number" step="0.1" value={h.editBodyFat} onChange={e=>h.setEditBodyFat(e.target.value)} placeholder="20" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+                <EditField label="Poids actuel (kg)" htmlFor={fieldId('weight')}><input id={fieldId('weight')} type="number" step="0.1" value={h.editWeight} onChange={e=>h.setEditWeight(e.target.value)} placeholder="70" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+                <EditField label="Taille (cm)" htmlFor={fieldId('height')}><input id={fieldId('height')} type="number" step="1" value={h.editHeight} onChange={e=>h.setEditHeight(e.target.value)} placeholder="175" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+                <EditField label="Poids cible (kg)" htmlFor={fieldId('target-weight')}><input id={fieldId('target-weight')} type="number" step="0.1" value={h.editTargetW} onChange={e=>h.setEditTargetW(e.target.value)} placeholder="65" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
+                <EditField label="% Graisse corporelle" htmlFor={fieldId('body-fat')}><input id={fieldId('body-fat')} type="number" step="0.1" value={h.editBodyFat} onChange={e=>h.setEditBodyFat(e.target.value)} placeholder="20" style={inputStyle} onFocus={e=>{e.target.style.borderColor=GOLD;e.target.style.boxShadow=`0 0 0 3px ${GOLD_DIM}`}} onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.boxShadow='none'}}/></EditField>
               </div>
               {h.editWeight && h.editHeight && (() => {
                 const bmi = (parseFloat(h.editWeight) / ((parseFloat(h.editHeight)/100)**2)).toFixed(1)
@@ -80,28 +105,27 @@ export default function ClientDetailPageOverlays({ detail: h, pendingTemplate, o
               })()}
             </>)}
             {h.editTab === 'status' && (<>
-              <EditField label="Statut">
+              <div role="group" aria-label="Statut">
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
                   {[{val:'active',label:'Actif',color:GOLD},{val:'warning',label:'À relancer',color:GOLD},{val:'inactive',label:'Inactif',color:TEXT_MUTED}].map(({val,label,color})=>(
-                    <button key={val} onClick={()=>h.setEditStatus(val)} style={{padding:'10px 8px',borderRadius:0,border:`2px solid ${h.editStatus===val?color:BORDER}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.85rem',fontWeight:700,background:h.editStatus===val?`${color}20`:'transparent',color:h.editStatus===val?color:TEXT_MUTED,transition:'all 150ms ease'}}>{label}</button>
+                    <button type="button" key={val} aria-pressed={h.editStatus===val} onClick={()=>h.setEditStatus(val)} style={{padding:'10px 8px',borderRadius:0,border:`2px solid ${h.editStatus===val?color:BORDER}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.85rem',fontWeight:700,background:h.editStatus===val?`${color}20`:'transparent',color:h.editStatus===val?color:TEXT_MUTED,transition:'all 150ms ease'}}>{label}</button>
                   ))}
                 </div>
-              </EditField>
-              <EditField label="Objectif">
+              </div>
+              <div role="group" aria-label="Objectif">
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8}}>
                   {[{val:'perte_poids',label:'Perte de poids',icon:'📉'},{val:'prise_masse',label:'Prise de masse',icon:'💪'},{val:'maintien',label:'Maintien',icon:'⚖️'},{val:'performance',label:'Performance',icon:'🏆'}].map(({val,label,icon})=>(
-                    <button key={val} onClick={()=>h.setEditObj(val)} style={{padding:'12px 10px',borderRadius:0,border:`2px solid ${h.editObj===val?GOLD:BORDER}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.85rem',fontWeight:700,background:h.editObj===val?GOLD_DIM:'transparent',color:h.editObj===val?GOLD:TEXT_MUTED,transition:'all 150ms ease',display:'flex',alignItems:'center',gap:8}}><span>{icon}</span>{label}</button>
+                    <button type="button" key={val} aria-pressed={h.editObj===val} onClick={()=>h.setEditObj(val)} style={{padding:'12px 10px',borderRadius:0,border:`2px solid ${h.editObj===val?GOLD:BORDER}`,cursor:'pointer',fontFamily:FONT_ALT,fontSize:'0.85rem',fontWeight:700,background:h.editObj===val?GOLD_DIM:'transparent',color:h.editObj===val?GOLD:TEXT_MUTED,transition:'all 150ms ease',display:'flex',alignItems:'center',gap:8}}><span aria-hidden="true">{icon}</span>{label}</button>
                   ))}
                 </div>
-              </EditField>
+              </div>
             </>)}
           </div>
           <div style={{display:'flex',gap:10,padding:'16px 24px',borderTop:`1px solid ${BORDER}`}}>
             <button className="btn-secondary" style={{flex:1,justifyContent:'center'}} onClick={()=>h.setEditOpen(false)}>Annuler</button>
             <button className="btn-primary" style={{flex:1,justifyContent:'center'}} onClick={h.saveEdit}><Check size={14} strokeWidth={2.5}/>Enregistrer</button>
           </div>
-        </div>
-      </div>
+      </ClientProfileEditDialogShell>
 
       {/* ── EXERCISE DB SEARCH MODAL ── */}
       <AnimatePresence>
