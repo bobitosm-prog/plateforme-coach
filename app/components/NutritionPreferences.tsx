@@ -3,9 +3,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNutritionGoals } from '../hooks/nutrition'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
-import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts } from '../../lib/design-tokens'
+import { ACTIVITY_LEVELS, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
+import {
+  calculateAutomaticCalorieMacroTargets,
+  type CalorieMacroObjective,
+} from '../../lib/nutrition/calorie-macro-targets'
 
 // ─── Constants ───
 
@@ -17,7 +21,7 @@ const DIET_IDS = ['omnivore', 'vegetarian', 'vegan', 'gluten_free', 'lactose_fre
 const ALLERGY_IDS = ['gluten', 'lactose', 'eggs', 'tree_nuts', 'peanuts', 'soy', 'fish', 'shellfish', 'sesame'] as const
 
 type MacroMode = 'auto' | 'manual' | 'ratio'
-type ObjectiveType = 'cut' | 'maintain' | 'bulk'
+type ObjectiveType = CalorieMacroObjective
 
 // ─── Helpers ───
 
@@ -97,34 +101,22 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     return Math.floor((Date.now() - new Date(bd).getTime()) / 31557600000)
   }, [profile?.birth_date])
 
-  // ─── BMR & TDEE ───
-  const bmr = useMemo(() => {
-    if (!weight || !height || !age) return 0
-    return Math.round(calcMifflinStJeor(weight, height, age, gender))
-  }, [weight, height, age, gender])
-
-  const actMult = ACTIVITY_LEVELS.find(l => l.id === activityLevel)?.mult || 1.55
-  const tdee = Math.round(bmr * actMult)
-
-  // ─── Objective Calories ───
-  const objectiveKcal = useMemo(() => {
-    if (!tdee) return 0
-    if (objective === 'maintain') return tdee
-    return tdee + adjustment
-  }, [tdee, objective, adjustment])
-
-  // ─── Auto Macros ───
-  const autoMacros = useMemo(() => {
-    if (!objectiveKcal || !weight) return { protein: 0, carbs: 0, fat: 0 }
-    let protMultiplier = 2.0
-    let fatPct = 0.30
-    if (objective === 'cut') { protMultiplier = 2.4; fatPct = 0.25 }
-    else if (objective === 'bulk') { protMultiplier = 2.2; fatPct = 0.25 }
-    const protein = Math.round(protMultiplier * weight)
-    const fat = Math.round((objectiveKcal * fatPct) / 9)
-    const carbs = Math.round((objectiveKcal - protein * 4 - fat * 9) / 4)
-    return { protein, carbs: Math.max(carbs, 0), fat }
-  }, [objectiveKcal, weight, objective])
+  // ─── Automatic calorie and macro targets ───
+  const automaticTargets = useMemo(() => calculateAutomaticCalorieMacroTargets({
+    gender,
+    age,
+    height,
+    weight,
+    activityLevel,
+    objective,
+    calorieAdjustment: adjustment,
+  }), [gender, age, height, weight, activityLevel, objective, adjustment])
+  const { bmr, tdee, calorieTarget: objectiveKcal } = automaticTargets
+  const autoMacros = useMemo(() => ({
+    protein: automaticTargets.protein,
+    carbs: automaticTargets.carbs,
+    fat: automaticTargets.fat,
+  }), [automaticTargets])
 
   // ─── Ratio Macros ───
   const ratioMacros = useMemo(() => {

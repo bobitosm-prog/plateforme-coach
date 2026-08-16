@@ -2,6 +2,9 @@
 // Single source of truth. Change ONE value → applies EVERYWHERE.
 
 import type React from 'react'
+import { ACTIVITY_MULTIPLIERS } from './nutrition/calorie-macro-targets'
+
+export { calcMifflinStJeor } from './nutrition/calorie-macro-targets'
 
 // ══════════════════════════════════════════
 // COLORS
@@ -398,11 +401,11 @@ export const MEAL_TYPES = [
 ]
 
 export const ACTIVITY_LEVELS = [
-  { id: 'sedentary', label: 'Sédentaire', sub: 'Bureau, peu/pas de sport', mult: 1.2 },
-  { id: 'light', label: 'Légèrement actif', sub: '1-3 séances/semaine', mult: 1.375 },
-  { id: 'moderate', label: 'Modérément actif', sub: '3-5 séances/semaine', mult: 1.55 },
-  { id: 'active', label: 'Très actif', sub: '6-7 séances/semaine', mult: 1.725 },
-  { id: 'extreme', label: 'Extrêmement actif', sub: 'Athlète / 2x/jour', mult: 1.9 },
+  { id: 'sedentary', label: 'Sédentaire', sub: 'Bureau, peu/pas de sport', mult: ACTIVITY_MULTIPLIERS.sedentary },
+  { id: 'light', label: 'Légèrement actif', sub: '1-3 séances/semaine', mult: ACTIVITY_MULTIPLIERS.light },
+  { id: 'moderate', label: 'Modérément actif', sub: '3-5 séances/semaine', mult: ACTIVITY_MULTIPLIERS.moderate },
+  { id: 'active', label: 'Très actif', sub: '6-7 séances/semaine', mult: ACTIVITY_MULTIPLIERS.active },
+  { id: 'extreme', label: 'Extrêmement actif', sub: 'Athlète / 2x/jour', mult: ACTIVITY_MULTIPLIERS.extreme },
 ]
 
 export const JS_DAYS_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
@@ -423,10 +426,6 @@ export function todayNutritionKey(): string {
   return jsDay === 0 ? 'dimanche' : NUTRITION_DAYS[jsDay - 1].key
 }
 
-export function calcMifflinStJeor(weight: number, height: number, age: number, gender: string) {
-  const base = 10 * weight + 6.25 * height - 5 * age
-  return gender === 'male' ? base + 5 : base - 161
-}
 export function calcKatchMcArdle(weight: number, bodyFatPct: number) {
   const leanMass = weight * (1 - bodyFatPct / 100)
   return 370 + 21.6 * leanMass
