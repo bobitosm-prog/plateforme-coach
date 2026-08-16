@@ -103,8 +103,6 @@ test('captures local font requests and deterministic visual specimens', async ({
       await capturePage(browser, 'landing-fr', '/fr/landing'),
       await capturePage(browser, 'guide-musculation', '/guide-musculation.html'),
       await capturePage(browser, 'guide-nutrition', '/guide-nutrition.html'),
-      await capturePage(browser, 'index-vitrine', '/index-vitrine.html'),
-      await capturePage(browser, 'vitrine', '/vitrine.html'),
       await capturePage(browser, 'client', '/', (page) =>
         loginLocalPersona(page, fixture.client, '/')),
       await capturePage(browser, 'coach', '/coach', (page) =>

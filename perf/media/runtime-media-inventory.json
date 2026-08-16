@@ -629,21 +629,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/features-bg.jpg",
@@ -660,21 +648,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/hero-athlete.png",
@@ -753,21 +729,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/hero-coaching.png",
@@ -1583,21 +1547,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/profile-hero.jpg",
@@ -1702,21 +1654,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "explicit-lazy",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/screens/home-dashboard.png",
@@ -1733,21 +1673,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "explicit-lazy",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/screens/nutrition-track.png",
@@ -1764,21 +1692,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "explicit-lazy",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/screens/profile-settings.png",
@@ -1795,21 +1711,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "explicit-lazy",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/screens/progress-analytics.png",
@@ -1826,21 +1730,9 @@
         "hasAlpha": false,
         "orientation": null
       },
-      "consumers": [
-        "public/vitrine.html"
-      ],
-      "delivery": [
-        {
-          "consumer": "public/vitrine.html",
-          "route": null,
-          "loading": "explicit-lazy",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        }
-      ],
-      "referenced": true
+      "consumers": [],
+      "delivery": [],
+      "referenced": false
     },
     {
       "path": "public/images/stitch-avatar.jpg",
@@ -2934,8 +2826,6 @@
         "lib/structured-data.ts",
         "public/guide-musculation.html",
         "public/guide-nutrition.html",
-        "public/index-vitrine.html",
-        "public/vitrine.html",
         "scripts/generate-icons.js"
       ],
       "delivery": [
@@ -2977,24 +2867,6 @@
         },
         {
           "consumer": "public/guide-nutrition.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        },
-        {
-          "consumer": "public/index-vitrine.html",
-          "route": null,
-          "loading": "unknown",
-          "preload": "unspecified",
-          "poster": false,
-          "sizing": "unknown",
-          "aboveTheFold": "unknown"
-        },
-        {
-          "consumer": "public/vitrine.html",
           "route": null,
           "loading": "unknown",
           "preload": "unspecified",

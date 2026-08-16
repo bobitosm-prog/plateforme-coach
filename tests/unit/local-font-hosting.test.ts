@@ -23,8 +23,6 @@ const publicFontCss = readFileSync(
 const staticPages = [
   "public/guide-musculation.html",
   "public/guide-nutrition.html",
-  "public/index-vitrine.html",
-  "public/vitrine.html",
 ].map((path) => readFileSync(join(root, path), "utf8"));
 
 function getFontDeclaration(fontName: string): string {

@@ -28,6 +28,41 @@ beforeEach(() => {
 })
 
 describe('SEO Blog host routing', () => {
+  it.each([
+    ['moovx.ch', '/index-vitrine.html'],
+    ['moovx.ch', '/vitrine.html'],
+    ['app.moovx.ch', '/index-vitrine.html'],
+    ['app.moovx.ch', '/vitrine.html'],
+  ])('redirects the legacy showcase %s%s permanently to the French landing', async (host, pathname) => {
+    const response = await proxy(request(host, pathname))
+
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe('https://moovx.ch/fr/landing')
+    expect(mocks.createServerClient).not.toHaveBeenCalled()
+  })
+
+  it('preserves the query when redirecting a legacy showcase', async () => {
+    const response = await proxy(request(
+      'moovx.ch',
+      '/vitrine.html?utm_source=legacy&utm_campaign=showcase',
+    ))
+
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe(
+      'https://moovx.ch/fr/landing?utm_source=legacy&utm_campaign=showcase',
+    )
+  })
+
+  it.each(['/vitrine.html-old', '/index-vitrine.html/extra'])(
+    'does not treat the neighboring route %s as a legacy showcase',
+    async pathname => {
+      const response = await proxy(request('moovx.ch', pathname))
+
+      expect(response.status).toBe(308)
+      expect(response.headers.get('location')).toBe(`https://app.moovx.ch${pathname}`)
+    },
+  )
+
   it.each(['fr', 'en', 'de'])('keeps the %s Blog index on the marketing host', async locale => {
     const response = await proxy(request('moovx.ch', `/${locale}/blog`))
 

@@ -48,9 +48,8 @@ Les autres catégories sont volontairement séparées :
   la frontière Storage ; aucune URL signée n’est journalisée ;
 - les médias externes historiques sont seulement repérés par leurs
   consommateurs et domaines, sans récupération ;
-- `public/guide-musculation.html`, `public/guide-nutrition.html`,
-  `public/index-vitrine.html` et `public/vitrine.html` sont des consommateurs
-  HTML autonomes, pas des sources dupliquées dans le total.
+- `public/guide-musculation.html` et `public/guide-nutrition.html` sont des
+  consommateurs HTML autonomes, pas des sources dupliquées dans le total.
 
 ## Priorités mesurées
 

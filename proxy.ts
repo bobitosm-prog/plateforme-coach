@@ -29,6 +29,10 @@ function getHostRedirect(request: NextRequest): NextResponse | null {
   // En dev (localhost) ou preview Vercel (xxx.vercel.app) → no-op
   if (!isMarketingHost && !isAppHost) return null
 
+  if (pathname === '/index-vitrine.html' || pathname === '/vitrine.html') {
+    return NextResponse.redirect(`https://moovx.ch/fr/landing${search}`, 308)
+  }
+
   const isLanding = isLandingPath(pathname)
 
   // Cas 1 : sur app.moovx.ch mais path landing → renvoyer sur moovx.ch
