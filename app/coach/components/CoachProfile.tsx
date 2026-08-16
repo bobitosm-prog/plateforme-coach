@@ -13,6 +13,7 @@ const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
+import TypedConfirmDialog from '../../components/ui/TypedConfirmDialog'
 
 interface CoachProfileProps {
   coachName: string
@@ -123,24 +124,23 @@ export default function CoachProfile({
         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: RED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const }}>Supprimer mon compte</span>
       </button>
 
-      {showDelete && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: BG_CARD, border: `1px solid rgba(239,68,68,0.3)`, borderRadius: RADIUS_CARD, padding: 24, maxWidth: 'min(400px, calc(100vw - 32px))', width: '100%' }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: RED, margin: '0 0 12px', letterSpacing: '2px', textTransform: 'uppercase' }}>Supprimer mon compte</h3>
-            <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 16px', fontFamily: FONT_BODY }}>
-              Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible.
-            </p>
-            <p style={{ fontSize: '0.78rem', color: TEXT_MUTED, margin: '0 0 8px', fontFamily: FONT_BODY }}>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</p>
-            <input value={confirmText} onChange={e => setConfirmText(e.target.value)} placeholder="SUPPRIMER" style={{ width: '100%', background: BG_BASE, border: `1px solid ${confirmText === 'SUPPRIMER' ? RED : BORDER}`, borderRadius: 12, padding: '10px 14px', color: TEXT_PRIMARY, fontSize: '0.9rem', fontFamily: FONT_BODY, outline: 'none', marginBottom: 16 }} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setShowDelete(false); setConfirmText('') }} style={{ flex: 1, padding: '12px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT_MUTED, fontSize: '0.85rem', fontFamily: FONT_BODY, cursor: 'pointer' }}>Annuler</button>
-              <button onClick={deleteAccount} disabled={confirmText !== 'SUPPRIMER' || deleting} style={{ flex: 1, padding: '12px', background: confirmText === 'SUPPRIMER' ? RED : BORDER, borderRadius: 12, border: 'none', color: '#fff', fontFamily: FONT_ALT, fontSize: '0.9rem', fontWeight: 700, cursor: confirmText === 'SUPPRIMER' ? 'pointer' : 'default', opacity: confirmText === 'SUPPRIMER' ? 1 : 0.5, letterSpacing: '1px', textTransform: 'uppercase' as const }}>
-                {deleting ? 'Suppression...' : 'Supprimer'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <TypedConfirmDialog
+        open={showDelete}
+        title="Supprimer mon compte"
+        warning="Es-tu sûr de vouloir supprimer ton compte ? Toutes tes données seront supprimées définitivement. Cette action est irréversible."
+        instruction={<>Tape <strong style={{ color: RED }}>SUPPRIMER</strong> pour confirmer :</>}
+        inputLabel="Tape SUPPRIMER pour confirmer la suppression du compte"
+        placeholder="SUPPRIMER"
+        value={confirmText}
+        expectedValue="SUPPRIMER"
+        confirmLabel="Supprimer"
+        busyLabel="Suppression..."
+        cancelLabel="Annuler"
+        busy={deleting}
+        onValueChange={setConfirmText}
+        onConfirm={deleteAccount}
+        onCancel={() => { setShowDelete(false); setConfirmText('') }}
+      />
     </div>
   )
 }
