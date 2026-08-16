@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
 import { createApiFailure } from '../../lib/api/response'
@@ -5,6 +6,15 @@ import {
   API_ERROR_CODES, API_ERROR_REGISTRY, LEGACY_API_ERROR_CODES,
   getApiErrorDescriptor, mapLegacyApiErrorCode, type ApiErrorCode,
 } from '../../lib/api/errors'
+
+const CHECKOUT_CONFIGURATION_OPERATOR_REASONS = [
+  'PRICE_NOT_CONFIGURED',
+  'SERVER_MISCONFIGURED',
+] as const
+
+function isCheckoutConfigurationOperatorReason(value: string): boolean {
+  return CHECKOUT_CONFIGURATION_OPERATOR_REASONS.some(reason => reason === value)
+}
 
 describe('API error taxonomy', () => {
   it('contains unique codes and an exhaustive registry', () => {
@@ -37,7 +47,34 @@ describe('API error taxonomy', () => {
   it('maps principal legacy codes to known canonical codes', () => {
     expect(mapLegacyApiErrorCode('IDENTITY_MISMATCH')).toBe('STRIPE_IDENTITY_INVALID')
     expect(mapLegacyApiErrorCode('SIGNATURE_INVALID')).toBe('STRIPE_SIGNATURE_INVALID')
+    expect(mapLegacyApiErrorCode('PRICE_NOT_CONFIGURED')).toBe('SERVER_MISCONFIGURED')
     for (const canonical of Object.values(LEGACY_API_ERROR_CODES)) expect(API_ERROR_CODES).toContain(canonical)
+  })
+
+  it.each(CHECKOUT_CONFIGURATION_OPERATOR_REASONS)(
+    'accepts checkout configuration reason %s during the bounded dual-read window',
+    reason => {
+      expect(isCheckoutConfigurationOperatorReason(reason)).toBe(true)
+    },
+  )
+
+  it('keeps unrelated checkout reasons outside the configuration dual-read', () => {
+    expect(isCheckoutConfigurationOperatorReason('CHECKOUT_FAILED')).toBe(false)
+  })
+
+  it('keeps the checkout producer legacy while operator contracts are dual-read', () => {
+    const route = readFileSync('app/api/stripe/checkout/route.ts', 'utf8')
+    const rollback = readFileSync('docs/PHASE_1_ROLLBACK.md', 'utf8')
+    const taxonomy = readFileSync('docs/API_ERROR_TAXONOMY.md', 'utf8')
+
+    expect(route).toContain("error.code === 'PRICE_NOT_CONFIGURED'")
+    expect(route).toContain("reason: error.code === 'STRIPE_NOT_CONFIGURED' ? 'SERVER_MISCONFIGURED' : 'PRICE_NOT_CONFIGURED'")
+    for (const reason of CHECKOUT_CONFIGURATION_OPERATOR_REASONS) {
+      expect(rollback).toContain(`\`${reason}\``)
+      expect(taxonomy).toContain(`\`${reason}\``)
+    }
+    expect(rollback).toContain('Fenêtre dual-read configuration checkout')
+    expect(taxonomy).toContain('contrat consommateur temporaire')
   })
 
   it('is coherent with ApiFailure', () => {
