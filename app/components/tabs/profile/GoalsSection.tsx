@@ -62,7 +62,7 @@ export default function GoalsSection({
     setEditingWater(false)
   }
 
-  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', cursor: 'pointer' }
+  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', cursor: 'pointer', width: '100%', background: 'transparent', border: 'none', textAlign: 'left' }
   const iconBoxStyle: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
   const separatorStyle: React.CSSProperties = { height: 0.5, background: colors.goldDim }
   const valueStyle: React.CSSProperties = { fontSize: 12, color: colors.textMuted }
@@ -83,23 +83,23 @@ export default function GoalsSection({
         {/* ═══ MON OBJECTIF ═══ */}
         <SectionTitle noPadding title={tGoals('objectiveSection')} />
         <div style={{ ...cardStyle, padding: '4px 16px', marginBottom: 24 }}>
-          <div style={rowStyle} onClick={() => setModal('objective')}>
+          <button type="button" style={rowStyle} onClick={() => setModal('objective')}>
             <div style={iconBoxStyle}><Target size={14} color={colors.gold} /></div>
             <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('fields.objective')}</span>
             <span style={valueStyle}>{objectiveLabels[profile?.objective] || profile?.objective || '—'}</span>
-          </div>
+          </button>
           <div style={separatorStyle} />
-          <div style={rowStyle} onClick={() => setModal('objective')}>
+          <button type="button" style={rowStyle} onClick={() => setModal('objective')}>
             <div style={iconBoxStyle}><Target size={14} color={colors.gold} /></div>
             <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('fields.goalWeight')}</span>
             <span style={valueStyle}>{goalWeight ? `${goalWeight} kg` : '—'}</span>
-          </div>
+          </button>
           <div style={separatorStyle} />
-          <div style={rowStyle} onClick={() => setModal('objective')}>
+          <button type="button" style={rowStyle} onClick={() => setModal('objective')}>
             <div style={iconBoxStyle}><Activity size={14} color={colors.gold} /></div>
             <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('fields.activityLevel')}</span>
             <span style={valueStyle}>{activityLabels[profile?.activity_level] || profile?.activity_level || '—'}</span>
-          </div>
+          </button>
         </div>
 
         {/* ═══ CIBLES ═══ */}

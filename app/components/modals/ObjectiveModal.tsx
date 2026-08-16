@@ -1,13 +1,12 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useId, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { X } from 'lucide-react'
 import {
   colors, fonts, radii, cardStyle, btnPrimary, btnSecondary, inputStyle,
-  modalOverlay, modalContainer, titleStyle,
   calcMifflinStJeor, ACTIVITY_LEVELS,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
+import DashboardObjectiveWizardDialogShell from './DashboardObjectiveWizardDialogShell'
 
 interface ObjectiveModalProps {
   profile: any
@@ -61,6 +60,13 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
   const [activity, setActivity] = useState<string>(profile?.activity_level || 'moderate')
   const [saving, setSaving] = useState(false)
   const [weightError, setWeightError] = useState('')
+  const [weightErrorField, setWeightErrorField] = useState<'weight' | 'targetWeight' | null>(null)
+  const reactId = useId()
+  const weightId = `objective-current-weight-${reactId}`
+  const targetWeightId = `objective-target-weight-${reactId}`
+  const weightErrorId = `objective-weight-error-${reactId}`
+  const currentWeightRef = useRef<HTMLInputElement>(null)
+  const targetWeightRef = useRef<HTMLInputElement>(null)
 
   const age = profile?.birth_date ? Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / 31557600000) : 25
   const height = profile?.height || 175
@@ -83,10 +89,27 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
   function validateWeight(): boolean {
     const w = parseFloat(weight)
     const tw = parseFloat(targetWeight)
-    if (!w || !tw) { setWeightError(t('validation.fillBoth')); return false }
-    if (objective === 'cut' && tw >= w) { setWeightError(t('validation.cutLower')); return false }
-    if (objective === 'mass' && tw <= w) { setWeightError(t('validation.massHigher')); return false }
+    if (!w || !tw) {
+      const invalidField = !w ? 'weight' : 'targetWeight'
+      setWeightError(t('validation.fillBoth'))
+      setWeightErrorField(invalidField)
+      ;(invalidField === 'weight' ? currentWeightRef : targetWeightRef).current?.focus()
+      return false
+    }
+    if (objective === 'cut' && tw >= w) {
+      setWeightError(t('validation.cutLower'))
+      setWeightErrorField('targetWeight')
+      targetWeightRef.current?.focus()
+      return false
+    }
+    if (objective === 'mass' && tw <= w) {
+      setWeightError(t('validation.massHigher'))
+      setWeightErrorField('targetWeight')
+      targetWeightRef.current?.focus()
+      return false
+    }
     setWeightError('')
+    setWeightErrorField(null)
     return true
   }
 
@@ -110,53 +133,30 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
     }
   }
 
-  // Progress bar
-  const ProgressBar = () => (
-    <div style={{ display: 'flex', gap: 4, marginBottom: 24 }}>
-      {[1, 2, 3, 4].map(s => (
-        <div key={s} style={{
-          flex: 1, height: 3, borderRadius: 2,
-          background: s <= step ? colors.gold : colors.goldBorder,
-          transition: 'background 300ms',
-        }} />
-      ))}
-    </div>
-  )
-
   const stepLabel = t('stepLabel', { step, total: 4 })
+  const stepTitle = t(`step${step}Title`)
 
   return (
-    <div style={{ ...modalOverlay, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1100 }} onClick={onClose}>
-      <div
-        style={{
-          ...modalContainer,
-          width: '100%', maxWidth: 480,
-          borderRadius: `${radii.card}px ${radii.card}px 0 0`,
-          padding: '20px 20px 40px',
-          maxHeight: '90dvh', overflowY: 'auto',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textDim, letterSpacing: '0.15em' }}>{stepLabel}</span>
-          <button onClick={onClose} style={{ background: colors.divider, border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <X size={14} color={colors.textMuted} />
-          </button>
-        </div>
-
-        <ProgressBar />
+    <DashboardObjectiveWizardDialogShell
+      step={step}
+      totalSteps={4}
+      stepLabel={stepLabel}
+      title={stepTitle}
+      saving={saving}
+      onClose={onClose}
+    >
 
         {/* ═══ STEP 1 — OBJECTIF ═══ */}
         {step === 1 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step1Title')}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+            <div role="group" aria-label={t('step1Title')} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               {OBJECTIVE_IDS.map(id => {
                 const selected = objective === id
                 return (
                   <button
+                    type="button"
                     key={id}
+                    aria-pressed={selected}
                     onClick={() => setObjective(id)}
                     style={{
                       ...cardStyle,
@@ -169,7 +169,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                      <span style={{ fontSize: 18 }}>{OBJECTIVE_EMOJIS[id]}</span>
+                      <span aria-hidden="true" style={{ fontSize: 18 }}>{OBJECTIVE_EMOJIS[id]}</span>
                       <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: selected ? colors.gold : colors.text, letterSpacing: '0.1em' }}>{t(`objectives.${id}.label`)}</span>
                     </div>
                     <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>{t(`objectives.${id}.desc`)}</div>
@@ -178,31 +178,37 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
                 )
               })}
             </div>
-            <button onClick={() => setStep(2)} style={{ ...btnPrimary, width: '100%', padding: '14px 0' }}>{t('next')}</button>
+            <button type="button" onClick={() => setStep(2)} style={{ ...btnPrimary, width: '100%', padding: '14px 0' }}>{t('next')}</button>
           </>
         )}
 
         {/* ═══ STEP 2 — POIDS ═══ */}
         {step === 2 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step2Title')}</div>
-
-            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('currentWeightLabel')}</label>
+            <label htmlFor={weightId} style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('currentWeightLabel')}</label>
             <input
+              ref={currentWeightRef}
+              id={weightId}
               type="number" value={weight}
-              onChange={e => { setWeight(e.target.value); setWeightError('') }}
+              aria-invalid={weightErrorField === 'weight'}
+              aria-describedby={weightErrorField === 'weight' ? weightErrorId : undefined}
+              onChange={e => { setWeight(e.target.value); setWeightError(''); setWeightErrorField(null) }}
               style={{ ...inputStyle, width: '100%', marginBottom: 16 }}
             />
 
-            <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('targetWeightLabel')}</label>
+            <label htmlFor={targetWeightId} style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('targetWeightLabel')}</label>
             <input
+              ref={targetWeightRef}
+              id={targetWeightId}
               type="number" value={targetWeight}
-              onChange={e => { setTargetWeight(e.target.value); setWeightError('') }}
+              aria-invalid={weightErrorField === 'targetWeight'}
+              aria-describedby={weightErrorField === 'targetWeight' ? weightErrorId : undefined}
+              onChange={e => { setTargetWeight(e.target.value); setWeightError(''); setWeightErrorField(null) }}
               style={{ ...inputStyle, width: '100%', marginBottom: 8 }}
             />
 
             {weightError && (
-              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.error, marginBottom: 12 }}>{weightError}</div>
+              <div id={weightErrorId} role="alert" style={{ fontFamily: fonts.body, fontSize: 11, color: colors.error, marginBottom: 12 }}>{weightError}</div>
             )}
 
             <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginBottom: 24 }}>
@@ -210,8 +216,8 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStep(1)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
-              <button onClick={() => { if (validateWeight()) setStep(3) }} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
+              <button type="button" onClick={() => setStep(1)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
+              <button type="button" onClick={() => { if (validateWeight()) setStep(3) }} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
             </div>
           </>
         )}
@@ -219,13 +225,14 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 3 — ACTIVITÉ ═══ */}
         {step === 3 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step3Title')}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            <div role="group" aria-label={t('step3Title')} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
               {ACTIVITY_IDS.map(id => {
                 const selected = activity === id
                 return (
                   <button
+                    type="button"
                     key={id}
+                    aria-pressed={selected}
                     onClick={() => setActivity(id)}
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -243,8 +250,8 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStep(2)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
-              <button onClick={() => setStep(4)} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
+              <button type="button" onClick={() => setStep(2)} style={{ ...btnSecondary, flex: 1, padding: '14px 0' }}>{t('back')}</button>
+              <button type="button" onClick={() => setStep(4)} style={{ ...btnPrimary, flex: 1, padding: '14px 0' }}>{t('next')}</button>
             </div>
           </>
         )}
@@ -252,8 +259,6 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 4 — CONFIRMATION ═══ */}
         {step === 4 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step4Title')}</div>
-
             {/* Summary card */}
             <div style={{ ...cardStyle, padding: 16, marginBottom: 16 }}>
               <div style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.12em', marginBottom: 12 }}>{t('oldToNew')}</div>
@@ -282,16 +287,16 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
             </div>
 
             <button
+              type="button"
               onClick={handleConfirm}
               disabled={saving}
               style={{ ...btnPrimary, width: '100%', padding: '14px 0', marginBottom: 10, opacity: saving ? 0.6 : 1 }}
             >
               {saving ? t('saving') : t('confirm')}
             </button>
-            <button onClick={onClose} style={{ ...btnSecondary, width: '100%', padding: '14px 0' }}>{t('cancel')}</button>
+            <button type="button" onClick={onClose} style={{ ...btnSecondary, width: '100%', padding: '14px 0' }}>{t('cancel')}</button>
           </>
         )}
-      </div>
-    </div>
+    </DashboardObjectiveWizardDialogShell>
   )
 }
