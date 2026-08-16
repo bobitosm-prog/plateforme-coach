@@ -27,6 +27,7 @@ export interface BlogContent {
 export interface BlogPost {
   slug: string
   date: string
+  dateModified?: string
   image?: string
   readingMinutes: number
   references: BlogReference[]

@@ -2,34 +2,53 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL, LOCALES, DEFAULT_LOCALE } from '@/lib/seo';
 import { getAllPosts } from '@/content/blog/posts';
+import { getAllGuides } from '@/content/guides/guides';
+import { LEGAL_DOCUMENT_METADATA } from '@/content/legal/metadata';
 
-const PAGES: Array<{
+interface SitemapPage {
   path: string;
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
-}> = [
+  lastModified?: string;
+}
+
+const posts = getAllPosts();
+const blogLastModified = posts.reduce<string | undefined>((latest, post) => {
+  const effectiveDate = post.dateModified ?? post.date;
+  return !latest || effectiveDate > latest ? effectiveDate : latest;
+}, undefined);
+
+const PAGES: SitemapPage[] = [
   { path: '/landing', priority: 1.0, changeFrequency: 'weekly' },
-  { path: '/blog', priority: 0.8, changeFrequency: 'weekly' },
-  ...getAllPosts().map((post) => ({
+  { path: '/blog', priority: 0.8, changeFrequency: 'weekly', lastModified: blogLastModified },
+  ...posts.map((post) => ({
     path: `/blog/${post.slug}`,
-    priority: 0.7 as number,
+    priority: 0.7,
     changeFrequency: 'monthly' as const,
+    lastModified: post.dateModified ?? post.date,
   })),
-  { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
-  { path: '/cgu', priority: 0.3, changeFrequency: 'yearly' },
+  {
+    path: '/privacy',
+    priority: 0.3,
+    changeFrequency: 'yearly',
+    lastModified: LEGAL_DOCUMENT_METADATA.privacy.lastModified,
+  },
+  {
+    path: '/cgu',
+    priority: 0.3,
+    changeFrequency: 'yearly',
+    lastModified: LEGAL_DOCUMENT_METADATA.cgu.lastModified,
+  },
 ];
 
-const FRENCH_ONLY_PAGES: Array<{
-  path: string;
-  priority: number;
-  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
-}> = [
-  { path: '/guides/musculation', priority: 0.8, changeFrequency: 'monthly' },
-  { path: '/guides/nutrition', priority: 0.8, changeFrequency: 'monthly' },
-];
+const FRENCH_ONLY_PAGES: SitemapPage[] = getAllGuides().map((guide) => ({
+  path: `/guides/${guide.slug}`,
+  priority: 0.8,
+  changeFrequency: 'monthly',
+  lastModified: guide.dateModified,
+}));
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
   const entries: MetadataRoute.Sitemap = [];
 
   for (const page of PAGES) {
@@ -42,7 +61,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
       entries.push({
         url: `${SITE_URL}/${locale}${page.path}`,
-        lastModified,
+        ...(page.lastModified && { lastModified: page.lastModified }),
         changeFrequency: page.changeFrequency,
         priority: page.priority,
         alternates: { languages },
@@ -54,7 +73,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const url = `${SITE_URL}/fr${page.path}`;
     entries.push({
       url,
-      lastModified,
+      ...(page.lastModified && { lastModified: page.lastModified }),
       changeFrequency: page.changeFrequency,
       priority: page.priority,
       alternates: {
