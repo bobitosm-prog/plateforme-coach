@@ -36,7 +36,6 @@ export default function RootDocument({
         <link rel="icon" href="/logo-moovx-32.png" sizes="32x32" />
         <link rel="icon" href="/logo-moovx-16.png" sizes="16x16" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta property="og:image" content="https://app.moovx.ch/logo-moovx.png" />
         <style dangerouslySetInnerHTML={{ __html: 'html,body{background:#0D0B08!important;margin:0}' }} />
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />

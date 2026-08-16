@@ -3,8 +3,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
   SITE_URL,
+  MARKETING_SOCIAL_IMAGE_URL,
   LOCALES,
   buildAlternates,
+  buildMarketingSocialImage,
   getOgLocale,
   getAlternateOgLocales,
   type Locale,
@@ -32,6 +34,7 @@ export async function generateMetadata({
   const post = getPost(slug)
   if (!post) return { title: 'Not found' }
   const c = post.content[loc] || post.content.fr
+  const socialImage = buildMarketingSocialImage(c.title)
   return {
     title: c.title,
     description: c.description,
@@ -44,6 +47,14 @@ export async function generateMetadata({
       alternateLocale: getAlternateOgLocales(loc),
       url: `${SITE_URL}/${locale}/blog/${slug}`,
       siteName: 'MoovX',
+      publishedTime: post.date,
+      images: [socialImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: c.title,
+      description: c.description,
+      images: [socialImage],
     },
   }
 }
@@ -74,6 +85,7 @@ export default async function BlogArticle({
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: c.title,
+    image: [MARKETING_SOCIAL_IMAGE_URL],
     datePublished: post.date,
     author: { '@type': 'Organization', name: 'MoovX' },
     inLanguage: loc,

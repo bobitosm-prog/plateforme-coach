@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { buildAlternates, type Locale } from '@/lib/seo'
+import {
+  buildAlternates,
+  buildMarketingSocialImage,
+  getAlternateOgLocales,
+  getOgLocale,
+  type Locale,
+} from '@/lib/seo'
 import { getAllPosts } from '@/content/blog/posts'
 
 export async function generateMetadata({
@@ -16,10 +22,31 @@ export async function generateMetadata({
     en: 'Science-based nutrition and training articles. By MoovX, Swiss Made fitness platform.',
     de: 'Wissenschaftlich fundierte Ernährungs- und Trainingsartikel. Von MoovX, Swiss Made Fitnessplattform.',
   }
+  const title = titles[loc] || titles.fr
+  const description = descriptions[loc] || descriptions.fr
+  const alternates = buildAlternates('/blog', loc)
+  const socialImage = buildMarketingSocialImage(title)
+
   return {
-    title: titles[loc] || titles.fr,
-    description: descriptions[loc] || descriptions.fr,
-    alternates: buildAlternates('/blog', loc),
+    title,
+    description,
+    alternates,
+    openGraph: {
+      type: 'website',
+      url: alternates.canonical,
+      siteName: 'MoovX',
+      title,
+      description,
+      locale: getOgLocale(loc),
+      alternateLocale: getAlternateOgLocales(loc),
+      images: [socialImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [socialImage],
+    },
   }
 }
 

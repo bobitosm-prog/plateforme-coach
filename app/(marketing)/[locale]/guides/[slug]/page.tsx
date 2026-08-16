@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAllGuides, getGuide } from '@/content/guides/guides'
-import { SITE_URL } from '@/lib/seo'
+import {
+  MARKETING_SOCIAL_IMAGE_URL,
+  SITE_URL,
+  buildMarketingSocialImage,
+} from '@/lib/seo'
 
 const GUIDE_LOCALE = 'fr'
-const OG_IMAGE = `${SITE_URL}/og-image.jpg`
-
 interface GuidePageProps {
   params: Promise<{ locale: string; slug: string }>
 }
@@ -29,6 +31,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   }
 
   const canonical = `${SITE_URL}/fr/guides/${guide.slug}`
+  const socialImage = buildMarketingSocialImage(guide.headline)
 
   return {
     title: guide.title,
@@ -47,13 +50,13 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
       locale: 'fr_CH',
       url: canonical,
       siteName: 'MoovX',
-      images: [{ url: OG_IMAGE, alt: guide.headline }],
+      images: [socialImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: guide.title,
       description: guide.description,
-      images: [OG_IMAGE],
+      images: [socialImage],
     },
   }
 }
@@ -70,7 +73,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
     '@type': 'Article',
     headline: guide.headline,
     description: guide.description,
-    image: [OG_IMAGE],
+    image: [MARKETING_SOCIAL_IMAGE_URL],
     datePublished: guide.datePublished,
     dateModified: guide.dateModified,
     inLanguage: 'fr-CH',

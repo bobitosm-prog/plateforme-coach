@@ -40,6 +40,17 @@ describe('localized root document language', () => {
     })
   })
 
+  it('does not inject a competing global social image', () => {
+    const html = renderToStaticMarkup(
+      <RootDocument lang="fr">
+        <main>MoovX</main>
+      </RootDocument>,
+    )
+
+    expect(html).not.toContain('property="og:image"')
+    expect(html).not.toContain('app.moovx.ch/logo-moovx.png')
+  })
+
   it('binds the marketing root to the validated route locale without request headers', () => {
     expect(marketingLayout).toContain('<RootDocument lang={locale}>')
     expect(marketingLayout).toContain('setRequestLocale(locale)')

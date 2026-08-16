@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import {
   SITE_URL,
+  buildMarketingSocialImage,
   buildAlternates,
   getOgLocale,
   getAlternateOgLocales,
@@ -46,7 +47,7 @@ export async function generateMetadata({
 
   const path = '/landing'
   const alternates = buildAlternates(path, locale)
-  const ogImage = `${SITE_URL}/og-image.jpg`
+  const socialImage = buildMarketingSocialImage(t('ogImageAlt'))
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -65,21 +66,13 @@ export async function generateMetadata({
       description: t('ogDescription'),
       locale: getOgLocale(locale),
       alternateLocale: getAlternateOgLocales(locale),
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: t('ogImageAlt'),
-          type: 'image/jpeg',
-        },
-      ],
+      images: [socialImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: t('twitterTitle'),
       description: t('twitterDescription'),
-      images: [ogImage],
+      images: [socialImage],
     },
     robots: {
       index: true,

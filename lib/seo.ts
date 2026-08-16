@@ -6,6 +6,19 @@ export const LOCALES = ['fr', 'en', 'de'] as const;
 export const DEFAULT_LOCALE = 'fr';
 export type Locale = (typeof LOCALES)[number];
 
+export const MARKETING_SOCIAL_IMAGE_URL = 'https://moovx.ch/og-image.jpg';
+
+/** Single marketing-domain fallback for Open Graph and Twitter cards. */
+export function buildMarketingSocialImage(alt: string) {
+  return {
+    url: MARKETING_SOCIAL_IMAGE_URL,
+    width: 1200,
+    height: 630,
+    alt,
+    type: 'image/jpeg' as const,
+  };
+}
+
 const OG_LOCALES: Record<Locale, string> = {
   fr: 'fr_CH',
   en: 'en_US',

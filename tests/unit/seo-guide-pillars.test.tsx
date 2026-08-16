@@ -58,8 +58,19 @@ describe('French SEO pillar guides', () => {
       type: 'article',
       locale: 'fr_CH',
       url: canonical,
+      images: [{
+        url: 'https://moovx.ch/og-image.jpg',
+        width: 1200,
+        height: 630,
+        type: 'image/jpeg',
+        alt: guide.headline,
+      }],
     })
-    expect(metadata.twitter).toMatchObject({ card: 'summary_large_image' })
+    expect(metadata.twitter).toMatchObject({
+      card: 'summary_large_image',
+      images: [{ url: 'https://moovx.ch/og-image.jpg' }],
+    })
+    expect(JSON.stringify(metadata)).not.toContain('app.moovx.ch')
   })
 
   it.each(['en', 'de'])('keeps the untranslated %s route non-indexable and unavailable', async locale => {
