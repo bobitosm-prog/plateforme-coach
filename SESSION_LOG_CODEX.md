@@ -14589,3 +14589,23 @@ reste `CI_STABILITY_CANDIDATE`.
 **Décision : `PASSAGE_AUTORISÉ_PHASE_10_2`.** La prochaine étape active est la
 validation Training `REAL_CORPUS_VALIDATION`, tandis que la stabilité CI
 continue d'être observée en parallèle.
+
+## Entrée — 2026-08-16 — Audits Phase 10.2 et 10.3
+
+**Phase 10.2 — REAL_CORPUS_VALIDATION :** l'architecture et les chemins de
+coexistence Training ont été validés sur les corpus synthétiques versionnés.
+Les 15 fichiers ciblés et leurs 172 tests sont `PASS`, le fallback legacy reste
+autoritaire, sans mutation ni impact UI. L'absence de template Training
+organique empêche toutefois toute preuve réelle : la décision est
+**`REAL_CORPUS_VALIDATION_BLOCKED`** et
+`REAL_CORPUS_VALIDATION_PENDING` reste actif.
+
+**Phase 10.3 — Staging Readiness Audit :** le contrat staging borné, le défaut
+`legacy-only`, les gardes fail-closed, le fallback, le monitoring et le rollback
+sans migration ni donnée sont prêts. La décision reste néanmoins
+**`STAGING_NOT_READY`**, car la CI demeure `CI_STABILITY_CANDIDATE` et la
+validation du corpus réel n'est pas acquise.
+
+**Décision :** l'architecture est prête, mais aucune activation n'est
+autorisée. Aucun opt-in canonical n'est actif dans l'état audité. Ces audits
+n'ont introduit aucun changement runtime, commit applicatif ou push technique.

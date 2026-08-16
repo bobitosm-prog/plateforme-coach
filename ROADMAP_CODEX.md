@@ -873,9 +873,46 @@ Monitoring restant :
 - progression du registre CI append-only ;
 - objectif formel de 150 runs et 7 jours UTC.
 
-### Prochaine étape
+#### 10.2 REAL_CORPUS_VALIDATION Training
 
-**10.2 `REAL_CORPUS_VALIDATION` Training**
+**Statut : `REAL_CORPUS_VALIDATION_BLOCKED`**
+
+**Validation technique : `PASS`**
+
+Résultats :
+
+- corpus synthétiques validés ;
+- 15 fichiers de tests `PASS` ;
+- 172 tests `PASS` ;
+- fallback legacy confirmé ;
+- aucune mutation ;
+- aucun impact UI.
+
+Blocage : aucun corpus Training organique n'est disponible. Le statut
+`REAL_CORPUS_VALIDATION_PENDING` reste actif.
+
+#### 10.3 Staging Readiness Audit
+
+**Statut : `STAGING_NOT_READY`**
+
+Validations `PASS` :
+
+- contrat staging borné ;
+- `legacy-only` par défaut ;
+- résolution fail-closed confirmée ;
+- fallback legacy maîtrisé ;
+- rollback prêt ;
+- monitoring disponible.
+
+Bloqueurs :
+
+- `CI_STABILITY_CANDIDATE` n'est pas encore confirmé statistiquement ;
+- `REAL_CORPUS_VALIDATION_PENDING` reste actif.
+
+### Prochaine condition
+
+Toute future autorisation d'opt-in exige la résolution préalable de ces deux
+bloqueurs.
 
 ---
 
