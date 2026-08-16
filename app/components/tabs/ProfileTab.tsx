@@ -196,11 +196,11 @@ export default function ProfileTab({
         <div style={titleLineStyle} />
       </div>
       <div style={{ ...cardStyle, padding: '4px 16px', marginBottom: 24 }}>
-        <div style={rowStyle} onClick={() => setModal('bmr')}>
+        <button type="button" style={{ ...rowStyle, width: '100%', background: 'transparent', border: 'none', textAlign: 'left', transform: 'none' }} onClick={() => setModal('bmr')}>
           <div style={iconBoxStyle}><Zap size={14} color={colors.gold} /></div>
           <span style={{ flex: 1, fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('tools.bmrCalculator')}</span>
           <ChevronRight size={12} color="rgba(255,255,255,0.15)" />
-        </div>
+        </button>
         {coachProgram && (
           <>
             <div style={separatorStyle} />

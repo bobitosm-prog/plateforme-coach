@@ -162,6 +162,17 @@ describe('DashboardMeasurementDialogShell accessibility', () => {
     expect(closeButton.props['aria-label']).toBe('Fermer')
   })
 
+  it('links the optional header description without changing the default contract', () => {
+    const described = renderInstance({ description: 'Description accessible' })
+    const plain = renderInstance()
+    const html = renderToStaticMarkup(described.tree)
+
+    expect(described.tree.props['aria-describedby']).toBeTypeOf('string')
+    expect(html).toContain(`id="${described.tree.props['aria-describedby']}"`)
+    expect(html).toContain('Description accessible')
+    expect(plain.tree.props['aria-describedby']).toBeUndefined()
+  })
+
   it('focuses the requested field, traps Tab both ways and contains background focus', () => {
     const trigger = new FakeElement('trigger')
     const outside = new FakeElement('outside')

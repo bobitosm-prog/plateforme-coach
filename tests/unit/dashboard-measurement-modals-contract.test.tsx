@@ -169,7 +169,8 @@ describe('dashboard measurement modal contracts', () => {
 
     expect(dashboard).toContain('<WeightModal currentWeight={h.currentWeight} onSave={h.saveWeight} onClose={() => h.setModal(null)} />')
     expect(dashboard).toContain('<MeasureModal measurements={h.measurements} onSave={h.saveMeasurements} onClose={() => h.setModal(null)} />')
-    for (const source of [bmr, objective]) expect(source).not.toContain('DashboardMeasurementDialogShell')
+    expect(objective).not.toContain('DashboardMeasurementDialogShell')
+    expect(bmr).toContain('DashboardMeasurementDialogShell')
     expect(progress).toContain('DashboardMeasurementDialogShell')
   })
 })

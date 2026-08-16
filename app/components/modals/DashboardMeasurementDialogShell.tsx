@@ -3,11 +3,12 @@
 import { useEffect, useId, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { X } from 'lucide-react'
 import {
-  BG_CARD_2, BORDER, FONT_DISPLAY, TEXT_MUTED, TEXT_PRIMARY, titleStyle,
+  BG_CARD_2, BORDER, FONT_BODY, FONT_DISPLAY, TEXT_MUTED, TEXT_PRIMARY, titleStyle,
 } from '@/lib/design-tokens'
 
 type Props = {
   title: ReactNode
+  description?: ReactNode
   initialFocusRef: RefObject<HTMLElement | null>
   onClose: () => void
   children: ReactNode
@@ -35,6 +36,7 @@ function getFocusableElements(dialog: HTMLElement) {
 
 export default function DashboardMeasurementDialogShell({
   title,
+  description,
   initialFocusRef,
   onClose,
   children,
@@ -45,9 +47,11 @@ export default function DashboardMeasurementDialogShell({
 }: Props) {
   const reactId = useId()
   const titleId = `dashboard-measurement-dialog-title-${reactId}`
+  const descriptionId = `dashboard-measurement-dialog-description-${reactId}`
   const dialogRef = useRef<HTMLDivElement>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
   const progressHeader = headerVariant === 'progress'
+  const hasDescription = description !== undefined && description !== null
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -105,12 +109,20 @@ export default function DashboardMeasurementDialogShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      aria-describedby={hasDescription ? descriptionId : undefined}
       tabIndex={-1}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, ...overlayStyle }}
     >
       <div style={panelStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', ...(progressHeader ? {} : { alignItems: 'center' }), marginBottom: headerMarginBottom }}>
-          <h3 id={titleId} style={progressHeader ? { ...titleStyle, fontSize: 18 } : { fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{title}</h3>
+          {hasDescription ? (
+            <div>
+              <h3 id={titleId} style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: '0 0 2px', color: TEXT_PRIMARY }}>{title}</h3>
+              <p id={descriptionId} style={{ fontSize: '0.7rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>{description}</p>
+            </div>
+          ) : (
+            <h3 id={titleId} style={progressHeader ? { ...titleStyle, fontSize: 18 } : { fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{title}</h3>
+          )}
           <button
             type="button"
             onClick={onClose}

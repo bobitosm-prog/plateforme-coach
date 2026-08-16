@@ -1,12 +1,12 @@
 'use client'
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useId, useRef, useState } from 'react'
 import {
-  BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
+  BG_CARD, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
   ACTIVITY_LEVELS, calcMifflinStJeor, calcKatchMcArdle, calcHarrisBenedict,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
+import DashboardMeasurementDialogShell from './DashboardMeasurementDialogShell'
 
 interface BmrModalProps {
   supabase: any
@@ -22,7 +22,16 @@ interface BmrModalProps {
   onClose: () => void
 }
 
+const BMR_FIELDS = [
+  { key: 'weight', label: 'Poids', unit: 'kg' },
+  { key: 'height', label: 'Taille', unit: 'cm' },
+  { key: 'age', label: 'Âge', unit: 'ans' },
+  { key: 'body_fat', label: '% Graisse (opt.)', unit: '%' },
+] as const
+
 export default function BmrModal({ supabase, session, initialValues, onClose }: BmrModalProps) {
+  const reactId = useId()
+  const weightInputRef = useRef<HTMLInputElement>(null)
   const [bmrForm, setBmrForm] = useState(initialValues)
   const [bmrResult, setBmrResult] = useState<any>(null)
 
@@ -51,23 +60,27 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
-      <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 40, minHeight: '90vh' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: '0 0 2px', color: TEXT_PRIMARY }}>CALCULATEUR BMR</h3>
-            <p style={{ fontSize: '0.7rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Mifflin-St Jeor · Katch-McArdle · Harris-Benedict</p>
-          </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
-        </div>
+    <DashboardMeasurementDialogShell
+      title="CALCULATEUR BMR"
+      description="Mifflin-St Jeor · Katch-McArdle · Harris-Benedict"
+      initialFocusRef={weightInputRef}
+      onClose={onClose}
+      overlayStyle={{ overflowY: 'auto' }}
+      panelStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 40, minHeight: '90vh' }}
+      headerMarginBottom={24}
+    >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          {[['weight', 'Poids', 'kg'], ['height', 'Taille', 'cm'], ['age', 'Âge', 'ans'], ['body_fat', '% Graisse (opt.)', '%']].map(([key, label, unit]) => (
+          {BMR_FIELDS.map(({ key, label, unit }) => {
+            const inputId = `bmr-${key}-${reactId}`
+            return (
             <div key={key} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 4 }}>{label}</div>
+              <label htmlFor={inputId} style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 4 }}>{label}</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <input
+                  ref={key === 'weight' ? weightInputRef : undefined}
+                  id={inputId}
                   type="number"
-                  value={(bmrForm as any)[key]}
+                  value={bmrForm[key]}
                   onChange={e => setBmrForm(p => ({ ...p, [key]: e.target.value }))}
                   placeholder="0"
                   style={{ background: 'transparent', color: GOLD, fontSize: '0.95rem', fontFamily: FONT_DISPLAY, fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }}
@@ -75,20 +88,21 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
                 <span style={{ color: TEXT_MUTED, fontSize: '0.75rem', fontFamily: FONT_ALT }}>{unit}</span>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+        <div role="group" aria-label="Genre" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
           {[['male', 'Homme'], ['female', 'Femme']].map(([val, label]) => (
-            <button key={val} onClick={() => setBmrForm(p => ({ ...p, gender: val }))}
+            <button type="button" key={val} aria-pressed={bmrForm.gender === val} onClick={() => setBmrForm(p => ({ ...p, gender: val }))}
               style={{ border: `1px solid ${bmrForm.gender === val ? GOLD : BORDER}`, background: bmrForm.gender === val ? `${GOLD}18` : BG_BASE, borderRadius: 12, padding: '12px', fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: bmrForm.gender === val ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>
               {label}
             </button>
           ))}
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 8 }}>Niveau d'activité</div>
+        <div role="group" aria-labelledby={`bmr-activity-label-${reactId}`} style={{ marginBottom: 16 }}>
+          <div id={`bmr-activity-label-${reactId}`} style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 8 }}>Niveau d'activité</div>
           {ACTIVITY_LEVELS.map(l => (
-            <button key={l.id} onClick={() => setBmrForm(p => ({ ...p, activity: l.id }))}
+            <button type="button" key={l.id} aria-pressed={bmrForm.activity === l.id} onClick={() => setBmrForm(p => ({ ...p, activity: l.id }))}
               style={{ width: '100%', border: `1px solid ${bmrForm.activity === l.id ? GOLD + '80' : BORDER}`, background: bmrForm.activity === l.id ? `${GOLD}10` : BG_BASE, borderRadius: 12, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer', transition: 'all 200ms' }}>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: '0.85rem', fontFamily: FONT_ALT, fontWeight: 700, color: bmrForm.activity === l.id ? GOLD : TEXT_PRIMARY }}>{l.label}</div>
@@ -98,9 +112,9 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             </button>
           ))}
         </div>
-        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
+        <button type="button" onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
         {bmrResult && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div role="status" aria-live="polite" aria-atomic="true" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>
               <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 4 }}>TDEE (Dépense Totale)</div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: '3rem', fontWeight: 700, color: GOLD, letterSpacing: '0.05em' }}>{bmrResult.tdee}</div>
@@ -140,7 +154,6 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </DashboardMeasurementDialogShell>
   )
 }
