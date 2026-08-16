@@ -88,7 +88,6 @@ Stripe : un événement `WEBHOOK_ALREADY_PROCESSED` est acquitté; `WEBHOOK_ALRE
 | `PRICE_NOT_CONFIGURED` | `SERVER_MISCONFIGURED` | dual-read opérateur borné ; message public générique |
 | `CHECKOUT_FAILED` | `UPSTREAM_REJECTED` | dual-read opérateur borné ; conserver le `500` et ne pas exposer Stripe |
 | `INVITATION_CONSUMPTION_FAILED` | `PERSISTENCE_FAILED` | dual-read consommateur borné ; invitation publique inchangée |
-| `WEBHOOK_FINALIZATION_FAILED` | `WEBHOOK_PROCESSING_FAILED` | reprise serveur idempotente |
 
 Les codes déjà utilisés comme raisons de journaux (`AUTH_REQUIRED`, `ROLE_FORBIDDEN`, `RELATION_FORBIDDEN`, `INVITATION_INVALID`, `INVITATION_TERMINAL`, `WEBHOOK_ALREADY_PROCESSED`, `WEBHOOK_ALREADY_PROCESSING`, `SERVER_MISCONFIGURED`) sont conservés lorsqu'ils ont une sémantique consommable. Une raison de log peut rester plus précise qu'un code public pendant une release.
 

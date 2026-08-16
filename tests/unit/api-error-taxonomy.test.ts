@@ -79,6 +79,23 @@ describe('API error taxonomy', () => {
     for (const canonical of Object.values(LEGACY_API_ERROR_CODES)) expect(API_ERROR_CODES).toContain(canonical)
   })
 
+  it('keeps only the legacy aliases that still have an active compatibility contract', () => {
+    expect(LEGACY_API_ERROR_CODES).toEqual({
+      IDENTITY_MISMATCH: 'STRIPE_IDENTITY_INVALID',
+      PROFILE_UNAVAILABLE: 'RESOURCE_NOT_FOUND',
+      SIGNATURE_REQUIRED: 'STRIPE_SIGNATURE_INVALID',
+      SIGNATURE_INVALID: 'STRIPE_SIGNATURE_INVALID',
+      PRICE_NOT_CONFIGURED: 'SERVER_MISCONFIGURED',
+      CHECKOUT_FAILED: 'UPSTREAM_REJECTED',
+      INVITATION_CONSUMPTION_FAILED: 'PERSISTENCE_FAILED',
+    })
+    expect(getApiErrorDescriptor('WEBHOOK_PROCESSING_FAILED')).toMatchObject({
+      status: 503,
+      retry: 'server',
+      domains: ['stripe'],
+    })
+  })
+
   it.each(CHECKOUT_CONFIGURATION_OPERATOR_REASONS)(
     'accepts checkout configuration reason %s during the bounded dual-read window',
     reason => {
