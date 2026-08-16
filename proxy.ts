@@ -11,6 +11,8 @@ function isLandingPath(pathname: string): boolean {
   if (/^\/(fr|en|de)\/(landing|cgu|privacy)/.test(pathname)) return true
   // Blog SEO localisé : index et articles restent sur le domaine marketing
   if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
+  // Guides piliers : seule la version française existe et reste sur le marketing
+  if (/^\/fr\/guides(?:\/|$)/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
@@ -31,6 +33,15 @@ function getHostRedirect(request: NextRequest): NextResponse | null {
 
   if (pathname === '/index-vitrine.html' || pathname === '/vitrine.html') {
     return NextResponse.redirect(`https://moovx.ch/fr/landing${search}`, 308)
+  }
+
+  const legacyGuideRedirects: Record<string, string> = {
+    '/guide-musculation.html': '/fr/guides/musculation',
+    '/guide-nutrition.html': '/fr/guides/nutrition',
+  }
+  const guideDestination = legacyGuideRedirects[pathname]
+  if (guideDestination) {
+    return NextResponse.redirect(`https://moovx.ch${guideDestination}${search}`, 308)
   }
 
   const isLanding = isLandingPath(pathname)

@@ -19,6 +19,15 @@ const PAGES: Array<{
   { path: '/cgu', priority: 0.3, changeFrequency: 'yearly' },
 ];
 
+const FRENCH_ONLY_PAGES: Array<{
+  path: string;
+  priority: number;
+  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
+}> = [
+  { path: '/guides/musculation', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/guides/nutrition', priority: 0.8, changeFrequency: 'monthly' },
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
   const entries: MetadataRoute.Sitemap = [];
@@ -39,6 +48,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
         alternates: { languages },
       });
     }
+  }
+
+  for (const page of FRENCH_ONLY_PAGES) {
+    const url = `${SITE_URL}/fr${page.path}`;
+    entries.push({
+      url,
+      lastModified,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+      alternates: {
+        languages: {
+          fr: url,
+          'x-default': url,
+        },
+      },
+    });
   }
 
   return entries;
