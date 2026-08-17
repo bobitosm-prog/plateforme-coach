@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { GUIDE_SLUGS, getGuide } from '@/content/guides/guides'
+import { GUIDE_SLUGS, getGuide, type GuideSlug } from '@/content/guides/guides'
 import { SITE_URL } from '@/lib/seo'
 
 export const dynamicParams = false
@@ -19,6 +19,55 @@ function resolveGuide(locale: string, slug: string) {
 
 function guideUrl(slug: string) {
   return `${SITE_URL}/fr/guides/${slug}`
+}
+
+function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
+  if (guideSlug === 'nutrition' && sectionId === 'calories') {
+    return {
+      href: '/fr/outils/calculateur-calories-macros',
+      label: 'calculer vos calories et vos macros',
+      prefix: 'Utilisez le calculateur MoovX pour ',
+    }
+  }
+
+  if (guideSlug === 'nutrition' && sectionId === 'prise-de-masse') {
+    return {
+      href: '/fr/nutrition/prise-de-masse',
+      label: 'construire une prise de masse progressive',
+      prefix: 'Approfondissez ces repères pour ',
+    }
+  }
+
+  if (guideSlug === 'musculation' && sectionId === 'split') {
+    return {
+      href: '/fr/coach-sportif-ia',
+      label: 'découvrir le coach sportif IA MoovX',
+      prefix: 'Vous pouvez aussi ',
+    }
+  }
+
+  return null
+}
+
+function ContextualGuideLink({
+  guideSlug,
+  sectionId,
+}: {
+  guideSlug: GuideSlug
+  sectionId: string
+}) {
+  const contextualLink = getContextualLink(guideSlug, sectionId)
+
+  if (!contextualLink) return null
+
+  return (
+    <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
+      {contextualLink.prefix}
+      <Link href={contextualLink.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
+        {contextualLink.label}
+      </Link>.
+    </p>
+  )
 }
 
 export async function generateMetadata({
@@ -146,6 +195,7 @@ export default async function GuidePage({
                   </table>
                 </div>
               )}
+              <ContextualGuideLink guideSlug={guide.slug} sectionId={section.id} />
             </section>
           ))}
 
