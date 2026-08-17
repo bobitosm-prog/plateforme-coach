@@ -29,12 +29,7 @@ import GenevaSection from './components/GenevaSection';
 import CtaSection from './components/CtaSection';
 import FooterSection from './components/FooterSection';
 import StructuredData from '@/components/StructuredData';
-import {
-  buildOrganizationSchema,
-  buildLocalBusinessSchema,
-  buildWebSiteSchema,
-  buildSchemaGraph,
-} from '@/lib/structured-data';
+import { buildLandingSchemaGraph } from '@/lib/structured-data';
 
 export async function generateMetadata({
   params,
@@ -111,14 +106,10 @@ export default async function LandingPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params;
+  await params
   const betaOffer = await getActiveBetaOffer()
   const trialDays = trialDaysFor(betaOffer)
-  const schemaGraph = buildSchemaGraph([
-    buildOrganizationSchema(),
-    buildLocalBusinessSchema(),
-    buildWebSiteSchema(locale),
-  ]);
+  const schemaGraph = buildLandingSchemaGraph()
 
   return (
     <>
