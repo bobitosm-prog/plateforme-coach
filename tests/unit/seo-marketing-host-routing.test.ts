@@ -102,6 +102,54 @@ describe('marketing/application host boundary', () => {
     )
   })
 
+  const legacyGuideRedirects = [
+    ['/guide-nutrition.html', '/fr/guides/nutrition'],
+    ['/guide-musculation.html', '/fr/guides/musculation'],
+  ] as const
+
+  it.each(legacyGuideRedirects)(
+    'redirects %s directly to %s on every production host',
+    (source, target) => {
+      for (const host of ['moovx.ch', 'app.moovx.ch', 'www.moovx.ch']) {
+        expectRedirect(
+          getHostRedirect(request(host, source)),
+          `https://moovx.ch${target}`,
+        )
+      }
+      expect(getHostRedirect(request('moovx.ch', target))).toBeNull()
+    },
+  )
+
+  it.each(legacyGuideRedirects)(
+    'preserves the query string while redirecting %s',
+    (source, target) => {
+      expectRedirect(
+        getHostRedirect(request('app.moovx.ch', `${source}?source=google&campaign=guide`)),
+        `https://moovx.ch${target}?source=google&campaign=guide`,
+      )
+    },
+  )
+
+  it.each([
+    '/guide-nutrition.htm',
+    '/guide-nutrition.html-extra',
+    '/guide-musculation.html/extra',
+  ])('does not capture the neighboring legacy path %s', path => {
+    expectRedirect(
+      getHostRedirect(request('moovx.ch', path)),
+      `https://app.moovx.ch${path}`,
+    )
+    expect(getHostRedirect(request('app.moovx.ch', path))).toBeNull()
+  })
+
+  it.each(legacyGuideRedirects)(
+    'keeps %s untouched on preview and localhost',
+    source => {
+      expect(getHostRedirect(request('preview.vercel.app', source))).toBeNull()
+      expect(getHostRedirect(request('localhost:3000', source))).toBeNull()
+    },
+  )
+
   it('canonicalizes www marketing routes without creating a loop', () => {
     expectRedirect(
       getHostRedirect(request('www.moovx.ch', '/fr/blog?source=www')),

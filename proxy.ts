@@ -5,6 +5,10 @@ import type { NextRequest } from 'next/server'
 // ===== Host-based redirect helpers =====
 const MARKETING_HOSTS = ['moovx.ch', 'www.moovx.ch']
 const APP_HOST = 'app.moovx.ch'
+const LEGACY_GUIDE_REDIRECTS: Readonly<Record<string, string>> = {
+  '/guide-nutrition.html': '/fr/guides/nutrition',
+  '/guide-musculation.html': '/fr/guides/musculation',
+}
 
 export function isMarketingPath(pathname: string): boolean {
   // Pages localisées : /fr/landing, /en/cgu, /de/privacy
@@ -31,6 +35,11 @@ export function getHostRedirect(request: NextRequest): NextResponse | null {
 
   // En dev (localhost) ou preview Vercel (xxx.vercel.app) → no-op
   if (!isMarketingHost && !isAppHost) return null
+
+  const legacyGuideTarget = LEGACY_GUIDE_REDIRECTS[pathname]
+  if (legacyGuideTarget) {
+    return NextResponse.redirect(`https://moovx.ch${legacyGuideTarget}${search}`, 308)
+  }
 
   const isMarketing = isMarketingPath(pathname)
 
