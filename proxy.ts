@@ -17,6 +17,8 @@ function isLandingPath(pathname: string): boolean {
   if (/^\/fr\/outils\/calculateur-calories-macros\/?$/.test(pathname)) return true
   // Page pilier nutrition : seule la version française existe
   if (/^\/fr\/nutrition\/prise-de-masse\/?$/.test(pathname)) return true
+  // Page pilier Coach sportif IA : seule la version française existe
+  if (/^\/fr\/coach-sportif-ia\/?$/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
@@ -111,6 +113,7 @@ export async function proxy(request: NextRequest) {
   if (
     /^\/(en|de)\/outils\/calculateur-calories-macros\/?$/.test(pathname)
     || /^\/(en|de)\/nutrition\/prise-de-masse\/?$/.test(pathname)
+    || /^\/(en|de)\/coach-sportif-ia\/?$/.test(pathname)
   ) {
     return new NextResponse(null, { status: 404, statusText: 'Not Found' })
   }

@@ -17,11 +17,11 @@ afterEach(() => {
 })
 
 describe('sitemap editorial lastModified dates', () => {
-  it('keeps exactly 31 unique canonical URLs', () => {
+  it('keeps exactly 32 unique canonical URLs', () => {
     const entries = sitemap()
 
-    expect(entries).toHaveLength(31)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(31)
+    expect(entries).toHaveLength(32)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(32)
   })
 
   it('is invariant when the system clock changes', () => {
@@ -106,7 +106,7 @@ describe('sitemap editorial lastModified dates', () => {
   it('emits only stable ISO calendar dates', () => {
     const datedEntries = sitemap().filter(entry => entry.lastModified)
 
-    expect(datedEntries).toHaveLength(27)
+    expect(datedEntries).toHaveLength(28)
     for (const entry of datedEntries) {
       expect(entry.lastModified).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/))
     }

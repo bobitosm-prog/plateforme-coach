@@ -193,6 +193,40 @@ describe('SEO Blog host routing', () => {
     expect(mocks.createServerClient).not.toHaveBeenCalled()
   })
 
+  it('keeps the French AI coach page on marketing and redirects it from the app host', async () => {
+    const pathname = '/fr/coach-sportif-ia'
+    const marketingResponse = await proxy(request('moovx.ch', pathname))
+    const appResponse = await proxy(request('app.moovx.ch', pathname))
+
+    expect(marketingResponse.status).toBe(200)
+    expect(marketingResponse.headers.get('location')).toBeNull()
+    expect(appResponse.status).toBe(308)
+    expect(appResponse.headers.get('location')).toBe(`https://moovx.ch${pathname}`)
+  })
+
+  it('preserves the query when redirecting the French AI coach page to marketing', async () => {
+    const response = await proxy(request(
+      'app.moovx.ch',
+      '/fr/coach-sportif-ia?utm_source=app&utm_campaign=ai-coach',
+    ))
+
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe(
+      'https://moovx.ch/fr/coach-sportif-ia?utm_source=app&utm_campaign=ai-coach',
+    )
+  })
+
+  it.each(['en', 'de'])('returns 404 for the untranslated %s AI coach page on every host', async locale => {
+    const pathname = `/${locale}/coach-sportif-ia`
+    for (const host of ['moovx.ch', 'app.moovx.ch', 'localhost:3000']) {
+      const response = await proxy(request(host, pathname))
+
+      expect(response.status).toBe(404)
+      expect(response.headers.get('location')).toBeNull()
+    }
+    expect(mocks.createServerClient).not.toHaveBeenCalled()
+  })
+
   it('keeps login and the unauthenticated app root on the application host', async () => {
     const loginResponse = await proxy(request('app.moovx.ch', '/login'))
     const rootResponse = await proxy(request('app.moovx.ch', '/'))

@@ -5,6 +5,7 @@ import { getAllPosts } from '@/content/blog/posts';
 import { getAllGuides } from '@/content/guides/guides';
 import { LEGAL_DOCUMENT_METADATA } from '@/content/legal/metadata';
 import { BULK_GAIN_PAGE } from '@/content/nutrition/bulk-gain';
+import { AI_COACH_PAGE } from '@/content/ai/ai-coach';
 
 interface SitemapPage {
   path: string;
@@ -59,6 +60,12 @@ const FRENCH_ONLY_PAGES: SitemapPage[] = [
     priority: 0.9,
     changeFrequency: 'monthly',
     lastModified: BULK_GAIN_PAGE.dateModified,
+  },
+  {
+    path: '/coach-sportif-ia',
+    priority: 0.9,
+    changeFrequency: 'monthly',
+    lastModified: AI_COACH_PAGE.dateModified,
   },
 ];
 
