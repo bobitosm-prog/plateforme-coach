@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Calendar, ScanLine, Apple, ChefHat } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import LandingContextualLinks from './LandingContextualLinks'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -199,6 +200,8 @@ export default function NutritionSection() {
               )
             })}
           </div>
+
+          <LandingContextualLinks group="nutrition" />
 
           {/* CTA */}
           <div ref={ctaRef}>

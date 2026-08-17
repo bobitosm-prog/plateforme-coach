@@ -130,7 +130,7 @@ export default async function LandingPage({
         <MarqueeSection />
         <div style={{ background: '#0a0a0a' }}><Results /></div>
         <GoldSeparator />
-        <div style={{ background: '#111' }}><NutritionSection /></div>
+        <div id="features" style={{ background: '#111' }}><NutritionSection /></div>
         <GoldSeparator />
         <div style={{ background: '#0a0a0a' }}><TrainingSection /></div>
         <GoldSeparator />

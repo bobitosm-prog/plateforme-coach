@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Sparkles, MessageCircle, Zap, Brain } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import LandingContextualLinks from './LandingContextualLinks'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -291,6 +292,8 @@ export default function CoachIaSection() {
               )
             })}
           </div>
+
+          <LandingContextualLinks group="coach" />
 
           <div ref={ctaRef}>
             <Link

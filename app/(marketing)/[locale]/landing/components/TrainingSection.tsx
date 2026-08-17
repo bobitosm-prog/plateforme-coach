@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Dumbbell, Flame, Activity, Trophy } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import LandingContextualLinks from './LandingContextualLinks'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -298,6 +299,8 @@ export default function TrainingSection() {
               )
             })}
           </div>
+
+          <LandingContextualLinks group="training" />
 
           <div ref={ctaRef}>
             <Link
