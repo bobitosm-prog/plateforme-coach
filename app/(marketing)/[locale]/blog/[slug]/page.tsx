@@ -150,6 +150,20 @@ export default async function BlogArticle({
           </div>
         )}
 
+        {loc === 'fr' && c.relatedLinks && c.relatedLinks.length > 0 && (
+          <nav aria-label="Ressources MoovX associées" style={{ margin: '40px 0' }}>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: 0, padding: 0, listStyle: 'none' }}>
+              {c.relatedLinks.map(link => (
+                <li key={link.href}>
+                  <Link href={link.href} style={{ color: 'var(--gold)', fontSize: 15, lineHeight: 1.7, textUnderlineOffset: 4 }}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         <div style={{ margin: '48px 0', padding: '24px', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)', borderRadius: 14, textAlign: 'center' }}>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.85)', marginBottom: 16 }}>
             {c.ctaText}

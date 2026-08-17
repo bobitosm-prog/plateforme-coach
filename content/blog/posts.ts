@@ -13,6 +13,11 @@ export interface BlogSection {
   paragraphs: string[]
 }
 
+export interface BlogInternalLink {
+  href: string
+  label: string
+}
+
 export interface BlogContent {
   title: string
   description: string
@@ -20,6 +25,7 @@ export interface BlogContent {
   sections: BlogSection[]
   tableTitle?: string
   table?: { headers: string[]; rows: string[][] }
+  relatedLinks?: BlogInternalLink[]
   ctaText: string
   disclaimer: string
 }
@@ -102,6 +108,16 @@ export const BLOG_POSTS: BlogPost[] = [
             ['Par repas', '0,25 g/kg (20–40 g)', '~20 g, 4x/jour'],
           ],
         },
+        relatedLinks: [
+          {
+            href: '/fr/outils/calculateur-calories-macros',
+            label: 'calculer vos besoins en calories et en macros',
+          },
+          {
+            href: '/fr/nutrition/prise-de-masse',
+            label: 'planifier une prise de masse progressive',
+          },
+        ],
         ctaText: "MoovX calcule automatiquement vos besoins en protéines selon votre poids, votre objectif et votre activité — et génère vos repas avec 170 aliments suisses. Essai 10 jours offert.",
         disclaimer: "Cet article est fourni à titre informatif et ne remplace pas l'avis d'un professionnel de santé. Adaptez votre alimentation à votre situation personnelle, surtout en cas de pathologie.",
       },
@@ -272,6 +288,12 @@ export const BLOG_POSTS: BlogPost[] = [
             ['Zone de plafonnement', '> 20 séries', 'Rendements décroissants'],
           ],
         },
+        relatedLinks: [
+          {
+            href: '/fr/coach-sportif-ia',
+            label: 'créer un programme adapté à vos objectifs',
+          },
+        ],
         ctaText: "MoovX construit votre programme avec le bon volume par groupe musculaire selon votre niveau, et l'ajuste à mesure que vous progressez. Essai 10 jours offert.",
         disclaimer: "Cet article est fourni à titre informatif et ne remplace pas l'accompagnement d'un professionnel. Adaptez le volume à votre récupération et votre expérience.",
       },
@@ -435,6 +457,12 @@ export const BLOG_POSTS: BlogPost[] = [
             ['3x / semaine', 'Avancés, volume élevé', 'Mieux répartir un gros volume'],
           ],
         },
+        relatedLinks: [
+          {
+            href: '/fr/coach-sportif-ia',
+            label: 'créer un programme adapté à vos objectifs',
+          },
+        ],
         ctaText: "Le programme PPL de MoovX répartit automatiquement votre volume sur la semaine pour un équilibre optimal entraînement/récupération. Essai 10 jours offert.",
         disclaimer: "Cet article est fourni à titre informatif. Adaptez votre fréquence à votre récupération, votre sommeil et votre niveau de stress.",
       },
@@ -597,6 +625,12 @@ export const BLOG_POSTS: BlogPost[] = [
             ['Entretien', '3-5 g/j', 'À maintenir dans la durée'],
           ],
         },
+        relatedLinks: [
+          {
+            href: '/fr/guides/musculation',
+            label: 'guide complet de musculation',
+          },
+        ],
         ctaText: "MoovX intègre vos compléments dans votre suivi nutritionnel et vous rappelle vos prises. Essai 10 jours offert.",
         disclaimer: "Cet article est fourni à titre informatif et ne remplace pas l'avis d'un professionnel de santé. En cas de pathologie rénale ou de doute, consultez un médecin avant toute supplémentation.",
       },
