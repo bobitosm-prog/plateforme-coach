@@ -53,6 +53,13 @@ describe('marketing/application host boundary', () => {
     },
   )
 
+  it.each(frenchAcquisitionPaths)(
+    'keeps %s on the marketing apex when the host includes the HTTPS port',
+    path => {
+      expect(getHostRedirect(request('moovx.ch:443', path))).toBeNull()
+    },
+  )
+
   it.each([...multilingualBlogPaths, ...frenchAcquisitionPaths])(
     'redirects %s from the application host to the marketing apex',
     path => {
@@ -91,6 +98,16 @@ describe('marketing/application host boundary', () => {
     },
   )
 
+  it.each(['/login', '/coach/team', '/client/example'])(
+    'redirects the application route %s from a marketing host with an HTTPS port',
+    path => {
+      expectRedirect(
+        getHostRedirect(request('moovx.ch:443', path)),
+        `https://app.moovx.ch${path}`,
+      )
+    },
+  )
+
   it('preserves query strings in both redirect directions', () => {
     expectRedirect(
       getHostRedirect(request('app.moovx.ch', '/fr/blog/article?source=google&page=2')),
@@ -99,6 +116,10 @@ describe('marketing/application host boundary', () => {
     expectRedirect(
       getHostRedirect(request('moovx.ch', '/login?next=%2Fcoach')),
       'https://app.moovx.ch/login?next=%2Fcoach',
+    )
+    expectRedirect(
+      getHostRedirect(request('moovx.ch:443', '/client/example?tab=progress')),
+      'https://app.moovx.ch/client/example?tab=progress',
     )
   })
 

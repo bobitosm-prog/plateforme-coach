@@ -26,7 +26,7 @@ export function isMarketingPath(pathname: string): boolean {
 }
 
 export function getHostRedirect(request: NextRequest): NextResponse | null {
-  const host = request.headers.get('host') || ''
+  const host = (request.headers.get('host') || '').split(':')[0]
   const pathname = request.nextUrl.pathname
   const search = request.nextUrl.search
 
