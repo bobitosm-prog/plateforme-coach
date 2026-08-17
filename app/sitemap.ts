@@ -70,5 +70,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const bulkGainUrl = `${SITE_URL}/fr/nutrition/prise-de-masse`;
+  entries.push({
+    url: bulkGainUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: bulkGainUrl,
+        'x-default': bulkGainUrl,
+      },
+    },
+  });
+
   return entries;
 }
