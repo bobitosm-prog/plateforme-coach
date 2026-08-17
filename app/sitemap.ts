@@ -41,12 +41,19 @@ const PAGES: SitemapPage[] = [
   },
 ];
 
-const FRENCH_ONLY_PAGES: SitemapPage[] = getAllGuides().map((guide) => ({
-  path: `/guides/${guide.slug}`,
-  priority: 0.8,
-  changeFrequency: 'monthly',
-  lastModified: guide.dateModified,
-}));
+const FRENCH_ONLY_PAGES: SitemapPage[] = [
+  ...getAllGuides().map((guide) => ({
+    path: `/guides/${guide.slug}`,
+    priority: 0.8,
+    changeFrequency: 'monthly' as const,
+    lastModified: guide.dateModified,
+  })),
+  {
+    path: '/outils/calculateur-calories-macros',
+    priority: 0.9,
+    changeFrequency: 'monthly',
+  },
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];

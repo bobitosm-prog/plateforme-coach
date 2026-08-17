@@ -17,11 +17,11 @@ afterEach(() => {
 })
 
 describe('sitemap editorial lastModified dates', () => {
-  it('keeps exactly 29 unique canonical URLs', () => {
+  it('keeps exactly 30 unique canonical URLs', () => {
     const entries = sitemap()
 
-    expect(entries).toHaveLength(29)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(29)
+    expect(entries).toHaveLength(30)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(30)
   })
 
   it('is invariant when the system clock changes', () => {
@@ -90,7 +90,7 @@ describe('sitemap editorial lastModified dates', () => {
   })
 
   it('keeps multilingual alternates unchanged', () => {
-    const multilingualEntries = sitemap().filter(entry => !entry.url.includes('/guides/'))
+    const multilingualEntries = sitemap().filter(entry => entry.alternates?.languages?.en)
 
     for (const entry of multilingualEntries) {
       const path = new URL(entry.url).pathname.replace(/^\/(fr|en|de)/, '')

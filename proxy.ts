@@ -13,6 +13,8 @@ function isLandingPath(pathname: string): boolean {
   if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
   // Guides piliers : seule la version française existe et reste sur le marketing
   if (/^\/fr\/guides(?:\/|$)/.test(pathname)) return true
+  // Outil calories/macros : seule la version française existe
+  if (/^\/fr\/outils\/calculateur-calories-macros\/?$/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
@@ -102,8 +104,13 @@ const WP_GHOST_PREFIXES = [
 ]
 
 export async function proxy(request: NextRequest) {
-  // Early-return 410 pour les URLs fantômes WordPress — avant toute logique
+  // L'outil n'existe qu'en français : répondre 404 avant le routage applicatif.
   const pathname = request.nextUrl.pathname
+  if (/^\/(en|de)\/outils\/calculateur-calories-macros\/?$/.test(pathname)) {
+    return new NextResponse(null, { status: 404, statusText: 'Not Found' })
+  }
+
+  // Early-return 410 pour les URLs fantômes WordPress — avant toute logique
   const normalized = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname
   if (WP_GHOST_PREFIXES.some(prefix => normalized.startsWith(prefix))) {
     return new NextResponse(null, { status: 410, statusText: 'Gone' })
