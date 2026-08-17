@@ -57,5 +57,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
+  const calculatorUrl = `${SITE_URL}/fr/outils/calculateur-calories-macros`;
+  entries.push({
+    url: calculatorUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: calculatorUrl,
+        'x-default': calculatorUrl,
+      },
+    },
+  });
+
   return entries;
 }
