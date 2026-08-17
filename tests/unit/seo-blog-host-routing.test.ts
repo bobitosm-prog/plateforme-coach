@@ -171,6 +171,28 @@ describe('SEO Blog host routing', () => {
     expect(mocks.createServerClient).not.toHaveBeenCalled()
   })
 
+  it('keeps the French bulk-gain page on marketing and redirects it from the app host', async () => {
+    const pathname = '/fr/nutrition/prise-de-masse'
+    const marketingResponse = await proxy(request('moovx.ch', pathname))
+    const appResponse = await proxy(request('app.moovx.ch', pathname))
+
+    expect(marketingResponse.status).toBe(200)
+    expect(marketingResponse.headers.get('location')).toBeNull()
+    expect(appResponse.status).toBe(308)
+    expect(appResponse.headers.get('location')).toBe(`https://moovx.ch${pathname}`)
+  })
+
+  it.each(['en', 'de'])('returns 404 for the untranslated %s bulk-gain page on every host', async locale => {
+    const pathname = `/${locale}/nutrition/prise-de-masse`
+    for (const host of ['moovx.ch', 'app.moovx.ch', 'localhost:3000']) {
+      const response = await proxy(request(host, pathname))
+
+      expect(response.status).toBe(404)
+      expect(response.headers.get('location')).toBeNull()
+    }
+    expect(mocks.createServerClient).not.toHaveBeenCalled()
+  })
+
   it('keeps login and the unauthenticated app root on the application host', async () => {
     const loginResponse = await proxy(request('app.moovx.ch', '/login'))
     const rootResponse = await proxy(request('app.moovx.ch', '/'))

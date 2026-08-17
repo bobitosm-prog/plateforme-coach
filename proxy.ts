@@ -15,6 +15,8 @@ function isLandingPath(pathname: string): boolean {
   if (/^\/fr\/guides(?:\/|$)/.test(pathname)) return true
   // Outil calories/macros : seule la version française existe
   if (/^\/fr\/outils\/calculateur-calories-macros\/?$/.test(pathname)) return true
+  // Page pilier nutrition : seule la version française existe
+  if (/^\/fr\/nutrition\/prise-de-masse\/?$/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
@@ -104,9 +106,12 @@ const WP_GHOST_PREFIXES = [
 ]
 
 export async function proxy(request: NextRequest) {
-  // L'outil n'existe qu'en français : répondre 404 avant le routage applicatif.
+  // Les acquisitions FR-only répondent 404 avant le routage applicatif.
   const pathname = request.nextUrl.pathname
-  if (/^\/(en|de)\/outils\/calculateur-calories-macros\/?$/.test(pathname)) {
+  if (
+    /^\/(en|de)\/outils\/calculateur-calories-macros\/?$/.test(pathname)
+    || /^\/(en|de)\/nutrition\/prise-de-masse\/?$/.test(pathname)
+  ) {
     return new NextResponse(null, { status: 404, statusText: 'Not Found' })
   }
 

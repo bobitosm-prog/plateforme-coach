@@ -4,6 +4,7 @@ import { SITE_URL, LOCALES, DEFAULT_LOCALE } from '@/lib/seo';
 import { getAllPosts } from '@/content/blog/posts';
 import { getAllGuides } from '@/content/guides/guides';
 import { LEGAL_DOCUMENT_METADATA } from '@/content/legal/metadata';
+import { BULK_GAIN_PAGE } from '@/content/nutrition/bulk-gain';
 
 interface SitemapPage {
   path: string;
@@ -52,6 +53,12 @@ const FRENCH_ONLY_PAGES: SitemapPage[] = [
     path: '/outils/calculateur-calories-macros',
     priority: 0.9,
     changeFrequency: 'monthly',
+  },
+  {
+    path: '/nutrition/prise-de-masse',
+    priority: 0.9,
+    changeFrequency: 'monthly',
+    lastModified: BULK_GAIN_PAGE.dateModified,
   },
 ];
 
