@@ -5,12 +5,13 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Sparkles, MessageCircle, Zap, Brain } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function CoachIaSection() {
   const t = useTranslations('coachIa')
+  const locale = useLocale()
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -318,6 +319,13 @@ export default function CoachIaSection() {
             >
               {t('cta')}
             </Link>
+            {locale === 'fr' && (
+              <div style={{ marginTop: 20 }}>
+                <Link href="/fr/coach-sportif-ia" style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13, textUnderlineOffset: 4 }}>
+                  Découvrir comment fonctionne notre coach sportif IA
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

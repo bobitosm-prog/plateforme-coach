@@ -284,7 +284,7 @@ export default async function Hero() {
           </Link>
 
           <a
-            href="#features"
+            href="#nutrition"
             style={{
               color: '#fff',
               padding: '19px 24px',

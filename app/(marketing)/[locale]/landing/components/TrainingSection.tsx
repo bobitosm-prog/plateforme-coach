@@ -5,12 +5,13 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Dumbbell, Flame, Activity, Trophy } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function TrainingSection() {
   const t = useTranslations('training')
+  const locale = useLocale()
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -325,6 +326,13 @@ export default function TrainingSection() {
             >
               {t('cta')}
             </Link>
+            {locale === 'fr' && (
+              <div style={{ marginTop: 20 }}>
+                <Link href="/fr/guides/musculation" style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13, textUnderlineOffset: 4 }}>
+                  Guide musculation
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -5,12 +5,13 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Calendar, ScanLine, Apple, ChefHat } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function NutritionSection() {
   const t = useTranslations('nutrition')
+  const locale = useLocale()
   const sectionRef = useRef<HTMLElement>(null)
   const eyebrowRef = useRef<HTMLDivElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
@@ -230,6 +231,19 @@ export default function NutritionSection() {
             >
               {t('cta')}
             </Link>
+            {locale === 'fr' && (
+              <nav aria-label="Ressources nutrition" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 18px', marginTop: 20, maxWidth: 520 }}>
+                <Link href="/fr/outils/calculateur-calories-macros" style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13, textUnderlineOffset: 4 }}>
+                  Estimer vos calories et vos macros
+                </Link>
+                <Link href="/fr/guides/nutrition" style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13, textUnderlineOffset: 4 }}>
+                  Guide nutrition sportive
+                </Link>
+                <Link href="/fr/nutrition/prise-de-masse" style={{ color: 'rgba(255,255,255,0.68)', fontSize: 13, textUnderlineOffset: 4 }}>
+                  Construire une prise de masse progressive
+                </Link>
+              </nav>
+            )}
           </div>
         </div>
 
