@@ -2,6 +2,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL, LOCALES, DEFAULT_LOCALE } from '@/lib/seo';
 import { getAllPosts } from '@/content/blog/posts';
+import { GUIDE_SLUGS } from '@/content/guides/guides';
 
 const PAGES: Array<{
   path: string;
@@ -39,6 +40,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
         alternates: { languages },
       });
     }
+  }
+
+  for (const slug of GUIDE_SLUGS) {
+    const url = `${SITE_URL}/fr/guides/${slug}`;
+    entries.push({
+      url,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          fr: url,
+          'x-default': url,
+        },
+      },
+    });
   }
 
   return entries;
