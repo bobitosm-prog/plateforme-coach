@@ -162,6 +162,23 @@ export default async function BlogArticle({
           </div>
         )}
 
+        {c.relatedLinks && (
+          <nav aria-label="Ressources associées" style={{ margin: '36px 0', padding: '20px 24px', background: '#0d0c0b', border: '1px solid rgba(212,168,67,0.2)', borderRadius: 14 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 12 }}>
+              Pour aller plus loin
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 10 }}>
+              {c.relatedLinks.map(link => (
+                <li key={link.href}>
+                  <Link href={link.href} style={{ color: 'var(--gold)', textUnderlineOffset: 4 }}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         <div style={{ margin: '48px 0', padding: '24px', background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.25)', borderRadius: 14, textAlign: 'center' }}>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.85)', marginBottom: 16 }}>
             {c.ctaText}

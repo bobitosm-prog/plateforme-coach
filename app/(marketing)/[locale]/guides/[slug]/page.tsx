@@ -176,6 +176,15 @@ export default async function GuidePage({ params }: GuidePageProps) {
                   </table>
                 </div>
               )}
+              {section.links && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 24 }}>
+                  {section.links.map(link => (
+                    <Link key={link.href} href={link.href} style={{ color: '#c9a84c', fontWeight: 700, textUnderlineOffset: 4 }}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           ))}
 

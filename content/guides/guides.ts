@@ -6,11 +6,17 @@ export interface GuideTable {
   rows: string[][]
 }
 
+export interface GuideLink {
+  href: string
+  label: string
+}
+
 export interface GuideSection {
   id: string
   title: string
   paragraphs: string[]
   table?: GuideTable
+  links?: GuideLink[]
 }
 
 export interface GuideEditorialReviewItem {
@@ -148,6 +154,12 @@ const musculation: GuideContent = {
         "Un carnet d'entraînement permet de distinguer une impression ponctuelle d'une tendance réelle. Charges, répétitions, difficulté perçue et récupération donnent les informations nécessaires pour ajuster le programme.",
         "Les outils numériques peuvent faciliter ce suivi, mais ils ne remplacent ni la technique, ni la constance, ni le jugement d'un professionnel qualifié lorsque la situation l'exige.",
       ],
+      links: [
+        {
+          href: '/fr/coach-sportif-ia',
+          label: 'Découvrir un programme adapté à vos objectifs',
+        },
+      ],
     },
   ],
   disclaimer:
@@ -178,6 +190,12 @@ const nutrition: GuideContent = {
       paragraphs: [
         "Le poids évolue principalement selon l'équilibre entre l'énergie consommée et l'énergie dépensée. Les besoins réels varient avec le gabarit, l'activité, l'entraînement et les adaptations individuelles.",
         "Une estimation calorique sert de point de départ. La tendance du poids, les performances, la faim et la récupération permettent ensuite de l'ajuster progressivement.",
+      ],
+      links: [
+        {
+          href: '/fr/outils/calculateur-calories-macros',
+          label: 'Estimer vos besoins caloriques',
+        },
       ],
     },
     {
@@ -236,6 +254,12 @@ const nutrition: GuideContent = {
       paragraphs: [
         "Une prise de masse vise un surplus énergétique modéré et ajusté selon l'évolution du poids et des performances. Un surplus excessif n'accélère pas proportionnellement la construction musculaire.",
         "La progression doit être évaluée sur plusieurs semaines afin de limiter les ajustements impulsifs liés aux variations quotidiennes d'eau et de glycogène.",
+      ],
+      links: [
+        {
+          href: '/fr/nutrition/prise-de-masse',
+          label: 'Construire un plan de prise de masse',
+        },
       ],
     },
     {

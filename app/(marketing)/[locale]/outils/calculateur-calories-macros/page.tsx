@@ -133,6 +133,9 @@ export default async function CalculatorPage({ params }: CalculatorPageProps) {
             <p style={paragraphStyle}>
               L’objectif choisi ajuste ce niveau de maintien. MoovX applique les mêmes règles que son outil nutritionnel interne afin d’éviter qu’un calcul public et un plan enregistré donnent deux réponses différentes.
             </p>
+            <p style={paragraphStyle}>
+              Si votre objectif est de développer votre masse musculaire, utilisez cette estimation pour <Link href="/fr/nutrition/prise-de-masse" style={{ color: '#c9a84c' }}>préparer une alimentation de prise de masse</Link> adaptée à votre suivi.
+            </p>
           </section>
 
           <section style={sectionStyle}>
