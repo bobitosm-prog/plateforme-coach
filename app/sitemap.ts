@@ -83,5 +83,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const aiCoachUrl = `${SITE_URL}/fr/coach-sportif-ia`;
+  entries.push({
+    url: aiCoachUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: aiCoachUrl,
+        'x-default': aiCoachUrl,
+      },
+    },
+  });
+
   return entries;
 }
