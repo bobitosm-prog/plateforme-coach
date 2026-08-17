@@ -83,6 +83,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const weightLossUrl = `${SITE_URL}/fr/nutrition/perte-de-poids`;
+  entries.push({
+    url: weightLossUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: weightLossUrl,
+        'x-default': weightLossUrl,
+      },
+    },
+  });
+
   const aiCoachUrl = `${SITE_URL}/fr/coach-sportif-ia`;
   entries.push({
     url: aiCoachUrl,

@@ -107,7 +107,7 @@ describe('French bulk gain pillar page', () => {
     const entries = sitemap()
     const bulkEntries = entries.filter(entry => entry.url.includes('/nutrition/prise-de-masse'))
 
-    expect(entries).toHaveLength(32)
+    expect(entries).toHaveLength(33)
     expect(bulkEntries).toHaveLength(1)
     expect(bulkEntries[0]).toMatchObject({
       url: canonical,
