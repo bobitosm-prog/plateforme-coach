@@ -2,13 +2,18 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// ===== Host-based redirect helpers (dead code until wired in) =====
+// ===== Host-based redirect helpers =====
 const MARKETING_HOSTS = ['moovx.ch', 'www.moovx.ch']
 const APP_HOST = 'app.moovx.ch'
 
-function isLandingPath(pathname: string): boolean {
+export function isMarketingPath(pathname: string): boolean {
   // Pages localisées : /fr/landing, /en/cgu, /de/privacy
-  if (/^\/(fr|en|de)\/(landing|cgu|privacy)/.test(pathname)) return true
+  if (/^\/(fr|en|de)\/(landing|cgu|privacy)(?:\/|$)/.test(pathname)) return true
+  // Blog public disponible dans les trois langues
+  if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
+  // Surfaces d'acquisition disponibles uniquement en français
+  if (/^\/fr\/(guides|outils|nutrition)(?:\/|$)/.test(pathname)) return true
+  if (/^\/fr\/coach-sportif-ia(?:\/|$)/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
   // SEO files
@@ -16,7 +21,7 @@ function isLandingPath(pathname: string): boolean {
   return false
 }
 
-function getHostRedirect(request: NextRequest): NextResponse | null {
+export function getHostRedirect(request: NextRequest): NextResponse | null {
   const host = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
   const search = request.nextUrl.search
@@ -27,16 +32,21 @@ function getHostRedirect(request: NextRequest): NextResponse | null {
   // En dev (localhost) ou preview Vercel (xxx.vercel.app) → no-op
   if (!isMarketingHost && !isAppHost) return null
 
-  const isLanding = isLandingPath(pathname)
+  const isMarketing = isMarketingPath(pathname)
 
-  // Cas 1 : sur app.moovx.ch mais path landing → renvoyer sur moovx.ch
-  if (isAppHost && isLanding) {
+  // Canonicaliser les surfaces marketing www vers l'apex.
+  if (host === 'www.moovx.ch' && isMarketing) {
+    return NextResponse.redirect(`https://moovx.ch${pathname}${search}`, 308)
+  }
+
+  // Cas 1 : sur app.moovx.ch mais path marketing → renvoyer sur moovx.ch
+  if (isAppHost && isMarketing) {
     return NextResponse.redirect(`https://moovx.ch${pathname}${search}`, 308)
   }
 
   // Cas 2 : sur moovx.ch mais path app
   // Exception : pathname === '/' est géré par la logique aval
-  if (isMarketingHost && !isLanding && pathname !== '/') {
+  if (isMarketingHost && !isMarketing && pathname !== '/') {
     return NextResponse.redirect(`https://app.moovx.ch${pathname}${search}`, 308)
   }
 
