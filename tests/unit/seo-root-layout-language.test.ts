@@ -22,9 +22,10 @@ import RootDocument, { rootMetadata } from '@/app/components/layout/RootDocument
 
 describe('localized root documents', () => {
   it.each(['fr', 'en', 'de'] as const)('renders the initial HTML language for /%s/*', lang => {
-    const html = renderToStaticMarkup(
-      createElement(RootDocument, { lang }, createElement('main', null, 'MoovX')),
-    )
+    const html = renderToStaticMarkup(RootDocument({
+      lang,
+      children: createElement('main', null, 'MoovX'),
+    }))
 
     expect(html).toContain(`<html lang="${lang}"`)
     expect(html.match(/<html/g)).toHaveLength(1)
