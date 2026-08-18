@@ -96,6 +96,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
+  entries.push({
+    url: beginnerProgramUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: beginnerProgramUrl,
+        'x-default': beginnerProgramUrl,
+      },
+    },
+  });
+
   const aiCoachUrl = `${SITE_URL}/fr/coach-sportif-ia`;
   entries.push({
     url: aiCoachUrl,
