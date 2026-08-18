@@ -40,8 +40,17 @@ describe('marketing/application host boundary', () => {
     '/fr/guides/nutrition',
     '/fr/outils/calculateur-calories-macros',
     '/fr/nutrition/prise-de-masse',
+    '/fr/programmes/musculation/debutant',
     '/fr/coach-sportif-ia',
   ]
+
+  it.each([
+    '/fr/programmes',
+    '/fr/programmes/',
+    '/fr/programmes/musculation/debutant',
+  ])('classifies the bounded French programmes path %s as marketing', path => {
+    expect(isMarketingPath(path)).toBe(true)
+  })
 
   it.each([...multilingualBlogPaths, ...frenchAcquisitionPaths])(
     'keeps %s on the marketing apex',
@@ -77,6 +86,8 @@ describe('marketing/application host boundary', () => {
     '/de/outils/calculateur-calories-macros',
     '/en/nutrition/prise-de-masse',
     '/de/nutrition/prise-de-masse',
+    '/en/programmes/musculation/debutant',
+    '/de/programmes/musculation/debutant',
     '/en/coach-sportif-ia',
     '/de/coach-sportif-ia',
   ])('does not classify the unavailable localized route %s as marketing', path => {
@@ -120,6 +131,10 @@ describe('marketing/application host boundary', () => {
     expectRedirect(
       getHostRedirect(request('moovx.ch:443', '/client/example?tab=progress')),
       'https://app.moovx.ch/client/example?tab=progress',
+    )
+    expectRedirect(
+      getHostRedirect(request('app.moovx.ch', '/fr/programmes/musculation/debutant?utm_source=test')),
+      'https://moovx.ch/fr/programmes/musculation/debutant?utm_source=test',
     )
   })
 
@@ -181,9 +196,13 @@ describe('marketing/application host boundary', () => {
       getHostRedirect(request('www.moovx.ch', '/login')),
       'https://app.moovx.ch/login',
     )
+    expectRedirect(
+      getHostRedirect(request('www.moovx.ch', '/fr/programmes/musculation/debutant?source=www')),
+      'https://moovx.ch/fr/programmes/musculation/debutant?source=www',
+    )
   })
 
-  it.each(['/fr/blogger', '/fr/landing-invalid'])(
+  it.each(['/fr/blogger', '/fr/landing-invalid', '/fr/programmesfoo'])(
     'uses exact segment boundaries for %s',
     path => {
       expect(isMarketingPath(path)).toBe(false)

@@ -16,7 +16,7 @@ export function isMarketingPath(pathname: string): boolean {
   // Blog public disponible dans les trois langues
   if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
   // Surfaces d'acquisition disponibles uniquement en français
-  if (/^\/fr\/(guides|outils|nutrition)(?:\/|$)/.test(pathname)) return true
+  if (/^\/fr\/(guides|outils|nutrition|programmes)(?:\/|$)/.test(pathname)) return true
   if (/^\/fr\/coach-sportif-ia(?:\/|$)/.test(pathname)) return true
   // Pages légales racine (legacy)
   if (pathname === '/cgu' || pathname === '/privacy') return true
