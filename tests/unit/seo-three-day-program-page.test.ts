@@ -164,8 +164,8 @@ describe('French three-day training program pillar', () => {
     const entries = sitemap()
     const programEntries = entries.filter(entry => entry.url.includes('/programmes/musculation/3-jours'))
 
-    expect(entries).toHaveLength(37)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(37)
+    expect(entries).toHaveLength(38)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(38)
     expect(programEntries).toHaveLength(1)
     expect(programEntries[0]).toMatchObject({
       url: canonical,

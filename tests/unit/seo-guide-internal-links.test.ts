@@ -25,6 +25,8 @@ describe('Guide internal authority flow', () => {
     expect(html).toContain('estimer combien de protéines consommer par jour')
     expect(html).toContain('href="/fr/nutrition/macros"')
     expect(html).toContain('comprendre comment répartir protéines, glucides et lipides')
+    expect(html).toContain('href="/fr/nutrition/repas-sportifs"')
+    expect(html).toContain('composer des repas sportifs avant et après l’entraînement')
     expect(html).toContain('href="/fr/nutrition/prise-de-masse"')
     expect(html).toContain('construire une prise de masse progressive')
     expect(html).toContain('href="/fr/nutrition/perte-de-poids"')

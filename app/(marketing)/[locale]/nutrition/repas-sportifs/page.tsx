@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { MACROS_CONTENT } from '@/content/nutrition/macros'
+import { SPORTS_MEALS_CONTENT } from '@/content/nutrition/sports-meals'
 import { SITE_URL } from '@/lib/seo'
 
-const PATH = '/fr/nutrition/macros'
+const PATH = '/fr/nutrition/repas-sportifs'
 const CANONICAL_URL = `${SITE_URL}${PATH}`
 
 export const dynamicParams = false
@@ -26,8 +26,8 @@ export async function generateMetadata({
   requireFrenchLocale(locale)
 
   return {
-    title: MACROS_CONTENT.seoTitle,
-    description: MACROS_CONTENT.description,
+    title: SPORTS_MEALS_CONTENT.seoTitle,
+    description: SPORTS_MEALS_CONTENT.description,
     alternates: {
       canonical: CANONICAL_URL,
       languages: {
@@ -38,7 +38,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function MacrosPage({
+export default async function SportsMealsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -51,8 +51,8 @@ export default async function MacrosPage({
     '@type': 'WebPage',
     '@id': `${CANONICAL_URL}#webpage`,
     url: CANONICAL_URL,
-    name: MACROS_CONTENT.title,
-    description: MACROS_CONTENT.description,
+    name: SPORTS_MEALS_CONTENT.title,
+    description: SPORTS_MEALS_CONTENT.description,
     inLanguage: 'fr',
     isPartOf: {
       '@id': `${SITE_URL}/#website`,
@@ -73,20 +73,17 @@ export default async function MacrosPage({
       <main>
         <article style={{ maxWidth: 920, margin: '0 auto', padding: '64px 24px 88px' }}>
           <header style={{ maxWidth: 800, marginBottom: 48 }}>
-            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Macronutriments</p>
+            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Repas sportifs</p>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 1, margin: '16px 0 24px' }}>
-              {MACROS_CONTENT.title}
+              {SPORTS_MEALS_CONTENT.title}
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{MACROS_CONTENT.introduction}</p>
-            <Link href="/fr/outils/calculateur-calories-macros" style={{ display: 'inline-block', marginTop: 18, background: '#c9a84c', color: '#080808', padding: '14px 20px', fontWeight: 800, textDecoration: 'none' }}>
-              Estimer mes calories et mes macros
-            </Link>
+            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{SPORTS_MEALS_CONTENT.introduction}</p>
           </header>
 
           <nav aria-label="Sommaire" style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.25)', padding: 24, marginBottom: 56 }}>
             <h2 style={{ color: '#c9a84c', marginTop: 0 }}>Sommaire</h2>
             <ol style={{ marginBottom: 0, paddingLeft: 22 }}>
-              {MACROS_CONTENT.sections.map(section => (
+              {SPORTS_MEALS_CONTENT.sections.map(section => (
                 <li key={section.id} style={{ marginBottom: 8 }}>
                   <a href={`#${section.id}`} style={{ color: 'rgba(255,255,255,0.76)' }}>{section.title}</a>
                 </li>
@@ -94,7 +91,7 @@ export default async function MacrosPage({
             </ol>
           </nav>
 
-          {MACROS_CONTENT.sections.map(section => (
+          {SPORTS_MEALS_CONTENT.sections.map(section => (
             <section key={section.id} id={section.id} style={{ scrollMarginTop: 24, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 5vw, 3rem)', color: '#c9a84c', lineHeight: 1.1 }}>{section.title}</h2>
               {section.paragraphs.map(paragraph => (
@@ -105,42 +102,26 @@ export default async function MacrosPage({
                   {section.points.map(point => <li key={point}>{point}</li>)}
                 </ul>
               )}
-              {section.table && (
-                <div style={{ overflowX: 'auto', marginTop: 28 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
-                    <caption style={{ textAlign: 'left', color: '#c9a84c', fontWeight: 700, marginBottom: 12 }}>{section.table.caption}</caption>
-                    <thead>
-                      <tr>
-                        {section.table.headers.map(header => (
-                          <th key={header} scope="col" style={{ borderBottom: '1px solid rgba(201,168,76,0.4)', padding: 12, textAlign: 'left' }}>{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {section.table.rows.map(row => (
-                        <tr key={row.join('|')}>
-                          {row.map(cell => <td key={cell} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 12, color: 'rgba(255,255,255,0.72)' }}>{cell}</td>)}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {section.examples && (
+                <div style={{ display: 'grid', gap: 18, marginTop: 28 }}>
+                  {section.examples.map(example => (
+                    <section key={example.meal} aria-label={example.meal} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 20 }}>
+                      <h3 style={{ color: '#c9a84c', marginTop: 0 }}>{example.meal}</h3>
+                      <ul style={{ color: 'rgba(255,255,255,0.76)', lineHeight: 1.8 }}>
+                        {example.composition.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                      <p style={{ color: 'rgba(255,255,255,0.68)', lineHeight: 1.7, marginBottom: 0 }}>{example.context}</p>
+                    </section>
+                  ))}
                 </div>
-              )}
-              {section.contextualLink && (
-                <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
-                  Pour appliquer cette répartition au quotidien, découvrez comment{' '}
-                  <Link href={section.contextualLink.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
-                    {section.contextualLink.label}
-                  </Link>.
-                </p>
               )}
             </section>
           ))}
 
           <section aria-labelledby="related-content" style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
-            <h2 id="related-content" style={{ color: '#c9a84c' }}>Approfondir avec MoovX</h2>
+            <h2 id="related-content" style={{ color: '#c9a84c' }}>Approfondir votre organisation nutritionnelle</h2>
             <ul style={{ display: 'grid', gap: 14, padding: 0, listStyle: 'none' }}>
-              {MACROS_CONTENT.links.map(link => (
+              {SPORTS_MEALS_CONTENT.links.map(link => (
                 <li key={link.href} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 18 }}>
                   <Link href={link.href} style={{ color: '#c9a84c', fontWeight: 700 }}>{link.label}</Link>
                   <p style={{ marginBottom: 0, color: 'rgba(255,255,255,0.7)' }}>{link.description}</p>
@@ -150,7 +131,7 @@ export default async function MacrosPage({
           </section>
 
           <aside style={{ border: '1px solid rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.08)', padding: 24, lineHeight: 1.7 }}>
-            {MACROS_CONTENT.disclaimer}
+            {SPORTS_MEALS_CONTENT.disclaimer}
           </aside>
 
           <p style={{ textAlign: 'center', marginTop: 40 }}>

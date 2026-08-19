@@ -114,6 +114,13 @@ describe('French macros nutrition pillar', () => {
     expect(calculatorHtml).toContain('guide des protéines, glucides et lipides')
   })
 
+  it('links contextually to the sports meals pillar', async () => {
+    const html = await renderPage('fr')
+
+    expect(html).toContain('href="/fr/nutrition/repas-sportifs"')
+    expect(html).toContain('composer des repas sportifs à partir de ces repères')
+  })
+
   it('keeps a distinct intent from the calculator, protein pillar and nutrition guide', async () => {
     const guide = getGuide('nutrition')
     expect(guide).toBeTruthy()
@@ -169,8 +176,8 @@ describe('French macros nutrition pillar', () => {
     const entries = sitemap()
     const macrosEntries = entries.filter(entry => entry.url.includes('/nutrition/macros'))
 
-    expect(entries).toHaveLength(37)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(37)
+    expect(entries).toHaveLength(38)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(38)
     expect(macrosEntries).toHaveLength(1)
     expect(macrosEntries[0]).toMatchObject({
       url: canonical,

@@ -122,6 +122,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const sportsMealsUrl = `${SITE_URL}/fr/nutrition/repas-sportifs`;
+  entries.push({
+    url: sportsMealsUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: sportsMealsUrl,
+        'x-default': sportsMealsUrl,
+      },
+    },
+  });
+
   const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
   entries.push({
     url: beginnerProgramUrl,

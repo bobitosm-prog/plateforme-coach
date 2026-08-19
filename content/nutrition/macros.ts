@@ -16,6 +16,7 @@ export type MacrosSection = {
   paragraphs: readonly string[]
   points?: readonly string[]
   table?: MacrosTable
+  contextualLink?: MacrosLink
 }
 
 export type MacrosContent = {
@@ -94,6 +95,11 @@ export const MACROS_CONTENT: MacrosContent = {
         'Éviter de modifier simultanément toutes les variables.',
         'Observer l’énergie, la satiété, la récupération et la régularité des repas.',
       ],
+      contextualLink: {
+        href: '/fr/nutrition/repas-sportifs',
+        label: 'composer des repas sportifs à partir de ces repères',
+        description: 'Passez de la répartition théorique à des structures de repas concrètes et adaptables.',
+      },
     },
     {
       id: 'selon-objectif',

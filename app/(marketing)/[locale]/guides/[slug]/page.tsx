@@ -46,6 +46,14 @@ function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
     }
   }
 
+  if (guideSlug === 'nutrition' && sectionId === 'timing') {
+    return {
+      href: '/fr/nutrition/repas-sportifs',
+      label: 'composer des repas sportifs avant et après l’entraînement',
+      prefix: 'Pour traduire ces repères en exemples concrets, découvrez comment ',
+    }
+  }
+
   if (guideSlug === 'nutrition' && sectionId === 'prise-de-masse') {
     return {
       href: '/fr/nutrition/prise-de-masse',
