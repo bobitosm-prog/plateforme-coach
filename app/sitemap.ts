@@ -122,6 +122,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const threeDayProgramUrl = `${SITE_URL}/fr/programmes/musculation/3-jours`;
+  entries.push({
+    url: threeDayProgramUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: threeDayProgramUrl,
+        'x-default': threeDayProgramUrl,
+      },
+    },
+  });
+
   const aiCoachUrl = `${SITE_URL}/fr/coach-sportif-ia`;
   entries.push({
     url: aiCoachUrl,

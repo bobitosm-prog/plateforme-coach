@@ -108,7 +108,7 @@ describe('French AI coach pillar page', () => {
     const entries = sitemap()
     const aiCoachEntries = entries.filter(entry => entry.url.includes('/coach-sportif-ia'))
 
-    expect(entries).toHaveLength(35)
+    expect(entries).toHaveLength(36)
     expect(aiCoachEntries).toHaveLength(1)
     expect(aiCoachEntries[0]).toMatchObject({
       url: canonical,

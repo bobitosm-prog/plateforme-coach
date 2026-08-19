@@ -103,8 +103,8 @@ describe('French weight loss pillar page', () => {
     const entries = sitemap()
     const weightLossEntries = entries.filter(entry => entry.url.includes('/nutrition/perte-de-poids'))
 
-    expect(entries).toHaveLength(35)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(35)
+    expect(entries).toHaveLength(36)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(36)
     expect(weightLossEntries).toHaveLength(1)
     expect(weightLossEntries[0]).toMatchObject({
       url: canonical,

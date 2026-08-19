@@ -37,6 +37,8 @@ describe('Guide internal authority flow', () => {
     expect(html).toContain('découvrir le coach sportif IA MoovX')
     expect(html).toContain('href="/fr/programmes/musculation/debutant"')
     expect(html).toContain('commencer avec un programme de musculation débutant')
+    expect(html).toContain('href="/fr/programmes/musculation/3-jours"')
+    expect(html).toContain('organiser un programme de musculation sur trois jours')
     expect(html).not.toContain('href="/fr/outils/calculateur-calories-macros"')
     expect(html).not.toContain('href="/fr/nutrition/prise-de-masse"')
     expect(html).not.toContain('href="/fr/nutrition/perte-de-poids"')

@@ -70,6 +70,14 @@ function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
     }
   }
 
+  if (guideSlug === 'musculation' && sectionId === 'recuperation') {
+    return {
+      href: '/fr/programmes/musculation/3-jours',
+      label: 'organiser un programme de musculation sur trois jours',
+      prefix: 'Pour répartir séances et récupération dans la semaine, découvrez comment ',
+    }
+  }
+
   return null
 }
 

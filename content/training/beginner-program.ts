@@ -65,6 +65,7 @@ export const BEGINNER_PROGRAM_CONTENT: BeginnerProgramContent = {
       ],
       links: [
         { href: '/fr/blog/frequence-entrainement-combien-de-fois-par-semaine', label: 'Comprendre comment choisir sa fréquence d’entraînement' },
+        { href: '/fr/programmes/musculation/3-jours', label: 'Voir comment organiser précisément trois séances par semaine' },
       ],
     },
     {
