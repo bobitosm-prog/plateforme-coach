@@ -19,6 +19,10 @@ const LINK_GROUPS = {
         href: '/fr/nutrition/prise-de-masse',
         label: 'Construire une prise de masse progressive',
       },
+      {
+        href: '/fr/nutrition/perte-de-poids',
+        label: 'Adapter son alimentation pour une perte de poids progressive',
+      },
     ],
   },
   training: {
@@ -27,6 +31,10 @@ const LINK_GROUPS = {
       {
         href: '/fr/guides/musculation',
         label: 'Consulter le guide de musculation',
+      },
+      {
+        href: '/fr/programmes/musculation/debutant',
+        label: 'Commencer avec un programme de musculation débutant',
       },
     ],
   },

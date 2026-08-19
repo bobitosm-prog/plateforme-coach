@@ -18,7 +18,9 @@ const expectedTargets = [
   '/fr/outils/calculateur-calories-macros',
   '/fr/guides/nutrition',
   '/fr/nutrition/prise-de-masse',
+  '/fr/nutrition/perte-de-poids',
   '/fr/guides/musculation',
+  '/fr/programmes/musculation/debutant',
   '/fr/coach-sportif-ia',
 ]
 
@@ -30,10 +32,10 @@ function renderLinks(locale: string) {
 }
 
 describe('Landing internal authority links', () => {
-  it('renders the five contextual SEO links on the French landing', () => {
+  it('renders the seven contextual SEO links on the French landing', () => {
     const html = renderLinks('fr')
 
-    expect(html.match(/href=/g)).toHaveLength(5)
+    expect(html.match(/href=/g)).toHaveLength(7)
     for (const target of expectedTargets) {
       expect(html).toContain(`href="${target}"`)
     }
@@ -41,7 +43,9 @@ describe('Landing internal authority links', () => {
       'Estimer vos calories et vos macros',
       'Consulter le guide de la nutrition sportive',
       'Construire une prise de masse progressive',
+      'Adapter son alimentation pour une perte de poids progressive',
       'Consulter le guide de musculation',
+      'Commencer avec un programme de musculation débutant',
       'Découvrir comment fonctionne le coach sportif IA',
     ]) {
       expect(html).toContain(anchor)
@@ -78,7 +82,9 @@ describe('Landing internal authority links', () => {
       '/fr/outils/calculateur-calories-macros': 'app/(marketing)/[locale]/outils/calculateur-calories-macros/page.tsx',
       '/fr/guides/nutrition': 'app/(marketing)/[locale]/guides/[slug]/page.tsx',
       '/fr/nutrition/prise-de-masse': 'app/(marketing)/[locale]/nutrition/prise-de-masse/page.tsx',
+      '/fr/nutrition/perte-de-poids': 'app/(marketing)/[locale]/nutrition/perte-de-poids/page.tsx',
       '/fr/guides/musculation': 'app/(marketing)/[locale]/guides/[slug]/page.tsx',
+      '/fr/programmes/musculation/debutant': 'app/(marketing)/[locale]/programmes/musculation/debutant/page.tsx',
       '/fr/coach-sportif-ia': 'app/(marketing)/[locale]/coach-sportif-ia/page.tsx',
     }
 

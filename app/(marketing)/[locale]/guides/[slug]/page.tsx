@@ -38,6 +38,22 @@ function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
     }
   }
 
+  if (guideSlug === 'nutrition' && sectionId === 'perte-de-poids') {
+    return {
+      href: '/fr/nutrition/perte-de-poids',
+      label: 'adapter votre alimentation pour une perte de poids progressive',
+      prefix: 'Retrouvez une méthode structurée pour ',
+    }
+  }
+
+  if (guideSlug === 'musculation' && sectionId === 'frequence') {
+    return {
+      href: '/fr/programmes/musculation/debutant',
+      label: 'commencer avec un programme de musculation débutant',
+      prefix: 'Pour organiser vos premières semaines, vous pouvez ',
+    }
+  }
+
   if (guideSlug === 'musculation' && sectionId === 'split') {
     return {
       href: '/fr/coach-sportif-ia',

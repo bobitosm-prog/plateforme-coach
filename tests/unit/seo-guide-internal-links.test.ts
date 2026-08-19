@@ -16,23 +16,28 @@ function extractSchema(html: string) {
 }
 
 describe('Guide internal authority flow', () => {
-  it('links the French nutrition guide to the calculator and bulk-gain pillar', async () => {
+  it('links the French nutrition guide to the calculator and nutrition pillars', async () => {
     const html = await renderGuide('fr', 'nutrition')
 
     expect(html).toContain('href="/fr/outils/calculateur-calories-macros"')
     expect(html).toContain('calculer vos calories et vos macros')
     expect(html).toContain('href="/fr/nutrition/prise-de-masse"')
     expect(html).toContain('construire une prise de masse progressive')
+    expect(html).toContain('href="/fr/nutrition/perte-de-poids"')
+    expect(html).toContain('adapter votre alimentation pour une perte de poids progressive')
     expect(html).not.toContain('href="/fr/coach-sportif-ia"')
   })
 
-  it('links the French training guide to the AI coach pillar', async () => {
+  it('links the French training guide to the beginner program and AI coach pillars', async () => {
     const html = await renderGuide('fr', 'musculation')
 
     expect(html).toContain('href="/fr/coach-sportif-ia"')
     expect(html).toContain('découvrir le coach sportif IA MoovX')
+    expect(html).toContain('href="/fr/programmes/musculation/debutant"')
+    expect(html).toContain('commencer avec un programme de musculation débutant')
     expect(html).not.toContain('href="/fr/outils/calculateur-calories-macros"')
     expect(html).not.toContain('href="/fr/nutrition/prise-de-masse"')
+    expect(html).not.toContain('href="/fr/nutrition/perte-de-poids"')
   })
 
   it.each(['en', 'de'])('keeps French-only links out of the unavailable %s guides', async locale => {
