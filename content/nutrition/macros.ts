@@ -124,8 +124,8 @@ export const MACROS_CONTENT: MacrosContent = {
       id: 'limites',
       title: 'Limites et situations nécessitant un professionnel',
       paragraphs: [
-        'Les repères généraux ne couvrent pas toutes les situations. Une pathologie, une grossesse, l’allaitement, un traitement, un trouble du comportement alimentaire ou un besoin clinique nécessitent une évaluation individualisée.',
-        'Dans ces situations, demandez conseil à un médecin ou à un professionnel de la nutrition qualifié avant de modifier significativement les apports ou leur répartition.',
+        'Une répartition théorique ne décrit ni la qualité des aliments, ni la tolérance digestive, ni la manière dont les repas s’intègrent au quotidien. Elle reste un cadre de lecture à confronter à l’alimentation complète, aux sensations et aux tendances observées avant d’envisager un ajustement.',
+        'Lorsqu’une maladie, une grossesse, l’allaitement, un traitement, des difficultés avec l’alimentation ou des symptômes digestifs influencent les choix nutritionnels, un professionnel qualifié peut évaluer le contexte et accompagner l’organisation des macronutriments.',
       ],
     },
   ],
