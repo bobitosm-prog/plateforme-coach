@@ -17,6 +17,7 @@ const groups: LandingContextualLinkGroup[] = ['nutrition', 'training', 'coach']
 const expectedTargets = [
   '/fr/outils/calculateur-calories-macros',
   '/fr/guides/nutrition',
+  '/fr/nutrition/proteines-par-jour',
   '/fr/nutrition/prise-de-masse',
   '/fr/nutrition/perte-de-poids',
   '/fr/guides/musculation',
@@ -32,16 +33,17 @@ function renderLinks(locale: string) {
 }
 
 describe('Landing internal authority links', () => {
-  it('renders the seven contextual SEO links on the French landing', () => {
+  it('renders the eight contextual SEO links on the French landing', () => {
     const html = renderLinks('fr')
 
-    expect(html.match(/href=/g)).toHaveLength(7)
+    expect(html.match(/href=/g)).toHaveLength(8)
     for (const target of expectedTargets) {
       expect(html).toContain(`href="${target}"`)
     }
     for (const anchor of [
       'Estimer vos calories et vos macros',
       'Consulter le guide de la nutrition sportive',
+      'Comprendre combien de protéines consommer par jour',
       'Construire une prise de masse progressive',
       'Adapter son alimentation pour une perte de poids progressive',
       'Consulter le guide de musculation',
@@ -81,6 +83,7 @@ describe('Landing internal authority links', () => {
     const routeFiles: Record<string, string> = {
       '/fr/outils/calculateur-calories-macros': 'app/(marketing)/[locale]/outils/calculateur-calories-macros/page.tsx',
       '/fr/guides/nutrition': 'app/(marketing)/[locale]/guides/[slug]/page.tsx',
+      '/fr/nutrition/proteines-par-jour': 'app/(marketing)/[locale]/nutrition/proteines-par-jour/page.tsx',
       '/fr/nutrition/prise-de-masse': 'app/(marketing)/[locale]/nutrition/prise-de-masse/page.tsx',
       '/fr/nutrition/perte-de-poids': 'app/(marketing)/[locale]/nutrition/perte-de-poids/page.tsx',
       '/fr/guides/musculation': 'app/(marketing)/[locale]/guides/[slug]/page.tsx',

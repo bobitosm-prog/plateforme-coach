@@ -115,7 +115,7 @@ describe('SEO calorie and macro calculator', () => {
     const entries = sitemap()
     const calculatorEntries = entries.filter(entry => entry.url.includes('/outils/'))
 
-    expect(entries).toHaveLength(34)
+    expect(entries).toHaveLength(35)
     expect(calculatorEntries).toHaveLength(1)
     expect(calculatorEntries[0]).toMatchObject({
       url: canonical,

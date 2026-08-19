@@ -21,6 +21,8 @@ describe('Guide internal authority flow', () => {
 
     expect(html).toContain('href="/fr/outils/calculateur-calories-macros"')
     expect(html).toContain('calculer vos calories et vos macros')
+    expect(html).toContain('href="/fr/nutrition/proteines-par-jour"')
+    expect(html).toContain('estimer combien de protéines consommer par jour')
     expect(html).toContain('href="/fr/nutrition/prise-de-masse"')
     expect(html).toContain('construire une prise de masse progressive')
     expect(html).toContain('href="/fr/nutrition/perte-de-poids"')

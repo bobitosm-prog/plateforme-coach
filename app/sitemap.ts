@@ -96,6 +96,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const dailyProteinUrl = `${SITE_URL}/fr/nutrition/proteines-par-jour`;
+  entries.push({
+    url: dailyProteinUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: dailyProteinUrl,
+        'x-default': dailyProteinUrl,
+      },
+    },
+  });
+
   const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
   entries.push({
     url: beginnerProgramUrl,

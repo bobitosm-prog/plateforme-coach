@@ -16,6 +16,10 @@ const LINK_GROUPS = {
         label: 'Consulter le guide de la nutrition sportive',
       },
       {
+        href: '/fr/nutrition/proteines-par-jour',
+        label: 'Comprendre combien de protéines consommer par jour',
+      },
+      {
         href: '/fr/nutrition/prise-de-masse',
         label: 'Construire une prise de masse progressive',
       },

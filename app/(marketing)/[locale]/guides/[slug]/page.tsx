@@ -30,6 +30,14 @@ function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
     }
   }
 
+  if (guideSlug === 'nutrition' && sectionId === 'proteines') {
+    return {
+      href: '/fr/nutrition/proteines-par-jour',
+      label: 'estimer combien de protéines consommer par jour',
+      prefix: 'Pour relier ces repères à votre objectif, découvrez comment ',
+    }
+  }
+
   if (guideSlug === 'nutrition' && sectionId === 'prise-de-masse') {
     return {
       href: '/fr/nutrition/prise-de-masse',
