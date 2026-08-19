@@ -115,6 +115,14 @@ export default async function SportsMealsPage({
                   ))}
                 </div>
               )}
+              {section.contextualLink && (
+                <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
+                  Pour approfondir cet objectif, découvrez comment{' '}
+                  <Link href={section.contextualLink.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
+                    {section.contextualLink.label}
+                  </Link>.
+                </p>
+              )}
             </section>
           ))}
 

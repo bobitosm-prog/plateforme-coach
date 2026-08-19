@@ -84,6 +84,13 @@ describe('French bulk gain pillar page', () => {
     }
   })
 
+  it('links contextually to the bulk menu pillar', async () => {
+    const html = await renderPage('fr')
+
+    expect(html).toContain('href="/fr/nutrition/menu-prise-de-masse"')
+    expect(html).toContain('construire un menu de prise de masse sur une journée complète')
+  })
+
   it('contains no local nutrition calculation or forbidden claims', async () => {
     const pageSource = readFileSync('app/(marketing)/[locale]/nutrition/prise-de-masse/page.tsx', 'utf8')
     const contentSource = readFileSync('content/nutrition/bulk-gain.ts', 'utf8')
@@ -107,7 +114,7 @@ describe('French bulk gain pillar page', () => {
     const entries = sitemap()
     const bulkEntries = entries.filter(entry => entry.url.includes('/nutrition/prise-de-masse'))
 
-    expect(entries).toHaveLength(38)
+    expect(entries).toHaveLength(39)
     expect(bulkEntries).toHaveLength(1)
     expect(bulkEntries[0]).toMatchObject({
       url: canonical,

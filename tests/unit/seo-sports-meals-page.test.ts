@@ -120,6 +120,13 @@ describe('French sports meals pillar page', () => {
     }
   })
 
+  it('links contextually to the bulk menu pillar', async () => {
+    const html = await renderPage('fr')
+
+    expect(html).toContain('href="/fr/nutrition/menu-prise-de-masse"')
+    expect(html).toContain('organiser un exemple de menu pour la prise de masse')
+  })
+
   it('describes only the authenticated meal-plan capability and avoids forbidden claims', async () => {
     const source = [
       readFileSync('app/(marketing)/[locale]/nutrition/repas-sportifs/page.tsx', 'utf8'),
@@ -188,8 +195,8 @@ describe('French sports meals pillar page', () => {
     const entries = sitemap()
     const sportsMealsEntries = entries.filter(entry => entry.url.includes('/nutrition/repas-sportifs'))
 
-    expect(entries).toHaveLength(38)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(38)
+    expect(entries).toHaveLength(39)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(39)
     expect(sportsMealsEntries).toHaveLength(1)
     expect(sportsMealsEntries[0]).toMatchObject({
       url: canonical,

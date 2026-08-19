@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { BULK_GAIN_CONTENT } from '@/content/nutrition/bulk-gain'
+import { BULK_MENU_CONTENT } from '@/content/nutrition/bulk-menu'
 import { SITE_URL } from '@/lib/seo'
 
-const PATH = '/fr/nutrition/prise-de-masse'
+const PATH = '/fr/nutrition/menu-prise-de-masse'
 const CANONICAL_URL = `${SITE_URL}${PATH}`
 
 export const dynamicParams = false
@@ -17,17 +17,13 @@ function requireFrenchLocale(locale: string) {
   if (locale !== 'fr') notFound()
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
   requireFrenchLocale(locale)
 
   return {
-    title: BULK_GAIN_CONTENT.seoTitle,
-    description: BULK_GAIN_CONTENT.description,
+    title: BULK_MENU_CONTENT.seoTitle,
+    description: BULK_MENU_CONTENT.description,
     alternates: {
       canonical: CANONICAL_URL,
       languages: {
@@ -38,11 +34,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function BulkGainPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function BulkMenuPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   requireFrenchLocale(locale)
 
@@ -51,12 +43,10 @@ export default async function BulkGainPage({
     '@type': 'WebPage',
     '@id': `${CANONICAL_URL}#webpage`,
     url: CANONICAL_URL,
-    name: BULK_GAIN_CONTENT.title,
-    description: BULK_GAIN_CONTENT.description,
+    name: BULK_MENU_CONTENT.title,
+    description: BULK_MENU_CONTENT.description,
     inLanguage: 'fr',
-    isPartOf: {
-      '@id': `${SITE_URL}/#website`,
-    },
+    isPartOf: { '@id': `${SITE_URL}/#website` },
   }
 
   return (
@@ -73,20 +63,15 @@ export default async function BulkGainPage({
       <main>
         <article style={{ maxWidth: 920, margin: '0 auto', padding: '64px 24px 88px' }}>
           <header style={{ maxWidth: 800, marginBottom: 48 }}>
-            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Prise de muscle</p>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 1, margin: '16px 0 24px' }}>
-              {BULK_GAIN_CONTENT.title}
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{BULK_GAIN_CONTENT.introduction}</p>
-            <Link href="/fr/outils/calculateur-calories-macros" style={{ display: 'inline-block', marginTop: 18, background: '#c9a84c', color: '#080808', padding: '14px 20px', fontWeight: 800, textDecoration: 'none' }}>
-              Estimer mes besoins
-            </Link>
+            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Menu prise de masse</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 1, margin: '16px 0 24px' }}>{BULK_MENU_CONTENT.title}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{BULK_MENU_CONTENT.introduction}</p>
           </header>
 
           <nav aria-label="Sommaire" style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.25)', padding: 24, marginBottom: 56 }}>
             <h2 style={{ color: '#c9a84c', marginTop: 0 }}>Sommaire</h2>
             <ol style={{ marginBottom: 0, paddingLeft: 22 }}>
-              {BULK_GAIN_CONTENT.sections.map(section => (
+              {BULK_MENU_CONTENT.sections.map(section => (
                 <li key={section.id} style={{ marginBottom: 8 }}>
                   <a href={`#${section.id}`} style={{ color: 'rgba(255,255,255,0.76)' }}>{section.title}</a>
                 </li>
@@ -94,7 +79,7 @@ export default async function BulkGainPage({
             </ol>
           </nav>
 
-          {BULK_GAIN_CONTENT.sections.map(section => (
+          {BULK_MENU_CONTENT.sections.map(section => (
             <section key={section.id} id={section.id} style={{ scrollMarginTop: 24, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 5vw, 3rem)', color: '#c9a84c', lineHeight: 1.1 }}>{section.title}</h2>
               {section.paragraphs.map(paragraph => (
@@ -105,44 +90,26 @@ export default async function BulkGainPage({
                   {section.points.map(point => <li key={point}>{point}</li>)}
                 </ul>
               )}
-              {section.exampleMeals && (
-                <div style={{ overflowX: 'auto', marginTop: 28 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
-                    <caption style={{ textAlign: 'left', color: '#c9a84c', fontWeight: 700, marginBottom: 12 }}>Exemple pédagogique uniquement</caption>
-                    <thead>
-                      <tr>
-                        {['Repas', 'Composition possible', 'Rôle dans l’organisation'].map(header => (
-                          <th key={header} scope="col" style={{ borderBottom: '1px solid rgba(201,168,76,0.4)', padding: 12, textAlign: 'left' }}>{header}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {section.exampleMeals.map(example => (
-                        <tr key={example.meal}>
-                          <th scope="row" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 12, textAlign: 'left' }}>{example.meal}</th>
-                          <td style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 12, color: 'rgba(255,255,255,0.72)' }}>{example.composition}</td>
-                          <td style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: 12, color: 'rgba(255,255,255,0.72)' }}>{example.purpose}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {section.examples && (
+                <div style={{ display: 'grid', gap: 18, marginTop: 28 }}>
+                  {section.examples.map(example => (
+                    <section key={example.label} aria-label={example.label} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 20 }}>
+                      <h3 style={{ color: '#c9a84c', marginTop: 0 }}>{example.label}</h3>
+                      <ul style={{ color: 'rgba(255,255,255,0.76)', lineHeight: 1.8 }}>
+                        {example.foods.map(food => <li key={food}>{food}</li>)}
+                      </ul>
+                      <p style={{ color: 'rgba(255,255,255,0.68)', lineHeight: 1.7, marginBottom: 0 }}>{example.note}</p>
+                    </section>
+                  ))}
                 </div>
-              )}
-              {section.contextualLink && (
-                <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
-                  Pour appliquer cette structure au quotidien, découvrez comment{' '}
-                  <Link href={section.contextualLink.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
-                    {section.contextualLink.label}
-                  </Link>.
-                </p>
               )}
             </section>
           ))}
 
           <section aria-labelledby="related-content" style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
-            <h2 id="related-content" style={{ color: '#c9a84c' }}>Poursuivre avec les outils et guides MoovX</h2>
+            <h2 id="related-content" style={{ color: '#c9a84c' }}>Approfondir votre prise de masse</h2>
             <ul style={{ display: 'grid', gap: 14, padding: 0, listStyle: 'none' }}>
-              {BULK_GAIN_CONTENT.links.map(link => (
+              {BULK_MENU_CONTENT.links.map(link => (
                 <li key={link.href} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 18 }}>
                   <Link href={link.href} style={{ color: '#c9a84c', fontWeight: 700 }}>{link.label}</Link>
                   <p style={{ marginBottom: 0, color: 'rgba(255,255,255,0.7)' }}>{link.description}</p>
@@ -151,17 +118,8 @@ export default async function BulkGainPage({
             </ul>
           </section>
 
-          <section aria-labelledby="sources" style={{ marginBottom: 48 }}>
-            <h2 id="sources" style={{ color: '#c9a84c' }}>Sources</h2>
-            <ul style={{ lineHeight: 1.7 }}>
-              {BULK_GAIN_CONTENT.sources.map(source => (
-                <li key={source.url}><a href={source.url} rel="noreferrer" style={{ color: 'rgba(255,255,255,0.76)' }}>{source.label}</a></li>
-              ))}
-            </ul>
-          </section>
-
           <aside style={{ border: '1px solid rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.08)', padding: 24, lineHeight: 1.7 }}>
-            {BULK_GAIN_CONTENT.disclaimer}
+            {BULK_MENU_CONTENT.disclaimer}
           </aside>
 
           <p style={{ textAlign: 'center', marginTop: 40 }}>

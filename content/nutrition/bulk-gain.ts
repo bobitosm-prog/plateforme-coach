@@ -16,6 +16,7 @@ export type BulkGainSection = {
   paragraphs: readonly string[]
   points?: readonly string[]
   exampleMeals?: readonly BulkGainMealExample[]
+  contextualLink?: BulkGainLink
 }
 
 export type BulkGainSource = {
@@ -81,6 +82,11 @@ export const BULK_GAIN_CONTENT: BulkGainContent = {
         { meal: 'Collation', composition: 'Produit laitier ou alternative, fruit et oléagineux selon les besoins', purpose: 'Compléter la journée lorsque les repas principaux ne suffisent pas' },
         { meal: 'Dîner', composition: 'Protéines, source de glucides, légumes et matière grasse', purpose: 'Soutenir la récupération dans une organisation digeste' },
       ],
+      contextualLink: {
+        href: '/fr/nutrition/menu-prise-de-masse',
+        label: 'construire un menu de prise de masse sur une journée complète',
+        description: 'Passer des principes du surplus à une organisation concrète des repas.',
+      },
     },
     {
       id: 'entrainement',

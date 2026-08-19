@@ -135,6 +135,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const bulkMenuUrl = `${SITE_URL}/fr/nutrition/menu-prise-de-masse`;
+  entries.push({
+    url: bulkMenuUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: bulkMenuUrl,
+        'x-default': bulkMenuUrl,
+      },
+    },
+  });
+
   const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
   entries.push({
     url: beginnerProgramUrl,

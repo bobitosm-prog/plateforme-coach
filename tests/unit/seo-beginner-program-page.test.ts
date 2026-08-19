@@ -110,8 +110,8 @@ describe('French beginner training program pillar page', () => {
     const entries = sitemap()
     const programEntries = entries.filter(entry => entry.url.includes('/programmes/musculation/debutant'))
 
-    expect(entries).toHaveLength(38)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(38)
+    expect(entries).toHaveLength(39)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(39)
     expect(programEntries).toHaveLength(1)
     expect(programEntries[0]).toMatchObject({
       url: canonical,
