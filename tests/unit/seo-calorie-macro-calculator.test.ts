@@ -30,6 +30,8 @@ describe('SEO calorie and macro calculator', () => {
     expect(html).toContain('<h1')
     expect(html).toContain('Calculateur de calories et macros')
     expect(html).toContain('aria-live="polite"')
+    expect(html).toContain('href="/fr/nutrition/macros"')
+    expect(html).toContain('guide des protéines, glucides et lipides')
   })
 
   it.each(['en', 'de'])('rejects the unavailable %s locale', async locale => {
@@ -115,7 +117,7 @@ describe('SEO calorie and macro calculator', () => {
     const entries = sitemap()
     const calculatorEntries = entries.filter(entry => entry.url.includes('/outils/'))
 
-    expect(entries).toHaveLength(36)
+    expect(entries).toHaveLength(37)
     expect(calculatorEntries).toHaveLength(1)
     expect(calculatorEntries[0]).toMatchObject({
       url: canonical,

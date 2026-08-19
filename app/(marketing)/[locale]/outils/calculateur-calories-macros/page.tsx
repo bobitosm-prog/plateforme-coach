@@ -97,6 +97,7 @@ export default async function CalorieMacroCalculatorPage({
           <section style={{ marginBottom: 44 }}>
             <h2 style={{ color: '#c9a84c' }}>Protéines, glucides et lipides</h2>
             <p>Les macronutriments contribuent différemment à l’énergie, à la récupération et au fonctionnement de l’organisme. Leur répartition doit rester compatible avec vos préférences et votre contexte.</p>
+            <p>Pour comprendre le rôle de chaque valeur affichée, consultez le <Link href="/fr/nutrition/macros" style={{ color: '#c9a84c' }}>guide des protéines, glucides et lipides</Link>.</p>
             <p>Pour approfondir ces repères, consultez le <Link href="/fr/guides/nutrition" style={{ color: '#c9a84c' }}>guide de la nutrition sportive</Link>.</p>
           </section>
 

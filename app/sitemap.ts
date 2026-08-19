@@ -109,6 +109,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const macrosUrl = `${SITE_URL}/fr/nutrition/macros`;
+  entries.push({
+    url: macrosUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: macrosUrl,
+        'x-default': macrosUrl,
+      },
+    },
+  });
+
   const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
   entries.push({
     url: beginnerProgramUrl,

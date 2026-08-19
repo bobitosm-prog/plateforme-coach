@@ -38,6 +38,14 @@ function getContextualLink(guideSlug: GuideSlug, sectionId: string) {
     }
   }
 
+  if (guideSlug === 'nutrition' && sectionId === 'macros') {
+    return {
+      href: '/fr/nutrition/macros',
+      label: 'comprendre comment répartir protéines, glucides et lipides',
+      prefix: 'Pour interpréter leur place dans votre apport quotidien, découvrez comment ',
+    }
+  }
+
   if (guideSlug === 'nutrition' && sectionId === 'prise-de-masse') {
     return {
       href: '/fr/nutrition/prise-de-masse',
