@@ -175,8 +175,8 @@ describe('French bulk menu pillar page', () => {
     const entries = sitemap()
     const bulkMenuEntries = entries.filter(entry => entry.url.includes('/nutrition/menu-prise-de-masse'))
 
-    expect(entries).toHaveLength(39)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(39)
+    expect(entries).toHaveLength(40)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(40)
     expect(bulkMenuEntries).toHaveLength(1)
     expect(bulkMenuEntries[0]).toMatchObject({
       url: canonical,

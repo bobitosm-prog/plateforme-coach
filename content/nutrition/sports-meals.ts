@@ -16,7 +16,7 @@ export type SportsMealsSection = {
   paragraphs: readonly string[]
   points?: readonly string[]
   examples?: readonly SportsMealExample[]
-  contextualLink?: SportsMealsLink
+  contextualLinks?: readonly SportsMealsLink[]
 }
 
 export type SportsMealsContent = {
@@ -121,11 +121,18 @@ export const SPORTS_MEALS_CONTENT: SportsMealsContent = {
         'Selon l’objectif, la structure des repas peut rester similaire tandis que les portions, la densité énergétique ou le nombre de collations évoluent. En prise de masse, un repas peut intégrer davantage d’énergie de manière progressive. En perte de poids, la composition peut privilégier une organisation rassasiante compatible avec le déficit estimé.',
         'Au maintien, l’enjeu est souvent de conserver une structure stable et suffisamment flexible. Dans tous les cas, un exemple reste pédagogique : seule l’observation du contexte réel permet d’évaluer si l’organisation convient.',
       ],
-      contextualLink: {
-        href: '/fr/nutrition/menu-prise-de-masse',
-        label: 'organiser un exemple de menu pour la prise de masse',
-        description: 'Décliner cette structure sur une journée complète orientée prise de masse.',
-      },
+      contextualLinks: [
+        {
+          href: '/fr/nutrition/menu-prise-de-masse',
+          label: 'organiser un exemple de menu pour la prise de masse',
+          description: 'Décliner cette structure sur une journée complète orientée prise de masse.',
+        },
+        {
+          href: '/fr/nutrition/menu-perte-de-poids',
+          label: 'construire un exemple de menu pour une perte de poids progressive',
+          description: 'Composer une journée rassasiante avec des variantes pratiques.',
+        },
+      ],
     },
     {
       id: 'adapter-portions',

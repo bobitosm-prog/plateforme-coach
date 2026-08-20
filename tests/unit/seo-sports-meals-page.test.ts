@@ -195,8 +195,8 @@ describe('French sports meals pillar page', () => {
     const entries = sitemap()
     const sportsMealsEntries = entries.filter(entry => entry.url.includes('/nutrition/repas-sportifs'))
 
-    expect(entries).toHaveLength(39)
-    expect(new Set(entries.map(entry => entry.url)).size).toBe(39)
+    expect(entries).toHaveLength(40)
+    expect(new Set(entries.map(entry => entry.url)).size).toBe(40)
     expect(sportsMealsEntries).toHaveLength(1)
     expect(sportsMealsEntries[0]).toMatchObject({
       url: canonical,

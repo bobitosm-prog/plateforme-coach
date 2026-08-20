@@ -9,6 +9,7 @@ export type WeightLossSection = {
   title: string
   paragraphs: readonly string[]
   points?: readonly string[]
+  contextualLink?: WeightLossLink
 }
 
 export type WeightLossContent = {
@@ -60,6 +61,11 @@ export const WEIGHT_LOSS_CONTENT: WeightLossContent = {
         'Conserver des sources variées de légumes, fruits et féculents.',
         'Adapter les portions sans exclure arbitrairement un groupe alimentaire.',
       ],
+      contextualLink: {
+        href: '/fr/nutrition/menu-perte-de-poids',
+        label: 'organiser un menu de perte de poids sur une journée',
+        description: 'Passer des principes généraux à un exemple alimentaire pédagogique.',
+      },
     },
     {
       id: 'proteines-satiete',

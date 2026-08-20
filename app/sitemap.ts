@@ -148,6 +148,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  const weightLossMenuUrl = `${SITE_URL}/fr/nutrition/menu-perte-de-poids`;
+  entries.push({
+    url: weightLossMenuUrl,
+    changeFrequency: 'monthly',
+    priority: 0.9,
+    alternates: {
+      languages: {
+        fr: weightLossMenuUrl,
+        'x-default': weightLossMenuUrl,
+      },
+    },
+  });
+
   const beginnerProgramUrl = `${SITE_URL}/fr/programmes/musculation/debutant`;
   entries.push({
     url: beginnerProgramUrl,

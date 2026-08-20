@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { SPORTS_MEALS_CONTENT } from '@/content/nutrition/sports-meals'
+import { WEIGHT_LOSS_MENU_CONTENT } from '@/content/nutrition/weight-loss-menu'
 import { SITE_URL } from '@/lib/seo'
 
-const PATH = '/fr/nutrition/repas-sportifs'
+const PATH = '/fr/nutrition/menu-perte-de-poids'
 const CANONICAL_URL = `${SITE_URL}${PATH}`
 
 export const dynamicParams = false
@@ -17,17 +17,13 @@ function requireFrenchLocale(locale: string) {
   if (locale !== 'fr') notFound()
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
   requireFrenchLocale(locale)
 
   return {
-    title: SPORTS_MEALS_CONTENT.seoTitle,
-    description: SPORTS_MEALS_CONTENT.description,
+    title: WEIGHT_LOSS_MENU_CONTENT.seoTitle,
+    description: WEIGHT_LOSS_MENU_CONTENT.description,
     alternates: {
       canonical: CANONICAL_URL,
       languages: {
@@ -38,11 +34,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function SportsMealsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function WeightLossMenuPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   requireFrenchLocale(locale)
 
@@ -51,12 +43,10 @@ export default async function SportsMealsPage({
     '@type': 'WebPage',
     '@id': `${CANONICAL_URL}#webpage`,
     url: CANONICAL_URL,
-    name: SPORTS_MEALS_CONTENT.title,
-    description: SPORTS_MEALS_CONTENT.description,
+    name: WEIGHT_LOSS_MENU_CONTENT.title,
+    description: WEIGHT_LOSS_MENU_CONTENT.description,
     inLanguage: 'fr',
-    isPartOf: {
-      '@id': `${SITE_URL}/#website`,
-    },
+    isPartOf: { '@id': `${SITE_URL}/#website` },
   }
 
   return (
@@ -73,17 +63,15 @@ export default async function SportsMealsPage({
       <main>
         <article style={{ maxWidth: 920, margin: '0 auto', padding: '64px 24px 88px' }}>
           <header style={{ maxWidth: 800, marginBottom: 48 }}>
-            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Repas sportifs</p>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 1, margin: '16px 0 24px' }}>
-              {SPORTS_MEALS_CONTENT.title}
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{SPORTS_MEALS_CONTENT.introduction}</p>
+            <p style={{ color: '#c9a84c', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Nutrition · Menu perte de poids</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 1, margin: '16px 0 24px' }}>{WEIGHT_LOSS_MENU_CONTENT.title}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.76)', fontSize: 18, lineHeight: 1.75 }}>{WEIGHT_LOSS_MENU_CONTENT.introduction}</p>
           </header>
 
           <nav aria-label="Sommaire" style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.25)', padding: 24, marginBottom: 56 }}>
             <h2 style={{ color: '#c9a84c', marginTop: 0 }}>Sommaire</h2>
             <ol style={{ marginBottom: 0, paddingLeft: 22 }}>
-              {SPORTS_MEALS_CONTENT.sections.map(section => (
+              {WEIGHT_LOSS_MENU_CONTENT.sections.map(section => (
                 <li key={section.id} style={{ marginBottom: 8 }}>
                   <a href={`#${section.id}`} style={{ color: 'rgba(255,255,255,0.76)' }}>{section.title}</a>
                 </li>
@@ -91,7 +79,7 @@ export default async function SportsMealsPage({
             </ol>
           </nav>
 
-          {SPORTS_MEALS_CONTENT.sections.map(section => (
+          {WEIGHT_LOSS_MENU_CONTENT.sections.map(section => (
             <section key={section.id} id={section.id} style={{ scrollMarginTop: 24, borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 5vw, 3rem)', color: '#c9a84c', lineHeight: 1.1 }}>{section.title}</h2>
               {section.paragraphs.map(paragraph => (
@@ -105,31 +93,23 @@ export default async function SportsMealsPage({
               {section.examples && (
                 <div style={{ display: 'grid', gap: 18, marginTop: 28 }}>
                   {section.examples.map(example => (
-                    <section key={example.meal} aria-label={example.meal} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 20 }}>
-                      <h3 style={{ color: '#c9a84c', marginTop: 0 }}>{example.meal}</h3>
+                    <section key={example.label} aria-label={example.label} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 20 }}>
+                      <h3 style={{ color: '#c9a84c', marginTop: 0 }}>{example.label}</h3>
                       <ul style={{ color: 'rgba(255,255,255,0.76)', lineHeight: 1.8 }}>
-                        {example.composition.map(item => <li key={item}>{item}</li>)}
+                        {example.foods.map(food => <li key={food}>{food}</li>)}
                       </ul>
-                      <p style={{ color: 'rgba(255,255,255,0.68)', lineHeight: 1.7, marginBottom: 0 }}>{example.context}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.68)', lineHeight: 1.7, marginBottom: 0 }}>{example.note}</p>
                     </section>
                   ))}
                 </div>
               )}
-              {section.contextualLinks?.map(link => (
-                <p key={link.href} style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
-                  Pour approfondir cet objectif, découvrez comment{' '}
-                  <Link href={link.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
-                    {link.label}
-                  </Link>.
-                </p>
-              ))}
             </section>
           ))}
 
           <section aria-labelledby="related-content" style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 40, marginBottom: 56 }}>
-            <h2 id="related-content" style={{ color: '#c9a84c' }}>Approfondir votre organisation nutritionnelle</h2>
+            <h2 id="related-content" style={{ color: '#c9a84c' }}>Approfondir votre organisation en perte de poids</h2>
             <ul style={{ display: 'grid', gap: 14, padding: 0, listStyle: 'none' }}>
-              {SPORTS_MEALS_CONTENT.links.map(link => (
+              {WEIGHT_LOSS_MENU_CONTENT.links.map(link => (
                 <li key={link.href} style={{ background: '#0d0c0b', border: '1px solid rgba(201,168,76,0.2)', padding: 18 }}>
                   <Link href={link.href} style={{ color: '#c9a84c', fontWeight: 700 }}>{link.label}</Link>
                   <p style={{ marginBottom: 0, color: 'rgba(255,255,255,0.7)' }}>{link.description}</p>
@@ -139,7 +119,7 @@ export default async function SportsMealsPage({
           </section>
 
           <aside style={{ border: '1px solid rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.08)', padding: 24, lineHeight: 1.7 }}>
-            {SPORTS_MEALS_CONTENT.disclaimer}
+            {WEIGHT_LOSS_MENU_CONTENT.disclaimer}
           </aside>
 
           <p style={{ textAlign: 'center', marginTop: 40 }}>

@@ -105,6 +105,14 @@ export default async function WeightLossPage({
                   {section.points.map(point => <li key={point}>{point}</li>)}
                 </ul>
               )}
+              {section.contextualLink && (
+                <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, lineHeight: 1.7, marginTop: 24 }}>
+                  Pour mettre ces repères en pratique, découvrez comment{' '}
+                  <Link href={section.contextualLink.href} style={{ color: '#c9a84c', textUnderlineOffset: 4 }}>
+                    {section.contextualLink.label}
+                  </Link>.
+                </p>
+              )}
             </section>
           ))}
 
