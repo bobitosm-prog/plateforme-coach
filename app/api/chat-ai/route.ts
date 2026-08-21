@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
+import { writeTrustedAthenaAssistantMessage } from '../../../lib/supabase/trusted-ai-writer'
+
+const chatRequestSchema = z.object({
+  message: z.string().trim().min(1),
+}).strict()
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -29,8 +35,11 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { message } = await req.json()
-    if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
+    const requestBody = await req.json().catch(() => null)
+    const parsedRequest = chatRequestSchema.safeParse(requestBody)
+    if (!parsedRequest.success) {
+      return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+    }
 
     // Fetch profile from DB (no longer sent by client)
     const { data: profile } = await supabase
@@ -81,7 +90,7 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
     }))
 
     // INSERT user message BEFORE calling Anthropic
-    const trimmedMessage = message.trim().slice(0, 500)
+    const trimmedMessage = parsedRequest.data.message.slice(0, 500)
     const { error: insertUserErr } = await supabase
       .from('chat_ai_messages')
       .insert({ user_id: user.id, role: 'user', content: trimmedMessage })
@@ -122,12 +131,13 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
     const aiMessage = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.'
 
     // INSERT assistant response AFTER reception (best effort)
-    const { error: insertAiErr } = await supabase
-      .from('chat_ai_messages')
-      .insert({ user_id: user.id, role: 'assistant', content: aiMessage })
-
-    if (insertAiErr) {
-      console.error('[chat-ai] insert assistant message failed:', insertAiErr)
+    try {
+      await writeTrustedAthenaAssistantMessage({
+        authenticatedUserId: user.id,
+        content: aiMessage,
+      })
+    } catch (insertAiError) {
+      console.error('[chat-ai] insert assistant message failed:', insertAiError)
       // Don't fail the request — user still gets the response
     }
 
