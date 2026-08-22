@@ -7,6 +7,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { sendPushToUser } from '../../../lib/push-server'
+import { findActiveBetween } from '../../../lib/coach-relations/repository'
 
 const internalPathSchema = z.string().trim().max(2048).refine(
   value => /^\/(?!\/)[^\\\u0000-\u001F\u007F]*$/.test(value),
@@ -60,24 +61,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Autorisation impossible' }, { status: 500 })
   }
 
-  let relationQuery = supabaseAuth
-    .from('coach_clients')
-    .select('coach_id, client_id')
-
+  let coachId: string
+  let clientId: string
   if (senderProfile.role === 'coach' || senderProfile.role === 'super_admin') {
-    relationQuery = relationQuery.eq('coach_id', user.id).eq('client_id', userId)
+    coachId = user.id
+    clientId = userId
   } else if (senderProfile.role === 'client') {
-    relationQuery = relationQuery.eq('client_id', user.id).eq('coach_id', userId)
+    coachId = userId
+    clientId = user.id
   } else {
     return NextResponse.json({ error: 'Interdit' }, { status: 403 })
   }
 
-  const { data: relation, error: relationError } = await relationQuery.limit(1).maybeSingle()
-  if (relationError) {
-    return NextResponse.json({ error: 'Autorisation impossible' }, { status: 500 })
-  }
-  if (!relation) {
+  const relation = await findActiveBetween(supabaseAuth, coachId, clientId)
+  if (relation.kind === 'not_found') {
     return NextResponse.json({ error: 'Interdit' }, { status: 403 })
+  }
+  if (relation.kind !== 'active') {
+    return NextResponse.json({ error: 'Autorisation impossible' }, { status: 500 })
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY

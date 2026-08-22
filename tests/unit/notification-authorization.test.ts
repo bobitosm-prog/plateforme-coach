@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   checkRateLimit: vi.fn(),
   sendPushToUser: vi.fn(),
+  findActiveBetween: vi.fn(),
 }))
 
 vi.mock('@supabase/ssr', () => ({
@@ -21,6 +22,9 @@ vi.mock('@/lib/rate-limit', () => ({
 }))
 vi.mock('@/lib/push-server', () => ({
   sendPushToUser: mocks.sendPushToUser,
+}))
+vi.mock('@/lib/coach-relations/repository', () => ({
+  findActiveBetween: mocks.findActiveBetween,
 }))
 
 import { POST } from '@/app/api/send-notification/route'
@@ -46,36 +50,28 @@ function createSessionClient({
   })
   const profileEq = vi.fn().mockReturnValue({ single: profileSingle })
 
-  const relationSingle = vi.fn().mockResolvedValue({
-    data: linked ? { coach_id: COACH_ID, client_id: CLIENT_ID } : null,
-    error: null,
-  })
-  const relationLimit = vi.fn().mockReturnValue({ maybeSingle: relationSingle })
-  const relationEqSecond = vi.fn().mockReturnValue({ limit: relationLimit })
-  const relationEqFirst = vi.fn().mockReturnValue({ eq: relationEqSecond })
-
   const from = vi.fn((table: string) => {
     if (table === 'profiles') {
       return { select: vi.fn().mockReturnValue({ eq: profileEq }) }
     }
-    if (table === 'coach_clients') {
-      return { select: vi.fn().mockReturnValue({ eq: relationEqFirst }) }
-    }
     throw new Error(`Unexpected table: ${table}`)
   })
 
-  return {
-    client: {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: userId ? { id: userId } : null },
-        }),
-      },
-      from,
+  const client = {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: userId ? { id: userId } : null },
+      }),
     },
     from,
-    relationEqFirst,
-    relationEqSecond,
+  }
+  mocks.findActiveBetween.mockResolvedValue(linked
+    ? { kind: 'active', relation: { id: 'relation-1', coach_id: COACH_ID, client_id: CLIENT_ID, status: 'active' } }
+    : { kind: 'not_found' })
+
+  return {
+    client,
+    from,
   }
 }
 
@@ -145,8 +141,7 @@ describe('notification authorization', () => {
     const response = await POST(request(validPayload(CLIENT_ID)) as never)
 
     expect(response.status).toBe(200)
-    expect(session.relationEqFirst).toHaveBeenCalledWith('coach_id', COACH_ID)
-    expect(session.relationEqSecond).toHaveBeenCalledWith('client_id', CLIENT_ID)
+    expect(mocks.findActiveBetween).toHaveBeenCalledWith(session.client, COACH_ID, CLIENT_ID)
     expect(mocks.sendPushToUser).toHaveBeenCalledWith(
       { kind: 'admin-client' },
       CLIENT_ID,
@@ -177,8 +172,7 @@ describe('notification authorization', () => {
     const response = await POST(request(validPayload(COACH_ID)) as never)
 
     expect(response.status).toBe(200)
-    expect(session.relationEqFirst).toHaveBeenCalledWith('client_id', CLIENT_ID)
-    expect(session.relationEqSecond).toHaveBeenCalledWith('coach_id', COACH_ID)
+    expect(mocks.findActiveBetween).toHaveBeenCalledWith(session.client, COACH_ID, CLIENT_ID)
     expect(mocks.sendPushToUser).toHaveBeenCalledOnce()
   })
 
@@ -189,6 +183,33 @@ describe('notification authorization', () => {
     const response = await POST(request(validPayload(OTHER_ID)) as never)
 
     expect(response.status).toBe(403)
+    expect(mocks.createClient).not.toHaveBeenCalled()
+    expect(mocks.sendPushToUser).not.toHaveBeenCalled()
+  })
+
+  it('rejects an ended relation before privileged access', async () => {
+    const session = createSessionClient()
+    mocks.createServerClient.mockReturnValue(session.client)
+    mocks.findActiveBetween.mockResolvedValue({ kind: 'not_found' })
+
+    const response = await POST(request(validPayload(CLIENT_ID)) as never)
+
+    expect(response.status).toBe(403)
+    expect(mocks.createClient).not.toHaveBeenCalled()
+    expect(mocks.sendPushToUser).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['multiple active relations', { kind: 'multiple_active' }],
+    ['database error', { kind: 'error', code: '42501' }],
+  ])('fails closed for %s before privileged access', async (_label, relationResult) => {
+    const session = createSessionClient()
+    mocks.createServerClient.mockReturnValue(session.client)
+    mocks.findActiveBetween.mockResolvedValue(relationResult)
+
+    const response = await POST(request(validPayload(CLIENT_ID)) as never)
+
+    expect(response.status).toBe(500)
     expect(mocks.createClient).not.toHaveBeenCalled()
     expect(mocks.sendPushToUser).not.toHaveBeenCalled()
   })
