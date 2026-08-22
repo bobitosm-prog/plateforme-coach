@@ -1,12 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export const ACTIVE_COACH_RELATION_PROJECTION = 'id,coach_id,client_id,status' as const
+export const ACTIVE_COACH_RELATION_PROJECTION = 'id,coach_id,client_id,status,created_at,invited_by_coach' as const
 
 export interface ActiveCoachRelation {
   id: string
   coach_id: string
   client_id: string
   status: 'active'
+  created_at?: string
+  invited_by_coach?: boolean | null
 }
 
 export type ActiveRelationLookupResult =
@@ -53,6 +55,10 @@ function parseActiveRelations(data: unknown): ActiveCoachRelation[] | null {
       || typeof Reflect.get(row, 'id') !== 'string'
       || typeof Reflect.get(row, 'coach_id') !== 'string'
       || typeof Reflect.get(row, 'client_id') !== 'string'
+      || ('created_at' in row && typeof Reflect.get(row, 'created_at') !== 'string')
+      || ('invited_by_coach' in row
+        && Reflect.get(row, 'invited_by_coach') !== null
+        && typeof Reflect.get(row, 'invited_by_coach') !== 'boolean')
     ) {
       return null
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { computeStreak } from '../../../../lib/streak'
+import { listActiveClientsForCoach } from '../../../../lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -60,28 +61,35 @@ export default function useCoachAnalytics(coachId: string | null) {
     if (!coachId) return
     setLoading(true)
 
-    // 1. Fetch clients + profiles en un seul join (FK coach_clients → profiles)
-    const { data: coachClientsRaw, error: ccError } = await supabase
-      .from('coach_clients')
-      .select('client_id, profiles!coach_clients_client_id_fkey(id, full_name, email, avatar_url, subscription_type, created_at)')
-      .eq('coach_id', coachId)
-
-    if (ccError) {
-      console.warn('[useCoachAnalytics] coach_clients query error:', ccError.message)
-      setLoading(false)
-      return
-    }
-    if (!coachClientsRaw || coachClientsRaw.length === 0) {
+    // 1. Establish the active coaching cohort before loading sensitive metrics.
+    const relationResult = await listActiveClientsForCoach(supabase, coachId)
+    if (relationResult.kind !== 'success') {
+      console.warn('[useCoachAnalytics] active relation query failed:', relationResult.kind)
       setClients([])
       setKpi({ totalClients: 0, totalActive: 0, totalDeclining: 0, totalInactive: 0, sessionsThisWeekTotal: 0 })
       setLoading(false)
       return
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const rawProfiles = coachClientsRaw.map((cc: any) => cc.profiles).filter((p: any) => p !== null && typeof p === 'object')
-    const clientIds = rawProfiles.map((p: any) => p.id)
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    const clientIds = relationResult.relations.map(relation => relation.client_id)
+    if (clientIds.length === 0) {
+      setClients([])
+      setKpi({ totalClients: 0, totalActive: 0, totalDeclining: 0, totalInactive: 0, sessionsThisWeekTotal: 0 })
+      setLoading(false)
+      return
+    }
+
+    const { data: rawProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, avatar_url, subscription_type, created_at')
+      .in('id', clientIds)
+
+    if (profilesError || !rawProfiles) {
+      setClients([])
+      setKpi({ totalClients: 0, totalActive: 0, totalDeclining: 0, totalInactive: 0, sessionsThisWeekTotal: 0 })
+      setLoading(false)
+      return
+    }
 
     // 2-4. Fetch en parallèle : sessions 30j, weight 7j, meal tracking 7j
     const [sessionsRes, weightsRes, mealsRes] = await Promise.all([
@@ -89,6 +97,7 @@ export default function useCoachAnalytics(coachId: string | null) {
         .from('completed_sessions')
         .select('client_id, completed_at')
         .eq('coach_id', coachId)
+        .in('client_id', clientIds)
         .gte('completed_at', fetch30d),
       supabase
         .from('weight_logs')

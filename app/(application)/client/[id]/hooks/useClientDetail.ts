@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useExerciseInfo } from '../../../../hooks/useExerciseInfo'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
+import { findActiveBetween, type ActiveRelationLookupResult } from '@/lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -110,6 +111,7 @@ export default function useClientDetail() {
   const [notesSaved,  setNotesSaved]  = useState(false)
   const [notesSaving, setNotesSaving] = useState(false)
   const [coachId,     setCoachId]     = useState<string | null>(null)
+  const [coachRelationStatus, setCoachRelationStatus] = useState<ActiveRelationLookupResult['kind']>('not_found')
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
   const [toast,       setToast]       = useState<string | null>(null)
@@ -130,6 +132,7 @@ export default function useClientDetail() {
   const [calGoalInput,   setCalGoalInput]   = useState('')
   const [totalSessionsCount, setTotalSessionsCount] = useState(0)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const relationAuthorizedRef = useRef(false)
 
   // Programme
   const [program,      setProgram]      = useState<WeekProgram>(defaultProgram())
@@ -415,6 +418,16 @@ export default function useClientDetail() {
     if (!coachId) return
     setLoading(true); setError(null)
 
+    relationAuthorizedRef.current = false
+    const relation = await findActiveBetween(supabase, coachId, id)
+    setCoachRelationStatus(relation.kind)
+    if (relation.kind !== 'active') {
+      setError(relation.kind === 'not_found' ? 'Relation de coaching inactive' : 'Autorisation impossible')
+      setLoading(false)
+      return
+    }
+    relationAuthorizedRef.current = true
+
     const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
@@ -500,6 +513,7 @@ export default function useClientDetail() {
   }, [coachId, id])
 
   const fetchWeeklyTracking = useCallback(async () => {
+    if (!relationAuthorizedRef.current) return
     const d = new Date(); const day = d.getDay()
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
     const mondayDate = d.toISOString().split('T')[0]
@@ -516,34 +530,34 @@ export default function useClientDetail() {
 
   // Coach messaging
   const loadCoachMessages = useCallback(async () => {
-    if (!coachId || !id) return
+    if (!coachId || !id || coachRelationStatus !== 'active') return
     const { data } = await supabase.from('messages').select('*')
       .or(`and(sender_id.eq.${coachId},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${coachId})`)
       .order('created_at', { ascending: true })
       .limit(100)
     setCoachMessages(data || [])
-  }, [coachId, id])
+  }, [coachId, id, coachRelationStatus])
 
   useEffect(() => {
-    if (activeTab === 'messages') {
+    if (activeTab === 'messages' && coachRelationStatus === 'active') {
       loadCoachMessages()
       supabase.from('messages').update({ read: true }).eq('sender_id', id).eq('receiver_id', coachId).eq('read', false)
     }
-  }, [activeTab, loadCoachMessages])
+  }, [activeTab, coachId, coachRelationStatus, id, loadCoachMessages])
 
   // Realtime for coach
   useEffect(() => {
-    if (!coachId || !id) return
+    if (!coachId || !id || coachRelationStatus !== 'active') return
     const channel = supabase.channel(`coach-msg-${id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${coachId}` }, (payload: any) => {
         if (payload.new.sender_id === id) setCoachMessages(prev => [...prev, payload.new])
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [coachId, id])
+  }, [coachId, id, coachRelationStatus])
 
   async function sendCoachMessage(imageUrl?: string | null) {
-    if ((!coachMsgInput.trim() && !imageUrl) || !coachId || !id) return
+    if ((!coachMsgInput.trim() && !imageUrl) || !coachId || !id || coachRelationStatus !== 'active') return
     const content = coachMsgInput.trim(); setCoachMsgInput('')
     const optimistic = { id: `opt-${Date.now()}`, sender_id: coachId, receiver_id: id, content, image_url: imageUrl || null, read: false, created_at: new Date().toISOString() }
     setCoachMessages(prev => [...prev, optimistic])
@@ -793,7 +807,7 @@ export default function useClientDetail() {
     // Router
     id, router, supabase,
     // Core state
-    profile, loading, error, toast, showToast,
+    profile, loading, error, coachRelationStatus, toast, showToast,
     activeTab, setActiveTab,
     // Overview
     currentWeight, weightDelta, totalSessions, goalProgress, streak,
