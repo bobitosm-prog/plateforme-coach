@@ -18,6 +18,11 @@ import { computeStreak } from '../../lib/streak'
 import { projectRestDates } from '../../lib/project-rest-days'
 import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
+import {
+  findActiveCoachForClient,
+  toActiveCoachResolutionState,
+  type ActiveCoachResolutionState,
+} from '../../lib/coach-relations/repository'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -68,6 +73,7 @@ export default function useClientDashboard() {
   // Coach link
   const [coachId, setCoachId] = useState<string | null>(null)
   const [isDefaultCoach, setIsDefaultCoach] = useState(false)
+  const [coachRelationStatus, setCoachRelationStatus] = useState<ActiveCoachResolutionState['status']>('not_found')
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
@@ -274,18 +280,22 @@ export default function useClientDashboard() {
   }
 
   async function resolveCoachLink(uid: string) {
+    const result = await findActiveCoachForClient(supabase, uid)
+    const resolution = toActiveCoachResolutionState(result)
+    setCoachId(resolution.coachId)
+    setCoachRelationStatus(resolution.status)
+
+    if (!resolution.coachId) {
+      setIsDefaultCoach(false)
+      if (resolution.status === 'multiple_active' || resolution.status === 'error') {
+        console.error('[client-dashboard] Active coach relation resolution failed:', resolution.status)
+      }
+      return
+    }
+
     const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
     const { data: defaultCoachId } = await supabase.rpc('get_default_coach_id', { coach_email: defaultEmail })
-
-    const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).maybeSingle()
-    if (coachLink?.coach_id) {
-      setCoachId(coachLink.coach_id)
-      setIsDefaultCoach(!!defaultCoachId && coachLink.coach_id === defaultCoachId)
-    } else if (defaultCoachId) {
-      await supabase.from('coach_clients').upsert({ coach_id: defaultCoachId, client_id: uid }, { onConflict: 'coach_id,client_id', ignoreDuplicates: true }).select().maybeSingle()
-      setCoachId(defaultCoachId)
-      setIsDefaultCoach(true)
-    }
+    setIsDefaultCoach(!!defaultCoachId && resolution.coachId === defaultCoachId)
   }
 
   /* ── Handlers ── */
@@ -611,7 +621,7 @@ export default function useClientDashboard() {
     photoUploading, photoRef, avatarRef,
     uploadAvatar, uploadProgressPhoto, deletePhoto,
     // Messages (from sub-hook)
-    coachId, isDefaultCoach, hasRealCoach: !isDefaultCoach && !!coachId,
+    coachId, coachRelationStatus, isDefaultCoach, hasRealCoach: !isDefaultCoach && !!coachId,
     messages: messagesHook.messages, msgInput: messagesHook.msgInput,
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,

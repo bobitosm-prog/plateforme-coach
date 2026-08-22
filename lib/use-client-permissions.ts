@@ -1,5 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  findActiveCoachForClient,
+  toActiveCoachResolutionState,
+  type ActiveRelationLookupResult,
+} from './coach-relations/repository'
 
 export interface ClientPermissions {
   canCreatePrograms: boolean
@@ -7,37 +13,58 @@ export interface ClientPermissions {
   canModifyNutrition: boolean
   isInvited: boolean
   coachId: string | null
+  coachRelationStatus: ActiveRelationLookupResult['kind']
   loading: boolean
 }
 
-export function useClientPermissions(userId: string | undefined, supabase: any): ClientPermissions {
+type LoadedClientPermissions = Omit<ClientPermissions, 'loading'>
+
+export function deriveClientPermissions(
+  subscriptionType: string | null | undefined,
+  relation: ActiveRelationLookupResult,
+): LoadedClientPermissions {
+  const isInvited = subscriptionType === 'invited'
+  const coach = toActiveCoachResolutionState(relation)
+
+  return {
+    canCreatePrograms: !isInvited,
+    canUseAI: !isInvited,
+    canModifyNutrition: !isInvited,
+    isInvited,
+    coachId: coach.coachId,
+    coachRelationStatus: coach.status,
+  }
+}
+
+export function useClientPermissions(userId: string | undefined, supabase: SupabaseClient): ClientPermissions {
   const [permissions, setPermissions] = useState<ClientPermissions>({
     canCreatePrograms: true,
     canUseAI: true,
     canModifyNutrition: true,
     isInvited: false,
     coachId: null,
+    coachRelationStatus: 'not_found',
     loading: true,
   })
 
   useEffect(() => {
     if (!userId) return
-    // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
+    let active = true
+
+    // Product entitlement and coach relationship are independent sources.
     Promise.all([
       supabase.from('profiles').select('subscription_type').eq('id', userId).maybeSingle(),
-      supabase.from('coach_clients').select('coach_id').eq('client_id', userId).maybeSingle(),
-    ]).then(([profileRes, coachRes]: any[]) => {
-      const isInvited = profileRes.data?.subscription_type === 'invited'
+      findActiveCoachForClient(supabase, userId),
+    ]).then(([profileRes, relation]) => {
+      if (!active) return
       setPermissions({
-        canCreatePrograms: !isInvited,
-        canUseAI: !isInvited,
-        canModifyNutrition: !isInvited,
-        isInvited,
-        coachId: coachRes.data?.coach_id || null,
+        ...deriveClientPermissions(profileRes.data?.subscription_type, relation),
         loading: false,
       })
     })
-  }, [userId])
+
+    return () => { active = false }
+  }, [userId, supabase])
 
   return permissions
 }

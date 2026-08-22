@@ -20,6 +20,19 @@ export type ActiveClientListResult =
   | { kind: 'multiple_active'; clientId: string }
   | { kind: 'error'; code: string }
 
+export interface ActiveCoachResolutionState {
+  coachId: string | null
+  status: ActiveRelationLookupResult['kind']
+}
+
+export function toActiveCoachResolutionState(
+  result: ActiveRelationLookupResult,
+): ActiveCoachResolutionState {
+  return result.kind === 'active'
+    ? { coachId: result.relation.coach_id, status: 'active' }
+    : { coachId: null, status: result.kind }
+}
+
 function errorCode(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'code' in error) {
     const code = Reflect.get(error, 'code')
