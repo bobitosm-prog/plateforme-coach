@@ -5,7 +5,10 @@ const mocks = vi.hoisted(() => ({ rpc: vi.fn() }))
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { rpc: mocks.rpc } }))
 
-import { endCoachClientRelation } from '@/lib/coach-relations/lifecycle-writer'
+import {
+  createCoachClientRelation,
+  endCoachClientRelation,
+} from '@/lib/coach-relations/lifecycle-writer'
 
 const CLIENT_ID = '11111111-1111-4111-8111-111111111111'
 const COACH_ID = '33333333-3333-4333-8333-333333333333'
@@ -68,5 +71,73 @@ describe('canonical relation lifecycle writer runtime wrapper', () => {
       actorId: COACH_ID,
       reason: 'coach_request',
     })).resolves.toEqual({ kind: 'error', code: 'RELATION_TRANSITION_FAILED' })
+  })
+
+  it('delegates default creation to the canonical serialized writer', async () => {
+    mocks.rpc.mockResolvedValue({
+      data: {
+        success: true,
+        outcome: 'created',
+        relationId: 'relation-new',
+        coachId: COACH_ID,
+      },
+      error: null,
+    })
+
+    await expect(createCoachClientRelation({
+      clientId: CLIENT_ID,
+      coachId: COACH_ID,
+      actorId: CLIENT_ID,
+      source: 'default',
+    })).resolves.toEqual({
+      kind: 'created',
+      relationId: 'relation-new',
+      coachId: COACH_ID,
+    })
+
+    expect(mocks.rpc).toHaveBeenCalledWith('transition_coach_client_relation', {
+      p_client_id: CLIENT_ID,
+      p_coach_id: COACH_ID,
+      p_operation: 'create',
+      p_source: 'default',
+      p_actor_id: CLIENT_ID,
+      p_end_reason: null,
+    })
+  })
+
+  it('preserves idempotence and active-coach conflicts from concurrent canonical calls', async () => {
+    mocks.rpc
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          outcome: 'created',
+          relationId: 'relation-new',
+          coachId: COACH_ID,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          success: true,
+          outcome: 'already_active_same_coach',
+          relationId: 'relation-new',
+          coachId: COACH_ID,
+        },
+        error: null,
+      })
+
+    const input = {
+      clientId: CLIENT_ID,
+      coachId: COACH_ID,
+      actorId: CLIENT_ID,
+      source: 'default' as const,
+    }
+    await expect(Promise.all([
+      createCoachClientRelation(input),
+      createCoachClientRelation(input),
+    ])).resolves.toEqual([
+      { kind: 'created', relationId: 'relation-new', coachId: COACH_ID },
+      { kind: 'already_active_same_coach', relationId: 'relation-new', coachId: COACH_ID },
+    ])
   })
 })

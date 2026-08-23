@@ -183,6 +183,17 @@ export default function useClientDashboard() {
       const { error: roleErr } = await supabase.rpc('set_role', { p_role: metaRole })
       if (!roleErr) profRes.data.role = metaRole
     }
+    if (profRes.data.role === 'client') {
+      try {
+        const assignmentResponse = await fetch('/api/coach/default-assignment', { method: 'POST' })
+        if (!assignmentResponse.ok && assignmentResponse.status !== 409) {
+          const assignmentError = await assignmentResponse.json().catch(() => null)
+          console.error('[client-dashboard] Default coach assignment failed:', assignmentError?.code || assignmentResponse.status)
+        }
+      } catch {
+        console.error('[client-dashboard] Default coach assignment request failed')
+      }
+    }
     if (profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')) {
       // Admin users skip all onboarding → proceed to dashboard
     } else if (profRes.data.role === 'coach') {
