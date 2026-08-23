@@ -911,18 +911,30 @@
     "join": {
       "title": "REJOINS MOOVX",
       "coachInvitation": "Invitation de coach {coachName}",
-      "subtitle": "Cree ton compte pour etre suivi par ton coach. Acces gratuit.",
+      "subtitle": "Crée ton compte pour accepter l'invitation de ton coach.",
       "continueGoogle": "Continuer avec Google",
       "or": "OU",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Mot de passe (min. 8 car.)",
       "confirmPasswordPlaceholder": "Confirmer le mot de passe",
-      "submitButton": "Creer mon compte gratuit",
+      "submitButton": "Créer mon compte",
       "loadingButton": "Creation du compte...",
       "hasAccount": "Deja un compte ?",
       "loginLink": "Se connecter",
       "features": "✓ Acces gratuit · ✓ Suivi par ton coach · ✓ Toutes les fonctionnalites",
       "invalidLink": "Lien d'invitation invalide.",
+      "states": {
+        "validating": "Validation de l'invitation...",
+        "consuming": "Activation de ton invitation...",
+        "success": "Invitation activée. Redirection en cours...",
+        "invalid": "Cette invitation n'est pas valide. Demande un nouveau lien à ton coach.",
+        "legacy": "Cet ancien lien n'est plus valide. Demande une nouvelle invitation à ton coach.",
+        "expired": "Cette invitation a expiré. Demande un nouveau lien à ton coach.",
+        "revoked": "Cette invitation n'est plus disponible. Demande un nouveau lien à ton coach.",
+        "used": "Cette invitation a déjà été utilisée.",
+        "forbidden": "Connecte-toi avec l'adresse email invitée ou vérifie qu'aucun autre coach n'est actif.",
+        "temporary": "Une erreur temporaire empêche l'activation. Réessaie dans quelques instants."
+      },
       "legacyUnavailable": {
         "title": "Invitation temporairement indisponible",
         "message": "Ce lien d'invitation n'est plus pris en charge. Demandez à votre coach une nouvelle invitation ou créez un compte client sans rattachement automatique.",
@@ -931,7 +943,8 @@
       "emailSent": {
         "title": "VERIFIE TA BOITE MAIL",
         "message": "Un email de confirmation a ete envoye a",
-        "instruction": "Clique sur le lien pour activer ton compte et commencer."
+        "instruction": "Clique sur le lien pour activer ton compte et commencer.",
+        "messageWithEmail": "Un email de confirmation a été envoyé à {email}. L'invitation reprendra après confirmation."
       },
       "errors": {
         "emailRequired": "Email requis",
@@ -1099,11 +1112,7 @@
         "hoursTo": "a",
         "followUpLabel": "Mode de suivi prefere",
         "businessModelTitle": "Comment ca marche",
-        "businessModelDesc": "Tu paies CHF 50/mois pour acceder a tous les outils MoovX. Tes clients s'inscrivent gratuitement via ton lien d'invitation et ont acces a toutes les fonctionnalites.",
-        "inviteLinkLabel": "Ton lien d'invitation",
-        "inviteLinkCopy": "Copier",
-        "inviteLinkCopied": "Copie",
-        "inviteLinkNote": "Partage ce lien avec tes clients. Ils s'inscrivent et sont automatiquement assignes a toi."
+        "businessModelDesc": "Tu paies CHF 50/mois pour accéder aux outils MoovX. Depuis ton tableau de bord, invite chaque client avec son adresse email."
       },
       "stripe": {
         "title": "RECOIS TES PAIEMENTS",
@@ -1126,8 +1135,7 @@
         "experienceLabel": "Experience",
         "maxClientsLabel": "Clients max",
         "inviteTitle": "Invite tes clients",
-        "inviteDesc": "Partage ton lien d'invitation unique",
-        "inviteCopied": "Lien copie !",
+        "inviteDesc": "Envoie une invitation sécurisée par email depuis ton tableau de bord",
         "aiPlanTitle": "Genere un plan IA",
         "aiPlanDesc": "Cree un programme nutrition ou training pour un client",
         "dashboardTitle": "Explore ton dashboard",

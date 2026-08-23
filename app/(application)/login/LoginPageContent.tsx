@@ -15,6 +15,7 @@ export default function LoginPageContent() {
   const t = useTranslations('auth.login')
   const router = useRouter()
   const searchParams = useSearchParams()
+  const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
   const [confirmedVisible, setConfirmedVisible] = useState(false)
   const [checking, setChecking] = useState(true)
   const [email, setEmail] = useState('')
@@ -38,12 +39,15 @@ export default function LoginPageContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { router.replace('/'); return }
+      if (session) { router.replace(nextTarget || '/'); return }
       setChecking(false)
     })
-  }, [])
+  }, [nextTarget, router])
 
-  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback'
+  const callbackNext = nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ''
+  const redirectUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/auth/callback${callbackNext}`
+    : `/auth/callback${callbackNext}`
 
   async function handleEmailLogin() {
     if (!email.trim()) { setError(t('errors.emailRequired')); return }
@@ -66,7 +70,7 @@ export default function LoginPageContent() {
       if (!profile?.role && role) {
         await supabase.from('profiles').update({ role }).eq('id', data.session.user.id)
       }
-      const target = role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'
+      const target = nextTarget || (role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/')
       supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_REDIRECT', details: { target, userId: data.session.user.id, role: profile?.role }, page_url: '/login' })
       // Sync locale from DB → cookie (cross-device consistency)
       try { await fetch('/api/user/sync-locale', { method: 'POST' }) } catch {}
@@ -245,7 +249,7 @@ export default function LoginPageContent() {
 
                 <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.42s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('noAccount')}{' '}</span>
-                  <button onClick={() => router.push('/register-client')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
+                  <button onClick={() => router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                     {t('createAccount')}
                   </button>

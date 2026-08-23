@@ -121,33 +121,29 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteSent, setInviteSent] = useState(false)
+  const [inviteError, setInviteError] = useState('')
   const [clientSearch, setClientSearch] = useState('')
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
 
   async function sendInviteEmail() {
     if (!inviteEmail.includes('@') || !h.session?.user?.id) return
     setInviteSending(true)
+    setInviteError('')
     try {
-      const res = await fetch('/api/invite-client', {
+      const res = await fetch('/api/coach/invitations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coachName: h.coachName,
-          clientEmail: inviteEmail,
-          inviteLink: h.inviteLink,
-        }),
+        body: JSON.stringify({ recipientEmail: inviteEmail, locale: 'fr' }),
       })
-      if (!res.ok) throw new Error('API error')
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        throw new Error(payload?.error?.code || 'INVITATION_CREATION_FAILED')
+      }
       setInviteSent(true)
       setInviteEmail('')
       setTimeout(() => setInviteSent(false), 3000)
-    } catch {
-      const subject = encodeURIComponent(h.coachName + " t'invite sur MoovX")
-      const body = encodeURIComponent("Salut !\n\nRejoins-moi sur MoovX :\n" + h.inviteLink)
-      window.open('mailto:' + inviteEmail + '?subject=' + subject + '&body=' + body)
-      setInviteSent(true)
-      setInviteEmail('')
-      setTimeout(() => setInviteSent(false), 3000)
+    } catch (error) {
+      setInviteError(error instanceof Error ? error.message : 'INVITATION_CREATION_FAILED')
     }
     setInviteSending(false)
   }
@@ -373,7 +369,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                 <div style={{ gridColumn: 'span 4', ...CARD }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}><span style={SEC_TITLE}>Actions Rapides</span><div style={SEC_LINE} /></div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <button onClick={() => { h.setShowInvite(true); h.setSection('dashboard' as any) }} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />{ct('nav.newClient')}</button>
+                    <button onClick={() => h.setSection('dashboard' as any)} style={{ width: '100%', padding: '12px', background: GOLD, color: BG_BASE, border: 'none', borderRadius: 10, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={14} />{ct('nav.newClient')}</button>
                     <button onClick={() => h.setSection('programs' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Dumbbell size={14} />NOUVEAU PROGRAMME</button>
                     <button onClick={() => h.setSection('aliments' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><UtensilsCrossed size={14} />PLAN NUTRITION</button>
                     <button onClick={() => h.setSection('messages' as any)} style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><MessageCircle size={14} />ENVOYER UN MESSAGE</button>
@@ -384,20 +380,13 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                 <div style={{ gridColumn: 'span 12', ...CARD, padding: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>LIEN D&apos;INVITATION</div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <input readOnly value={h.inviteLink} onClick={e => (e.target as HTMLInputElement).select()} style={{ flex: 1, background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED, outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }} />
-                        <button onClick={h.copyInviteLink} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: h.copied ? 'rgba(74,222,128,0.15)' : GOLD, color: h.copied ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{h.copied ? '✓ Copie' : 'Copier'}</button>
-                      </div>
-                    </div>
-                    <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.06)' }} />
-                    <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, color: TEXT_MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>INVITER PAR EMAIL</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <input type="email" placeholder="email@client.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
                           style={{ flex: 1, background: BG_BASE, border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 11, color: TEXT_PRIMARY, outline: 'none' }} />
                         <button onClick={sendInviteEmail} disabled={!inviteEmail.includes('@') || inviteSending} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: inviteSent ? 'rgba(74,222,128,0.15)' : GOLD, color: inviteSent ? GREEN : BG_BASE, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', opacity: !inviteEmail.includes('@') ? 0.5 : 1 }}>{inviteSent ? '✓ Envoye' : inviteSending ? '...' : 'Inviter'}</button>
                       </div>
+                      {inviteError && <div style={{ marginTop: 6, color: RED, fontSize: 10 }}>{inviteError}</div>}
                     </div>
                   </div>
                 </div>
@@ -406,7 +395,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
 
             {/* Other sections — render existing components with desktop padding */}
             {h.section === 'dashboard' && (
-              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} showInvite={h.showInvite} setShowInvite={h.setShowInvite} inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} lastSessionByClient={h.lastSessionByClient} sessionsThisWeekByClient={h.sessionsThisWeekByClient} />
+              <ClientsList filtered={h.filtered} loading={h.loading} search={h.search} setSearch={h.setSearch} unreadCounts={h.unreadCounts} setSection={h.setSection} openChat={h.openChat} setShowNewSession={h.setShowNewSession} coachInitials={h.coachInitials} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} SESSION_COLORS={SESSION_COLORS} lastSessionByClient={h.lastSessionByClient} sessionsThisWeekByClient={h.sessionsThisWeekByClient} />
             )}
             {h.section === 'calendar' && <CoachCalendar calWeekOffset={h.calWeekOffset} setCalWeekOffset={h.setCalWeekOffset} scheduledSessions={h.scheduledSessions} clients={h.clients} setSelectedSession={h.setSelectedSession} setShowNewSession={h.setShowNewSession} setNsDate={h.setNsDate} setSection={h.setSection} />}
             {h.section === 'messages' && <CoachMessages clients={h.clients} selectedClient={h.selectedClient} setSelectedClient={h.setSelectedClient} openChat={h.openChat} chatMessages={h.chatMessages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} unreadCounts={h.unreadCounts} lastMessages={h.lastMessages} supabase={h.supabase} session={h.session} msgEndRef={h.msgEndRef} />}
@@ -640,31 +629,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
           <div className="sidebar-card">
             <h2 className="section-title">Inviter un client</h2>
 
-            {/* Option 1 — Lien d'invitation */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <input
-                readOnly
-                value={h.inviteLink}
-                style={{
-                  flex: 1, background: BG_BASE, border: `1px solid ${BORDER}`,
-                  borderRadius: 12, padding: '10px 14px',
-                  fontFamily: FONT_BODY, fontSize: '0.78rem', color: TEXT_MUTED,
-                  outline: 'none', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}
-                onClick={e => (e.target as HTMLInputElement).select()}
-              />
-              <button onClick={h.copyInviteLink} style={{
-                padding: '10px 16px', borderRadius: 12, border: 'none',
-                background: h.copied ? 'rgba(74,222,128,0.15)' : GOLD,
-                color: h.copied ? GREEN : BG_BASE,
-                fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
-                letterSpacing: 1, cursor: 'pointer', whiteSpace: 'nowrap',
-              }}>
-                {h.copied ? '✓ Copié' : 'Copier'}
-              </button>
-            </div>
-
-            {/* Option 2 — Invitation par email */}
+            {/* Invitation V2 — email lié, token opaque délivré côté serveur */}
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="email"
@@ -690,6 +655,7 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
                 {inviteSent ? '✓ Envoyé' : inviteSending ? '...' : 'Inviter'}
               </button>
             </div>
+            {inviteError && <div style={{ marginTop: 8, color: RED, fontSize: 11 }}>{inviteError}</div>}
           </div>
 
           {/* Bloc 2 — Chiffre d'affaires */}
@@ -753,8 +719,6 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
           <ClientsList
             filtered={h.filtered} loading={h.loading}
             search={h.search} setSearch={h.setSearch}
-            showInvite={h.showInvite} setShowInvite={h.setShowInvite}
-            inviteLink={h.inviteLink} copied={h.copied} copyInviteLink={h.copyInviteLink}
             unreadCounts={h.unreadCounts} setSection={h.setSection}
             openChat={h.openChat} setShowNewSession={h.setShowNewSession}
             coachInitials={h.coachInitials}

@@ -43,15 +43,15 @@ describe('legacy assign-coach cutover', () => {
     expect(registration).not.toContain('autoAssign')
   })
 
-  it('turns legacy invitation links into an explicit non-mutating state', () => {
+  it('rejects legacy coach UUID links while allowing only Invitation V2', () => {
     const join = read('app/(application)/join/JoinPageContent.tsx')
 
-    expect(join).toContain("t('legacyUnavailable.message')")
-    expect(join).toContain('href="/register-client"')
+    expect(join).toContain("params.get('coach')")
+    expect(join).toContain("setState('legacy')")
+    expect(join).toContain('/api/coach/invitations/consume')
+    expect(join).toContain('auth.signUp')
     expect(join).not.toContain('/api/assign-coach')
-    expect(join).not.toContain("params.get('coach')")
     expect(join).not.toContain('invited_coach_id')
-    expect(join).not.toContain('auth.signUp')
   })
 
   it('does not treat the legacy coach callback parameter as relation authority', () => {

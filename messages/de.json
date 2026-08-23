@@ -814,18 +814,30 @@
     "join": {
       "title": "TRITT MOOVX BEI",
       "coachInvitation": "Einladung von Coach {coachName}",
-      "subtitle": "Erstelle dein Konto, um von deinem Coach betreut zu werden. Kostenloser Zugang.",
+      "subtitle": "Erstelle dein Konto, um die Einladung deines Coaches anzunehmen.",
       "continueGoogle": "Weiter mit Google",
       "or": "ODER",
       "emailPlaceholder": "E-Mail",
       "passwordPlaceholder": "Passwort (min. 8 Zeichen)",
       "confirmPasswordPlaceholder": "Passwort bestätigen",
-      "submitButton": "Kostenloses Konto erstellen",
+      "submitButton": "Konto erstellen",
       "loadingButton": "Konto wird erstellt...",
       "hasAccount": "Schon ein Konto?",
       "loginLink": "Anmelden",
       "features": "✓ Kostenloser Zugang · ✓ Von deinem Coach betreut · ✓ Alle Funktionen",
       "invalidLink": "Ungültiger Einladungslink.",
+      "states": {
+        "validating": "Einladung wird geprüft...",
+        "consuming": "Einladung wird aktiviert...",
+        "success": "Einladung aktiviert. Weiterleitung...",
+        "invalid": "Diese Einladung ist ungültig. Bitte deinen Coach um einen neuen Link.",
+        "legacy": "Dieser alte Link ist nicht mehr gültig. Bitte deinen Coach um eine neue Einladung.",
+        "expired": "Diese Einladung ist abgelaufen. Bitte deinen Coach um einen neuen Link.",
+        "revoked": "Diese Einladung ist nicht mehr verfügbar. Bitte deinen Coach um einen neuen Link.",
+        "used": "Diese Einladung wurde bereits verwendet.",
+        "forbidden": "Melde dich mit der eingeladenen E-Mail-Adresse an oder prüfe, dass kein anderer Coach aktiv ist.",
+        "temporary": "Ein vorübergehender Fehler verhindert die Aktivierung. Versuche es gleich erneut."
+      },
       "legacyUnavailable": {
         "title": "Einladung vorübergehend nicht verfügbar",
         "message": "Dieser Einladungslink wird nicht mehr unterstützt. Bitte deinen Coach um eine neue Einladung oder erstelle ein Kundenkonto ohne automatische Zuordnung.",
@@ -834,7 +846,8 @@
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
         "message": "Eine Bestätigungs-E-Mail wurde gesendet an",
-        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen."
+        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen.",
+        "messageWithEmail": "Eine Bestätigungs-E-Mail wurde an {email} gesendet. Die Einladung wird nach der Bestätigung fortgesetzt."
       },
       "errors": {
         "emailRequired": "E-Mail erforderlich",
@@ -1099,11 +1112,7 @@
         "hoursTo": "bis",
         "followUpLabel": "Bevorzugter Betreuungsmodus",
         "businessModelTitle": "So funktioniert's",
-        "businessModelDesc": "Du zahlst CHF 50/Monat für Zugang zu allen MoovX-Tools. Deine Kunden melden sich kostenlos über deinen Einladungslink an und erhalten Zugang zu allen Funktionen.",
-        "inviteLinkLabel": "Dein Einladungslink",
-        "inviteLinkCopy": "Kopieren",
-        "inviteLinkCopied": "Kopiert",
-        "inviteLinkNote": "Teile diesen Link mit deinen Kunden. Sie melden sich an und werden dir automatisch zugewiesen."
+        "businessModelDesc": "Du zahlst CHF 50/Monat für den Zugang zu den MoovX-Tools. Lade jeden Kunden per E-Mail über dein Dashboard ein."
       },
       "stripe": {
         "title": "ZAHLUNGEN EMPFANGEN",
@@ -1126,8 +1135,7 @@
         "experienceLabel": "Erfahrung",
         "maxClientsLabel": "Max. Kunden",
         "inviteTitle": "Lade deine Kunden ein",
-        "inviteDesc": "Teile deinen einzigartigen Einladungslink",
-        "inviteCopied": "Link kopiert!",
+        "inviteDesc": "Sende eine sichere E-Mail-Einladung über dein Dashboard",
         "aiPlanTitle": "Erstelle einen KI-Plan",
         "aiPlanDesc": "Erstelle ein Ernährungs- oder Trainingsprogramm für einen Kunden",
         "dashboardTitle": "Entdecke dein Dashboard",

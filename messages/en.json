@@ -814,18 +814,30 @@
     "join": {
       "title": "JOIN MOOVX",
       "coachInvitation": "Invitation from coach {coachName}",
-      "subtitle": "Create your account to be coached. Free access.",
+      "subtitle": "Create your account to accept your coach invitation.",
       "continueGoogle": "Continue with Google",
       "or": "OR",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Password (min. 8 chars)",
       "confirmPasswordPlaceholder": "Confirm password",
-      "submitButton": "Create my free account",
+      "submitButton": "Create my account",
       "loadingButton": "Creating account...",
       "hasAccount": "Already have an account?",
       "loginLink": "Sign in",
       "features": "✓ Free access · ✓ Coached by your trainer · ✓ All features",
       "invalidLink": "Invalid invitation link.",
+      "states": {
+        "validating": "Validating invitation...",
+        "consuming": "Activating your invitation...",
+        "success": "Invitation activated. Redirecting...",
+        "invalid": "This invitation is invalid. Ask your coach for a new link.",
+        "legacy": "This old link is no longer valid. Ask your coach for a new invitation.",
+        "expired": "This invitation has expired. Ask your coach for a new link.",
+        "revoked": "This invitation is no longer available. Ask your coach for a new link.",
+        "used": "This invitation has already been used.",
+        "forbidden": "Sign in with the invited email address or verify that no other coach is active.",
+        "temporary": "A temporary error prevented activation. Please try again shortly."
+      },
       "legacyUnavailable": {
         "title": "Invitation temporarily unavailable",
         "message": "This invitation link is no longer supported. Ask your coach for a new invitation or create a client account without automatic assignment.",
@@ -834,7 +846,8 @@
       "emailSent": {
         "title": "CHECK YOUR INBOX",
         "message": "A confirmation email has been sent to",
-        "instruction": "Click the link to activate your account and get started."
+        "instruction": "Click the link to activate your account and get started.",
+        "messageWithEmail": "A confirmation email was sent to {email}. The invitation will resume after confirmation."
       },
       "errors": {
         "emailRequired": "Email required",
@@ -1099,11 +1112,7 @@
         "hoursTo": "to",
         "followUpLabel": "Preferred follow-up mode",
         "businessModelTitle": "How it works",
-        "businessModelDesc": "You pay CHF 50/month to access all MoovX tools. Your clients sign up for free via your invite link and get access to all features.",
-        "inviteLinkLabel": "Your invite link",
-        "inviteLinkCopy": "Copy",
-        "inviteLinkCopied": "Copied",
-        "inviteLinkNote": "Share this link with your clients. They sign up and are automatically assigned to you."
+        "businessModelDesc": "You pay CHF 50/month to access MoovX tools. Invite each client by email from your dashboard."
       },
       "stripe": {
         "title": "RECEIVE YOUR PAYMENTS",
@@ -1126,8 +1135,7 @@
         "experienceLabel": "Experience",
         "maxClientsLabel": "Max clients",
         "inviteTitle": "Invite your clients",
-        "inviteDesc": "Share your unique invite link",
-        "inviteCopied": "Link copied!",
+        "inviteDesc": "Send a secure email invitation from your dashboard",
         "aiPlanTitle": "Generate an AI plan",
         "aiPlanDesc": "Create a nutrition or training program for a client",
         "dashboardTitle": "Explore your dashboard",

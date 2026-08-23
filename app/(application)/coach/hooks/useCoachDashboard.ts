@@ -103,8 +103,6 @@ export default function useCoachDashboard(initialSession?: any) {
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(!initialSession)
   const [search, setSearch]     = useState('')
-  const [copied, setCopied]     = useState(false)
-  const [showInvite, setShowInvite] = useState(false)
   const [section, setSection]   = useState<'accueil' | 'dashboard' | 'suivi' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
@@ -160,10 +158,6 @@ export default function useCoachDashboard(initialSession?: any) {
   /* ── Derived values ────────────────────────────────────── */
 
   const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
-
-  const inviteLink = session && typeof window !== 'undefined'
-    ? `${window.location.origin}/join?coach=${session.user.id}`
-    : ''
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -700,22 +694,6 @@ export default function useCoachDashboard(initialSession?: any) {
     loadChat(selectedClient.client_id, session.user.id)
   }
 
-  function copyInviteLink() {
-    if (!inviteLink) return
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(inviteLink).catch(() => fallbackCopy(inviteLink))
-    } else { fallbackCopy(inviteLink) }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  function fallbackCopy(text: string) {
-    const el = document.createElement('textarea')
-    el.value = text; el.style.cssText = 'position:fixed;opacity:0'
-    document.body.appendChild(el); el.focus(); el.select()
-    document.execCommand('copy'); document.body.removeChild(el)
-  }
-
   // Food management functions
   async function loadFoods() {
     setFoodLoading(true)
@@ -818,11 +796,6 @@ export default function useCoachDashboard(initialSession?: any) {
     allPayments,
 
     // Invite
-    showInvite, setShowInvite,
-    inviteLink,
-    copied,
-    copyInviteLink,
-
     // Messaging
     selectedClient, setSelectedClient,
     chatMessages,
