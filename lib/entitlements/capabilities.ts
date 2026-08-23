@@ -1,4 +1,5 @@
 import type { LegacyEntitlement } from './legacy-entitlements'
+import { resolveEffectiveEntitlement } from './effective-entitlement'
 
 export type UserCapabilities = {
   ai: boolean
@@ -9,20 +10,25 @@ export type UserCapabilities = {
 
 type CapabilitySource = {
   subscriptionType: string | null | undefined
-  /** Shadow input only. Legacy grants are not an active authority yet. */
   legacyEntitlements?: readonly LegacyEntitlement[]
+  now?: Date
 }
 
 /**
- * Resolves the current product capabilities from the legacy subscription
- * authority. The optional legacy entitlement input is deliberately ignored
- * until persistence, migration and cutover are approved. This preserves all
- * existing rights while keeping the future resolver boundary stable.
+ * Maps the effective product authority to the existing capability contract.
+ * Callers that have not loaded legacy grants retain subscription fallback.
  */
 export function resolveUserCapabilities({
   subscriptionType,
+  legacyEntitlements = [],
+  now,
 }: CapabilitySource): UserCapabilities {
-  const coachManaged = subscriptionType === 'invited'
+  const entitlement = resolveEffectiveEntitlement({
+    subscriptionType,
+    legacyEntitlements,
+    now,
+  })
+  const coachManaged = entitlement.type === 'legacy_invited'
 
   return {
     ai: !coachManaged,
