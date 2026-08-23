@@ -24,6 +24,7 @@ import {
   type ActiveCoachResolutionState,
 } from '../../lib/coach-relations/repository'
 import { resolveUserCapabilities } from '../../lib/entitlements/capabilities'
+import { resolveEffectiveEntitlement } from '../../lib/entitlements/effective-entitlement'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -528,28 +529,29 @@ export default function useClientDashboard() {
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
-  const capabilities = resolveUserCapabilities({
+  const entitlementInput = {
     subscriptionType: profile?.subscription_type,
-  })
+  }
+  const effectiveEntitlement = resolveEffectiveEntitlement(entitlementInput)
+  const capabilities = resolveUserCapabilities(entitlementInput)
 
   const hasPaidSub = (() => {
     if (!profile) return false
 
-    // Bypass priority: subscription_type is the source of truth for
-    // lifetime/invited accounts. This protects against subscription_status
-    // being temporarily desynced (e.g. Stripe webhook missed an event).
-    if (profile.subscription_type === 'lifetime') return true
+    // Product authority is centralized; subscription_status remains only the
+    // billing lifecycle fallback for older or temporarily desynced profiles.
+    if (effectiveEntitlement.type === 'lifetime') return true
     if (capabilities.coachManaged) return true
 
     // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
-    if (profile.subscription_type === 'beta') {
+    if (effectiveEntitlement.type === 'beta') {
       if (!profile.subscription_end_date) return false
       return new Date(profile.subscription_end_date) > new Date()
     }
 
     // Fallback: subscription_status (for older profiles or status-driven flows)
     const st = profile.subscription_status
-    if (st === 'lifetime' || st === 'invited') return true
+    if (st === 'lifetime') return true
     if (st === 'beta') {
       if (!profile.subscription_end_date) return false
       return new Date(profile.subscription_end_date) > new Date()
@@ -569,9 +571,9 @@ export default function useClientDashboard() {
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
   const trialExpired = !hasPaidSub && !isExempt && !coachManaged && !!trialEndsAt && trialEndsAt <= now
   const subEndsAt = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
-  const isInBeta = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt > now
+  const isInBeta = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt > now
   const betaDaysLeft = subEndsAt ? Math.max(0, Math.ceil((subEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const betaExpired = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt <= now
+  const betaExpired = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt <= now
   const isSubActive = hasPaidSub || isExempt || coachManaged || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
