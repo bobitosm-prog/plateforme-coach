@@ -53,6 +53,7 @@ import RecentSessionsList from '../training/RecentSessionsList'
 import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
+import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -83,8 +84,10 @@ export default function TrainingTab({
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const T = titleStyle
-  // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
-  const aiAllowed = profile?.subscription_type !== 'invited'
+  const capabilities = resolveUserCapabilities({
+    subscriptionType: profile?.subscription_type,
+  })
+  const aiAllowed = capabilities.training
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})

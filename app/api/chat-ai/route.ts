@@ -4,11 +4,17 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
+import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
 import { writeTrustedAthenaAssistantMessage } from '../../../lib/supabase/trusted-ai-writer'
 
 const chatRequestSchema = z.object({
   message: z.string().trim().min(1),
 }).strict()
+
+type AthenaProfile = {
+  onboarding_answers?: Record<string, unknown> | null
+  [field: string]: unknown
+}
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -48,12 +54,14 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Guard: invited clients cannot use AI coach
-    if (profile?.subscription_type === 'invited') {
+    const capabilities = resolveUserCapabilities({
+      subscriptionType: profile?.subscription_type,
+    })
+    if (!capabilities.ai) {
       return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
     }
 
-    const p = profile || {} as any
+    const p = (profile || {}) as AthenaProfile
     const onboarding = p.onboarding_answers || {}
     const systemPrompt = `${COACH_SYSTEM_PROMPT}
 
@@ -84,7 +92,7 @@ REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max
       .order('created_at', { ascending: false })
       .limit(10)
 
-    const historyMessages = (dbHistory || []).reverse().map((m: any) => ({
+    const historyMessages = (dbHistory || []).reverse().map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
     }))

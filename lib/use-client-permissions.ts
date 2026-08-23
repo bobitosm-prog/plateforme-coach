@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { resolveUserCapabilities } from './entitlements/capabilities'
 import {
   findActiveCoachForClient,
   toActiveCoachResolutionState,
@@ -23,14 +24,14 @@ export function deriveClientPermissions(
   subscriptionType: string | null | undefined,
   relation: ActiveRelationLookupResult,
 ): LoadedClientPermissions {
-  const isInvited = subscriptionType === 'invited'
+  const capabilities = resolveUserCapabilities({ subscriptionType })
   const coach = toActiveCoachResolutionState(relation)
 
   return {
-    canCreatePrograms: !isInvited,
-    canUseAI: !isInvited,
-    canModifyNutrition: !isInvited,
-    isInvited,
+    canCreatePrograms: capabilities.training,
+    canUseAI: capabilities.ai,
+    canModifyNutrition: capabilities.nutrition,
+    isInvited: capabilities.coachManaged,
     coachId: coach.coachId,
     coachRelationStatus: coach.status,
   }

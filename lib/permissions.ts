@@ -5,17 +5,25 @@
  * TYPE 2 — CLIENT INVITÉ: invited by coach, AI disabled, coach manages plans
  */
 
+import { resolveUserCapabilities } from './entitlements/capabilities'
+
+type CapabilityProfile = {
+  subscription_type?: string | null
+}
+
 /** Check if user can use AI features (generate programs, nutrition, chat AI) */
-export function canUseAI(profile: any): boolean {
+export function canUseAI(profile: CapabilityProfile | null | undefined): boolean {
   if (!profile) return false
-  // Invited clients cannot use AI — their coach manages everything
-  if (profile.subscription_type === 'invited') return false
-  return true
+  return resolveUserCapabilities({
+    subscriptionType: profile.subscription_type,
+  }).ai
 }
 
 /** Check if user is an invited client (coach-managed) */
-export function isInvitedClient(profile: any): boolean {
-  return profile?.subscription_type === 'invited'
+export function isInvitedClient(profile: CapabilityProfile | null | undefined): boolean {
+  return resolveUserCapabilities({
+    subscriptionType: profile?.subscription_type,
+  }).coachManaged
 }
 
 /** Message to show when AI is disabled for invited clients */

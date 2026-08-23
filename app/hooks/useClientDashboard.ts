@@ -23,6 +23,7 @@ import {
   toActiveCoachResolutionState,
   type ActiveCoachResolutionState,
 } from '../../lib/coach-relations/repository'
+import { resolveUserCapabilities } from '../../lib/entitlements/capabilities'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -527,6 +528,9 @@ export default function useClientDashboard() {
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
+  const capabilities = resolveUserCapabilities({
+    subscriptionType: profile?.subscription_type,
+  })
 
   const hasPaidSub = (() => {
     if (!profile) return false
@@ -535,7 +539,7 @@ export default function useClientDashboard() {
     // lifetime/invited accounts. This protects against subscription_status
     // being temporarily desynced (e.g. Stripe webhook missed an event).
     if (profile.subscription_type === 'lifetime') return true
-    if (profile.subscription_type === 'invited') return true
+    if (capabilities.coachManaged) return true
 
     // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
     if (profile.subscription_type === 'beta') {
@@ -558,17 +562,17 @@ export default function useClientDashboard() {
   })()
 
   const isExempt = !!profile && (profile.email === OWNER_EMAIL || profile.email === ADMIN_EMAIL)
-  const isInvited = profile?.subscription_type === 'invited'
+  const coachManaged = capabilities.coachManaged
   const trialEndsAt = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null
   const now = new Date()
   const isInTrial = !hasPaidSub && !isExempt && !!trialEndsAt && trialEndsAt > now
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const trialExpired = !hasPaidSub && !isExempt && !isInvited && !!trialEndsAt && trialEndsAt <= now
+  const trialExpired = !hasPaidSub && !isExempt && !coachManaged && !!trialEndsAt && trialEndsAt <= now
   const subEndsAt = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
   const isInBeta = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt > now
   const betaDaysLeft = subEndsAt ? Math.max(0, Math.ceil((subEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
   const betaExpired = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt <= now
-  const isSubActive = hasPaidSub || isExempt || isInvited || isInTrial
+  const isSubActive = hasPaidSub || isExempt || coachManaged || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
     try {
@@ -641,7 +645,7 @@ export default function useClientDashboard() {
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial
-    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe, aiAllowed: !isInvited,
+    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe, aiAllowed: capabilities.ai,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

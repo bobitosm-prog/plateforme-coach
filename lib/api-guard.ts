@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { resolveUserCapabilities } from './entitlements/capabilities'
 
 /**
  * Server-side guard: check if the requesting user is an invited client.
@@ -20,7 +21,10 @@ export async function guardInvitedClient(userId: string | undefined): Promise<Ne
     .eq('id', userId)
     .maybeSingle()
 
-  if (data?.subscription_type === 'invited') {
+  const capabilities = resolveUserCapabilities({
+    subscriptionType: data?.subscription_type,
+  })
+  if (!capabilities.ai) {
     return NextResponse.json(
       { error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' },
       { status: 403 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
+import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -24,22 +25,33 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { category, profile, foodsList, includeIngredients, excludeIngredients } = await req.json()
+    const { category, profile: recipeProfile, foodsList, includeIngredients, excludeIngredients } = await req.json()
 
-    // Guard: invited clients cannot generate AI recipes
-    if (profile?.subscription_type === 'invited') {
+    const { data: capabilityProfile, error: capabilityError } = await supabase
+      .from('profiles')
+      .select('subscription_type')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (capabilityError || !capabilityProfile) {
+      return NextResponse.json({ error: 'Autorisation impossible' }, { status: 403 })
+    }
+
+    const capabilities = resolveUserCapabilities({
+      subscriptionType: capabilityProfile.subscription_type,
+    })
+    if (!capabilities.nutrition) {
       return NextResponse.json({ error: 'Fonctionnalité gérée par ton coach.' }, { status: 403 })
     }
 
-    const targetCalPerMeal = Math.round((profile?.calorie_goal || 2000) / 4)
-    const targetProtPerMeal = Math.round((profile?.protein_goal || 130) / 4)
+    const targetCalPerMeal = Math.round((recipeProfile?.calorie_goal || 2000) / 4)
+    const targetProtPerMeal = Math.round((recipeProfile?.protein_goal || 130) / 4)
 
     const systemPrompt = `Tu es un chef cuisinier certifié spécialisé en nutrition sportive et fitness. Ne mentionne jamais l'intelligence artificielle dans tes réponses. Génère UNE recette.
 
 PROFIL DU CLIENT :
 - Calories par repas : ~${targetCalPerMeal} kcal
 - Protéines par repas : ~${targetProtPerMeal}g
-- Régime : ${profile?.dietary_type || 'omnivore'}
+- Régime : ${recipeProfile?.dietary_type || 'omnivore'}
 
 RÈGLES :
 1. Utilise des aliments de cette liste fitness : ${foodsList || 'aliments fitness classiques'}
@@ -100,7 +112,8 @@ Réponds UNIQUEMENT en JSON (pas de backticks, pas de texte) :
     recipe.fat_per_serving = Math.round((recipe.fat_per_serving || 0) * 10) / 10
 
     return NextResponse.json({ recipe })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Erreur inattendue' }, { status: 500 })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erreur inattendue'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

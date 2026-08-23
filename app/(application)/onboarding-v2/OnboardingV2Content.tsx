@@ -8,6 +8,7 @@ import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { colors, fonts, calcMifflinStJeor } from '@/lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
+import { resolveUserCapabilities } from '@/lib/entitlements/capabilities'
 
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
@@ -158,8 +159,10 @@ export default function OnboardingV2Content() {
           if (Array.isArray(mp.disliked_foods)) setDislikedFoods(mp.disliked_foods)
         }
 
-        // Flow detection: subscription_type === 'invited' → invited flow
-        if (profile.subscription_type === 'invited') {
+        const capabilities = resolveUserCapabilities({
+          subscriptionType: profile.subscription_type,
+        })
+        if (capabilities.coachManaged) {
           dispatch({ type: 'SET_FLOW', flow: 'invited' })
 
           // Fetch coach via coach_clients junction table
