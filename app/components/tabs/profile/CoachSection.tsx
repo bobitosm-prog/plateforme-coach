@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Crown, UserMinus } from 'lucide-react'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY } from '../../../../lib/design-tokens'
 
-export default function CoachSection({ supabase, session, coachId }: { supabase: any; session: any; coachId: string | null }) {
+export default function CoachSection({ supabase, coachId }: { supabase: any; session: any; coachId: string | null }) {
   const t = useTranslations('profile.coach')
   const [coachName, setCoachName] = useState<string | null>(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -19,11 +19,14 @@ export default function CoachSection({ supabase, session, coachId }: { supabase:
   }, [coachId])
 
   async function leaveCoach() {
-    if (!coachId || !session?.user?.id) return
+    if (!coachId) return
     setLeaving(true)
-    await supabase.from('coach_clients').delete().eq('client_id', session.user.id).eq('coach_id', coachId)
-    setLeaving(false)
-    window.location.reload()
+    try {
+      const response = await fetch('/api/coach/disconnect', { method: 'POST' })
+      if (response.ok) window.location.reload()
+    } finally {
+      setLeaving(false)
+    }
   }
 
   return (
