@@ -826,6 +826,11 @@
       "loginLink": "Sign in",
       "features": "✓ Free access · ✓ Coached by your trainer · ✓ All features",
       "invalidLink": "Invalid invitation link.",
+      "legacyUnavailable": {
+        "title": "Invitation temporarily unavailable",
+        "message": "This invitation link is no longer supported. Ask your coach for a new invitation or create a client account without automatic assignment.",
+        "register": "Create a client account"
+      },
       "emailSent": {
         "title": "CHECK YOUR INBOX",
         "message": "A confirmation email has been sent to",

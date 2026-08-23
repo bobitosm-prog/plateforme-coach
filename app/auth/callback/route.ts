@@ -37,16 +37,6 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Coach invitation link (?coach=uuid) — server API to bypass RLS
-      const coachId = searchParams.get('coach')
-      if (coachId && data.session) {
-        await fetch(`${origin}/api/assign-coach`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coachId, clientId: data.session.user.id }),
-        })
-      }
-
       // Self-signup flow → force re-login + banner sur /login
       // Exchange déjà fait (email_confirmed_at set en DB + sync rôle appliqué),
       // on jette ensuite la session browser pour reproduire un login manuel.

@@ -826,6 +826,11 @@
       "loginLink": "Anmelden",
       "features": "✓ Kostenloser Zugang · ✓ Von deinem Coach betreut · ✓ Alle Funktionen",
       "invalidLink": "Ungültiger Einladungslink.",
+      "legacyUnavailable": {
+        "title": "Einladung vorübergehend nicht verfügbar",
+        "message": "Dieser Einladungslink wird nicht mehr unterstützt. Bitte deinen Coach um eine neue Einladung oder erstelle ein Kundenkonto ohne automatische Zuordnung.",
+        "register": "Kundenkonto erstellen"
+      },
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
         "message": "Eine Bestätigungs-E-Mail wurde gesendet an",

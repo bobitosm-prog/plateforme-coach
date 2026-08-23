@@ -923,6 +923,11 @@
       "loginLink": "Se connecter",
       "features": "✓ Acces gratuit · ✓ Suivi par ton coach · ✓ Toutes les fonctionnalites",
       "invalidLink": "Lien d'invitation invalide.",
+      "legacyUnavailable": {
+        "title": "Invitation temporairement indisponible",
+        "message": "Ce lien d'invitation n'est plus pris en charge. Demandez à votre coach une nouvelle invitation ou créez un compte client sans rattachement automatique.",
+        "register": "Créer un compte client"
+      },
       "emailSent": {
         "title": "VERIFIE TA BOITE MAIL",
         "message": "Un email de confirmation a ete envoye a",
