@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   checkRateLimit: vi.fn(),
 }))
 
+vi.mock('server-only', () => ({}))
 vi.mock('@supabase/ssr', () => ({
   createServerClient: mocks.createServerClient,
 }))
@@ -100,9 +101,12 @@ describe('capability consumers migration', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('routes the remaining business consumers through the capability resolver', () => {
-    const consumers = [
+  it('routes the remaining business consumers through capability contexts', () => {
+    const serverConsumer = readFileSync(
       'app/api/generate-recipe/route.ts',
+      'utf8',
+    )
+    const clientConsumers = [
       'app/hooks/useClientDashboard.ts',
       'app/(application)/onboarding-v2/OnboardingV2Content.tsx',
       'app/components/ChatAI.tsx',
@@ -110,7 +114,11 @@ describe('capability consumers migration', () => {
       'app/components/tabs/TrainingTab.tsx',
     ].map(path => readFileSync(path, 'utf8'))
 
-    for (const source of consumers) {
+    expect(serverConsumer).toContain('loadEffectiveEntitlementContext')
+    expect(serverConsumer).not.toMatch(
+      /subscription_type\s*={2,3}\s*['"]invited['"]/,
+    )
+    for (const source of clientConsumers) {
       expect(source).toContain('resolveUserCapabilities')
       expect(source).not.toMatch(/subscription_type\s*={2,3}\s*['"]invited['"]/)
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
+import { loadEffectiveEntitlementContext } from '../../../lib/entitlements/server-context'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -36,9 +36,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Autorisation impossible' }, { status: 403 })
     }
 
-    const capabilities = resolveUserCapabilities({
-      subscriptionType: capabilityProfile.subscription_type,
-    })
+    const { capabilities } = await loadEffectiveEntitlementContext(
+      user.id,
+      capabilityProfile.subscription_type,
+    )
     if (!capabilities.nutrition) {
       return NextResponse.json({ error: 'Fonctionnalité gérée par ton coach.' }, { status: 403 })
     }

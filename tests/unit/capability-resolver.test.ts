@@ -42,16 +42,22 @@ describe('resolveUserCapabilities', () => {
     expect(isInvitedClient({ subscription_type: 'invited' })).toBe(true)
   })
 
-  it('routes the first permission consumers through the resolver', () => {
-    const consumers = [
+  it('routes client permissions and server consumers through their contexts', () => {
+    const clientConsumers = [
       'lib/permissions.ts',
       'lib/use-client-permissions.ts',
+    ].map(path => readFileSync(path, 'utf8'))
+    const serverConsumers = [
       'lib/api-guard.ts',
       'app/api/chat-ai/route.ts',
     ].map(path => readFileSync(path, 'utf8'))
 
-    for (const source of consumers) {
+    for (const source of clientConsumers) {
       expect(source).toContain('resolveUserCapabilities')
+      expect(source).not.toMatch(/subscription_type\s*={2,3}\s*['"]invited['"]/)
+    }
+    for (const source of serverConsumers) {
+      expect(source).toContain('loadEffectiveEntitlementContext')
       expect(source).not.toMatch(/subscription_type\s*={2,3}\s*['"]invited['"]/)
     }
   })

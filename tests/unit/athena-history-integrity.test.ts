@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   writeAssistant: vi.fn(),
 }))
 
+vi.mock('server-only', () => ({}))
 vi.mock('@supabase/ssr', () => ({
   createServerClient: mocks.createServerClient,
 }))

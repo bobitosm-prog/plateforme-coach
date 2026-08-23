@@ -34,16 +34,24 @@ const readSources = (paths: readonly string[]) => (
 )
 
 describe('capability consumers cutover', () => {
-  it('routes P0 permission and direct API consumers through capabilities', () => {
-    const consumers = readSources([
+  it('routes P0 permission and direct API consumers through capability contexts', () => {
+    const clientConsumers = readSources([
       'lib/permissions.ts',
+    ])
+    const serverConsumers = readSources([
       'lib/api-guard.ts',
       'app/api/chat-ai/route.ts',
       'app/api/generate-recipe/route.ts',
     ])
 
-    for (const { path, source } of consumers) {
+    for (const { path, source } of clientConsumers) {
       expect(source, path).toContain('resolveUserCapabilities')
+      expect(source, path).not.toMatch(
+        /subscription_type\s*={2,3}\s*['"]invited['"]/,
+      )
+    }
+    for (const { path, source } of serverConsumers) {
+      expect(source, path).toContain('loadEffectiveEntitlementContext')
       expect(source, path).not.toMatch(
         /subscription_type\s*={2,3}\s*['"]invited['"]/,
       )

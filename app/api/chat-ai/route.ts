@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
-import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
+import { loadEffectiveEntitlementContext } from '../../../lib/entitlements/server-context'
 import { writeTrustedAthenaAssistantMessage } from '../../../lib/supabase/trusted-ai-writer'
 
 const chatRequestSchema = z.object({
@@ -54,9 +54,10 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const capabilities = resolveUserCapabilities({
-      subscriptionType: profile?.subscription_type,
-    })
+    const { capabilities } = await loadEffectiveEntitlementContext(
+      user.id,
+      profile?.subscription_type,
+    )
     if (!capabilities.ai) {
       return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
     }
