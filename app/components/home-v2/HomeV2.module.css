@@ -40,8 +40,26 @@
 .nbaTitle { margin: 0; color: #f7f4ed; font-size: clamp(1.15rem,3vw,1.45rem); }
 .nbaCopy { margin: 7px 0 0; max-width: 650px; color: #aaa294; font-size: .86rem; line-height: 1.5; }
 .nbaButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+.progression { margin-top: 24px; padding: clamp(18px,3vw,26px); border: 1px solid rgba(201,168,76,.18); border-radius: 20px; background: linear-gradient(145deg,#15130f,#10100e); }
+.progressionHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.progressionEyebrow { margin: 0 0 6px; color: #c9a84c; font-size: .68rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.progressionTitle { margin: 0; color: #f7f4ed; font-size: clamp(1.12rem,3vw,1.4rem); }
+.progressionCopy { margin: 7px 0 0; color: #9f978a; font-size: .82rem; line-height: 1.45; }
+.progressionLink { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0; border: 0; color: #e6c364; background: transparent; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; white-space: nowrap; }
+.progressionLink:focus-visible { outline: 3px solid rgba(230,195,100,.42); outline-offset: 4px; border-radius: 5px; }
+.progressionState { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; margin-top: 18px; color: #9f978a; font-size: .84rem; line-height: 1.45; }
+.progressionState strong { color: #ece6da; font-size: .95rem; }
+.progressionSkeleton { width: min(100%,320px); margin: 0 0 4px; }
+.progressionGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 20px; }
+.progressionMetric { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 2px 10px; align-items: center; min-width: 0; padding: 14px; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.018); }
+.progressionIcon { grid-row: 1 / span 3; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: #d9b85d; background: rgba(201,168,76,.09); }
+.progressionMetricLabel { overflow: hidden; color: #8f887b; font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.progressionMetricValue { overflow-wrap: anywhere; color: #f7f4ed; font-size: 1rem; line-height: 1.25; }
+.progressionMetricMeta { display: inline-flex; align-items: center; gap: 4px; color: #918a7e; font-size: .7rem; line-height: 1.35; }
+.progressionMetricMeta[data-trend='up'] { color: #d9b85d; }
+.progressionMetricMeta[data-trend='down'] { color: #a9cba4; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeletonLine { animation: none; } .button { transition: none; } }
-@media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } }
+@media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
-@media (max-width: 520px) { .metrics { display: none; } .actions, .button { width: 100%; } }
+@media (max-width: 520px) { .metrics { display: none; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } }

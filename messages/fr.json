@@ -2396,6 +2396,26 @@
         "rest_day": { "title": "Priorité à la récupération", "description": "Ton programme prévoit du repos aujourd’hui.", "cta": "Voir la récupération" },
         "missing_program": { "title": "Choisis ton prochain programme", "description": "Prépare la prochaine étape de ton entraînement.", "cta": "Voir les programmes" },
         "day_on_track": { "title": "Ta journée est bien lancée", "description": "Continue sur cette dynamique et consulte ta progression.", "cta": "Voir ma progression" }
+      },
+      "progression": {
+        "eyebrow": "Cette semaine",
+        "title": "Ta progression",
+        "completeCopy": "Tes repères essentiels sont à jour.",
+        "partialCopy": "Les premiers repères sont disponibles. Ils s’enrichiront avec ton suivi.",
+        "loading": "Chargement de ta progression…",
+        "errorTitle": "Progression momentanément indisponible",
+        "errorCopy": "Tes données ne sont pas remplacées par des valeurs nulles.",
+        "emptyTitle": "Ta progression commence ici",
+        "emptyCopy": "Enregistre une séance ou une mesure pour faire apparaître tes premiers repères.",
+        "cta": "Voir ma progression",
+        "weight": "Poids actuel",
+        "trendUnknown": "Première mesure",
+        "trend": { "up": "+{value} kg depuis la mesure précédente", "down": "−{value} kg depuis la mesure précédente", "stable": "Poids stable" },
+        "sessionsLabel": "Régularité",
+        "sessions": "{count, plural, =0 {Aucune séance cette semaine} one {# séance cette semaine} other {# séances cette semaine}}",
+        "adherence": "Assiduité",
+        "latestPR": "Dernier record",
+        "recordGain": "+{value}"
       }
     },
     "nextAppointment": "Prochain rendez-vous",

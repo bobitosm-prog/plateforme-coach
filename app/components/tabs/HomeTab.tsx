@@ -10,18 +10,15 @@ import { de as deLocale } from 'date-fns/locale/de'
 import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  Ruler, Camera, Zap, Moon, CheckCircle, Flame, Dumbbell, TrendingUp, Droplets, Calendar,
+  Ruler, Camera, Zap, Moon, CheckCircle, Dumbbell, TrendingUp, Droplets, Calendar,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
 import { toast } from 'sonner'
 import SessionDoneModal from '../training/SessionDoneModal'
 import {
-  colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary,
+  colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statSmallStyle, bodyStyle, labelStyle, subtitleStyle, pageTitleStyle, btnPrimary,
 } from '../../../lib/design-tokens'
-const GOLD = colors.gold
-const TEXT_PRIMARY = colors.text
-const TEXT_MUTED = colors.textMuted
 import SwissBadge from '../ui/SwissBadge'
 import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, addXP } from '../../../lib/gamification'
@@ -31,7 +28,6 @@ import type { NextBestAction } from '../../../lib/home/next-best-action'
 import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
-import { formatZurichDate } from '../../../lib/format-time'
 
 /**
  * Get daily quote index — deterministic per day of year.
@@ -51,8 +47,6 @@ interface HomeTabProps {
   photoRef: React.RefObject<HTMLInputElement | null>
   uploadAvatar: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   uploadProgressPhoto: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
-  currentWeight: number | undefined
-  goalWeight: number | null
   calorieGoal: number
   completedSessions: number
   streak: number
@@ -69,7 +63,6 @@ interface HomeTabProps {
   nextSession?: { sessionIndex: number; weekday: string; day: any; reason: string } | null
   latestDiagnostic?: any
   setLatestDiagnostic?: (d: any) => void
-  sessionDates?: { created_at: string }[]
   activeTab: string
 }
 
@@ -77,11 +70,11 @@ export default function HomeTab({
   homeModel,
   supabase, session, profile,
   avatarRef, photoRef, uploadAvatar, uploadProgressPhoto,
-  currentWeight, goalWeight, completedSessions, streak,
+  completedSessions, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
-  latestDiagnostic, setLatestDiagnostic, sessionDates = [], activeTab,
+  latestDiagnostic, setLatestDiagnostic, activeTab,
 }: HomeTabProps) {
   const ht = useTranslations('home')
   const locale = useLocale()
@@ -327,16 +320,6 @@ export default function HomeTab({
   const rawSessionTitle = customIsRest ? ht('rest') : (customDayName || todayScheduledSession?.title || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || ht('trainingOfDay')}` : ht('workoutOfDay')))
   const sessionTitle = rawSessionTitle
 
-  // Weekly assiduity bar chart (1 bar/day, filled if session done)
-  const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-  const trainedDays = new Set(sessionDates.map(s => formatZurichDate(s.created_at)))
-  const todayZ = formatZurichDate(new Date().toISOString())
-  const jsDow = new Date().getDay() === 0 ? 7 : new Date().getDay()
-  const barData = dayLabels.map((label, i) => {
-    const dd = new Date(); dd.setDate(dd.getDate() + (i - (jsDow - 1)))
-    const ds = formatZurichDate(dd.toISOString())
-    return { label, value: trainedDays.has(ds) ? 1 : 0, isToday: ds === todayZ }
-  })
   // Objective label
   const objLabel = profile?.objective === 'cut' ? 'cut'
     : profile?.objective === 'mass' ? 'bulk' : 'maintain'
@@ -411,6 +394,7 @@ export default function HomeTab({
           onOpenProgram: () => setActiveTab('training'),
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
           onNextBestAction: handleNextBestAction,
+          onOpenProgression: () => setActiveTab('progress'),
         }}
       />
 
@@ -545,46 +529,6 @@ export default function HomeTab({
       </div>
 
       <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column' }}>
-
-        {/* ═══ PROGRESSION (streak + weight + XP) ═══ */}
-        <SectionTitle noPadding title={ht('progression')} action={{ label: ht('details'), onClick: () => setActiveTab('progress') }} />
-        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', position: 'relative', overflow: 'hidden' }}>
-          {/* Streak */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Flame size={22} color={GOLD} fill={GOLD} style={{ opacity: 0.8 }} />
-              <div>
-                <div style={{ ...statStyle, fontSize: 24, letterSpacing: '-0.02em' }}>{ht('streakDays', { count: streak })}</div>
-                <div style={{ ...mutedStyle, fontSize: 10 }}>{ht('activeStreak')}</div>
-              </div>
-            </div>
-            {currentWeight && (
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ ...statStyle, fontSize: 24, lineHeight: 1 }}>{currentWeight} <span style={{ fontSize: 12, color: TEXT_MUTED }}>KG</span></div>
-                {goalWeight && <div style={{ ...mutedStyle, fontSize: 10 }}>{ht('goal', { weight: goalWeight })} {objLabel === 'bulk' ? '\u2197' : objLabel === 'cut' ? '\u2198' : '\u2192'}</div>}
-              </div>
-            )}
-          </div>
-          {/* Assiduity dots */}
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-              {barData.map((b, i) => (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: 999,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    ...(b.value
-                      ? { background: `linear-gradient(180deg, ${GOLD}, ${colors.goldContainer})`, color: colors.onGold, fontSize: 15, fontWeight: 700, boxShadow: b.isToday ? `0 0 12px ${colors.goldDim}` : 'none' }
-                      : { border: `1.5px solid ${colors.divider}`, color: colors.textDim, fontSize: 12 }),
-                    transition: 'all 0.3s ease',
-                  }}>{b.value ? '✓' : '·'}</div>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: b.isToday ? GOLD : TEXT_MUTED, letterSpacing: '0.05em' }}>{b.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
 
         {/* ═══ PROCHAINE SEANCE — coach-managed clients only ═══ */}
         {!aiAllowed && coachProgram && nextSession && (

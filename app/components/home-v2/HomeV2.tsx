@@ -6,6 +6,7 @@ import HomeV2Header from './HomeV2Header'
 import TodayHero from './TodayHero'
 import DailyStatus from './DailyStatus'
 import NextBestActionCard from './NextBestActionCard'
+import ProgressionSnapshot from './ProgressionSnapshot'
 import { resolveNextBestAction, type NextBestAction } from '../../../lib/home/next-best-action'
 import styles from './HomeV2.module.css'
 
@@ -15,6 +16,7 @@ export interface HomeV2Actions {
   onOpenProgram?: () => void
   onStartFreeSession?: () => void
   onNextBestAction?: (action: NextBestAction) => void
+  onOpenProgression?: () => void
 }
 
 export default function HomeV2({ model, actions, children }: { model: HomeViewModel; actions: HomeV2Actions; children?: ReactNode }) {
@@ -24,6 +26,7 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
     <TodayHero training={model.training} {...actions} />
     <DailyStatus training={model.training} nutrition={model.nutrition} recovery={model.recovery} />
     <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />
+    <ProgressionSnapshot progression={model.progression} onOpenProgression={actions.onOpenProgression} />
     {children && <div className={styles.legacy}>{children}</div>}
   </div>
 }

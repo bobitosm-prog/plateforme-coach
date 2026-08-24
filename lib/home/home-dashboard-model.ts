@@ -45,6 +45,14 @@ export interface HomeMacros {
   fat: number | null
 }
 
+export interface HomeProgressionRecord {
+  exerciseName: string
+  value: number | null
+  unit: string | null
+  previousValue: number | null
+  achievedAt: string | null
+}
+
 export interface HomeViewModel {
   identity: {
     state: HomeDomainState
@@ -96,7 +104,7 @@ export interface HomeViewModel {
     weightTrend: number | null
     sessionsThisWeek: number | null
     adherence: number | null
-    latestPR: unknown | null
+    latestPR: HomeProgressionRecord | null
   }
   diagnostic: {
     state: HomeDomainState
@@ -296,6 +304,33 @@ function normalizeMacros(value?: Partial<HomeMacros>): HomeMacros {
   return { ...emptyMacros, ...value }
 }
 
+export function normalizeHomeProgressionRecord(value: unknown): HomeProgressionRecord | null {
+  if (!value || typeof value !== 'object') return null
+  const record = value as Record<string, unknown>
+  const exerciseName = typeof record.exercise_name === 'string'
+    ? record.exercise_name.trim()
+    : typeof record.exerciseName === 'string'
+      ? record.exerciseName.trim()
+      : ''
+  if (!exerciseName) return null
+
+  return {
+    exerciseName,
+    value: typeof record.value === 'number' && Number.isFinite(record.value) ? record.value : null,
+    unit: typeof record.unit === 'string' && record.unit.trim() ? record.unit.trim() : null,
+    previousValue: typeof record.previous_value === 'number' && Number.isFinite(record.previous_value)
+      ? record.previous_value
+      : typeof record.previousValue === 'number' && Number.isFinite(record.previousValue)
+        ? record.previousValue
+        : null,
+    achievedAt: typeof record.achieved_at === 'string'
+      ? record.achieved_at
+      : typeof record.achievedAt === 'string'
+        ? record.achievedAt
+        : null,
+  }
+}
+
 function stateOrEmpty(
   explicit: HomeDomainState | undefined,
   hasData: boolean,
@@ -441,7 +476,7 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
         : null,
       sessionsThisWeek: input.progression?.sessionsThisWeek ?? null,
       adherence: input.progression?.adherence ?? null,
-      latestPR: input.progression?.latestPR ?? null,
+      latestPR: normalizeHomeProgressionRecord(input.progression?.latestPR),
     },
     diagnostic: {
       state: states.diagnostic,

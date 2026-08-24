@@ -2396,6 +2396,26 @@
         "rest_day": { "title": "Prioritize recovery", "description": "Your program schedules recovery today.", "cta": "View recovery" },
         "missing_program": { "title": "Choose your next program", "description": "Prepare the next step in your training.", "cta": "View programs" },
         "day_on_track": { "title": "Your day is on track", "description": "Keep the momentum and review your progress.", "cta": "View progress" }
+      },
+      "progression": {
+        "eyebrow": "This week",
+        "title": "Your progress",
+        "completeCopy": "Your essential progress markers are up to date.",
+        "partialCopy": "Your first markers are available and will grow with your tracking.",
+        "loading": "Loading your progress…",
+        "errorTitle": "Progress temporarily unavailable",
+        "errorCopy": "Your data is not being replaced by zero values.",
+        "emptyTitle": "Your progress starts here",
+        "emptyCopy": "Log a workout or measurement to reveal your first markers.",
+        "cta": "View my progress",
+        "weight": "Current weight",
+        "trendUnknown": "First measurement",
+        "trend": { "up": "+{value} kg since the previous measurement", "down": "−{value} kg since the previous measurement", "stable": "Weight stable" },
+        "sessionsLabel": "Consistency",
+        "sessions": "{count, plural, =0 {No workouts this week} one {# workout this week} other {# workouts this week}}",
+        "adherence": "Adherence",
+        "latestPR": "Latest record",
+        "recordGain": "+{value}"
       }
     },
     "nextAppointment": "Next appointment",
