@@ -402,7 +402,7 @@
     "client_label": "For clients",
     "client_title": "Full access",
     "client_subtitle1": "Without coach: direct subscription.",
-    "client_subtitle2": "With invited coach: free access.",
+    "client_subtitle2": "With coach support: access included.",
     "plan_monthly_label": "Monthly",
     "plan_monthly_period": "/mo",
     "plan_yearly_label": "Yearly",
@@ -1346,8 +1346,8 @@
     "subscription": {
       "lifetime": "Lifetime access",
       "lifetimeDesc": "Permanent access to all MoovX features.",
-      "coachAccess": "Coach Access",
-      "coachAccessDesc": "Your access is included via your coach.",
+      "legacyAccess": "Historical access",
+      "legacyAccessDesc": "Your historical access to MoovX remains active.",
       "planMonthly": "Monthly Plan — CHF 10/month",
       "planYearly": "Yearly Plan — CHF 80/year",
       "planCoach": "Coach Pro — CHF 50/month",
@@ -1507,7 +1507,7 @@
       "kcalDay": "KCAL/DAY",
       "sessions": "SESSIONS"
     },
-    "invited": {
+    "coachManaged": {
       "title": "AI COACH",
       "message": "Your coach manages your program and nutrition. Contact them directly via messaging.",
       "close": "CLOSE"
@@ -2333,7 +2333,6 @@
       "coachPro": "COACH PRO · {count} clients",
       "clientsActive": "{count} active client(s) · {unread} unread message(s)",
       "searchPlaceholder": "Search a client...",
-      "invited": "INVITED",
       "videosToReview": "Videos to review"
     },
     "invite": {

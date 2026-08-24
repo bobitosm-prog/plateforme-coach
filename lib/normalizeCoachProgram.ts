@@ -14,7 +14,7 @@
  *
  * TEMPORAIRE : ce mapping implicite sera remplace par un vrai "choix
  * client du jour" dans un commit ulterieur (voir AUDIT-TRAINING.md
- * section 'Refacto TrainingTab pour clients invited').
+ * section 'Refacto TrainingTab pour clients coach-managed').
  */
 
 const WEEKDAYS_FR = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const

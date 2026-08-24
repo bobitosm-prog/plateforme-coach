@@ -10,7 +10,6 @@ const PatchSubscriptionSchema = z.object({
   subscription_type: z.enum([
     'client_monthly',
     'lifetime',
-    'invited',
     'trial',
   ]).nullable(),
   subscription_status: z.enum([

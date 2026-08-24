@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Search, Settings2 } from 'lucide-react'
 import type { AdminUserRow } from '@/lib/admin/types'
-import { StatusBadge, roleVariant, subscriptionVariant } from '../../_components/StatusBadge'
+import { StatusBadge, roleVariant, subscriptionLabel, subscriptionVariant } from '../../_components/StatusBadge'
 import { formatRelative } from '../../_components/formatters'
 import { RoleDialog } from './RoleDialog'
 import { SubscriptionDialog } from './SubscriptionDialog'
@@ -131,7 +131,7 @@ export function UsersTable({
                   <td>
                     <div className="flex flex-col gap-1 items-start">
                       <StatusBadge variant={subscriptionVariant(u.subscription_type)}>
-                        {u.subscription_type || 'aucun'}
+                        {subscriptionLabel(u.subscription_type)}
                       </StatusBadge>
                       {u.subscription_status && u.subscription_status !== 'active' && (
                         <span className="text-[10px]" style={{ color: '#99907e' }}>{u.subscription_status}</span>

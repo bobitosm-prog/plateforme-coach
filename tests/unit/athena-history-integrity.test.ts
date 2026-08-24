@@ -143,7 +143,7 @@ describe('Athena history role integrity', () => {
     expect(mocks.writeAssistant).not.toHaveBeenCalled()
   })
 
-  it('keeps invited clients blocked', async () => {
+  it('keeps coach-managed capabilities blocked', async () => {
     const session = createSessionClient({ subscription_type: 'invited' })
     mocks.createServerClient.mockReturnValue(session.client)
 

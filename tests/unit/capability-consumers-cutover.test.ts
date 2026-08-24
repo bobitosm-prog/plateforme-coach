@@ -67,7 +67,7 @@ describe('capability consumers cutover', () => {
     ])
 
     for (const { path, source } of consumers) {
-      expect(source, path).toContain('guardInvitedClient')
+      expect(source, path).toContain('guardCoachManagedCapabilities')
       expect(source, path).not.toMatch(
         /subscription_type\s*={2,3}\s*['"]invited['"]/,
       )
@@ -131,19 +131,24 @@ describe('capability consumers cutover', () => {
     }
   })
 
-  it('limits exact subscription invited checks to authority and display code', () => {
+  it('limits exact subscription invited checks to authority and historical account display', () => {
     const authority = readFileSync(
       'lib/entitlements/effective-entitlement.ts',
       'utf8',
     )
     const historicalDisplay = readFileSync(
+      'app/components/tabs/profile/AccountSection.tsx',
+      'utf8',
+    )
+    const coachAnalytics = readFileSync(
       'app/(application)/coach/components/CoachAnalytics.tsx',
       'utf8',
     )
 
     expect(authority).toMatch(/subscriptionType\s*===\s*['"]invited['"]/)
     expect(historicalDisplay).toMatch(
-      /subscription_type\s*===\s*['"]invited['"]/,
+      /subType\s*===\s*['"]invited['"]/,
     )
+    expect(coachAnalytics).not.toMatch(/subscription_type|['"]invited['"]/)
   })
 })

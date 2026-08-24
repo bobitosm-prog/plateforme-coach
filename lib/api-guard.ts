@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server'
 import { loadEffectiveEntitlementContext } from './entitlements/server-context'
 
 /**
- * Server-side guard: check if the requesting user is an invited client.
+ * Server-side guard for users whose product capabilities are coach-managed.
  * Returns a 403 NextResponse if blocked, or null if allowed.
  * Pass the userId from the request body.
  */
-export async function guardInvitedClient(userId: string | undefined): Promise<NextResponse | null> {
+export async function guardCoachManagedCapabilities(userId: string | undefined): Promise<NextResponse | null> {
   if (!userId) return null // No user — let other auth handle it
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

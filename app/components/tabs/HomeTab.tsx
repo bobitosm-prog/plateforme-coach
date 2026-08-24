@@ -648,7 +648,7 @@ export default function HomeTab({
         </div>
 
 
-        {/* ═══ PROCHAINE SEANCE — invited clients only ═══ */}
+        {/* ═══ PROCHAINE SEANCE — coach-managed clients only ═══ */}
         {!aiAllowed && coachProgram && nextSession && (
           <div>
             <SectionTitle noPadding title={ht('nextSession')} />
@@ -675,7 +675,7 @@ export default function HomeTab({
           </div>
         )}
 
-        {/* ═══ TA SEMAINE — invited clients only ═══ */}
+        {/* ═══ TA SEMAINE — coach-managed clients only ═══ */}
         {!aiAllowed && coachProgram && (
           <div>
             <SectionTitle noPadding title={ht('yourWeek')} />

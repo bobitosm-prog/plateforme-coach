@@ -912,7 +912,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const todayPlan = getTodayPlanData()
               const foods = todayPlan ? getMealByKey(todayPlan.day, importingMeal) : []
               return (
-                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isInvited={coachManaged} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
+                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isCoachManaged={coachManaged} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
               )
             })()}
 

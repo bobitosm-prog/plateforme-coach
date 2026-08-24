@@ -150,7 +150,7 @@ describe('runtime legacy entitlement loading', () => {
       expect(source).toContain('loadEffectiveEntitlementContext')
     }
     for (const source of guardedConsumers) {
-      expect(source).toContain('guardInvitedClient')
+      expect(source).toContain('guardCoachManagedCapabilities')
     }
   })
 })

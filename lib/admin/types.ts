@@ -12,6 +12,8 @@ export type SubscriptionType =
   | 'trial'
   | null
 
+export type WritableSubscriptionType = Exclude<SubscriptionType, 'invited'>
+
 export type SubscriptionStatus =
   | 'active'
   | 'canceled'
@@ -93,7 +95,13 @@ export interface AdminBugReportRow {
 }
 
 export interface AdminActionLog {
-  action: 'role_change' | 'subscription_change' | 'user_delete' | 'bug_report_update' | 'bug_report_reply'
+  action:
+    | 'role_change'
+    | 'subscription_change'
+    | 'legacy_entitlement_grant'
+    | 'user_delete'
+    | 'bug_report_update'
+    | 'bug_report_reply'
   target_user_id: string
   target_email: string
   actor_email: string

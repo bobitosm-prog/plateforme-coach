@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { resolveUserCapabilities } from '@/lib/entitlements/capabilities'
-import { canUseAI, isInvitedClient } from '@/lib/permissions'
+import { canUseAI, isCoachManagedClient } from '@/lib/permissions'
 
 const unrestricted = {
   ai: true,
@@ -21,7 +21,7 @@ describe('resolveUserCapabilities', () => {
     expect(resolveUserCapabilities({ subscriptionType })).toEqual(unrestricted)
   })
 
-  it('preserves the coach-managed restrictions for invited clients', () => {
+  it('preserves coach-managed restrictions for the historical fallback', () => {
     expect(resolveUserCapabilities({ subscriptionType: 'invited' })).toEqual({
       ai: false,
       training: false,
@@ -38,8 +38,8 @@ describe('resolveUserCapabilities', () => {
     expect(canUseAI(null)).toBe(false)
     expect(canUseAI({ subscription_type: 'invited' })).toBe(false)
     expect(canUseAI({ subscription_type: 'client_monthly' })).toBe(true)
-    expect(isInvitedClient(null)).toBe(false)
-    expect(isInvitedClient({ subscription_type: 'invited' })).toBe(true)
+    expect(isCoachManagedClient(null)).toBe(false)
+    expect(isCoachManagedClient({ subscription_type: 'invited' })).toBe(true)
   })
 
   it('routes client permissions and server consumers through their contexts', () => {

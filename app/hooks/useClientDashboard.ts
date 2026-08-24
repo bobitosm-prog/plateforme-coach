@@ -435,7 +435,7 @@ export default function useClientDashboard() {
     // Update last_workout_at
     await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
 
-    // Track completed session for invited clients with coach program
+    // Track completed sessions for clients using coach-managed programs.
     if (clientProgramIdRef.current && workoutSession?.weekdayKey) {
       const WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
       const sessionIndex = WEEKDAYS.indexOf(workoutSession.weekdayKey)

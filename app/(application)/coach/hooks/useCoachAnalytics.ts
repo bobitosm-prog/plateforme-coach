@@ -20,7 +20,6 @@ export type ClientAnalytics = {
   full_name: string
   email: string
   avatar_url: string | null
-  subscription_type: string | null
   sessionsLast7d: number
   weightDelta7d: number | null
   mealAdherence7d: number
@@ -81,7 +80,7 @@ export default function useCoachAnalytics(coachId: string | null) {
 
     const { data: rawProfiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, subscription_type, created_at')
+      .select('id, full_name, email, avatar_url, created_at')
       .in('id', clientIds)
 
     if (profilesError || !rawProfiles) {
@@ -184,7 +183,6 @@ export default function useCoachAnalytics(coachId: string | null) {
         full_name: p.full_name || 'Sans nom',
         email: p.email || '',
         avatar_url: p.avatar_url || null,
-        subscription_type: p.subscription_type || null,
         sessionsLast7d: sessions7d.length,
         weightDelta7d,
         mealAdherence7d,

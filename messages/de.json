@@ -402,7 +402,7 @@
     "client_label": "Für Kunden",
     "client_title": "Voller Zugang",
     "client_subtitle1": "Ohne Coach: Direkt-Abo.",
-    "client_subtitle2": "Mit eingeladenem Coach: kostenfreier Zugang.",
+    "client_subtitle2": "Mit Coach-Begleitung: Zugang inbegriffen.",
     "plan_monthly_label": "Monatlich",
     "plan_monthly_period": "/Mon",
     "plan_yearly_label": "Jährlich",
@@ -1346,8 +1346,8 @@
     "subscription": {
       "lifetime": "Lebenslanger Zugang",
       "lifetimeDesc": "Dauerhafter Zugang zu allen MoovX-Funktionen.",
-      "coachAccess": "Coach-Zugang",
-      "coachAccessDesc": "Dein Zugang ist über deinen Coach enthalten.",
+      "legacyAccess": "Historischer Zugang",
+      "legacyAccessDesc": "Dein historischer Zugang zu MoovX bleibt aktiv.",
       "planMonthly": "Monatsplan — CHF 10/Monat",
       "planYearly": "Jahresplan — CHF 80/Jahr",
       "planCoach": "Coach Pro — CHF 50/Monat",
@@ -1507,7 +1507,7 @@
       "kcalDay": "KCAL/TAG",
       "sessions": "EINHEITEN"
     },
-    "invited": {
+    "coachManaged": {
       "title": "KI-COACH",
       "message": "Dein Coach verwaltet dein Programm und deine Ernährung. Kontaktiere ihn direkt über die Nachrichten.",
       "close": "SCHLIESSEN"
@@ -2333,7 +2333,6 @@
       "coachPro": "COACH PRO · {count} Klienten",
       "clientsActive": "{count} aktive(r) Klient(en) · {unread} ungelesene Nachricht(en)",
       "searchPlaceholder": "Klient suchen...",
-      "invited": "EINGELADEN",
       "videosToReview": "Videos zu überprüfen"
     },
     "invite": {

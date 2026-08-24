@@ -12,7 +12,7 @@ export interface ClientPermissions {
   canCreatePrograms: boolean
   canUseAI: boolean
   canModifyNutrition: boolean
-  isInvited: boolean
+  isCoachManaged: boolean
   coachId: string | null
   coachRelationStatus: ActiveRelationLookupResult['kind']
   loading: boolean
@@ -31,7 +31,7 @@ export function deriveClientPermissions(
     canCreatePrograms: capabilities.training,
     canUseAI: capabilities.ai,
     canModifyNutrition: capabilities.nutrition,
-    isInvited: capabilities.coachManaged,
+    isCoachManaged: capabilities.coachManaged,
     coachId: coach.coachId,
     coachRelationStatus: coach.status,
   }
@@ -42,7 +42,7 @@ export function useClientPermissions(userId: string | undefined, supabase: Supab
     canCreatePrograms: true,
     canUseAI: true,
     canModifyNutrition: true,
-    isInvited: false,
+    isCoachManaged: false,
     coachId: null,
     coachRelationStatus: 'not_found',
     loading: true,

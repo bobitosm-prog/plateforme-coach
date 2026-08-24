@@ -47,6 +47,15 @@ export type Profile = {
   [key: string]: any // Allow additional fields
 }
 
+type SubscriptionAuthorityField =
+  | 'subscription_type'
+  | 'subscription_status'
+  | 'subscription_end_date'
+
+export type ProfileUpdate = Partial<Omit<Profile, SubscriptionAuthorityField>> & {
+  [Field in SubscriptionAuthorityField]?: never
+}
+
 let cachedProfile: Profile | null = null
 let cacheTimestamp = 0
 const CACHE_TTL = 60_000 // 1 minute
@@ -70,7 +79,7 @@ export async function getProfile(userId: string, supabase: any, force = false): 
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Profile>,
+  updates: ProfileUpdate,
   supabase: any
 ): Promise<{ data: Profile | null; error: any }> {
   const { data, error } = await supabase

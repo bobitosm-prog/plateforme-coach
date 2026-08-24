@@ -982,7 +982,7 @@ export default function TrainingTab({
         </div>
       )}
 
-      {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (invited clients only) ═══ */}
+      {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (coach-managed only) ═══ */}
       {!aiAllowed && coachProgram && (
         <div style={{ margin: '16px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>

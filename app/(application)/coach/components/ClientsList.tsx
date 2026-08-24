@@ -85,7 +85,7 @@ export default function ClientsList({
                   statusLabel={statusLabel}
                   sinceLabel={`· Depuis ${daysSince}j`}
                   unread={unread}
-                  invited={!!c.invited_by_coach}
+                  showInvitationOrigin={c.invited_by_coach === true}
                   onOpen={() => { window.location.href = `/client/${c.client_id}` }}
                   onMessage={() => { setSection('messages'); openChat(c) }}
                 />

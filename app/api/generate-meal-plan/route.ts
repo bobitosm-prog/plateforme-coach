@@ -507,11 +507,11 @@ export async function POST(req: NextRequest) {
 
     const params = await req.json()
 
-    // Guard: invited clients cannot generate AI meal plans
+    // Coach-managed capabilities do not include AI meal-plan generation.
     const userId = user.id
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { guardInvitedClient } = await import('../../../lib/api-guard')
-      const blocked = await guardInvitedClient(userId)
+      const { guardCoachManagedCapabilities } = await import('../../../lib/api-guard')
+      const blocked = await guardCoachManagedCapabilities(userId)
       if (blocked) return blocked
     }
     const encoder = new TextEncoder()

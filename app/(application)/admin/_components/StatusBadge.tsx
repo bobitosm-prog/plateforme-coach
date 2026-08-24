@@ -59,3 +59,7 @@ export function subscriptionVariant(type: string | null): Variant {
     default:               return 'zinc'
   }
 }
+
+export function subscriptionLabel(type: string | null): string {
+  return type === 'invited' ? 'accès historique' : type || 'aucun'
+}

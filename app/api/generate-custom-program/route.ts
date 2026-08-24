@@ -36,10 +36,10 @@ export async function POST(req: NextRequest) {
     const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = body
     const userId = user.id
 
-    // Guard: invited clients cannot generate AI programs
+    // Coach-managed capabilities do not include AI program generation.
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { guardInvitedClient } = await import('../../../lib/api-guard')
-      const blocked = await guardInvitedClient(userId)
+      const { guardCoachManagedCapabilities } = await import('../../../lib/api-guard')
+      const blocked = await guardCoachManagedCapabilities(userId)
       if (blocked) return blocked
     }
 

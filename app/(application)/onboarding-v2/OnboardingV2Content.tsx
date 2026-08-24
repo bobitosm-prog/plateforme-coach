@@ -13,9 +13,9 @@ import { resolveUserCapabilities } from '@/lib/entitlements/capabilities'
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
 import OnboardingScreen from './steps/shared/OnboardingScreen'
-import InvitedStep1Profile from './steps/invited/InvitedStep1Profile'
-import InvitedStep2Avatar from './steps/invited/InvitedStep2Avatar'
-import InvitedStep3Welcome from './steps/invited/InvitedStep3Welcome'
+import CoachManagedStep1Profile from './steps/invited/InvitedStep1Profile'
+import CoachManagedStep2Avatar from './steps/invited/InvitedStep2Avatar'
+import CoachManagedStep3Welcome from './steps/invited/InvitedStep3Welcome'
 import SoloStep1Welcome from './steps/solo/SoloStep1Welcome'
 import SoloStep2Profile from './steps/solo/SoloStep2Profile'
 import SoloStep3Body from './steps/solo/SoloStep3Body'
@@ -35,13 +35,13 @@ const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 // ─── State machine ───
 
-type Flow = 'invited' | 'solo' | null
-type InvitedStep = 1 | 2 | 3
+type Flow = 'coachManaged' | 'solo' | null
+type CoachManagedStep = 1 | 2 | 3
 type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
 interface State {
   flow: Flow
-  step: InvitedStep | SoloStep
+  step: CoachManagedStep | SoloStep
   direction: number
 }
 
@@ -63,7 +63,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const INVITED_TOTAL_STEPS = 3
+const COACH_MANAGED_TOTAL_STEPS = 3
 const SOLO_TOTAL_STEPS = 12
 
 export default function OnboardingV2Content() {
@@ -163,7 +163,7 @@ export default function OnboardingV2Content() {
           subscriptionType: profile.subscription_type,
         })
         if (capabilities.coachManaged) {
-          dispatch({ type: 'SET_FLOW', flow: 'invited' })
+          dispatch({ type: 'SET_FLOW', flow: 'coachManaged' })
 
           // Fetch coach via coach_clients junction table
           const { data: link } = await supabase
@@ -231,7 +231,7 @@ export default function OnboardingV2Content() {
     if (!userId) return false
     setSaving(true)
     try {
-      if (state.flow === 'invited') {
+      if (state.flow === 'coachManaged') {
         switch (state.step) {
           case 1: {
             const { error } = await updateProfile(userId, {
@@ -525,7 +525,7 @@ export default function OnboardingV2Content() {
     const saved = await saveCurrentStep()
     if (!saved) return
 
-    const totalSteps = state.flow === 'invited' ? INVITED_TOTAL_STEPS : SOLO_TOTAL_STEPS
+    const totalSteps = state.flow === 'coachManaged' ? COACH_MANAGED_TOTAL_STEPS : SOLO_TOTAL_STEPS
     if (state.step >= totalSteps) {
       // Final step → redirect to app
       router.replace('/')
@@ -567,11 +567,11 @@ export default function OnboardingV2Content() {
   }
 
   // ─── Validation helpers ───
-  const isInvited = state.flow === 'invited'
-  const totalSteps = isInvited ? INVITED_TOTAL_STEPS : SOLO_TOTAL_STEPS
+  const isCoachManaged = state.flow === 'coachManaged'
+  const totalSteps = isCoachManaged ? COACH_MANAGED_TOTAL_STEPS : SOLO_TOTAL_STEPS
 
-  // INVITED validations
-  const canProceedInvitedStep1 = firstName.trim().length >= 2
+  // Coach-managed validations
+  const canProceedCoachManagedStep1 = firstName.trim().length >= 2
 
   // SOLO validations
   const canProceedSoloStep2 = firstName.trim().length >= 2 && !!birthDate && !!gender
@@ -580,8 +580,8 @@ export default function OnboardingV2Content() {
     parseFloat(weight) > 0 && parseFloat(height) > 0 && parseFloat(goalWeight) > 0
 
   function getNextDisabled(): boolean {
-    if (isInvited) {
-      return state.step === 1 && !canProceedInvitedStep1
+    if (isCoachManaged) {
+      return state.step === 1 && !canProceedCoachManagedStep1
     }
     // SOLO
     switch (state.step) {
@@ -602,8 +602,8 @@ export default function OnboardingV2Content() {
   }
 
   function getNextLabel(): string | undefined {
-    if (isInvited) {
-      if (state.step === INVITED_TOTAL_STEPS) return t('nav.finish')
+    if (isCoachManaged) {
+      if (state.step === COACH_MANAGED_TOTAL_STEPS) return t('nav.finish')
       if (state.step === 2) return avatarUrl ? t('nav.continue') : t('nav.skip')
       return undefined
     }
@@ -635,15 +635,15 @@ export default function OnboardingV2Content() {
       {/* Step content */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <AnimatePresence mode="wait" custom={state.direction}>
-          {/* ─── INVITED steps ─── */}
-          {isInvited && state.step === 1 && (
+          {/* ─── Coach-managed steps ─── */}
+          {isCoachManaged && state.step === 1 && (
             <OnboardingScreen
               stepKey="invited-profile"
               title={t('profile.title')}
               subtitle={t('profile.subtitle')}
               direction={state.direction}
             >
-              <InvitedStep1Profile
+              <CoachManagedStep1Profile
                 firstName={firstName}
                 setFirstName={setFirstName}
                 birthDate={birthDate}
@@ -654,27 +654,27 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {isInvited && state.step === 2 && (
+          {isCoachManaged && state.step === 2 && (
             <OnboardingScreen
               stepKey="invited-avatar"
               title={t('avatar.title')}
               subtitle={t('avatar.subtitle')}
               direction={state.direction}
             >
-              <InvitedStep2Avatar
+              <CoachManagedStep2Avatar
                 avatarUrl={avatarUrl}
                 onUpload={handleAvatarUpload}
               />
             </OnboardingScreen>
           )}
 
-          {isInvited && state.step === 3 && (
+          {isCoachManaged && state.step === 3 && (
             <OnboardingScreen
               stepKey="invited-welcome"
               title=""
               direction={state.direction}
             >
-              <InvitedStep3Welcome
+              <CoachManagedStep3Welcome
                 firstName={firstName}
                 coachName={coachName}
               />
@@ -682,7 +682,7 @@ export default function OnboardingV2Content() {
           )}
 
           {/* ─── SOLO steps ─── */}
-          {!isInvited && state.step === 1 && (
+          {!isCoachManaged && state.step === 1 && (
             <OnboardingScreen
               stepKey="solo-welcome"
               title=""
@@ -692,7 +692,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 2 && (
+          {!isCoachManaged && state.step === 2 && (
             <OnboardingScreen
               stepKey="solo-profile"
               title={t('profile.title')}
@@ -710,7 +710,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 3 && (
+          {!isCoachManaged && state.step === 3 && (
             <OnboardingScreen
               stepKey="solo-body"
               title={t('solo.step3.title')}
@@ -728,7 +728,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 4 && (
+          {!isCoachManaged && state.step === 4 && (
             <OnboardingScreen
               stepKey="solo-goal"
               title={t('solo.step4.title')}
@@ -739,7 +739,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 5 && (
+          {!isCoachManaged && state.step === 5 && (
             <OnboardingScreen
               stepKey="solo-activity"
               title={t('solo.step5.title')}
@@ -750,7 +750,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 6 && (
+          {!isCoachManaged && state.step === 6 && (
             <OnboardingScreen
               stepKey="solo-sessions"
               title={t('solo.step6.title')}
@@ -761,7 +761,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 7 && (
+          {!isCoachManaged && state.step === 7 && (
             <OnboardingScreen
               stepKey="solo-nutrition"
               title={t('solo.step7.title')}
@@ -772,7 +772,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 8 && (
+          {!isCoachManaged && state.step === 8 && (
             <OnboardingScreen
               stepKey="solo-experience"
               title={t('solo.step8.title')}
@@ -783,7 +783,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 9 && (
+          {!isCoachManaged && state.step === 9 && (
             <OnboardingScreen
               stepKey="solo-photo-body"
               title={t('solo.step9.title')}
@@ -798,7 +798,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 10 && (
+          {!isCoachManaged && state.step === 10 && (
             <OnboardingScreen
               stepKey="solo-equipment"
               title={t('solo.stepEquipment.title')}
@@ -814,7 +814,7 @@ export default function OnboardingV2Content() {
             </OnboardingScreen>
           )}
 
-          {!isInvited && state.step === 11 && (
+          {!isCoachManaged && state.step === 11 && (
             <OnboardingScreen
               stepKey="solo-preferences"
               title="Tes préférences alimentaires"
@@ -830,7 +830,7 @@ export default function OnboardingV2Content() {
               />
             </OnboardingScreen>
           )}
-          {!isInvited && state.step === 12 && macrosCalc && (
+          {!isCoachManaged && state.step === 12 && macrosCalc && (
             <OnboardingScreen
               stepKey="solo-recap"
               title={t('solo.step10.title')}

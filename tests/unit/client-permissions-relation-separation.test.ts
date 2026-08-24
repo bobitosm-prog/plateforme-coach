@@ -18,7 +18,7 @@ describe('client permission relation and entitlement separation', () => {
       canCreatePrograms: true,
       canUseAI: true,
       canModifyNutrition: true,
-      isInvited: false,
+      isCoachManaged: false,
       coachId: null,
       coachRelationStatus: 'not_found',
     })
@@ -39,7 +39,7 @@ describe('client permission relation and entitlement separation', () => {
       canCreatePrograms: false,
       canUseAI: false,
       canModifyNutrition: false,
-      isInvited: true,
+      isCoachManaged: true,
       coachId: null,
       coachRelationStatus: 'not_found',
     })

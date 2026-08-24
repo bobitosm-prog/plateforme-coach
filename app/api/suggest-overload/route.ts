@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { guardInvitedClient } from '../../../lib/api-guard'
+import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     const { exerciseName, currentWeight, currentReps, setsCompleted, setsTarget, sessionId } = body
     const userId = user.id
 
-    // ── Gate: invited clients cannot use AI ──
-    const blocked = await guardInvitedClient(userId)
+    // ── Gate: coach-managed capabilities do not include AI ──
+    const blocked = await guardCoachManagedCapabilities(userId)
     if (blocked) return blocked
 
     const apiKey = process.env.ANTHROPIC_API_KEY
