@@ -2355,6 +2355,33 @@
     }
   },
   "home": {
+    "v2": {
+      "hello": "Bonjour {name}",
+      "today": "Aujourd’hui",
+      "secondaryMetrics": "Progression secondaire",
+      "avatarAlt": "Photo de profil",
+      "hero": {
+        "label": "À faire maintenant",
+        "loading": "Chargement de la séance du jour",
+        "errorTitle": "Séance momentanément indisponible",
+        "errorCopy": "Nous n’avons pas pu charger ton entraînement. Tes données ne sont pas interprétées comme une journée vide.",
+        "completedLabel": "Terminé aujourd’hui",
+        "completedTitle": "Séance accomplie",
+        "viewSession": "Voir la séance",
+        "restTitle": "Jour de repos",
+        "restCopy": "La récupération fait partie du programme. Recharge les batteries pour la prochaine séance.",
+        "emptyTodayTitle": "Rien de planifié aujourd’hui",
+        "emptyTodayCopy": "Ton programme est actif. Profite de cette journée ou lance une séance libre.",
+        "noProgramTitle": "Choisis ton prochain objectif",
+        "noProgramCopy": "Sélectionne un programme ou démarre une séance libre pour te mettre en mouvement.",
+        "start": "Commencer la séance",
+        "openProgram": "Voir le programme",
+        "freeSession": "Séance libre",
+        "sessionFallback": "Séance du jour",
+        "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}",
+        "source": { "scheduled": "Planifiée", "custom_program": "Programme personnel", "coach_program": "Programme coach", "none": "Séance libre" }
+      }
+    },
     "nextAppointment": "Prochain rendez-vous",
     "appointmentAt": "à",
     "nextAppointmentMore": "+{count, plural, one {# autre} other {# autres}}",

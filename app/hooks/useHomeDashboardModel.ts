@@ -5,6 +5,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import {
   buildHomeViewModel,
+  resolveHomeTrainingData,
+  type HomeDashboardTrainingSource,
   type HomeDomain,
   type HomeViewModel,
   type HomeViewModelInput,
@@ -43,6 +45,7 @@ export interface UseHomeDashboardModelInput {
   supabase: SupabaseClient
   userId: string | null | undefined
   base: Omit<HomeViewModelInput, 'today'>
+  trainingSource?: Omit<HomeDashboardTrainingSource, 'day'>
   now?: Date
 }
 
@@ -92,6 +95,7 @@ export default function useHomeDashboardModel({
   supabase,
   userId,
   base,
+  trainingSource,
   now,
 }: UseHomeDashboardModelInput): HomeViewModel {
   const [clock, setClock] = useState(() => now ?? new Date())
@@ -233,6 +237,9 @@ export default function useHomeDashboardModel({
     return buildHomeViewModel({
       ...base,
       today,
+      training: trainingSource
+        ? resolveHomeTrainingData({ ...trainingSource, day: today })
+        : base.training,
       identity: {
         ...base.identity,
         xp: currentSupplemental.data.xp ?? base.identity.xp,
@@ -269,5 +276,5 @@ export default function useHomeDashboardModel({
       },
       errors: { ...base.errors, ...currentSupplemental.errors },
     })
-  }, [base, requestKey, supplemental, supplementalLoading, today])
+  }, [base, requestKey, supplemental, supplementalLoading, today, trainingSource])
 }

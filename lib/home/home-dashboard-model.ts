@@ -59,6 +59,7 @@ export interface HomeViewModel {
     dayStatus: 'scheduled' | 'completed' | 'rest' | 'no_session'
     session: HomeTrainingSession | null
     source: 'scheduled' | 'custom_program' | 'coach_program' | 'none'
+    hasProgram: boolean
     isCompleted: boolean
     nextSession: unknown | null
     weeklySummary: HomeTrainingWeeklySummary
@@ -139,6 +140,7 @@ export interface HomeViewModelInput {
     nextSession?: unknown | null
     weeklyPlanned?: number
     weeklyCompleted?: number
+    hasProgram?: boolean
   }
   nutrition: {
     state?: HomeDomainState
@@ -216,6 +218,7 @@ export interface HomeDashboardTrainingSource {
   nextSession?: unknown | null
   weeklyPlanned?: number
   weeklyCompleted?: number
+  hasProgram?: boolean
   state?: HomeDomainState
 }
 
@@ -248,7 +251,7 @@ export function resolveHomeTrainingData(
   if (scheduled) {
     session = {
       id: scheduled.id,
-      title: scheduled.title || program?.title || 'Séance du jour',
+      title: scheduled.title || program?.title || '',
       exercises: program?.exercises ?? [],
       scheduledAt: scheduled.scheduled_time
         ? `${scheduled.scheduled_date}T${scheduled.scheduled_time}`
@@ -268,7 +271,7 @@ export function resolveHomeTrainingData(
   } else if (completedWorkout) {
     session = {
       id: completedWorkout.id ?? null,
-      title: completedWorkout.name || 'Séance libre',
+      title: completedWorkout.name || '',
       exercises: [],
       scheduledAt: completedWorkout.created_at,
       isRest: false,
@@ -283,6 +286,7 @@ export function resolveHomeTrainingData(
     nextSession: source.nextSession ?? null,
     weeklyPlanned: source.weeklyPlanned,
     weeklyCompleted: source.weeklyCompleted,
+    hasProgram: source.hasProgram ?? Boolean(program),
   }
 }
 
@@ -385,6 +389,7 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
       dayStatus: trainingDayStatus(trainingState, session, isCompleted),
       session,
       source: session ? (input.training.source ?? 'none') : 'none',
+      hasProgram: input.training.hasProgram ?? false,
       isCompleted,
       nextSession: input.training.nextSession ?? null,
       weeklySummary: {

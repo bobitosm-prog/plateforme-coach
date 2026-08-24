@@ -2355,6 +2355,33 @@
     }
   },
   "home": {
+    "v2": {
+      "hello": "Hallo {name}",
+      "today": "Heute",
+      "secondaryMetrics": "Weitere Fortschrittswerte",
+      "avatarAlt": "Profilbild",
+      "hero": {
+        "label": "Als Nächstes",
+        "loading": "Heutiges Training wird geladen",
+        "errorTitle": "Training vorübergehend nicht verfügbar",
+        "errorCopy": "Dein Training konnte nicht geladen werden. Die Daten werden nicht als leerer Tag behandelt.",
+        "completedLabel": "Heute abgeschlossen",
+        "completedTitle": "Training geschafft",
+        "viewSession": "Training ansehen",
+        "restTitle": "Ruhetag",
+        "restCopy": "Erholung gehört zum Plan. Lade deine Energie für das nächste Training auf.",
+        "emptyTodayTitle": "Heute ist nichts geplant",
+        "emptyTodayCopy": "Dein Programm ist aktiv. Genieße den Tag oder starte ein freies Training.",
+        "noProgramTitle": "Wähle dein nächstes Ziel",
+        "noProgramCopy": "Wähle ein Programm oder starte ein freies Training.",
+        "start": "Training starten",
+        "openProgram": "Programm ansehen",
+        "freeSession": "Freies Training",
+        "sessionFallback": "Heutiges Training",
+        "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+        "source": { "scheduled": "Geplant", "custom_program": "Eigenes Programm", "coach_program": "Coach-Programm", "none": "Freies Training" }
+      }
+    },
     "nextAppointment": "Nächster Termin",
     "appointmentAt": "um",
     "nextAppointmentMore": "+{count, plural, one {# weiterer} other {# weitere}}",

@@ -2355,6 +2355,33 @@
     }
   },
   "home": {
+    "v2": {
+      "hello": "Hello {name}",
+      "today": "Today",
+      "secondaryMetrics": "Secondary progress metrics",
+      "avatarAlt": "Profile picture",
+      "hero": {
+        "label": "Up next",
+        "loading": "Loading today’s workout",
+        "errorTitle": "Workout temporarily unavailable",
+        "errorCopy": "We couldn’t load your training. Your data is not being treated as an empty day.",
+        "completedLabel": "Completed today",
+        "completedTitle": "Workout complete",
+        "viewSession": "View workout",
+        "restTitle": "Rest day",
+        "restCopy": "Recovery is part of the plan. Recharge for your next workout.",
+        "emptyTodayTitle": "Nothing planned today",
+        "emptyTodayCopy": "Your program is active. Enjoy the day or start a free workout.",
+        "noProgramTitle": "Choose your next goal",
+        "noProgramCopy": "Choose a program or start a free workout to get moving.",
+        "start": "Start workout",
+        "openProgram": "View program",
+        "freeSession": "Free workout",
+        "sessionFallback": "Today’s workout",
+        "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+        "source": { "scheduled": "Scheduled", "custom_program": "Personal program", "coach_program": "Coach program", "none": "Free workout" }
+      }
+    },
     "nextAppointment": "Next appointment",
     "appointmentAt": "at",
     "nextAppointmentMore": "+{count, plural, one {# more} other {# more}}",

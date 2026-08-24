@@ -625,7 +625,7 @@ export default function useClientDashboard() {
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
+    coachProgram, coachMealPlan, planningDays, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
     // Tabs
     activeTab, setActiveTab,
     // Workout session

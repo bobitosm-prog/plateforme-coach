@@ -1,0 +1,30 @@
+.shell { width: 100%; max-width: 1180px; margin: 0 auto; padding: 24px 16px 10px; box-sizing: border-box; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.eyebrow { margin: 0 0 5px; color: #9b927f; font-size: .82rem; }
+.title { margin: 0; color: #f7f4ed; font-size: clamp(1.55rem, 4vw, 2.25rem); line-height: 1.05; letter-spacing: -.02em; }
+.date { margin: 7px 0 0; color: #b9b1a2; font-size: .9rem; text-transform: capitalize; }
+.identity { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.metrics { display: flex; gap: 6px; color: #c9a84c; font-size: .75rem; }
+.metric { padding: 5px 8px; border: 1px solid rgba(201,168,76,.18); border-radius: 999px; background: rgba(201,168,76,.06); }
+.avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,.35); background: #24211b; }
+.avatarFallback { display: grid; place-items: center; color: #e6c364; font-weight: 700; }
+.hero { position: relative; overflow: hidden; min-height: 260px; padding: clamp(22px, 4vw, 42px); border: 1px solid rgba(230,195,100,.24); border-radius: 24px; background: radial-gradient(circle at 85% 15%, rgba(230,195,100,.17), transparent 34%), linear-gradient(145deg,#17140f,#0d0c0a 70%); box-shadow: 0 22px 55px rgba(0,0,0,.28); box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+.heroLabel { margin: 0 0 12px; color: #e6c364; font-size: .76rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.heroTitle { margin: 0; max-width: 720px; color: #fffdf8; font-size: clamp(1.75rem, 5vw, 3.2rem); line-height: 1.03; letter-spacing: -.025em; }
+.heroCopy { margin: 12px 0 0; max-width: 600px; color: #bdb4a5; font-size: clamp(.92rem, 2vw, 1.02rem); line-height: 1.55; }
+.meta { display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 22px; color: #d8d0c3; font-size: .86rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.button { min-height: 46px; padding: 0 20px; border-radius: 13px; border: 1px solid rgba(230,195,100,.35); font: inherit; font-weight: 750; cursor: pointer; transition: transform 150ms ease, border-color 150ms ease; }
+.button:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: 3px; }
+.button:hover { transform: translateY(-1px); }
+.primary { color: #151108; background: linear-gradient(135deg,#f0d27c,#c9a84c); border-color: transparent; }
+.secondary { color: #f0d27c; background: rgba(255,255,255,.025); }
+.success { border-color: rgba(74,222,128,.26); background: radial-gradient(circle at 85% 15%,rgba(74,222,128,.12),transparent 34%),linear-gradient(145deg,#121713,#0d0c0a 70%); }
+.error { border-color: rgba(248,113,113,.3); }
+.skeletonLine { height: 18px; max-width: 480px; margin: 12px 0; border-radius: 8px; background: linear-gradient(90deg,#26231d,#373127,#26231d); background-size: 200% 100%; animation: shimmer 1.4s ease infinite; }
+.skeletonTitle { height: 48px; max-width: 620px; }
+.legacy { margin-top: 22px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeletonLine { animation: none; } .button { transition: none; } }
+@media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
+@media (max-width: 520px) { .metrics { display: none; } .actions, .button { width: 100%; } }

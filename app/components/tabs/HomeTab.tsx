@@ -15,7 +15,6 @@ import {
 import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
 import { toast } from 'sonner'
-import { resolveSessionType } from '../../../lib/session-types'
 import SessionDoneModal from '../training/SessionDoneModal'
 import {
   colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
@@ -25,9 +24,9 @@ const TEXT_PRIMARY = colors.text
 const TEXT_MUTED = colors.textMuted
 import SwissBadge from '../ui/SwissBadge'
 import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
-import { getLevelFromXP, getLevelTitle, addXP } from '../../../lib/gamification'
-import HomeHeader from '../home/HomeHeader'
-import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
+import { getLevelFromXP, addXP } from '../../../lib/gamification'
+import HomeV2 from '../home-v2/HomeV2'
+import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import EnergyCard from '../home/cards/EnergyCard'
 import RecoveryCard from '../home/cards/RecoveryCard'
 import NutritionCard from '../home/cards/NutritionCard'
@@ -35,7 +34,6 @@ import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagn
 import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
 import { formatZurichDate } from '../../../lib/format-time'
-import { modalOverlay, modalContainer, btnPrimary as btnPrimaryStyle } from '../../../lib/design-tokens'
 
 /**
  * Get daily quote index — deterministic per day of year.
@@ -47,11 +45,10 @@ function getDailyQuoteIndex(count: number): number {
 }
 
 interface HomeTabProps {
+  homeModel: HomeViewModel
   supabase: any
   session: any
   profile: any
-  displayAvatar: string | undefined
-  firstName: string
   avatarRef: React.RefObject<HTMLInputElement | null>
   photoRef: React.RefObject<HTMLInputElement | null>
   uploadAvatar: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
@@ -80,7 +77,8 @@ interface HomeTabProps {
 }
 
 export default function HomeTab({
-  supabase, session, profile, displayAvatar, firstName,
+  homeModel,
+  supabase, session, profile,
   avatarRef, photoRef, uploadAvatar, uploadProgressPhoto,
   currentWeight, goalWeight, completedSessions, hasTrainedBefore, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
@@ -93,7 +91,6 @@ export default function HomeTab({
   const router = useRouter()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
-  const [showLevelModal, setShowLevelModal] = useState(false)
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
@@ -377,18 +374,7 @@ export default function HomeTab({
   const todayExercises = customIsRest ? [] : (customProgramExercises?.length ? customProgramExercises : todayCoachDay?.exercises || [])
   // Session title: custom program > scheduled session > coach program
   const rawSessionTitle = customIsRest ? ht('rest') : (customDayName || todayScheduledSession?.title || todayCoachDay?.nom || todayCoachDay?.name || (todayExercises.length > 0 ? `${todayExercises[0]?.muscle_group || ht('trainingOfDay')}` : ht('workoutOfDay')))
-  const sessionTypeInfo = resolveSessionType(rawSessionTitle)
   const sessionTitle = rawSessionTitle
-  // Has workout today: custom program says rest → no. Otherwise check exercises exist.
-  const hasWorkoutToday = !customIsRest && (!!todayScheduledSession || (customProgramExercises && customProgramExercises.length > 0))
-
-  const heroState: HeroState = (() => {
-    if (!coachProgram && !customProgramExercises && !todayScheduledSession) return 'no-program'
-    if (!hasWorkoutToday && (customIsRest || customDayName === ht('rest') || todayCoachDay?.repos)) return 'rest'
-    if (!todayExercises.length) return 'no-exercises'
-    if (todaySession) return 'done'
-    return 'active'
-  })()
 
   // Weekly assiduity bar chart (1 bar/day, filled if session done)
   const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -427,32 +413,22 @@ export default function HomeTab({
       })
   }, [session?.user?.id, supabase, homeRefreshKey])
 
-  // Card title style from centralized design system
-  const T = titleStyle
-
   return (
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
 
-      {/* ═══ HOME HEADER ═══ */}
-      {(() => {
-        const xp = xpData?.total_xp ?? 0
-        const { level: xpLevel, xpForNext, xpInLevel, progress: xpProgress } = getLevelFromXP(xp)
-        const levelTitle = getLevelTitle(xpLevel)
-        return (
-          <HomeHeader
-            firstName={firstName}
-            displayAvatar={displayAvatar}
-            level={xpLevel}
-            levelTitle={levelTitle}
-            streak={streak}
-            xpInLevel={xpInLevel}
-            xpForNext={xpForNext}
-            xpProgress={xpProgress}
-            onLevelClick={() => setShowLevelModal(true)}
-          />
-        )
-      })()}
+      <HomeV2
+        model={homeModel}
+        actions={{
+          onStartSession: sessionModel => startProgramWorkout(
+            { day_name: sessionModel.title, name: sessionModel.title },
+            Array.from(sessionModel.exercises),
+          ),
+          onOpenSession: () => setShowSessionModal(true),
+          onOpenProgram: () => setActiveTab('training'),
+          onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
+        }}
+      />
 
       {nextAppt && (
         <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.35)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -472,21 +448,6 @@ export default function HomeTab({
           </div>
         </div>
       )}
-
-      {/* ═══ HERO CARD — SÉANCE DU JOUR ═══ */}
-      <HeroSessionCard
-        state={heroState}
-        sessionTitle={sessionTitle}
-        todayExercises={todayExercises}
-        todaySession={todaySession}
-        onStart={
-          heroState === 'no-program' || heroState === 'no-exercises'
-            ? () => startProgramWorkout({ day_name: 'Séance libre' }, [])
-            : () => startProgramWorkout({ day_name: sessionTitle || todayKey, name: sessionTitle || todayKey }, todayExercises)
-        }
-        onCalendar={() => setActiveTab('training')}
-        onViewDetail={() => setShowSessionModal(true)}
-      />
 
       {/* ═══ APERÇU DU JOUR — 3 cards grid (moved up from below) ═══ */}
       <div style={{ padding: '0 20px 16px' }}>
@@ -742,37 +703,6 @@ export default function HomeTab({
 
         <div style={{ height: 20 }} />
       </div>
-
-      {/* ═══ LEVEL MODAL ═══ */}
-      {showLevelModal && (() => {
-        const xp = xpData?.total_xp ?? 0
-        const { level: lvl, xpForNext, xpInLevel, progress } = getLevelFromXP(xp)
-        const title = getLevelTitle(lvl)
-        return (
-          <div style={modalOverlay} onClick={() => setShowLevelModal(false)}>
-            <div style={{ ...modalContainer, padding: 24, maxWidth: 340, margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }} onClick={e => e.stopPropagation()}>
-              <h2 style={{ fontFamily: fonts.headline, fontSize: 36, fontWeight: 400, color: colors.gold, letterSpacing: '0.04em', lineHeight: 1, textTransform: 'uppercase', margin: 0 }}>
-                {ht('levelYourLevel', { level: lvl })}
-              </h2>
-              <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>
-                {title}
-              </div>
-              <div style={{ width: '100%' }}>
-                <div style={{ height: 6, background: `${colors.gold}1a`, borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.round(progress * 100)}%`, height: '100%', background: colors.gold, borderRadius: 999, transition: 'width 300ms' }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{ht('levelProgress', { current: xpInLevel, next: xpForNext })}</span>
-                  <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>{ht('levelTotalXp', { total: xp })}</span>
-                </div>
-              </div>
-              <button onClick={() => setShowLevelModal(false)} style={{ ...btnPrimaryStyle, padding: '12px 32px', fontSize: 13 }}>
-                {ht('levelClose')}
-              </button>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* ═══ RECOVERY MODAL ═══ */}
       {showRecoveryModal && (

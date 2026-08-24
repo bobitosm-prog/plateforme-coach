@@ -28,6 +28,7 @@ import MeasureModal from '../components/modals/MeasureModal'
 import BmrModal from '../components/modals/BmrModal'
 import ObjectiveModal from '../components/modals/ObjectiveModal'
 import HomeTab from '../components/tabs/HomeTab'
+import useHomeDashboardModel from '../hooks/useHomeDashboardModel'
 import TrainingTab from '../components/tabs/TrainingTab'
 import NutritionTab from '../components/tabs/NutritionTab'
 import ProgressTab from '../components/tabs/ProgressTab'
@@ -37,7 +38,8 @@ import PreferencesSection from '../components/tabs/profile/PreferencesSection'
 import AccountSection from '../components/tabs/profile/AccountSection'
 import GoalsSection from '../components/tabs/profile/GoalsSection'
 import AccountTab from '../components/tabs/AccountTab'
-import DesktopDashboard from '../(dashboard)/page-desktop'
+import { getSessionForDay } from '../../lib/get-today-session'
+import { getHomeDayWindow } from '../../lib/home/home-date'
 
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -87,7 +89,6 @@ export default function CoachApp() {
   const h = useClientDashboard()
   const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
-  const [isDesktop, setIsDesktop] = React.useState(false)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
 
@@ -259,13 +260,70 @@ export default function CoachApp() {
     }
   }, [])
 
-  // Detect desktop viewport
-  React.useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth > 1024)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const homeProgramSession = React.useMemo(() => {
+    const localDate = getHomeDayWindow().localDateKey
+    const [year, month, day] = localDate.split('-').map(Number)
+    const jsDay = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+    const mondayIndex = jsDay === 0 ? 6 : jsDay - 1
+    if (h.planningDays?.length) {
+      const value = getSessionForDay(h.planningDays, mondayIndex)
+      return { title: value.name, exercises: value.exercises, isRest: value.type === 'rest', source: 'custom_program' as const }
+    }
+    if (h.todayCoachDay) return {
+      title: h.todayCoachDay.day_name || h.todayCoachDay.name || '',
+      exercises: h.todayCoachDay.exercises || [],
+      isRest: Boolean(h.todayCoachDay.repos),
+      source: 'coach_program' as const,
+    }
+    return null
+  }, [h.planningDays, h.todayCoachDay])
+
+  const homeBase = React.useMemo(() => ({
+    identity: {
+      firstName: h.firstName || '', avatar: h.displayAvatar ?? null,
+      streak: h.streak ?? 0, state: h.profile ? 'ready' as const : 'loading' as const,
+    },
+    training: { state: h.loading ? 'loading' as const : 'empty' as const, hasProgram: Boolean(h.planningDays?.length || h.coachProgram) },
+    nutrition: {
+      caloriesConsumed: null, caloriesTarget: h.calorieGoal ?? null,
+      macrosTarget: { protein: h.profile?.protein_goal ?? null, carbs: h.profile?.carbs_goal ?? null, fat: h.profile?.fat_goal ?? null },
+      hasPlan: Boolean(h.coachMealPlan),
+    },
+    recovery: { sourceDataAvailable: false },
+    hydration: { consumedMl: null, targetMl: h.profile?.water_goal ?? null },
+    progression: {
+      currentWeight: h.currentWeight ?? null,
+      sessionsThisWeek: h.completedThisWeek?.size ?? null,
+      latestPR: h.personalRecords?.[0] ?? null,
+    },
+    diagnostic: { latest: h.latestDiagnostic ?? null, canGenerate: true },
+    coach: {
+      relationStatus: h.coachRelationStatus,
+      coachId: h.coachId ?? null,
+      lastMessage: h.messages?.length ? h.messages[h.messages.length - 1] : null,
+    },
+    capabilities: h.capabilities,
+    freshness: 'mixed' as const,
+  }), [h])
+
+  const homeTrainingSource = React.useMemo(() => ({
+    scheduledSessions: h.scheduledSessions ?? [],
+    programSession: homeProgramSession,
+    workoutSessions: h.wSessions ?? [],
+    nextSession: h.nextSession ?? null,
+    weeklyCompleted: h.completedThisWeek?.size ?? 0,
+    weeklyPlanned: h.scheduledSessions?.length ?? 0,
+    hasProgram: Boolean(h.planningDays?.length || h.coachProgram),
+    state: h.loading ? 'loading' as const : 'ready' as const,
+  }), [h.coachProgram, h.completedThisWeek, h.loading, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession])
+
+  const homeModel = useHomeDashboardModel({
+    enabled: h.userRole === 'client' && Boolean(h.session?.user?.id),
+    supabase: h.supabase,
+    userId: h.session?.user?.id,
+    base: homeBase,
+    trainingSource: homeTrainingSource,
+  })
 
   // Check and schedule workout reminders
   React.useEffect(() => {
@@ -325,40 +383,6 @@ export default function CoachApp() {
         <Paywall role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />
       </ClientIntlProvider>
     </div>
-  )
-
-  /* ══════════════════════════════════════════════════════════════
-     DESKTOP DASHBOARD (>1024px)
-  ══════════════════════════════════════════════════════════════ */
-  if (isDesktop && h.profile) return (
-    <DesktopDashboard
-      session={h.session}
-      profile={h.profile}
-      supabase={h.supabase}
-      coachProgram={h.coachProgram}
-      coachMealPlan={h.coachMealPlan}
-      todayKey={h.todayKey}
-      todaySessionDone={h.todaySessionDone}
-      streak={h.streak}
-      wSessions={h.wSessions}
-      currentWeight={h.currentWeight}
-      goalWeight={h.goalWeight}
-      personalRecords={h.personalRecords}
-      weightHistory={h.weightHistoryFull?.length ? h.weightHistoryFull : h.weightHistory30}
-      progressPhotos={h.progressPhotos}
-      measurements={h.measurements}
-      weeklyCalories={h.weeklyCalories}
-      weeklyVolume={h.weeklyVolume}
-      scheduledSessions={h.scheduledSessions}
-      completedSessions={h.completedSessions}
-      calorieGoal={h.calorieGoal}
-      onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
-      onNavigate={(tab) => { setIsDesktop(false); h.setActiveTab(tab as Tab) }}
-      startProgramWorkout={h.startProgramWorkout}
-      setModal={h.setModal}
-      aiAllowed={h.aiAllowed}
-      unreadCount={h.unreadCount}
-    />
   )
 
   /* ══════════════════════════════════════════════════════════════
@@ -635,7 +659,7 @@ export default function CoachApp() {
           onTouchCancel={onRailTouchEnd}
         >
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} hasTrainedBefore={h.hasTrainedBefore} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} sessionDates={h.sessionDates} activeTab={h.activeTab} />}
+            {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} hasTrainedBefore={h.hasTrainedBefore} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} sessionDates={h.sessionDates} activeTab={h.activeTab} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} capabilities={h.capabilities} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} setModal={h.setModal} />}
