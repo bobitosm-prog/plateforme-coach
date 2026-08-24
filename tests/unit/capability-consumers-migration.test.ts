@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   checkRateLimit: vi.fn(),
+  getActiveLegacyEntitlement: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
@@ -15,6 +16,9 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: mocks.checkRateLimit,
+}))
+vi.mock('@/lib/entitlements/legacy-entitlement-repository', () => ({
+  getActiveLegacyEntitlement: mocks.getActiveLegacyEntitlement,
 }))
 
 import { POST } from '@/app/api/generate-recipe/route'
@@ -59,6 +63,7 @@ describe('capability consumers migration', () => {
     vi.clearAllMocks()
     vi.stubEnv('ANTHROPIC_API_KEY', 'anthropic-test-key')
     mocks.checkRateLimit.mockReturnValue({ allowed: true })
+    mocks.getActiveLegacyEntitlement.mockResolvedValue(null)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
       content: [{
         text: JSON.stringify({
@@ -119,7 +124,7 @@ describe('capability consumers migration', () => {
       /subscription_type\s*={2,3}\s*['"]invited['"]/,
     )
     for (const source of clientConsumers) {
-      expect(source).toContain('resolveUserCapabilities')
+      expect(source).toMatch(/fetchEffectiveEntitlementSnapshot|capabilities/)
       expect(source).not.toMatch(/subscription_type\s*={2,3}\s*['"]invited['"]/)
     }
   })

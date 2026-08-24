@@ -6,31 +6,29 @@ import { useTranslations, useLocale } from 'next-intl'
 import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
 import { useChatAI } from '../hooks/useChatAI'
 import AthenaMessageContent from './AthenaMessageContent'
-import { resolveUserCapabilities } from '../../lib/entitlements/capabilities'
+import type { UserCapabilities } from '../../lib/entitlements/capabilities'
 
 const SUGGESTION_ICONS = [UtensilsCrossed, Dumbbell, Heart, BarChart3]
 
 interface ChatAIProps {
   session: any
   profile: any
+  capabilities: UserCapabilities
   externalOpen?: boolean
   onExternalClose?: () => void
   hideFloatingButton?: boolean
 }
 
-export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
+export default function ChatAI({ session, profile, capabilities, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
   const t = useTranslations('chat')
   const locale = useLocale()
-  const capabilities = resolveUserCapabilities({
-    subscriptionType: profile?.subscription_type,
-  })
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (externalOpen) setOpen(true)
   }, [externalOpen])
 
-  if (capabilities.coachManaged && open) {
+  if (!capabilities.ai && open) {
     return (
       <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>

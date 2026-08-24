@@ -53,7 +53,7 @@ import RecentSessionsList from '../training/RecentSessionsList'
 import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
-import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
+import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -61,6 +61,7 @@ interface TrainingTabProps {
   supabase: any
   session: any
   profile?: any
+  capabilities: UserCapabilities
   coachProgram: any
   todayKey: string
   todaySessionDone: boolean
@@ -76,7 +77,7 @@ interface TrainingTabProps {
 }
 
 export default function TrainingTab({
-  supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
+  supabase, session, profile, capabilities, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
   lastCompletedByIndex, setModal,
 }: TrainingTabProps) {
@@ -84,9 +85,6 @@ export default function TrainingTab({
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const T = titleStyle
-  const capabilities = resolveUserCapabilities({
-    subscriptionType: profile?.subscription_type,
-  })
   const aiAllowed = capabilities.training
   const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])

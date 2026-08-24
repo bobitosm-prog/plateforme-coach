@@ -124,22 +124,22 @@ async function readActiveLegacyEntitlement(
     console.error('[legacy-entitlements] Shadow lookup failed', {
       code: safeErrorCode(error),
     })
-    return null
+    throw new Error('LEGACY_ENTITLEMENT_LOOKUP_FAILED')
   }
   if (!Array.isArray(data)) {
     console.error('[legacy-entitlements] Shadow lookup returned invalid data')
-    return null
+    throw new Error('LEGACY_ENTITLEMENT_INVALID_RESULT')
   }
   if (data.length > 1) {
     console.error('[legacy-entitlements] Integrity violation: multiple active grants')
-    return null
+    throw new Error('LEGACY_ENTITLEMENT_INTEGRITY_ERROR')
   }
   if (data.length === 0) return null
 
   const row = parseActiveRow(data[0], userId, now)
   if (!row) {
     console.error('[legacy-entitlements] Shadow lookup returned an invalid grant')
-    return null
+    throw new Error('LEGACY_ENTITLEMENT_INVALID_GRANT')
   }
 
   return {
@@ -157,7 +157,7 @@ export const legacyEntitlementRepository: LegacyEntitlementRepository = {
 }
 
 /**
- * Server-only shadow read. No capability consumer calls this function yet.
+ * Server-only grant read used by the effective entitlement server context.
  */
 export function getActiveLegacyEntitlement(
   userId: string,

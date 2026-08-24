@@ -83,16 +83,20 @@ describe('legacy entitlement repository shadow read', () => {
     ['revoked', { revoked_at: '2026-02-01T00:00:00.000Z' }],
     ['invalid type', { type: 'admin_grant' }],
     ['invalid source', { source: 'browser' }],
-  ])('fails closed for an %s grant', async (_label, override) => {
+  ])('rejects an invalid %s grant so authorization can fail closed', async (_label, override) => {
     arrangeQuery({ data: [activeRow(override)], error: null })
-    await expect(getActiveLegacyEntitlement(USER_ID)).resolves.toBeNull()
+    await expect(getActiveLegacyEntitlement(USER_ID)).rejects.toThrow(
+      'LEGACY_ENTITLEMENT_INVALID_GRANT',
+    )
   })
 
   it('fails closed and logs only a controlled code on DB error', async () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     arrangeQuery({ data: null, error: { code: 'DB_TIMEOUT', message: 'sensitive' } })
 
-    await expect(getActiveLegacyEntitlement(USER_ID)).resolves.toBeNull()
+    await expect(getActiveLegacyEntitlement(USER_ID)).rejects.toThrow(
+      'LEGACY_ENTITLEMENT_LOOKUP_FAILED',
+    )
     expect(errorLog).toHaveBeenCalledWith(
       '[legacy-entitlements] Shadow lookup failed',
       { code: 'DB_TIMEOUT' },
@@ -108,7 +112,9 @@ describe('legacy entitlement repository shadow read', () => {
       error: null,
     })
 
-    await expect(getActiveLegacyEntitlement(USER_ID)).resolves.toBeNull()
+    await expect(getActiveLegacyEntitlement(USER_ID)).rejects.toThrow(
+      'LEGACY_ENTITLEMENT_INTEGRITY_ERROR',
+    )
     expect(errorLog).toHaveBeenCalledWith(
       '[legacy-entitlements] Integrity violation: multiple active grants',
     )

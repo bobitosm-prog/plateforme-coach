@@ -18,7 +18,7 @@ import {
   fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
-import { resolveUserCapabilities } from '../../../lib/entitlements/capabilities'
+import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
 const MEAL_TIMES: Record<string, string> = {
   petit_dejeuner: '7h00',
@@ -35,12 +35,13 @@ interface NutritionTabProps {
   todayKey: string
   setModal: (modal: string) => void
   profile: any
+  capabilities: UserCapabilities
   supabase: any
   userId: string
   fetchAll: () => Promise<void>
 }
 
-export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
+export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, capabilities, supabase, userId, fetchAll }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
@@ -342,14 +343,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     return result
   }
 
-  const capabilities = resolveUserCapabilities({
-    subscriptionType: profile?.subscription_type,
-  })
-  const coachManaged = capabilities.coachManaged
+  const nutritionManaged = !capabilities.nutrition
 
   // Waiting screen when no plan exists
   function renderWaitingScreen() {
-    if (coachManaged) {
+    if (nutritionManaged) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🔒</div>
@@ -892,7 +890,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
                           >
-                            <Download size={14} /> {coachManaged ? nt('actions.import') : nt('actions.importAI')}
+                            <Download size={14} /> {nutritionManaged ? nt('actions.import') : nt('actions.importAI')}
                           </button>
                         )
                       })()}
@@ -912,7 +910,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               const todayPlan = getTodayPlanData()
               const foods = todayPlan ? getMealByKey(todayPlan.day, importingMeal) : []
               return (
-                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isCoachManaged={coachManaged} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
+                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isCoachManaged={nutritionManaged} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
               )
             })()}
 

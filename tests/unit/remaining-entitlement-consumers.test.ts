@@ -32,8 +32,7 @@ describe('remaining entitlement consumers', () => {
   it('routes the dashboard authority through the centralized resolvers', () => {
     const dashboard = readFileSync('app/hooks/useClientDashboard.ts', 'utf8')
 
-    expect(dashboard).toContain('resolveEffectiveEntitlement(entitlementInput)')
-    expect(dashboard).toContain('resolveUserCapabilities(entitlementInput)')
+    expect(dashboard).toContain('fetchEffectiveEntitlementSnapshot')
     expect(dashboard).not.toMatch(
       /profile(?:\?)?\.subscription_type\s*={2,3}\s*['"]/,
     )

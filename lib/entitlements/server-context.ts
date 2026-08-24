@@ -28,8 +28,9 @@ async function loadPersistedLegacyEntitlement(
 }
 
 /**
- * Server-only product authority context. Repository failures deliberately
- * become an empty grant set, preserving the historical subscription fallback.
+ * Server-only product authority context. An absent grant preserves the
+ * historical subscription fallback; a repository failure is propagated so
+ * authorization callers can fail closed.
  */
 export async function loadEffectiveEntitlementContext(
   userId: string,
@@ -41,6 +42,7 @@ export async function loadEffectiveEntitlementContext(
     legacyEntitlement = await loadLegacyEntitlement(userId)
   } catch {
     console.error('[effective-entitlement] Legacy grant lookup failed')
+    throw new Error('EFFECTIVE_ENTITLEMENT_CONTEXT_UNAVAILABLE')
   }
 
   const legacyEntitlements = legacyEntitlement === null

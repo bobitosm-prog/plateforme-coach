@@ -53,7 +53,7 @@ describe('resolveUserCapabilities', () => {
     ].map(path => readFileSync(path, 'utf8'))
 
     for (const source of clientConsumers) {
-      expect(source).toContain('resolveUserCapabilities')
+      expect(source).toMatch(/fetchEffectiveEntitlementSnapshot|capabilities/)
       expect(source).not.toMatch(/subscription_type\s*={2,3}\s*['"]invited['"]/)
     }
     for (const source of serverConsumers) {

@@ -8,7 +8,8 @@ import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { colors, fonts, calcMifflinStJeor } from '@/lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
-import { resolveUserCapabilities } from '@/lib/entitlements/capabilities'
+import { fetchEffectiveEntitlementSnapshot } from '@/lib/entitlements/client-snapshot'
+import { resolveActiveCoachForOnboarding } from '@/lib/coach-relations/onboarding-reader'
 
 import OnboardingHeader from './steps/shared/OnboardingHeader'
 import OnboardingNav from './steps/shared/OnboardingNav'
@@ -80,6 +81,7 @@ export default function OnboardingV2Content() {
   const [userId, setUserId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [runtimeDenied, setRuntimeDenied] = useState(false)
 
   // ─── Form state ───
   const [firstName, setFirstName] = useState('')
@@ -130,7 +132,7 @@ export default function OnboardingV2Content() {
       // Fetch profile to detect flow
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_type, full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment, meal_preferences')
+        .select('full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment, meal_preferences')
         .eq('id', uid)
         .single()
 
@@ -159,24 +161,28 @@ export default function OnboardingV2Content() {
           if (Array.isArray(mp.disliked_foods)) setDislikedFoods(mp.disliked_foods)
         }
 
-        const capabilities = resolveUserCapabilities({
-          subscriptionType: profile.subscription_type,
-        })
+        let capabilities
+        try {
+          ;({ capabilities } = await fetchEffectiveEntitlementSnapshot())
+        } catch {
+          setRuntimeDenied(true)
+          setLoading(false)
+          return
+        }
         if (capabilities.coachManaged) {
           dispatch({ type: 'SET_FLOW', flow: 'coachManaged' })
 
-          // Fetch coach via coach_clients junction table
-          const { data: link } = await supabase
-            .from('coach_clients')
-            .select('coach_id')
-            .eq('client_id', uid)
-            .single()
-
-          if (link?.coach_id) {
+          const relation = await resolveActiveCoachForOnboarding(supabase, uid)
+          if (relation.kind === 'denied') {
+            setRuntimeDenied(true)
+            setLoading(false)
+            return
+          }
+          if (relation.kind === 'active') {
             const { data: coach } = await supabase
               .from('profiles')
               .select('full_name')
-              .eq('id', link.coach_id)
+              .eq('id', relation.coachId)
               .single()
             if (coach?.full_name) setCoachName(coach.full_name)
           }
@@ -540,6 +546,14 @@ export default function OnboardingV2Content() {
   }
 
   // ─── Loading ───
+  if (runtimeDenied) {
+    return (
+      <div style={{ minHeight: '100dvh', background: colors.background, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, color: colors.text, textAlign: 'center' }}>
+        Impossible de vérifier tes droits pour le moment. Réessaie dans quelques instants.
+      </div>
+    )
+  }
+
   if (loading || !state.flow) {
     return (
       <div

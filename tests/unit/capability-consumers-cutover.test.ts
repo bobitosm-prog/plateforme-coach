@@ -84,7 +84,7 @@ describe('capability consumers cutover', () => {
     ])
 
     for (const { path, source } of consumers) {
-      expect(source, path).toContain('resolveUserCapabilities')
+      expect(source, path).toMatch(/fetchEffectiveEntitlementSnapshot|capabilities/)
       expect(source, path).not.toMatch(
         /subscription_type\s*={2,3}\s*['"]invited['"]/,
       )

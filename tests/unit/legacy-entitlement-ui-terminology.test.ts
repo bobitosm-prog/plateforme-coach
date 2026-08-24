@@ -27,7 +27,7 @@ describe('legacy entitlement UI terminology', () => {
   it('uses coach-managed terminology for the capability-derived Athena state', () => {
     const chat = read('app/components/ChatAI.tsx')
 
-    expect(chat).toContain('capabilities.coachManaged')
+    expect(chat).toContain('capabilities.ai')
     expect(chat).toContain("t('coachManaged.title')")
     expect(chat).not.toMatch(/t\(['\"]invited\./)
   })

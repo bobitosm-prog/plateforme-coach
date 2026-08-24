@@ -92,22 +92,15 @@ describe('runtime legacy entitlement loading', () => {
     },
   )
 
-  it('treats a repository error as no grant and keeps the fallback', async () => {
+  it('propagates a controlled repository error so authorization can fail closed', async () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     mocks.getActiveLegacyEntitlement.mockRejectedValue(
       new Error('sensitive repository error'),
     )
-    const context = await loadEffectiveEntitlementContext(
+    await expect(loadEffectiveEntitlementContext(
       USER_ID,
       'invited',
-    )
-
-    expect(context.legacyEntitlements).toEqual([])
-    expect(context.effectiveEntitlement).toEqual({
-      type: 'legacy_invited',
-      source: 'subscription',
-    })
-    expect(context.capabilities).toEqual(coachManaged)
+    )).rejects.toThrow('EFFECTIVE_ENTITLEMENT_CONTEXT_UNAVAILABLE')
     expect(errorLog).toHaveBeenCalledWith(
       '[effective-entitlement] Legacy grant lookup failed',
     )

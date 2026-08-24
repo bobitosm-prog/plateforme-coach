@@ -23,8 +23,11 @@ import {
   toActiveCoachResolutionState,
   type ActiveCoachResolutionState,
 } from '../../lib/coach-relations/repository'
-import { resolveUserCapabilities } from '../../lib/entitlements/capabilities'
-import { resolveEffectiveEntitlement } from '../../lib/entitlements/effective-entitlement'
+import {
+  DENIED_ENTITLEMENT_SNAPSHOT,
+  fetchEffectiveEntitlementSnapshot,
+  type EffectiveEntitlementSnapshot,
+} from '../../lib/entitlements/client-snapshot'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -57,6 +60,9 @@ export default function useClientDashboard() {
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [entitlementSnapshot, setEntitlementSnapshot] = useState<EffectiveEntitlementSnapshot>(
+    DENIED_ENTITLEMENT_SNAPSHOT,
+  )
 
   const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string; weekdayKey?: string } | null>(() => {
     if (typeof window === 'undefined') return null
@@ -142,6 +148,13 @@ export default function useClientDashboard() {
     const uid = session?.user?.id
     if (!uid) return
     const today = new Date().toISOString().split('T')[0]
+
+    try {
+      setEntitlementSnapshot(await fetchEffectiveEntitlementSnapshot())
+    } catch {
+      setEntitlementSnapshot(DENIED_ENTITLEMENT_SNAPSHOT)
+      console.error('[client-dashboard] Effective entitlement unavailable')
+    }
 
     // Try cache first (only on initial load, not forced refreshes)
     if (!forceRefresh) {
@@ -529,11 +542,7 @@ export default function useClientDashboard() {
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
-  const entitlementInput = {
-    subscriptionType: profile?.subscription_type,
-  }
-  const effectiveEntitlement = resolveEffectiveEntitlement(entitlementInput)
-  const capabilities = resolveUserCapabilities(entitlementInput)
+  const { effectiveEntitlement, capabilities } = entitlementSnapshot
 
   const hasPaidSub = (() => {
     if (!profile) return false
@@ -647,7 +656,8 @@ export default function useClientDashboard() {
     todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
     displayAvatar, fullName, firstName,
     // Subscription & trial
-    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe, aiAllowed: capabilities.ai,
+    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe,
+    aiAllowed: capabilities.ai, capabilities,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

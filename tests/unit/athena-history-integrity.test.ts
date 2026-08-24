@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   aiRateLimitResponse: vi.fn(),
   logAiUsage: vi.fn(),
   writeAssistant: vi.fn(),
+  getActiveLegacyEntitlement: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
@@ -28,6 +29,9 @@ vi.mock('@/lib/coach-knowledge', () => ({
 }))
 vi.mock('@/lib/supabase/trusted-ai-writer', () => ({
   writeTrustedAthenaAssistantMessage: mocks.writeAssistant,
+}))
+vi.mock('@/lib/entitlements/legacy-entitlement-repository', () => ({
+  getActiveLegacyEntitlement: mocks.getActiveLegacyEntitlement,
 }))
 
 import { POST } from '@/app/api/chat-ai/route'
@@ -91,6 +95,7 @@ describe('Athena history role integrity', () => {
     mocks.checkAiRateLimit.mockResolvedValue({ allowed: true })
     mocks.logAiUsage.mockResolvedValue(undefined)
     mocks.writeAssistant.mockResolvedValue(undefined)
+    mocks.getActiveLegacyEntitlement.mockResolvedValue(null)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
       content: [{ text: 'Réponse Athena' }],
     }), { status: 200 })))
