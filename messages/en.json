@@ -2380,6 +2380,22 @@
         "sessionFallback": "Today’s workout",
         "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
         "source": { "scheduled": "Scheduled", "custom_program": "Personal program", "coach_program": "Coach program", "none": "Free workout" }
+      },
+      "dailyStatus": {
+        "title": "Today’s status",
+        "training": { "label": "Training", "scheduled": "To do", "completed": "Completed", "rest": "Rest", "empty": "Nothing planned", "loading": "Loading…", "error": "Unavailable", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}" },
+        "nutrition": { "label": "Nutrition", "loading": "Loading…", "ready": "In progress", "empty": "No entries", "error": "Unavailable", "protein": "Protein", "carbs": "Carbs", "fat": "Fat" },
+        "recovery": { "label": "Recovery", "ready": "Ready", "watch": "Keep watch", "recover": "Recover", "unavailable": "Unavailable", "loading": "Loading…", "error": "Unavailable" }
+      },
+      "nextBestAction": {
+        "label": "Recommended action",
+        "scheduled_training": { "title": "Your workout is ready", "description": "Today’s training is ready to start.", "cta": "Start workout" },
+        "missing_check_in": { "title": "How are you feeling today?", "description": "Complete your check-in to keep your tracking useful.", "cta": "Complete in 30 sec" },
+        "nutrition_incomplete": { "title": "Keep tracking nutrition", "description": "Your nutrition day is still in progress.", "cta": "Open Nutrition" },
+        "diagnostic_available": { "title": "Review your week", "description": "Your weekly diagnostic is available or ready to generate.", "cta": "View diagnostic" },
+        "rest_day": { "title": "Prioritize recovery", "description": "Your program schedules recovery today.", "cta": "View recovery" },
+        "missing_program": { "title": "Choose your next program", "description": "Prepare the next step in your training.", "cta": "View programs" },
+        "day_on_track": { "title": "Your day is on track", "description": "Keep the momentum and review your progress.", "cta": "View progress" }
       }
     },
     "nextAppointment": "Next appointment",

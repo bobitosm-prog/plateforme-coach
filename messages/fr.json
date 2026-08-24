@@ -2380,6 +2380,22 @@
         "sessionFallback": "Séance du jour",
         "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}",
         "source": { "scheduled": "Planifiée", "custom_program": "Programme personnel", "coach_program": "Programme coach", "none": "Séance libre" }
+      },
+      "dailyStatus": {
+        "title": "Statut du jour",
+        "training": { "label": "Entraînement", "scheduled": "À faire", "completed": "Terminé", "rest": "Repos", "empty": "Rien de prévu", "loading": "Chargement…", "error": "Indisponible", "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}" },
+        "nutrition": { "label": "Nutrition", "loading": "Chargement…", "ready": "En cours", "empty": "Aucune saisie", "error": "Indisponible", "protein": "Prot.", "carbs": "Gluc.", "fat": "Lip." },
+        "recovery": { "label": "Récupération", "ready": "Prêt", "watch": "À surveiller", "recover": "Récupération", "unavailable": "Indisponible", "loading": "Chargement…", "error": "Indisponible" }
+      },
+      "nextBestAction": {
+        "label": "Action recommandée",
+        "scheduled_training": { "title": "Ta séance t’attend", "description": "Ton entraînement du jour est prêt.", "cta": "Commencer la séance" },
+        "missing_check_in": { "title": "Comment te sens-tu aujourd’hui ?", "description": "Complète ton check-in pour garder un suivi utile.", "cta": "Compléter en 30 sec" },
+        "nutrition_incomplete": { "title": "Continue ton suivi nutrition", "description": "Ta journée nutrition est encore en cours.", "cta": "Ouvrir Nutrition" },
+        "diagnostic_available": { "title": "Fais le point sur ta semaine", "description": "Ton diagnostic hebdomadaire est disponible ou peut être généré.", "cta": "Voir le diagnostic" },
+        "rest_day": { "title": "Priorité à la récupération", "description": "Ton programme prévoit du repos aujourd’hui.", "cta": "Voir la récupération" },
+        "missing_program": { "title": "Choisis ton prochain programme", "description": "Prépare la prochaine étape de ton entraînement.", "cta": "Voir les programmes" },
+        "day_on_track": { "title": "Ta journée est bien lancée", "description": "Continue sur cette dynamique et consulte ta progression.", "cta": "Voir ma progression" }
       }
     },
     "nextAppointment": "Prochain rendez-vous",

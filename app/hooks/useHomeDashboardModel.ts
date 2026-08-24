@@ -85,6 +85,15 @@ function nutritionFromTrackedMeals(
   return total
 }
 
+function nutritionFromFoodLogs(rows: readonly Record<string, unknown>[]): HomeSupplementalData['trackedPlanNutrition'] {
+  return rows.reduce<HomeSupplementalData['trackedPlanNutrition']>((total, row) => ({
+    calories: total.calories + (Number(row.calories) || 0),
+    protein: total.protein + (Number(row.protein) || 0),
+    carbs: total.carbs + (Number(row.carbs) || 0),
+    fat: total.fat + (Number(row.fat) || 0),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 })
+}
+
 /**
  * Home-only read adapter. It consumes the dashboard's existing data through
  * `base` and loads only data that the parent does not already expose.
@@ -161,20 +170,31 @@ export default function useHomeDashboardModel({
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase.from('daily_food_logs')
+        .select('calories,protein,carbs,fat')
+        .eq('user_id', userId)
+        .eq('date', today.localDateKey)
+        .limit(20),
       coachProfileRead,
       appointmentRead,
-    ]).then(([xp, checkIn, tracking, plan, coachProfile, appointment]) => {
+    ]).then(([xp, checkIn, tracking, plan, foodLogs, coachProfile, appointment]) => {
       if (!active) return
       const errors: Partial<Record<HomeDomain, string>> = {}
       if (xp.error) errors.identity = 'HOME_IDENTITY_READ_FAILED'
       if (checkIn.error) errors.checkIn = 'HOME_CHECKIN_READ_FAILED'
-      if (tracking.error || plan.error) errors.nutrition = 'HOME_NUTRITION_READ_FAILED'
+      if (tracking.error || plan.error || foodLogs.error) errors.nutrition = 'HOME_NUTRITION_READ_FAILED'
       if (coachProfile.error || appointment.error) errors.coach = 'HOME_COACH_READ_FAILED'
 
       const mealTypes = (tracking.data ?? [])
         .map((row: { meal_type?: unknown }) => row.meal_type)
         .filter((value: unknown): value is string => typeof value === 'string')
       const planData = plan.data?.plan_data ?? null
+      const planned = nutritionFromTrackedMeals(
+        planData,
+        mealTypes,
+        getHomeNutritionDayKey(today),
+      )
+      const logged = nutritionFromFoodLogs(foodLogs.data ?? [])
       setSupplemental({
         requestKey,
         errors,
@@ -187,11 +207,12 @@ export default function useHomeDashboardModel({
               note: checkIn.data.note ?? null,
             }
             : null,
-          trackedPlanNutrition: nutritionFromTrackedMeals(
-            planData,
-            mealTypes,
-            getHomeNutritionDayKey(today),
-          ),
+          trackedPlanNutrition: {
+            calories: planned.calories + logged.calories,
+            protein: planned.protein + logged.protein,
+            carbs: planned.carbs + logged.carbs,
+            fat: planned.fat + logged.fat,
+          },
           hasPersonalMealPlan: Boolean(planData),
           coachDisplayName: coachProfile.data?.full_name ?? null,
           nextAppointment: appointment.data ?? null,
@@ -227,6 +248,7 @@ export default function useHomeDashboardModel({
       ? { requestKey: null, data: emptySupplementalData, errors: {} }
       : supplemental
     const tracked = currentSupplemental.data.trackedPlanNutrition
+    const hasTrackedNutrition = Object.values(tracked).some(value => value > 0)
     const baseConsumed = base.nutrition.caloriesConsumed
     const baseMacros = base.nutrition.macrosConsumed ?? {}
     const nutritionLoading = supplementalLoading
@@ -249,12 +271,12 @@ export default function useHomeDashboardModel({
         ...base.nutrition,
         state: nutritionLoading ? 'loading' : base.nutrition.state,
         caloriesConsumed: baseConsumed == null
-          ? (tracked.calories > 0 ? tracked.calories : null)
+          ? (hasTrackedNutrition ? tracked.calories : null)
           : baseConsumed + tracked.calories,
         macrosConsumed: {
-          protein: (baseMacros.protein ?? 0) + tracked.protein,
-          carbs: (baseMacros.carbs ?? 0) + tracked.carbs,
-          fat: (baseMacros.fat ?? 0) + tracked.fat,
+          protein: baseMacros.protein == null && !hasTrackedNutrition ? null : (baseMacros.protein ?? 0) + tracked.protein,
+          carbs: baseMacros.carbs == null && !hasTrackedNutrition ? null : (baseMacros.carbs ?? 0) + tracked.carbs,
+          fat: baseMacros.fat == null && !hasTrackedNutrition ? null : (baseMacros.fat ?? 0) + tracked.fat,
         },
         hasPlan: base.nutrition.hasPlan || supplemental.data.hasPersonalMealPlan,
       },

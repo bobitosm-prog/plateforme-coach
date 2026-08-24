@@ -17,7 +17,7 @@ import { getTodaySession, getSessionForDay } from '../../../lib/get-today-sessio
 import { toast } from 'sonner'
 import SessionDoneModal from '../training/SessionDoneModal'
 import {
-  colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary, todayNutritionKey,
+  colors, fonts, cardStyle, cardTitleAbove, titleStyle, titleLineStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, subtitleStyle, pageTitleStyle, btnPrimary,
 } from '../../../lib/design-tokens'
 const GOLD = colors.gold
 const TEXT_PRIMARY = colors.text
@@ -27,9 +27,7 @@ import MuscleHeatMap, { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { getLevelFromXP, addXP } from '../../../lib/gamification'
 import HomeV2 from '../home-v2/HomeV2'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
-import EnergyCard from '../home/cards/EnergyCard'
-import RecoveryCard from '../home/cards/RecoveryCard'
-import NutritionCard from '../home/cards/NutritionCard'
+import type { NextBestAction } from '../../../lib/home/next-best-action'
 import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import SectionTitle from '../ui/SectionTitle'
@@ -57,7 +55,6 @@ interface HomeTabProps {
   goalWeight: number | null
   calorieGoal: number
   completedSessions: number
-  hasTrainedBefore: boolean
   streak: number
   coachProgram: any
   coachMealPlan: any
@@ -80,7 +77,7 @@ export default function HomeTab({
   homeModel,
   supabase, session, profile,
   avatarRef, photoRef, uploadAvatar, uploadProgressPhoto,
-  currentWeight, goalWeight, completedSessions, hasTrainedBefore, streak,
+  currentWeight, goalWeight, completedSessions, streak,
   coachProgram, coachMealPlan, todayKey, todayCoachDay,
   setActiveTab, setModal, startProgramWorkout,
   completedThisWeek, aiAllowed, nextSession,
@@ -93,14 +90,13 @@ export default function HomeTab({
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
+  const checkInSectionRef = useRef<HTMLDivElement>(null)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
-  const [consumedKcal, setConsumedKcal] = useState(0)
   const calorieGoal = profile?.calorie_goal || 2000
   const [waterToday, setWaterToday] = useState(0)
 
   // Mini analytics state
   const [weightData, setWeightData] = useState<{ date: string; poids: number }[]>([])
-  const [caloriesWeekData, setCaloriesWeekData] = useState<{ day: string; calories: number }[]>([])
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
@@ -150,32 +146,6 @@ export default function HomeTab({
     if (activeTab === 'home') setHomeRefreshKey(k => k + 1)
   }, [activeTab])
 
-  // Fetch today's consumed calories
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const uid = session.user.id
-    const todayDate = new Date().toISOString().split('T')[0]
-    const dayKey = todayNutritionKey()
-
-    Promise.all([
-      supabase.from('meal_tracking').select('meal_type').eq('user_id', uid).eq('date', todayDate).eq('is_completed', true).limit(20),
-      supabase.from('meal_plans').select('plan_data').eq('user_id', uid).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('daily_food_logs').select('calories').eq('user_id', uid).eq('date', todayDate).limit(20),
-    ]).then(([trackingRes, planRes, logsRes]) => {
-      let planKcal = 0
-      const completedTypes = new Set((trackingRes.data || []).map((r: any) => r.meal_type))
-      const dayData = planRes.data?.plan_data?.[dayKey]
-      if (dayData?.repas && completedTypes.size > 0) {
-        for (const [mealType, foods] of Object.entries(dayData.repas)) {
-          if (!completedTypes.has(mealType) || !Array.isArray(foods)) continue
-          for (const f of foods as any[]) planKcal += f.kcal || 0
-        }
-      }
-      const logsKcal = (logsRes.data || []).reduce((s: number, l: any) => s + (l.calories || 0), 0)
-      setConsumedKcal(planKcal + logsKcal)
-    })
-  }, [session?.user?.id, homeRefreshKey])
-
   // Fetch water
   useEffect(() => {
     if (!session?.user?.id) return
@@ -221,22 +191,6 @@ export default function HomeTab({
     supabase.from('weight_logs').select('date, poids').eq('user_id', userId)
       .gte('date', twoWeeksAgo).order('date', { ascending: true }).limit(14)
       .then(({ data }: any) => setWeightData(data || []))
-
-    // Calories 7 days (from daily_food_logs)
-    supabase.from('daily_food_logs').select('calories, date').eq('user_id', userId)
-      .gte('date', new Date(now.getTime() - 7 * 86400000).toISOString().split('T')[0]).limit(200)
-      .then(({ data }: any) => {
-        const calByDay: Record<string, number> = {}
-        ;(data || []).forEach((m: any) => {
-          const day = m.date || ''
-          calByDay[day] = (calByDay[day] || 0) + (m.calories || 0)
-        })
-        const days = Object.entries(calByDay).sort(([a], [b]) => a.localeCompare(b))
-        setCaloriesWeekData(days.map(([day, calories]) => ({
-          day: new Date(day + 'T12:00:00').toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }),
-          calories: Math.round(calories as number),
-        })))
-      })
 
     // Volume & sessions this week
     supabase.from('workout_sets').select('weight, reps').eq('user_id', userId)
@@ -367,9 +321,6 @@ export default function HomeTab({
     return () => clearTimeout(checkinSaveRef.current)
   }, [checkinMood, checkinNote, checkinSleep])
 
-  const calPct = calorieGoal > 0 ? Math.min(100, Math.round((consumedKcal / calorieGoal) * 100)) : 0
-  // Ring values used by MetallicRing via calPct
-
   // Custom program is authoritative: if it says rest, it's rest — don't fall through to coach
   const todayExercises = customIsRest ? [] : (customProgramExercises?.length ? customProgramExercises : todayCoachDay?.exercises || [])
   // Session title: custom program > scheduled session > coach program
@@ -394,6 +345,38 @@ export default function HomeTab({
   const quoteCategory = objLabel === 'bulk' ? 'mass' : objLabel
   const quoteCount = parseInt(ht(`quotes.${quoteCategory}Count`), 10) || 15
   const dailyQuote = ht(`quotes.${quoteCategory}.${getDailyQuoteIndex(quoteCount)}`)
+
+  const handleNextBestAction = (recommendation: NextBestAction) => {
+    switch (recommendation.type) {
+      case 'start_training': {
+        const current = homeModel.training.session
+        if (current) startProgramWorkout(
+          { day_name: current.title, name: current.title },
+          Array.from(current.exercises),
+        )
+        return
+      }
+      case 'complete_check_in':
+        setCheckinEditMode(true)
+        requestAnimationFrame(() => checkInSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        return
+      case 'open_nutrition':
+        setActiveTab('nutrition')
+        return
+      case 'open_diagnostic':
+        if (latestDiagnostic) router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)
+        else handleGenerateDiagnostic()
+        return
+      case 'open_recovery':
+        setShowRecoveryModal(true)
+        return
+      case 'open_program':
+        setActiveTab('training')
+        return
+      case 'view_progress':
+        setActiveTab('progress')
+    }
+  }
 
   useEffect(() => {
     const uid = session?.user?.id
@@ -427,6 +410,7 @@ export default function HomeTab({
           onOpenSession: () => setShowSessionModal(true),
           onOpenProgram: () => setActiveTab('training'),
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
+          onNextBestAction: handleNextBestAction,
         }}
       />
 
@@ -449,15 +433,8 @@ export default function HomeTab({
         </div>
       )}
 
-      {/* ═══ APERÇU DU JOUR — 3 cards grid (moved up from below) ═══ */}
+      {/* Legacy sections not yet migrated to Home V2 */}
       <div style={{ padding: '0 20px 16px' }}>
-        <SectionTitle noPadding title={ht('overview')} action={{ label: '›', onClick: () => setActiveTab('progress') }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          <EnergyCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} weekData={caloriesWeekData} />
-          <RecoveryCard muscleStatus={muscleStatus} onCardClick={() => setShowRecoveryModal(true)} hasTrainedBefore={hasTrainedBefore} />
-          <NutritionCard consumedKcal={consumedKcal} calorieGoal={calorieGoal} proteinGoal={profile?.protein_goal} carbsGoal={profile?.carbs_goal} fatGoal={profile?.fat_goal} />
-        </div>
-
         {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
         <SectionTitle noPadding title={ht('weekTitle')} trailing={latestDiagnostic ? formatWeekRange(latestDiagnostic.week_start, locale) : undefined} />
         <WeeklyDiagnosticCard
@@ -479,7 +456,7 @@ export default function HomeTab({
       </div>
 
       {/* ═══ CHECK-IN — COMPACT (saved) or FULL (editing) ═══ */}
-      <div style={{ padding: '0 24px' }}>
+      <div ref={checkInSectionRef} style={{ padding: '0 24px', scrollMarginTop: 16 }}>
         {checkinSaved && !checkinEditMode ? (
           /* ── COMPACT CARD: week calendar ── */
           <>
