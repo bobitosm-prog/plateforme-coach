@@ -116,6 +116,7 @@ export interface HomeViewModel {
     relationStatus: HomeCoachRelationStatus
     coachId: string | null
     coachDisplayName: string | null
+    coachAvatar: string | null
     nextAppointment: unknown | null
     lastMessage: unknown | 'unavailable' | null
   }
@@ -193,6 +194,7 @@ export interface HomeViewModelInput {
     relationStatus: HomeCoachRelationStatus
     coachId?: string | null
     coachDisplayName?: string | null
+    coachAvatar?: string | null
     nextAppointment?: unknown | null
     lastMessage?: unknown | 'unavailable' | null
   }
@@ -489,6 +491,9 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
       coachId: relationIsActive ? input.coach.coachId ?? null : null,
       coachDisplayName: relationIsActive
         ? input.coach.coachDisplayName ?? null
+        : null,
+      coachAvatar: relationIsActive
+        ? input.coach.coachAvatar ?? null
         : null,
       nextAppointment: relationIsActive
         ? input.coach.nextAppointment ?? null

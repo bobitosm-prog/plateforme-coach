@@ -58,8 +58,28 @@
 .progressionMetricMeta { display: inline-flex; align-items: center; gap: 4px; color: #918a7e; font-size: .7rem; line-height: 1.35; }
 .progressionMetricMeta[data-trend='up'] { color: #d9b85d; }
 .progressionMetricMeta[data-trend='down'] { color: #a9cba4; }
+.intelligenceGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,340px),1fr)); gap: 12px; margin-top: 24px; }
+.intelligenceCard { display: flex; flex-direction: column; min-width: 0; min-height: 230px; padding: clamp(18px,3vw,24px); border: 1px solid rgba(201,168,76,.18); border-radius: 20px; background: #12110f; }
+.athenaInsight { background: radial-gradient(circle at 92% 5%,rgba(139,92,246,.13),transparent 38%),linear-gradient(145deg,#15121a,#10100e 74%); }
+.coachCard { background: radial-gradient(circle at 92% 5%,rgba(230,195,100,.11),transparent 38%),linear-gradient(145deg,#17140f,#10100e 74%); }
+.intelligenceLabel { display: flex; align-items: center; gap: 8px; color: #d9b85d; font-size: .68rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.intelligenceIcon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; color: #d9b85d; background: rgba(139,92,246,.12); }
+.insightMessage { margin: 22px 0; color: #eee9df; font-size: clamp(1rem,2vw,1.14rem); line-height: 1.55; }
+.insightLoading { display: flex; flex-direction: column; gap: 8px; margin: 22px 0; color: #918a7e; font-size: .8rem; }
+.insightSkeleton { width: min(100%,360px); margin: 0; }
+.intelligenceCta { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; gap: 6px; min-height: 40px; margin-top: auto; padding: 0; border: 0; color: #e6c364; background: transparent; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; }
+.intelligenceCta:focus-visible { outline: 3px solid rgba(230,195,100,.42); outline-offset: 4px; border-radius: 5px; }
+.coachIdentity { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; }
+.coachAvatar { width: 46px; height: 46px; flex-shrink: 0; border: 1px solid rgba(230,195,100,.3); border-radius: 50%; object-fit: cover; background: #24211b; }
+.coachAvatarFallback { display: grid; place-items: center; color: #d9b85d; }
+.coachName { min-width: 0; overflow: hidden; color: #f7f4ed; font-size: 1.08rem; text-overflow: ellipsis; white-space: nowrap; }
+.coachDetails { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.coachDetail { display: flex; align-items: flex-start; gap: 9px; color: #aaa294; font-size: .78rem; line-height: 1.4; }
+.coachDetail svg { flex-shrink: 0; margin-top: 1px; color: #c9a84c; }
+.coachDetail strong { color: #d8d0c3; font-weight: 650; }
+.coachDetail small { display: block; max-width: 360px; margin-top: 2px; overflow: hidden; color: #827b70; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeletonLine { animation: none; } .button { transition: none; } }
 @media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
-@media (max-width: 520px) { .metrics { display: none; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .metrics { display: none; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } }

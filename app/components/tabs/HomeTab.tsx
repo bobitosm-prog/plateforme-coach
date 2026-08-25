@@ -3,14 +3,9 @@ import React, { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { format } from 'date-fns'
-import { fr as frLocale } from 'date-fns/locale/fr'
-import { enUS } from 'date-fns/locale/en-US'
-import { de as deLocale } from 'date-fns/locale/de'
-import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
 import {
-  Ruler, Camera, Zap, Moon, CheckCircle, Dumbbell, TrendingUp, Droplets, Calendar,
+  Ruler, Camera, Zap, Moon, CheckCircle, Dumbbell, TrendingUp, Droplets,
 } from 'lucide-react'
 import ExercisePreview from '../ExercisePreview'
 import { getTodaySession, getSessionForDay } from '../../../lib/get-today-session'
@@ -79,8 +74,6 @@ export default function HomeTab({
   const ht = useTranslations('home')
   const locale = useLocale()
   const router = useRouter()
-  const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
-  const dateLocale = DATE_LOCALES[locale] || frLocale
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
   const checkInSectionRef = useRef<HTMLDivElement>(null)
@@ -93,9 +86,6 @@ export default function HomeTab({
   const [weekVolume, setWeekVolume] = useState(0)
   const [weekSessions, setWeekSessions] = useState(0)
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
-  const [nextAppt, setNextAppt] = useState<any>(null)
-  const [apptCount, setApptCount] = useState(0)
-  const [apptCoachName, setApptCoachName] = useState('votre coach')
   const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
   const [generatingDiag, setGeneratingDiag] = useState(false)
 
@@ -361,24 +351,6 @@ export default function HomeTab({
     }
   }
 
-  useEffect(() => {
-    const uid = session?.user?.id
-    if (!uid || !supabase) return
-    supabase.from('coach_appointments')
-      .select('*')
-      .eq('client_id', uid)
-      .gte('scheduled_at', new Date().toISOString())
-      .order('scheduled_at', { ascending: true })
-      .limit(10)
-      .then(async ({ data }: any) => {
-        if (data && data.length > 0) {
-          setNextAppt(data[0]); setApptCount(data.length)
-          const { data: coach } = await supabase.from('profiles').select('full_name').eq('id', data[0].coach_id).maybeSingle()
-          if (coach?.full_name) setApptCoachName(coach.full_name)
-        } else { setNextAppt(null); setApptCount(0) }
-      })
-  }, [session?.user?.id, supabase, homeRefreshKey])
-
   return (
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
@@ -395,27 +367,10 @@ export default function HomeTab({
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
           onNextBestAction: handleNextBestAction,
           onOpenProgression: () => setActiveTab('progress'),
+          onOpenAthena: () => setActiveTab('coachIA'),
+          onOpenMessages: () => setActiveTab('messages'),
         }}
       />
-
-      {nextAppt && (
-        <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(230,195,100,0.08)', border: '1px solid rgba(230,195,100,0.35)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(230,195,100,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Calendar size={18} color="#E6C364" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#E6C364', marginBottom: 2 }}>
-              {ht('nextAppointment')}{apptCount > 1 ? ` · ${ht('nextAppointmentMore', { count: apptCount - 1 })}` : ''}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
-              {`${format(new Date(nextAppt.scheduled_at), 'EEEE d MMMM', { locale: dateLocale })} ${ht('appointmentAt')} ${format(new Date(nextAppt.scheduled_at), 'HH:mm', { locale: dateLocale })}`}
-            </div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
-              {ht('appointmentWith', { name: apptCoachName })}{nextAppt.location ? ` · ${nextAppt.location}` : ''}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Legacy sections not yet migrated to Home V2 */}
       <div style={{ padding: '0 20px 16px' }}>

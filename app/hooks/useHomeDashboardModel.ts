@@ -31,6 +31,7 @@ interface HomeSupplementalData {
   }
   hasPersonalMealPlan: boolean
   coachDisplayName: string | null
+  coachAvatar: string | null
   nextAppointment: unknown | null
 }
 
@@ -55,6 +56,7 @@ const emptySupplementalData: HomeSupplementalData = {
   trackedPlanNutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
   hasPersonalMealPlan: false,
   coachDisplayName: null,
+  coachAvatar: null,
   nextAppointment: null,
 }
 
@@ -137,7 +139,7 @@ export default function useHomeDashboardModel({
     const coachId = hasActiveCoach ? base.coach.coachId : null
 
     const coachProfileRead = coachId
-      ? supabase.from('profiles').select('full_name').eq('id', coachId).maybeSingle()
+      ? supabase.from('profiles').select('full_name,avatar_url').eq('id', coachId).maybeSingle()
       : Promise.resolve({ data: null, error: null })
     const appointmentRead = coachId
       ? supabase.from('coach_appointments')
@@ -215,6 +217,7 @@ export default function useHomeDashboardModel({
           },
           hasPersonalMealPlan: Boolean(planData),
           coachDisplayName: coachProfile.data?.full_name ?? null,
+          coachAvatar: coachProfile.data?.avatar_url ?? null,
           nextAppointment: appointment.data ?? null,
         },
       })
@@ -293,6 +296,8 @@ export default function useHomeDashboardModel({
           : base.coach.state,
         coachDisplayName: currentSupplemental.data.coachDisplayName
           ?? base.coach.coachDisplayName,
+        coachAvatar: currentSupplemental.data.coachAvatar
+          ?? base.coach.coachAvatar,
         nextAppointment: currentSupplemental.data.nextAppointment
           ?? base.coach.nextAppointment,
       },

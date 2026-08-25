@@ -2416,6 +2416,30 @@
         "adherence": "Assiduité",
         "latestPR": "Dernier record",
         "recordGain": "+{value}"
+      },
+      "athenaInsight": {
+        "label": "Athena",
+        "loading": "Analyse des données disponibles…",
+        "cta": "Parler à Athena",
+        "messages": {
+          "safe_fallback": "Certaines données sont indisponibles. Continue ton suivi pour obtenir un aperçu plus contextualisé.",
+          "training_recovery_ready": "Les données de récupération disponibles sont favorables aujourd’hui. Tu peux garder la séance prévue.",
+          "training_recovery_warning": "Les données de récupération invitent à la prudence aujourd’hui. Reste attentif à tes sensations pendant la séance.",
+          "rest_day": "Profite de cette journée pour favoriser la récupération.",
+          "nutrition_incomplete": "Ton suivi nutritionnel est encore incomplet aujourd’hui.",
+          "check_in_missing": "Ton check-in du jour peut aider à mieux contextualiser ton suivi.",
+          "progression_available": "Ta régularité cette semaine est visible dans ton suivi.",
+          "generic_fallback": "Continue à suivre tes données pour obtenir des recommandations plus pertinentes."
+        }
+      },
+      "activeCoach": {
+        "label": "Ton coach",
+        "loading": "Chargement des informations du coach…",
+        "nameFallback": "Coach",
+        "avatarAlt": "Photo de {name}",
+        "lastMessage": "Dernier message",
+        "nextAppointment": "Prochain rendez-vous",
+        "cta": "Ouvrir les messages"
       }
     },
     "nextAppointment": "Prochain rendez-vous",

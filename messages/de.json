@@ -2416,6 +2416,30 @@
         "adherence": "Planerfüllung",
         "latestPR": "Letzter Rekord",
         "recordGain": "+{value}"
+      },
+      "athenaInsight": {
+        "label": "Athena",
+        "loading": "Verfügbare Daten werden ausgewertet…",
+        "cta": "Mit Athena sprechen",
+        "messages": {
+          "safe_fallback": "Einige Daten sind nicht verfügbar. Erfasse weiter Daten, um einen besser eingeordneten Hinweis zu erhalten.",
+          "training_recovery_ready": "Die verfügbaren Erholungsdaten sind heute günstig. Du kannst das geplante Training beibehalten.",
+          "training_recovery_warning": "Die verfügbaren Erholungsdaten sprechen heute für zusätzliche Vorsicht. Achte während des Trainings auf dein Gefühl.",
+          "rest_day": "Nutze den heutigen Tag, um deine Erholung zu unterstützen.",
+          "nutrition_incomplete": "Dein Ernährungstracking ist heute noch unvollständig.",
+          "check_in_missing": "Der heutige Check-in kann helfen, dein Tracking besser einzuordnen.",
+          "progression_available": "Deine Regelmäßigkeit in dieser Woche ist in deinem Tracking sichtbar.",
+          "generic_fallback": "Erfasse weiter Daten, um relevantere Empfehlungen zu erhalten."
+        }
+      },
+      "activeCoach": {
+        "label": "Dein Coach",
+        "loading": "Coach-Informationen werden geladen…",
+        "nameFallback": "Coach",
+        "avatarAlt": "Foto von {name}",
+        "lastMessage": "Letzte Nachricht",
+        "nextAppointment": "Nächster Termin",
+        "cta": "Nachrichten öffnen"
       }
     },
     "nextAppointment": "Nächster Termin",

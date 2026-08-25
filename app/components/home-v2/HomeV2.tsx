@@ -7,7 +7,10 @@ import TodayHero from './TodayHero'
 import DailyStatus from './DailyStatus'
 import NextBestActionCard from './NextBestActionCard'
 import ProgressionSnapshot from './ProgressionSnapshot'
+import AthenaInsightCard from './AthenaInsightCard'
+import ActiveCoachCard from './ActiveCoachCard'
 import { resolveNextBestAction, type NextBestAction } from '../../../lib/home/next-best-action'
+import { resolveAthenaHomeInsight } from '../../../lib/home/athena-home-insight'
 import styles from './HomeV2.module.css'
 
 export interface HomeV2Actions {
@@ -17,16 +20,23 @@ export interface HomeV2Actions {
   onStartFreeSession?: () => void
   onNextBestAction?: (action: NextBestAction) => void
   onOpenProgression?: () => void
+  onOpenAthena?: () => void
+  onOpenMessages?: () => void
 }
 
 export default function HomeV2({ model, actions, children }: { model: HomeViewModel; actions: HomeV2Actions; children?: ReactNode }) {
   const recommendation = resolveNextBestAction(model)
+  const athenaInsight = resolveAthenaHomeInsight(model)
   return <div className={styles.shell} data-home-v2>
     <HomeV2Header identity={model.identity} today={model.today} />
     <TodayHero training={model.training} {...actions} />
     <DailyStatus training={model.training} nutrition={model.nutrition} recovery={model.recovery} />
     <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />
     <ProgressionSnapshot progression={model.progression} onOpenProgression={actions.onOpenProgression} />
+    <div className={styles.intelligenceGrid}>
+      <AthenaInsightCard insight={athenaInsight} onOpenAthena={actions.onOpenAthena} />
+      <ActiveCoachCard coach={model.coach} onOpenMessages={actions.onOpenMessages} />
+    </div>
     {children && <div className={styles.legacy}>{children}</div>}
   </div>
 }
