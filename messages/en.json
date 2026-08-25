@@ -2598,6 +2598,7 @@
       "generate_cta": "Generate now",
       "generating": "AI analysis in progress...",
       "generating_time": "(15-25s)",
+      "generation_error": "The diagnostic could not be generated. Please try again shortly.",
       "points_forts_heading": "Strengths",
       "points_alerte_heading": "Warnings",
       "view_details": "View details"

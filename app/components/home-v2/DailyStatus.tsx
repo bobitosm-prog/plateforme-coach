@@ -24,8 +24,8 @@ export function resolveDailyRecoveryStatus(recovery: HomeViewModel['recovery']):
   return recovery.status ?? 'unavailable'
 }
 
-function StatusCard({ icon, label, status, children }: { icon: React.ReactNode; label: string; status: string; children?: React.ReactNode }) {
-  return <article className={styles.statusCard}>
+function StatusCard({ icon, label, status, state, children }: { icon: React.ReactNode; label: string; status: string; state: HomeDomainState; children?: React.ReactNode }) {
+  return <article className={styles.statusCard} aria-busy={state === 'loading'} role={state === 'error' ? 'status' : undefined}>
     <div className={styles.statusTop}><span className={styles.statusIcon}>{icon}</span><span className={styles.statusLabel}>{label}</span></div>
     <strong className={styles.statusValue}>{status}</strong>
     {children && <div className={styles.statusDetails}>{children}</div>}
@@ -46,10 +46,10 @@ export default function DailyStatus({ training, nutrition, recovery }: Pick<Home
   return <section className={styles.statusSection} aria-labelledby="daily-status-title">
     <h2 id="daily-status-title" className={styles.sectionTitle}>{t('title')}</h2>
     <div className={styles.statusGrid}>
-      <StatusCard icon={<Dumbbell size={18} aria-hidden="true" />} label={t('training.label')} status={t(`training.${trainingStatus}`)}>
+      <StatusCard icon={<Dumbbell size={18} aria-hidden="true" />} label={t('training.label')} status={t(`training.${trainingStatus}`)} state={training.state}>
         {trainingStatus === 'scheduled' && training.session && <span>{t('training.exerciseCount', { count: training.session.exercises.length })}</span>}
       </StatusCard>
-      <StatusCard icon={<Apple size={18} aria-hidden="true" />} label={t('nutrition.label')} status={t(`nutrition.${nutritionStatus}`)}>
+      <StatusCard icon={<Apple size={18} aria-hidden="true" />} label={t('nutrition.label')} status={t(`nutrition.${nutritionStatus}`)} state={nutrition.state}>
         {nutritionStatus === 'ready' && nutrition.caloriesConsumed != null && nutrition.caloriesTarget != null && <>
           <span className={styles.calories}>{nutrition.caloriesConsumed} / {nutrition.caloriesTarget} kcal</span>
           <div className={styles.macroList}>{macros.map(([key, consumed, target]) => consumed != null && target != null
@@ -57,7 +57,7 @@ export default function DailyStatus({ training, nutrition, recovery }: Pick<Home
             : null)}</div>
         </>}
       </StatusCard>
-      <StatusCard icon={<HeartPulse size={18} aria-hidden="true" />} label={t('recovery.label')} status={t(`recovery.${recoveryStatus}`)} />
+      <StatusCard icon={<HeartPulse size={18} aria-hidden="true" />} label={t('recovery.label')} status={t(`recovery.${recoveryStatus}`)} state={recovery.state} />
     </div>
   </section>
 }

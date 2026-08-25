@@ -59,7 +59,7 @@ export default function ProgressionSnapshot({
       ? <ArrowDown size={14} aria-hidden="true" />
       : <Minus size={14} aria-hidden="true" />
 
-  return <section className={styles.progression} aria-labelledby="progression-snapshot-title" data-state={state}>
+  return <section className={styles.progression} aria-labelledby="progression-snapshot-title" aria-busy={state === 'loading'} data-state={state}>
     <div className={styles.progressionHeader}>
       <div>
         <p className={styles.progressionEyebrow}>{t('eyebrow')}</p>

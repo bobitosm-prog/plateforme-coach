@@ -2598,6 +2598,7 @@
       "generate_cta": "Jetzt generieren",
       "generating": "KI-Analyse läuft...",
       "generating_time": "(15-25s)",
+      "generation_error": "Die Analyse konnte nicht erstellt werden. Bitte versuche es gleich noch einmal.",
       "points_forts_heading": "Stärken",
       "points_alerte_heading": "Warnungen",
       "view_details": "Details ansehen"

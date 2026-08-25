@@ -66,8 +66,8 @@ export default function ActiveCoachCard({
   if (!hasActiveHomeCoach(coach)) return null
 
   if (coach.state === 'loading') {
-    return <article className={`${styles.intelligenceCard} ${styles.coachCard}`} aria-live="polite">
-      <div className={styles.intelligenceLabel}><span>{t('label')}</span></div>
+    return <article className={`${styles.intelligenceCard} ${styles.coachCard}`} aria-live="polite" aria-busy="true">
+      <h2 className={styles.intelligenceLabel}><span>{t('label')}</span></h2>
       <div className={styles.insightLoading}>
         <div className={`${styles.skeletonLine} ${styles.insightSkeleton}`} />
         <span>{t('loading')}</span>
@@ -83,7 +83,7 @@ export default function ActiveCoachCard({
   )
 
   return <article className={`${styles.intelligenceCard} ${styles.coachCard}`}>
-    <div className={styles.intelligenceLabel}><span>{t('label')}</span></div>
+    <h2 className={styles.intelligenceLabel}><span>{t('label')}</span></h2>
     <div className={styles.coachIdentity}>
       {coach.coachAvatar
         ? <img className={styles.coachAvatar} src={coach.coachAvatar} alt={t('avatarAlt', { name: coachName })} />

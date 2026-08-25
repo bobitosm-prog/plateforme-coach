@@ -14,11 +14,11 @@ export default function AthenaInsightCard({
 }) {
   const t = useTranslations('home.v2.athenaInsight')
 
-  return <article className={`${styles.intelligenceCard} ${styles.athenaInsight}`} data-insight={insight.reason}>
-    <div className={styles.intelligenceLabel}>
+  return <article className={`${styles.intelligenceCard} ${styles.athenaInsight}`} data-insight={insight.reason} aria-busy={insight.type === 'loading'}>
+    <h2 className={styles.intelligenceLabel}>
       <span className={styles.intelligenceIcon}><Sparkles size={17} aria-hidden="true" /></span>
       <span>{t('label')}</span>
-    </div>
+    </h2>
     {insight.type === 'loading'
       ? <div className={styles.insightLoading} aria-live="polite">
         <div className={`${styles.skeletonLine} ${styles.insightSkeleton}`} />

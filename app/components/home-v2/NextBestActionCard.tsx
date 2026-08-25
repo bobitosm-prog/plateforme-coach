@@ -13,7 +13,7 @@ export default function NextBestActionCard({ recommendation, onAction }: { recom
       <h2 id="next-best-action-title" className={styles.nbaTitle}>{t(`${recommendation.reason}.title`)}</h2>
       <p className={styles.nbaCopy}>{t(`${recommendation.reason}.description`)}</p>
     </div>
-    <button className={`${styles.button} ${styles.primary} ${styles.nbaButton}`} onClick={() => onAction(recommendation)}>
+    <button type="button" className={`${styles.button} ${styles.primary} ${styles.nbaButton}`} onClick={() => onAction(recommendation)}>
       {t(`${recommendation.reason}.cta`)} <ArrowRight size={16} aria-hidden="true" />
     </button>
   </section>
