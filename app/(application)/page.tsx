@@ -12,7 +12,6 @@ import useInitialGeneration from '../hooks/useInitialGeneration'
 import Paywall from '../components/Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../components/ClientIntlProvider'
-import BugReport from '../components/BugReport'
 import BadgeCelebration from '../components/BadgeCelebration'
 import type { Badge } from '../../lib/check-badges'
 import FeedbackTab from '../components/client/FeedbackTab'
@@ -444,8 +443,37 @@ export default function CoachApp() {
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
         .photo-cell:hover .photo-delete-btn { opacity: 1 !important; }
-        .client-main-scroll { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
-        @media (min-width: 768px) { .client-main-scroll { padding-bottom: 16px; } }
+        .app-shell {
+          --mobile-bottom-nav-height: 100px;
+          --mobile-bottom-visual-gap: 20px;
+          --mobile-floating-action-gap: 12px;
+          --mobile-athena-fab-size: 52px;
+        }
+        .client-main-scroll {
+          padding-bottom: calc(
+            var(--mobile-bottom-nav-height)
+            + var(--mobile-bottom-visual-gap)
+            + env(safe-area-inset-bottom, 0px)
+          );
+        }
+        .client-main-scroll-home {
+          padding-bottom: calc(
+            var(--mobile-bottom-nav-height)
+            + var(--mobile-floating-action-gap)
+            + var(--mobile-athena-fab-size)
+            + var(--mobile-bottom-visual-gap)
+            + env(safe-area-inset-bottom, 0px)
+          );
+        }
+        @media (max-width: 767px) {
+          .client-athena-fab {
+            bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-floating-action-gap) + env(safe-area-inset-bottom, 0px)) !important;
+          }
+        }
+        @media (min-width: 768px) {
+          .client-main-scroll,
+          .client-main-scroll-home { padding-bottom: 16px; }
+        }
       `}</style>
 
       {/* ── F6.B.5a : auto-gen progress banner ── */}
@@ -664,7 +692,7 @@ export default function CoachApp() {
           onTouchEnd={onRailTouchEnd}
           onTouchCancel={onRailTouchEnd}
         >
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll client-main-scroll-home" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -677,7 +705,7 @@ export default function CoachApp() {
             {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
+            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} session={h.session} onNavigate={(tab) => h.setActiveTab(tab)} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
           </div>
         </motion.div>
       </main>
@@ -685,13 +713,12 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       {!h.workoutSession && h.activeTab !== 'coachIA' && (
-        <button onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
+        <button className="client-athena-fab" onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
           style={{ position: 'fixed', bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${GOLD_RULE}`, zIndex: Z_FAB }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 700, color: '#0D0B08', lineHeight: 1, letterSpacing: '0.02em' }}>A</span>
           <Sparkles size={11} color="#0D0B08" style={{ position: 'absolute', top: 8, right: 9 }} />
         </button>
       )}
-      <BugReport session={h.session} profile={h.profile} />
       {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
       {!perms.isCoachManaged && (
           <ChatAI

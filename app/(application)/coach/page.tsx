@@ -5,7 +5,6 @@ import ClientIntlProvider from '@/components/ClientIntlProvider'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { cache } from '../../../lib/cache'
-import BugReport from '../../components/BugReport'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -429,7 +428,6 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
         {h.selectedSession && (
           <SessionDetailModal session={h.selectedSession} clients={h.clients} onClose={() => h.setSelectedSession(null)} onDelete={h.deleteSession} />
         )}
-        <BugReport session={h.session} profile={h.coachProfile} />
       </div>
     )
   }
@@ -759,8 +757,6 @@ function CoachPageInner({ initialSession }: { initialSession?: any }) {
           setSection={h.setSection} supabaseSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
         />
       )}
-
-      <BugReport session={h.session} profile={h.coachProfile} />
 
       {/* ── BOTTOM NAV ── */}
       <nav className="bottom-nav" aria-label="Navigation principale">

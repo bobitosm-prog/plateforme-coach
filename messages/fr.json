@@ -2203,6 +2203,8 @@
     "profile": "PROFIL",
     "myProfile": "Mon profil",
     "myReports": "Mes rapports",
+    "reportProblem": "Signaler un problème",
+    "reportProblemDescription": "Un souci avec l'application ? Envoyez-nous un rapport.",
     "goals": "Objectifs",
     "goalsSoon": "Section Objectifs : bientot disponible",
     "preferences": "Préférences",

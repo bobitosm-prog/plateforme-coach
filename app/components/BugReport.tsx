@@ -1,17 +1,17 @@
 'use client'
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { X, Send, Bug, Lightbulb, HelpCircle, MessageSquare, CheckCircle2, ExternalLink } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import type { Session } from '@supabase/supabase-js'
+import { X, Send, Bug, Lightbulb, HelpCircle, MessageSquare, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
+import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL } from '../../lib/design-tokens'
 import { useMyFeedback, type MyFeedbackReport } from '@/app/hooks/useMyFeedback'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-
 interface BugReportProps {
-  session: any
-  profile: any
+  session: Session | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 const TYPES = [
@@ -139,8 +139,7 @@ function HistoryView() {
   )
 }
 
-export default function BugReport({ session, profile }: BugReportProps) {
-  const [open, setOpen] = useState(false)
+export default function BugReport({ session, open, onOpenChange }: BugReportProps) {
   const [mode, setMode] = useState<Mode>('submit')
   const [type, setType] = useState('bug')
   const [title, setTitle] = useState('')
@@ -149,24 +148,25 @@ export default function BugReport({ session, profile }: BugReportProps) {
   const unreadCount = useMyFeedbackBadge()
 
   async function handleSend() {
-    if (!title.trim() || !desc.trim()) return
+    if (!session || !title.trim() || !desc.trim()) return
     setSending(true)
-    const { error } = await supabase.from('bug_reports').insert({
-      user_id: session.user.id,
-      user_email: session.user.email,
-      user_role: profile?.role || 'client',
-      type,
-      title: title.trim().slice(0, 100),
-      description: desc.trim().slice(0, 1000),
-      page_url: window.location.href,
+    const response = await fetch('/api/feedback/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        title: title.trim().slice(0, 100),
+        description: desc.trim().slice(0, 1000),
+        page_url: window.location.href,
+      }),
     })
     setSending(false)
-    if (error) { toast.error('Erreur lors de l\'envoi'); return }
+    if (!response.ok) { toast.error('Erreur lors de l\'envoi'); return }
     toast.success('Merci ! Ton rapport a ete envoye.')
     setTitle(''); setDesc(''); setType('bug')
   }
 
-  if (!session) return null
+  if (!session || !open) return null
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     flex: 1, padding: '10px 0', background: 'transparent', border: 'none',
@@ -177,35 +177,8 @@ export default function BugReport({ session, profile }: BugReportProps) {
     transition: 'all 0.2s',
   })
 
-  return (
-    <>
-      {/* Floating button */}
-      <button onClick={() => setOpen(true)} style={{
-        position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', right: 16,
-        width: 44, height: 44, borderRadius: 12, background: BG_CARD, border: `1px solid ${GOLD_RULE}`,
-        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: Z_FAB, boxShadow: '0 4px 16px rgba(0,0,0,0.4)', transition: 'transform 0.2s',
-      }}>
-        <span style={{ fontSize: 18 }}>💬</span>
-        {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute', top: -4, right: -4,
-            background: GOLD, color: '#0D0B08',
-            fontSize: '10px', fontWeight: 700, fontFamily: FONT_ALT,
-            minWidth: 18, height: 18, borderRadius: 9,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '0 5px',
-            boxShadow: '0 0 12px rgba(212, 168, 67, 0.5)',
-          }}>
-            {unreadCount}
-          </span>
-        )}
-      </button>
-      <style>{`@media(min-width:768px){.bug-btn-fix{bottom:24px!important}}`}</style>
-
-      {/* Modal */}
-      {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label="Signaler un problème" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 480, padding: '0 20px 40px', maxHeight: '85vh', overflowY: 'auto' }}>
 
             {/* Tabs */}
@@ -231,7 +204,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
               <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0 }}>
                 {mode === 'submit' ? 'SIGNALER' : 'MES RAPPORTS'}
               </h3>
-              <button onClick={() => setOpen(false)} style={{ width: 32, height: 32, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => onOpenChange(false)} aria-label="Fermer" style={{ width: 32, height: 32, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={14} color={TEXT_MUTED} />
               </button>
             </div>
@@ -297,8 +270,7 @@ export default function BugReport({ session, profile }: BugReportProps) {
             {/* History view */}
             {mode === 'history' && <HistoryView />}
           </div>
-        </div>
-      )}
-    </>
+    </div>,
+    document.body,
   )
 }
