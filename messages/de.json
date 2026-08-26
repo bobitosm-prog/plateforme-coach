@@ -2027,6 +2027,11 @@
         "empty": "Schließe protokollierte Sätze ab, damit deine ersten Rekorde erscheinen.",
         "unavailable": "Persönliche Rekorde sind derzeit nicht verfügbar.",
         "dateUnavailable": "Datum nicht verfügbar",
+        "muscleGroupsLabel": "Rekorde nach Muskelgruppe",
+        "recordCount": "{count, plural, one {# Rekord} other {# Rekorde}}",
+        "otherGroup": "Andere",
+        "showMore": "{count} weitere anzeigen",
+        "collapse": "Weniger anzeigen",
         "types": { "estimated1rm": "Geschätztes 1RM", "maxWeight": "Maximale Last", "maxReps": "Maximale Wiederholungen", "bestVolume": "Bestes Volumen", "other": "Protokollierte Leistung" }
       },
       "exercise": {

@@ -2027,6 +2027,11 @@
         "empty": "Termine des séries enregistrées pour faire apparaître tes premiers records.",
         "unavailable": "Les records personnels ne peuvent pas être affichés pour le moment.",
         "dateUnavailable": "Date indisponible",
+        "muscleGroupsLabel": "Records par groupe musculaire",
+        "recordCount": "{count, plural, one {# record} other {# records}}",
+        "otherGroup": "Autres",
+        "showMore": "Voir les {count} autres",
+        "collapse": "Réduire",
         "types": { "estimated1rm": "1RM estimé", "maxWeight": "Charge maximale", "maxReps": "Répétitions maximales", "bestVolume": "Meilleur volume", "other": "Performance enregistrée" }
       },
       "exercise": {

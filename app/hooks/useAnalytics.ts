@@ -36,6 +36,33 @@ const INITIAL_SOURCE_STATES: AnalyticsSourceStates = {
   wellbeing: 'loading',
 }
 
+interface ExerciseMuscleMetadata {
+  name?: string | null
+  muscle_group?: string | null
+}
+
+export function getDistinctRecordExerciseNames(records: readonly ProgressionRecordRow[]): string[] {
+  return Array.from(new Set(records.flatMap(record => {
+    const name = record.exercise_name?.trim()
+    return name ? [name] : []
+  }))).sort((a, b) => a.localeCompare(b))
+}
+
+export function enrichRecordsWithMuscleMetadata(
+  records: readonly ProgressionRecordRow[],
+  metadata: readonly ExerciseMuscleMetadata[],
+): ProgressionRecordRow[] {
+  const muscleByExercise = new Map(metadata.flatMap(item => {
+    const name = item.name?.trim()
+    const muscleGroup = item.muscle_group?.trim()
+    return name && muscleGroup ? [[name, muscleGroup] as const] : []
+  }))
+  return records.map(record => ({
+    ...record,
+    muscle_group: muscleByExercise.get(record.exercise_name?.trim() ?? '') ?? null,
+  }))
+}
+
 export default function useAnalytics({
   supabase,
   enabled,
@@ -49,6 +76,7 @@ export default function useAnalytics({
   const [wellbeingEntries, setWellbeingEntries] = useState<ProgressionWellbeingEntry[]>([])
   const [sourceStates, setSourceStates] = useState<AnalyticsSourceStates>(INITIAL_SOURCE_STATES)
   const loadedUserRef = useRef<string | null>(null)
+  const recordMuscleMetadataRef = useRef<ExerciseMuscleMetadata[]>([])
 
   const weightHistoryFull = useMemo(
     () => [...weightHistory].sort((a, b) => a.date.localeCompare(b.date)),
@@ -88,7 +116,19 @@ export default function useAnalytics({
       supabase.from('daily_checkins').select('date,mood,sleep_hours,note').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
     ])
 
-    setPersonalRecords(prRes.data || [])
+    const recordRows = (prRes.data || []) as ProgressionRecordRow[]
+    const recordExerciseNames = getDistinctRecordExerciseNames(recordRows)
+    let muscleMetadata: ExerciseMuscleMetadata[] = []
+    if (!prRes.error && recordExerciseNames.length) {
+      const { data } = await supabase
+        .from('exercises_db')
+        .select('name, muscle_group')
+        .in('name', recordExerciseNames)
+        .limit(recordExerciseNames.length)
+      muscleMetadata = data || []
+    }
+    recordMuscleMetadataRef.current = muscleMetadata
+    setPersonalRecords(enrichRecordsWithMuscleMetadata(recordRows, muscleMetadata))
     setWellbeingEntries(wellbeingRes.data || [])
     setSourceStates({
       records: prRes.error ? 'error' : 'ready',
@@ -175,7 +215,7 @@ export default function useAnalytics({
       }, { onConflict: 'user_id, exercise_name, record_type' })
 
       const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(enabled ? 50 : 1)
-      setPersonalRecords(prs || [])
+      setPersonalRecords(enrichRecordsWithMuscleMetadata(prs || [], recordMuscleMetadataRef.current))
 
       return { newPR: true, exercise: exerciseName, value: Math.round(estimated1RM * 10) / 10, previous: currentRecord?.value }
     }

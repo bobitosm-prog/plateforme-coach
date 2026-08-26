@@ -48,6 +48,7 @@ export interface ProgressionWorkoutSession {
 export interface ProgressionRecordRow {
   exercise_id?: string | null
   exercise_name?: string | null
+  muscle_group?: string | null
   record_type?: string | null
   value?: number | null
   unit?: string | null
@@ -214,6 +215,7 @@ export interface ProgressionRecord {
   unit: string | null
   estimated: boolean
   recordedAt: string | null
+  muscleGroup: string | null
   previousValue: number | null
   delta: number | null
 }
@@ -465,6 +467,7 @@ function buildRecords(input: ProgressionViewModelInput) {
       unit: row.unit ?? null,
       estimated: row.record_type === '1rm',
       recordedAt: row.achieved_at ?? null,
+      muscleGroup: row.muscle_group?.trim() || null,
       previousValue,
       delta: previousValue == null ? null : round(row.value - previousValue),
     }]

@@ -55,14 +55,28 @@
 .detailState .secondaryButton { margin-top: 6px; }
 .performanceGrid { display: grid; min-width: 0; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .performanceCard { min-width: 0; padding: clamp(20px,3vw,26px); scroll-margin-top: 76px; border: 1px solid rgba(201,168,76,.15); border-radius: 22px; background: linear-gradient(145deg,#15130f,#10100e); box-sizing: border-box; }
-.recordGrid { display: grid; margin-top: 18px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
-.recordCard { display: flex; min-width: 0; padding: 14px; align-items: flex-start; gap: 11px; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.02); }
-.recordIcon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 11px; color: #d9b85d; background: rgba(201,168,76,.1); }
-.recordContent { min-width: 0; }
-.recordContent h3 { margin: 0; overflow: hidden; color: #d8d0c3; font-size: .76rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-.recordContent strong { display: block; margin-top: 7px; overflow-wrap: anywhere; color: #f5f1e8; font-size: 1.15rem; }
-.recordType, .recordContent time { display: block; margin-top: 4px; color: #bba356; font-size: .7rem; line-height: 1.35; }
-.recordContent time { color: #827b70; }
+.recordGroupGrid { display: grid; margin-top: 18px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; align-items: start; }
+.recordGroup { min-width: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.02); }
+.recordGroup[data-open='true'] { grid-column: 1 / -1; border-color: rgba(201,168,76,.2); }
+.recordGroupToggle { display: flex; width: 100%; min-height: 72px; padding: 12px 14px; align-items: center; justify-content: space-between; gap: 12px; border: 0; color: #d8d0c3; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.recordGroupToggle:focus-visible, .recordMoreButton:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: -3px; }
+.recordGroupToggle > svg { flex: 0 0 auto; transition: transform .18s ease; }
+.recordGroupToggle > svg[data-open='true'] { transform: rotate(180deg); }
+.recordGroupHeading { display: grid; min-width: 0; gap: 3px; }
+.recordGroupHeading strong { color: #e7dfd1; font-size: .86rem; }
+.recordGroupHeading > span { color: #bba356; font-size: .7rem; }
+.recordGroupHeading small { overflow: hidden; color: #827b70; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.recordGroupContent { padding: 0 14px 14px; border-top: 1px solid rgba(255,255,255,.045); }
+.recordRows { display: grid; }
+.recordRow { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.045); }
+.recordRow:last-child { border-bottom: 0; }
+.recordRowMain { min-width: 0; }
+.recordRowMain h3 { margin: 0; overflow: hidden; color: #d8d0c3; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.recordRowMain span, .recordRowMain time { display: inline; color: #827b70; font-size: .69rem; }
+.recordRowMain span { color: #bba356; }
+.recordRowMain span::after { content: ' · '; color: #625d54; }
+.recordRow > strong { color: #f5f1e8; font-size: .84rem; text-align: right; white-space: nowrap; }
+.recordMoreButton { width: 100%; min-height: 42px; margin-top: 5px; border: 1px solid rgba(230,195,100,.2); border-radius: 11px; color: #d8ba62; background: rgba(201,168,76,.06); font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; }
 .selectorLabel { display: block; margin: 18px 0 7px; color: #918a7e; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .exerciseSelector { width: 100%; min-height: 44px; padding: 0 40px 0 13px; border: 1px solid rgba(230,195,100,.22); border-radius: 12px; color: #eee9df; background: #18150f; font: inherit; font-size: .82rem; cursor: pointer; }
 .exerciseSelector:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: 3px; }
@@ -150,7 +164,7 @@
 .sparkline { display: block; width: 100%; height: 36px; margin-top: 12px; overflow: visible; }
 .sparkline polyline { fill: none; stroke: #c9a84c; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (max-width: 767px) { .heroTop, .detailHeading, .compareHeader { flex-direction: column; align-items: stretch; } .primaryButton, .detailHeading .secondaryButton { width: 100%; } .heroSummary, .performanceGrid, .weightMetrics, .volumeMetrics, .secondaryGrid, .advancedGrid { grid-template-columns: 1fr; } .trendGrid { grid-template-columns: 1fr; } .recordGrid { grid-template-columns: 1fr; } .measurementGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weightChart, .exerciseChart, .volumeChart { min-height: 140px; } .sectionNavButton { min-width: 104px; } .compareActions .secondaryButton { flex: 1; } }
+@media (max-width: 767px) { .heroTop, .detailHeading, .compareHeader { flex-direction: column; align-items: stretch; } .primaryButton, .detailHeading .secondaryButton { width: 100%; } .heroSummary, .performanceGrid, .weightMetrics, .volumeMetrics, .secondaryGrid, .advancedGrid { grid-template-columns: 1fr; } .trendGrid { grid-template-columns: 1fr; } .recordGroupGrid { grid-template-columns: 1fr; } .measurementGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weightChart, .exerciseChart, .volumeChart { min-height: 140px; } .sectionNavButton { min-width: 104px; } .compareActions .secondaryButton { flex: 1; } }
 @media (min-width: 768px) { .page { padding: 34px 28px 120px; } }
 @media (min-width: 768px) and (max-width: 1050px) { .trendGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .trendCard:last-child { grid-column: 1 / -1; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .primaryButton, .secondaryToggle > svg, .compareCanvas img { transition: none; } .primaryButton:hover { transform: none; } }

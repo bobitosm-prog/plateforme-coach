@@ -2027,6 +2027,11 @@
         "empty": "Complete logged sets to reveal your first records.",
         "unavailable": "Personal records are currently unavailable.",
         "dateUnavailable": "Date unavailable",
+        "muscleGroupsLabel": "Records by muscle group",
+        "recordCount": "{count, plural, one {# record} other {# records}}",
+        "otherGroup": "Other",
+        "showMore": "Show {count} more",
+        "collapse": "Show less",
         "types": { "estimated1rm": "Estimated 1RM", "maxWeight": "Maximum weight", "maxReps": "Maximum repetitions", "bestVolume": "Best volume", "other": "Logged performance" }
       },
       "exercise": {
