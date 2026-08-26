@@ -89,7 +89,10 @@ export function FeedbackDetailDialog({ report, onClose, onUpdated }: Props) {
     try {
       const res = await adminFetch<{
         report: Partial<AdminBugReportRow>
-        email: { method: string; error?: string } | null
+        email: {
+          method: 'sent' | 'skipped' | 'error'
+          code?: 'EMAIL_SEND_FAILED'
+        } | null
       }>(
         `/api/admin/bug-reports/${report.id}/reply`,
         {
@@ -114,11 +117,11 @@ export function FeedbackDetailDialog({ report, onClose, onUpdated }: Props) {
       setStatus(res.report.status || 'en_cours')
 
       if (res.email?.method === 'sent') {
-        toast.success(`Reponse envoyee par email a ${report.user_email}`)
+        toast.success('Réponse envoyée')
       } else if (res.email?.method === 'skipped') {
-        toast.warning('Reponse sauvegardee (SMTP non configure, email non envoye)')
+        toast.warning("Réponse sauvegardée, mais l'email n'a pas été envoyé.")
       } else if (res.email?.method === 'error') {
-        toast.error(`Reponse sauvegardee mais email echoue : ${res.email.error}`)
+        toast.error("Réponse sauvegardée, mais l'email n'a pas pu être envoyé.")
       } else {
         toast.success('Reponse sauvegardee')
       }

@@ -12,7 +12,19 @@ interface SendEmailOptions {
 interface SendResult {
   success: boolean
   method: 'sent' | 'skipped' | 'error'
+  errorCode?: string
   error?: string
+}
+
+function resolveEmailErrorCode(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code?: unknown }).code
+    if (typeof code === 'string' && /^[A-Z0-9_]+$/.test(code)) return code
+  }
+
+  return error instanceof Error && /^[A-Za-z0-9_]+$/.test(error.name)
+    ? error.name
+    : 'UNKNOWN_EMAIL_ERROR'
 }
 
 /**
@@ -48,10 +60,12 @@ export async function sendEmail({
 
     return { success: true, method: 'sent' }
   } catch (err) {
-    console.error('[email] Erreur envoi:', err instanceof Error ? err.name : 'UnknownError')
+    const errorCode = resolveEmailErrorCode(err)
+    console.error('[email] Envoi echoue', { emailMethod: 'error', errorCode })
     return {
       success: false,
       method: 'error',
+      errorCode,
       error: err instanceof Error ? err.message : 'Unknown error',
     }
   }
