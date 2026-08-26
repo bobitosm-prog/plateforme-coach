@@ -2499,7 +2499,74 @@
       },
       "macroTargetDefined": "Consumed / target",
       "macrosError": "Macros unavailable",
-      "macrosErrorCopy": "The data could not be loaded."
+      "macrosErrorCopy": "The data could not be loaded.",
+      "todayMeals": {
+        "eyebrow": "Today’s log",
+        "title": "Meals",
+        "count": "{count} moments",
+        "loading": "Loading meals",
+        "error": "The meal log is unavailable. No value is replaced with zero.",
+        "retry": "Try again",
+        "open": "Open",
+        "partial": "Some sources are unavailable. Logged foods remain visible.",
+        "importError": "The planned meal could not be imported. No food was added.",
+        "meal": {
+          "breakfast": "Breakfast",
+          "lunch": "Lunch",
+          "snack": "Snack",
+          "dinner": "Dinner"
+        },
+        "status": {
+          "empty": "No meal",
+          "planned": "Planned",
+          "partially_logged": "Partially logged",
+          "logged": "Logged",
+          "completed": "Completed"
+        },
+        "action": {
+          "add": "Add",
+          "log": "Log",
+          "continue": "Continue",
+          "view": "View"
+        },
+        "plannedSummary": "{food}",
+        "plannedMeal": "Planned meal",
+        "loggedSummary": "{count} kcal",
+        "emptySummary": "No food logged",
+        "planned": "Planned meal",
+        "logged": "Actual log",
+        "noLoggedFoods": "No food logged for this meal.",
+        "foodFallback": "Food",
+        "quantity": "Quantity in grams",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit quantity",
+        "replace": "Replace food",
+        "delete": "Delete food",
+        "addOptions": "Add options",
+        "mealActions": "Meal actions",
+        "compactEdit": "Edit",
+        "compactSave": "Save",
+        "more": "More",
+        "moreActions": "More actions",
+        "fromPlan": "From plan",
+        "food": "Food",
+        "photo": "Photo",
+        "savedMeals": "My meals",
+        "saveMeal": "Save meal",
+        "copyMeal": "Copy",
+        "clearMeal": "Clear",
+        "nextAction": {
+          "title": "Next action",
+          "retry": "Try loading the log again",
+          "add_first": "Add your first meal",
+          "log_planned": "Log your planned {meal}",
+          "continue_partial": "Continue your {meal}",
+          "complete_protein": "Complete today’s protein intake",
+          "view_journal": "View the journal",
+          "complete_day": "Complete this day with your {meal}"
+        }
+      }
     }
   },
   "coach_dashboard": {

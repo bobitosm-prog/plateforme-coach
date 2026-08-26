@@ -2499,7 +2499,74 @@
       },
       "macroTargetDefined": "Aufgenommen / Ziel",
       "macrosError": "Makros nicht verfügbar",
-      "macrosErrorCopy": "Die Daten konnten nicht geladen werden."
+      "macrosErrorCopy": "Die Daten konnten nicht geladen werden.",
+      "todayMeals": {
+        "eyebrow": "Heutiges Protokoll",
+        "title": "Mahlzeiten",
+        "count": "{count} Zeitpunkte",
+        "loading": "Mahlzeiten werden geladen",
+        "error": "Das Mahlzeitenprotokoll ist nicht verfügbar. Kein Wert wird durch 0 ersetzt.",
+        "retry": "Erneut versuchen",
+        "open": "Öffnen",
+        "partial": "Einige Quellen sind nicht verfügbar. Erfasste Lebensmittel bleiben sichtbar.",
+        "importError": "Die geplante Mahlzeit konnte nicht importiert werden. Es wurde nichts hinzugefügt.",
+        "meal": {
+          "breakfast": "Frühstück",
+          "lunch": "Mittagessen",
+          "snack": "Zwischenmahlzeit",
+          "dinner": "Abendessen"
+        },
+        "status": {
+          "empty": "Keine Mahlzeit",
+          "planned": "Geplant",
+          "partially_logged": "Teilweise erfasst",
+          "logged": "Erfasst",
+          "completed": "Abgeschlossen"
+        },
+        "action": {
+          "add": "Hinzufügen",
+          "log": "Erfassen",
+          "continue": "Fortsetzen",
+          "view": "Ansehen"
+        },
+        "plannedSummary": "{food}",
+        "plannedMeal": "Geplante Mahlzeit",
+        "loggedSummary": "{count} kcal",
+        "emptySummary": "Keine Lebensmittel erfasst",
+        "planned": "Im Plan vorgesehen",
+        "logged": "Tatsächliches Protokoll",
+        "noLoggedFoods": "Für diese Mahlzeit wurden keine Lebensmittel erfasst.",
+        "foodFallback": "Lebensmittel",
+        "quantity": "Menge in Gramm",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "edit": "Menge bearbeiten",
+        "replace": "Lebensmittel ersetzen",
+        "delete": "Lebensmittel löschen",
+        "addOptions": "Optionen zum Hinzufügen",
+        "mealActions": "Mahlzeitenaktionen",
+        "compactEdit": "Ändern",
+        "compactSave": "Sichern",
+        "more": "Mehr",
+        "moreActions": "Weitere Aktionen",
+        "fromPlan": "Aus dem Plan",
+        "food": "Lebensmittel",
+        "photo": "Foto",
+        "savedMeals": "Meine Mahlzeiten",
+        "saveMeal": "Mahlzeit speichern",
+        "copyMeal": "Kopieren",
+        "clearMeal": "Leeren",
+        "nextAction": {
+          "title": "Nächste Aktion",
+          "retry": "Protokoll erneut laden",
+          "add_first": "Erste Mahlzeit hinzufügen",
+          "log_planned": "Geplantes {meal} erfassen",
+          "continue_partial": "{meal} fortsetzen",
+          "complete_protein": "Heutige Proteinzufuhr ergänzen",
+          "view_journal": "Protokoll ansehen",
+          "complete_day": "Diesen Tag mit {meal} ergänzen"
+        }
+      }
     }
   },
   "coach_dashboard": {

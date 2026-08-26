@@ -2499,7 +2499,74 @@
       },
       "macroTargetDefined": "Consommé / objectif",
       "macrosError": "Macros indisponibles",
-      "macrosErrorCopy": "Les données n’ont pas pu être chargées."
+      "macrosErrorCopy": "Les données n’ont pas pu être chargées.",
+      "todayMeals": {
+        "eyebrow": "Journal du jour",
+        "title": "Repas",
+        "count": "{count} moments",
+        "loading": "Chargement des repas",
+        "error": "Le journal des repas est indisponible. Aucune valeur n’est remplacée par zéro.",
+        "retry": "Réessayer",
+        "open": "Ouvrir",
+        "partial": "Certaines sources sont indisponibles. Les aliments enregistrés restent affichés.",
+        "importError": "Le repas prévu n’a pas pu être importé. Aucun aliment n’a été ajouté.",
+        "meal": {
+          "breakfast": "Petit-déjeuner",
+          "lunch": "Déjeuner",
+          "snack": "Collation",
+          "dinner": "Dîner"
+        },
+        "status": {
+          "empty": "Aucun repas",
+          "planned": "Prévu",
+          "partially_logged": "Partiellement enregistré",
+          "logged": "Enregistré",
+          "completed": "Terminé"
+        },
+        "action": {
+          "add": "Ajouter",
+          "log": "Enregistrer",
+          "continue": "Continuer",
+          "view": "Voir"
+        },
+        "plannedSummary": "{food}",
+        "plannedMeal": "Repas planifié",
+        "loggedSummary": "{count} kcal",
+        "emptySummary": "Aucun aliment enregistré",
+        "planned": "Prévu dans le plan",
+        "logged": "Journal réel",
+        "noLoggedFoods": "Aucun aliment enregistré pour ce repas.",
+        "foodFallback": "Aliment",
+        "quantity": "Quantité en grammes",
+        "save": "Valider",
+        "cancel": "Annuler",
+        "edit": "Modifier la quantité",
+        "replace": "Remplacer l’aliment",
+        "delete": "Supprimer l’aliment",
+        "addOptions": "Options d’ajout",
+        "mealActions": "Actions du repas",
+        "compactEdit": "Modifier",
+        "compactSave": "Sauver",
+        "more": "Plus",
+        "moreActions": "Plus d’actions",
+        "fromPlan": "Depuis le plan",
+        "food": "Aliment",
+        "photo": "Photo",
+        "savedMeals": "Mes repas",
+        "saveMeal": "Sauvegarder",
+        "copyMeal": "Copier",
+        "clearMeal": "Vider",
+        "nextAction": {
+          "title": "Prochaine action",
+          "retry": "Réessayer de charger le journal",
+          "add_first": "Ajouter votre premier repas",
+          "log_planned": "Enregistrer votre {meal} prévu",
+          "continue_partial": "Continuer votre {meal}",
+          "complete_protein": "Compléter les protéines de la journée",
+          "view_journal": "Consulter le journal",
+          "complete_day": "Compléter cette journée avec votre {meal}"
+        }
+      }
     }
   },
   "coach_dashboard": {

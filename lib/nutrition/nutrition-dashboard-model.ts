@@ -4,6 +4,8 @@ import type { ActiveCoachResolutionState } from '../coach-relations/repository'
 import { getNutritionDayKey, type NutritionDayWindow, type NutritionWeekWindow } from './nutrition-date'
 import type { NutritionMealType } from './nutrition-plan-generation'
 
+export type { NutritionMealType } from './nutrition-plan-generation'
+
 export type NutritionDomainState = 'loading' | 'ready' | 'partial' | 'empty' | 'error'
 export type NutritionMealStatus = 'empty' | 'planned' | 'partially_logged' | 'logged' | 'completed'
 export type NutritionPlanSource = 'coach' | 'personal' | 'none'
@@ -263,12 +265,14 @@ export function buildNutritionViewModel(input: NutritionViewModelInput): Nutriti
     else if (planned.length) status = 'planned'
     return { type, planned, logged, completed, status }
   })
-  const mealsError = errors.dailyLogs ?? errors.tracking
+  const mealsPartial = Boolean(errors.tracking || activePlan.state === 'error')
   const meals: NutritionDomain<NutritionMealModel[]> = input.loading
     ? { state: 'loading', data: null }
-    : mealsError
-      ? { state: 'error', data: null, errorCode: mealsError }
-      : { state: mealsData.some(meal => meal.status !== 'empty') ? 'ready' : 'empty', data: mealsData }
+    : errors.dailyLogs
+      ? { state: 'error', data: null, errorCode: errors.dailyLogs }
+      : mealsPartial
+        ? { state: 'partial', data: mealsData, errorCode: errors.tracking ?? activePlan.errorCode }
+        : { state: mealsData.some(meal => meal.status !== 'empty') ? 'ready' : 'empty', data: mealsData }
   const hydrationRows = input.hydration.filter(row => row.date === input.selectedDate)
   const waterTarget = numericTarget(input.profile, 'water_goal')
   const hydration: NutritionDomain<{ consumedMl: number; targetMl: number | null }> = input.loading

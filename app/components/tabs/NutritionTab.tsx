@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Droplets, X } from 'lucide-react'
+import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Trash2, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Pencil, CalendarDays, Droplets } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
@@ -15,15 +15,16 @@ import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import {
-  fonts, colors, NUTRITION_DAYS, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
+  fonts, colors, NUTRITION_DAYS, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 import type { ActiveCoachResolutionState } from '../../../lib/coach-relations/repository'
 import useNutritionDashboardModel from '../../hooks/useNutritionDashboardModel'
 import { addNutritionDays, getNutritionDayKey, getNutritionDayWindow } from '../../../lib/nutrition/nutrition-date'
-import { normalizeNutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
+import { normalizeNutritionMealType, type NutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
 import NutritionV2 from '../nutrition-v2/NutritionV2'
+import TodayMeals from '../nutrition-v2/TodayMeals'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
 const MEAL_TIMES: Record<string, string> = {
   petit_dejeuner: '7h00',
@@ -32,6 +33,12 @@ const MEAL_TIMES: Record<string, string> = {
   diner: '19h30',
 }
 const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
+  breakfast: 'petit_dejeuner',
+  lunch: 'dejeuner',
+  snack: 'collation',
+  dinner: 'diner',
+}
 
 type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
 
@@ -51,22 +58,19 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
-  const T = titleStyle
   const [nutritionDay, setNutritionDay] = useState<string>(() => getNutritionDayWindow().dayKey)
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
-  const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
-  const [editQty, setEditQty] = useState('')
   const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
   const [showPhotoCapture, setShowPhotoCapture] = useState(false)
   const [photoMealTarget, setPhotoMealTarget] = useState('')
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
   const [photoResults, setPhotoResults] = useState<any>(null)
   // Meal save/copy/reuse
-  const [mealMenuOpen, setMealMenuOpen] = useState<string | null>(null)
+  const [mealActionError, setMealActionError] = useState<string | null>(null)
   const [showSaveMealPopup, setShowSaveMealPopup] = useState(false)
   const [saveMealData, setSaveMealData] = useState<any>(null)
   const [saveMealName, setSaveMealName] = useState('')
@@ -147,7 +151,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     const updated = { quantity_g: newQty, calories: Math.round((log.calories || 0) * ratio), protein: Math.round((log.protein || 0) * ratio * 10) / 10, carbs: Math.round((log.carbs || 0) * ratio * 10) / 10, fat: Math.round((log.fat || 0) * ratio * 10) / 10 }
     await supabase.from('daily_food_logs').update(updated).eq('id', id)
     await refreshNutrition()
-    setEditingFoodId(null)
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
@@ -218,31 +221,19 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     if (!todayPlan) return
     const foods = getMealByKey(todayPlan.day, mealType)
     if (!foods.length) return
-    setImportingMeal(null)
+    setMealActionError(null)
     const inserts = foods.map(f => ({
       user_id: userId, date: today, meal_type: mealType,
       custom_name: f.name || 'Aliment', quantity_g: f.qty || 100,
       calories: f.kcal, protein: f.prot, carbs: f.carb, fat: f.fat,
     }))
-    await supabase.from('daily_food_logs').insert(inserts)
+    const { error } = await supabase.from('daily_food_logs').insert(inserts)
+    if (error) {
+      setMealActionError(nt('v2.todayMeals.importError'))
+      return
+    }
+    setImportingMeal(null)
     await refreshNutrition()
-  }
-
-  function getMealRecommendation(mealType: MealKey) {
-    const todayPlan = getTodayPlanData()
-    if (!todayPlan) return null
-    const foods = getMealByKey(todayPlan.day, mealType)
-    if (!foods.length) return null
-    return foods.reduce(
-      (acc, f) => ({ kcal: acc.kcal + f.kcal, protein: acc.protein + f.prot, carbs: acc.carbs + f.carb, fat: acc.fat + f.fat }),
-      { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    )
-  }
-
-  function getMealConsumed(mealType: string) {
-    const normalizedTarget = normalizeNutritionMealType(mealType)
-    const logs = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedTarget)
-    return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
   }
 
   // Get today's plan data normalized to canonical DayPlan format.
@@ -577,12 +568,10 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && ((): React.ReactNode => {
-        if (nutritionModel.summary.state === 'loading' || nutritionModel.summary.state === 'error') return null
         const isViewingPast = selectedDate < today
         const waterGoal = profile?.water_goal || 3000
         const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
         const canAddWater = selectedDate === today
-        const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
         const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
@@ -625,6 +614,45 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
+            <TodayMeals
+              model={nutritionModel}
+              selectedDate={selectedDate}
+              actionError={mealActionError}
+              onRetry={() => void refreshNutrition()}
+              onAddFood={mealType => setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])}
+              onImportPlan={mealType => setImportingMeal(NUTRITION_MEAL_TO_KEY[mealType])}
+              onPhoto={mealType => {
+                setPhotoMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
+                setShowPhotoCapture(true)
+              }}
+              onSavedMeals={mealType => {
+                setUseSavedMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
+                setShowSavedMeals(true)
+                supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+                  .then(({ data }: { data: unknown }) => setSavedMeals(Array.isArray(data) ? data : []))
+              }}
+              onSaveMeal={meal => {
+                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                setSaveMealData({ mealType, foods: meal.logged.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) })
+                setSaveMealName('')
+                setSaveMealType(mealType)
+                setShowSaveMealPopup(true)
+              }}
+              onCopyMeal={meal => {
+                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                setCopyMealData({ mealType, foods: meal.logged })
+                setCopyTargetDate('')
+                setCopyTargetMealType(mealType)
+                setShowCopyMealPopup(true)
+              }}
+              onClearMeal={mealType => void clearMeal(NUTRITION_MEAL_TO_KEY[mealType])}
+              onReplaceFood={(mealType, logId) => {
+                setSwappingFoodId(logId)
+                setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])
+              }}
+              onDeleteFood={logId => void deleteDailyLog(logId)}
+              onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
+            />
             {/* Hydration remains a separate legacy module during the progressive migration. */}
             <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: 16, marginBottom: 18, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -643,110 +671,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater500')}</button>
               </div>
             </div>
-
-            {/* Meal sections — start empty, import IA optional */}
-            {MEAL_ORDER.map(mealType => {
-              const rec = getMealRecommendation(mealType)
-              const con = getMealConsumed(mealType)
-              const normalizedMealType = normalizeNutritionMealType(mealType)
-              const logs = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedMealType)
-              const hasPlanFoods = !!rec
-
-              return (
-                <div key={mealType} style={{ ...cardStyle, marginBottom: 12, overflow: 'hidden' }}>
-                  {/* Meal header */}
-                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      {React.createElement(MEAL_ICONS[mealType] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: colors.text }}>{MEAL_LABELS[mealType]}</span>
-                      <span style={{ ...T, marginLeft: 'auto' }}>{con.kcal} kcal</span>
-                      {logs.length > 0 && (
-                        <div style={{ position: 'relative' }}>
-                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
-                          {mealMenuOpen === mealType && (
-                            <div style={{ position: 'absolute', top: 36, right: 0, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.saveMeal')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.copyToDay')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>{nt('mealMenu.clearMeal')}</span></button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {rec && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, fontStyle: 'italic' }}>
-                        {nt('chrome.recommended', { kcal: rec.kcal, p: Math.round(rec.protein), c: Math.round(rec.carbs), f: Math.round(rec.fat) })}
-                      </div>
-                    )}
-                    {logs.length > 0 && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? colors.error : colors.gold, marginTop: 2 }}>
-                        Consommé : {con.kcal} kcal · P:{Math.round(con.protein)}g · G:{Math.round(con.carbs)}g · L:{Math.round(con.fat)}g
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Daily food logs for this meal */}
-                  <div style={{ padding: '0 16px' }}>
-                    {logs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{log.custom_name || log.food_name || 'Aliment'}</div>
-                          {editingFoodId === log.id ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-                              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>g</span>
-                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: colors.onGold, padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
-                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><X size={14} color={colors.textMuted} /></button>
-                            </div>
-                          ) : (
-                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>{log.quantity_g}g</span>
-                              <Pencil size={10} color={colors.textDim} />
-                              <span style={{ fontSize: 10, color: colors.textDim }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
-                            </div>
-                          )}
-                        </div>
-                        <span style={{ ...T, flexShrink: 0 }}>{Math.round(Number(log.calories) || 0)}</span>
-                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.replace')}><RefreshCw size={14} color={colors.textMuted} /></button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.delete')}><Trash2 size={14} color={colors.textMuted} /></button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {logs.length === 0 && (
-                      <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                        <span style={mutedStyle}>{nt('chrome.noFoodAdded')}</span>
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px', flexWrap: 'wrap' }}>
-                      {hasPlanFoods && logs.length === 0 && (() => {
-                        const isViewingToday = selectedDate === today
-                        return (
-                          <button
-                            onClick={() => isViewingToday && setImportingMeal(mealType)}
-                            disabled={!isViewingToday}
-                            title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
-                          >
-                            <Download size={14} /> {nutritionManaged ? nt('actions.import') : nt('actions.importAI')}
-                          </button>
-                        )
-                      })()}
-                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
-                        <Plus size={14} strokeWidth={2.5} /> {nt('chrome.add')}
-                      </button>
-                      {nutritionModel.tools.photoAnalysis && (
-                        <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} aria-label={nt('chrome.scanMeal')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
-                      )}
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false }).then(({ data }: { data: unknown }) => setSavedMeals(Array.isArray(data) ? data : [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
-                    </div>
-                  </div>
-                </div>
-              )
-            }) as React.ReactNode}
 
             {/* Import confirmation modal */}
             {importingMeal && (() => {

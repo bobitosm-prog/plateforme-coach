@@ -132,6 +132,10 @@ describe('Nutrition V2 responsive and accessible structure', () => {
     expect(styles).toContain('@media (max-width: 767px)')
     expect(styles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))')
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
-    expect(styles).not.toMatch(/overflow-x:\s*auto/)
+    expect(styles).toMatch(/\.shell\s*\{[\s\S]*?overflow-x:\s*hidden;/)
+    for (const selector of ['hero', 'macros', 'todayMeals']) {
+      const block = styles.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)\\}`))?.[1] ?? ''
+      expect(block).not.toMatch(/overflow-x:\s*auto/)
+    }
   })
 })
