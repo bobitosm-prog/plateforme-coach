@@ -2440,6 +2440,58 @@
         "lastMessage": "Latest message",
         "nextAppointment": "Next appointment",
         "cta": "Open messages"
+      },
+      "lower": {
+        "today": "Today",
+        "week": "This week",
+        "checkIn": {
+          "label": "Check-in",
+          "missing": "Take a few seconds to record how you feel today.",
+          "loading": "Loading check-in…",
+          "unavailable": "Check-in is temporarily unavailable.",
+          "start": "Complete my check-in",
+          "edit": "Edit",
+          "close": "Close",
+          "saved": "Saved",
+          "sleepSummary": "{hours} h of sleep",
+          "question": "How are you feeling today?",
+          "sleep": "Sleep",
+          "note": "Note for your coach (optional)…",
+          "save": "Save",
+          "update": "Update",
+          "saving": "Saving…",
+          "error": "The check-in could not be saved. Please try again.",
+          "moods": { "fatigue": "Tired", "normal": "Normal", "bien": "Good", "top": "Great", "energie": "Energy" }
+        },
+        "hydration": {
+          "label": "Hydration",
+          "value": "{current} L / {target} L",
+          "add": "+250 ml",
+          "addLabel": "Add 250 ml of water",
+          "error": "Water could not be added. The previous value was restored."
+        },
+        "diagnostic": {
+          "label": "Diagnostic",
+          "empty": "Your weekly review is ready to generate.",
+          "ready": "Your diagnostic is available.",
+          "loading": "Loading diagnostic…",
+          "unavailable": "The diagnostic is temporarily unavailable.",
+          "notAvailable": "Not available yet",
+          "generate": "Generate",
+          "generating": "Generating…",
+          "view": "View diagnostic",
+          "error": "The diagnostic could not be generated. Please try again."
+        },
+        "coachWeek": {
+          "label": "Coach plan",
+          "upcoming": "Up next",
+          "session": "Workout",
+          "today": "Today",
+          "planned": "Planned",
+          "completed": "Done",
+          "cta": "View program"
+        },
+        "days": { "lundi": "Monday", "mardi": "Tuesday", "mercredi": "Wednesday", "jeudi": "Thursday", "vendredi": "Friday", "samedi": "Saturday", "dimanche": "Sunday" }
       }
     },
     "nextAppointment": "Next appointment",

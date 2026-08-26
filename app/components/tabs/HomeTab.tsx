@@ -1,22 +1,18 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations, useLocale } from 'next-intl'
-import { Droplets } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { getTodaySession } from '../../../lib/get-today-session'
 import { toast } from 'sonner'
 import SessionDoneModal from '../training/SessionDoneModal'
-import {
-  colors, fonts, cardStyle, btnPrimary,
-} from '../../../lib/design-tokens'
+import { colors } from '../../../lib/design-tokens'
 import { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { addXP } from '../../../lib/gamification'
 import HomeV2 from '../home-v2/HomeV2'
+import HomeV2LowerSections, { type HomeV2LowerSectionsHandle } from '../home-v2/HomeV2LowerSections'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import type { NextBestAction } from '../../../lib/home/next-best-action'
-import WeeklyDiagnosticCard, { formatWeekRange } from '../home/cards/WeeklyDiagnosticCard'
 import RecoveryModal from '../home/modals/RecoveryModal'
-import SectionTitle from '../ui/SectionTitle'
 
 interface HomeTabProps {
   homeModel: HomeViewModel
@@ -52,15 +48,14 @@ export default function HomeTab({
   avatarRef, uploadAvatar,
   coachProgram, todayKey, todayCoachDay,
   setActiveTab, startProgramWorkout,
-  completedThisWeek, aiAllowed, nextSession,
+  completedThisWeek, nextSession,
   latestDiagnostic, setLatestDiagnostic,
 }: HomeTabProps) {
   const ht = useTranslations('home')
-  const locale = useLocale()
   const router = useRouter()
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
-  const checkInSectionRef = useRef<HTMLDivElement>(null)
+  const lowerSectionsRef = useRef<HomeV2LowerSectionsHandle>(null)
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [waterToday, setWaterToday] = useState(0)
 
@@ -85,14 +80,6 @@ export default function HomeTab({
       setGeneratingDiag(false)
     }
   }
-  const [checkinMood, setCheckinMood] = useState<string | null>(null)
-  const [checkinNote, setCheckinNote] = useState('')
-  const [checkinSleep, setCheckinSleep] = useState<string>('')
-  const [checkinSaved, setCheckinSaved] = useState(false)
-  const [checkinSaving, setCheckinSaving] = useState(false)
-  const checkinSaveRef = useRef<any>(null)
-  const [last7Checkins, setLast7Checkins] = useState<any[]>([])
-  const [checkinEditMode, setCheckinEditMode] = useState(false)
   const [customProgramExercises, setCustomProgramExercises] = useState<any[] | null>(null)
   const [customDayName, setCustomDayName] = useState<string | null>(null)
   const [customIsRest, setCustomIsRest] = useState(false)
@@ -101,17 +88,27 @@ export default function HomeTab({
   // Fetch water
   useEffect(() => {
     if (!session?.user?.id) return
-    const today = new Date().toISOString().split('T')[0]
-    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', today).limit(50)
+    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', homeModel.today.localDateKey).limit(50)
       .then(({ data }: any) => {
         setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
       })
-  }, [session?.user?.id])
+  }, [homeModel.today.localDateKey, session?.user?.id, supabase])
 
-  async function addWater(ml: number) {
-    if (!session?.user?.id) return
-    await supabase.from('water_intake').insert({ user_id: session.user.id, amount_ml: ml, date: new Date().toISOString().split('T')[0] })
-    setWaterToday(prev => prev + ml)
+  async function addWater(ml: number): Promise<boolean> {
+    if (!session?.user?.id) return false
+    setWaterToday(previous => previous + ml)
+    try {
+      const { error } = await supabase.from('water_intake').insert({
+        user_id: session.user.id,
+        amount_ml: ml,
+        date: homeModel.today.localDateKey,
+      })
+      if (!error) return true
+    } catch {
+      // The optimistic value is reverted below for both transport and DB errors.
+    }
+    setWaterToday(previous => Math.max(0, previous - ml))
+    return false
   }
 
   // Today session check
@@ -179,52 +176,31 @@ export default function HomeTab({
       setMuscleStatus(calculateMuscleStatus(sets))
     })
 
-    // Fetch last 7 days check-ins for mini-timeline
-    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', userId).gte('date', weekAgo).order('date')
-      .then(({ data }: any) => setLast7Checkins(data || []))
-  }, [session?.user?.id])
+  }, [ht, session?.user?.id, supabase])
 
-  // Mount-only: load checkin mood/note/sleep (re-fetching would trigger autosave)
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const todayDate = new Date().toISOString().split('T')[0]
-    supabase.from('daily_checkins').select('*').eq('user_id', session.user.id).eq('date', todayDate).maybeSingle()
-      .then(({ data, error }: any) => {
-        if (error) console.error('[CheckIn] Fetch error:', error.message, '— Table may not exist. Run the migration in Supabase.')
-        if (data) { setCheckinMood(data.mood); setCheckinNote(data.note || ''); setCheckinSleep(data.sleep_hours?.toString() || ''); setCheckinSaved(true) }
-      })
-  }, [session?.user?.id])
-
-  // Save check-in helper (shared by auto-save and manual button)
-  const saveCheckin = async () => {
-    if (!session?.user?.id || !checkinMood) return
-    setCheckinSaving(true)
-    const todayDate = new Date().toISOString().split('T')[0]
-    const payload = { user_id: session.user.id, date: todayDate, mood: checkinMood, note: checkinNote || null, sleep_hours: checkinSleep ? parseFloat(checkinSleep) : null }
-    const { error } = await supabase.from('daily_checkins').upsert(payload, { onConflict: 'user_id,date' })
-    setCheckinSaving(false)
-    if (error) {
-      console.error('[CheckIn] Save error:', error.message, error)
-      toast.error(`Check-in error: ${error.message}`)
+  const saveCheckin = async (
+    draft: { mood: string | null; note: string; sleep: string },
+    wasCompleted: boolean,
+  ): Promise<boolean> => {
+    if (!session?.user?.id || !draft.mood) return false
+    const payload = {
+      user_id: session.user.id,
+      date: homeModel.today.localDateKey,
+      mood: draft.mood,
+      note: draft.note || null,
+      sleep_hours: draft.sleep ? parseFloat(draft.sleep) : null,
+    }
+    try {
+      const { error } = await supabase.from('daily_checkins').upsert(payload, { onConflict: 'user_id,date' })
+      if (error) throw error
+    } catch (error) {
+      console.error('[CheckIn] Save error:', error)
+      toast.error(ht('v2.lower.checkIn.error'))
       return false
     }
-    if (!checkinSaved) { try { await addXP(session.user.id, 10, supabase) } catch {} }
-    setCheckinSaved(true)
-    // Reload week data for compact card
-    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_checkins').select('date, mood, sleep_hours').eq('user_id', session.user.id).gte('date', weekAgo).order('date')
-      .then(({ data }: any) => setLast7Checkins(data || []))
+    if (!wasCompleted) { try { await addXP(session.user.id, 10, supabase) } catch {} }
     return true
   }
-
-  // Auto-save check-in (debounced 800ms)
-  useEffect(() => {
-    if (!session?.user?.id || !checkinMood) return
-    clearTimeout(checkinSaveRef.current)
-    checkinSaveRef.current = setTimeout(() => saveCheckin(), 800)
-    return () => clearTimeout(checkinSaveRef.current)
-  }, [checkinMood, checkinNote, checkinSleep])
 
   // Custom program is authoritative: if it says rest, it's rest — don't fall through to coach
   const todayExercises = customIsRest ? [] : (customProgramExercises?.length ? customProgramExercises : todayCoachDay?.exercises || [])
@@ -243,8 +219,7 @@ export default function HomeTab({
         return
       }
       case 'complete_check_in':
-        setCheckinEditMode(true)
-        requestAnimationFrame(() => checkInSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        lowerSectionsRef.current?.openCheckIn()
         return
       case 'open_nutrition':
         setActiveTab('nutrition')
@@ -283,186 +258,26 @@ export default function HomeTab({
           onOpenAthena: () => setActiveTab('coachIA'),
           onOpenMessages: () => setActiveTab('messages'),
         }}
-      />
-
-      {/* Legacy sections not yet migrated to Home V2 */}
-      <div style={{ padding: '0 20px 16px' }}>
-        {/* ═══ MA SEMAINE — Weekly AI Diagnostic ═══ */}
-        <SectionTitle noPadding title={ht('weekTitle')} trailing={latestDiagnostic ? formatWeekRange(latestDiagnostic.week_start, locale) : undefined} />
-        <WeeklyDiagnosticCard
+      >
+        <HomeV2LowerSections
+          ref={lowerSectionsRef}
+          model={homeModel}
+          waterToday={waterToday}
+          waterTarget={homeModel.hydration.targetMl ?? profile?.water_goal ?? 3000}
           diagnostic={latestDiagnostic}
-          onViewDetails={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
-          onGenerate={handleGenerateDiagnostic}
-          generating={generatingDiag}
-          generationError={diagnosticGenerationError}
+          generatingDiagnostic={generatingDiag}
+          diagnosticGenerationError={diagnosticGenerationError}
+          coachProgram={coachProgram}
+          nextSession={nextSession ?? null}
+          completedThisWeek={completedThisWeek}
+          todayKey={todayKey}
+          onSaveCheckIn={saveCheckin}
+          onAddWater={addWater}
+          onGenerateDiagnostic={handleGenerateDiagnostic}
+          onViewDiagnostic={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
+          onOpenTraining={() => setActiveTab('training')}
         />
-
-        {/* ═══ HYDRATATION ═══ */}
-        <SectionTitle noPadding title={ht('hydration')} />
-        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-          <Droplets size={18} color={colors.gold} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 16, color: colors.gold }}>{(waterToday / 1000).toFixed(1)}L <span style={{ fontSize: 11, color: colors.textMuted }}>/ {((profile?.water_goal || 3000) / 1000).toFixed(1)}L</span></div>
-          </div>
-          <button onClick={() => addWater(250)} className="active:scale-95" style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.15s' }}>{ht('addWater')}</button>
-        </div>
-      </div>
-
-      {/* ═══ CHECK-IN — COMPACT (saved) or FULL (editing) ═══ */}
-      <div ref={checkInSectionRef} style={{ padding: '0 24px', scrollMarginTop: 16 }}>
-        {checkinSaved && !checkinEditMode ? (
-          /* ── COMPACT CARD: week calendar ── */
-          <>
-            <SectionTitle noPadding title={ht('checkinTitle')} action={{ label: ht('viewAll'), onClick: () => setActiveTab('progress') }} />
-            <div data-no-tab-swipe="true" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 12 }}>
-                {(() => {
-                  const moodIcon = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
-                  const days: any[] = []
-                  for (let i = 6; i >= 0; i--) {
-                    const d = new Date(Date.now() - i * 86400000)
-                    const ds = d.toISOString().split('T')[0]
-                    const c = last7Checkins.find((x: any) => x.date === ds)
-                    days.push({ ds, day: d.toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'narrow' }).toUpperCase(), isToday: i === 0, c })
-                  }
-                  return days.map((d) => (
-                    <div key={d.ds} onClick={() => { if (d.isToday) setCheckinEditMode(true) }} style={{
-                      background: d.isToday ? 'rgba(201,168,76,0.1)' : 'transparent',
-                      border: d.isToday ? '1px solid rgba(201,168,76,0.3)' : '1px solid rgba(201,168,76,0.05)',
-                      borderRadius: 10, padding: '8px 2px', cursor: d.isToday ? 'pointer' : 'default', textAlign: 'center',
-                    }}>
-                      <div style={{ fontSize: 8, fontWeight: 700, color: d.isToday ? colors.gold : 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', marginBottom: 4 }}>{d.day}</div>
-                      <div style={{ fontSize: 18, height: 22, opacity: d.c ? 1 : 0.2 }}>{d.c ? moodIcon(d.c.mood) : '—'}</div>
-                      <div style={{ fontSize: 9, color: d.c?.sleep_hours ? colors.gold : 'rgba(255,255,255,0.2)', fontWeight: 600, marginTop: 4 }}>{d.c?.sleep_hours ? `${d.c.sleep_hours}h` : '—'}</div>
-                    </div>
-                  ))
-                })()}
-              </div>
-              <button onClick={() => setCheckinEditMode(true)} style={{ width: '100%', padding: '8px 0', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.7)', fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{ht('editToday')}</button>
-            </div>
-          </>
-        ) : (
-          /* ── FULL CHECK-IN CARD ── */
-          <>
-          <SectionTitle noPadding title={ht('checkinTitle')} action={checkinSaved ? { label: ht('close'), onClick: () => setCheckinEditMode(false) } : undefined} />
-          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-            <div style={{ fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12 }}>{ht('checkinQuestion')}</div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-              {[
-                { id: 'fatigue', icon: '😴', label: ht('moodFatigue') },
-                { id: 'normal', icon: '😐', label: ht('moodNormal') },
-                { id: 'bien', icon: '💪', label: ht('moodBien') },
-                { id: 'top', icon: '🔥', label: ht('moodTop') },
-                { id: 'energie', icon: '⚡', label: ht('moodEnergie') },
-              ].map(m => (
-                <button key={m.id} onClick={() => setCheckinMood(m.id)} style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-                }}>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
-                    background: checkinMood === m.id ? colors.goldDim : colors.surface,
-                    border: `1.5px solid ${checkinMood === m.id ? colors.goldRule : colors.goldBorder}`,
-                    transform: checkinMood === m.id ? 'scale(1.08)' : 'scale(1)', transition: 'all 200ms',
-                  }}>{m.icon}</div>
-                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: checkinMood === m.id ? colors.gold : colors.textDim }}>{m.label}</span>
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 9, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>{ht('sleep')}</span>
-              <input type="number" step="0.5" min="0" max="14" placeholder="7.5" value={checkinSleep} onChange={e => setCheckinSleep(e.target.value)}
-                style={{ width: 60, padding: '7px 8px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-              <span style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>h</span>
-              <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 2, background: colors.gold, width: `${Math.min(100, (parseFloat(checkinSleep) || 0) / 8 * 100)}%`, transition: 'width 300ms' }} />
-              </div>
-              <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDim, flexShrink: 0 }}>/ 8h</span>
-            </div>
-            <textarea value={checkinNote} onChange={e => setCheckinNote(e.target.value.slice(0, 200))} placeholder={ht('checkinPlaceholder')} rows={2} maxLength={200}
-              style={{ width: '100%', padding: '8px 12px', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, outline: 'none', resize: 'none', marginBottom: 12 }} />
-            <button disabled={!checkinMood || checkinSaving} onClick={() => { clearTimeout(checkinSaveRef.current); saveCheckin().then(ok => { if (ok) setCheckinEditMode(false) }) }}
-              style={{
-                ...btnPrimary,
-                width: '100%', padding: 13,
-                opacity: checkinMood ? 1 : 0.4,
-                cursor: checkinMood && !checkinSaving ? 'pointer' : 'not-allowed',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}>
-              {checkinSaving ? (<><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: colors.onGold, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />{ht('saving')}</>)
-                : checkinSaved ? ht('update') : ht('validateCheckin')}
-            </button>
-          </div>
-          </>
-        )}
-      </div>
-
-      <div style={{ padding: '8px 24px 16px', display: 'flex', flexDirection: 'column' }}>
-
-        {/* ═══ PROCHAINE SEANCE — coach-managed clients only ═══ */}
-        {!aiAllowed && coachProgram && nextSession && (
-          <div>
-            <SectionTitle noPadding title={ht('nextSession')} />
-            <div style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 20 }}>
-              <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                {ht('suggestedForYou')}
-              </div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, letterSpacing: 1, marginBottom: 4 }}>
-                {(nextSession.day.name || 'Seance').toUpperCase()}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, marginBottom: 12 }}>
-                {ht('exerciseCount', { count: nextSession.day.exercises?.length || 0 })}
-              </div>
-              <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, fontStyle: 'italic', marginBottom: 16 }}>
-                {nextSession.reason}
-              </div>
-              <button
-                onClick={() => startProgramWorkout(nextSession.day, nextSession.day.exercises || [], nextSession.weekday)}
-                style={{ ...btnPrimary, width: '100%', padding: 14, borderRadius: 14 }}
-              >
-                {ht('launchNow')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ TA SEMAINE — coach-managed clients only ═══ */}
-        {!aiAllowed && coachProgram && (
-          <div>
-            <SectionTitle noPadding title={ht('yourWeek')} />
-            <div data-no-tab-swipe="true" style={{ ...cardStyle, background: colors.surface2, border: `1px solid ${colors.divider}`, padding: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {(['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'] as const).map((dayKey, idx) => {
-                  const label = ht(dayKey)
-                  const jsDay = new Date().getDay()
-                  const todayIdx = jsDay === 0 ? 6 : jsDay - 1
-                  const isToday = idx === todayIdx
-                  const completed = completedThisWeek?.has(idx)
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: '10px 4px',
-                        textAlign: 'center',
-                        borderRadius: 10,
-                        background: completed ? colors.goldDim : 'rgba(255,255,255,0.02)',
-                        border: isToday ? `1.5px solid ${colors.gold}` : '1px solid rgba(255,255,255,0.05)',
-                      }}
-                    >
-                      <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: isToday ? colors.gold : colors.textMuted, letterSpacing: 0.5 }}>{label}</div>
-                      <div style={{ fontSize: 18, marginTop: 4, color: completed ? colors.gold : colors.textDim }}>
-                        {completed ? '✓' : '·'}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div style={{ height: 20 }} />
-      </div>
+      </HomeV2>
 
       {/* ═══ RECOVERY MODAL ═══ */}
       {showRecoveryModal && (

@@ -2440,6 +2440,58 @@
         "lastMessage": "Dernier message",
         "nextAppointment": "Prochain rendez-vous",
         "cta": "Ouvrir les messages"
+      },
+      "lower": {
+        "today": "Aujourd’hui",
+        "week": "Cette semaine",
+        "checkIn": {
+          "label": "Check-in",
+          "missing": "Prends quelques secondes pour noter ton état du jour.",
+          "loading": "Chargement du check-in…",
+          "unavailable": "Le check-in est momentanément indisponible.",
+          "start": "Faire mon check-in",
+          "edit": "Modifier",
+          "close": "Fermer",
+          "saved": "Enregistré",
+          "sleepSummary": "{hours} h de sommeil",
+          "question": "Comment te sens-tu aujourd’hui ?",
+          "sleep": "Sommeil",
+          "note": "Note pour ton coach (facultatif)…",
+          "save": "Enregistrer",
+          "update": "Mettre à jour",
+          "saving": "Enregistrement…",
+          "error": "Le check-in n’a pas pu être enregistré. Réessaie.",
+          "moods": { "fatigue": "Fatigué", "normal": "Normal", "bien": "Bien", "top": "Top", "energie": "Énergie" }
+        },
+        "hydration": {
+          "label": "Hydratation",
+          "value": "{current} L / {target} L",
+          "add": "+250 ml",
+          "addLabel": "Ajouter 250 ml d’eau",
+          "error": "L’eau n’a pas pu être ajoutée. La valeur précédente a été restaurée."
+        },
+        "diagnostic": {
+          "label": "Diagnostic",
+          "empty": "Ton bilan hebdomadaire est prêt à être généré.",
+          "ready": "Ton diagnostic est disponible.",
+          "loading": "Chargement du diagnostic…",
+          "unavailable": "Le diagnostic est momentanément indisponible.",
+          "notAvailable": "Pas encore disponible",
+          "generate": "Générer",
+          "generating": "Génération…",
+          "view": "Voir le diagnostic",
+          "error": "Le diagnostic n’a pas pu être généré. Réessaie."
+        },
+        "coachWeek": {
+          "label": "Planning coach",
+          "upcoming": "À venir",
+          "session": "Séance",
+          "today": "Aujourd’hui",
+          "planned": "Prévu",
+          "completed": "Fait",
+          "cta": "Voir le programme"
+        },
+        "days": { "lundi": "Lundi", "mardi": "Mardi", "mercredi": "Mercredi", "jeudi": "Jeudi", "vendredi": "Vendredi", "samedi": "Samedi", "dimanche": "Dimanche" }
       }
     },
     "nextAppointment": "Prochain rendez-vous",

@@ -37,6 +37,6 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       <AthenaInsightCard insight={athenaInsight} onOpenAthena={actions.onOpenAthena} />
       <ActiveCoachCard coach={model.coach} onOpenMessages={actions.onOpenMessages} />
     </div>
-    {children && <div className={styles.legacy}>{children}</div>}
+    {children && <div className={styles.lowerContent}>{children}</div>}
   </div>
 }

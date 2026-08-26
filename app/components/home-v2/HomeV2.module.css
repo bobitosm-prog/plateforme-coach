@@ -24,7 +24,62 @@
 .error { border-color: rgba(248,113,113,.3); }
 .skeletonLine { height: 18px; max-width: 480px; margin: 12px 0; border-radius: 8px; background: linear-gradient(90deg,#26231d,#373127,#26231d); background-size: 200% 100%; animation: shimmer 1.4s ease infinite; }
 .skeletonTitle { height: 48px; max-width: 620px; }
-.legacy { margin-top: 22px; }
+.lowerContent { margin-top: 24px; }
+.lowerSections { display: flex; flex-direction: column; gap: 26px; padding-bottom: 18px; }
+.lowerSection { min-width: 0; }
+.lowerSectionTitle { margin: 0 0 12px; color: #eee9df; font-size: .82rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.lowerGrid, .weeklyGrid { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+.quickCard, .weeklyCard { min-width: 0; padding: 18px; border: 1px solid rgba(201,168,76,.15); border-radius: 18px; background: #12110f; box-sizing: border-box; }
+.quickCard:focus { outline: none; }
+.quickCard:focus-visible { outline: 3px solid rgba(230,195,100,.42); outline-offset: 3px; }
+.quickCardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.quickCardHeader > :first-child { min-width: 0; }
+.quickEyebrow { margin: 0 0 7px; color: #c9a84c; font-size: .75rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.quickCopy { margin: 0; color: #aaa294; font-size: .86rem; line-height: 1.45; }
+.compactButton { display: inline-flex; align-items: center; justify-content: center; min-width: 96px; min-height: 44px; padding: 0 13px; flex-shrink: 0; border: 1px solid rgba(230,195,100,.28); border-radius: 12px; color: #e6c364; background: rgba(201,168,76,.06); font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.compactButton:disabled { cursor: wait; opacity: .58; }
+.compactButton:focus-visible, .textButton:focus-visible, .moodButton:focus-visible, .saveCheckIn:focus-visible, .fieldRow input:focus-visible, .noteField textarea:focus-visible { outline: 3px solid rgba(230,195,100,.42); outline-offset: 3px; }
+.checkInSummary { display: flex; align-items: center; gap: 10px; color: #f7f4ed; }
+.checkInSummary > div { display: flex; flex-direction: column; gap: 4px; }
+.checkInSummary strong { font-size: .95rem; }
+.checkInSummary span:not(.moodSummary) { display: inline-flex; align-items: center; gap: 5px; color: #918a7e; font-size: .76rem; }
+.moodSummary { font-size: 1.6rem; line-height: 1; }
+.checkInPanel { margin-top: 18px; padding-top: 17px; border-top: 1px solid rgba(255,255,255,.065); }
+.formQuestion { margin: 0 0 12px; color: #d8d0c3; font-size: .85rem; }
+.moodGrid { display: grid; grid-template-columns: repeat(5,minmax(48px,1fr)); gap: 6px; }
+.moodButton { display: flex; min-width: 0; min-height: 64px; padding: 7px 2px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid rgba(201,168,76,.12); border-radius: 12px; color: #918a7e; background: rgba(255,255,255,.018); font: inherit; cursor: pointer; }
+.moodButton[data-selected='true'] { border-color: rgba(230,195,100,.55); color: #e6c364; background: rgba(201,168,76,.1); }
+.moodButton > span { font-size: 1.35rem; line-height: 1; }
+.moodButton small { overflow: hidden; max-width: 100%; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.fieldRow { display: flex; align-items: center; gap: 9px; margin-top: 14px; color: #918a7e; font-size: .76rem; font-weight: 700; text-transform: uppercase; }
+.fieldRow input { width: 72px; min-height: 42px; padding: 0 9px; border: 1px solid rgba(201,168,76,.2); border-radius: 10px; color: #f7f4ed; background: #0d0c0a; font: inherit; font-size: 1rem; text-align: center; }
+.noteField { display: block; margin-top: 12px; }
+.noteField textarea { width: 100%; min-height: 70px; padding: 11px 12px; border: 1px solid rgba(201,168,76,.2); border-radius: 11px; color: #f7f4ed; background: #0d0c0a; box-sizing: border-box; font: inherit; font-size: .82rem; line-height: 1.45; resize: vertical; }
+.saveCheckIn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 12px; }
+.saveCheckIn:disabled { cursor: not-allowed; opacity: .46; }
+.hydrationRow { display: flex; align-items: center; gap: 12px; }
+.lowerIcon { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 11px; color: #d9b85d; background: rgba(201,168,76,.09); }
+.hydrationValue { min-width: 0; flex: 1; }
+.hydrationValue strong { color: #f7f4ed; font-size: 1rem; }
+.hydrationTrack { height: 6px; margin-top: 15px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.06); }
+.hydrationTrack span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#a88b3c,#e6c364); transition: width 180ms ease; }
+.inlineError { margin: 10px 0 0; color: #fca5a5; font-size: .78rem; line-height: 1.4; }
+.weeklyCard { display: flex; min-height: 185px; flex-direction: column; }
+.diagnosticSummary { display: flex; align-items: center; gap: 13px; }
+.diagnosticSummary > strong { color: #e6c364; font-size: 1.65rem; line-height: 1; }
+.diagnosticSummary small { color: #827b70; font-size: .72rem; }
+.diagnosticSummary p { display: -webkit-box; margin: 0; overflow: hidden; color: #aaa294; font-size: .8rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.textButton { display: inline-flex; align-items: center; justify-content: space-between; gap: 7px; min-height: 44px; margin-top: auto; padding: 14px 0 0; border: 0; color: #e6c364; background: transparent; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; }
+.textButton:disabled { cursor: wait; opacity: .58; }
+.upcomingSession { display: flex; margin: 0; flex-direction: column; gap: 4px; color: #918a7e; font-size: .74rem; }
+.upcomingSession span { color: #c9a84c; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.upcomingSession strong { overflow-wrap: anywhere; color: #f7f4ed; font-size: .92rem; }
+.coachWeekList { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 15px; }
+.coachWeekItem { display: flex; min-width: 0; padding: 9px 10px; align-items: center; justify-content: space-between; gap: 6px; border: 1px solid rgba(255,255,255,.055); border-radius: 10px; color: #918a7e; background: rgba(255,255,255,.018); font-size: .75rem; }
+.coachWeekItem[data-today='true'] { border-color: rgba(230,195,100,.32); color: #e6c364; }
+.coachWeekItem strong { display: inline-flex; align-items: center; gap: 3px; color: #d8d0c3; font-size: .72rem; }
+.spinner { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .sectionTitle { margin: 0 0 12px; color: #eee9df; font-size: 1rem; letter-spacing: .01em; }
 .statusSection { margin-top: 24px; }
 .statusGrid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -81,7 +136,7 @@
 .coachDetail strong { color: #d8d0c3; font-weight: 650; }
 .coachDetail small { display: block; max-width: 360px; margin-top: 2px; overflow: hidden; color: #827b70; font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .skeletonLine { animation: none; } .button { transition: none; } .button:hover { transform: none; } }
-@media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner { animation: none; } .button, .hydrationTrack span { transition: none; } .button:hover { transform: none; } }
+@media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
-@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } }
+@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }

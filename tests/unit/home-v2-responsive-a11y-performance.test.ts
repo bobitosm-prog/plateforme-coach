@@ -91,7 +91,7 @@ describe('Home V2 performance and architecture guard', () => {
 
   it('keeps weekly diagnostic generation explicit and exposes failures', () => {
     expect(legacyHome).toContain("fetch('/api/weekly-diagnostic', { method: 'POST' })")
-    expect(legacyHome).toContain('onGenerate={handleGenerateDiagnostic}')
+    expect(legacyHome).toContain('onGenerateDiagnostic={handleGenerateDiagnostic}')
     expect(diagnostic).toContain('role="status"')
     expect(diagnostic).toContain('aria-busy={generating}')
   })

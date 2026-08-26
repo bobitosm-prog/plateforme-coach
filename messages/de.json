@@ -2440,6 +2440,58 @@
         "lastMessage": "Letzte Nachricht",
         "nextAppointment": "Nächster Termin",
         "cta": "Nachrichten öffnen"
+      },
+      "lower": {
+        "today": "Heute",
+        "week": "Diese Woche",
+        "checkIn": {
+          "label": "Check-in",
+          "missing": "Nimm dir kurz Zeit und halte fest, wie du dich heute fühlst.",
+          "loading": "Check-in wird geladen…",
+          "unavailable": "Der Check-in ist vorübergehend nicht verfügbar.",
+          "start": "Check-in ausfüllen",
+          "edit": "Bearbeiten",
+          "close": "Schliessen",
+          "saved": "Gespeichert",
+          "sleepSummary": "{hours} Std. Schlaf",
+          "question": "Wie fühlst du dich heute?",
+          "sleep": "Schlaf",
+          "note": "Notiz für deinen Coach (optional)…",
+          "save": "Speichern",
+          "update": "Aktualisieren",
+          "saving": "Wird gespeichert…",
+          "error": "Der Check-in konnte nicht gespeichert werden. Bitte versuche es erneut.",
+          "moods": { "fatigue": "Müde", "normal": "Normal", "bien": "Gut", "top": "Super", "energie": "Energie" }
+        },
+        "hydration": {
+          "label": "Hydrierung",
+          "value": "{current} L / {target} L",
+          "add": "+250 ml",
+          "addLabel": "250 ml Wasser hinzufügen",
+          "error": "Das Wasser konnte nicht hinzugefügt werden. Der vorherige Wert wurde wiederhergestellt."
+        },
+        "diagnostic": {
+          "label": "Wochenanalyse",
+          "empty": "Deine Wochenanalyse kann jetzt erstellt werden.",
+          "ready": "Deine Analyse ist verfügbar.",
+          "loading": "Analyse wird geladen…",
+          "unavailable": "Die Analyse ist vorübergehend nicht verfügbar.",
+          "notAvailable": "Noch nicht verfügbar",
+          "generate": "Erstellen",
+          "generating": "Wird erstellt…",
+          "view": "Analyse ansehen",
+          "error": "Die Analyse konnte nicht erstellt werden. Bitte versuche es erneut."
+        },
+        "coachWeek": {
+          "label": "Coach-Plan",
+          "upcoming": "Als Nächstes",
+          "session": "Training",
+          "today": "Heute",
+          "planned": "Geplant",
+          "completed": "Erledigt",
+          "cta": "Programm ansehen"
+        },
+        "days": { "lundi": "Montag", "mardi": "Dienstag", "mercredi": "Mittwoch", "jeudi": "Donnerstag", "vendredi": "Freitag", "samedi": "Samstag", "dimanche": "Sonntag" }
       }
     },
     "nextAppointment": "Nächster Termin",
