@@ -307,8 +307,9 @@ describe('Progression V2 architecture guards', () => {
     expect(analytics).toContain('weightHistory')
   })
 
-  it('loads detailed private photo URLs only when the Photos section is active', () => {
-    expect(progressTab).toContain("activePill !== 'photos'")
+  it('loads detailed private photo URLs only when the Photos section is open', () => {
+    expect(progressTab).toContain('shouldLoadSignedPhotoUrls(photosOpen, progressPhotos.length)')
+    expect(progressTab).toContain("const [photosOpen, setPhotosOpen] = useState(false)")
     expect(progressTab).toContain('createSignedUrl(photo.photo_url, 3600)')
   })
 

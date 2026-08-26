@@ -117,8 +117,8 @@ describe('Progression V2 weight/body architecture', () => {
   it('removes both legacy weight charts and the legacy measurement summary only', () => {
     expect(progressTab).not.toContain('SECTION 4 — ÉVOLUTION DU POIDS')
     expect(progressTab).not.toContain('SECTION 7 — MENSURATIONS')
-    expect(progressTab).toContain('showWeightChart={false}')
-    expect(analytics).toContain('showWeightChart && weightHistoryFull.length > 1')
+    expect(analytics).not.toContain('weightHistoryFull')
+    expect(analytics).not.toContain('showWeightChart')
     expect(progressTab).not.toContain('setShowWeight')
     expect(progressTab).not.toContain('setShowMeasure')
   })
@@ -138,7 +138,7 @@ describe('Progression V2 weight/body architecture', () => {
 
   it('preserves V2 records, photos, wellbeing and advanced analytics', () => {
     expect(shell).toContain('<PersonalRecordsV2')
-    for (const marker of ['TRANSFORMATION', 'MON BIEN-ÊTRE', '<AnalyticsSection']) {
+    for (const marker of ['<TransformationPhotos', '<WellbeingCompact', '<AnalyticsSection']) {
       expect(progressTab).toContain(marker)
     }
   })

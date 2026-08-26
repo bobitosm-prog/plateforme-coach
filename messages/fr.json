@@ -2054,6 +2054,58 @@
         "definition": "Charge totale déplacée sur les séries enregistrées.",
         "empty": "Enregistre des séries avec charge et répétitions pour afficher le volume.",
         "unavailable": "Le volume hebdomadaire ne peut pas être affiché pour le moment."
+      },
+      "history": {
+        "eyebrow": "Historique secondaire",
+        "title": "Historique et outils",
+        "subtitle": "Photos, bien-être, analyses avancées et exports, regroupés sans alourdir le suivi principal.",
+        "navigationLabel": "Navigation Progression",
+        "navigation": { "weight": "Poids", "performance": "Performance", "body": "Corps", "history": "Historique" },
+        "photos": {
+          "title": "Transformation",
+          "subtitle": "Photos et comparaison avant/après",
+          "add": "Ajouter une photo",
+          "compare": "Comparer",
+          "emptyTitle": "Aucune photo",
+          "empty": "Ajoute une photo quand tu souhaites documenter ton évolution.",
+          "unavailable": "Les photos ne peuvent pas être chargées pour le moment.",
+          "before": "Avant",
+          "after": "Après",
+          "comparisonTitle": "Comparaison de photos",
+          "align": "Aligner",
+          "aligning": "Alignement",
+          "alignError": "L’alignement automatique est indisponible.",
+          "close": "Fermer la comparaison",
+          "sliderLabel": "Position de comparaison avant et après",
+          "photoNumber": "Photo {number}"
+        },
+        "wellbeing": {
+          "title": "Bien-être",
+          "subtitle": "Tendances compactes de l’humeur et du sommeil sur la période.",
+          "mood": "Humeur",
+          "sleep": "Sommeil",
+          "empty": "Ajoute des check-ins pour faire apparaître les tendances.",
+          "partial": "Une seule des deux tendances dispose de données suffisantes.",
+          "unavailable": "Les données de bien-être sont indisponibles."
+        },
+        "advanced": {
+          "title": "Analyses avancées",
+          "subtitle": "Volume par muscle et effort perçu, chargés à la demande.",
+          "rir": "Effort perçu / RIR",
+          "volumeHelp": "Séries et tonnage enregistrés sur les 28 derniers jours.",
+          "volumeSummary": "Répartition disponible pour {count} groupes musculaires.",
+          "rirHelp": "Moyenne affichée à partir de {count} séries RIR renseignées par muscle.",
+          "rirSummary": "RIR fiable disponible pour {count} groupes musculaires.",
+          "insufficient": "Données insuffisantes pour cette analyse."
+        },
+        "exports": {
+          "eyebrow": "Tes données",
+          "title": "Exporter mes données",
+          "subtitle": "Les formats existants sont regroupés au même endroit.",
+          "csv": "CSV analytics",
+          "xlsx": "XLSX poids et mensurations",
+          "done": "Export créé"
+        }
       }
     },
     "pills": {

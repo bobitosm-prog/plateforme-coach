@@ -2054,6 +2054,58 @@
         "definition": "Gesamtlast aller protokollierten Sätze.",
         "empty": "Protokolliere Sätze mit Last und Wiederholungen, um das Volumen anzuzeigen.",
         "unavailable": "Das wöchentliche Volumen ist derzeit nicht verfügbar."
+      },
+      "history": {
+        "eyebrow": "Sekundärer Verlauf",
+        "title": "Verlauf und Werkzeuge",
+        "subtitle": "Fotos, Wohlbefinden, erweiterte Analysen und Exporte übersichtlich zusammengefasst.",
+        "navigationLabel": "Fortschrittsnavigation",
+        "navigation": { "weight": "Gewicht", "performance": "Leistung", "body": "Körper", "history": "Verlauf" },
+        "photos": {
+          "title": "Transformation",
+          "subtitle": "Fotos und Vorher-Nachher-Vergleich",
+          "add": "Foto hinzufügen",
+          "compare": "Vergleichen",
+          "emptyTitle": "Keine Fotos",
+          "empty": "Füge ein Foto hinzu, wenn du deine Entwicklung dokumentieren möchtest.",
+          "unavailable": "Fotos können derzeit nicht geladen werden.",
+          "before": "Vorher",
+          "after": "Nachher",
+          "comparisonTitle": "Fotovergleich",
+          "align": "Ausrichten",
+          "aligning": "Ausrichtung",
+          "alignError": "Die automatische Ausrichtung ist nicht verfügbar.",
+          "close": "Vergleich schließen",
+          "sliderLabel": "Position des Vorher-Nachher-Vergleichs",
+          "photoNumber": "Foto {number}"
+        },
+        "wellbeing": {
+          "title": "Wohlbefinden",
+          "subtitle": "Kompakte Trends für Stimmung und Schlaf im Zeitraum.",
+          "mood": "Stimmung",
+          "sleep": "Schlaf",
+          "empty": "Füge Check-ins hinzu, damit Trends sichtbar werden.",
+          "partial": "Bisher hat nur ein Trend genügend Daten.",
+          "unavailable": "Wohlbefindensdaten sind nicht verfügbar."
+        },
+        "advanced": {
+          "title": "Erweiterte Analysen",
+          "subtitle": "Muskelvolumen und wahrgenommene Anstrengung, bei Bedarf geladen.",
+          "rir": "Wahrgenommene Anstrengung / RIR",
+          "volumeHelp": "Protokollierte Sätze und Tonnage der letzten 28 Tage.",
+          "volumeSummary": "Aufteilung für {count} Muskelgruppen verfügbar.",
+          "rirHelp": "Durchschnitt ab {count} protokollierten RIR-Sätzen pro Muskel.",
+          "rirSummary": "Zuverlässiger RIR für {count} Muskelgruppen verfügbar.",
+          "insufficient": "Nicht genügend Daten für diese Analyse."
+        },
+        "exports": {
+          "eyebrow": "Deine Daten",
+          "title": "Meine Daten exportieren",
+          "subtitle": "Die bestehenden Formate sind an einem Ort gebündelt.",
+          "csv": "Analytics-CSV",
+          "xlsx": "Gewicht und Körpermaße XLSX",
+          "done": "Export erstellt"
+        }
       }
     },
     "pills": {

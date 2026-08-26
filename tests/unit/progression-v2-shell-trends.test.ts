@@ -71,7 +71,7 @@ describe('Progression V2 trends contract', () => {
     expect(shell).toContain('model: ProgressionViewModel')
   })
 
-  it('replaces only the legacy header and summary while preserving detailed sections', () => {
+  it('replaces the legacy shell while preserving the complete V2 history surface', () => {
     expect(progressTab).toContain('<ProgressionV2')
     expect(progressTab).not.toContain('SECTION 1 — HEADER')
     expect(progressTab).not.toContain('3 STATS RÉSUMÉ')
@@ -79,7 +79,7 @@ describe('Progression V2 trends contract', () => {
     expect(shell).toContain('<WeightHistory')
     expect(shell).toContain('<BodyMeasurements')
     expect(shell).toContain('<PersonalRecordsV2')
-    for (const section of ['TRANSFORMATION', 'BIEN-ÊTRE']) {
+    for (const section of ['<TransformationPhotos', '<WellbeingCompact', '<AnalyticsSection']) {
       expect(progressTab).toContain(section)
     }
   })

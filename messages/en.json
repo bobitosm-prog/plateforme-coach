@@ -2054,6 +2054,58 @@
         "definition": "Total load moved across logged sets.",
         "empty": "Log sets with weight and repetitions to display volume.",
         "unavailable": "Weekly volume is currently unavailable."
+      },
+      "history": {
+        "eyebrow": "Secondary history",
+        "title": "History and tools",
+        "subtitle": "Photos, wellbeing, advanced analytics and exports grouped without weighing down the main view.",
+        "navigationLabel": "Progress navigation",
+        "navigation": { "weight": "Weight", "performance": "Performance", "body": "Body", "history": "History" },
+        "photos": {
+          "title": "Transformation",
+          "subtitle": "Photos and before/after comparison",
+          "add": "Add a photo",
+          "compare": "Compare",
+          "emptyTitle": "No photos",
+          "empty": "Add a photo whenever you want to document your evolution.",
+          "unavailable": "Photos cannot be loaded right now.",
+          "before": "Before",
+          "after": "After",
+          "comparisonTitle": "Photo comparison",
+          "align": "Align",
+          "aligning": "Aligning",
+          "alignError": "Automatic alignment is unavailable.",
+          "close": "Close comparison",
+          "sliderLabel": "Before and after comparison position",
+          "photoNumber": "Photo {number}"
+        },
+        "wellbeing": {
+          "title": "Wellbeing",
+          "subtitle": "Compact mood and sleep trends for the period.",
+          "mood": "Mood",
+          "sleep": "Sleep",
+          "empty": "Add check-ins to reveal wellbeing trends.",
+          "partial": "Only one trend has enough data so far.",
+          "unavailable": "Wellbeing data is unavailable."
+        },
+        "advanced": {
+          "title": "Advanced analytics",
+          "subtitle": "Muscle volume and perceived effort, loaded on demand.",
+          "rir": "Perceived effort / RIR",
+          "volumeHelp": "Logged sets and tonnage over the last 28 days.",
+          "volumeSummary": "Breakdown available for {count} muscle groups.",
+          "rirHelp": "Average shown from {count} logged RIR sets per muscle.",
+          "rirSummary": "Reliable RIR available for {count} muscle groups.",
+          "insufficient": "Not enough data for this analysis."
+        },
+        "exports": {
+          "eyebrow": "Your data",
+          "title": "Export my data",
+          "subtitle": "Existing formats are grouped in one place.",
+          "csv": "Analytics CSV",
+          "xlsx": "Weight and measurements XLSX",
+          "done": "Export created"
+        }
       }
     },
     "pills": {

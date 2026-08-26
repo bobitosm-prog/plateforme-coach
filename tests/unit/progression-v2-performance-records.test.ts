@@ -148,14 +148,14 @@ describe('Progression V2 performance architecture and legacy cleanup', () => {
     expect(records).not.toContain('record.delta')
   })
 
-  it('removes legacy PR, exercise and weekly volume rendering while preserving advanced analytics', () => {
+  it('removes legacy PR, exercise and weekly volume rendering while preserving focused advanced analytics', () => {
     expect(progressTab).not.toContain('SECTION 5 — RECORDS PERSONNELS')
-    expect(progressTab).toContain('showTrainingVolume={false}')
-    expect(progressTab).toContain('showExerciseProgress={false}')
-    expect(analytics).toContain('showTrainingVolume && volumeData.length > 0')
-    expect(analytics).toContain('showExerciseProgress && exerciseList.length > 0')
-    expect(analytics).toContain('MUSCLE VOLUME')
-    expect(analytics).toContain('MUSCLE RIR')
+    expect(analytics).not.toContain('showTrainingVolume')
+    expect(analytics).not.toContain('showExerciseProgress')
+    expect(analytics).toContain("t('muscleVolumeTitle')")
+    expect(analytics).toContain("tV2('history.advanced.rir')")
+    expect(progressTab).toContain('advancedOpen &&')
+    expect(progressTab).toContain('<AnalyticsSection wSessions={wSessions} muscleMap={advancedMuscleMap} mappingState={advancedMappingState}')
   })
 
   it('adds no API and preserves neutral volume semantics', () => {
