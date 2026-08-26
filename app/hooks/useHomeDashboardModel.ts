@@ -163,12 +163,12 @@ export default function useHomeDashboardModel({
         .select('meal_type')
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
-        .eq('is_completed', true)
+        .eq('completed', true)
         .limit(20),
       supabase.from('meal_plans')
-        .select('plan_data')
+        .select('plan')
         .eq('user_id', userId)
-        .eq('is_active', true)
+        .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -190,7 +190,7 @@ export default function useHomeDashboardModel({
       const mealTypes = (tracking.data ?? [])
         .map((row: { meal_type?: unknown }) => row.meal_type)
         .filter((value: unknown): value is string => typeof value === 'string')
-      const planData = plan.data?.plan_data ?? null
+      const planData = plan.data?.plan ?? null
       const planned = nutritionFromTrackedMeals(
         planData,
         mealTypes,
