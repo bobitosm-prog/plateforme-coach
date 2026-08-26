@@ -10,6 +10,7 @@ import { cache } from '../../lib/cache'
 import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
 import useProgressionViewModel from './useProgressionViewModel'
+import type { ProgressionPeriod } from '../../lib/progression/progression-dashboard-model'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
@@ -91,6 +92,7 @@ export default function useClientDashboard() {
   const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
   const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
   const [progressionBaseErrors, setProgressionBaseErrors] = useState<Partial<Record<'weight' | 'sessions' | 'measurements' | 'photos', string>>>({})
+  const [progressionPeriod, setProgressionPeriod] = useState<ProgressionPeriod>('30d')
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -554,7 +556,7 @@ export default function useClientDashboard() {
 
   const progressionModel = useProgressionViewModel({
     enabled: activeTab === 'progress',
-    period: '30d',
+    period: progressionPeriod,
     goal: profile?.objective,
     weight: {
       logs: weightHistory30,
@@ -732,6 +734,7 @@ export default function useClientDashboard() {
     weightHistoryFull: analyticsHook.weightHistoryFull,
     wellbeingEntries: analyticsHook.wellbeingEntries,
     progressionModel,
+    setProgressionPeriod,
     checkForPR,
     // Weekly diagnostic
     latestDiagnostic, setLatestDiagnostic,

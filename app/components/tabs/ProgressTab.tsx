@@ -28,6 +28,12 @@ import SectionTitle from '../ui/SectionTitle'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { addProgressionDays } from '../../../lib/progression/progression-date'
 import type { ProgressionWellbeingEntry } from '../../hooks/useAnalytics'
+import ProgressionV2 from '../progression-v2/ProgressionV2'
+import progressionV2Styles from '../progression-v2/ProgressionV2.module.css'
+import type {
+  ProgressionPeriod,
+  ProgressionViewModel,
+} from '../../../lib/progression/progression-dashboard-model'
 
 const MEASURE_FIELDS_KEYS = [
   { key: 'waist', labelKey: 'waist', unit: 'cm' },
@@ -78,6 +84,8 @@ interface ProgressTabProps {
   streak: number
   currentWeight: number | undefined
   wellbeingEntries: ProgressionWellbeingEntry[]
+  progressionModel: ProgressionViewModel
+  onProgressionPeriodChange: (period: ProgressionPeriod) => void
 }
 
 export default function ProgressTab({
@@ -89,6 +97,7 @@ export default function ProgressTab({
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
   streak, currentWeight,
   wellbeingEntries,
+  progressionModel, onProgressionPeriodChange,
 }: ProgressTabProps) {
   const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress')
@@ -412,8 +421,6 @@ export default function ProgressTab({
   const pMax = periodWeights.length > 0 ? Math.max(...periodWeights.map(p => p.poids)) + 1 : cMax
 
   // Total volume in tonnes
-  const totalVolume = useMemo(() => weeklyVolume.reduce((s, w) => s + w.volume, 0), [weeklyVolume])
-
   const groupedRecords = useMemo(() => {
     const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
     const byExercise: Record<string, { name: string; maxWeight: number | null; oneRm: number | null; date: string; unit: string }> = {}
@@ -446,31 +453,12 @@ export default function ProgressTab({
   const deltaPositive = isBulking ? weightDelta > 0 : weightDelta < 0
 
   return (
-    <div ref={rootRef} style={{ padding: '20px 20px 120px', minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-
-      {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-          ANALYTICS
-        </div>
-        <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
-          {t('headerSubtitle', { sessions: wSessions.length, records: personalRecords.length })}
-        </div>
-      </div>
-
-      {/* ═══ SECTION 2 — 3 STATS RÉSUMÉ ═══ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: t('tab.sessions'), value: wSessions.length },
-          { label: t('stats.volume'), value: totalVolume >= 1000 ? `${(totalVolume / 1000).toFixed(1)}T` : `${Math.round(totalVolume)}kg` },
-          { label: t('tab.streak'), value: streak },
-        ].map(s => (
-          <div key={s.label} style={{ ...cardStyle, padding: 14, textAlign: 'center' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 800, color: colors.gold }}>{s.value}</div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
+    <div ref={rootRef} className={progressionV2Styles.page}>
+      <ProgressionV2
+        model={progressionModel}
+        onPeriodChange={onProgressionPeriodChange}
+        onAddMeasurement={() => setShowWeight(true)}
+      />
 
       {/* ═══ SECTION 3 — PILLS NAVIGATION ═══ */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16, marginBottom: 8 }}>
