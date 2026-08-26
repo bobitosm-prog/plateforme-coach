@@ -486,14 +486,24 @@ export default function useClientDashboard() {
   }
 
   async function saveWeight(value: number, date: string) {
-    await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
+    const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
+    if (error) { toast.error('Erreur lors de l’enregistrement'); return }
     await updateProfile(session.user.id, { current_weight: value, ...(profile?.start_weight ? {} : { start_weight: value }) }, supabase)
-    toast.success('Poids enregistré !'); setModal(null); fetchAll(true)
+    setWeightHistory30(previous => [
+      ...previous.filter(entry => entry.date !== date),
+      { date, poids: value },
+    ].sort((a, b) => a.date.localeCompare(b.date)).slice(-100))
+    setProfile(profile ? { ...profile, current_weight: value, start_weight: profile.start_weight || value } : profile)
+    cache.remove(`dashboard_${session.user.id}`)
+    toast.success('Poids enregistré !'); setModal(null)
   }
 
   async function saveMeasurements(data: Record<string, number>, date: string) {
-    await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
-    toast.success('Mensurations enregistrées !'); setModal(null); fetchAll(true)
+    const { error } = await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
+    if (error) { toast.error('Erreur lors de l’enregistrement'); return }
+    setMeasurements(previous => [{ date, ...data }, ...previous].slice(0, 10))
+    cache.remove(`dashboard_${session.user.id}`)
+    toast.success('Mensurations enregistrées !'); setModal(null)
   }
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -548,8 +558,6 @@ export default function useClientDashboard() {
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
   const todaySessionDone = sessionDates.some(s => toLocal(new Date(s.created_at)) === toLocal(new Date()))
-  const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
-  const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
   const displayAvatar = session ? (profile?.avatar_url || session.user.user_metadata?.avatar_url) : undefined
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]
@@ -713,7 +721,7 @@ export default function useClientDashboard() {
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,
     // Computed
     calorieGoal, goalWeight, currentWeight, completedSessions, hasTrainedBefore, streak, sessionDates,
-    todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
+    todayKey, todayCoachDay, todaySessionDone,
     displayAvatar, fullName, firstName,
     // Subscription & trial
     isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe,

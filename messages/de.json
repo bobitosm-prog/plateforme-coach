@@ -1991,7 +1991,34 @@
       "trends": { "eyebrow": "Wichtige Trends", "title": "Das Wesentliche auf einen Blick", "subtitle": "Gewicht, Regelmäßigkeit und Trainingsbelastung im gewählten Zeitraum." },
       "states": { "loading": "Fortschritt wird geladen", "unavailable": "Daten nicht verfügbar", "unavailableCopy": "Ein Teil deines Fortschritts konnte nicht geladen werden.", "insufficient": "Noch nicht genügend Daten", "insufficientCopy": "Füge einige Messwerte oder Einheiten hinzu, damit ein Trend sichtbar wird.", "partial": "Einige Daten sind noch unvollständig." },
       "trend": { "up": "Steigender Trend", "down": "Sinkender Trend", "stable": "Stabiler Trend", "unknown": "Trend nicht verfügbar" },
-      "units": { "kg": "kg" }
+      "units": { "kg": "kg" },
+      "weightHistory": {
+        "eyebrow": "Körperverlauf",
+        "title": "Gewichtsentwicklung",
+        "subtitle": "Deine tatsächlichen Messwerte über {period}, ohne automatische Bewertung.",
+        "add": "Gewicht hinzufügen",
+        "target": "Ziel",
+        "notSet": "Nicht festgelegt",
+        "change": "Veränderung",
+        "actual": "Gemessenes Gewicht",
+        "chartTitle": "Gewichtsverlauf",
+        "accessibleSummary": "{count} Messwerte über {period}. Aktuelles Gewicht {current} kg, Veränderung {delta} kg.",
+        "empty": "Füge deinen ersten Messwert hinzu, um den Verlauf zu starten.",
+        "unavailable": "Der Gewichtsverlauf ist derzeit nicht verfügbar."
+      },
+      "measurements": {
+        "eyebrow": "Körper",
+        "title": "Körpermaße",
+        "subtitle": "Aktuelle Werte und Entwicklung der sechs kanonischen Körpermaße.",
+        "add": "Körpermaße hinzufügen",
+        "empty": "Füge deine ersten Körpermaße hinzu, um ihre Entwicklung zu verfolgen.",
+        "unavailable": "Die Körpermaße sind derzeit nicht verfügbar.",
+        "partial": "Für einige Körpermaße liegt noch kein vollständiger Verlauf vor.",
+        "noComparison": "Noch kein Vergleich",
+        "delta": "{value} cm seit der vorherigen Messung",
+        "trendLabel": "Verlauf: {field}",
+        "fields": { "chest": "Brust", "waist": "Taille", "hips": "Hüfte", "biceps": "Bizeps", "thighs": "Oberschenkel", "calves": "Waden" }
+      }
     },
     "pills": {
       "poids": "GEWICHT",
@@ -2072,7 +2099,8 @@
         "hips": "Hüfte",
         "chest": "Brust",
         "arms": "Arme",
-        "thighs": "Oberschenkel"
+        "thighs": "Oberschenkel",
+        "calves": "Waden"
       },
       "graphLabels": {
         "poids": "Gewicht",
@@ -2080,7 +2108,8 @@
         "chest": "Brust",
         "hips": "Hüfte",
         "arms": "Bizeps",
-        "body_fat": "KF%"
+        "body_fat": "KF%",
+        "calves": "Waden"
       },
       "transformation": "TRANSFORMATION",
       "aiSection": "KI-ANALYSE",

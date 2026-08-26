@@ -31,6 +31,7 @@ interface AnalyticsSectionProps {
   waterGoal: number
   streak: number
   currentWeight: number | undefined
+  showWeightChart?: boolean
 }
 
 type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
@@ -53,6 +54,7 @@ export default function AnalyticsSection({
   personalRecords, weeklyCalories, weeklyWater, weeklyVolume,
   weightHistoryFull, weightHistory30, wSessions,
   calorieGoal, goalWeight, waterGoal, streak, currentWeight,
+  showWeightChart = true,
 }: AnalyticsSectionProps) {
   const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress.analytics')
@@ -302,7 +304,7 @@ export default function AnalyticsSection({
       </div>
 
       {/* WEIGHT CHART */}
-      {weightHistoryFull.length > 1 && (
+      {showWeightChart && weightHistoryFull.length > 1 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold }}>{t('weight')}</span>

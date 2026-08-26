@@ -1991,7 +1991,34 @@
       "trends": { "eyebrow": "Key trends", "title": "The essentials at a glance", "subtitle": "Weight, consistency and training load for the selected period." },
       "states": { "loading": "Loading your progress", "unavailable": "Data unavailable", "unavailableCopy": "Part of your progress could not be loaded.", "insufficient": "Not enough data yet", "insufficientCopy": "Add a few measurements or sessions to reveal a trend.", "partial": "Some data is still partial." },
       "trend": { "up": "Upward trend", "down": "Downward trend", "stable": "Stable trend", "unknown": "Trend unavailable" },
-      "units": { "kg": "kg" }
+      "units": { "kg": "kg" },
+      "weightHistory": {
+        "eyebrow": "Body history",
+        "title": "Weight evolution",
+        "subtitle": "Your actual measurements over {period}, without automatic judgement.",
+        "add": "Add weight",
+        "target": "Target",
+        "notSet": "Not set",
+        "change": "Change",
+        "actual": "Measured weight",
+        "chartTitle": "Weight history",
+        "accessibleSummary": "{count} measurements over {period}. Current weight {current} kg, change {delta} kg.",
+        "empty": "Add your first measurement to start your history.",
+        "unavailable": "Weight history is currently unavailable."
+      },
+      "measurements": {
+        "eyebrow": "Body",
+        "title": "Measurements",
+        "subtitle": "Latest values and evolution for the six canonical measurements.",
+        "add": "Add measurements",
+        "empty": "Add your first body measurements to track their evolution.",
+        "unavailable": "Body measurements are currently unavailable.",
+        "partial": "Some measurements do not have a complete history yet.",
+        "noComparison": "No comparison yet",
+        "delta": "{value} cm since the previous measurement",
+        "trendLabel": "Trend: {field}",
+        "fields": { "chest": "Chest", "waist": "Waist", "hips": "Hips", "biceps": "Biceps", "thighs": "Thighs", "calves": "Calves" }
+      }
     },
     "pills": {
       "poids": "WEIGHT",
@@ -2072,7 +2099,8 @@
         "hips": "Hips",
         "chest": "Chest",
         "arms": "Arms",
-        "thighs": "Thighs"
+        "thighs": "Thighs",
+        "calves": "Calves"
       },
       "graphLabels": {
         "poids": "Weight",
@@ -2080,7 +2108,8 @@
         "chest": "Chest",
         "hips": "Hips",
         "arms": "Biceps",
-        "body_fat": "BF%"
+        "body_fat": "BF%",
+        "calves": "Calves"
       },
       "transformation": "TRANSFORMATION",
       "aiSection": "AI ANALYSIS",

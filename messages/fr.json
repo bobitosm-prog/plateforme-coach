@@ -1991,7 +1991,34 @@
       "trends": { "eyebrow": "Tendances clés", "title": "L’essentiel en un coup d’œil", "subtitle": "Poids, régularité et charge d’entraînement sur la période choisie." },
       "states": { "loading": "Chargement de ta progression", "unavailable": "Données indisponibles", "unavailableCopy": "Une partie de ta progression n’a pas pu être chargée.", "insufficient": "Pas encore assez de données", "insufficientCopy": "Ajoute quelques mesures ou séances pour faire apparaître une tendance.", "partial": "Certaines données sont encore partielles." },
       "trend": { "up": "Tendance en hausse", "down": "Tendance en baisse", "stable": "Tendance stable", "unknown": "Tendance indisponible" },
-      "units": { "kg": "kg" }
+      "units": { "kg": "kg" },
+      "weightHistory": {
+        "eyebrow": "Historique corporel",
+        "title": "Évolution du poids",
+        "subtitle": "Tes mesures réelles sur {period}, sans interprétation automatique.",
+        "add": "Ajouter un poids",
+        "target": "Objectif",
+        "notSet": "Non défini",
+        "change": "Variation",
+        "actual": "Poids mesuré",
+        "chartTitle": "Historique du poids",
+        "accessibleSummary": "{count} mesures sur {period}. Poids actuel {current} kg, variation {delta} kg.",
+        "empty": "Ajoute une première mesure pour commencer ton historique.",
+        "unavailable": "L’historique du poids ne peut pas être affiché pour le moment."
+      },
+      "measurements": {
+        "eyebrow": "Corps",
+        "title": "Mensurations",
+        "subtitle": "Dernières valeurs et évolution des six mesures canoniques.",
+        "add": "Ajouter des mensurations",
+        "empty": "Ajoute tes premières mensurations pour suivre leur évolution.",
+        "unavailable": "Les mensurations ne peuvent pas être affichées pour le moment.",
+        "partial": "Certaines mensurations ne disposent pas encore d’un historique complet.",
+        "noComparison": "Pas encore de comparaison",
+        "delta": "{value} cm depuis la mesure précédente",
+        "trendLabel": "Évolution : {field}",
+        "fields": { "chest": "Poitrine", "waist": "Taille", "hips": "Hanches", "biceps": "Biceps", "thighs": "Cuisses", "calves": "Mollets" }
+      }
     },
     "pills": {
       "poids": "POIDS",
@@ -2072,7 +2099,8 @@
         "hips": "Tour de hanches",
         "chest": "Tour de poitrine",
         "arms": "Tour de bras",
-        "thighs": "Tour de cuisses"
+        "thighs": "Tour de cuisses",
+        "calves": "Tour de mollets"
       },
       "graphLabels": {
         "poids": "Poids",
@@ -2080,7 +2108,8 @@
         "chest": "Poitrine",
         "hips": "Hanches",
         "arms": "Biceps",
-        "body_fat": "% MG"
+        "body_fat": "% MG",
+        "calves": "Mollets"
       },
       "transformation": "TRANSFORMATION",
       "aiSection": "ANALYSE IA",

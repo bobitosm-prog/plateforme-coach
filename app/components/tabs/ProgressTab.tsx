@@ -7,7 +7,7 @@ import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import type { Locale } from 'date-fns'
 import { useTranslations, useLocale } from 'next-intl'
-import { Scale, Ruler, Camera, TrendingUp, TrendingDown, Plus, Trash2, X, ChevronUp, ChevronDown, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Trophy, Info, Clock, User } from 'lucide-react'
+import { Camera, Plus, Trash2, X, Download, BarChart3, Sparkles, Send, ChevronRight, Star, Trophy, Info, Clock, User } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
@@ -35,24 +35,6 @@ import type {
   ProgressionViewModel,
 } from '../../../lib/progression/progression-dashboard-model'
 
-const MEASURE_FIELDS_KEYS = [
-  { key: 'waist', labelKey: 'waist', unit: 'cm' },
-  { key: 'hips', labelKey: 'hips', unit: 'cm' },
-  { key: 'chest', labelKey: 'chest', unit: 'cm' },
-  { key: 'arms', labelKey: 'arms', unit: 'cm' },
-  { key: 'thighs', labelKey: 'thighs', unit: 'cm' },
-]
-
-const EVOLUTION_METRICS_KEYS = [
-  { key: 'poids', labelKey: 'poids', unit: 'kg', source: 'weight' },
-  { key: 'waist', labelKey: 'waist', unit: 'cm', source: 'measure' },
-  { key: 'chest', labelKey: 'chest', unit: 'cm', source: 'measure' },
-  { key: 'hips', labelKey: 'hips', unit: 'cm', source: 'measure' },
-  { key: 'biceps', labelKey: 'arms', unit: 'cm', source: 'measure' },
-  { key: 'thighs', labelKey: 'thighs', unit: 'cm', source: 'measure' },
-  { key: 'calves', labelKey: 'calves', unit: 'cm', source: 'measure' },
-]
-
 type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre' | 'graphiques'
 
 interface ProgressTabProps {
@@ -66,8 +48,6 @@ interface ProgressTabProps {
   uploadProgressPhoto: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
   deletePhoto: (photo: any) => Promise<void>
   setModal: (modal: string) => void
-  chartMin: number
-  chartMax: number
   onRefresh: () => void
   profile: any
   coachId: string | null
@@ -91,7 +71,7 @@ interface ProgressTabProps {
 export default function ProgressTab({
   supabase, session, weightHistory30, measurements, progressPhotos,
   photoRef, photoUploading, uploadProgressPhoto, deletePhoto,
-  setModal, chartMin, chartMax, onRefresh,
+  setModal, onRefresh,
   profile, coachId,
   personalRecords, weeklyCalories, weeklyWater, weeklyVolume,
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
@@ -106,7 +86,6 @@ export default function ProgressTab({
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [activePill, setActivePill] = useState<PillSection>('poids')
   const sectionRefs = { poids: React.useRef<HTMLDivElement>(null), records: React.useRef<HTMLDivElement>(null), photos: React.useRef<HTMLDivElement>(null), mensurations: React.useRef<HTMLDivElement>(null), bienetre: React.useRef<HTMLDivElement>(null), graphiques: React.useRef<HTMLDivElement>(null) }
-  const [weightPeriod, setWeightPeriod] = useState<'7' | '30' | '90' | 'all'>('30')
   const [recordsLimit, setRecordsLimit] = useState(10)
   const [showAssessment, setShowAssessment] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
@@ -121,28 +100,7 @@ export default function ProgressTab({
     const cutoff = addProgressionDays(todayDateKey, -checkinPeriod)
     return wellbeingEntries.filter(entry => entry.date >= cutoff)
   }, [checkinPeriod, todayDateKey, wellbeingEntries])
-  const latestMeasure = measurements[0]
-  const prevMeasure = measurements[1]
-
-  // Weight modal
-  const [showWeight, setShowWeight] = useState(false)
-  const [weightVal, setWeightVal] = useState('')
-  const [weightDate, setWeightDate] = useState(() => new Date().toISOString().split('T')[0])
-  const [savingWeight, setSavingWeight] = useState(false)
-  const [localWeights, setLocalWeights] = useState<{ date: string; poids: number }[]>([])
-  const mergedWeights = useMemo(() => {
-    const all = [...weightHistory30, ...localWeights]
-    const seen = new Set<string>()
-    return all.filter(w => { const k = w.date + w.poids; const ok = !seen.has(k); seen.add(k); return ok }).sort((a, b) => a.date.localeCompare(b.date))
-  }, [weightHistory30, localWeights])
-  const cMin = mergedWeights.length > 0 ? Math.min(...mergedWeights.map(p => p.poids)) - 1 : chartMin
-  const cMax = mergedWeights.length > 0 ? Math.max(...mergedWeights.map(p => p.poids)) + 1 : chartMax
-
-  // Measure modal
-  const [showMeasure, setShowMeasure] = useState(false)
-  const [measureForm, setMeasureForm] = useState<Record<string, string>>({ waist: '', hips: '', chest: '', arms: '', thighs: '' })
-  const [measureDate, setMeasureDate] = useState(() => new Date().toISOString().split('T')[0])
-  const [savingMeasure, setSavingMeasure] = useState(false)
+  const displayWeights = weightHistory30
 
   // AI Analysis
   const [analyzingId, setAnalyzingId] = useState<string | null>(null)
@@ -346,80 +304,6 @@ export default function ProgressTab({
     setSharingId(null)
   }
 
-  // Evolution
-  const [evoMetric, setEvoMetric] = useState('poids')
-
-  async function handleSaveWeight() {
-    if (!weightVal || !session?.user?.id) return
-    setSavingWeight(true)
-    const poids = parseFloat(weightVal)
-    const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, date: weightDate, poids }, { onConflict: 'user_id,date' })
-    if (error) { toast.error(t('tab.saveError')) }
-    else {
-      setLocalWeights(prev => [...prev, { date: weightDate, poids }])
-      toast.success(t('tab.weightSaved'))
-      setShowWeight(false); setWeightVal(''); setWeightDate(new Date().toISOString().split('T')[0])
-      onRefresh()
-    }
-    setSavingWeight(false)
-  }
-
-  async function handleSaveMeasure() {
-    if (savingMeasure || !session?.user?.id) return
-    const payload: Record<string, unknown> = { user_id: session.user.id, date: measureDate }
-    if (measureForm.waist) payload.waist = Number(measureForm.waist)
-    if (measureForm.hips) payload.hips = Number(measureForm.hips)
-    if (measureForm.chest) payload.chest = Number(measureForm.chest)
-    if (measureForm.arms) payload.biceps = Number(measureForm.arms)
-    if (measureForm.thighs) payload.thighs = Number(measureForm.thighs)
-    if (Object.keys(payload).length <= 2) return
-    setSavingMeasure(true)
-    const { error } = await supabase.from('body_measurements').insert(payload)
-    if (error) { toast.error(t('tab.saveError')) }
-    else {
-      toast.success(t('tab.measureSaved'))
-      setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }); setMeasureDate(new Date().toISOString().split('T')[0])
-      onRefresh()
-    }
-    setSavingMeasure(false)
-  }
-
-  // Get delta between two measures for a field
-  function delta(field: string): { val: number; icon: any; color: string } | null {
-    if (!latestMeasure || !prevMeasure) return null
-    const curr = latestMeasure[field], prev = prevMeasure[field]
-    if (curr == null || prev == null) return null
-    const d = curr - prev
-    if (d === 0) return null
-    return { val: Math.abs(d), icon: d > 0 ? ChevronUp : ChevronDown, color: d > 0 ? colors.error : colors.success }
-  }
-
-  // Evolution chart data
-  const evoData = useMemo(() => {
-    const metric = EVOLUTION_METRICS_KEYS.find(m => m.key === evoMetric)
-    if (!metric) return []
-    if (metric.source === 'weight') {
-      return mergedWeights.map(w => ({ date: w.date, value: w.poids }))
-    }
-    return measurements
-      .filter((m: any) => m[metric.key] != null)
-      .map((m: any) => ({ date: m.date, value: m[metric.key] }))
-      .reverse()
-  }, [evoMetric, mergedWeights, measurements])
-
-  const displayWeights = mergedWeights.length > 0 ? mergedWeights : weightHistory30
-
-  // Filtered weights by period
-  const periodWeights = useMemo(() => {
-    if (weightPeriod === 'all') return weightHistoryFull.length > 0 ? weightHistoryFull : displayWeights
-    const days = weightPeriod === '7' ? 7 : weightPeriod === '90' ? 90 : 30
-    const cutoff = new Date(Date.now() - days * 86400000).toISOString().split('T')[0]
-    return displayWeights.filter(w => w.date >= cutoff)
-  }, [weightPeriod, displayWeights, weightHistoryFull])
-
-  const pMin = periodWeights.length > 0 ? Math.min(...periodWeights.map(p => p.poids)) - 1 : cMin
-  const pMax = periodWeights.length > 0 ? Math.max(...periodWeights.map(p => p.poids)) + 1 : cMax
-
   // Total volume in tonnes
   const groupedRecords = useMemo(() => {
     const priorityExercises = ['developpe couche', 'bench press', 'squat', 'deadlift', 'souleve de terre', 'overhead press', 'developpe militaire', 'rowing', 'barbell row']
@@ -444,20 +328,24 @@ export default function ProgressTab({
   // Scroll to section on pill tap
   function scrollToSection(section: PillSection) {
     setActivePill(section)
+    if (section === 'poids') {
+      document.getElementById('progression-v2-weight')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    if (section === 'mensurations') {
+      document.getElementById('progression-v2-measurements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
     sectionRefs[section]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-
-  // Weight variation
-  const weightDelta = displayWeights.length >= 2 ? Math.round((displayWeights[displayWeights.length - 1].poids - displayWeights[0].poids) * 10) / 10 : 0
-  const isBulking = profile?.objective === 'prise_masse' || profile?.objective === 'gain'
-  const deltaPositive = isBulking ? weightDelta > 0 : weightDelta < 0
 
   return (
     <div ref={rootRef} className={progressionV2Styles.page}>
       <ProgressionV2
         model={progressionModel}
         onPeriodChange={onProgressionPeriodChange}
-        onAddMeasurement={() => setShowWeight(true)}
+        onAddWeight={() => setModal('weight')}
+        onAddBodyMeasurement={() => setModal('measure')}
       />
 
       {/* ═══ SECTION 3 — PILLS NAVIGATION ═══ */}
@@ -485,61 +373,6 @@ export default function ProgressTab({
           )
         })}
       </div>
-
-
-      {/* ═══ SECTION 4 — ÉVOLUTION DU POIDS ═══ */}
-      <div ref={sectionRefs.poids} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('weight.title')} trailing={weightPeriod === 'all' ? 'TOUT' : `${weightPeriod}J`} />
-        <div style={{ ...cardStyle, padding: 20, marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-            <div>
-              <div style={{ fontFamily: fonts.headline, fontSize: 32, fontWeight: 800, color: colors.text, lineHeight: 1 }}>
-                {currentWeight || displayWeights[displayWeights.length - 1]?.poids || '—'}<span style={{ ...mutedStyle, fontSize: 14, marginLeft: 4 }}>KG</span>
-              </div>
-              {goalWeight && <div style={{ ...mutedStyle, fontSize: 10, marginTop: 4 }}>{t('tab.goal', { weight: goalWeight })}</div>}
-            </div>
-            {weightDelta !== 0 && (
-              <div style={{ padding: '4px 10px', borderRadius: 999, background: deltaPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${deltaPositive ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}` }}>
-                <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: deltaPositive ? colors.success : colors.error }}>
-                  {weightDelta > 0 ? '+' : ''}{weightDelta} kg
-                </span>
-              </div>
-            )}
-          </div>
-          {periodWeights.length > 1 && (
-            <svg viewBox="0 0 300 90" style={{ width: '100%', height: 90, overflow: 'visible' }} preserveAspectRatio="none">
-              <polyline points={periodWeights.map((p, i) => { const x = (i / (periodWeights.length - 1)) * 300; const y = 90 - ((p.poids - pMin) / ((pMax - pMin) || 1)) * 86; return `${x.toFixed(1)},${y.toFixed(1)}` }).join(' ')} fill="none" stroke={colors.gold} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-              <circle cx={300} cy={90 - ((periodWeights[periodWeights.length - 1]?.poids - pMin) / ((pMax - pMin) || 1)) * 86} r="5" fill={colors.gold} />
-            </svg>
-          )}
-          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-            {(['7', '30', '90', 'all'] as const).map(p => {
-              const active = weightPeriod === p
-              return (
-                <button key={p} onClick={() => setWeightPeriod(p)} style={{
-                  padding: '4px 10px', borderRadius: 999, border: active ? `1px solid ${colors.gold}4d` : '1px solid transparent',
-                  background: active ? `${colors.gold}33` : `${colors.gold}1a`,
-                  color: colors.gold, fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, cursor: 'pointer',
-                  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                }}>
-                  {p === 'all' ? 'TOUT' : `${p}J`}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-        <button onClick={() => setShowWeight(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Scale size={20} color={colors.gold} />
-          </div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('tab.logWeight')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('weight.addMeasure')}</div>
-          </div>
-          <ChevronRight size={16} color={colors.textDim} />
-        </button>
-      </div>
-
       {/* ═══ SECTION 5 — RECORDS PERSONNELS ═══ */}
       <div ref={sectionRefs.records} style={{ scrollMarginTop: 20 }}>
         <SectionTitle noPadding title={t('tab.personalRecords')} trailing={t('weight.prCount', { count: groupedRecords.length })} />
@@ -804,39 +637,6 @@ export default function ProgressTab({
         </div>
       </div>
 
-      {/* ═══ SECTION 7 — MENSURATIONS ═══ */}
-      <div ref={sectionRefs.mensurations} style={{ scrollMarginTop: 20 }}>
-        <SectionTitle noPadding title={t('tab.measurementsSection')} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              { l: 'TAILLE', v: latestMeasure?.waist, u: 'cm' },
-              { l: 'POITRINE', v: latestMeasure?.chest, u: 'cm' },
-              { l: 'BRAS', v: latestMeasure?.biceps, u: 'cm' },
-              { l: 'CUISSES', v: latestMeasure?.thighs, u: 'cm' },
-            ].map(({ l, v, u }) => (
-              <div key={l} style={{ background: `${colors.gold}0a`, borderRadius: 10, padding: 12 }}>
-                <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{l}</div>
-                <div>
-                  <span style={{ fontFamily: fonts.headline, fontSize: 18, fontWeight: 800, color: colors.text }}>{v ?? '—'}</span>
-                  <span style={{ ...mutedStyle, fontSize: 10, marginLeft: 2 }}>{v ? u : ''}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <button onClick={() => setShowMeasure(true)} style={{ ...cardStyle, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, width: '100%', cursor: 'pointer', border: `1px solid ${colors.goldBorder}`, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Ruler size={20} color={colors.gold} />
-          </div>
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.text }}>{t('measurements.title')}</div>
-            <div style={{ ...mutedStyle, fontSize: 10 }}>{t('tab.measureDesc')}</div>
-          </div>
-          <ChevronRight size={16} color={colors.textDim} />
-        </button>
-      </div>
-
       {/* ═══ SECTION 7.5 — MON BIEN-ÊTRE ═══ */}
       <div ref={sectionRefs.bienetre} style={{ scrollMarginTop: 20, marginTop: 24 }}>
         <SectionTitle noPadding title={t('tab.myWellness')} />
@@ -962,6 +762,7 @@ export default function ProgressTab({
           waterGoal={waterGoal}
           streak={streak}
           currentWeight={currentWeight}
+          showWeightChart={false}
         />
       </div>
 
@@ -1082,61 +883,6 @@ export default function ProgressTab({
       })()}
 
       <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadProgressPhoto} />
-
-      {/* ── WEIGHT MODAL ── */}
-      {showWeight && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ background: colors.surface, borderTop: `1px solid ${colors.goldBorder}`, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>ENREGISTRER MON POIDS</h3>
-              <button onClick={() => { setShowWeight(false); setWeightVal('') }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
-            </div>
-            <div style={{ position: 'relative', marginBottom: 20 }}>
-              <input type="number" inputMode="decimal" step="0.1" min="0" value={weightVal} onChange={e => setWeightVal(e.target.value)} placeholder="0.0" autoFocus
-                style={{ width: '100%', background: colors.background, border: `2px solid ${weightVal ? colors.gold : colors.goldBorder}`, borderRadius: radii.card, padding: '22px 56px 22px 20px', color: colors.text, fontSize: '3.2rem', fontFamily: fonts.headline, textAlign: 'center', outline: 'none', transition: 'border-color 200ms' }} />
-              <span style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: colors.textMuted, fontSize: 16, fontWeight: 600 }}>kg</span>
-            </div>
-            {weightHistory30.length > 0 && <p style={{ textAlign: 'center', ...bodyStyle, fontSize: 12, marginBottom: 20 }}>{t('tab.previous', { weight: weightHistory30[weightHistory30.length - 1].poids })}</p>}
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>{t('tab.date')}</label>
-              <input type="date" value={weightDate} onChange={e => setWeightDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
-            </div>
-            <button onClick={handleSaveWeight} disabled={!weightVal || savingWeight} style={{ width: '100%', background: weightVal && !savingWeight ? colors.gold : colors.surfaceHigh, color: weightVal && !savingWeight ? colors.onGold : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: weightVal && !savingWeight ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56 }}>
-              {savingWeight ? 'Enregistrement...' : 'Sauvegarder'}
-            </button>
-          </div>
-        </div>
-      </RailOverlay>)}
-
-      {/* ── MEASUREMENTS MODAL ── */}
-      {showMeasure && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
-          <div style={{ background: colors.surface, borderRadius: `${radii.card}px ${radii.card}px 0 0`, padding: '28px 20px 48px', marginTop: 60, minHeight: 'calc(100vh - 60px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ ...titleStyle, fontSize: 18, margin: 0 }}>{t('tab.myMeasurements')}</h3>
-              <button onClick={() => { setShowMeasure(false); setMeasureForm({ waist: '', hips: '', chest: '', arms: '', thighs: '' }) }} style={{ width: 36, height: 36, background: colors.surfaceHigh, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color={colors.textMuted} /></button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              {MEASURE_FIELDS_KEYS.map(({ key, labelKey, unit }) => (
-                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: colors.background, border: `1px solid ${measureForm[key] ? colors.gold + '60' : colors.goldBorder}`, borderRadius: radii.card, padding: '0 16px', minHeight: 56, transition: 'border-color 200ms' }}>
-                  <span style={{ ...bodyStyle, fontSize: 14, flex: 1 }}>{t(`tab.measureLabels.${labelKey}`)}</span>
-                  <input type="number" inputMode="decimal" step="0.1" min="0" value={measureForm[key]} onChange={e => setMeasureForm(p => ({ ...p, [key]: e.target.value }))} placeholder="—"
-                    style={{ background: 'transparent', color: colors.text, fontSize: 18, fontFamily: fonts.headline, textAlign: 'right', width: 72, outline: 'none', border: 'none', padding: '14px 0' }} />
-                  <span style={{ ...mutedStyle, fontSize: 12, width: 28 }}>{unit}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', ...subtitleStyle, marginBottom: 8 }}>{t('tab.date')}</label>
-              <input type="date" value={measureDate} onChange={e => setMeasureDate(e.target.value)} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: radii.card, padding: '14px 16px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none', colorScheme: 'dark', minHeight: 48 }} />
-            </div>
-            <button onClick={handleSaveMeasure} disabled={Object.values(measureForm).every(v => !v) || savingMeasure}
-              style={{ width: '100%', background: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.gold : '#2A2A2A', color: Object.values(measureForm).some(v => v) && !savingMeasure ? colors.onGold : colors.textMuted, fontWeight: 700, padding: 17, borderRadius: radii.card, border: 'none', cursor: Object.values(measureForm).some(v => v) && !savingMeasure ? 'pointer' : 'default', fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' as const, minHeight: 56, marginBottom: 32 }}>
-              {savingMeasure ? 'Enregistrement...' : 'Sauvegarder'}
-            </button>
-          </div>
-        </div>
-      </RailOverlay>)}
     </div>
   )
 }

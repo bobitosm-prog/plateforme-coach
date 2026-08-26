@@ -5,26 +5,32 @@ import type {
   ProgressionViewModel,
 } from '../../../lib/progression/progression-dashboard-model'
 import KeyTrends from './KeyTrends'
+import BodyMeasurements from './BodyMeasurements'
 import ProgressionHero from './ProgressionHero'
+import WeightHistory from './WeightHistory'
 import styles from './ProgressionV2.module.css'
 
 export interface ProgressionV2Props {
   model: ProgressionViewModel
   onPeriodChange: (period: ProgressionPeriod) => void
-  onAddMeasurement: () => void
+  onAddWeight: () => void
+  onAddBodyMeasurement: () => void
 }
 
 export default function ProgressionV2({
   model,
   onPeriodChange,
-  onAddMeasurement,
+  onAddWeight,
+  onAddBodyMeasurement,
 }: ProgressionV2Props) {
   return <section className={styles.shell} data-progression-v2>
     <ProgressionHero
       model={model}
       onPeriodChange={onPeriodChange}
-      onAddMeasurement={onAddMeasurement}
+      onAddMeasurement={onAddWeight}
     />
     <KeyTrends model={model} />
+    <WeightHistory weight={model.weight} onAddWeight={onAddWeight} />
+    <BodyMeasurements measurements={model.measurements} onAddMeasurement={onAddBodyMeasurement} />
   </section>
 }
