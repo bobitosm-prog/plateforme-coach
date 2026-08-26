@@ -221,7 +221,7 @@ export interface ProgressionRecord {
 export interface ProgressionExerciseSeries {
   exerciseId: string | null
   exerciseName: string
-  metric: 'e1rm'
+  metric: 'e1rm' | 'max_weight' | 'volume'
   series: Array<{ date: string; value: number; weight: number; reps: number }>
 }
 

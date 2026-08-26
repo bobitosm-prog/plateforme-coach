@@ -2018,6 +2018,42 @@
         "delta": "{value} cm since the previous measurement",
         "trendLabel": "Trend: {field}",
         "fields": { "chest": "Chest", "waist": "Waist", "hips": "Hips", "biceps": "Biceps", "thighs": "Thighs", "calves": "Calves" }
+      },
+      "records": {
+        "eyebrow": "Performance",
+        "title": "Personal records",
+        "subtitle": "Your best logged results, with their actual type and date.",
+        "emptyTitle": "No record yet",
+        "empty": "Complete logged sets to reveal your first records.",
+        "unavailable": "Personal records are currently unavailable.",
+        "dateUnavailable": "Date unavailable",
+        "types": { "estimated1rm": "Estimated 1RM", "maxWeight": "Maximum weight", "maxReps": "Maximum repetitions", "bestVolume": "Best volume", "other": "Logged performance" }
+      },
+      "exercise": {
+        "eyebrow": "Strength",
+        "title": "Exercise progression",
+        "subtitle": "A timeline based only on sets already logged.",
+        "selectorLabel": "Exercise",
+        "chartTitle": "{exercise} progression",
+        "summary": "{exercise}: {count} points for {metric}, from {start} to {end}.",
+        "visibleSummary": "{metric}: from {start} to {end} kg over the period.",
+        "needsHistory": "A second session is needed to chart a progression.",
+        "empty": "No exercise has enough logged sets for this period yet.",
+        "unavailable": "Exercise progression is currently unavailable.",
+        "metrics": { "estimated1rm": "Estimated 1RM", "maxWeight": "Maximum weight", "volume": "Logged volume" }
+      },
+      "weeklyVolume": {
+        "eyebrow": "Training load",
+        "title": "Weekly volume",
+        "subtitle": "Compare weeks without treating volume as a universal quality score.",
+        "current": "This week",
+        "previous": "Previous week",
+        "change": "Change",
+        "chartTitle": "Weekly volume trend",
+        "summary": "Logged volume across {count} weeks.",
+        "definition": "Total load moved across logged sets.",
+        "empty": "Log sets with weight and repetitions to display volume.",
+        "unavailable": "Weekly volume is currently unavailable."
       }
     },
     "pills": {

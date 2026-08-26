@@ -136,8 +136,9 @@ describe('Progression V2 weight/body architecture', () => {
     expect(saveWeight).not.toContain('.select(')
   })
 
-  it('preserves PR, photos, wellbeing and advanced analytics', () => {
-    for (const marker of ['RECORDS PERSONNELS', 'TRANSFORMATION', 'MON BIEN-ÊTRE', '<AnalyticsSection']) {
+  it('preserves V2 records, photos, wellbeing and advanced analytics', () => {
+    expect(shell).toContain('<PersonalRecordsV2')
+    for (const marker of ['TRANSFORMATION', 'MON BIEN-ÊTRE', '<AnalyticsSection']) {
       expect(progressTab).toContain(marker)
     }
   })

@@ -2018,6 +2018,42 @@
         "delta": "{value} cm seit der vorherigen Messung",
         "trendLabel": "Verlauf: {field}",
         "fields": { "chest": "Brust", "waist": "Taille", "hips": "Hüfte", "biceps": "Bizeps", "thighs": "Oberschenkel", "calves": "Waden" }
+      },
+      "records": {
+        "eyebrow": "Leistung",
+        "title": "Persönliche Rekorde",
+        "subtitle": "Deine besten protokollierten Ergebnisse mit tatsächlichem Typ und Datum.",
+        "emptyTitle": "Noch kein Rekord",
+        "empty": "Schließe protokollierte Sätze ab, damit deine ersten Rekorde erscheinen.",
+        "unavailable": "Persönliche Rekorde sind derzeit nicht verfügbar.",
+        "dateUnavailable": "Datum nicht verfügbar",
+        "types": { "estimated1rm": "Geschätztes 1RM", "maxWeight": "Maximale Last", "maxReps": "Maximale Wiederholungen", "bestVolume": "Bestes Volumen", "other": "Protokollierte Leistung" }
+      },
+      "exercise": {
+        "eyebrow": "Kraft",
+        "title": "Übungsfortschritt",
+        "subtitle": "Eine zeitliche Entwicklung nur aus bereits protokollierten Sätzen.",
+        "selectorLabel": "Übung",
+        "chartTitle": "Entwicklung von {exercise}",
+        "summary": "{exercise}: {count} Punkte für {metric}, von {start} bis {end}.",
+        "visibleSummary": "{metric}: von {start} bis {end} kg im Zeitraum.",
+        "needsHistory": "Eine zweite Einheit ist nötig, um eine Entwicklung darzustellen.",
+        "empty": "Für diesen Zeitraum hat noch keine Übung genügend protokollierte Sätze.",
+        "unavailable": "Der Übungsfortschritt ist derzeit nicht verfügbar.",
+        "metrics": { "estimated1rm": "Geschätztes 1RM", "maxWeight": "Maximale Last", "volume": "Protokolliertes Volumen" }
+      },
+      "weeklyVolume": {
+        "eyebrow": "Trainingslast",
+        "title": "Wöchentliches Volumen",
+        "subtitle": "Vergleiche Wochen, ohne Volumen als universellen Qualitätswert darzustellen.",
+        "current": "Diese Woche",
+        "previous": "Vorwoche",
+        "change": "Veränderung",
+        "chartTitle": "Entwicklung des Wochenvolumens",
+        "summary": "Protokolliertes Volumen über {count} Wochen.",
+        "definition": "Gesamtlast aller protokollierten Sätze.",
+        "empty": "Protokolliere Sätze mit Last und Wiederholungen, um das Volumen anzuzeigen.",
+        "unavailable": "Das wöchentliche Volumen ist derzeit nicht verfügbar."
       }
     },
     "pills": {

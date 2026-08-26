@@ -53,6 +53,28 @@
 .detailState { display: flex; min-height: 150px; margin-top: 18px; padding: 20px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 9px; border: 1px solid rgba(255,255,255,.05); border-radius: 16px; color: #918a7e; font-size: .82rem; }
 .detailState strong { color: #ded7ca; font-size: 1rem; }
 .detailState .secondaryButton { margin-top: 6px; }
+.performanceGrid { display: grid; min-width: 0; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.performanceCard { min-width: 0; padding: clamp(20px,3vw,26px); border: 1px solid rgba(201,168,76,.15); border-radius: 22px; background: linear-gradient(145deg,#15130f,#10100e); box-sizing: border-box; }
+.recordGrid { display: grid; margin-top: 18px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.recordCard { display: flex; min-width: 0; padding: 14px; align-items: flex-start; gap: 11px; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.02); }
+.recordIcon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 11px; color: #d9b85d; background: rgba(201,168,76,.1); }
+.recordContent { min-width: 0; }
+.recordContent h3 { margin: 0; overflow: hidden; color: #d8d0c3; font-size: .76rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.recordContent strong { display: block; margin-top: 7px; overflow-wrap: anywhere; color: #f5f1e8; font-size: 1.15rem; }
+.recordType, .recordContent time { display: block; margin-top: 4px; color: #bba356; font-size: .7rem; line-height: 1.35; }
+.recordContent time { color: #827b70; }
+.selectorLabel { display: block; margin: 18px 0 7px; color: #918a7e; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.exerciseSelector { width: 100%; min-height: 44px; padding: 0 40px 0 13px; border: 1px solid rgba(230,195,100,.22); border-radius: 12px; color: #eee9df; background: #18150f; font: inherit; font-size: .82rem; cursor: pointer; }
+.exerciseSelector:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: 3px; }
+.exerciseFigure, .volumeFigure { margin: 14px 0 0; padding: 14px; border: 1px solid rgba(255,255,255,.055); border-radius: 16px; background: rgba(0,0,0,.17); }
+.chartMetric { margin-bottom: 5px; color: #bba356; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.exerciseChart, .volumeChart { display: block; width: 100%; height: auto; min-height: 150px; overflow: visible; }
+.performanceLine { fill: none; stroke: #e0bd5b; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.chartSummary { margin: 12px 0 0; color: #918a7e; font-size: .76rem; line-height: 1.45; }
+.volumeMetrics { display: grid; margin-top: 20px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.volumeMetrics > div { min-width: 0; padding: 14px 16px; border: 1px solid rgba(255,255,255,.055); border-radius: 14px; background: rgba(255,255,255,.02); }
+.volumeMetrics span { display: block; color: #918a7e; font-size: .69rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.volumeMetrics strong { display: block; margin-top: 6px; overflow-wrap: anywhere; color: #f5f1e8; font-size: clamp(1rem,2.6vw,1.3rem); }
 .weightMetrics { display: grid; margin-top: 22px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
 .weightMetrics > div { min-width: 0; padding: 14px 16px; border: 1px solid rgba(255,255,255,.055); border-radius: 14px; background: rgba(255,255,255,.02); }
 .weightMetrics span, .measurementLabel { display: block; color: #918a7e; font-size: .69rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
@@ -78,7 +100,7 @@
 .sparkline { display: block; width: 100%; height: 36px; margin-top: 12px; overflow: visible; }
 .sparkline polyline { fill: none; stroke: #c9a84c; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (max-width: 767px) { .heroTop, .detailHeading { flex-direction: column; } .primaryButton, .detailHeading .secondaryButton { width: 100%; } .heroSummary, .weightMetrics { grid-template-columns: 1fr; } .trendGrid { grid-template-columns: 1fr; } .measurementGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weightChart { min-height: 140px; } }
+@media (max-width: 767px) { .heroTop, .detailHeading { flex-direction: column; } .primaryButton, .detailHeading .secondaryButton { width: 100%; } .heroSummary, .performanceGrid, .weightMetrics, .volumeMetrics { grid-template-columns: 1fr; } .trendGrid { grid-template-columns: 1fr; } .recordGrid { grid-template-columns: 1fr; } .measurementGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weightChart, .exerciseChart, .volumeChart { min-height: 140px; } }
 @media (min-width: 768px) { .page { padding: 34px 28px 120px; } }
 @media (min-width: 768px) and (max-width: 1050px) { .trendGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .trendCard:last-child { grid-column: 1 / -1; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .primaryButton { transition: none; } .primaryButton:hover { transform: none; } }

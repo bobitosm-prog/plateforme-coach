@@ -2018,6 +2018,42 @@
         "delta": "{value} cm depuis la mesure précédente",
         "trendLabel": "Évolution : {field}",
         "fields": { "chest": "Poitrine", "waist": "Taille", "hips": "Hanches", "biceps": "Biceps", "thighs": "Cuisses", "calves": "Mollets" }
+      },
+      "records": {
+        "eyebrow": "Performance",
+        "title": "Records personnels",
+        "subtitle": "Tes meilleurs résultats enregistrés, avec leur type et leur date réels.",
+        "emptyTitle": "Pas encore de record",
+        "empty": "Termine des séries enregistrées pour faire apparaître tes premiers records.",
+        "unavailable": "Les records personnels ne peuvent pas être affichés pour le moment.",
+        "dateUnavailable": "Date indisponible",
+        "types": { "estimated1rm": "1RM estimé", "maxWeight": "Charge maximale", "maxReps": "Répétitions maximales", "bestVolume": "Meilleur volume", "other": "Performance enregistrée" }
+      },
+      "exercise": {
+        "eyebrow": "Force",
+        "title": "Progression par exercice",
+        "subtitle": "Une évolution temporelle basée uniquement sur les séries déjà enregistrées.",
+        "selectorLabel": "Exercice",
+        "chartTitle": "Évolution de {exercise}",
+        "summary": "{exercise} : {count} points pour {metric}, de {start} à {end}.",
+        "visibleSummary": "{metric} : de {start} à {end} kg sur la période.",
+        "needsHistory": "Une seconde séance est nécessaire pour tracer une évolution.",
+        "empty": "Aucun exercice ne dispose encore de séries suffisantes sur cette période.",
+        "unavailable": "La progression par exercice ne peut pas être affichée pour le moment.",
+        "metrics": { "estimated1rm": "1RM estimé", "maxWeight": "Charge maximale", "volume": "Volume enregistré" }
+      },
+      "weeklyVolume": {
+        "eyebrow": "Charge d’entraînement",
+        "title": "Volume hebdomadaire",
+        "subtitle": "Compare les semaines sans transformer le volume en score de qualité.",
+        "current": "Cette semaine",
+        "previous": "Semaine précédente",
+        "change": "Variation",
+        "chartTitle": "Évolution du volume hebdomadaire",
+        "summary": "Volume enregistré sur {count} semaines.",
+        "definition": "Charge totale déplacée sur les séries enregistrées.",
+        "empty": "Enregistre des séries avec charge et répétitions pour afficher le volume.",
+        "unavailable": "Le volume hebdomadaire ne peut pas être affiché pour le moment."
       }
     },
     "pills": {

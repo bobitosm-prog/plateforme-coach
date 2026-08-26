@@ -32,6 +32,8 @@ interface AnalyticsSectionProps {
   streak: number
   currentWeight: number | undefined
   showWeightChart?: boolean
+  showTrainingVolume?: boolean
+  showExerciseProgress?: boolean
 }
 
 type WeightPeriod = '30j' | '60j' | '90j' | 'tout'
@@ -55,6 +57,8 @@ export default function AnalyticsSection({
   weightHistoryFull, weightHistory30, wSessions,
   calorieGoal, goalWeight, waterGoal, streak, currentWeight,
   showWeightChart = true,
+  showTrainingVolume = true,
+  showExerciseProgress = true,
 }: AnalyticsSectionProps) {
   const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress.analytics')
@@ -387,7 +391,7 @@ export default function AnalyticsSection({
       )}
 
       {/* VOLUME CHART */}
-      {volumeData.length > 0 && (
+      {showTrainingVolume && volumeData.length > 0 && (
         <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16 }}>
           <span style={{ fontFamily: fonts.alt, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, display: 'block', marginBottom: 12 }}>{t('trainingVolume')}</span>
           <SizedContainer hasSize={hasSize} height={140}>
@@ -423,7 +427,7 @@ export default function AnalyticsSection({
       )}
 
       {/* EXERCISE PROGRESSION */}
-      {exerciseList.length > 0 && (
+      {showExerciseProgress && exerciseList.length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Dumbbell size={16} color={colors.gold} />

@@ -78,7 +78,8 @@ describe('Progression V2 trends contract', () => {
     expect(progressTab).not.toContain('totalVolume')
     expect(shell).toContain('<WeightHistory')
     expect(shell).toContain('<BodyMeasurements')
-    for (const section of ['RECORDS PERSONNELS', 'TRANSFORMATION', 'BIEN-ÊTRE']) {
+    expect(shell).toContain('<PersonalRecordsV2')
+    for (const section of ['TRANSFORMATION', 'BIEN-ÊTRE']) {
       expect(progressTab).toContain(section)
     }
   })
