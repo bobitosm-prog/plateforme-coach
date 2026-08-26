@@ -313,12 +313,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         setTimeout(() => setToastMsg(''), 3000)
       } else {
         // Deactivate old plans first
-        await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
+        await supabase.from('meal_plans').update({ active: false }).eq('user_id', userId).eq('active', true)
         // Insert new plan
         const { error: insertErr } = await supabase.from('meal_plans').insert({
           user_id: userId,
-          plan_data: planData,
-          is_active: true,
+          plan: planData,
+          active: true,
         })
         if (insertErr) {
           console.error('Insert meal_plans error:', insertErr)

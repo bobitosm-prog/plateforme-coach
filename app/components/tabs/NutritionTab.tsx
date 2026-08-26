@@ -15,10 +15,14 @@ import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
+  fonts, colors, NUTRITION_DAYS, titleStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
 import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
+import type { ActiveCoachResolutionState } from '../../../lib/coach-relations/repository'
+import useNutritionDashboardModel from '../../hooks/useNutritionDashboardModel'
+import { addNutritionDays, getNutritionDayKey, getNutritionDayWindow } from '../../../lib/nutrition/nutrition-date'
+import { normalizeNutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
 const MEAL_TIMES: Record<string, string> = {
   petit_dejeuner: '7h00',
@@ -31,33 +35,27 @@ const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner
 type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
 
 interface NutritionTabProps {
-  coachMealPlan: any
-  todayKey: string
-  setModal: (modal: string) => void
   profile: any
   capabilities: UserCapabilities
+  coachRelationStatus: ActiveCoachResolutionState['status']
+  coachId: string | null
   supabase: any
   userId: string
   fetchAll: () => Promise<void>
 }
 
-export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, capabilities, supabase, userId, fetchAll }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, fetchAll }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const T = titleStyle
-  const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
-  const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
-  const [loadingPlan, setLoadingPlan] = useState(true)
-  const [showShoppingList, setShowShoppingList] = useState(false)
-  const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
+  const [nutritionDay, setNutritionDay] = useState<string>(() => getNutritionDayWindow().dayKey)
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [showScanner, setShowScanner] = useState(false)
   const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
-  const [dailyLogs, setDailyLogs] = useState<any[]>([])
   const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
   const [editQty, setEditQty] = useState('')
@@ -91,45 +89,39 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   const calScrollRef = React.useRef<HTMLDivElement>(null)
-  const today = new Date().toISOString().split('T')[0]
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [daysWithMeals, setDaysWithMeals] = useState<Set<string>>(new Set())
-  const [waterToday, setWaterToday] = useState(0)
+  const nutritionDashboard = useNutritionDashboardModel({
+    supabase,
+    userId,
+    profile,
+    capabilities,
+    coachRelation: { status: coachRelationStatus, coachId },
+  })
+  const { model: nutritionModel, selectedDate, setSelectedDate, dailyLogs, daysWithMeals, personalPlan, refresh: refreshNutrition } = nutritionDashboard
+  const today = nutritionModel.day.localDateKey
+  const todayKey = nutritionModel.day.dayKey
+  const activeMealPlan = personalPlan
+  const coachMealPlan = nutritionModel.activePlan.source === 'coach' ? nutritionModel.activePlan.plan : null
+  const loadingPlan = nutritionModel.loading
+  const waterToday = nutritionModel.hydration.data?.consumedMl ?? 0
   const calendarDays = React.useMemo(() => {
-    const d: string[] = []
-    for (let i = -30; i <= 7; i++) { const dt = new Date(); dt.setDate(dt.getDate() + i); d.push(dt.toISOString().split('T')[0]) }
-    return d
-  }, [])
+    const dates: string[] = []
+    for (let i = -30; i <= 7; i += 1) dates.push(addNutritionDays(today, i))
+    return dates
+  }, [today])
 
-  const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>('today')
 
   useEffect(() => {
-    fetchActiveMealPlan()
-    fetchTodayTracking()
-    fetchDailyLogs()
-    // Load days with meals for calendar dots
-    const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_food_logs').select('date').eq('user_id', userId).gte('date', thirtyAgo)
-      .then(({ data }: any) => setDaysWithMeals(new Set((data || []).map((d: any) => d.date))))
-    // Auto-scroll calendar to today
-    setTimeout(() => { document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' }) }, 100)
-  }, [userId])
-
-  // Reload meals when date changes
-  useEffect(() => { fetchDailyLogs() }, [selectedDate])
-
-  // Load water intake for selected date
-  useEffect(() => {
-    if (!userId) return
-    supabase.from('water_intake').select('amount_ml').eq('user_id', userId).eq('date', selectedDate).limit(50)
-      .then(({ data }: any) => setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0)))
-  }, [userId, selectedDate])
+    const timer = window.setTimeout(() => {
+      document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' })
+    }, 100)
+    return () => window.clearTimeout(timer)
+  }, [today])
 
   async function addWater(ml: number) {
     if (!userId) return
     await supabase.from('water_intake').insert({ user_id: userId, amount_ml: ml, date: today })
-    setWaterToday(prev => prev + ml)
+    await refreshNutrition()
   }
 
   // Fetch saved meals for "Mes Repas" tab
@@ -140,17 +132,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }
   }, [subTab, userId])
 
-  useEffect(() => {
-  }, [activeMealPlan, subTab])
-
-  async function fetchDailyLogs() {
-    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true })
-    setDailyLogs(data || [])
-  }
-
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
-    setDailyLogs(prev => prev.filter(l => l.id !== id))
+    await refreshNutrition()
   }
 
   async function updateFoodQuantity(id: string, newQty: number) {
@@ -161,7 +145,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     const ratio = newQty / oldQty
     const updated = { quantity_g: newQty, calories: Math.round((log.calories || 0) * ratio), protein: Math.round((log.protein || 0) * ratio * 10) / 10, carbs: Math.round((log.carbs || 0) * ratio * 10) / 10, fat: Math.round((log.fat || 0) * ratio * 10) / 10 }
     await supabase.from('daily_food_logs').update(updated).eq('id', id)
-    setDailyLogs(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
+    await refreshNutrition()
     setEditingFoodId(null)
   }
 
@@ -193,13 +177,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     }
     setShowPhotoCapture(false)
     setPhotoResults(null)
-    fetchDailyLogs()
+    await refreshNutrition()
   }
 
   async function clearMeal(mealType: string) {
-    const toDelete = dailyLogs.filter(l => l.meal_type === mealType)
+    const normalizedTarget = normalizeNutritionMealType(mealType)
+    const toDelete = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedTarget)
     for (const l of toDelete) await supabase.from('daily_food_logs').delete().eq('id', l.id)
-    setDailyLogs(prev => prev.filter(l => l.meal_type !== mealType))
+    await refreshNutrition()
   }
 
   async function applySavedMeal(meal: any, targetMealType: string) {
@@ -211,8 +196,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         carbs: food.carbs || 0, fat: food.fats || food.fat || 0,
       })
     }
-    await supabase.from('saved_meals').update({ use_count: (meal.use_count || 0) + 1 }).eq('id', meal.id)
-    fetchDailyLogs()
+    await refreshNutrition()
   }
 
   async function copyMealToDate(foods: any[], targetDate: string, targetMealType: string) {
@@ -224,10 +208,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         carbs: food.carbs || 0, fat: food.fat || food.fats || 0,
       })
     }
+    await refreshNutrition()
   }
 
   async function importMealFromPlan(mealType: MealKey) {
-    if (nutritionDay !== todayKey) return
+    if (selectedDate !== today) return
     const todayPlan = getTodayPlanData()
     if (!todayPlan) return
     const foods = getMealByKey(todayPlan.day, mealType)
@@ -239,13 +224,14 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       calories: f.kcal, protein: f.prot, carbs: f.carb, fat: f.fat,
     }))
     await supabase.from('daily_food_logs').insert(inserts)
-    fetchDailyLogs()
+    await refreshNutrition()
   }
 
-  function getDailyLogsMacros() {
-    const r = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const l of dailyLogs) { r.kcal += l.calories || 0; r.protein += l.protein || 0; r.carbs += l.carbs || 0; r.fat += l.fat || 0 }
-    return r
+  function getDailyLogsMacros(): { kcal: number; protein: number; carbs: number; fat: number } {
+    const consumed = nutritionModel.consumed.data
+    return consumed
+      ? { kcal: consumed.calories, protein: consumed.protein, carbs: consumed.carbs, fat: consumed.fat }
+      : { kcal: 0, protein: 0, carbs: 0, fat: 0 }
   }
 
   function getMealRecommendation(mealType: MealKey) {
@@ -260,90 +246,23 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   }
 
   function getMealConsumed(mealType: string) {
-    const logs = dailyLogs.filter(l => l.meal_type === mealType)
+    const normalizedTarget = normalizeNutritionMealType(mealType)
+    const logs = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedTarget)
     return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
   }
 
-  async function fetchActiveMealPlan() {
-    setLoadingPlan(true)
-    const { data } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('today')
-    setLoadingPlan(false)
-  }
-
-  async function fetchTodayTracking() {
-    const { data } = await supabase
-      .from('meal_tracking')
-      .select('meal_type')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .eq('is_completed', true)
-      .limit(50)
-    if (data) {
-      setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
-    }
-  }
-
-
-
-  async function toggleMeal(mealType: string, planId: string | null) {
-    const isCompleted = !completedMeals.has(mealType)
-    const next = new Set(completedMeals)
-    if (isCompleted) next.add(mealType); else next.delete(mealType)
-    setCompletedMeals(next)
-
-    await supabase.from('meal_tracking').upsert({
-      user_id: userId,
-      meal_plan_id: planId,
-      date: today,
-      meal_type: mealType,
-      is_completed: isCompleted,
-      completed_at: isCompleted ? new Date().toISOString() : null,
-    }, { onConflict: 'user_id,date,meal_type' })
-  }
-
   // Get today's plan data normalized to canonical DayPlan format.
-  // Prefers activeMealPlan (AI), falls back to coachMealPlan.
+  // Plan authority is resolved by the unified Nutrition model.
   function getTodayPlanData(): { day: DayPlan; planId: string | null } | null {
-    const dayKey = todayNutritionKey().toLowerCase() as Day
-    if (activeMealPlan?.plan_data) {
-      const parsed = parseMealPlan(activeMealPlan.plan_data)
-      const day = parsed[dayKey]
-      if (day) return { day, planId: activeMealPlan.id }
-    }
-    if (coachMealPlan) {
-      const parsed = parseMealPlan(coachMealPlan)
-      const day = parsed[dayKey]
-      if (day) return { day, planId: coachMealPlan.id ?? null }
-    }
+    const plan = nutritionModel.activePlan.plan
+    if (!plan) return null
+    const dayKey = getNutritionDayKey(selectedDate) as Day
+    const day = parseMealPlan(plan)[dayKey]
+    if (day) return { day, planId: nutritionModel.activePlan.id }
     return null
   }
 
-  // Calculate consumed macros from completed meals (canonical DayPlan)
-  function getConsumedMacros(day: DayPlan): { kcal: number; protein: number; carbs: number; fat: number } {
-    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const key of MEAL_KEYS) {
-      if (!completedMeals.has(key)) continue
-      const foods = getMealByKey(day, key)
-      for (const f of foods) {
-        result.kcal += f.kcal
-        result.protein += f.prot
-        result.carbs += f.carb
-        result.fat += f.fat
-      }
-    }
-    return result
-  }
-
-  const nutritionManaged = !capabilities.nutrition
+  const nutritionManaged = nutritionModel.coachRelation.status === 'active' && !capabilities.nutrition
 
   // Waiting screen when no plan exists
   function renderWaitingScreen() {
@@ -372,30 +291,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     )
   }
 
-  // Generate shopping list from plan_data (client-side, no API)
-  function generateShoppingList(planData: any): { name: string; totalG: number }[] {
-    const map = new Map<string, number>()
-    for (const day of Object.values(planData) as any[]) {
-      if (!day?.repas) continue
-      for (const foods of Object.values(day.repas) as any[]) {
-        if (!Array.isArray(foods)) continue
-        for (const f of foods) {
-          const name = (f.aliment || '').trim()
-          if (!name) continue
-          map.set(name, (map.get(name) || 0) + (f.quantite_g || 0))
-        }
-      }
-    }
-    return Array.from(map.entries())
-      .map(([name, totalG]) => ({ name, totalG }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-  }
-
   // Render the AI-generated meal plan (from meal_plans table)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function renderAiPlan(plan: any) {
-    if (!plan.plan_data) return null
-    const parsed = parseMealPlan(plan.plan_data)
+    if (!plan.plan) return null
+    const parsed = parseMealPlan(plan.plan)
     const dayData = parsed[nutritionDay as Day]
     if (!dayData) {
       return (
@@ -507,15 +407,24 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     const parsed = parseMealPlan(coachMealPlan)
     const dayPlanData = parsed[nutritionDay as Day]
     const dayTotals = dayPlanData ? computeDayTotals(dayPlanData) : { kcal: 0, prot: 0, carb: 0, fat: 0 }
+    const planNumber = (key: string) => {
+      if (!coachMealPlan || typeof coachMealPlan !== 'object') return null
+      const value = Reflect.get(coachMealPlan, key)
+      return typeof value === 'number' ? value : null
+    }
+    const calorieTarget = planNumber('calorie_target')
+    const proteinTarget = planNumber('protein_target')
+    const carbTarget = planNumber('carb_target')
+    const fatTarget = planNumber('fat_target')
 
     return (
       <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
           {[
-            { label: nt('macros.kcal'), value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
-            { label: nt('macros.protein'), value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
-            { label: nt('macros.carbs'), value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
-            { label: nt('macros.fat'), value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
+            { label: nt('macros.kcal'), value: String(dayTotals.kcal || calorieTarget || '—') },
+            { label: nt('macros.protein'), value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (proteinTarget ? `${proteinTarget}g` : '—') },
+            { label: nt('macros.carbs'), value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (carbTarget ? `${carbTarget}g` : '—') },
+            { label: nt('macros.fat'), value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (fatTarget ? `${fatTarget}g` : '—') },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
               <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
@@ -646,7 +555,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* Barcode scanner modal (single scan) */}
       {showScanner && (
         <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
-          onProductAdded={() => { setShowScanner(false); fetchDailyLogs() }}
+          onProductAdded={() => { setShowScanner(false); void refreshNutrition() }}
           onClose={() => setShowScanner(false)} />
       )}
 
@@ -664,27 +573,34 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           userId={userId}
           defaultMealType={showFoodSearch}
           dateOverride={selectedDate}
-          onAdded={async (insertedLog?: any) => {
+          onAdded={async () => {
             if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }
-            // Optimistic update — inject into state immediately (never null thanks to fallback)
-            if (insertedLog) { setDailyLogs(prev => [...prev, insertedLog]) }
-            setDaysWithMeals(prev => new Set([...prev, selectedDate]))
             setShowFoodSearch(null)
-            // Delayed refetch — wait for read replica sync before overwriting optimistic state
-            setTimeout(() => { fetchDailyLogs() }, 2000)
+            await refreshNutrition()
           }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
 
       {/* MON PLAN TAB — daily logs as source of truth */}
-      {subTab === 'today' && (() => {
+      {subTab === 'today' && ((): React.ReactNode => {
+        if (nutritionModel.summary.state === 'loading') {
+          return <div style={{ margin: '0 20px', height: 280, borderRadius: 16 }} className="skeleton" />
+        }
+        if (nutritionModel.summary.state === 'error') {
+          return (
+            <div style={{ ...cardStyle, margin: '0 20px', padding: 24, textAlign: 'center' }} role="alert">
+              <p style={{ ...bodyStyle, margin: '0 0 12px' }}>Les données nutrition sont temporairement indisponibles.</p>
+              <button onClick={() => void refreshNutrition()} style={{ border: `1px solid ${colors.goldRule}`, background: colors.goldDim, color: colors.gold, padding: '10px 16px', borderRadius: 10, cursor: 'pointer' }}>Réessayer</button>
+            </div>
+          )
+        }
         const isViewingPast = selectedDate < today
         const consumed = getDailyLogsMacros()
-        const targetKcal = profile?.calorie_goal || 2000
-        const targetP = profile?.protein_goal || 140
-        const targetG = profile?.carbs_goal || 200
-        const targetL = profile?.fat_goal || 60
+        const targetKcal = Number(profile?.calorie_goal) || 2000
+        const targetP = Number(profile?.protein_goal) || 140
+        const targetG = Number(profile?.carbs_goal) || 200
+        const targetL = Number(profile?.fat_goal) || 60
         const remaining = Math.max(0, targetKcal - consumed.kcal)
         const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
 
@@ -702,6 +618,21 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         const canAddWater = selectedDate === today
         const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
         const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+        const renderMacro = (label: string, current: number, target: number, color: string, Icon: typeof Beef): React.ReactElement => {
+          const pct = Math.min(100, Math.round((current / target) * 100))
+          return (
+            <div key={label} style={{ textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
+                <Icon size={12} color={color} />
+                <span style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em' }}>{label}</span>
+              </div>
+              <div style={{ ...statSmallStyle, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: colors.textMuted }}>/{target}g</span></div>
+              <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
+                <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
+              </div>
+            </div>
+          )
+        }
 
         return (
           <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
@@ -783,32 +714,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
 
             {/* Macros bar */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-              {[
-                { label: nt('macrosLong.prot'), current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
-                { label: nt('macrosLong.gluc'), current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
-                { label: nt('macrosLong.lip'), current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
-              ].map(({ label, current, target, color, icon: Icon }) => {
-                const pct = Math.min(100, Math.round((current / target) * 100))
-                return (
-                  <div key={label} style={{ textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
-                      <Icon size={12} color={color} />
-                      <span style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em' }}>{label}</span>
-                    </div>
-                    <div style={{ ...statSmallStyle, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: colors.textMuted }}>/{target}g</span></div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
-                      <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
-                    </div>
-                  </div>
-                )
-              })}
+              {renderMacro(String(nt('macrosLong.prot')), consumed.protein, targetP, colors.gold, Beef)}
+              {renderMacro(String(nt('macrosLong.gluc')), consumed.carbs, targetG, colors.blue, Wheat)}
+              {renderMacro(String(nt('macrosLong.lip')), consumed.fat, targetL, colors.orange, Droplet)}
             </div>
 
             {/* Meal sections — start empty, import IA optional */}
             {MEAL_ORDER.map(mealType => {
               const rec = getMealRecommendation(mealType)
               const con = getMealConsumed(mealType)
-              const logs = dailyLogs.filter(l => l.meal_type === mealType)
+              const normalizedMealType = normalizeNutritionMealType(mealType)
+              const logs = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedMealType)
               const hasPlanFoods = !!rec
 
               return (
@@ -865,7 +781,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                             </div>
                           )}
                         </div>
-                        <span style={{ ...T, flexShrink: 0 }}>{Math.round(log.calories)}</span>
+                        <span style={{ ...T, flexShrink: 0 }}>{Math.round(Number(log.calories) || 0)}</span>
                         <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
                           <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.replace')}><RefreshCw size={14} color={colors.textMuted} /></button>
                           <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.delete')}><Trash2 size={14} color={colors.textMuted} /></button>
@@ -882,7 +798,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                     {/* Action buttons */}
                     <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px', flexWrap: 'wrap' }}>
                       {hasPlanFoods && logs.length === 0 && (() => {
-                        const isViewingToday = nutritionDay === todayKey
+                        const isViewingToday = selectedDate === today
                         return (
                           <button
                             onClick={() => isViewingToday && setImportingMeal(mealType)}
@@ -897,13 +813,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                       <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
                         <Plus size={14} strokeWidth={2.5} /> {nt('chrome.add')}
                       </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
+                      {nutritionModel.tools.photoAnalysis && (
+                        <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} aria-label={nt('chrome.scanMeal')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
+                      )}
+                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false }).then(({ data }: { data: unknown }) => setSavedMeals(Array.isArray(data) ? data : [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
                     </div>
                   </div>
                 </div>
               )
-            })}
+            }) as React.ReactNode}
 
             {/* Import confirmation modal */}
             {importingMeal && (() => {
@@ -915,7 +833,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             })()}
 
             {/* Shopping button */}
-            {(activeMealPlan?.plan_data || coachMealPlan) && (
+            {nutritionModel.activePlan.plan != null && (
               <button onClick={() => setShowShoppingModal(true)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 padding: '12px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer',
@@ -929,7 +847,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       })()}
 
       {/* Plan sub-tab (kept for backward compatibility) */}
-      {subTab === 'plan' && loadingPlan && !coachMealPlan && (
+      {subTab === 'plan' && loadingPlan && (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
             {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 16 }} />)}
@@ -938,15 +856,15 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         </div>
       )}
 
-      {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && renderWaitingScreen()}
+      {subTab === 'plan' && !loadingPlan && nutritionModel.activePlan.source === 'none' && renderWaitingScreen()}
 
       {/* Show AI meal plan from meal_plans table (priority) */}
-      {subTab === 'plan' && activeMealPlan && (
+      {subTab === 'plan' && nutritionModel.activePlan.source === 'personal' && activeMealPlan && (
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderAiPlan(activeMealPlan)}</div>
       )}
 
       {/* Show old-style coach meal plan if no AI plan */}
-      {subTab === 'plan' && !activeMealPlan && coachMealPlan && (
+      {subTab === 'plan' && nutritionModel.activePlan.source === 'coach' && coachMealPlan && (
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderCoachPlan()}</div>
       )}
 
@@ -955,7 +873,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <AiQuotaBadge />
           <SectionTitle noPadding title={nt('chrome.prefsTitle')} icon={<SlidersHorizontal size={16} />} />
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
+          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { void refreshNutrition(); setSubTab('today') }} />
         </div>
       )}
 
@@ -1107,10 +1025,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               setEditMealSaving(true)
               const foods = editingMeal.foods || []
               const totals = {
-                total_calories: foods.reduce((s: number, f: any) => s + (f.calories || 0), 0),
-                total_proteins: foods.reduce((s: number, f: any) => s + (f.protein || f.proteins || 0), 0),
-                total_carbs: foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0),
-                total_fats: foods.reduce((s: number, f: any) => s + (f.fat || f.fats || 0), 0),
+                total_calories: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.calories) || 0), 0),
+                total_protein: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.protein ?? f.proteins) || 0), 0),
+                total_carbs: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.carbs) || 0), 0),
+                total_fat: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.fat ?? f.fats) || 0), 0),
               }
               await supabase.from('saved_meals').update({ foods, ...totals }).eq('id', editingMeal.id)
               setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods, ...totals } : m))
@@ -1133,9 +1051,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       </RailOverlay>)}
 
       {/* Shopping list modal */}
-      {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && (
+      {showShoppingModal && nutritionModel.activePlan.plan && (
         <ShoppingList
-          planData={activeMealPlan?.plan_data || coachMealPlan}
+          planData={nutritionModel.activePlan.plan}
           onClose={() => setShowShoppingModal(false)}
         />
       )}
@@ -1211,7 +1129,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.cancel')}</button>
               <button disabled={!saveMealName.trim()} onClick={async () => {
-                await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
+                const foods = Array.isArray(saveMealData?.foods) ? saveMealData.foods as Record<string, unknown>[] : []
+                await supabase.from('saved_meals').insert({
+                  user_id: userId,
+                  name: saveMealName,
+                  meal_type: saveMealType,
+                  foods,
+                  total_calories: foods.reduce((sum, food) => sum + (Number(food.calories) || 0), 0),
+                  total_protein: foods.reduce((sum, food) => sum + (Number(food.proteins ?? food.protein) || 0), 0),
+                  total_carbs: foods.reduce((sum, food) => sum + (Number(food.carbs) || 0), 0),
+                  total_fat: foods.reduce((sum, food) => sum + (Number(food.fats ?? food.fat) || 0), 0),
+                })
                 setShowSaveMealPopup(false); setSaveMealName('')
               }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
             </div>
@@ -1261,7 +1189,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div>
                     <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}{meal.use_count > 0 && ` · ${nt('savedMeals.usedCount', { count: meal.use_count })}`}</div>
+                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}</div>
                   </div>
                   <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
                 </button>

@@ -81,7 +81,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
       try {
         const { data: existing } = await supabase.from('custom_foods').select('*').eq('user_id', userId).eq('barcode', cleanCode).limit(1).maybeSingle()
         if (existing?.name) {
-          setProduct({ name: existing.name, brand: existing.brand || '', image_url: existing.image_url, barcode: cleanCode, per_100g: { calories: existing.calories_per_100g, proteins: existing.proteins_per_100g, carbs: existing.carbs_per_100g, fat: existing.fats_per_100g }, _existingId: existing.id })
+          setProduct({ name: existing.name, brand: existing.brand || '', image_url: existing.image_url, barcode: cleanCode, per_100g: { calories: existing.calories, proteins: existing.proteins, carbs: existing.carbs, fat: existing.fat }, _existingId: existing.id })
           setLoading(false); return
         }
       } catch {} // barcode column may not exist yet
@@ -113,8 +113,8 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
       try {
         await supabase.from('custom_foods').upsert({
           user_id: userId, name: product.name, brand: product.brand,
-          calories_per_100g: p.calories, proteins_per_100g: p.proteins,
-          carbs_per_100g: p.carbs, fats_per_100g: p.fat,
+          calories: p.calories, proteins: p.proteins,
+          carbs: p.carbs, fat: p.fat,
           barcode: product.barcode, image_url: product.image_url,
         }, { onConflict: 'user_id,barcode', ignoreDuplicates: true })
       } catch {} // barcode column may not exist
