@@ -1,34 +1,101 @@
 'use client'
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getProgressionWeekKey } from '../../lib/progression/progression-date'
+import type {
+  ProgressionRecordRow,
+  ProgressionWorkoutSession,
+} from '../../lib/progression/progression-dashboard-model'
+
+export interface ProgressionWellbeingEntry {
+  date: string
+  mood: string | null
+  sleep_hours: number | null
+  note: string | null
+}
 
 interface UseAnalyticsParams {
   supabase: SupabaseClient
+  enabled: boolean
+  userId: string | null | undefined
+  workoutSessions: readonly ProgressionWorkoutSession[]
+  weightHistory: readonly { date: string; poids: number }[]
 }
 
-export default function useAnalytics({ supabase }: UseAnalyticsParams) {
-  const [personalRecords, setPersonalRecords] = useState<any[]>([])
+export interface AnalyticsSourceStates {
+  records: 'loading' | 'ready' | 'error'
+  nutrition: 'loading' | 'ready' | 'error'
+  hydration: 'loading' | 'ready' | 'error'
+  wellbeing: 'loading' | 'ready' | 'error'
+}
+
+const INITIAL_SOURCE_STATES: AnalyticsSourceStates = {
+  records: 'loading',
+  nutrition: 'loading',
+  hydration: 'loading',
+  wellbeing: 'loading',
+}
+
+export default function useAnalytics({
+  supabase,
+  enabled,
+  userId,
+  workoutSessions,
+  weightHistory,
+}: UseAnalyticsParams) {
+  const [personalRecords, setPersonalRecords] = useState<ProgressionRecordRow[]>([])
   const [weeklyCalories, setWeeklyCalories] = useState<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>([])
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
-  const [weeklyVolume, setWeeklyVolume] = useState<{ week: string; volume: number }[]>([])
-  const [weightHistoryFull, setWeightHistoryFull] = useState<{ date: string; poids: number }[]>([])
+  const [wellbeingEntries, setWellbeingEntries] = useState<ProgressionWellbeingEntry[]>([])
+  const [sourceStates, setSourceStates] = useState<AnalyticsSourceStates>(INITIAL_SOURCE_STATES)
+  const loadedUserRef = useRef<string | null>(null)
 
-  async function fetchAnalyticsData(uid: string) {
+  const weightHistoryFull = useMemo(
+    () => [...weightHistory].sort((a, b) => a.date.localeCompare(b.date)),
+    [weightHistory],
+  )
+
+  // Progression volume is derived from the workout sets already loaded by the
+  // dashboard. This replaces the former second read of up to 500 workout_sets.
+  const weeklyVolume = useMemo(() => {
+    const volumeByWeek = new Map<string, number>()
+    for (const session of workoutSessions) {
+      for (const set of session.workout_sets ?? []) {
+        if (set.completed === false) continue
+        const weekKey = getProgressionWeekKey(set.created_at ?? session.created_at ?? '')
+        if (!weekKey) continue
+        const volume = (Number(set.weight) || 0) * (Number(set.reps) || 0)
+        volumeByWeek.set(weekKey, (volumeByWeek.get(weekKey) ?? 0) + volume)
+      }
+    }
+    return Array.from(volumeByWeek.entries())
+      .map(([week, volume]) => ({ week, volume: Math.round(volume) }))
+      .sort((a, b) => a.week.localeCompare(b.week))
+      .slice(-4)
+  }, [workoutSessions])
+
+  const fetchAnalyticsData = useCallback(async (uid: string) => {
     const today = new Date()
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(today.getDate() - 7)
     const ninetyDaysAgo = new Date(today)
     ninetyDaysAgo.setDate(today.getDate() - 90)
 
-    const [prRes, calsRes, waterRes, weightsFullRes] = await Promise.all([
+    const [prRes, calsRes, waterRes, wellbeingRes] = await Promise.all([
       supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
       supabase.from('daily_food_logs').select('date, calories, protein, carbs, fat').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
       supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date', { ascending: true }).limit(100),
+      supabase.from('daily_checkins').select('date,mood,sleep_hours,note').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
     ])
 
     setPersonalRecords(prRes.data || [])
-    setWeightHistoryFull(weightsFullRes.data || [])
+    setWellbeingEntries(wellbeingRes.data || [])
+    setSourceStates({
+      records: prRes.error ? 'error' : 'ready',
+      nutrition: calsRes.error ? 'error' : 'ready',
+      hydration: waterRes.error ? 'error' : 'ready',
+      wellbeing: wellbeingRes.error ? 'error' : 'ready',
+    })
 
     // Aggregate calories by day
     const calsByDay: Record<string, { calories: number; protein: number; carbs: number; fat: number }> = {}
@@ -48,35 +115,31 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
       waterByDay[w.date] = (waterByDay[w.date] || 0) + (w.amount_ml || 0)
     }
     setWeeklyWater(Object.entries(waterByDay).map(([date, ml]) => ({ date, ml })).sort((a, b) => a.date.localeCompare(b.date)))
+    loadedUserRef.current = uid
+  }, [supabase])
 
-    // Weekly training volume from workout_sets (last 4 weeks)
-    const fourWeeksAgo = new Date(today)
-    fourWeeksAgo.setDate(today.getDate() - 28)
-    const { data: setsData } = await supabase
-      .from('workout_sets')
-      .select('weight, reps, created_at')
-      .eq('user_id', uid)
-      .gte('created_at', fourWeeksAgo.toISOString())
-      .eq('completed', true)
-      .limit(500)
+  // Home needs only the latest PR snapshot. The full analytics payload remains
+  // lazy and is requested only after opening Progression.
+  useEffect(() => {
+    if (!userId || enabled) return
+    let active = true
+    supabase.from('personal_records')
+      .select('*')
+      .eq('user_id', userId)
+      .order('achieved_at', { ascending: false })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (!active) return
+        setPersonalRecords(data || [])
+        setSourceStates(previous => ({ ...previous, records: error ? 'error' : 'ready' }))
+      })
+    return () => { active = false }
+  }, [enabled, supabase, userId])
 
-    if (setsData && setsData.length > 0) {
-      const volByWeek: Record<string, number> = {}
-      for (const s of setsData) {
-        const d = new Date(s.created_at)
-        const weekStart = new Date(d)
-        const day = weekStart.getDay()
-        weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
-        const weekKey = weekStart.toISOString().split('T')[0]
-        volByWeek[weekKey] = (volByWeek[weekKey] || 0) + (s.weight || 0) * (s.reps || 0)
-      }
-      setWeeklyVolume(
-        Object.entries(volByWeek)
-          .map(([week, volume]) => ({ week, volume: Math.round(volume) }))
-          .sort((a, b) => a.week.localeCompare(b.week))
-      )
-    }
-  }
+  useEffect(() => {
+    if (!enabled || !userId || loadedUserRef.current === userId) return
+    queueMicrotask(() => void fetchAnalyticsData(userId))
+  }, [enabled, fetchAnalyticsData, userId])
 
   // PR detection -- called after finishing a workout set
   async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
@@ -111,7 +174,7 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
         achieved_at: new Date().toISOString().split('T')[0],
       }, { onConflict: 'user_id, exercise_name, record_type' })
 
-      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50)
+      const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(enabled ? 50 : 1)
       setPersonalRecords(prs || [])
 
       return { newPR: true, exercise: exerciseName, value: Math.round(estimated1RM * 10) / 10, previous: currentRecord?.value }
@@ -121,6 +184,6 @@ export default function useAnalytics({ supabase }: UseAnalyticsParams) {
 
   return {
     personalRecords, weeklyCalories, weeklyWater, weeklyVolume, weightHistoryFull,
-    fetchAnalyticsData, checkForPR,
+    wellbeingEntries, sourceStates, fetchAnalyticsData, checkForPR,
   }
 }

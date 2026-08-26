@@ -17,7 +17,7 @@ interface MeasureModalProps {
   onClose: () => void
 }
 
-const MEASURE_KEYS = ['waist', 'hips', 'chest', 'arms', 'thighs'] as const
+const MEASURE_KEYS = ['waist', 'hips', 'chest', 'biceps', 'thighs'] as const
 
 export default function MeasureModal({ measurements, onSave, onClose }: MeasureModalProps) {
   const t = useTranslations('progress')
@@ -26,12 +26,12 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const MEASURE_FIELDS = MEASURE_KEYS.map(key => ({
     key,
-    label: t(`tab.measureLabels.${key}`),
-    shortLabel: t(`tab.graphLabels.${key === 'arms' ? 'arms' : key}`),
+    label: t(`tab.measureLabels.${key === 'biceps' ? 'arms' : key}`),
+    shortLabel: t(`tab.graphLabels.${key === 'biceps' ? 'arms' : key}`),
     unit: 'cm',
   }))
   const [measureForm, setMeasureForm] = useState<Record<string, string>>({
-    waist: '', hips: '', chest: '', arms: '', thighs: '',
+    waist: '', hips: '', chest: '', biceps: '', thighs: '',
   })
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 

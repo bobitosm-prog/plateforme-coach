@@ -9,6 +9,7 @@ import { JS_DAYS_FR } from '../../lib/design-tokens'
 import { cache } from '../../lib/cache'
 import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
+import useProgressionViewModel from './useProgressionViewModel'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
@@ -89,6 +90,7 @@ export default function useClientDashboard() {
   const coachOfProgramIdRef = useRef<string | null>(null)
   const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
   const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
+  const [progressionBaseErrors, setProgressionBaseErrors] = useState<Partial<Record<'weight' | 'sessions' | 'measurements' | 'photos', string>>>({})
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -97,7 +99,13 @@ export default function useClientDashboard() {
   const userId = session?.user?.id
 
   const messagesHook = useMessages({ supabase, userId, coachId, activeTab })
-  const analyticsHook = useAnalytics({ supabase })
+  const analyticsHook = useAnalytics({
+    supabase,
+    enabled: activeTab === 'progress',
+    userId,
+    workoutSessions: wSessions,
+    weightHistory: weightHistory30,
+  })
   const scheduledHook = useScheduledSessions({ supabase })
   const foodHook = useFoodLog({
     supabase,
@@ -163,11 +171,11 @@ export default function useClientDashboard() {
         applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
         setSessionDates(cached.sessionDatesData || [])
         setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
+        setProgressionBaseErrors(cached.progressionBaseErrorsData || {})
         resolveCoachLink(uid)
         const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
         setPlanningDays(planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
-        analyticsHook.fetchAnalyticsData(uid)
         fetchAllComplete.current = true
         return
       }
@@ -175,7 +183,7 @@ export default function useClientDashboard() {
 
     const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
+      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: false }).limit(100),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
       supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(90),
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
@@ -246,10 +254,16 @@ export default function useClientDashboard() {
     }
 
     const profileData = profRes.data
-    const weightsData = weightsRes.data || []
+    const weightsData = [...(weightsRes.data || [])].sort((a, b) => a.date.localeCompare(b.date))
     const sessData = sessRes.data || []
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
+    const baseErrors: typeof progressionBaseErrors = {}
+    if (weightsRes.error) baseErrors.weight = 'PROGRESSION_WEIGHT_READ_FAILED'
+    if (sessRes.error) baseErrors.sessions = 'PROGRESSION_SESSIONS_READ_FAILED'
+    if (measureRes.error) baseErrors.measurements = 'PROGRESSION_MEASUREMENTS_READ_FAILED'
+    if (photosRes.error) baseErrors.photos = 'PROGRESSION_PHOTOS_READ_FAILED'
+    setProgressionBaseErrors(baseErrors)
     const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
     clientProgramIdRef.current = coachProgRes.data?.id ?? null
     coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
@@ -270,7 +284,7 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0, progressionBaseErrorsData: baseErrors }, 5 * 60 * 1000)
 
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
@@ -280,7 +294,6 @@ export default function useClientDashboard() {
     const planningProgram = customProg || coachToDays(coachProgData)
     setPlanningDays(planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
-    analyticsHook.fetchAnalyticsData(uid)
     await resolveCoachLink(uid)
     fetchAllComplete.current = true
   }
@@ -539,6 +552,51 @@ export default function useClientDashboard() {
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]
 
+  const progressionModel = useProgressionViewModel({
+    enabled: activeTab === 'progress',
+    period: '30d',
+    goal: profile?.objective,
+    weight: {
+      logs: weightHistory30,
+      profileCurrentWeight: profile?.current_weight ?? null,
+      targetWeight: profile?.target_weight ?? null,
+      isTruncated: weightHistory30.length === 100,
+      state: progressionBaseErrors.weight ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.weight,
+    },
+    sessions: {
+      rows: wSessions,
+      isTruncated: wSessions.length === 90,
+      state: progressionBaseErrors.sessions ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.sessions,
+    },
+    records: {
+      rows: analyticsHook.personalRecords,
+      isTruncated: analyticsHook.personalRecords.length === 50,
+      state: analyticsHook.sourceStates.records,
+      errorCode: analyticsHook.sourceStates.records === 'error' ? 'PROGRESSION_RECORDS_READ_FAILED' : undefined,
+    },
+    measurements: {
+      rows: measurements,
+      isTruncated: measurements.length === 10,
+      state: progressionBaseErrors.measurements ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.measurements,
+    },
+    photos: {
+      rows: progressPhotos,
+      isTruncated: progressPhotos.length === 20,
+      state: progressionBaseErrors.photos ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.photos,
+    },
+    wellbeing: {
+      rows: analyticsHook.wellbeingEntries,
+      isTruncated: analyticsHook.wellbeingEntries.length === 100,
+      state: analyticsHook.sourceStates.wellbeing,
+      errorCode: analyticsHook.sourceStates.wellbeing === 'error' ? 'PROGRESSION_WELLBEING_READ_FAILED' : undefined,
+    },
+    freshness: fetchAllComplete.current ? 'mixed' : 'network',
+  })
+
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
@@ -672,6 +730,8 @@ export default function useClientDashboard() {
     weeklyWater: analyticsHook.weeklyWater,
     weeklyVolume: analyticsHook.weeklyVolume,
     weightHistoryFull: analyticsHook.weightHistoryFull,
+    wellbeingEntries: analyticsHook.wellbeingEntries,
+    progressionModel,
     checkForPR,
     // Weekly diagnostic
     latestDiagnostic, setLatestDiagnostic,

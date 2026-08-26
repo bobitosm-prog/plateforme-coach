@@ -26,13 +26,15 @@ import ActionBtn from './progress/ActionBtn'
 import { computeAlignment, type Alignment } from '../../../lib/photo-align'
 import SectionTitle from '../ui/SectionTitle'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { addProgressionDays } from '../../../lib/progression/progression-date'
+import type { ProgressionWellbeingEntry } from '../../hooks/useAnalytics'
 
 const MEASURE_FIELDS_KEYS = [
-  { key: 'waist', labelKey: 'waist', unit: 'cm', dbKey: 'waist' },
-  { key: 'hips', labelKey: 'hips', unit: 'cm', dbKey: 'hips' },
-  { key: 'chest', labelKey: 'chest', unit: 'cm', dbKey: 'chest' },
-  { key: 'arms', labelKey: 'arms', unit: 'cm', dbKey: 'left_arm' },
-  { key: 'thighs', labelKey: 'thighs', unit: 'cm', dbKey: 'left_thigh' },
+  { key: 'waist', labelKey: 'waist', unit: 'cm' },
+  { key: 'hips', labelKey: 'hips', unit: 'cm' },
+  { key: 'chest', labelKey: 'chest', unit: 'cm' },
+  { key: 'arms', labelKey: 'arms', unit: 'cm' },
+  { key: 'thighs', labelKey: 'thighs', unit: 'cm' },
 ]
 
 const EVOLUTION_METRICS_KEYS = [
@@ -40,8 +42,9 @@ const EVOLUTION_METRICS_KEYS = [
   { key: 'waist', labelKey: 'waist', unit: 'cm', source: 'measure' },
   { key: 'chest', labelKey: 'chest', unit: 'cm', source: 'measure' },
   { key: 'hips', labelKey: 'hips', unit: 'cm', source: 'measure' },
-  { key: 'left_arm', labelKey: 'arms', unit: 'cm', source: 'measure' },
-  { key: 'body_fat', labelKey: 'body_fat', unit: '%', source: 'measure' },
+  { key: 'biceps', labelKey: 'arms', unit: 'cm', source: 'measure' },
+  { key: 'thighs', labelKey: 'thighs', unit: 'cm', source: 'measure' },
+  { key: 'calves', labelKey: 'calves', unit: 'cm', source: 'measure' },
 ]
 
 type PillSection = 'poids' | 'records' | 'photos' | 'mensurations' | 'bienetre' | 'graphiques'
@@ -74,6 +77,7 @@ interface ProgressTabProps {
   waterGoal: number
   streak: number
   currentWeight: number | undefined
+  wellbeingEntries: ProgressionWellbeingEntry[]
 }
 
 export default function ProgressTab({
@@ -84,6 +88,7 @@ export default function ProgressTab({
   personalRecords, weeklyCalories, weeklyWater, weeklyVolume,
   weightHistoryFull, wSessions, calorieGoal, goalWeight, waterGoal,
   streak, currentWeight,
+  wellbeingEntries,
 }: ProgressTabProps) {
   const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress')
@@ -101,8 +106,12 @@ export default function ProgressTab({
   const [alignment, setAlignment] = useState<{ before: Alignment; after: Alignment } | null>(null)
   const [isAligning, setIsAligning] = useState(false)
   const [alignError, setAlignError] = useState<string | null>(null)
-  const [checkinData, setCheckinData] = useState<any[]>([])
   const [checkinPeriod, setCheckinPeriod] = useState(7)
+  const [todayDateKey] = useState(() => new Date().toISOString().split('T')[0])
+  const checkinData = useMemo(() => {
+    const cutoff = addProgressionDays(todayDateKey, -checkinPeriod)
+    return wellbeingEntries.filter(entry => entry.date >= cutoff)
+  }, [checkinPeriod, todayDateKey, wellbeingEntries])
   const latestMeasure = measurements[0]
   const prevMeasure = measurements[1]
 
@@ -228,7 +237,7 @@ export default function ProgressTab({
     [progressPhotos]
   )
   useEffect(() => {
-    if (!progressPhotos.length) return
+    if (activePill !== 'photos' || !progressPhotos.length) return
     let cancelled = false
     async function generateUrls() {
       const urls: Record<string, string> = {}
@@ -244,15 +253,7 @@ export default function ProgressTab({
     }
     generateUrls()
     return () => { cancelled = true }
-  }, [photoIds])
-
-  // Fetch check-in data for well-being section
-  React.useEffect(() => {
-    if (!session?.user?.id) return
-    const startDate = new Date(Date.now() - checkinPeriod * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_checkins').select('*').eq('user_id', session.user.id).gte('date', startDate).order('date', { ascending: true })
-      .then(({ data }: any) => setCheckinData(data || []))
-  }, [session?.user?.id, checkinPeriod])
+  }, [activePill, photoIds, progressPhotos, supabase])
 
   // Load cached analyses from progressPhotos
   React.useEffect(() => {
@@ -302,7 +303,7 @@ export default function ProgressTab({
             calorie_goal: profile.calorie_goal, tdee: profile.tdee,
             protein_goal: profile.protein_goal, carbs_goal: profile.carbs_goal,
             fat_goal: profile.fat_goal, activity_level: profile.activity_level,
-            body_fat: latestM?.body_fat || null,
+            body_fat: profile.body_fat_pct || null,
             waist: latestM?.waist || null,
             weight_trend: weightTrend,
             weight_delta_30d: weightDelta30d,
@@ -360,8 +361,8 @@ export default function ProgressTab({
     if (measureForm.waist) payload.waist = Number(measureForm.waist)
     if (measureForm.hips) payload.hips = Number(measureForm.hips)
     if (measureForm.chest) payload.chest = Number(measureForm.chest)
-    if (measureForm.arms) { payload.left_arm = Number(measureForm.arms); payload.right_arm = Number(measureForm.arms) }
-    if (measureForm.thighs) { payload.left_thigh = Number(measureForm.thighs); payload.right_thigh = Number(measureForm.thighs) }
+    if (measureForm.arms) payload.biceps = Number(measureForm.arms)
+    if (measureForm.thighs) payload.thighs = Number(measureForm.thighs)
     if (Object.keys(payload).length <= 2) return
     setSavingMeasure(true)
     const { error } = await supabase.from('body_measurements').insert(payload)
@@ -823,8 +824,8 @@ export default function ProgressTab({
             {[
               { l: 'TAILLE', v: latestMeasure?.waist, u: 'cm' },
               { l: 'POITRINE', v: latestMeasure?.chest, u: 'cm' },
-              { l: 'BRAS', v: latestMeasure?.left_arm, u: 'cm' },
-              { l: 'CUISSES', v: latestMeasure?.left_thigh, u: 'cm' },
+              { l: 'BRAS', v: latestMeasure?.biceps, u: 'cm' },
+              { l: 'CUISSES', v: latestMeasure?.thighs, u: 'cm' },
             ].map(({ l, v, u }) => (
               <div key={l} style={{ background: `${colors.gold}0a`, borderRadius: 10, padding: 12 }}>
                 <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{l}</div>
@@ -865,19 +866,21 @@ export default function ProgressTab({
         </div>
 
         {(() => {
-          const moodScore = (m: string) => ({ fatigue: 1, normal: 2, bien: 3, top: 4, energie: 5 } as any)[m] || null
-          const moodEmoji = (m: string) => ({ fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' } as any)[m] || '—'
+          const moodScores: Record<string, number> = { fatigue: 1, normal: 2, bien: 3, top: 4, energie: 5 }
+          const moodEmojis: Record<string, string> = { fatigue: '😴', normal: '😐', bien: '💪', top: '🔥', energie: '⚡' }
+          const moodScore = (m: string) => moodScores[m] || null
+          const moodEmoji = (m: string) => moodEmojis[m] || '—'
           // Prepare chart data with all days filled
           const chartData: any[] = []
           for (let i = checkinPeriod - 1; i >= 0; i--) {
-            const d = new Date(Date.now() - i * 86400000)
-            const ds = d.toISOString().split('T')[0]
-            const c = checkinData.find((x: any) => x.date === ds)
-            chartData.push({ date: ds, day: d.toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }), mood: c ? moodScore(c.mood) : null, sleep: c?.sleep_hours || null, note: c?.note })
+            const ds = addProgressionDays(todayDateKey, -i)
+            const displayDate = new Date(`${ds}T12:00:00`)
+            const c = checkinData.find(entry => entry.date === ds)
+            chartData.push({ date: ds, day: displayDate.toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH', { weekday: 'short' }), mood: c?.mood ? moodScore(c.mood) : null, sleep: c?.sleep_hours || null, note: c?.note })
           }
           // Stats
-          const moods = checkinData.filter((c: any) => c.mood).map((c: any) => moodScore(c.mood)).filter(Boolean)
-          const sleeps = checkinData.filter((c: any) => c.sleep_hours).map((c: any) => c.sleep_hours)
+          const moods = checkinData.flatMap(entry => entry.mood ? [moodScore(entry.mood)] : []).filter((score): score is number => score != null)
+          const sleeps = checkinData.flatMap(entry => entry.sleep_hours ? [entry.sleep_hours] : [])
           const moodAvg = moods.length ? (moods.reduce((a: number, b: number) => a + b, 0) / moods.length).toFixed(1) : '—'
           const sleepAvg = sleeps.length ? (sleeps.reduce((a: number, b: number) => a + b, 0) / sleeps.length).toFixed(1) : '—'
           // Most frequent mood
@@ -987,7 +990,7 @@ export default function ProgressTab({
               ...measurements.map((m: any) => {
                 const h = profile?.height ? profile.height / 100 : 0
                 const imc = m.waist && h > 0 ? +(displayWeights.find(w => w.date === m.date)?.poids || currentWeight || 0) / (h * h) : ''
-                return [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.left_arm ?? '', m.left_thigh ?? '', m.body_fat ?? '', typeof imc === 'number' ? +imc.toFixed(1) : '']
+                return [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.biceps ?? '', m.thighs ?? '', '', typeof imc === 'number' ? +imc.toFixed(1) : '']
               })
             ]
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(msData), 'Mensurations')
