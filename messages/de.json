@@ -2467,6 +2467,39 @@
       "empty": "Keine gespeicherten Mahlzeiten.",
       "foodCount": "{count} Lebensmittel",
       "usedCount": "{count}x verwendet"
+    },
+    "v2": {
+      "eyebrow": "Tägliche Übersicht",
+      "title": "Ernährung",
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "addMeal": "Mahlzeit hinzufügen",
+      "addFirstMeal": "Erste Mahlzeit hinzufügen",
+      "loading": "Ernährungsdaten werden geladen",
+      "errorTitle": "Ernährungsübersicht nicht verfügbar",
+      "errorCopy": "Die Ernährungsdaten konnten nicht geladen werden. Keine Angabe wird durch 0 ersetzt.",
+      "retry": "Erneut versuchen",
+      "emptyTitle": "Für diesen Tag wurde keine Mahlzeit erfasst",
+      "emptyCopy": "Füge deine erste Mahlzeit hinzu, um die tatsächliche Tageszufuhr zu verfolgen.",
+      "calories": "Kalorien",
+      "protein": "Protein",
+      "remaining": "{count} kcal verbleibend",
+      "above": "+{count} kcal über dem Ziel",
+      "reached": "Ziel erreicht",
+      "targetMissing": "Ziel nicht festgelegt",
+      "calorieProgress": "Fortschritt der aufgenommenen Kalorien",
+      "proteinProgress": "Tatsächliche Aufnahme heute",
+      "partial": "Einige Ziele sind noch nicht festgelegt. Die aufgenommenen Werte bleiben sichtbar.",
+      "macrosTitle": "Makros",
+      "macrosCopy": "Heute erfasste Aufnahme",
+      "macro": {
+        "protein": "Protein",
+        "carbs": "Kohlenhydrate",
+        "fat": "Fett"
+      },
+      "macroTargetDefined": "Aufgenommen / Ziel",
+      "macrosError": "Makros nicht verfügbar",
+      "macrosErrorCopy": "Die Daten konnten nicht geladen werden."
     }
   },
   "coach_dashboard": {

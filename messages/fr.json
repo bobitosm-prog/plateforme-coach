@@ -2467,6 +2467,39 @@
       "empty": "Aucun repas sauvegarde.",
       "foodCount": "{count} aliments",
       "usedCount": "{count}x utilise"
+    },
+    "v2": {
+      "eyebrow": "Suivi quotidien",
+      "title": "Nutrition",
+      "today": "Aujourd’hui",
+      "yesterday": "Hier",
+      "addMeal": "Ajouter un repas",
+      "addFirstMeal": "Ajouter mon premier repas",
+      "loading": "Chargement du suivi nutritionnel",
+      "errorTitle": "Suivi nutritionnel indisponible",
+      "errorCopy": "Impossible de charger le suivi nutritionnel. Aucune valeur n’est remplacée par zéro.",
+      "retry": "Réessayer",
+      "emptyTitle": "Aucun repas enregistré pour cette journée",
+      "emptyCopy": "Ajoute ton premier repas pour commencer le suivi réel de la journée.",
+      "calories": "Calories",
+      "protein": "Protéines",
+      "remaining": "{count} kcal restantes",
+      "above": "+{count} kcal au-dessus de l’objectif",
+      "reached": "Objectif atteint",
+      "targetMissing": "Objectif non défini",
+      "calorieProgress": "Progression des calories consommées",
+      "proteinProgress": "Consommation réelle aujourd’hui",
+      "partial": "Certaines cibles ne sont pas encore définies. Les valeurs consommées restent disponibles.",
+      "macrosTitle": "Macros",
+      "macrosCopy": "Consommation enregistrée aujourd’hui",
+      "macro": {
+        "protein": "Protéines",
+        "carbs": "Glucides",
+        "fat": "Lipides"
+      },
+      "macroTargetDefined": "Consommé / objectif",
+      "macrosError": "Macros indisponibles",
+      "macrosErrorCopy": "Les données n’ont pas pu être chargées."
     }
   },
   "coach_dashboard": {

@@ -2467,6 +2467,39 @@
       "empty": "No saved meals.",
       "foodCount": "{count} foods",
       "usedCount": "{count}x used"
+    },
+    "v2": {
+      "eyebrow": "Daily tracking",
+      "title": "Nutrition",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "addMeal": "Add a meal",
+      "addFirstMeal": "Add my first meal",
+      "loading": "Loading nutrition tracking",
+      "errorTitle": "Nutrition tracking unavailable",
+      "errorCopy": "Nutrition tracking could not be loaded. No value is replaced with zero.",
+      "retry": "Try again",
+      "emptyTitle": "No meal logged for this day",
+      "emptyCopy": "Add your first meal to start tracking the day’s actual intake.",
+      "calories": "Calories",
+      "protein": "Protein",
+      "remaining": "{count} kcal remaining",
+      "above": "+{count} kcal above target",
+      "reached": "Target reached",
+      "targetMissing": "Target not set",
+      "calorieProgress": "Consumed calorie progress",
+      "proteinProgress": "Actual intake today",
+      "partial": "Some targets are not set yet. Consumed values remain available.",
+      "macrosTitle": "Macros",
+      "macrosCopy": "Intake logged today",
+      "macro": {
+        "protein": "Protein",
+        "carbs": "Carbs",
+        "fat": "Fat"
+      },
+      "macroTargetDefined": "Consumed / target",
+      "macrosError": "Macros unavailable",
+      "macrosErrorCopy": "The data could not be loaded."
     }
   },
   "coach_dashboard": {
