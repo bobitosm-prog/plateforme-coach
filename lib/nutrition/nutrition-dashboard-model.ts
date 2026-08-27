@@ -44,6 +44,7 @@ export interface ActiveNutritionPlan {
   id: string | null
   plan: unknown | null
   coachId: string | null
+  updatedAt: string | null
   errorCode?: string
 }
 
@@ -174,14 +175,28 @@ export function resolveActiveNutritionPlan({
     && coachMealPlan?.coach_id === coachId
     && isPlanPayload(coachMealPlan.plan)
   ) {
-    return { state: 'ready', source: 'coach', id: coachMealPlan.id, plan: coachMealPlan.plan, coachId }
+    return {
+      state: 'ready',
+      source: 'coach',
+      id: coachMealPlan.id,
+      plan: coachMealPlan.plan,
+      coachId,
+      updatedAt: coachMealPlan.updated_at ?? coachMealPlan.created_at ?? null,
+    }
   }
 
   if (personalMealPlan?.active && isPlanPayload(personalMealPlan.plan)) {
-    return { state: 'ready', source: 'personal', id: personalMealPlan.id, plan: personalMealPlan.plan, coachId: null }
+    return {
+      state: 'ready',
+      source: 'personal',
+      id: personalMealPlan.id,
+      plan: personalMealPlan.plan,
+      coachId: null,
+      updatedAt: personalMealPlan.created_at ?? null,
+    }
   }
 
-  return { state: 'empty', source: 'none', id: null, plan: null, coachId: null }
+  return { state: 'empty', source: 'none', id: null, plan: null, coachId: null, updatedAt: null }
 }
 
 function sumLogs(rows: NutritionLogRow[]): NutritionValues {
@@ -231,7 +246,7 @@ export function buildNutritionViewModel(input: NutritionViewModelInput): Nutriti
     personalMealPlan: input.personalPlan,
   })
   if (input.loading) {
-    activePlan = { state: 'loading', source: 'none', id: null, plan: null, coachId: null }
+    activePlan = { state: 'loading', source: 'none', id: null, plan: null, coachId: null, updatedAt: null }
   } else if (
     (input.coachRelation.status === 'active' && errors.coachPlan)
     || (activePlan.source === 'none' && errors.personalPlan)
@@ -242,8 +257,11 @@ export function buildNutritionViewModel(input: NutritionViewModelInput): Nutriti
       id: null,
       plan: null,
       coachId: null,
+      updatedAt: null,
       errorCode: errors.coachPlan ?? errors.personalPlan,
     }
+  } else if (activePlan.source === 'personal' && input.coachRelation.status === 'error') {
+    activePlan = { ...activePlan, state: 'partial', errorCode: 'NUTRITION_COACH_RELATION_UNAVAILABLE' }
   }
   const selectedLogs = input.dailyLogs.filter(row => row.date === input.selectedDate)
   const selectedTracking = input.tracking.filter(row => row.date === input.selectedDate)

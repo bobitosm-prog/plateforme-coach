@@ -2566,6 +2566,22 @@
           "view_journal": "Consulter le journal",
           "complete_day": "Compléter cette journée avec votre {meal}"
         }
+      },
+      "activePlan": {
+        "eyebrow": "Plan actif", "loading": "Chargement du plan actif", "errorTitle": "Plan indisponible",
+        "errorBody": "Impossible de charger le plan actif. Le journal reste disponible.", "retry": "Réessayer",
+        "emptyTitle": "Aucun plan alimentaire actif", "emptyBody": "Le suivi quotidien reste disponible sans plan.",
+        "configure": "Configurer mon plan", "coachSource": "Plan coach", "personalSource": "Plan personnel",
+        "coachBody": "Créé par votre coach actif", "personalBody": "Votre plan alimentaire actif",
+        "updated": "Mis à jour le {date}", "partial": "Le plan reste consultable, mais la relation coach n’a pas pu être vérifiée.",
+        "viewPlan": "Voir le plan", "hidePlan": "Masquer le plan", "shoppingList": "Liste de courses",
+        "today": "Aujourd’hui", "selectedDay": "Jour sélectionné", "todayShort": "auj.", "chooseDay": "Choisir le jour du plan",
+        "noMeals": "Aucun repas prévu pour cette journée.", "mealSummary": "{count} aliments · {calories} kcal",
+        "addToJournal": "Ajouter au journal", "macros": "P {protein} g · G {carbs} g · L {fat} g",
+        "dayTotal": "Total prévu : {calories} kcal",
+        "days": { "lundi": "Lundi", "mardi": "Mardi", "mercredi": "Mercredi", "jeudi": "Jeudi", "vendredi": "Vendredi", "samedi": "Samedi", "dimanche": "Dimanche" },
+        "daysShort": { "lundi": "Lun", "mardi": "Mar", "mercredi": "Mer", "jeudi": "Jeu", "vendredi": "Ven", "samedi": "Sam", "dimanche": "Dim" },
+        "meals": { "petit_dejeuner": "Petit-déjeuner", "dejeuner": "Déjeuner", "collation": "Collation", "diner": "Dîner" }
       }
     }
   },

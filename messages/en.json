@@ -2566,6 +2566,22 @@
           "view_journal": "View the journal",
           "complete_day": "Complete this day with your {meal}"
         }
+      },
+      "activePlan": {
+        "eyebrow": "Active plan", "loading": "Loading active plan", "errorTitle": "Plan unavailable",
+        "errorBody": "The active plan could not be loaded. Your journal remains available.", "retry": "Try again",
+        "emptyTitle": "No active meal plan", "emptyBody": "Daily tracking remains available without a plan.",
+        "configure": "Configure my plan", "coachSource": "Coach plan", "personalSource": "Personal plan",
+        "coachBody": "Created by your active coach", "personalBody": "Your active meal plan",
+        "updated": "Updated {date}", "partial": "The plan remains available, but the coach relationship could not be verified.",
+        "viewPlan": "View plan", "hidePlan": "Hide plan", "shoppingList": "Shopping list",
+        "today": "Today", "selectedDay": "Selected day", "todayShort": "today", "chooseDay": "Choose a plan day",
+        "noMeals": "No meals planned for this day.", "mealSummary": "{count} foods · {calories} kcal",
+        "addToJournal": "Add to journal", "macros": "P {protein} g · C {carbs} g · F {fat} g",
+        "dayTotal": "Planned total: {calories} kcal",
+        "days": { "lundi": "Monday", "mardi": "Tuesday", "mercredi": "Wednesday", "jeudi": "Thursday", "vendredi": "Friday", "samedi": "Saturday", "dimanche": "Sunday" },
+        "daysShort": { "lundi": "Mon", "mardi": "Tue", "mercredi": "Wed", "jeudi": "Thu", "vendredi": "Fri", "samedi": "Sat", "dimanche": "Sun" },
+        "meals": { "petit_dejeuner": "Breakfast", "dejeuner": "Lunch", "collation": "Snack", "diner": "Dinner" }
       }
     }
   },

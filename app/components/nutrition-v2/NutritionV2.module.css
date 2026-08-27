@@ -614,6 +614,221 @@
   background: rgba(137, 67, 58, .035);
 }
 
+.activePlan {
+  margin: 0 20px calc(160px + env(safe-area-inset-bottom, 0px));
+  padding: 20px;
+  border: 1px solid rgba(201, 168, 76, .12);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .015));
+}
+
+.activePlanHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.activePlanHeader h2 {
+  margin: 3px 0 0;
+  color: #eee9df;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 500;
+}
+
+.activePlanHeader p:not(.eyebrow) {
+  margin: 6px 0 0;
+  color: #aaa195;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.activePlanHeader span {
+  display: block;
+  margin-top: 5px;
+  color: #777066;
+  font-size: .68rem;
+}
+
+.activePlanHeader > svg { flex-shrink: 0; color: #c9a84c; }
+
+.activePlanNotice {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(222, 181, 90, .15);
+  border-radius: 10px;
+  color: #c5ad70;
+  background: rgba(222, 181, 90, .055);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
+.activePlanActions {
+  display: grid;
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.activePlanActions button,
+.activePlanState button {
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(201, 168, 76, .2);
+  border-radius: 11px;
+  color: #d5bb70;
+  background: rgba(201, 168, 76, .075);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.activePlanActions button:first-child svg { transition: transform 160ms ease; }
+.activePlanActions button:first-child[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+.activePlanDetails {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, .06);
+}
+
+.activePlanDayHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.activePlanDayHeading strong { color: #d9bd6d; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+.activePlanDayHeading span { color: #eee9df; font-size: .95rem; font-weight: 700; }
+
+.activePlanDaySelector {
+  display: grid;
+  margin-top: 12px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.activePlanDaySelector button {
+  display: grid;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 2px;
+  place-content: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 9px;
+  color: #8f887d;
+  background: rgba(255, 255, 255, .025);
+  font: inherit;
+  cursor: pointer;
+}
+
+.activePlanDaySelector button[aria-pressed='true'] {
+  border-color: rgba(201, 168, 76, .34);
+  color: #dfc475;
+  background: rgba(201, 168, 76, .09);
+}
+
+.activePlanDaySelector span { font-size: .65rem; font-weight: 800; text-transform: uppercase; }
+.activePlanDaySelector small { color: inherit; font-size: .5rem; }
+
+.activePlanMeals { display: grid; margin-top: 12px; gap: 7px; }
+
+.activePlanMeal {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .018);
+}
+
+.activePlanMealSummary {
+  display: grid;
+  padding: 5px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.activePlanMealSummary > button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.activePlanMealSummary > button:first-child {
+  display: flex;
+  min-width: 0;
+  padding: 5px 7px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.activePlanMealSummary > button:first-child span { min-width: 0; }
+.activePlanMealSummary strong { display: block; color: #e7e2d9; font-size: .76rem; }
+.activePlanMealSummary small { display: block; margin-top: 3px; color: #7f786e; font-size: .62rem; }
+.activePlanMealSummary > button:first-child svg { flex-shrink: 0; color: #847d72; transition: transform 160ms ease; }
+.activePlanMealSummary > button:first-child[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+.activePlanMealSummary > button:last-child {
+  padding: 0 10px;
+  border: 1px solid rgba(201, 168, 76, .16);
+  color: #ceb468;
+  background: rgba(201, 168, 76, .06);
+  font-size: .62rem;
+  font-weight: 750;
+}
+
+.activePlanFoods { padding: 0 12px 12px; border-top: 1px solid rgba(255, 255, 255, .045); }
+
+.activePlanFoods > div {
+  display: flex;
+  min-height: 42px;
+  padding: 7px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .04);
+  color: #a9a195;
+  font-size: .68rem;
+}
+
+.activePlanFoods strong { display: block; color: #d6d0c5; font-size: .72rem; }
+.activePlanFoods small { display: block; margin-top: 2px; color: #777066; }
+.activePlanFoods p { margin: 9px 0 0; color: #817a70; font-size: .62rem; }
+.activePlanDayTotal { margin: 12px 0 0; color: #9a9286; font-size: .68rem; text-align: right; }
+.activePlanNoMeals { margin: 14px 0 0; color: #8b8479; font-size: .74rem; }
+
+.activePlanState {
+  display: flex;
+  min-height: 180px;
+  padding: 24px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #8e877c;
+  text-align: center;
+}
+
+.activePlanState > svg { color: #a9904f; }
+.activePlanState strong { color: #e0dbd1; font-size: 1rem; }
+.activePlanState span { max-width: 330px; font-size: .74rem; line-height: 1.5; }
+.activePlanState button { margin-top: 7px; }
+.activePlanSkeleton { display: grid; min-height: 150px; align-content: center; gap: 12px; }
+
 .todayMeals button:focus-visible,
 .todayMeals input:focus-visible {
   outline: 3px solid rgba(230, 195, 100, .42);
@@ -659,6 +874,9 @@
   .mealActionBar { gap: 4px; }
   .mealActionBar button { padding-inline: 2px; font-size: .6rem; }
   .mealActionBar button svg { display: none; }
+  .activePlan { margin-inline: 12px; padding: 16px 12px; border-radius: 18px; }
+  .activePlanDaySelector { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .activePlanMealSummary > button:last-child { max-width: 92px; padding-inline: 8px; }
 }
 
 @media (min-width: 768px) {
@@ -669,4 +887,6 @@
   .skeleton { animation: none; }
   .primaryButton, .progressTrack > span, .mealToggle svg { transition: none; }
   .primaryButton:hover { transform: none; }
+  .activePlanActions button:first-child svg,
+  .activePlanMealSummary > button:first-child svg { transition: none; }
 }

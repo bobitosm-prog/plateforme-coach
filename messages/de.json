@@ -2566,6 +2566,22 @@
           "view_journal": "Protokoll ansehen",
           "complete_day": "Diesen Tag mit {meal} ergänzen"
         }
+      },
+      "activePlan": {
+        "eyebrow": "Aktiver Plan", "loading": "Aktiver Plan wird geladen", "errorTitle": "Plan nicht verfügbar",
+        "errorBody": "Der aktive Plan konnte nicht geladen werden. Das Protokoll bleibt verfügbar.", "retry": "Erneut versuchen",
+        "emptyTitle": "Kein aktiver Ernährungsplan", "emptyBody": "Die tägliche Erfassung bleibt auch ohne Plan verfügbar.",
+        "configure": "Plan konfigurieren", "coachSource": "Coach-Plan", "personalSource": "Persönlicher Plan",
+        "coachBody": "Von Ihrem aktiven Coach erstellt", "personalBody": "Ihr aktiver Ernährungsplan",
+        "updated": "Aktualisiert am {date}", "partial": "Der Plan bleibt verfügbar, aber die Coach-Beziehung konnte nicht geprüft werden.",
+        "viewPlan": "Plan ansehen", "hidePlan": "Plan ausblenden", "shoppingList": "Einkaufsliste",
+        "today": "Heute", "selectedDay": "Ausgewählter Tag", "todayShort": "heute", "chooseDay": "Plantag auswählen",
+        "noMeals": "Für diesen Tag sind keine Mahlzeiten geplant.", "mealSummary": "{count} Lebensmittel · {calories} kcal",
+        "addToJournal": "Zum Protokoll hinzufügen", "macros": "P {protein} g · K {carbs} g · F {fat} g",
+        "dayTotal": "Geplant: {calories} kcal",
+        "days": { "lundi": "Montag", "mardi": "Dienstag", "mercredi": "Mittwoch", "jeudi": "Donnerstag", "vendredi": "Freitag", "samedi": "Samstag", "dimanche": "Sonntag" },
+        "daysShort": { "lundi": "Mo", "mardi": "Di", "mercredi": "Mi", "jeudi": "Do", "vendredi": "Fr", "samedi": "Sa", "dimanche": "So" },
+        "meals": { "petit_dejeuner": "Frühstück", "dejeuner": "Mittagessen", "collation": "Snack", "diner": "Abendessen" }
       }
     }
   },
