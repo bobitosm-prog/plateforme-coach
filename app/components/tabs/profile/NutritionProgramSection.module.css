@@ -1,0 +1,193 @@
+.page {
+  min-height: 100%;
+  padding: 16px 16px calc(160px + env(safe-area-inset-bottom, 0px));
+  background: #0d0b08;
+  color: #f7f2e8;
+}
+
+.shell {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.back,
+.configureButton,
+.regenerateButton {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: #c9bda8;
+  background: transparent;
+}
+
+.header {
+  margin: 20px 0 22px;
+}
+
+.header > span,
+.summaryContent > span,
+.configurationHeading span {
+  color: #c8a96e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.header h1,
+.summary h2,
+.configurationHeading h2 {
+  margin: 5px 0 0;
+  font-family: var(--font-bebas-neue), sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.header h1 { font-size: clamp(2rem, 7vw, 3rem); }
+.header p { max-width: 52ch; margin: 8px 0 0; color: #9f9587; line-height: 1.55; }
+
+.summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(200, 169, 110, 0.2);
+  border-radius: 18px;
+  background: #17130f;
+}
+
+.summaryIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 13px;
+  color: #c8a96e;
+  background: rgba(200, 169, 110, 0.1);
+}
+
+.summary h2 { font-size: 1.55rem; }
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.meta div {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.meta dt { color: #8f8577; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.meta dd { margin: 4px 0 0; color: #f7f2e8; font-size: 0.86rem; }
+
+.coachNotice,
+.notice,
+.error,
+.disabledReason,
+.regenerationHint {
+  margin: 14px 0 0;
+  color: #c9bda8;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.coachNotice,
+.regenerationHint { display: flex; align-items: flex-start; gap: 8px; }
+.coachNotice { color: #c8a96e; }
+.error { color: #f4a3a3; }
+
+.actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.configureButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #0d0b08;
+  background: #c8a96e;
+  font-weight: 800;
+}
+
+.configureButton span { flex: 1; text-align: left; }
+.configureButton[aria-expanded='true'] svg:last-child { transform: rotate(180deg); }
+.configureButton:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.regenerateButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(200, 169, 110, 0.35);
+  color: #c8a96e;
+  background: transparent;
+  font-weight: 700;
+}
+
+.configuration {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: #12100d;
+}
+
+.configurationHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.configurationHeading h2 { font-size: 1.45rem; }
+.quota { padding: 6px 9px; border-radius: 999px; background: rgba(200, 169, 110, 0.1); white-space: nowrap; }
+.loadingPanel { min-height: 220px; border-radius: 14px; background: rgba(255, 255, 255, 0.035); }
+
+.back:focus-visible,
+.configureButton:focus-visible,
+.regenerateButton:focus-visible,
+.configuration :global(button:focus-visible),
+.configuration :global(input:focus-visible),
+.configuration :global(select:focus-visible) {
+  outline: 2px solid #f0c978;
+  outline-offset: 3px;
+}
+
+@media (max-width: 430px) {
+  .page { padding-inline: 12px; }
+  .summary { padding: 15px; }
+  .meta { grid-template-columns: 1fr; }
+  .configuration { padding: 12px; }
+  .configurationHeading { align-items: stretch; flex-direction: column; }
+  .quota { align-self: flex-start; }
+}
+
+@media (min-width: 768px) {
+  .page { padding-top: 28px; padding-bottom: 48px; }
+  .configuration { padding: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .configureButton,
+  .configureButton svg { transition: none !important; }
+}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import BugReport from '../BugReport'
 import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
@@ -24,7 +24,7 @@ interface AccountTabProps {
   supabase: any
   userId?: string
   session: Session | null
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals') => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program') => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
@@ -137,6 +137,20 @@ export default function AccountTab({
           <button onClick={() => onNavigate('coachIA')} style={itemStyle}>
             <Sparkles size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Athena</span>
+            <span style={{ flex: 1 }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
+        </div>
+
+        {/* ── PROGRAMMES ── */}
+        <SectionTitle noPadding title={t('programs')} />
+        <div style={menuCard}>
+          <button onClick={() => onNavigate('nutrition_program')} style={itemStyle}>
+            <UtensilsCrossed size={18} color={GOLD} />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('nutritionProgram')}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('nutritionProgramDescription')}</span>
+            </span>
             <span style={{ flex: 1 }} />
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>

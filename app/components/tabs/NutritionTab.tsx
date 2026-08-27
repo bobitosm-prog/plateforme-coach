@@ -1,9 +1,8 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Trash2, ChefHat, List, ClipboardList, Camera, Star, Pencil, CalendarDays, Droplets } from 'lucide-react'
+import { Sparkles, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Trash2, ChefHat, List, ClipboardList, Camera, Star, Pencil, CalendarDays, Droplets } from 'lucide-react'
 import { downloadCsv } from '../../../lib/exportCsv'
-import NutritionPreferences from '../NutritionPreferences'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
@@ -13,7 +12,6 @@ import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
-import AiQuotaBadge from '../ui/AiQuotaBadge'
 import {
   fonts, colors, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
@@ -41,7 +39,7 @@ const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
   dinner: 'diner',
 }
 
-type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
+type SubTab = 'today' | 'plan' | 'scanner' | 'recipes' | 'meals'
 
 interface NutritionTabProps {
   profile: any
@@ -51,9 +49,10 @@ interface NutritionTabProps {
   supabase: any
   userId: string
   fetchAll: () => Promise<void>
+  onOpenProgramSettings: () => void
 }
 
-export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, fetchAll }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, fetchAll, onOpenProgramSettings }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
@@ -261,7 +260,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         {([
           { id: 'today' as SubTab, label: nt('tabs.journal') },
           { id: 'plan' as SubTab, label: nt('tabs.plan') },
-          ...(capabilities.nutrition ? [{ id: 'prefs' as SubTab, label: nt('tabs.prefs') }] : []),
           ...(capabilities.nutrition ? [{ id: 'recipes' as SubTab, label: nt('tabs.recipes') }] : []),
           { id: 'meals' as SubTab, label: nt('tabs.meals') },
         ]).map(({ id, label }) => {
@@ -431,7 +429,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         todayKey={todayKey}
         onImportMeal={(mealType, dayKey) => setImportingMeal({ mealType, dayKey })}
         onOpenShoppingList={() => setShowShoppingModal(true)}
-        onConfigurePlan={capabilities.nutrition ? () => setSubTab('prefs') : undefined}
+        onConfigurePlan={capabilities.nutrition ? onOpenProgramSettings : undefined}
         onRetry={() => void refreshNutrition()}
       />}
 
@@ -446,15 +444,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
           onClose={() => setImportingMeal(null)}
         />
       })()}
-
-      {/* Preferences sub-tab */}
-      {subTab === 'prefs' && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <AiQuotaBadge />
-          <SectionTitle noPadding title={nt('chrome.prefsTitle')} icon={<SlidersHorizontal size={16} />} />
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { void refreshNutrition(); setSubTab('today') }} />
-        </div>
-      )}
 
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
