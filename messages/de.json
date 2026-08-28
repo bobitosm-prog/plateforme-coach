@@ -603,6 +603,8 @@
     "empty": "Keine Rezepte. Generiere eins!",
     "generated": "Rezept generiert!",
     "genError": "Generierungsfehler",
+    "loadError": "Rezepte sind derzeit nicht verfügbar.",
+    "retry": "Erneut versuchen",
     "deleted": "Rezept gelöscht",
     "categories": {
       "all": "Alle",
@@ -2469,7 +2471,12 @@
       "addAll": "ALLE HINZUFÜGEN",
       "today": "HEUTE",
       "remaining": "verbleibend: {count}",
-      "myMeals": "Meine Mahlzeiten"
+      "myMeals": "Meine Mahlzeiten",
+      "savedMealsError": "Gespeicherte Mahlzeiten konnten nicht geladen werden.",
+      "photoError": "Die Fotoanalyse ist fehlgeschlagen. Versuche es mit einem anderen Bild.",
+      "photoSaveError": "Die erkannten Lebensmittel konnten nicht hinzugefügt werden.",
+      "photoEstimate": "KI-Schätzung zur Prüfung. Passe die Mengen vor dem Hinzufügen zum Tagebuch an.",
+      "quantityEstimate": "Geschätzte Menge"
     },
     "macrosShort": {
       "p": "E",
@@ -2622,6 +2629,14 @@
         "days": { "lundi": "Montag", "mardi": "Dienstag", "mercredi": "Mittwoch", "jeudi": "Donnerstag", "vendredi": "Freitag", "samedi": "Samstag", "dimanche": "Sonntag" },
         "daysShort": { "lundi": "Mo", "mardi": "Di", "mercredi": "Mi", "jeudi": "Do", "vendredi": "Fr", "samedi": "Sa", "dimanche": "So" },
         "meals": { "petit_dejeuner": "Frühstück", "dejeuner": "Mittagessen", "collation": "Snack", "diner": "Abendessen" }
+      },
+      "tools": {
+        "eyebrow": "Schnellzugriff", "title": "Werkzeuge", "secondary": "Sekundäre Aktionen",
+        "addFood": "Lebensmittel", "addFoodBody": "Lebensmittel suchen",
+        "photo": "KI-Foto", "photoBody": "Schätzen und prüfen",
+        "savedMeals": "Meine Mahlzeiten", "savedMealsBody": "Mahlzeit wiederverwenden",
+        "recipes": "Rezepte", "recipesBody": "Ideen durchsuchen",
+        "scannerPending": "Barcode-Scannen ist über die Lebensmittelsuche verfügbar."
       }
     }
   },

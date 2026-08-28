@@ -1,17 +1,16 @@
 'use client'
+import dynamic from 'next/dynamic'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Sparkles, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Trash2, ChefHat, List, ClipboardList, Camera, Star, Pencil, CalendarDays, Droplets } from 'lucide-react'
-import { downloadCsv } from '../../../lib/exportCsv'
+import { ChevronLeft, ChevronRight, Trash2, Camera, Pencil, CalendarDays, Droplets } from 'lucide-react'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
-import BarcodeScanner from '../BarcodeScanner'
-import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
+import AiQuotaBadge from '../ui/AiQuotaBadge'
 import {
   fonts, colors, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
@@ -24,13 +23,10 @@ import { normalizeNutritionMealType, type NutritionMealType } from '../../../lib
 import NutritionV2 from '../nutrition-v2/NutritionV2'
 import TodayMeals from '../nutrition-v2/TodayMeals'
 import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
+import NutritionTools from '../nutrition-v2/NutritionTools'
+
+const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
-const MEAL_TIMES: Record<string, string> = {
-  petit_dejeuner: '7h00',
-  dejeuner: '12h30',
-  collation: '16h00',
-  diner: '19h30',
-}
 const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
 const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
   breakfast: 'petit_dejeuner',
@@ -39,7 +35,21 @@ const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
   dinner: 'diner',
 }
 
-type SubTab = 'today' | 'plan' | 'scanner' | 'recipes' | 'meals'
+type SubTab = 'today' | 'plan' | 'recipes' | 'meals'
+
+interface PhotoFoodEstimate {
+  name: string
+  quantity_g: number
+  calories: number
+  proteins: number
+  carbs: number
+  fats: number
+}
+
+interface PhotoAnalysisResult {
+  foods: PhotoFoodEstimate[]
+  total_calories?: number
+}
 
 interface NutritionTabProps {
   profile: any
@@ -52,22 +62,21 @@ interface NutritionTabProps {
   onOpenProgramSettings: () => void
 }
 
-export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, fetchAll, onOpenProgramSettings }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, onOpenProgramSettings }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
-  const [showScanner, setShowScanner] = useState(false)
-  const [showFridgeScanner, setShowFridgeScanner] = useState(false)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
   const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
   const [showPhotoCapture, setShowPhotoCapture] = useState(false)
   const [photoMealTarget, setPhotoMealTarget] = useState('')
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
-  const [photoResults, setPhotoResults] = useState<any>(null)
+  const [photoResults, setPhotoResults] = useState<PhotoAnalysisResult | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   // Meal save/copy/reuse
   const [mealActionError, setMealActionError] = useState<string | null>(null)
   const [showSaveMealPopup, setShowSaveMealPopup] = useState(false)
@@ -83,6 +92,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
   // Mes repas tab state
   const [myMeals, setMyMeals] = useState<any[]>([])
+  const [myMealsError, setMyMealsError] = useState<string | null>(null)
   const [myMealsSearch, setMyMealsSearch] = useState('')
   const [myMealsFilter, setMyMealsFilter] = useState('all')
   const [editingMeal, setEditingMeal] = useState<any>(null)
@@ -128,10 +138,18 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   // Fetch saved meals for "Mes Repas" tab
   useEffect(() => {
     if (subTab === 'meals' && userId) {
+      setMyMealsError(null)
       supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-        .then(({ data }: any) => setMyMeals(data || []))
+        .then(({ data, error }: any) => {
+          if (error) {
+            setMyMeals([])
+            setMyMealsError(nt('chrome.savedMealsError'))
+            return
+          }
+          setMyMeals(data || [])
+        })
     }
-  }, [subTab, userId])
+  }, [nt, subTab, supabase, userId])
 
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
@@ -153,27 +171,62 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     const file = e.target.files?.[0]
     if (!file) return
     setAnalyzingPhoto(true)
+    setPhotoError(null)
     const reader = new FileReader()
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1]
       try {
         const res = await fetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) })
-        const data = await res.json()
+        if (!res.ok) throw new Error('PHOTO_ANALYSIS_FAILED')
+        const data = await res.json() as PhotoAnalysisResult
+        if (!Array.isArray(data.foods)) throw new Error('PHOTO_ANALYSIS_INVALID')
         setPhotoResults(data)
-      } catch { setPhotoResults(null) }
+      } catch {
+        setPhotoResults(null)
+        setPhotoError(nt('chrome.photoError'))
+      }
       finally { setAnalyzingPhoto(false) }
     }
+    reader.onerror = () => {
+      setAnalyzingPhoto(false)
+      setPhotoError(nt('chrome.photoError'))
+    }
     reader.readAsDataURL(file)
+  }
+
+  function updatePhotoFoodQuantity(index: number, quantity: number) {
+    if (!Number.isFinite(quantity) || quantity <= 0) return
+    setPhotoResults(current => {
+      if (!current) return current
+      const foods = current.foods.map((food, foodIndex) => {
+        if (foodIndex !== index) return food
+        const previousQuantity = Math.max(food.quantity_g || 100, 1)
+        const ratio = quantity / previousQuantity
+        return {
+          ...food,
+          quantity_g: quantity,
+          calories: Math.round((food.calories || 0) * ratio),
+          proteins: Math.round((food.proteins || 0) * ratio * 10) / 10,
+          carbs: Math.round((food.carbs || 0) * ratio * 10) / 10,
+          fats: Math.round((food.fats || 0) * ratio * 10) / 10,
+        }
+      })
+      return { ...current, foods }
+    })
   }
 
   async function addPhotoFoods() {
     if (!photoResults?.foods) return
     for (const food of photoResults.foods) {
-      await supabase.from('daily_food_logs').insert({
+      const { error } = await supabase.from('daily_food_logs').insert({
         user_id: userId, date: today, meal_type: photoMealTarget,
         custom_name: food.name, quantity_g: food.quantity_g || 100,
         calories: food.calories || 0, protein: food.proteins || 0, carbs: food.carbs || 0, fat: food.fats || 0,
       })
+      if (error) {
+        setPhotoError(nt('chrome.photoSaveError'))
+        return
+      }
     }
     setShowPhotoCapture(false)
     setPhotoResults(null)
@@ -260,8 +313,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         {([
           { id: 'today' as SubTab, label: nt('tabs.journal') },
           { id: 'plan' as SubTab, label: nt('tabs.plan') },
-          ...(capabilities.nutrition ? [{ id: 'recipes' as SubTab, label: nt('tabs.recipes') }] : []),
-          { id: 'meals' as SubTab, label: nt('tabs.meals') },
         ]).map(({ id, label }) => {
           const active = subTab === id
           return (
@@ -278,20 +329,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
           )
         })}
       </div>
-
-      {/* Barcode scanner modal (single scan) */}
-      {showScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
-          onProductAdded={() => { setShowScanner(false); void refreshNutrition() }}
-          onClose={() => setShowScanner(false)} />
-      )}
-
-      {/* Fridge scanner (continuous mode) */}
-      {showFridgeScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} continuousMode
-          onProductAdded={() => { setShowFridgeScanner(false); fetchAll() }}
-          onClose={() => setShowFridgeScanner(false)} />
-      )}
 
       {/* Food search modal */}
       {showFoodSearch && (
@@ -315,12 +352,12 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         const waterGoal = profile?.water_goal || 3000
         const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
         const canAddWater = selectedDate === today
-        const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+        const glassBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
           <div style={{ padding: '0 4px' }}>
             {/* ═══ CALENDAR STRIP ═══ */}
-            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 14, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -369,6 +406,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               })}
               onPhoto={mealType => {
                 setPhotoMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
+                setPhotoError(null)
                 setShowPhotoCapture(true)
               }}
               onSavedMeals={mealType => {
@@ -400,7 +438,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
             />
             {/* Hydration remains a separate legacy module during the progressive migration. */}
-            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, marginBottom: 12, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ display: 'grid', width: 38, height: 38, placeItems: 'center', borderRadius: 12, background: 'rgba(111,183,232,0.12)' }}>
                   <Droplets size={18} color="#6FB7E8" aria-hidden="true" />
@@ -417,6 +455,19 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater500')}</button>
               </div>
             </div>
+
+            <NutritionTools
+              photoEnabled={capabilities.ai}
+              recipesEnabled={capabilities.nutrition}
+              onAddFood={() => setShowFoodSearch('dejeuner')}
+              onPhoto={() => {
+                setPhotoMealTarget('dejeuner')
+                setPhotoError(null)
+                setShowPhotoCapture(true)
+              }}
+              onSavedMeals={() => setSubTab('meals')}
+              onRecipes={() => setSubTab('recipes')}
+            />
 
           </div>
         )
@@ -448,7 +499,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <RecipesSection supabase={supabase} userId={userId} profile={profile} />
+          <RecipesSection supabase={supabase} userId={userId} profile={profile} aiAllowed={capabilities.ai} />
         </div>
       )}
 
@@ -457,6 +508,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <SectionTitle noPadding title={nt('chrome.myMeals')} />
           <div style={{ ...cardStyle, padding: 16 }}>
+            {myMealsError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 12px' }}>{myMealsError}</p>}
             {/* Search */}
             <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
             {/* Filter pills */}
@@ -629,10 +681,13 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       {/* ═══ PHOTO MEAL SCAN ═══ */}
       {showPhotoCapture && (<RailOverlay>
         <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null) }} />
+            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} />
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <AiQuotaBadge />
+              <p style={{ ...mutedStyle, margin: '0 0 14px', lineHeight: 1.5 }}>{nt('chrome.photoEstimate')}</p>
+              {photoError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 14px' }}>{photoError}</p>}
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
                 <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -650,24 +705,36 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               {photoResults?.foods && (
                 <>
                   <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 3, marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
-                  {photoResults.foods.map((f: any, i: number) => (
+                  {photoResults.foods.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
                       <div>
                         <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{f.name}</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                          <span>{nt('chrome.quantityEstimate')}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={f.quantity_g}
+                            aria-label={`${nt('chrome.quantityEstimate')} ${f.name}`}
+                            onChange={event => updatePhotoFoodQuantity(i, Number(event.target.value))}
+                            style={{ width: 68, minHeight: 44, padding: '6px 8px', borderRadius: 8, border: `1px solid ${colors.goldBorder}`, background: colors.background, color: colors.text }}
+                          />
+                          <span>g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</span>
+                        </label>
                       </div>
                       <span style={{ ...statSmallStyle, fontSize: 16 }}>{f.calories}</span>
                     </div>
                   ))}
                   <div style={{ background: colors.goldDim, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
-                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.total_calories} KCAL</span>
+                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.foods.reduce((total, food) => total + (food.calories || 0), 0)} KCAL</span>
                   </div>
                 </>
               )}
             </div>
             {photoResults?.foods && (
               <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
+                <button onClick={() => { setPhotoResults(null); setPhotoError(null) }} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
                 <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: colors.onGold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
               </div>
             )}

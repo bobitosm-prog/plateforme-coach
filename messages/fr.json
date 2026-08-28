@@ -603,6 +603,8 @@
     "empty": "Aucune recette. Génère-en une !",
     "generated": "Recette générée !",
     "genError": "Erreur de génération",
+    "loadError": "Les recettes sont indisponibles pour le moment.",
+    "retry": "Réessayer",
     "deleted": "Recette supprimée",
     "categories": {
       "all": "Tout",
@@ -2469,7 +2471,12 @@
       "addAll": "AJOUTER TOUT",
       "today": "AUJOURD'HUI",
       "remaining": "restantes : {count}",
-      "myMeals": "Mes repas"
+      "myMeals": "Mes repas",
+      "savedMealsError": "Impossible de charger les repas sauvegardés.",
+      "photoError": "L’analyse de la photo a échoué. Réessaie avec une autre image.",
+      "photoSaveError": "Les aliments détectés n’ont pas pu être ajoutés.",
+      "photoEstimate": "Estimation IA à vérifier. Ajuste les quantités avant d’ajouter les aliments au journal.",
+      "quantityEstimate": "Quantité estimée"
     },
     "macrosShort": {
       "p": "P",
@@ -2622,6 +2629,14 @@
         "days": { "lundi": "Lundi", "mardi": "Mardi", "mercredi": "Mercredi", "jeudi": "Jeudi", "vendredi": "Vendredi", "samedi": "Samedi", "dimanche": "Dimanche" },
         "daysShort": { "lundi": "Lun", "mardi": "Mar", "mercredi": "Mer", "jeudi": "Jeu", "vendredi": "Ven", "samedi": "Sam", "dimanche": "Dim" },
         "meals": { "petit_dejeuner": "Petit-déjeuner", "dejeuner": "Déjeuner", "collation": "Collation", "diner": "Dîner" }
+      },
+      "tools": {
+        "eyebrow": "Accès rapides", "title": "Outils", "secondary": "Actions secondaires",
+        "addFood": "Ajouter", "addFoodBody": "Rechercher un aliment",
+        "photo": "Photo IA", "photoBody": "Estimer puis vérifier",
+        "savedMeals": "Mes repas", "savedMealsBody": "Réutiliser un repas",
+        "recipes": "Recettes", "recipesBody": "Parcourir les idées",
+        "scannerPending": "Scanner code-barres disponible via la recherche d’aliments."
       }
     }
   },

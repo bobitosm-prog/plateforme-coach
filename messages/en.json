@@ -603,6 +603,8 @@
     "empty": "No recipes yet. Generate one!",
     "generated": "Recipe generated!",
     "genError": "Generation error",
+    "loadError": "Recipes are currently unavailable.",
+    "retry": "Try again",
     "deleted": "Recipe deleted",
     "categories": {
       "all": "All",
@@ -2469,7 +2471,12 @@
       "addAll": "ADD ALL",
       "today": "TODAY",
       "remaining": "remaining: {count}",
-      "myMeals": "My meals"
+      "myMeals": "My meals",
+      "savedMealsError": "Saved meals could not be loaded.",
+      "photoError": "Photo analysis failed. Try again with another image.",
+      "photoSaveError": "The detected foods could not be added.",
+      "photoEstimate": "AI estimate to review. Adjust quantities before adding foods to your journal.",
+      "quantityEstimate": "Estimated quantity"
     },
     "macrosShort": {
       "p": "P",
@@ -2622,6 +2629,14 @@
         "days": { "lundi": "Monday", "mardi": "Tuesday", "mercredi": "Wednesday", "jeudi": "Thursday", "vendredi": "Friday", "samedi": "Saturday", "dimanche": "Sunday" },
         "daysShort": { "lundi": "Mon", "mardi": "Tue", "mercredi": "Wed", "jeudi": "Thu", "vendredi": "Fri", "samedi": "Sat", "dimanche": "Sun" },
         "meals": { "petit_dejeuner": "Breakfast", "dejeuner": "Lunch", "collation": "Snack", "diner": "Dinner" }
+      },
+      "tools": {
+        "eyebrow": "Quick access", "title": "Tools", "secondary": "Secondary actions",
+        "addFood": "Add food", "addFoodBody": "Search for a food",
+        "photo": "AI photo", "photoBody": "Estimate then review",
+        "savedMeals": "My meals", "savedMealsBody": "Reuse a meal",
+        "recipes": "Recipes", "recipesBody": "Browse ideas",
+        "scannerPending": "Barcode scanning is available through food search."
       }
     }
   },

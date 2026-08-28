@@ -850,6 +850,56 @@
 .legacyContent { min-width: 0; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
+.tools {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .018);
+}
+
+.toolsHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.toolsHeading h2 { margin: 2px 0 0; color: #e8e2d8; font-size: 1rem; }
+.toolsHeading > span { color: #746d63; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+
+.toolsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.toolsGrid button {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  padding: 10px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 13px;
+  color: #a9904f;
+  background: rgba(255, 255, 255, .025);
+  text-align: left;
+  cursor: pointer;
+}
+
+.toolsGrid button > svg { flex-shrink: 0; }
+.toolsGrid button span { min-width: 0; }
+.toolsGrid strong { display: block; overflow: hidden; color: #ded8ce; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.toolsGrid small { display: block; margin-top: 2px; overflow: hidden; color: #746e65; font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
+.toolsScannerStatus { margin: 10px 0 0; color: #6f685f; font-size: .6rem; line-height: 1.4; }
+
+.toolsGrid button:focus-visible {
+  outline: 3px solid rgba(230, 195, 100, .42);
+  outline-offset: 2px;
+}
+
 @keyframes shimmer { to { background-position: -200% 0; } }
 
 @media (max-width: 767px) {
@@ -877,6 +927,10 @@
   .activePlan { margin-inline: 12px; padding: 16px 12px; border-radius: 18px; }
   .activePlanDaySelector { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .activePlanMealSummary > button:last-child { max-width: 92px; padding-inline: 8px; }
+  .tools { padding: 13px 10px; }
+  .toolsHeading > span { display: none; }
+  .toolsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .toolsGrid button { min-height: 54px; padding: 9px 8px; }
 }
 
 @media (min-width: 768px) {
@@ -888,5 +942,6 @@
   .primaryButton, .progressTrack > span, .mealToggle svg { transition: none; }
   .primaryButton:hover { transform: none; }
   .activePlanActions button:first-child svg,
-  .activePlanMealSummary > button:first-child svg { transition: none; }
+  .activePlanMealSummary > button:first-child svg,
+  .toolsGrid button { transition: none; }
 }
