@@ -105,6 +105,24 @@ describe('legacy entitlement repository shadow read', () => {
     errorLog.mockRestore()
   })
 
+  it('uses the subscription fallback only when the dark table is absent', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    arrangeQuery({ data: null, error: { code: 'PGRST205', message: 'schema detail' } })
+
+    await expect(getActiveLegacyEntitlement(USER_ID)).resolves.toBeNull()
+    expect(warning).toHaveBeenCalledWith(
+      '[legacy-entitlements] Shadow table unavailable; using subscription fallback',
+    )
+    expect(JSON.stringify(warning.mock.calls)).not.toContain('schema detail')
+    expect(resolveUserCapabilities({ subscriptionType: 'invited' })).toEqual({
+      ai: false,
+      training: false,
+      nutrition: false,
+      coachManaged: true,
+    })
+    warning.mockRestore()
+  })
+
   it('fails closed on duplicate active grants', async () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     arrangeQuery({

@@ -2384,6 +2384,7 @@
     "subtitle": "Konfiguriere deine Ziele und Präferenzen und generiere deinen Ernährungsplan an einem Ort.",
     "nutritionProgram": "Ernährungsprogramm",
     "loading": "Status wird geladen…",
+    "statusUnavailable": "Status nicht verfügbar",
     "activePlan": "Aktiver Plan",
     "noPlan": "Kein Plan",
     "source": "Quelle",
@@ -2407,6 +2408,7 @@
     "quotaReached": "Generierungskontingent erreicht. Versuche es in {days} Tag(en) erneut.",
     "generationBlockedCoach": "Der aktive Coach-Plan ist geschützt. Präferenzen können gespeichert werden, aber es wird kein persönlicher Plan generiert.",
     "generationBlockedRelation": "Die Generierung ist deaktiviert, bis die Coach-Beziehung geprüft werden kann.",
+    "generationBlockedPlanStatus": "Die Generierung ist deaktiviert, bis der Planstatus geprüft werden kann.",
     "generationBlockedCapability": "KI-Generierung ist mit deinem aktuellen Zugriff nicht verfügbar.",
     "regenerationHint": "Öffne die Konfiguration, um Präferenzen anzupassen oder den Plan ausdrücklich neu zu generieren."
   },

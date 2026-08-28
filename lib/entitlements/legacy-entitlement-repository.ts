@@ -121,8 +121,18 @@ async function readActiveLegacyEntitlement(
     .limit(2)
 
   if (error) {
+    const code = safeErrorCode(error)
+    // Transitional compatibility: a deployment where the dark table has not
+    // been applied cannot contain persisted grants. Treat that exact schema
+    // absence as an empty repository and let subscription authority (including
+    // the historical `invited` fallback) resolve capabilities normally.
+    // Every other repository failure remains fail-closed.
+    if (code === 'PGRST205') {
+      console.warn('[legacy-entitlements] Shadow table unavailable; using subscription fallback')
+      return null
+    }
     console.error('[legacy-entitlements] Shadow lookup failed', {
-      code: safeErrorCode(error),
+      code,
     })
     throw new Error('LEGACY_ENTITLEMENT_LOOKUP_FAILED')
   }

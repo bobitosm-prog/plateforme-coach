@@ -2384,6 +2384,7 @@
     "subtitle": "Configure tes objectifs et préférences, puis génère ton plan alimentaire depuis un seul endroit.",
     "nutritionProgram": "Programme alimentaire",
     "loading": "Chargement du statut…",
+    "statusUnavailable": "Statut indisponible",
     "activePlan": "Plan actif",
     "noPlan": "Aucun plan",
     "source": "Source",
@@ -2407,6 +2408,7 @@
     "quotaReached": "Quota de génération atteint. Réessaie dans {days} jour(s).",
     "generationBlockedCoach": "Le plan coach actif est protégé. Tes préférences peuvent être enregistrées, mais aucun plan personnel ne sera généré.",
     "generationBlockedRelation": "La génération est désactivée tant que la relation coach ne peut pas être vérifiée.",
+    "generationBlockedPlanStatus": "La génération est désactivée tant que le statut du plan ne peut pas être vérifié.",
     "generationBlockedCapability": "La génération IA n’est pas disponible avec vos droits actuels.",
     "regenerationHint": "Ouvre la configuration pour ajuster tes préférences ou régénérer explicitement le plan."
   },

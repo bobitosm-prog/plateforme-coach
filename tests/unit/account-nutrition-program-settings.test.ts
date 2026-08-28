@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const account = readFileSync('app/components/tabs/AccountTab.tsx', 'utf8')
 const program = readFileSync('app/components/tabs/profile/NutritionProgramSection.tsx', 'utf8')
+const access = readFileSync('lib/nutrition/nutrition-program-access.ts', 'utf8')
 const programStyles = readFileSync('app/components/tabs/profile/NutritionProgramSection.module.css', 'utf8')
 const nutrition = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 const preferences = readFileSync('app/components/NutritionPreferences.tsx', 'utf8')
@@ -88,16 +89,16 @@ describe('Plan authority and safety', () => {
     expect(program).toContain("coachRelationStatus === 'active' && coachId")
     expect(program).toContain(".eq('coach_id', coachId)")
     expect(program).toContain("const coachPlanActive = activePlan.source === 'coach'")
-    expect(program).toContain('&& !coachPlanActive')
+    expect(access).toContain("if (coachPlanActive) generationBlockReason = 'coach_plan'")
     expect(messages).toContain('"coachPlanNotice": "Votre plan alimentaire est actuellement fourni par votre coach."')
   })
 
   it('fails closed for uncertain relation, denied AI capability and exhausted quota', () => {
-    expect(program).toContain("coachRelationStatus === 'error' || coachRelationStatus === 'multiple_active'")
-    expect(program).toContain('capabilities.nutrition')
-    expect(program).toContain('capabilities.ai')
-    expect(program).toContain('quota.remaining > 0')
-    expect(program).toContain('!quota.error')
+    expect(access).toContain("coachRelationStatus === 'error'")
+    expect(access).toContain("coachRelationStatus === 'multiple_active'")
+    expect(access).toContain('!capabilities.nutrition || !capabilities.ai')
+    expect(access).toContain('quota.remaining <= 0')
+    expect(access).toContain('quota.error')
     expect(preferences).toContain('if (generationEnabled) setShowRegenCard(true)')
   })
 

@@ -14,6 +14,11 @@ import {
   type CoachNutritionPlan,
   type PersonalNutritionPlan,
 } from '../../../../lib/nutrition/nutrition-dashboard-model'
+import {
+  resolveNutritionPlanStatus,
+  resolveNutritionProgramAccess,
+  type NutritionPlanStatus,
+} from '../../../../lib/nutrition/nutrition-program-access'
 import styles from './NutritionProgramSection.module.css'
 
 const NutritionPreferences = dynamic(() => import('../../NutritionPreferences'), {
@@ -60,33 +65,36 @@ function NutritionPlanConfiguration({
   userId,
   hasPersonalPlan,
   coachPlanActive,
-  relationUncertain,
+  coachRelationStatus,
+  planStatus,
   onSaved,
   onGenerated,
 }: Omit<NutritionProgramSectionProps, 'coachRelationStatus' | 'coachId' | 'onBack'> & {
   hasPersonalPlan: boolean
   coachPlanActive: boolean
-  relationUncertain: boolean
+  coachRelationStatus: ActiveCoachResolutionState['status']
+  planStatus: NutritionPlanStatus
   onSaved: () => void
   onGenerated: () => void
 }) {
   const t = useTranslations('accountPrograms')
   const quota = useAiQuota()
-  const generationEnabled = capabilities.nutrition
-    && capabilities.ai
-    && !coachPlanActive
-    && !relationUncertain
-    && !quota.loading
-    && !quota.error
-    && quota.remaining > 0
+  const access = resolveNutritionProgramAccess({
+    capabilities,
+    coachRelationStatus,
+    coachPlanActive,
+    planStatus,
+    quota,
+  })
 
   let blockedReason: string | null = null
-  if (coachPlanActive) blockedReason = t('generationBlockedCoach')
-  else if (relationUncertain) blockedReason = t('generationBlockedRelation')
-  else if (!capabilities.ai || !capabilities.nutrition) blockedReason = t('generationBlockedCapability')
-  else if (quota.loading) blockedReason = t('quotaLoading')
-  else if (quota.error) blockedReason = t('quotaUnavailable')
-  else if (quota.remaining <= 0) blockedReason = t('quotaReached', { days: quota.days })
+  if (access.generationBlockReason === 'coach_plan') blockedReason = t('generationBlockedCoach')
+  else if (access.generationBlockReason === 'relation_uncertain') blockedReason = t('generationBlockedRelation')
+  else if (access.generationBlockReason === 'plan_read_error') blockedReason = t('generationBlockedPlanStatus')
+  else if (access.generationBlockReason === 'capability') blockedReason = t('generationBlockedCapability')
+  else if (access.generationBlockReason === 'quota_loading') blockedReason = t('quotaLoading')
+  else if (access.generationBlockReason === 'quota_error') blockedReason = t('quotaUnavailable')
+  else if (access.generationBlockReason === 'quota_exhausted') blockedReason = t('quotaReached', { days: quota.days })
 
   return <div id="nutrition-program-configuration" className={styles.configuration}>
     <div className={styles.configurationHeading}>
@@ -107,7 +115,7 @@ function NutritionPlanConfiguration({
         quota.refresh()
         onGenerated()
       }}
-      generationEnabled={generationEnabled}
+      generationEnabled={access.canGenerate}
       hasPersonalPlan={hasPersonalPlan}
       generationBlockedReason={blockedReason}
     />
@@ -173,6 +181,11 @@ export default function NutritionProgramSection({
   }), [coachId, coachRelationStatus, snapshot.coachPlan, snapshot.personalPlan])
   const coachPlanActive = activePlan.source === 'coach'
   const hasPersonalPlan = activePlan.source === 'personal'
+  const planStatus = resolveNutritionPlanStatus({
+    loading: snapshot.loading,
+    error: snapshot.error,
+    hasActivePlan: activePlan.source !== 'none',
+  })
   const relationUncertain = coachRelationStatus === 'error' || coachRelationStatus === 'multiple_active'
   const canOpenConfiguration = capabilities.nutrition
 
@@ -202,9 +215,15 @@ export default function NutritionProgramSection({
         <div className={styles.summaryContent}>
           <span>{t('nutritionProgram')}</span>
           <h2 id="nutrition-program-title">
-            {snapshot.loading ? t('loading') : activePlan.source === 'none' ? t('noPlan') : t('activePlan')}
+            {planStatus === 'loading'
+              ? t('loading')
+              : planStatus === 'error'
+                ? t('statusUnavailable')
+                : planStatus === 'empty'
+                  ? t('noPlan')
+                  : t('activePlan')}
           </h2>
-          {!snapshot.loading && <dl className={styles.meta}>
+          {(planStatus === 'ready' || planStatus === 'empty') && <dl className={styles.meta}>
             <div><dt>{t('source')}</dt><dd>{activePlan.source === 'coach' ? t('coachSource') : activePlan.source === 'personal' ? t('personalSource') : t('noneSource')}</dd></div>
             <div><dt>{t('objective')}</dt><dd>{t(`objectives.${objectiveKey(profile?.objective)}`)}</dd></div>
           </dl>}
@@ -250,7 +269,8 @@ export default function NutritionProgramSection({
         fetchAll={fetchAll}
         hasPersonalPlan={hasPersonalPlan}
         coachPlanActive={coachPlanActive}
-        relationUncertain={relationUncertain}
+        coachRelationStatus={coachRelationStatus}
+        planStatus={planStatus}
         onSaved={() => void handleSaved()}
         onGenerated={() => void handleGenerated()}
       />}

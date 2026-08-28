@@ -2384,6 +2384,7 @@
     "subtitle": "Configure your goals and preferences, then generate your meal plan from one place.",
     "nutritionProgram": "Meal plan",
     "loading": "Loading status…",
+    "statusUnavailable": "Status unavailable",
     "activePlan": "Active plan",
     "noPlan": "No plan",
     "source": "Source",
@@ -2407,6 +2408,7 @@
     "quotaReached": "Generation quota reached. Try again in {days} day(s).",
     "generationBlockedCoach": "The active coach plan is protected. You may save preferences, but no personal plan will be generated.",
     "generationBlockedRelation": "Generation is disabled until the coach relationship can be verified.",
+    "generationBlockedPlanStatus": "Generation is disabled until the plan status can be verified.",
     "generationBlockedCapability": "AI generation is not available with your current access.",
     "regenerationHint": "Open configuration to adjust preferences or explicitly regenerate the plan."
   },
