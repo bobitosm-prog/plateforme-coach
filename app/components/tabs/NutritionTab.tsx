@@ -36,6 +36,12 @@ const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
 }
 
 type SubTab = 'today' | 'plan' | 'recipes' | 'meals'
+export type SavedMealsLoadState = 'idle' | 'loading' | 'ready' | 'empty' | 'error'
+
+export function resolveSavedMealsLoadState(error: unknown, meals: unknown[]): SavedMealsLoadState {
+  if (error) return 'error'
+  return meals.length > 0 ? 'ready' : 'empty'
+}
 
 interface PhotoFoodEstimate {
   name: string
@@ -89,6 +95,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const [copyTargetMealType, setCopyTargetMealType] = useState('')
   const [showSavedMeals, setShowSavedMeals] = useState(false)
   const [savedMeals, setSavedMeals] = useState<any[]>([])
+  const [savedMealsState, setSavedMealsState] = useState<SavedMealsLoadState>('idle')
   const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
   // Mes repas tab state
   const [myMeals, setMyMeals] = useState<any[]>([])
@@ -165,6 +172,21 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     const updated = { quantity_g: newQty, calories: Math.round((log.calories || 0) * ratio), protein: Math.round((log.protein || 0) * ratio * 10) / 10, carbs: Math.round((log.carbs || 0) * ratio * 10) / 10, fat: Math.round((log.fat || 0) * ratio * 10) / 10 }
     await supabase.from('daily_food_logs').update(updated).eq('id', id)
     await refreshNutrition()
+  }
+
+  async function loadSavedMeals(targetMealType: string) {
+    setUseSavedMealTarget(targetMealType)
+    setShowSavedMeals(true)
+    setSavedMealsState('loading')
+    const { data, error } = await supabase
+      .from('saved_meals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    const meals = Array.isArray(data) ? data : []
+    const nextState = resolveSavedMealsLoadState(error, meals)
+    setSavedMeals(nextState === 'error' ? [] : meals)
+    setSavedMealsState(nextState)
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
@@ -410,10 +432,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 setShowPhotoCapture(true)
               }}
               onSavedMeals={mealType => {
-                setUseSavedMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
-                setShowSavedMeals(true)
-                supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-                  .then(({ data }: { data: unknown }) => setSavedMeals(Array.isArray(data) ? data : []))
+                void loadSavedMeals(NUTRITION_MEAL_TO_KEY[mealType])
               }}
               onSaveMeal={meal => {
                 const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
@@ -818,9 +837,16 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <ModalHeader title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)} />
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
-              {savedMeals.length === 0 ? (
+              {savedMealsState === 'loading' ? (
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.loading')}</div>
+              ) : savedMealsState === 'error' ? (
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>
+                  <p style={{ margin: '0 0 14px' }}>{nt('savedMeals.error')}</p>
+                  <button type="button" onClick={() => void loadSavedMeals(useSavedMealTarget)} style={{ minHeight: 44, padding: '8px 16px', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: 'transparent', color: colors.gold, cursor: 'pointer' }}>{nt('savedMeals.retry')}</button>
+                </div>
+              ) : savedMealsState === 'empty' ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
-              ) : savedMeals.map((meal: any) => (
+              ) : savedMealsState === 'ready' ? savedMeals.map((meal: any) => (
                 <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div>
                     <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
@@ -828,7 +854,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                   </div>
                   <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
                 </button>
-              ))}
+              )) : null}
             </div>
           </div>
         </>

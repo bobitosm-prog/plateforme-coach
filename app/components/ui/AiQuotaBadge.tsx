@@ -1,23 +1,47 @@
 'use client'
 import { Sparkles } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { useAiQuota } from '../../hooks/useAiQuota'
 
+export type AiQuotaBadgeState = 'loading' | 'available' | 'exhausted' | 'error'
+
+export function resolveAiQuotaBadgeState({
+  loading,
+  error,
+  remaining,
+}: {
+  loading: boolean
+  error: string | null
+  remaining: number
+}): AiQuotaBadgeState {
+  if (loading) return 'loading'
+  if (error) return 'error'
+  return remaining <= 0 ? 'exhausted' : 'available'
+}
+
 export default function AiQuotaBadge() {
-  const { remaining, days, loading } = useAiQuota()
+  const t = useTranslations('aiQuotaBadge')
+  const { remaining, days, loading, error } = useAiQuota()
+  const state = resolveAiQuotaBadgeState({ loading, error, remaining })
 
-  if (loading) return null
+  if (state === 'loading') return null
 
-  const exhausted = remaining <= 0
-  const gradient = exhausted
+  const unavailable = state === 'error'
+  const exhausted = state === 'exhausted'
+  const gradient = unavailable
+    ? 'linear-gradient(135deg, #5f6570 0%, #3f4650 100%)'
+    : exhausted
     ? 'linear-gradient(135deg, #e05252 0%, #b91c1c 100%)'
     : 'linear-gradient(135deg, #e6c364 0%, #c9a84c 100%)'
-  const shadow = exhausted
+  const shadow = unavailable
+    ? '0 4px 16px rgba(63,70,80,0.22)'
+    : exhausted
     ? '0 4px 16px rgba(224,82,82,0.25)'
     : '0 4px 16px rgba(201,168,76,0.2)'
 
   return (
-    <div style={{
+    <div role="status" style={{
       width: '100%',
       display: 'flex',
       alignItems: 'center',
@@ -41,17 +65,21 @@ export default function AiQuotaBadge() {
           fontFamily: FONT_ALT, fontSize: '0.82rem', fontWeight: 800,
           letterSpacing: '0.04em', color: '#fff',
         }}>
-          {exhausted
-            ? `Quota atteint`
-            : `${remaining} génération${remaining > 1 ? 's' : ''} IA restante${remaining > 1 ? 's' : ''}`}
+          {unavailable
+            ? t('unavailable')
+            : exhausted
+              ? t('exhausted')
+              : t('remaining', { count: remaining })}
         </div>
         <div style={{
           fontFamily: FONT_BODY, fontSize: '0.72rem', color: 'rgba(255,255,255,0.8)',
           marginTop: 2,
         }}>
-          {exhausted
-            ? `Prochaine dispo dans ${days} jour${days > 1 ? 's' : ''}`
-            : 'ce mois'}
+          {unavailable
+            ? t('unavailableHint')
+            : exhausted
+              ? t('nextAvailable', { days })
+              : t('period')}
         </div>
       </div>
     </div>

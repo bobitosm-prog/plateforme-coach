@@ -587,6 +587,14 @@
       "generationError": "Der neue Plan konnte nicht gespeichert werden. Bitte versuche es erneut."
     }
   },
+  "aiQuotaBadge": {
+    "remaining": "{count, plural, one {# KI-Generierung verfügbar} other {# KI-Generierungen verfügbar}}",
+    "period": "diesen Monat",
+    "exhausted": "Kontingent erreicht",
+    "nextAvailable": "Verfügbar in {days, plural, one {# Tag} other {# Tagen}}",
+    "unavailable": "Kontingent nicht verfügbar",
+    "unavailableHint": "Das Kontingent kann derzeit nicht geprüft werden."
+  },
   "recipesSection": {
     "title": "Fitness-Rezepte",
     "generateBtn": "Generieren",
@@ -2511,6 +2519,9 @@
     },
     "savedMeals": {
       "title": "MEINE MAHLZEITEN",
+      "loading": "Gespeicherte Mahlzeiten werden geladen...",
+      "error": "Gespeicherte Mahlzeiten konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
       "empty": "Keine gespeicherten Mahlzeiten.",
       "foodCount": "{count} Lebensmittel",
       "usedCount": "{count}x verwendet"

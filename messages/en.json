@@ -587,6 +587,14 @@
       "generationError": "Unable to save the new plan. Please try again."
     }
   },
+  "aiQuotaBadge": {
+    "remaining": "{count, plural, one {# AI generation remaining} other {# AI generations remaining}}",
+    "period": "this month",
+    "exhausted": "Quota reached",
+    "nextAvailable": "Available in {days, plural, one {# day} other {# days}}",
+    "unavailable": "Quota unavailable",
+    "unavailableHint": "The quota cannot be checked right now."
+  },
   "recipesSection": {
     "title": "Fitness recipes",
     "generateBtn": "Generate",
@@ -2511,6 +2519,9 @@
     },
     "savedMeals": {
       "title": "MY MEALS",
+      "loading": "Loading saved meals...",
+      "error": "Your saved meals could not be loaded.",
+      "retry": "Try again",
       "empty": "No saved meals.",
       "foodCount": "{count} foods",
       "usedCount": "{count}x used"

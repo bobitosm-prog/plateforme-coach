@@ -587,6 +587,14 @@
       "generationError": "Impossible d’enregistrer le nouveau plan. Réessaie."
     }
   },
+  "aiQuotaBadge": {
+    "remaining": "{count, plural, one {# génération IA restante} other {# générations IA restantes}}",
+    "period": "ce mois",
+    "exhausted": "Quota atteint",
+    "nextAvailable": "Disponible dans {days, plural, one {# jour} other {# jours}}",
+    "unavailable": "Quota indisponible",
+    "unavailableHint": "Impossible de vérifier le quota pour le moment."
+  },
   "recipesSection": {
     "title": "Recettes fitness",
     "generateBtn": "Générer",
@@ -2511,6 +2519,9 @@
     },
     "savedMeals": {
       "title": "MES REPAS",
+      "loading": "Chargement des repas sauvegardés...",
+      "error": "Impossible de charger vos repas sauvegardés.",
+      "retry": "Réessayer",
       "empty": "Aucun repas sauvegarde.",
       "foodCount": "{count} aliments",
       "usedCount": "{count}x utilise"
