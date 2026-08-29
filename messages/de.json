@@ -1682,6 +1682,7 @@
       "viewAll": "Verlauf anzeigen ›",
       "reduce": "Reduzieren",
       "historyTitle": "Trainingsverlauf",
+      "historyTotal": "{count, plural, one {# gespeicherte Einheit} other {# gespeicherte Einheiten}}",
       "completed": "Beendet",
       "sessionFallback": "Einheit",
       "filters": {
@@ -3228,7 +3229,8 @@
     "ui": {
       "title": "Cardio",
       "hide": "Ausblenden",
-      "sessionsCount": "{count, plural, one {# Einheit} other {# Einheiten}}",
+      "optionsCount": "{count} Optionen",
+      "showOptions": "{count} Optionen anzeigen",
       "all": "Alle",
       "minutes": "MINUTEN",
       "kcal": "KCAL",

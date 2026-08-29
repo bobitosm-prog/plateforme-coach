@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useId, useState, useEffect, useRef } from 'react'
 import { toDateStr } from '../../lib/schedule-utils'
 import { Play, Pause, Square, SkipForward, ChevronDown } from 'lucide-react'
 import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, type HiitExercise } from '../../lib/cardio-data'
@@ -22,10 +22,11 @@ interface CardioProps {
 
 export default function CardioSection({ supabase, userId, weight, weightIsReal, setModal }: CardioProps) {
   const t = useTranslations('cardio')
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
   const [activeWorkout, setActiveWorkout] = useState<CardioWorkout | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
+  const panelId = useId()
 
   const allWorkouts = [...HIIT_WORKOUTS, ...LISS_WORKOUTS]
   const filtered = filter === 'all' ? allWorkouts : allWorkouts.filter(w => w.type === filter)
@@ -46,19 +47,37 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
   }
 
   return (
-    <>
-      {/* Header — flat SectionTitle style with accordion */}
-      <button onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', marginTop: 28, marginBottom: 20, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
-        <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-        <span style={{ fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.16em', textTransform: 'uppercase', lineHeight: 1 }}>{t('ui.title')}</span>
-        <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>HIIT</span>
-        <span style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase' }}>LISS</span>
-        <div style={{ flexGrow: 1, height: 1, background: colors.goldRule }} />
-        <ChevronDown size={16} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
+    <section
+      data-training-section-card="cardio"
+      style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14 }}
+    >
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
+        <h2 style={{ margin: 0, color: colors.gold, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
+          {t('ui.title')}
+        </h2>
+        <span style={{ color: colors.textDim, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          {t('ui.optionsCount', { count: allWorkouts.length })}
+        </span>
+      </div>
+
+      {/* Lightweight accordion row: details remain mounted only after user action. */}
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        aria-label={expanded ? t('ui.hide') : t('ui.showOptions', { count: allWorkouts.length })}
+        onClick={() => setExpanded(current => !current)}
+        style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', minHeight: 56, marginBottom: expanded ? 12 : 0, padding: '4px 0 0', background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>HIIT</span>
+        <span style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>LISS</span>
+        <span aria-hidden="true" style={{ width: 44, height: 44, marginLeft: 'auto', display: 'grid', placeItems: 'center', borderRadius: 12, border: `1px solid ${colors.divider}`, background: 'rgba(255,255,255,0.03)', flexShrink: 0 }}>
+          <ChevronDown size={18} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+        </span>
       </button>
 
       {expanded && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div id={panelId} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Suggested workouts */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <WorkoutCard workout={suggestedHiit} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(suggestedHiit)} />
@@ -66,8 +85,8 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
           </div>
 
           {/* Library toggle */}
-          <button onClick={() => setShowLibrary(!showLibrary)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
-            {showLibrary ? t('ui.hide') : t('ui.sessionsCount', { count: allWorkouts.length })}
+          <button type="button" onClick={() => setShowLibrary(!showLibrary)} style={{ minHeight: 44, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
+            {showLibrary ? t('ui.hide') : t('ui.showOptions', { count: allWorkouts.length })}
           </button>
 
           {/* Library */}
@@ -88,7 +107,7 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
           )}
         </div>
       )}
-    </>
+    </section>
   )
 }
 

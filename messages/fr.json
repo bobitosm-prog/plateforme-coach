@@ -1682,6 +1682,7 @@
       "viewAll": "Voir l’historique ›",
       "reduce": "Réduire",
       "historyTitle": "Historique des séances",
+      "historyTotal": "{count, plural, one {# séance enregistrée} other {# séances enregistrées}}",
       "completed": "Terminée",
       "sessionFallback": "Séance",
       "filters": {
@@ -3228,7 +3229,8 @@
     "ui": {
       "title": "Cardio",
       "hide": "Masquer",
-      "sessionsCount": "{count, plural, one {# séance} other {# séances}}",
+      "optionsCount": "{count} options",
+      "showOptions": "Voir les {count} options",
       "all": "Tout",
       "minutes": "MINUTES",
       "kcal": "KCAL",

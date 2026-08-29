@@ -4,7 +4,6 @@ import { useTranslations, useLocale } from 'next-intl'
 import { CheckCircle2, ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
-import SectionTitle from '../ui/SectionTitle'
 import type { TrainingReadState } from '../../../lib/training/active-program'
 import TrainingSheet from '../training-v2/TrainingSheet'
 
@@ -38,7 +37,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
   const recent = workoutHistory.slice(0, 3)
   const expanded = filtered.slice(0, 20)
 
-  const renderRows = (sessions: WorkoutHistoryItem[]) => sessions.map(session => {
+  const renderRows = (sessions: WorkoutHistoryItem[], compact = false) => sessions.map((session, index) => {
     const date = new Date(session.created_at)
     const dateLabel = date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -49,9 +48,11 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
         onClick={() => onOpenDetail(session)}
         style={{
           display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 12,
-          minHeight: 58, padding: '10px 12px', background: colors.surface2,
-          border: `1px solid ${colors.divider}`, borderRadius: 13,
-          cursor: 'pointer', textAlign: 'left', width: '100%', marginBottom: 8,
+          minHeight: 58, padding: compact ? '10px 2px' : '10px 12px', background: compact ? 'transparent' : colors.surface2,
+          border: compact ? 'none' : `1px solid ${colors.divider}`,
+          borderBottom: compact && index < sessions.length - 1 ? `1px solid ${colors.divider}` : undefined,
+          borderRadius: compact ? 0 : 13,
+          cursor: 'pointer', textAlign: 'left', width: '100%', marginBottom: compact ? 0 : 8,
           fontFamily: 'inherit', color: 'inherit',
         }}
       >
@@ -74,45 +75,52 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
 
   return (
     <div style={{ padding: '0 20px', marginBottom: 24 }}>
-      <SectionTitle noPadding title={t('lastSessions')} trailing={t('sessionsCount', { count: workoutHistory.length })} />
+      <section
+        data-training-section-card="recent-history"
+        style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14 }}
+      >
+        <h2 style={{ margin: '0 0 10px', color: colors.gold, fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
+          {t('lastSessions')}
+        </h2>
 
-      {state === 'loading' ? (
-        <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          {t('loading')}
-        </div>
-      ) : state === 'error' ? (
-        <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          {t('loadError')}
-        </div>
-      ) : recent.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
-          {t('noSessions')}
-        </div>
-      ) : (
-        <>
-          {renderRows(recent)}
-          {workoutHistory.length > 3 && (
-            <button
-              type="button"
-              onClick={() => setShowFullHistory(true)}
-              style={{
-                width: '100%', minHeight: 44, padding: 12, marginTop: 4,
-                background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
-                border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 14,
-                fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.18em', color: colors.gold,
-                textTransform: 'uppercase', cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              {t('viewAll')}
-            </button>
-          )}
-        </>
-      )}
+        {state === 'loading' ? (
+          <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
+            {t('loading')}
+          </div>
+        ) : state === 'error' ? (
+          <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
+            {t('loadError')}
+          </div>
+        ) : recent.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
+            {t('noSessions')}
+          </div>
+        ) : (
+          <>
+            {renderRows(recent, true)}
+            {workoutHistory.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowFullHistory(true)}
+                style={{
+                  width: '100%', minHeight: 44, padding: 12, marginTop: 10,
+                  background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
+                  border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 12,
+                  fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.18em', color: colors.gold,
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                {t('viewAll')}
+              </button>
+            )}
+          </>
+        )}
+      </section>
 
       {showFullHistory && (
-        <TrainingSheet title={t('historyTitle')} onClose={() => { setShowFullHistory(false); setHistoryFilter('all') }}>
+        <TrainingSheet title={t('historyTitle')} description={t('historyTotal', { count: workoutHistory.length })} onClose={() => { setShowFullHistory(false); setHistoryFilter('all') }}>
           <div data-training-history-filters="advanced" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
             {HISTORY_FILTERS.map(filter => {
               const active = historyFilter === filter.key

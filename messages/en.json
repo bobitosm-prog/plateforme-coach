@@ -1682,6 +1682,7 @@
       "viewAll": "View history ›",
       "reduce": "Reduce",
       "historyTitle": "Workout history",
+      "historyTotal": "{count, plural, one {# recorded workout} other {# recorded workouts}}",
       "completed": "Completed",
       "sessionFallback": "Session",
       "filters": {
@@ -3228,7 +3229,8 @@
     "ui": {
       "title": "Cardio",
       "hide": "Hide",
-      "sessionsCount": "{count, plural, one {# session} other {# sessions}}",
+      "optionsCount": "{count} options",
+      "showOptions": "View {count} options",
       "all": "All",
       "minutes": "MINUTES",
       "kcal": "KCAL",
