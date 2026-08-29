@@ -5,13 +5,15 @@ import { ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS, getHeroImage } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
 import SectionTitle from '../ui/SectionTitle'
+import type { TrainingReadState } from '../../../lib/training/active-program'
 
 interface RecentSessionsListProps {
   workoutHistory: any[]
+  state: TrainingReadState
   onOpenDetail: (workout: any) => void
 }
 
-export default function RecentSessionsList({ workoutHistory, onOpenDetail }: RecentSessionsListProps) {
+export default function RecentSessionsList({ workoutHistory, state, onOpenDetail }: RecentSessionsListProps) {
   const t = useTranslations('training_tab.recent')
   const locale = useLocale()
   const filterLabels: Record<string, string> = Object.fromEntries(HISTORY_FILTERS.map(f => [f.key, t(`filters.${f.key}`)]))
@@ -57,7 +59,11 @@ export default function RecentSessionsList({ workoutHistory, onOpenDetail }: Rec
       </div>
 
       {/* Session items */}
-      {visible.length === 0 ? (
+      {state === 'error' ? (
+        <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
+          {t('loadError')}
+        </div>
+      ) : visible.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
           {t('noSessions')}
         </div>

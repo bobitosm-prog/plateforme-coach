@@ -1595,6 +1595,7 @@
     },
     "recent": {
       "noSessions": "Keine Einheiten",
+      "loadError": "Der Verlauf ist vorübergehend nicht verfügbar.",
       "lastSessions": "Letzte Einheiten",
       "sessionsCount": "{count} Einheiten",
       "viewAll": "Alle anzeigen ›",

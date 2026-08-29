@@ -82,7 +82,7 @@ describe('client dashboard active relation reader', () => {
   it('uses the central repository and contains no browser relation writer or legacy read', () => {
     const source = readFileSync('app/hooks/useClientDashboard.ts', 'utf8')
     expect(source).toContain('findActiveCoachForClient(supabase, uid)')
-    expect(source).toContain('toActiveCoachResolutionState(result)')
+    expect(source).toMatch(/toActiveCoachResolutionState\((?:relationResult|result)\)/)
     expect(source).not.toContain(".from('coach_clients')")
     expect(source).not.toMatch(/coach_clients[\s\S]{0,120}\.(?:insert|upsert|delete)\(/)
   })

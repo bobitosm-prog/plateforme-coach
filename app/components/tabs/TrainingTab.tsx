@@ -11,7 +11,6 @@ import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
-import { addXP, updateStreak } from '../../../lib/gamification'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { findExerciseMatch } from '../../../lib/exercise-matching'
@@ -30,10 +29,8 @@ import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, buildWeekSessions } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
 
-import WorkoutCelebration from './training/WorkoutCelebration'
 import TrainingActiveBar from './training/TrainingActiveBar'
 import AddExercisePopup from './training/AddExercisePopup'
-import SaveChoicePopup from './training/SaveChoicePopup'
 import TrainingRestDay from './training/TrainingRestDay'
 import SessionDoneModal from '../training/SessionDoneModal'
 import TrainingExerciseCard from './training/TrainingExerciseCard'
@@ -54,6 +51,7 @@ import PhaseProgressBanner from '../training/PhaseProgressBanner'
 import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
+import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -62,23 +60,22 @@ interface TrainingTabProps {
   session: any
   profile?: any
   capabilities: UserCapabilities
-  coachProgram: any
+  activeTrainingProgram: ActiveTrainingProgramContext
   todayKey: string
   todaySessionDone: boolean
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
-  fetchAll: () => Promise<void>
+  fetchAll: (forceRefresh?: boolean) => Promise<void>
   scheduledSessions: ScheduledSession[]
   calendarSelectedDate: Date
   setCalendarSelectedDate: (d: Date) => void
   markSessionCompleted: (id: string) => Promise<void>
-  checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
   lastCompletedByIndex?: Map<number, string>
   setModal: (m: string | null) => void
 }
 
 export default function TrainingTab({
-  supabase, session, profile, capabilities, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
-  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
+  supabase, session, profile, capabilities, activeTrainingProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
+  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted,
   lastCompletedByIndex, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
@@ -101,7 +98,7 @@ export default function TrainingTab({
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
-  const [workoutFinished, setWorkoutFinished] = useState(false)
+  const [workoutHistoryState, setWorkoutHistoryState] = useState<TrainingReadState>('loading')
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   useBeforeUnload(workoutStarted !== null)
   const [videoExercise, setVideoExercise]     = useState<string | null>(null)
@@ -115,15 +112,18 @@ export default function TrainingTab({
   const [motivationalMsg, setMotivationalMsg] = useState('')
   const [customPrograms, setCustomPrograms] = useState<any[]>([])
   const [showProgramBuilder, setShowProgramBuilder] = useState(false)
-  const [activeCustomProgram, setActiveCustomProgram] = useState<any>(null)
+  const activeCustomProgram = activeTrainingProgram.source === 'personal'
+    ? activeTrainingProgram.program as (typeof customPrograms)[number]
+    : null
+  const coachProgram = activeTrainingProgram.source === 'coach'
+    ? activeTrainingProgram.program as Record<string, (typeof customPrograms)[number]>
+    : null
   const [editingProgram, setEditingProgram] = useState<any>(null)
   // Feature: add exercise in session
   const [addedExercises, setAddedExercises] = useState<any[]>([])
   const [showAddExercise, setShowAddExercise] = useState(false)
   const [exerciseSearchQ, setExerciseSearchQ] = useState('')
   const [exerciseSearchResults, setExerciseSearchResults] = useState<any[]>([])
-  // Feature: save choice popup
-  const [showSaveChoice, setShowSaveChoice] = useState(false)
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
@@ -145,6 +145,8 @@ export default function TrainingTab({
   const restIntervalRef  = useRef<any>(null)
   const elapsedIntervalRef = useRef<any>(null)
   const exSearchRef      = useRef<any>(null)
+  const fetchAllRef = useRef(fetchAll)
+  useEffect(() => { fetchAllRef.current = fetchAll }, [fetchAll])
 
   // Use local date (not UTC) to avoid timezone issues
   const _now = new Date()
@@ -153,7 +155,8 @@ export default function TrainingTab({
 
   // Keep screen awake during workout + rest timer
   useWakeLock(!!workoutStarted || restRunning)
-  // Priorité : programme custom actif > programme coach — using shared utility
+  // Program choice is owned by ActiveTrainingProgramContext. This component
+  // only renders the already-resolved personal OR coach authority.
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null
     const dayIndex = frDayToIndex(trainingDay)
@@ -319,8 +322,7 @@ export default function TrainingTab({
           toast.success(t('programs.newProgramToast'))
         }
         setCustomPrograms(programs)
-        const active = programs.find((p: any) => p.is_active)
-        if (active) setActiveCustomProgram(active)
+        if (dueToStart.length > 0) await fetchAllRef.current(true)
       })
   }, [session?.user?.id])
 
@@ -329,7 +331,16 @@ export default function TrainingTab({
     if (!session?.user?.id) return
     supabase.from('workout_sessions').select('id, name, completed, date, duration_minutes, notes, created_at, muscles_worked')
       .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
-      .then(({ data }: any) => setWorkoutHistory(data || []))
+      .then(({ data, error }: any) => {
+        if (error) {
+          setWorkoutHistory([])
+          setWorkoutHistoryState('error')
+          return
+        }
+        const history = data || []
+        setWorkoutHistory(history)
+        setWorkoutHistoryState(history.length > 0 ? 'ready' : 'empty')
+      })
   }, [session?.user?.id, todaySessionDone])
 
   // ── Load exercises_db cache ──
@@ -356,7 +367,6 @@ export default function TrainingTab({
     const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId, scheduled: p.id === programId ? false : p.scheduled }))
     setCustomPrograms(updated)
     const activeProg = updated.find(p => p.id === programId) || null
-    setActiveCustomProgram(activeProg)
 
     if (activeProg?.days) {
       try {
@@ -378,6 +388,7 @@ export default function TrainingTab({
         if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
       } catch (e) { console.error('[activateProgram] sync error:', e) }
     }
+    await fetchAll(true)
     toast.success(t('calendar.toasts.activated'))
   }
 
@@ -425,7 +436,7 @@ export default function TrainingTab({
     await supabase.from('custom_programs').update({ is_active: false }).eq('id', programId).eq('user_id', session.user.id)
     const updated = customPrograms.map(p => p.id === programId ? { ...p, is_active: false } : p)
     setCustomPrograms(updated)
-    setActiveCustomProgram(null)
+    await fetchAll(true)
     toast.success(t('calendar.toasts.deactivated'))
   }
 
@@ -434,7 +445,7 @@ export default function TrainingTab({
   async function deleteProgram(programId: string) {
     await supabase.from('custom_programs').delete().eq('id', programId).eq('user_id', session.user.id)
     setCustomPrograms(prev => prev.filter(p => p.id !== programId))
-    if (activeCustomProgram?.id === programId) setActiveCustomProgram(null)
+    await fetchAll(true)
     toast.success(t('calendar.toasts.deleted'))
   }
 
@@ -442,8 +453,7 @@ export default function TrainingTab({
     supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
       .then(({ data }: any) => {
         setCustomPrograms(data || [])
-        const active = (data || []).find((p: any) => p.is_active)
-        setActiveCustomProgram(active || null)
+        void fetchAll(true)
       })
   }
 
@@ -603,7 +613,7 @@ export default function TrainingTab({
   async function saveEditedProgram() {
     if (!editedDays || !activeCustomProgram?.id) return
     await supabase.from('custom_programs').update({ days: editedDays, updated_at: new Date().toISOString() }).eq('id', activeCustomProgram.id)
-    setActiveCustomProgram({ ...activeCustomProgram, days: editedDays })
+    await fetchAll(true)
     setEditMode(false)
     setEditedDays(null)
     toast.success(t('calendar.toasts.updated'))
@@ -626,46 +636,8 @@ export default function TrainingTab({
   }
 
   function handleFinishWithCheck() {
-    if (addedExercises.length > 0) {
-      setShowSaveChoice(true)
-    } else {
-      finishTrainingWorkout()
-    }
-  }
-
-  async function saveWithModifications() {
-    // Save session + update the custom program with new exercises
-    await finishTrainingWorkout()
-    if (activeCustomProgram?.id) {
-      const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-      const updatedDays = [...(activeCustomProgram.days || [])]
-      if (updatedDays[dayIndex]) {
-        const existingExs = updatedDays[dayIndex].exercises || []
-        const newExs = addedExercises.map(ex => ({ exercise_name: ex.name, custom_name: ex.name, sets: ex.sets, reps: ex.reps, rest_seconds: ex.rest_seconds, muscle_group: ex.muscle_group }))
-        updatedDays[dayIndex] = { ...updatedDays[dayIndex], exercises: [...existingExs, ...newExs] }
-        await supabase.from('custom_programs').update({ days: updatedDays }).eq('id', activeCustomProgram.id)
-      }
-    }
-    setAddedExercises([])
-  }
-
-  async function saveOriginal() {
-    await finishTrainingWorkout()
-    setAddedExercises([])
-  }
-
-  async function finishTrainingWorkout() {
-    const duration = workoutStarted ? Math.round((Date.now() - workoutStarted) / 60000) : 1
-    const exs: any[] = (coachProgram?.[trainingDay]?.exercises as any[]) || []
-    const totalSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `moovx-sets-${todayStr}-${ex.name}`
-      return s + (completedSets[key]?.length || Number(ex.sets) || 0)
-    }, 0)
-    const doneSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `moovx-sets-${todayStr}-${ex.name}`
-      return s + (completedSets[key] || []).filter(Boolean).length
-    }, 0)
-    // Get the session title from custom program or scheduled session
+    // LEGACY_TO_REMOVE (Wave 4C/4D): old inline set state is adapted into the
+    // single V2 draft. It is never allowed to persist a parallel remote session.
     const sessionTitle = (() => {
       if (activeCustomProgram?.days?.length) {
         const idx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
@@ -677,47 +649,30 @@ export default function TrainingTab({
       if (todaySession?.title) return todaySession.title
       return trainingDay
     })()
-    await supabase.from('workout_sessions').insert({
-      user_id: session.user.id,
-      name: sessionTitle,
-      completed: true,
-      duration_minutes: Math.max(duration, 1),
-      notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
-    })
-
-    // Gamification: +100 XP for completing a workout
-    try { await addXP(session.user.id, 100, supabase); await updateStreak(session.user.id, supabase) } catch {}
-
-    for (const ex of exs) {
-      const inputs = setInputs[ex.name] || []
-      for (const input of inputs) {
-        const weight = parseFloat(input.kg.replace(',', '.'))
-        const reps = parseInt(input.reps)
-        if (weight > 0 && reps > 0) {
-          const result = await checkForPR(ex.name, weight, reps)
-          if (result.newPR) {
-            toast.success(t('calendar.toasts.newPR', { exercise: result.exercise || '', value: result.value?.toLocaleString(locale) || '' }), { duration: 5000 })
+    const v2Exercises = trainingExercises.map(exercise => {
+      const completionKey = `moovx-sets-${todayStr}-${exercise.name}`
+      const completed = completedSets[completionKey] || []
+      const inputs = setInputs[exercise.name] || []
+      const count = Math.max(Number(exercise.sets) || 0, completed.length, inputs.length, 1)
+      return {
+        ...exercise,
+        targetSets: count,
+        sets: Array.from({ length: count }, (_, index) => {
+          const input = inputs[index] || { kg: '', reps: '' }
+          const weight = Number.parseFloat(String(input.kg).replace(',', '.'))
+          const reps = Number.parseInt(String(input.reps), 10)
+          return {
+            num: index + 1,
+            weight: Number.isFinite(weight) ? weight : '',
+            weightRaw: input.kg || '',
+            reps: Number.isFinite(reps) ? reps : '',
+            done: completed[index] === true,
+            rir: null,
           }
-        }
-      }
-    }
-
-    exs.forEach((ex: any) => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(`moovx-sets-${todayStr}-${ex.name}`)
-        localStorage.removeItem(`moovx-inputs-${todayStr}-${ex.name}`)
+        }),
       }
     })
-    setCompletedSets({})
-    setSetInputs({})
-    setWorkoutStarted(null)
-    setRestRunning(false)
-    setRestTimer(0)
-    setActiveRestExName(null)
-    setRestingSet(null)
-    setWorkoutFinished(true)
-    setTimeout(() => setWorkoutFinished(false), 4000)
-    fetchAll()
+    startProgramWorkout({ day_name: sessionTitle }, v2Exercises, trainingDay)
   }
 
   function handleExerciseInfo(ex: any) {
@@ -800,7 +755,6 @@ export default function TrainingTab({
       </RailOverlay>)}
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
-      <WorkoutCelebration visible={workoutFinished} />
 
       {/* ═══ SECTION 1 — HEADER ═══ */}
       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -1354,9 +1308,9 @@ export default function TrainingTab({
       />
 
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
-      <RecentSessionsList workoutHistory={workoutHistory} onOpenDetail={openWorkoutDetail} />
+      <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} />
       {/* ═══ SECTION — BIBLIOTHÈQUE + ALTERNATIVES (extracted) ═══ */}
-      <ExerciseLibrarySection exercisesCache={exercisesCache} activeCustomProgram={activeCustomProgram} supabase={supabase} onProgramUpdate={(updated: any) => { setActiveCustomProgram(updated) }} onStartWorkout={startProgramWorkout} />
+      <ExerciseLibrarySection exercisesCache={exercisesCache} activeCustomProgram={activeCustomProgram} supabase={supabase} onProgramUpdate={() => { void fetchAll(true) }} onStartWorkout={startProgramWorkout} />
 
       {/* ═══ SECTION 6 — CARDIO ═══ */}
       <div style={{ padding: '0 24px 16px' }}>
@@ -1657,9 +1611,6 @@ export default function TrainingTab({
           }
           setShowAddExercise(false)
         }} onClose={() => setShowAddExercise(false)} />
-      )}
-      {showSaveChoice && (
-        <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
       )}
 
       {/* Exercise info popup */}

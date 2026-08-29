@@ -1595,6 +1595,7 @@
     },
     "recent": {
       "noSessions": "Aucune seance",
+      "loadError": "Historique temporairement indisponible.",
       "lastSessions": "Dernières séances",
       "sessionsCount": "{count} séances",
       "viewAll": "Voir tout ›",

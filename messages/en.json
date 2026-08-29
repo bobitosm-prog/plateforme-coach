@@ -1595,6 +1595,7 @@
     },
     "recent": {
       "noSessions": "No sessions",
+      "loadError": "History is temporarily unavailable.",
       "lastSessions": "Recent sessions",
       "sessionsCount": "{count} sessions",
       "viewAll": "View all ›",

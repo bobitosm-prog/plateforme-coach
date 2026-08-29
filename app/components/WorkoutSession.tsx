@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, Fragment } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, Fragment } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
@@ -19,13 +19,28 @@ import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
+import {
+  findNextWorkoutPosition,
+  removeActiveWorkoutDraft,
+  updateActiveWorkoutDraft,
+  type ActiveWorkoutDraft,
+  type WorkoutDraftExercise,
+} from '../../lib/training/active-workout-draft'
+import type { CompletedWorkoutData } from '../../lib/training/session-persistence'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; reps: number | ''; done: boolean; rir: number | null }
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
-interface WorkoutSessionProps { sessionName: string; exercises: any[]; startedAt?: string; onFinish: (data: any) => void; onClose: () => void; rirTrackingEnabled?: boolean; rirScaleAdvanced?: boolean }
+interface WorkoutSessionProps {
+  draft: ActiveWorkoutDraft
+  onDraftChange: (draft: ActiveWorkoutDraft) => void
+  onFinish: (data: CompletedWorkoutData, draft?: ActiveWorkoutDraft) => Promise<unknown>
+  onClose: () => void
+  rirTrackingEnabled?: boolean
+  rirScaleAdvanced?: boolean
+}
 
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
@@ -34,23 +49,6 @@ const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ 
 const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
-
-function readDraft(name: string): { exos: Exo[] } | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem('moovx_workout_draft')
-    if (!raw) return null
-    const draft = JSON.parse(raw)
-    if (draft.sessionName !== name) return null
-    const ageH = (Date.now() - new Date(draft.savedAt).getTime()) / 3600000
-    if (ageH > 24) return null
-    if (!Array.isArray(draft.exos)) return null
-    return { exos: draft.exos }
-  } catch {
-    return null
-  }
-}
-
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
 
@@ -235,35 +233,36 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
 const AUTO_REDIRECT_SECONDS = 8
 
-export default function WorkoutSession({ sessionName, exercises: raw, startedAt, onFinish, onClose, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
+export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
+  const sessionName = draft.sessionName
+  const startedAt = draft.startedAt
+  const raw = draft.exercises
   const t = useTranslations('training_tab.ws')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
-  const draftCheckedRef = useRef(false)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: e.tempo, rir: e.rir ?? null, notes: e.notes || e.description || e.tips || '', videoUrl: e.video_url, imageUrl: e.image_url || e.gif_url, technique: e.technique, techniqueDetails: e.technique_details, exerciseId: e.exercise_id ?? null, sets: makeSets(e.sets || 3), open: true })))
-  // Draft resume prompt
+  const [exos, setExos] = useState<Exo[]>(() => raw as Exo[])
+  const draftRef = useRef(draft)
   const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
-  // Persist exos to localStorage after each mutation (gated by draftCheckedRef)
+  const [saving, setSaving] = useState(draft.status === 'saving')
+  const [saveError, setSaveError] = useState(draft.status === 'save_error')
+  useEffect(() => { draftRef.current = draft }, [draft])
+  const onDraftChangeRef = useRef(onDraftChange)
+  useEffect(() => { onDraftChangeRef.current = onDraftChange }, [onDraftChange])
+
+  const persistDraft = useCallback((patch: Partial<ActiveWorkoutDraft>) => {
+    const next = updateActiveWorkoutDraft(draftRef.current, patch)
+    draftRef.current = next
+    onDraftChangeRef.current(next)
+  }, [])
+
+  // The versioned draft is the single logical local authority.
   useEffect(() => {
     if (typeof window === 'undefined' || mode !== 'session') return
-    if (!draftCheckedRef.current) return
-    if (draftPrompt) return
-    try {
-      const draft = { sessionName, startedAt: startedAt || new Date().toISOString(), savedAt: new Date().toISOString(), exos }
-      localStorage.setItem('moovx_workout_draft', JSON.stringify(draft))
-    } catch {}
-  }, [exos, sessionName, startedAt, mode, draftPrompt])
-  useEffect(() => {
-    const draft = readDraft(sessionName)
-    if (draft && draft.exos.length > 0) {
-      const hasProgress = draft.exos.some(e => Array.isArray(e.sets) && e.sets.some((s: any) => s.done))
-      if (hasProgress) setDraftPrompt(draft.exos)
-    }
-    draftCheckedRef.current = true
-  }, [sessionName])
+    persistDraft({ exercises: exos as WorkoutDraftExercise[] })
+  }, [exos, mode, persistDraft])
   const resumeDraft = () => {
     if (draftPrompt) {
       setExos(draftPrompt.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, weightRaw: s.weightRaw ?? (s.weight !== '' ? String(s.weight).replace('.', ',') : '') })) })))
@@ -282,6 +281,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
   const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
+  useEffect(() => {
+    if (!draft.restTimerEndAt) return
+    const endAt = new Date(draft.restTimerEndAt).getTime()
+    const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000))
+    if (remaining <= 0) {
+      persistDraft({ restTimerEndAt: null })
+      return
+    }
+    restEndsAtRef.current = endAt
+    setRestMax(remaining)
+    setRestSecs(remaining)
+    setRestOn(true)
+  }, [draft.restTimerEndAt, persistDraft])
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
@@ -303,7 +315,8 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [reorderMode, setReorderMode] = useState(false)
   const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
-  const [prevSessionsByExo, setPrevSessionsByExo] = useState<Record<string, PrevSessionSet[][]>>({})
+  // null means read error; [] means a successful read with no history.
+  const [prevSessionsByExo, setPrevSessionsByExo] = useState<Record<string, PrevSessionSet[][] | null>>({})
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
   const [showEndModal, setShowEndModal] = useState(false)
@@ -357,28 +370,39 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       const userId = userData?.user?.id
       if (!userId) return
       // Fetch distinct exercise_name for this user once, to enable normalized matching
-      const { data: allUserSets } = await supabase
+      const { data: allUserSets, error: namesError } = await supabase
         .from('workout_sets')
         .select('exercise_name')
         .eq('user_id', userId)
+      if (namesError) {
+        setPrevSessionsByExo(previous => ({
+          ...previous,
+          ...Object.fromEntries(missing.map(name => [name, null])),
+        }))
+        return
+      }
       const allCandidates = new Set<string>()
       for (const row of (allUserSets || [])) {
         if (row.exercise_name) allCandidates.add(row.exercise_name)
       }
 
       const newPrev: Record<string, { weight: number; reps: number }[]> = {}
-      const newPrevSessions: Record<string, PrevSessionSet[][]> = {}
+      const newPrevSessions: Record<string, PrevSessionSet[][] | null> = {}
       for (const name of missing) {
         const target = normalizeExerciseName(name)
         const matchingNames = Array.from(allCandidates).filter(c => normalizeExerciseName(c) === target)
         if (matchingNames.length === 0) matchingNames.push(name)
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('workout_sets')
           .select('weight, reps, set_number, session_id, completed, created_at, rir')
           .eq('user_id', userId)
           .in('exercise_name', matchingNames)
           .order('created_at', { ascending: false })
           .limit(30)
+        if (error) {
+          newPrevSessions[name] = null
+          continue
+        }
         if (data?.length) {
           const sessionIds: string[] = []
           for (const row of data) {
@@ -531,7 +555,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     }
   }, [])
 
-  const cleanupDraft = () => { try { localStorage.removeItem('moovx_workout_draft') } catch {} }
+  const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId) }
 
   const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
@@ -545,6 +569,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     restEndsAtRef.current = Date.now() + s * 1000
     restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
     setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
+    persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
     if (nextInfo) setRestNextInfo(nextInfo)
@@ -556,8 +581,13 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
       restScheduledSoundsRef.current = []
     }
     setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+    persistDraft({ restTimerEndAt: null })
   }
-  const addRestTime = () => { restEndsAtRef.current += 30000; setRestMax(m => m + 30) }
+  const addRestTime = () => {
+    restEndsAtRef.current += 30000
+    setRestMax(m => m + 30)
+    persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
+  }
   const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
     if (f === 'weight') {
@@ -588,7 +618,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     const nextUndone = projectedSets.find(s => !s.done)
     const nextSetNum = nextUndone?.num ?? 0
 
-    setExos(p => p.map(e => e.id !== eid ? e : {
+    const updatedExercises = exos.map(e => e.id !== eid ? e : {
       ...e,
       sets: e.sets.map(s => {
         if (s.id !== sid) return s
@@ -601,7 +631,14 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         }
         return { ...s, weight: committedWeight, done: true }
       })
-    }))
+    })
+    setExos(updatedExercises)
+    const exerciseIndex = updatedExercises.findIndex(exercise => exercise.id === eid)
+    const setIndex = updatedExercises[exerciseIndex]?.sets.findIndex(set => set.id === sid) ?? 0
+    persistDraft({
+      exercises: updatedExercises as WorkoutDraftExercise[],
+      ...findNextWorkoutPosition(updatedExercises as WorkoutDraftExercise[], exerciseIndex, setIndex),
+    })
 
     const prev = previousData[exoName]
     const prevInfo = prev?.[nextSetNum - 1]
@@ -630,14 +667,19 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
   const pct = total > 0 ? (completed / total) * 100 : 0
   const allDone = completed === total && total > 0
 
-  const finish = () => {
+  const finish = async () => {
+    if (saving) return
     if (elT.current) clearInterval(elT.current)
-    cleanupDraft()
-    onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) })
-    if (exos.length > 0) {
-      setShowSaveTemplate(true)
-    } else {
-      setDone(true)
+    setSaving(true)
+    setSaveError(false)
+    try {
+      await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
+      setSaving(false)
+      if (exos.length > 0) setShowSaveTemplate(true)
+      else setDone(true)
+    } catch {
+      setSaving(false)
+      setSaveError(true)
     }
   }
   async function saveAsTemplate() {
@@ -904,6 +946,25 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
           50% { opacity: 0.5; }
         }
       `}</style>
+      {(saving || saveError) && (
+        <div role="alertdialog" aria-modal="true" aria-labelledby="workout-save-status" style={{ position: 'fixed', inset: 0, zIndex: 10020, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ width: '100%', maxWidth: 360, padding: 24, borderRadius: 18, background: BG_BASE, border: `1px solid ${saveError ? RED : GOLD}`, textAlign: 'center' }}>
+            <h2 id="workout-save-status" style={{ margin: '0 0 10px', color: saveError ? RED : GOLD, fontFamily: FONT_ALT, fontSize: 17 }}>
+              {saving ? 'Sauvegarde de la séance…' : 'Sauvegarde interrompue'}
+            </h2>
+            <p style={{ margin: '0 0 20px', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5 }}>
+              {saving
+                ? 'Tes séries restent protégées sur cet appareil.'
+                : 'Tes séries sont conservées. Vérifie ta connexion puis réessaie.'}
+            </p>
+            {saveError && (
+              <button onClick={() => void finish()} style={{ ...btnPrimary, width: '100%', padding: 14 }}>
+                Réessayer
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* DRAFT RESUME PROMPT */}
       {draftPrompt && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>

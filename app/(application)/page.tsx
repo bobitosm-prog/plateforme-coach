@@ -20,6 +20,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
 import { cache } from '../../lib/cache'
 import { useOverlayOpen } from '../hooks/useOverlayOpen'
 import { resyncPushSubscription } from '../../lib/push-resync'
+import type { ActiveWorkoutDraft } from '../../lib/training/active-workout-draft'
 
 import WorkoutSession from '../components/WorkoutSession'
 import WeightModal from '../components/modals/WeightModal'
@@ -61,15 +62,16 @@ function NavAccountLabel() {
 }
 
 /** Wrapper: PR toasts + pushes newBadges to global queue — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, onBadgesEarned, rirTrackingEnabled, rirScaleAdvanced }: {
-  sessionName: string; exercises: any[]; startedAt?: string
-  onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
+function WorkoutSessionWithCelebrations({ draft, onDraftChange, onFinish, onClose, onBadgesEarned, rirTrackingEnabled, rirScaleAdvanced }: {
+  draft: ActiveWorkoutDraft
+  onDraftChange: (draft: ActiveWorkoutDraft) => void
+  onFinish: (data: any, draft?: ActiveWorkoutDraft) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
   onClose: () => void; onBadgesEarned: (badges: Badge[]) => void
   rirTrackingEnabled?: boolean; rirScaleAdvanced?: boolean
 }) {
   const t = useTranslations('training_tab')
-  const handleFinish = React.useCallback(async (data: any) => {
-    const result = await onFinish(data)
+  const handleFinish = React.useCallback(async (data: any, submittedDraft?: ActiveWorkoutDraft) => {
+    const result = await onFinish(data, submittedDraft ?? draft)
     const prs = result?.newPRs
     if (prs && prs.length === 1) {
       toast.success(t('calendar.toasts.newPR', { exercise: prs[0].exercise, value: prs[0].value }), { duration: 5000 })
@@ -78,8 +80,9 @@ function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onF
       toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
     }
     if (result?.newBadges?.length) onBadgesEarned(result.newBadges)
-  }, [onFinish, t, onBadgesEarned])
-  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} rirTrackingEnabled={rirTrackingEnabled} rirScaleAdvanced={rirScaleAdvanced} />
+    return result
+  }, [onFinish, draft, t, onBadgesEarned])
+  return <WorkoutSession draft={draft} onDraftChange={onDraftChange} onFinish={handleFinish} onClose={onClose} rirTrackingEnabled={rirTrackingEnabled} rirScaleAdvanced={rirScaleAdvanced} />
 }
 
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
@@ -505,7 +508,7 @@ export default function CoachApp() {
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} onBadgesEarned={handleBadgesEarned} rirTrackingEnabled={h.profile?.rir_tracking_enabled} rirScaleAdvanced={h.profile?.rir_scale_advanced} />
+        <WorkoutSessionWithCelebrations draft={h.workoutSession} onDraftChange={h.updateWorkoutSessionDraft} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); void h.fetchAll(true) }} onBadgesEarned={handleBadgesEarned} rirTrackingEnabled={h.profile?.rir_tracking_enabled} rirScaleAdvanced={h.profile?.rir_scale_advanced} />
       )}
 
       {/* ── WEIGHT MODAL ── */}
@@ -698,7 +701,7 @@ export default function CoachApp() {
             {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} capabilities={h.capabilities} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} setModal={h.setModal} />}
+            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} capabilities={h.capabilities} activeTrainingProgram={h.activeTrainingProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} lastCompletedByIndex={h.lastCompletedByIndex} setModal={h.setModal} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('nutrition') && <NutritionTab profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onOpenProgramSettings={() => h.setActiveTab('nutrition_program')} />}
