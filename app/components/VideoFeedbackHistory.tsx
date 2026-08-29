@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { createBrowserClient } from '@supabase/ssr'
 import { Video, Check, Clock, MessageCircle } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN,
+  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
+  RADIUS_CARD, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
 
 const supabase = createBrowserClient(
@@ -14,10 +15,20 @@ const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 )
 
+interface ExerciseFeedback {
+  id: string
+  status: string
+  exercise_name: string
+  created_at: string
+  video_url: string
+  client_note?: string | null
+  coach_feedback?: string | null
+}
+
 export default function VideoFeedbackHistory({ userId }: { userId: string }) {
   const t = useTranslations('videoFeedback')
   const locale = useLocale()
-  const [feedbacks, setFeedbacks] = useState<any[]>([])
+  const [feedbacks, setFeedbacks] = useState<ExerciseFeedback[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -34,7 +45,7 @@ export default function VideoFeedbackHistory({ userId }: { userId: string }) {
   if (loading) return null
   if (feedbacks.length === 0) return null
 
-  const statusInfo: Record<string, { label: string; color: string; icon: any }> = {
+  const statusInfo: Record<string, { label: string; color: string; icon: ReactNode }> = {
     pending: { label: t('status.pending'), color: GOLD, icon: <Clock size={12} /> },
     reviewed: { label: t('status.reviewed'), color: GOLD, icon: <MessageCircle size={12} /> },
     approved: { label: t('status.approved'), color: GREEN, icon: <Check size={12} /> },
@@ -56,21 +67,26 @@ export default function VideoFeedbackHistory({ userId }: { userId: string }) {
 
           return (
             <div key={fb.id}
-              onClick={() => setExpanded(isExpanded ? null : fb.id)}
-              style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 14, cursor: 'pointer', transition: 'border-color 0.2s' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
+              style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 14, transition: 'border-color 0.2s' }}>
+              <button
+                type="button"
+                aria-expanded={isExpanded}
+                aria-controls={`video-feedback-${fb.id}`}
+                onClick={() => setExpanded(isExpanded ? null : fb.id)}
+                style={{ width: '100%', minHeight: 44, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: 0, background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>{fb.exercise_name}</span>
                   <span style={{ fontSize: 11, color: TEXT_DIM, marginLeft: 8, fontFamily: FONT_BODY }}>{new Date(fb.created_at).toLocaleDateString(locale)}</span>
                 </div>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 12, padding: '3px 10px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                <span style={{ display: 'inline-flex', flexShrink: 0, alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 12, padding: '3px 10px', fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' }}>
                   {info.icon} {info.label}
                 </span>
-              </div>
+              </button>
 
               {isExpanded && (
-                <div style={{ marginTop: 12 }}>
-                  <video src={fb.video_url} controls style={{ width: '100%', borderRadius: 12, maxHeight: 200, marginBottom: 8 }} />
+                <div id={`video-feedback-${fb.id}`} style={{ marginTop: 12 }}>
+                  <video src={fb.video_url} controls preload="metadata" style={{ width: '100%', borderRadius: 12, maxHeight: 200, marginBottom: 8 }} />
                   {fb.client_note && (
                     <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'italic', margin: '0 0 8px', fontFamily: FONT_BODY }}>{t('yourNote', { note: fb.client_note })}</p>
                   )}

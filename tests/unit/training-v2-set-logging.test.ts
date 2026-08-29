@@ -90,10 +90,10 @@ describe('Training V2 set logging', () => {
     expect(workoutSession).not.toContain("from('workout_sets').insert")
   })
 
-  it('renders one current-set authority and keeps the legacy logger visually disabled', () => {
+  it('renders one current-set authority and removes the legacy logger path', () => {
     expect(workoutSession.match(/<CurrentSetEditor/g)).toHaveLength(1)
-    expect(workoutSession).toContain('legacyLoggerHidden')
-    expect(trainingStyles).toMatch(/\.legacyLoggerHidden\s*\{[\s\S]*?display:\s*none\s*!important/)
+    expect(workoutSession).not.toContain('legacyLoggerHidden')
+    expect(trainingStyles).not.toContain('legacyLoggerHidden')
     expect(currentSetEditor).not.toContain('supabase')
   })
 })

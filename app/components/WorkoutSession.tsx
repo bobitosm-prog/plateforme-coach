@@ -1,6 +1,6 @@
 'use client'
-import { Fragment, useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { Check, Plus, ArrowLeft, Search, X, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
@@ -8,13 +8,10 @@ import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, btnPrimary } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
-import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, getIncrementForExercise, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
-import TempoModal from './training/TempoModal'
-import TempoExecutor from './training/TempoExecutor'
 import {
   findNextWorkoutPosition,
   removeActiveWorkoutDraft,
@@ -63,16 +60,13 @@ interface WorkoutSessionProps {
   onNavigateHome: () => void
   onNavigateProgress: () => void
   rirTrackingEnabled?: boolean
-  rirScaleAdvanced?: boolean
 }
 
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', weightRaw: '', reps: '', done: false, rir: null }))
-const fmt = (s: number | string) => { const n = typeof s === 'string' ? parseInt(s) || 0 : s; return n >= 60 ? `${Math.floor(n / 60)}:${(n % 60).toString().padStart(2, '0')}` : `${n}s` }
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
-const isDumbbell = (n: string) => /halt[eè]res?|dumbbell|\bDB\b/i.test(n)
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
 
@@ -83,7 +77,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   const ALL_KEY = '__all__'
   const muscleFilters = [{ key: ALL_KEY, label: tMuscle('all') }, ...WORKOUT_MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
-  const [name, setName] = useState(t('builder.defaultName'))
+  const name = t('builder.defaultName')
   const [search, setSearch] = useState('')
   const [dbExos, setDbExos] = useState<any[]>([])
   const [selected, setSelected] = useState<any[]>([])
@@ -195,7 +189,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             value={search} onChange={e => setSearch(e.target.value)} placeholder={t('builder.searchPlaceholder')}
             style={{ width: '100%', padding: '14px 44px 14px 36px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <X size={12} color={GOLD} />
             </button>
           )}
@@ -255,7 +249,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   )
 }
 
-export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
+export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
   const raw = draft.exercises
@@ -303,9 +297,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
-  const [restMax, setRestMax] = useState(90)
-  const [restExoId, setRestExoId] = useState<string | null>(null)
-  const [restSetId, setRestSetId] = useState<string | null>(null)
   const [restDone, setRestDone] = useState(false)
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
@@ -331,7 +322,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     if (snapshot.state !== 'running' || snapshot.endAt === null) return
     restEndsAtRef.current = snapshot.endAt
-    setRestMax(snapshot.remainingSeconds)
     setRestSecs(snapshot.remainingSeconds)
     setRestOn(true)
   }, [completeRestTimer, draft.restTimerEndAt])
@@ -342,7 +332,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [completionRecords, setCompletionRecords] = useState<{ exercise: string; value: number }[]>([])
   const [showVideo, setShowVideo] = useState<string | null>(null)
   const [sessionModified, setSessionModified] = useState(false)
-  const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
   const [variantPopup, setVariantPopup] = useState<VariantPopupState | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [exerciseInfoLoading, setExerciseInfoLoading] = useState(false)
@@ -352,29 +341,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [previousPerformance, setPreviousPerformance] = useState<Record<string, PreviousPerformance>>({})
   const previousLoadStartedRef = useRef(false)
   const [setStatusMessage, setSetStatusMessage] = useState('')
-  const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [showEndModal, setShowEndModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
-  const [tempoModal, setTempoModal] = useState<{ tempo: string; name: string } | null>(null)
-  const [tempoExecutor, setTempoExecutor] = useState<{ exoId: string; setIdx: number; tempo: string; name: string; targetReps: number } | null>(null)
-
-  // Parse the target reps for TempoExecutor (e.g. '8-10' → 10, '12' → 12)
-  const parseTargetRepsForTempo = (targetReps: string): number => {
-    if (!targetReps) return 10
-    // If range like '8-10', use the higher number
-    const parts = String(targetReps).split('-').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
-    if (parts.length === 0) return 10
-    return Math.max(...parts)
-  }
-
-  // Check if a tempo string is valid (format X-X-X)
-  const isTempoValid = (tempo?: string): boolean => {
-    if (!tempo) return false
-    const parts = tempo.trim().split('-').map(p => parseInt(p.trim(), 10))
-    if (parts.length < 3) return false
-    return parts.slice(0, 3).every(n => !isNaN(n) && n >= 0)
-  }
 
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
@@ -390,13 +359,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     return map
   }, [exos, previousPerformance])
 
-  // Compatibility adapters for non-visual timer/tempo helpers pending their own extraction.
-  const previousData = useMemo<Record<string, { weight: number; reps: number }[]>>(() => Object.fromEntries(
-    exos.map(exercise => [exercise.name, (previousPerformance[exercise.id]?.latestSets ?? []).map(set => ({
-      weight: set.weight,
-      reps: set.reps,
-    }))]),
-  ), [exos, previousPerformance])
+  // Compatibility adapter for the existing progression helper.
   const prevSessionsByExo = useMemo<Record<string, PrevSessionSet[][] | null>>(() => Object.fromEntries(
     exos.map(exercise => {
       const performance = previousPerformance[exercise.id]
@@ -545,7 +508,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId) }
 
-  const startRest = (s: number, exoId?: string, setId?: string) => {
+  const startRest = (s: number) => {
     if (restT.current) clearInterval(restT.current)
     // Cancel any previously scheduled sounds (defensive: shouldn't happen,
     // but if startRest is called while a previous one is still pending
@@ -556,10 +519,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     restEndsAtRef.current = Date.now() + s * 1000
     restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
-    setRestMax(s); setRestSecs(s); setRestOn(true); setRestDone(false)
+    setRestSecs(s); setRestOn(true); setRestDone(false)
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
-    if (exoId) setRestExoId(exoId)
-    if (setId) setRestSetId(setId)
   }
   const skipRest = () => {
     // Cancel scheduled audio cues so they don't fire after skip
@@ -567,15 +528,14 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       cancelScheduledSounds(restScheduledSoundsRef.current)
       restScheduledSoundsRef.current = []
     }
-    setRestOn(false); setRestDone(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+    setRestOn(false); setRestDone(false); setRestSecs(0)
     persistDraft({ restTimerEndAt: null })
   }
   const addRestTime = () => {
     restEndsAtRef.current = extendRestTimerDeadline(restEndsAtRef.current, 30)
-    setRestMax(m => m + 30)
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
-  const dismissRestDone = () => { setRestDone(false); setRestExoId(null); setRestSetId(null) }
+  const dismissRestDone = () => { setRestDone(false) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
     if (f === 'weight') {
       setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, weightRaw: v }) }))
@@ -635,7 +595,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       setSetStatusMessage(tv2('workoutComplete'))
     }
 
-    startRest(r, eid, sid)
+    startRest(r)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -644,20 +604,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (reps > 15) { setRepsWarning({ eid, sid, reps }); return }
     doValidate(eid, sid)
   }
-  const unvalidate = (eid: string, sid: string) => { skipRest(); setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: false }) })) }
-  const addSet = (eid: string) => setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: [...e.sets, { id: uid(), num: e.sets.length + 1, weight: e.sets.at(-1)?.weight ?? '', weightRaw: e.sets.at(-1)?.weightRaw ?? '', reps: e.sets.at(-1)?.reps ?? '', done: false, rir: null }] }))
   const setSetRir = (eid: string, sid: string, value: number) => {
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, rir: value }) }))
-  }
-  const setRir = (value: number) => {
-    if (!restExoId || !restSetId) return
-    setSetRir(restExoId, restSetId, value)
   }
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
   const volume = exos.reduce((v, e) => v + e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0), 0)
-  const allDone = completed === total && total > 0
   const completedExercises = exos.filter(exercise => (
     exercise.sets.length > 0 && exercise.sets.every(set => set.done)
   )).length
@@ -693,7 +646,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
   }
   async function loadVariantsForSession(exo: Exo, exIdx: number) {
-    setExerciseMenu(null)
     setVariantPopup({ exIdx, variants: [], originalName: exo.name, status: 'loading' })
     try {
       const { data: current, error: currentError } = await supabase
@@ -862,7 +814,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         <button aria-label={t('back')} onClick={onClose} style={{ width: 44, height: 44, display: 'grid', placeItems: 'center', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, cursor: 'pointer' }}>
           <ArrowLeft size={20} color={TEXT_PRIMARY} />
         </button>
-        <span style={{ fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{draft.programSource === 'coach' ? 'Plan coach' : 'Programme personnel'}</span>
+        <span style={{ fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{draft.programSource === 'coach' ? tv2('coachPlan') : tv2('personalProgram')}</span>
       </div>
 
       <div style={{ width: 'min(100%, 1180px)', margin: '0 auto' }}>
@@ -931,28 +883,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-            <button onClick={() => setReorderMode(false)} style={{ width: '100%', background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: colors.onGold, letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', minHeight: 44, background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: colors.onGold, letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
           </div>
         )}
 
         {/* ── Normal exercise list ── */}
         {!reorderMode && exos.map((exo, idx) => {
           if (idx !== activeExerciseIndex) return null
-          const cnt = exo.sets.filter(s => s.done).length
-          const isDone = cnt === exo.sets.length
-          const last = exo.sets.filter(s => s.done).at(-1)
-          // Progression badge — "même stade" : compare le volume cumulé des N premiers sets communs
-          const progressBadge = (() => {
-            const prev = previousData[exo.name]
-            if (!prev?.length) return null
-            const doneSets = exo.sets.filter(s => s.done && s.weight !== '' && s.reps !== '')
-            if (!doneSets.length) return null
-            const n = Math.min(doneSets.length, prev.length)
-            const curVol = doneSets.slice(0, n).reduce((s, st) => s + Number(st.weight) * Number(st.reps), 0)
-            const prevVol = prev.slice(0, n).reduce((s, st) => s + st.weight * st.reps, 0)
-            if (!prevVol) return null
-            return Math.round(((curVol - prevVol) / prevVol) * 100)
-          })()
           const firstUndone = exo.sets.findIndex(set => !set.done)
           const activeSetIndex = firstUndone >= 0 ? firstUndone : Math.max(exo.sets.length - 1, 0)
           const activeSet = exo.sets[activeSetIndex]
@@ -995,78 +932,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               target={targetLabel}
             >
             <div style={{ marginBottom: 12 }}>
-              {/* ── Exercise Hero Banner ── */}
-              <div
-                className={trainingV2Styles.legacyHeaderHidden}
-                onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))}
-                style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: exo.open ? 14 : 0, cursor: 'pointer', background: colors.surface2 }}
-              >
-                {/* Background image */}
-                {exo.imageUrl && (
-                  <img src={exo.imageUrl} alt={getExerciseName(exo, locale)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                )}
-                {/* Gradient overlay */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(13,11,8,0.85) 100%)', pointerEvents: 'none' }} />
-                {/* Done overlay */}
-                {isDone && <div style={{ position: 'absolute', inset: 0, background: colors.goldBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Check size={32} color={GOLD} strokeWidth={3} /></div>}
-
-                {/* Actions — top right */}
-                <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6, zIndex: 2 }}>
-                  <button onClick={(e) => { e.stopPropagation(); openExerciseInfo(exo) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); setExerciseMenu(exerciseMenu === idx ? null : idx) }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '50%', cursor: 'pointer', padding: 0, color: GOLD, fontSize: 13, fontWeight: 700 }}>⋯</button>
-                </div>
-
-                {/* Text — bottom left */}
-                <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
-                  {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{getMuscleLabel(exo.muscle, locale, tMuscle)}</div>}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</span>
-                    {progressBadge !== null && (
-                      <span style={{ fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 8, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? colors.success : progressBadge < 0 ? colors.error : 'rgba(255,255,255,0.5)' }}>
-                        {progressBadge > 0 ? '+' : ''}{progressBadge}%
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(245,241,232,0.7)', marginTop: 6, fontFamily: FONT_BODY }}>
-                    {t('setsReps', { sets: exo.targetSets, reps: exo.targetReps })}
-                    {exo.tempo && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setTempoModal({ tempo: exo.tempo!, name: exo.name }) }}
-                        style={{
-                          marginLeft: 8,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          padding: '3px 8px',
-                          background: 'rgba(212,175,55,0.15)',
-                          border: `0.5px solid ${GOLD_RULE}`,
-                          borderRadius: 5,
-                          color: GOLD,
-                          fontFamily: FONT_ALT,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          letterSpacing: 0.5,
-                          cursor: 'pointer',
-                          verticalAlign: 'middle',
-                        }}
-                      >
-                        <Clock size={10} strokeWidth={2.5} />
-                        <span style={{ fontSize: 8, color: TEXT_DIM, letterSpacing: 1.5 }}>TEMPO</span>
-                        <span>{exo.tempo}</span>
-                      </button>
-                    )}
-                    {exo.rir != null && <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 5px', background: 'rgba(0,0,0,0.35)', borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700 }}>R{exo.rir}</span>}
-                    {exo.technique && TECHNIQUE_LABELS[exo.technique] && (
-                      <span style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', background: colors.goldBorder, border: `0.5px solid ${GOLD_RULE}`, borderRadius: 4, fontFamily: FONT_ALT, fontWeight: 700, color: GOLD }}>
-                        {TECHNIQUE_LABELS[exo.technique].emoji} {TECHNIQUE_LABELS[exo.technique].label}{exo.techniqueDetails ? ` ×${exo.techniqueDetails.split(',')[0]}` : ''}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               <div className={trainingV2Styles.focusExecutionLayout}>
                 <div className={trainingV2Styles.focusEditorColumn}>
                   {activeSet && (
@@ -1127,199 +992,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </aside>
               </div>
 
-              {/* ── Sets Big Stack ── */}
-              {exo.open && (
-                <div className={trainingV2Styles.legacyLoggerHidden} aria-hidden="true" style={{ paddingTop: 8, flexDirection: 'column', gap: 8 }}>
-
-                  {/* Set cards */}
-                  {exo.sets.map((set: ExSet, si: number) => {
-                    const firstUndoneIdx = exo.sets.findIndex(s => !s.done)
-                    const isFirstUndone = si === firstUndoneIdx
-                    const showTempoPlay = !set.done && isFirstUndone && isTempoValid(exo.tempo)
-                    const ok = !set.done && (set.weight !== '' || set.reps !== '')
-                    const prevSet = previousData[exo.name]?.[set.num - 1]
-                    const isActive = ok && !set.done
-                    return (
-                      <Fragment key={set.id}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '14px 12px', borderRadius: 12,
-                        background: (isActive || set.done) ? 'rgba(201,168,76,0.10)' : 'rgba(201,168,76,0.05)',
-                        border: set.done ? `2px solid ${colors.success}` : isActive ? `2px solid ${GOLD}` : '1px solid rgba(201,168,76,0.20)',
-                        transition: 'all 0.2s',
-                      }}>
-                        {/* a) Set number */}
-                        <div style={{ width: 42, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(245,241,232,0.4)', textTransform: 'uppercase' as const }}>{t('set')}</span>
-                          <span style={{ fontSize: 22, fontFamily: FONT_DISPLAY, fontWeight: 700, color: set.done ? GOLD : isActive ? GOLD : 'rgba(245,241,232,0.5)', lineHeight: 1 }}>{set.num}</span>
-                        </div>
-
-                        {/* b) Previous data + progression badge on 1st set */}
-                        <div style={{ width: 60, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <span style={{ fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase' as const }}>{t('prev')}</span>
-                          <span style={{ fontSize: 13, fontFamily: FONT_BODY, fontWeight: 600, color: prevSet ? GOLD : 'rgba(245,241,232,0.25)', whiteSpace: 'nowrap' }}>
-                            {prevSet ? `${prevSet.weight} × ${prevSet.reps}` : '—'}
-                          </span>
-                          {si === 0 && progressionByExo[exo.name] && (
-                            <span style={{
-                              marginTop: 2, fontSize: 9, fontFamily: FONT_ALT, fontWeight: 700,
-                              padding: '1px 4px', borderRadius: 4, alignSelf: 'flex-start',
-                              ...(progressionByExo[exo.name]!.status === 'progress'
-                                ? { color: GREEN, background: `${GREEN}20` }
-                                : progressionByExo[exo.name]!.status === 'deload'
-                                  ? { color: colors.orange, background: 'rgba(251,146,60,0.15)' }
-                                  : { color: TEXT_DIM, background: `${TEXT_DIM}20` }),
-                            }}>
-                              {progressionByExo[exo.name]!.status === 'progress' ? `+${fmtStep(progressionByExo[exo.name]!.step)}` : progressionByExo[exo.name]!.status === 'deload' ? `-${fmtStep(progressionByExo[exo.name]!.step)}` : t('keep')}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* c) KG x REPS inputs */}
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: 6, justifyContent: 'center' }}>
-                          <input type="text" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" className="ws-input ws-big-input"
-                            value={set.weightRaw ?? ''} onChange={e => setField(exo.id, set.id, 'weight', e.target.value)}
-                            onBlur={() => commitWeight(exo.id, set.id)}
-                            disabled={set.done} placeholder={si === 0 && progressionByExo[exo.name] ? String(progressionByExo[exo.name]!.weight).replace('.', ',') : last?.weight ? String(last.weight).replace('.', ',') : '0'}
-                            style={{ width: 64, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.weight !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
-                          <span style={{ fontSize: 17, fontWeight: 600, color: 'rgba(245,241,232,0.3)', lineHeight: 1 }}>×</span>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="ws-input ws-big-input"
-                            value={set.reps === '' || Number.isNaN(set.reps) ? '' : set.reps} onChange={e => { const cleaned = e.target.value.replace(/\D/g, ''); setField(exo.id, set.id, 'reps', cleaned) }}
-                            disabled={set.done} placeholder={String(exo.targetReps || '0').split('-')[0] || '0'}
-                            style={{ width: 52, textAlign: 'center', background: 'transparent', border: 'none', borderRadius: 6, fontSize: isActive ? 40 : 36, fontFamily: FONT_BODY, fontWeight: 800, color: (set.reps !== '') ? GOLD : 'rgba(201,168,76,0.4)', caretColor: GOLD, outline: 'none', lineHeight: 1, opacity: set.done ? 0.6 : 1 }} />
-                        </div>
-
-                        {/* d) Tempo play + Validate button */}
-                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                          {showTempoPlay && (
-                            <button
-                              onClick={() => {
-                                initAudio()
-                                setTempoExecutor({
-                                  exoId: exo.id,
-                                  setIdx: si,
-                                  tempo: exo.tempo!,
-                                  name: exo.name,
-                                  targetReps: parseTargetRepsForTempo(exo.targetReps),
-                                })
-                              }}
-                              aria-label={t('startTempo')}
-                              style={{
-                                width: 40,
-                                height: 40,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: GOLD_DIM,
-                                border: `1.5px solid ${GOLD}`,
-                                borderRadius: '50%',
-                                cursor: 'pointer',
-                                color: GOLD,
-                                marginRight: 8,
-                                transition: 'transform 0.15s',
-                              }}
-                              className="active:scale-95"
-                            >
-                              <Play size={16} fill={GOLD} strokeWidth={2} />
-                            </button>
-                          )}
-                          {set.done ? (
-                            <button onClick={() => unvalidate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success, border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
-                              <Check size={18} strokeWidth={3} color="#fff" />
-                            </button>
-                          ) : ok ? (
-                            <button onClick={() => validate(exo.id, set.id)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GOLD, border: 'none', borderRadius: '50%', cursor: 'pointer' }}>
-                              <Check size={18} strokeWidth={3} color={colors.onGold} />
-                            </button>
-                          ) : (
-                            <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: '50%' }}>
-                              <Check size={14} strokeWidth={2.5} color="rgba(201,168,76,0.3)" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* INLINE REST TIMER — rendered below the set that triggered it */}
-                      {restOn && restExoId === exo.id && restSetId === set.id && (() => {
-                        const currentRir = exo.sets.find(s => s.id === set.id)?.rir ?? null
-                        return (
-                        <div style={{
-                          marginTop: 8, marginBottom: 4, borderRadius: 12,
-                          background: 'rgba(201,168,76,0.08)',
-                          border: `1px solid ${restSecs <= 10 ? colors.orange : GOLD_RULE}`,
-                          transition: 'border-color 200ms',
-                          overflow: 'hidden',
-                        }}>
-                          {rirTrackingEnabled && (
-                            <div style={{ padding: '12px 16px 10px', borderBottom: `1px solid ${GOLD_RULE}` }}>
-                              <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginBottom: 8 }}>{t(rirScaleAdvanced ? 'rirQuestionAdvanced' : 'rirQuestionSimple')}</div>
-                              <div style={{ display: 'flex', gap: 6 }}>
-                                {rirScaleAdvanced
-                                  ? [0, 1, 2, 3, 4].map(v => (
-                                      <button key={v} onClick={() => setRir(v)} style={{
-                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                                        background: currentRir === v ? GOLD_DIM : colors.surface2,
-                                        border: `1px solid ${currentRir === v ? GOLD : colors.divider}`,
-                                        fontFamily: FONT_ALT, fontSize: 13, fontWeight: 700, color: currentRir === v ? GOLD : TEXT_MUTED,
-                                      }}>{v === 4 ? '4+' : v}</button>
-                                    ))
-                                  : ([
-                                      { label: 'Facile', value: 4 },
-                                      { label: 'Moyen', value: 2 },
-                                      { label: 'Dur', value: 1 },
-                                      { label: 'Échec', value: 0 },
-                                    ] as const).map(opt => (
-                                      <button key={opt.value} onClick={() => setRir(opt.value)} style={{
-                                        flex: 1, padding: '8px 0', borderRadius: 8, cursor: 'pointer',
-                                        background: currentRir === opt.value ? GOLD_DIM : colors.surface2,
-                                        border: `1px solid ${currentRir === opt.value ? GOLD : colors.divider}`,
-                                        fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: currentRir === opt.value ? GOLD : TEXT_MUTED,
-                                      }}>{opt.label}</button>
-                                    ))
-                                }
-                              </div>
-                            </div>
-                          )}
-                          <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
-                          <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
-                            <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
-                              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
-                              <circle cx="40" cy="40" r="32" fill="none"
-                                stroke={restSecs <= 10 ? colors.orange : GOLD} strokeWidth="6" strokeLinecap="round"
-                                strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - (restMax > 0 ? restSecs / restMax : 0))}
-                                style={{ transition: 'stroke-dashoffset 1s linear, stroke 200ms' }} />
-                            </svg>
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONT_ALT, color: restSecs <= 10 ? colors.orange : GOLD, lineHeight: 1 }}>{restSecs}s</span>
-                              <span style={{ fontSize: 8, fontFamily: FONT_ALT, color: TEXT_DIM, letterSpacing: '0.1em', marginTop: 2 }}>{t('rest')}</span>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                            <button onClick={addRestTime} style={{ padding: '10px 16px', background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30s</button>
-                            <button onClick={skipRest} style={{ padding: '10px 16px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('skipRest')}</button>
-                          </div>
-                          </div>
-                        </div>
-                        )
-                      })()}
-                      </Fragment>
-                    )
-                  })}
-
-                  {/* Add set */}
-                  <button onClick={() => addSet(exo.id)} style={{
-                    width: '100%', marginTop: 8, padding: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: 'transparent', border: `1px dashed rgba(201,168,76,0.2)`, borderRadius: 8, cursor: 'pointer',
-                    fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                  }}>
-                    <Plus size={12} /> {t('addSet')}
-                  </button>
-                  {isDone && idx < exos.length - 1 && (
-                    <button type="button" onClick={() => selectExercise(idx + 1)} style={{ ...btnPrimary, width: '100%', minHeight: 44, marginTop: 10 }}>
-                      {t('exerciseDone')} · →
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
             </ActiveExerciseFocus>
           )
@@ -1328,7 +1000,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         {/* Reorder link — visible only in normal mode with 2+ exos */}
         {exos.length >= 2 && !reorderMode && (
           <div style={{ textAlign: 'center', padding: '6px 0', marginBottom: 14 }}>
-            <button onClick={() => setReorderMode(true)} style={{ background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>{t('reorderLink')}</button>
+            <button onClick={() => setReorderMode(true)} style={{ minHeight: 44, background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>{t('reorderLink')}</button>
           </div>
         )}
 
@@ -1367,7 +1039,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
             <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
+          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ minHeight: 44, background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
         </div>
       </div>}
 
@@ -1545,27 +1217,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         </TrainingSheet>
       )}
 
-      {/* Tempo modal */}
-      {tempoModal && (
-        <TempoModal
-          tempo={tempoModal.tempo}
-          exerciseName={tempoModal.name}
-          onClose={() => setTempoModal(null)}
-        />
-      )}
-      {/* Tempo executor — fullscreen guided tempo for the current set */}
-      {tempoExecutor && (
-        <TempoExecutor
-          tempo={tempoExecutor.tempo}
-          exerciseName={tempoExecutor.name}
-          targetReps={tempoExecutor.targetReps}
-          onComplete={() => {
-            // For now in B.2 just close. B.3 will auto-trigger rest timer here.
-            setTempoExecutor(null)
-          }}
-          onClose={() => setTempoExecutor(null)}
-        />
-      )}
     </div>
     </TrainingV2>
   )

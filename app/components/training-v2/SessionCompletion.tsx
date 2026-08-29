@@ -41,7 +41,7 @@ export default function SessionCompletion({
 
   return (
     <main className={styles.completionShell} aria-labelledby="training-completion-title">
-      <section className={styles.completionCard} role="status" aria-live="polite">
+      <section className={styles.completionCard}>
         <CheckCircle2 className={styles.completionIcon} aria-hidden="true" />
         <h1 id="training-completion-title" ref={headingRef} tabIndex={-1}>{t('title')}</h1>
         <p className={styles.completionSessionName}>{sessionName}</p>

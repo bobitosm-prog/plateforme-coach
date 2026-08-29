@@ -29,7 +29,7 @@ export default function ActiveExerciseFocus({
   const previousLabel = previousError ? t('previousError') : previous || t('noPrevious')
 
   return (
-    <main className={styles.focus} aria-labelledby="active-exercise-title" aria-live="polite">
+    <main className={styles.focus} aria-labelledby="active-exercise-title">
       <div className={styles.focusLabel}>{t('focus')}</div>
       <h2 id="active-exercise-title" className={styles.focusHeading}>{name}</h2>
       <div className={styles.focusMeta}>

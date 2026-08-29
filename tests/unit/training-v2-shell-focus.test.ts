@@ -38,7 +38,8 @@ describe('Training V2 shell and focus mode', () => {
     expect(workoutSession).toContain('if (idx !== activeExerciseIndex) return null')
     expect(workoutSession).toContain('<ActiveExerciseFocus')
     expect(focus).toContain('data-training-v2-logger="primary"')
-    expect(trainingTab).toContain('legacyLoggerHidden')
+    expect(trainingTab).not.toContain('legacyLoggerHidden')
+    expect(workoutSession).not.toContain('legacyLoggerHidden')
     expect(trainingTab).not.toContain("from('workout_sessions').insert")
   })
 
