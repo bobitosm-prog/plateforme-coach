@@ -7,9 +7,9 @@ import { getExerciseName } from '../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
+import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
+import { initAudio, playBeep, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
@@ -31,6 +31,9 @@ import TrainingSessionHero from './training-v2/TrainingSessionHero'
 import SessionTimeline from './training-v2/SessionTimeline'
 import ActiveExerciseFocus from './training-v2/ActiveExerciseFocus'
 import CurrentSetEditor from './training-v2/CurrentSetEditor'
+import ExerciseTools from './training-v2/ExerciseTools'
+import RestTimerCompact from './training-v2/RestTimerCompact'
+import TrainingSheet from './training-v2/TrainingSheet'
 import trainingV2Styles from './training-v2/TrainingV2.module.css'
 import {
   adjustRepsValue,
@@ -41,12 +44,15 @@ import {
   type PreviousPerformance,
   type PreviousExerciseReference,
 } from '../../lib/training/set-logging'
+import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/rest-timer'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; reps: number | ''; done: boolean; rir: number | null }
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
+interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
+interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
 interface WorkoutSessionProps {
   draft: ActiveWorkoutDraft
   onDraftChange: (draft: ActiveWorkoutDraft) => void
@@ -299,23 +305,34 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [restExoId, setRestExoId] = useState<string | null>(null)
   const [restSetId, setRestSetId] = useState<string | null>(null)
   const [restDone, setRestDone] = useState(false)
-  const [restNextInfo, setRestNextInfo] = useState('')
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
   const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
+  const completeRestTimer = useCallback(() => {
+    if (restScheduledSoundsRef.current.length > 0) {
+      cancelScheduledSounds(restScheduledSoundsRef.current)
+      restScheduledSoundsRef.current = []
+    }
+    setRestOn(false)
+    setRestSecs(0)
+    setRestDone(true)
+    persistDraft({ restTimerEndAt: null })
+    playBeep()
+    vibrateDevice()
+  }, [persistDraft])
   useEffect(() => {
     if (!draft.restTimerEndAt) return
-    const endAt = new Date(draft.restTimerEndAt).getTime()
-    const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000))
-    if (remaining <= 0) {
-      persistDraft({ restTimerEndAt: null })
+    const snapshot = resolveRestTimer(draft.restTimerEndAt)
+    if (snapshot.state === 'finished') {
+      completeRestTimer()
       return
     }
-    restEndsAtRef.current = endAt
-    setRestMax(remaining)
-    setRestSecs(remaining)
+    if (snapshot.state !== 'running' || snapshot.endAt === null) return
+    restEndsAtRef.current = snapshot.endAt
+    setRestMax(snapshot.remainingSeconds)
+    setRestSecs(snapshot.remainingSeconds)
     setRestOn(true)
-  }, [draft.restTimerEndAt, persistDraft])
+  }, [completeRestTimer, draft.restTimerEndAt])
   const [t0] = useState(() => startedAt ? new Date(startedAt).getTime() : Date.now())
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
@@ -333,14 +350,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
   const [showSaveTemplate, setShowSaveTemplate] = useState(false)
   const [templateName, setTemplateName] = useState(sessionName || 'Séance libre') // DB value, do not translate
-  const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
+  const [variantPopup, setVariantPopup] = useState<VariantPopupState | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
+  const [exerciseInfoLoading, setExerciseInfoLoading] = useState(false)
+  const [exerciseInfoError, setExerciseInfoError] = useState(false)
+  const [videoError, setVideoError] = useState(false)
   const [reorderMode, setReorderMode] = useState(false)
   const [previousPerformance, setPreviousPerformance] = useState<Record<string, PreviousPerformance>>({})
   const previousLoadStartedRef = useRef(false)
   const [setStatusMessage, setSetStatusMessage] = useState('')
   const [showTimerAlert, setShowTimerAlert] = useState(false)
-  const [motivationalMsg, setMotivationalMsg] = useState('')
   const [showEndModal, setShowEndModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [repsWarning, setRepsWarning] = useState<{ eid: string; sid: string; reps: number } | null>(null)
@@ -498,18 +517,18 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (!restOn) { prevRemaining.current = Infinity; return }
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
+      const previousRemaining = prevRemaining.current
       setRestSecs(remaining)
-      if (remaining === 5 && prevRemaining.current > 5) { playWarningTick(); vibrateDevice() }
+      if (remaining === 5 && previousRemaining > 5) { playWarningTick(); vibrateDevice() }
       prevRemaining.current = remaining
-      if (remaining === 0) {
-        setRestOn(false); playBeep(); vibrateDevice()
-        setMotivationalMsg(getRandomMessage()); setRestDone(true)
+      if (remaining === 0 && previousRemaining > 0) {
+        completeRestTimer()
       }
     }
     tick()
     restT.current = setInterval(tick, 200)
     return () => { if (restT.current) clearInterval(restT.current) }
-  }, [restOn])
+  }, [completeRestTimer, restOn])
   // Force recalc when app becomes visible (iOS Safari suspends setInterval)
   useEffect(() => {
     if (!restOn) return
@@ -518,8 +537,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
       setRestSecs(remaining)
       if (remaining === 0) {
-        setRestOn(false); playBeep(); vibrateDevice()
-        setMotivationalMsg(getRandomMessage()); setRestDone(true)
+        completeRestTimer()
       }
     }
     document.addEventListener('visibilitychange', onVisible)
@@ -528,7 +546,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('focus', onVisible)
     }
-  }, [restOn])
+  }, [completeRestTimer, restOn])
   useEffect(() => {
     if (!restDone) return
     const t = setTimeout(() => {
@@ -575,7 +593,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId) }
 
-  const startRest = (s: number, exoId?: string, nextInfo?: string, setId?: string) => {
+  const startRest = (s: number, exoId?: string, setId?: string) => {
     if (restT.current) clearInterval(restT.current)
     // Cancel any previously scheduled sounds (defensive: shouldn't happen,
     // but if startRest is called while a previous one is still pending
@@ -590,7 +608,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
     if (exoId) setRestExoId(exoId)
     if (setId) setRestSetId(setId)
-    if (nextInfo) setRestNextInfo(nextInfo)
   }
   const skipRest = () => {
     // Cancel scheduled audio cues so they don't fire after skip
@@ -598,11 +615,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       cancelScheduledSounds(restScheduledSoundsRef.current)
       restScheduledSoundsRef.current = []
     }
-    setRestOn(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
+    setRestOn(false); setRestDone(false); setRestSecs(0); setRestExoId(null); setRestSetId(null)
     persistDraft({ restTimerEndAt: null })
   }
   const addRestTime = () => {
-    restEndsAtRef.current += 30000
+    restEndsAtRef.current = extendRestTimerDeadline(restEndsAtRef.current, 30)
     setRestMax(m => m + 30)
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
@@ -627,14 +644,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     // Compute r SYNCHRONOUSLY before any state update
     const targetExo = exos.find(e => e.id === eid)
     const r = targetExo ? getRestSeconds(targetExo) : 90
-    const exoName = targetExo?.name || ''
 
-    // Projection synchrone : calculer nextSetNum AVANT setExos (updater async)
+    // Project the next set before the asynchronous state update.
     const projectedSets = targetExo?.sets.map(s =>
       s.id !== sid ? s : { ...s, done: true }
     ) ?? []
     const nextUndone = projectedSets.find(s => !s.done)
-    const nextSetNum = nextUndone?.num ?? 0
 
     const updatedExercises = exos.map(e => e.id !== eid ? e : {
       ...e,
@@ -668,12 +683,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       setSetStatusMessage(tv2('workoutComplete'))
     }
 
-    const prev = previousData[exoName]
-    const prevInfo = prev?.[nextSetNum - 1]
-    const nextInfo = nextSetNum > 0
-      ? `Set ${nextSetNum}${prevInfo ? ` — ${prevInfo.weight} kg × ${prevInfo.reps}` : ''}`
-      : t('exerciseDone')
-    startRest(r, eid, nextInfo, sid)
+    startRest(r, eid, sid)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -742,55 +752,81 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setDone(true)
   }
 
-  function moveExercise(index: number, dir: number) {
-    const ni = index + dir
-    if (ni < 0 || ni >= exos.length) return
-    setExos(prev => { const a = [...prev]; const t = a[index]; a[index] = a[ni]; a[ni] = t; return a })
-    setSessionModified(true)
-  }
-  function removeExerciseDuringSession(exIdx: number) {
-    setExos(prev => prev.filter((_, i) => i !== exIdx))
-    setSessionModified(true)
-    setExerciseMenu(null)
-  }
   async function loadVariantsForSession(exo: Exo, exIdx: number) {
     setExerciseMenu(null)
-    const { data: current } = await supabase.from('exercises_db').select('variant_group').ilike('name', exo.name).limit(1).maybeSingle()
-    let variants: any[] = []
-    if (current?.variant_group) {
-      const { data } = await supabase.from('exercises_db').select('name, equipment, muscle_group').eq('variant_group', current.variant_group).neq('name', exo.name).order('equipment').limit(10)
-      variants = data || []
-    } else {
-      const baseName = exo.name.split(' ').slice(0, 2).join(' ')
-      const { data } = await supabase.from('exercises_db').select('name, equipment, muscle_group').ilike('name', `%${baseName}%`).neq('name', exo.name).limit(8)
-      variants = data || []
+    setVariantPopup({ exIdx, variants: [], originalName: exo.name, status: 'loading' })
+    try {
+      const { data: current, error: currentError } = await supabase
+        .from('exercises_db')
+        .select('variant_group, equipment')
+        .ilike('name', exo.name)
+        .limit(1)
+        .maybeSingle()
+      if (currentError) throw currentError
+
+      let variants: ExerciseVariant[] = []
+      if (current?.variant_group) {
+        const { data, error } = await supabase
+          .from('exercises_db')
+          .select('id, name, equipment, muscle_group, video_url')
+          .eq('variant_group', current.variant_group)
+          .neq('name', exo.name)
+          .limit(5)
+        if (error) throw error
+        variants = (data || []) as ExerciseVariant[]
+      } else {
+        const baseName = exo.name.split(' ').slice(0, 2).join(' ')
+        const { data, error } = await supabase
+          .from('exercises_db')
+          .select('id, name, equipment, muscle_group, video_url')
+          .ilike('name', `%${baseName}%`)
+          .neq('name', exo.name)
+          .limit(5)
+        if (error) throw error
+        variants = (data || []) as ExerciseVariant[]
+      }
+      if (current?.equipment) {
+        variants.sort((left, right) => Number(right.equipment === current.equipment) - Number(left.equipment === current.equipment))
+      }
+      setVariantPopup({ exIdx, variants, originalName: exo.name, status: 'ready' })
+    } catch {
+      setVariantPopup({ exIdx, variants: [], originalName: exo.name, status: 'error' })
     }
-    setVariantPopup({ exIdx, variants, originalName: exo.name })
   }
   async function openExerciseInfo(exo: Exo) {
+    setExerciseInfo({ name: exo.name })
+    setExerciseInfoLoading(true)
+    setExerciseInfoError(false)
     const fields = 'name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url, variant_group'
-    // Try exact match first, then fuzzy
-    let { data } = await supabase.from('exercises_db')
-      .select(fields).ilike('name', exo.name).limit(1).maybeSingle()
-    if (!data) {
-      const fuzzy = await supabase.from('exercises_db')
-        .select(fields).ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
-      data = fuzzy.data
+    try {
+      const exact = await supabase.from('exercises_db')
+        .select(fields).ilike('name', exo.name).limit(1).maybeSingle()
+      if (exact.error) throw exact.error
+      let data = exact.data
+      if (!data) {
+        const fuzzy = await supabase.from('exercises_db')
+          .select(fields).ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
+        if (fuzzy.error) throw fuzzy.error
+        data = fuzzy.data
+      }
+      setExerciseInfo(data || { name: exo.name })
+    } catch {
+      setExerciseInfoError(true)
+    } finally {
+      setExerciseInfoLoading(false)
     }
-    // If no video_url but has variant_group, try siblings
-    if (data && !data.video_url && data.variant_group) {
-      const { data: sibling } = await supabase.from('exercises_db')
-        .select('video_url').eq('variant_group', data.variant_group)
-        .not('video_url', 'is', null).limit(1).maybeSingle()
-      if (sibling?.video_url) data.video_url = sibling.video_url
-    }
-    console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| matched:', data?.name)
-    setExerciseInfo(data || { name: exo.name })
   }
-  function selectSessionVariant(v: any) {
+  function selectSessionVariant(v: ExerciseVariant) {
     if (!variantPopup) return
-    setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? { ...e, name: v.name, muscle: v.muscle_group || e.muscle } : e))
-    setSessionModified(true)
+    const replacedExercise = exos[variantPopup.exIdx]
+    if (replacedExercise?.sets.some(set => set.done) && !window.confirm(tv2('replaceCompletedConfirm'))) return
+    setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? {
+      ...e,
+      name: v.name,
+      muscle: v.muscle_group || e.muscle,
+      exerciseId: v.id || e.exerciseId,
+      videoUrl: v.video_url || undefined,
+    } : e))
     setVariantPopup(null)
   }
 
@@ -1029,29 +1065,15 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         </div>
       )}
 
-      {/* REST DONE POPUP — only shows when timer reaches 0 */}
-      {restDone && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 24 }}>
-          <div style={{ position: 'relative', overflow: 'hidden', background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 32, textAlign: 'center', maxWidth: 340, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: colors.goldBorder, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            </div>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, color: TEXT_PRIMARY, letterSpacing: 3, margin: '0 0 8px' }}>{t('restDone.title')}</h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, margin: '0 0 8px' }}>{t('restDone.next')}</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: GOLD, letterSpacing: 1, margin: '0 0 24px' }}>{restNextInfo || motivationalMsg}</p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { dismissRestDone(); startRest(30, restExoId || undefined, restNextInfo) }} className="active:scale-95"
-                style={{ flex: 1, padding: '14px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' as const, cursor: 'pointer' }}>+30S</button>
-              <button onClick={dismissRestDone} className="active:scale-95"
-                style={{ flex: 2, padding: '14px', background: GOLD, border: 'none', borderRadius: 12, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('restDone.start')}</button>
-            </div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: GOLD, animation: 'rest-autoclose-progress 5s linear forwards' }} />
-            </div>
-          </div>
-        </div>
+      {showVideo && (
+        <TrainingSheet title={tv2('video')} onClose={() => { setShowVideo(null); setVideoError(false) }}>
+          {videoError ? (
+            <div className={trainingV2Styles.toolError} role="status">{tv2('videoError')}</div>
+          ) : (
+            <video src={showVideo} controls preload="metadata" onError={() => setVideoError(true)} className={trainingV2Styles.exerciseVideo} />
+          )}
+        </TrainingSheet>
       )}
-      {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
       {/* Compact safe exit; application bottom navigation remains behind this fullscreen shell. */}
       <div style={{ width: 'min(100%, 1180px)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px 12px' }}>
@@ -1172,6 +1194,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 weight: progression.weight,
               }
             : null
+          const techniqueSummary = [
+            exo.tempo ? `Tempo ${exo.tempo}` : null,
+            exo.technique && TECHNIQUE_LABELS[exo.technique]
+              ? `${TECHNIQUE_LABELS[exo.technique].emoji} ${TECHNIQUE_LABELS[exo.technique].label}${exo.techniqueDetails ? ` · ${exo.techniqueDetails}` : ''}`
+              : null,
+          ].filter(Boolean).join(' · ') || null
           return (
             <ActiveExerciseFocus
               key={exo.id}
@@ -1257,67 +1285,65 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </div>
               </div>
 
-              <div className={trainingV2Styles.focusTools} aria-label={tv2('exerciseTools')}>
-                <button type="button" onClick={() => openExerciseInfo(exo)}>{tv2('details')}</button>
-                <button type="button" aria-label={tv2('exerciseTools')} onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)}>•••</button>
-              </div>
-
-              {activeSet && (
-                <CurrentSetEditor
-                  setNumber={activeSet.num}
-                  totalSets={exo.sets.length}
-                  weight={activeSet.weightRaw ?? ''}
-                  reps={activeSet.reps}
-                  rir={activeSet.rir}
-                  weightStep={getIncrementForExercise(exo.name)}
-                  showRir={Boolean(rirTrackingEnabled)}
-                  canValidate={!activeSet.done && (activeSet.weightRaw !== '' || activeSet.reps !== '')}
-                  suggestion={suggestion}
-                  statusMessage={setStatusMessage}
-                  onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}
-                  onWeightBlur={() => commitWeight(exo.id, activeSet.id)}
-                  onAdjustWeight={direction => {
-                    setSetStatusMessage('')
-                    setField(exo.id, activeSet.id, 'weight', adjustWeightValue(activeSet.weightRaw || String(activeSet.weight || ''), direction, getIncrementForExercise(exo.name)))
-                  }}
-                  onRepsChange={value => {
-                    setSetStatusMessage('')
-                    setField(exo.id, activeSet.id, 'reps', value.replace(/\D/g, ''))
-                  }}
-                  onAdjustReps={direction => {
-                    setSetStatusMessage('')
-                    setField(exo.id, activeSet.id, 'reps', String(adjustRepsValue(activeSet.reps, direction)))
-                  }}
-                  onRirChange={value => setSetRir(exo.id, activeSet.id, value)}
-                  onUseSuggestion={() => {
-                    if (!suggestion) return
-                    setSetStatusMessage('')
-                    setField(exo.id, activeSet.id, 'weight', fmtStep(suggestion.weight))
-                  }}
-                  onValidate={() => validate(exo.id, activeSet.id)}
-                />
-              )}
-
-              {restOn && (
-                <aside className={trainingV2Styles.compactRest} aria-live="polite">
-                  <div>
-                    <span>{tv2('restTimer')}</span>
-                    <strong>{restSecs}s</strong>
-                  </div>
-                  <button type="button" onClick={addRestTime}>+30s</button>
-                  <button type="button" onClick={skipRest}>{t('skipRest')}</button>
-                </aside>
-              )}
-
-              {/* Exercise menu */}
-              {exerciseMenu === idx && (
-                <div style={{ display: 'flex', gap: 6, padding: '10px 0 4px', flexWrap: 'wrap' }}>
-                  <button disabled={idx === 0} onClick={() => { moveExercise(idx, -1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === 0 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === 0 ? BORDER : GOLD_RULE}`, color: idx === 0 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === 0 ? 'default' : 'pointer' }}>{t('menu.moveUp')}</button>
-                  <button disabled={idx === exos.length - 1} onClick={() => { moveExercise(idx, 1); setExerciseMenu(null) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: idx === exos.length - 1 ? BG_BASE : GOLD_DIM, border: `1px solid ${idx === exos.length - 1 ? BORDER : GOLD_RULE}`, color: idx === exos.length - 1 ? TEXT_DIM : GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: idx === exos.length - 1 ? 'default' : 'pointer' }}>{t('menu.moveDown')}</button>
-                  <button onClick={() => { setExerciseMenu(null); loadVariantsForSession(exo, idx) }} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>{t('menu.replace')}</button>
-                  <button onClick={() => removeExerciseDuringSession(idx)} style={{ flex: 1, padding: 8, borderRadius: 8, minWidth: 65, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: colors.error, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: 'pointer' }}>{t('menu.delete')}</button>
+              <div className={trainingV2Styles.focusExecutionLayout}>
+                <div className={trainingV2Styles.focusEditorColumn}>
+                  {activeSet && (
+                    <CurrentSetEditor
+                      setNumber={activeSet.num}
+                      totalSets={exo.sets.length}
+                      weight={activeSet.weightRaw ?? ''}
+                      reps={activeSet.reps}
+                      rir={activeSet.rir}
+                      weightStep={getIncrementForExercise(exo.name)}
+                      showRir={Boolean(rirTrackingEnabled)}
+                      canValidate={!activeSet.done && (activeSet.weightRaw !== '' || activeSet.reps !== '')}
+                      suggestion={suggestion}
+                      statusMessage={setStatusMessage}
+                      onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}
+                      onWeightBlur={() => commitWeight(exo.id, activeSet.id)}
+                      onAdjustWeight={direction => {
+                        setSetStatusMessage('')
+                        setField(exo.id, activeSet.id, 'weight', adjustWeightValue(activeSet.weightRaw || String(activeSet.weight || ''), direction, getIncrementForExercise(exo.name)))
+                      }}
+                      onRepsChange={value => {
+                        setSetStatusMessage('')
+                        setField(exo.id, activeSet.id, 'reps', value.replace(/\D/g, ''))
+                      }}
+                      onAdjustReps={direction => {
+                        setSetStatusMessage('')
+                        setField(exo.id, activeSet.id, 'reps', String(adjustRepsValue(activeSet.reps, direction)))
+                      }}
+                      onRirChange={value => setSetRir(exo.id, activeSet.id, value)}
+                      onUseSuggestion={() => {
+                        if (!suggestion) return
+                        setSetStatusMessage('')
+                        setField(exo.id, activeSet.id, 'weight', fmtStep(suggestion.weight))
+                      }}
+                      onValidate={() => validate(exo.id, activeSet.id)}
+                    />
+                  )}
                 </div>
-              )}
+
+                <aside className={trainingV2Styles.contextRail}>
+                  {(restOn || restDone) && (
+                    <RestTimerCompact
+                      state={restDone ? 'finished' : 'running'}
+                      remainingSeconds={restSecs}
+                      onSkip={skipRest}
+                      onAddThirtySeconds={addRestTime}
+                      onDismissFinished={dismissRestDone}
+                    />
+                  )}
+                  <ExerciseTools
+                    notes={exo.notes?.trim() || null}
+                    technique={techniqueSummary}
+                    videoAvailable={Boolean(exo.videoUrl)}
+                    onOpenDetails={() => void openExerciseInfo(exo)}
+                    onOpenVideo={() => { if (exo.videoUrl) { setVideoError(false); setShowVideo(exo.videoUrl) } }}
+                    onReplace={() => void loadVariantsForSession(exo, idx)}
+                  />
+                </aside>
+              </div>
 
               {/* ── Sets Big Stack ── */}
               {exo.open && (
@@ -1712,85 +1738,58 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
       {/* Exercise info popup */}
       {exerciseInfo && (
-        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.85)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setExerciseInfo(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:colors.surface2,border:`1px solid ${colors.divider}`,borderRadius:'20px 20px 0 0',width:'100%',maxWidth:500,maxHeight:'85vh',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.divider}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
-              <div>
-                <div style={{fontFamily:FONT_DISPLAY,fontSize:22,letterSpacing:2,color:TEXT_PRIMARY}}>{getExerciseName(exerciseInfo, locale)}</div>
-                <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
-                  {exerciseInfo.muscle_group&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:GOLD_DIM,color:GOLD,letterSpacing:1,textTransform:'uppercase' as const}}>{getMuscleLabel(exerciseInfo.muscle_group, locale, tMuscle)}</span>}
-                  {exerciseInfo.equipment&&<span style={{fontFamily:FONT_BODY,fontSize:10,padding:'2px 8px',borderRadius:6,background:BG_CARD_2,color:TEXT_MUTED}}>{exerciseInfo.equipment}</span>}
-                  {exerciseInfo.difficulty&&<span style={{fontFamily:FONT_ALT,fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:exerciseInfo.difficulty==='avance'?'rgba(239,68,68,0.1)':exerciseInfo.difficulty==='intermediaire'?GOLD_DIM:'rgba(74,222,128,0.1)',color:exerciseInfo.difficulty==='avance'?colors.error:exerciseInfo.difficulty==='intermediaire'?GOLD:colors.success,letterSpacing:1,textTransform:'uppercase' as const}}>{exerciseInfo.difficulty==='debutant'?'Débutant':exerciseInfo.difficulty==='intermediaire'?'Intermédiaire':'Avancé'}</span>}
-                </div>
-              </div>
-              <button onClick={()=>setExerciseInfo(null)} style={{width:36,height:36,borderRadius:12,background:GOLD_DIM,border:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:TEXT_MUTED,fontSize:16}}>✕</button>
+        <TrainingSheet title={getExerciseName(exerciseInfo, locale)} onClose={() => setExerciseInfo(null)}>
+          {exerciseInfoLoading ? (
+            <div className={trainingV2Styles.toolState} role="status">{tv2('toolLoading')}</div>
+          ) : exerciseInfoError ? (
+            <div className={trainingV2Styles.toolError} role="status">
+              <span>{tv2('detailsError')}</span>
+              <button type="button" onClick={() => void openExerciseInfo(exos[activeExerciseIndex])}>{tv2('retry')}</button>
             </div>
-            <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch' as any}}>
-              {exerciseInfo.video_url?(
-                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <video src={`${exerciseInfo.video_url}?v=2`} autoPlay loop muted playsInline style={{width:'100%',height:'auto',display:'block'}}/>
-                </div>
-              ):exerciseInfo.gif_url?(
-                <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <img src={exerciseInfo.gif_url} alt={getExerciseName(exerciseInfo, locale)} style={{width:'100%',height:'auto',display:'block'}}/>
-                </div>
-              ):(
-                <div style={{marginBottom:20,borderRadius:14,border:`1px dashed ${BORDER}`,padding:'40px 20px',textAlign:'center',background:GOLD_DIM}}>
-                  <div style={{fontSize:32,marginBottom:8}}>🎬</div>
-                  <div style={{fontFamily:FONT_ALT,fontSize:12,fontWeight:700,color:TEXT_DIM,letterSpacing:1}}>{t('exerciseInfo.videoSoon')}</div>
-                </div>
+          ) : (
+            <div className={trainingV2Styles.exerciseInfoContent}>
+              {exerciseInfo.video_url && (
+                <video src={exerciseInfo.video_url} controls preload="metadata" className={trainingV2Styles.exerciseVideo} />
               )}
-              {exerciseInfo.description&&(
-                <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.description')}</div>
-                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_MUTED,lineHeight:1.6}}>{exerciseInfo.description}</div>
-                </div>
+              {exerciseInfo.description && <p>{exerciseInfo.description}</p>}
+              {exerciseInfo.instructions && (
+                <section><h3>{t('exerciseInfo.execution')}</h3><p>{exerciseInfo.instructions}</p></section>
               )}
-              {exerciseInfo.instructions&&(
-                <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.execution')}</div>
-                  <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,lineHeight:1.6}}>{exerciseInfo.instructions}</div>
-                </div>
+              {(exerciseInfo.execution_tips || exerciseInfo.tips) && (
+                <section><h3>{t('exerciseInfo.tips')}</h3><p>{exerciseInfo.execution_tips || exerciseInfo.tips}</p></section>
               )}
-              {(exerciseInfo.execution_tips||exerciseInfo.tips)&&(
-                <div style={{marginBottom:20}}>
-                  <div style={{fontFamily:FONT_ALT,fontSize:11,fontWeight:700,color:GOLD,letterSpacing:2,textTransform:'uppercase' as const,marginBottom:8}}>{t('exerciseInfo.tips')}</div>
-                  <div style={{fontFamily:FONT_BODY,fontSize:13,color:TEXT_MUTED,lineHeight:1.6,padding:'12px 14px',background:GOLD_DIM,border:`1px solid ${GOLD_RULE}`,borderRadius:12}}>{exerciseInfo.execution_tips||exerciseInfo.tips}</div>
-                </div>
+              {!exerciseInfo.description && !exerciseInfo.instructions && !exerciseInfo.execution_tips && !exerciseInfo.tips && !exerciseInfo.video_url && (
+                <div className={trainingV2Styles.toolState}>{tv2('detailsUnavailable')}</div>
               )}
             </div>
-          </div>
-        </div>
+          )}
+        </TrainingSheet>
       )}
 
       {/* Variant popup */}
       {variantPopup && (
-        <div style={{position:'fixed',inset:0,zIndex:300,background:'rgba(0,0,0,0.85)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end'}} onClick={()=>setVariantPopup(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:colors.surface2,border:`1px solid ${colors.divider}`,borderRadius:'20px 20px 0 0',width:'100%',maxHeight:'60vh',display:'flex',flexDirection:'column'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.divider}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <div>
-                <div style={{fontFamily:FONT_DISPLAY,fontSize:20,letterSpacing:2,color:TEXT_PRIMARY}}>{t('menu.replace')}</div>
-                <div style={{fontFamily:FONT_BODY,fontSize:12,color:TEXT_MUTED,marginTop:2}}>{variantPopup.originalName}</div>
-              </div>
-              <button onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:TEXT_MUTED,fontSize:20,cursor:'pointer'}}>✕</button>
+        <TrainingSheet title={tv2('replaceForSession')} description={variantPopup.originalName} onClose={() => setVariantPopup(null)}>
+          {variantPopup.status === 'loading' ? (
+            <div className={trainingV2Styles.toolState} role="status">{tv2('replacementLoading')}</div>
+          ) : variantPopup.status === 'error' ? (
+            <div className={trainingV2Styles.toolError} role="status">
+              <span>{tv2('replacementError')}</span>
+              <button type="button" onClick={() => void loadVariantsForSession(exos[variantPopup.exIdx], variantPopup.exIdx)}>{tv2('retry')}</button>
             </div>
-            <div style={{overflowY:'auto',padding:'8px 12px 32px'}}>
-              {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:TEXT_MUTED,fontSize:14}}>{t('noVariants')}</div>
-              ):variantPopup.variants.map((v: any,i: number)=>(
-                <button key={i} onClick={()=>selectSessionVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius:14,background:colors.surface2,border:`1px solid ${colors.divider}`,cursor:'pointer',textAlign:'left'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:GOLD_DIM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
-                  </div>
-                  <div>
-                    <div style={{fontFamily:FONT_BODY,fontSize:14,color:TEXT_PRIMARY,fontWeight:700}}>{getExerciseName(v, locale)}</div>
-                    <div style={{fontFamily:FONT_ALT,fontSize:10,color:GOLD,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${getMuscleLabel(v.muscle_group, locale, tMuscle)}`:''}</div>
-                  </div>
+          ) : variantPopup.variants.length === 0 ? (
+            <div className={trainingV2Styles.toolState}>{tv2('noReplacement')}</div>
+          ) : (
+            <div className={trainingV2Styles.variantList}>
+              {variantPopup.variants.map(variant => (
+                <button key={variant.id || variant.name} type="button" onClick={() => selectSessionVariant(variant)}>
+                  <strong>{getExerciseName(variant, locale)}</strong>
+                  <span>{[variant.equipment, variant.muscle_group ? getMuscleLabel(variant.muscle_group, locale, tMuscle) : null].filter(Boolean).join(' · ')}</span>
                 </button>
               ))}
             </div>
-          </div>
-        </div>
+          )}
+          <p className={trainingV2Styles.sessionOnlyNotice}>{tv2('replacementSessionOnly')}</p>
+        </TrainingSheet>
       )}
 
       {/* Save changes popup */}

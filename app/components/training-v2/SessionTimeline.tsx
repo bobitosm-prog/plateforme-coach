@@ -42,6 +42,7 @@ export default function SessionTimeline({ exercises, activeIndex, onSelect }: Se
               key={exercise.id}
               type="button"
               className={styles.timelineButton}
+              data-state={state}
               data-active={active}
               data-done={done}
               aria-current={active ? 'step' : undefined}
