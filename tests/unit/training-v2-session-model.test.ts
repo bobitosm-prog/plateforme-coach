@@ -127,6 +127,6 @@ describe('Training V2 active workout draft', () => {
     expect(hook).toContain('const draft = createActiveWorkoutDraft({')
     expect(hook).toContain('writeActiveWorkoutDraft(localStorage, draft)')
     expect(session).toMatch(/const doValidate[\s\S]*const nextPosition = findNextWorkoutPosition[\s\S]*persistDraft\(\{[\s\S]*\.\.\.nextPosition/)
-    expect(session).toContain('Réessayer')
+    expect(session).toContain("t('done.retry')")
   })
 })

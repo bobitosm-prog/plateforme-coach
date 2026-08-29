@@ -66,6 +66,8 @@ interface TrainingTabProps {
   activeTrainingProgram: ActiveTrainingProgramContext
   todayKey: string
   todaySessionDone: boolean
+  workoutHistory: any[]
+  workoutHistoryState: TrainingReadState
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   fetchAll: (forceRefresh?: boolean) => Promise<void>
   scheduledSessions: ScheduledSession[]
@@ -77,7 +79,7 @@ interface TrainingTabProps {
 }
 
 export default function TrainingTab({
-  supabase, session, profile, capabilities, activeTrainingProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
+  supabase, session, profile, capabilities, activeTrainingProgram, todayKey, todaySessionDone, workoutHistory, workoutHistoryState, startProgramWorkout, fetchAll,
   scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted,
   lastCompletedByIndex, setModal,
 }: TrainingTabProps) {
@@ -100,8 +102,6 @@ export default function TrainingTab({
   const calTouchStart = useRef<number | null>(null)
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
-  const [workoutHistoryState, setWorkoutHistoryState] = useState<TrainingReadState>('loading')
   const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
   useBeforeUnload(workoutStarted !== null)
   const [videoExercise, setVideoExercise]     = useState<string | null>(null)
@@ -328,23 +328,6 @@ export default function TrainingTab({
         if (dueToStart.length > 0) await fetchAllRef.current(true)
       })
   }, [session?.user?.id])
-
-  // ── Load workout history (refetch when todaySessionDone changes = session just completed) ──
-  useEffect(() => {
-    if (!session?.user?.id) return
-    supabase.from('workout_sessions').select('id, name, completed, date, duration_minutes, notes, created_at, muscles_worked')
-      .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
-      .then(({ data, error }: any) => {
-        if (error) {
-          setWorkoutHistory([])
-          setWorkoutHistoryState('error')
-          return
-        }
-        const history = data || []
-        setWorkoutHistory(history)
-        setWorkoutHistoryState(history.length > 0 ? 'ready' : 'empty')
-      })
-  }, [session?.user?.id, todaySessionDone])
 
   // ── Load exercises_db cache ──
   useEffect(() => {

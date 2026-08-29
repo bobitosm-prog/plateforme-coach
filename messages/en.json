@@ -1675,11 +1675,14 @@
     },
     "recent": {
       "noSessions": "No sessions",
+      "loading": "Loading history…",
       "loadError": "History is temporarily unavailable.",
       "lastSessions": "Recent sessions",
       "sessionsCount": "{count} sessions",
       "viewAll": "View history ›",
       "reduce": "Reduce",
+      "historyTitle": "Workout history",
+      "completed": "Completed",
       "sessionFallback": "Session",
       "filters": {
         "all": "All",
@@ -1879,15 +1882,18 @@
         "rest": "REST"
       },
       "done": {
-        "title": "Workout complete.",
-        "totalVolume": "Total volume",
-        "lastSessions": "Recent workouts",
+        "title": "Workout complete",
         "duration": "Duration",
         "sets": "Sets",
         "exercises": "Exercises",
         "setsCount": "{count} sets",
-        "backToDashboard": "Back to Dashboard",
-        "autoRedirect": "Auto in {seconds}s"
+        "newRecord": "New record",
+        "backHome": "Back home",
+        "viewProgress": "View my progress",
+        "saving": "Saving workout…",
+        "saveErrorTitle": "Incomplete save",
+        "saveErrorDescription": "The workout could not be saved completely. Your sets remain recoverable on this device.",
+        "retry": "Retry"
       },
       "reorder": {
         "title": "REORDER",
@@ -1917,6 +1923,7 @@
         "duration": "Duration",
         "save": "SAVE WORKOUT",
         "saveHint": "Record your progress and records",
+        "sessionOnly": "Changes apply only to this workout.",
         "delete": "DELETE WORKOUT",
         "deleteHint": "This workout data will be lost",
         "continue": "CONTINUE WORKOUT"
@@ -1943,12 +1950,6 @@
         "description": "DESCRIPTION",
         "execution": "EXECUTION",
         "tips": "TIPS"
-      },
-      "savePopup": {
-        "title": "PROGRAM MODIFIED",
-        "description": "You modified the exercises. Save to your program?",
-        "save": "SAVE PROGRAM",
-        "justThisTime": "JUST THIS WORKOUT"
       }
     },
     "builder": {

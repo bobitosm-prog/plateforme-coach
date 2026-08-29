@@ -1675,11 +1675,14 @@
     },
     "recent": {
       "noSessions": "Keine Einheiten",
+      "loading": "Verlauf wird geladen…",
       "loadError": "Der Verlauf ist vorübergehend nicht verfügbar.",
       "lastSessions": "Letzte Einheiten",
       "sessionsCount": "{count} Einheiten",
       "viewAll": "Verlauf anzeigen ›",
       "reduce": "Reduzieren",
+      "historyTitle": "Trainingsverlauf",
+      "completed": "Beendet",
       "sessionFallback": "Einheit",
       "filters": {
         "all": "Alle",
@@ -1879,15 +1882,18 @@
         "rest": "PAUSE"
       },
       "done": {
-        "title": "Training abgeschlossen.",
-        "totalVolume": "Gesamtvolumen",
-        "lastSessions": "Letzte Trainings",
+        "title": "Training abgeschlossen",
         "duration": "Dauer",
         "sets": "Sätze",
         "exercises": "Übungen",
         "setsCount": "{count} Sätze",
-        "backToDashboard": "Zurück zum Dashboard",
-        "autoRedirect": "Auto in {seconds}s"
+        "newRecord": "Neuer Rekord",
+        "backHome": "Zur Startseite",
+        "viewProgress": "Meine Fortschritte ansehen",
+        "saving": "Training wird gespeichert…",
+        "saveErrorTitle": "Unvollständig gespeichert",
+        "saveErrorDescription": "Das Training konnte nicht vollständig gespeichert werden. Deine Sätze bleiben auf diesem Gerät wiederherstellbar.",
+        "retry": "Erneut versuchen"
       },
       "reorder": {
         "title": "UMORDNEN",
@@ -1917,6 +1923,7 @@
         "duration": "Dauer",
         "save": "TRAINING SPEICHERN",
         "saveHint": "Speichere deinen Fortschritt und deine Rekorde",
+        "sessionOnly": "Änderungen gelten nur für dieses Training.",
         "delete": "TRAINING LÖSCHEN",
         "deleteHint": "Die Daten dieses Trainings gehen verloren",
         "continue": "TRAINING FORTSETZEN"
@@ -1943,12 +1950,6 @@
         "description": "BESCHREIBUNG",
         "execution": "AUSFÜHRUNG",
         "tips": "TIPPS"
-      },
-      "savePopup": {
-        "title": "PROGRAMM GEÄNDERT",
-        "description": "Du hast die Übungen geändert. Im Programm speichern?",
-        "save": "PROGRAMM SPEICHERN",
-        "justThisTime": "NUR DIESES TRAINING"
       }
     },
     "builder": {

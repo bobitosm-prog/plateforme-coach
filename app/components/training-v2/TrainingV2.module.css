@@ -940,6 +940,171 @@
   border: 0;
 }
 
+.completionShell {
+  --training-accent: #e6c364;
+  --training-border: rgba(230, 195, 100, 0.18);
+  position: fixed;
+  z-index: 500;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 50% 8%, rgba(230, 195, 100, 0.12), transparent 34%),
+    #0d0b08;
+}
+
+.completionCard {
+  width: min(100%, 520px);
+  padding: clamp(22px, 5vw, 34px);
+  border: 1px solid var(--training-border);
+  border-radius: 24px;
+  background: linear-gradient(155deg, rgba(230, 195, 100, 0.07), rgba(255, 255, 255, 0.025));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.completionIcon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  color: #86efac;
+}
+
+.completionCard h1 {
+  margin: 0;
+  outline: 0;
+  color: #f5f1e8;
+  font-family: var(--font-headline, sans-serif);
+  font-size: clamp(30px, 9vw, 44px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.completionSessionName {
+  margin: 8px 0 20px;
+  color: rgba(245, 241, 232, 0.56);
+  font-size: 13px;
+}
+
+.completionMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.completionMetrics div {
+  min-width: 0;
+  padding: 13px 6px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.completionMetrics dt {
+  color: rgba(245, 241, 232, 0.48);
+  font-family: var(--font-alt, sans-serif);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.completionMetrics dd {
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: var(--training-accent);
+  font-family: var(--font-headline, sans-serif);
+  font-size: clamp(18px, 5vw, 25px);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.completionRecords {
+  margin-top: 16px;
+  padding: 13px 14px;
+  border: 1px solid rgba(230, 195, 100, 0.22);
+  border-radius: 14px;
+  background: rgba(230, 195, 100, 0.06);
+  text-align: left;
+}
+
+.completionRecordsHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--training-accent);
+}
+
+.completionRecordsHeading h2 {
+  margin: 0;
+  font-family: var(--font-alt, sans-serif);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.completionRecord {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 9px;
+  color: rgba(245, 241, 232, 0.72);
+  font-size: 13px;
+}
+
+.completionRecord span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.completionRecord strong {
+  flex: 0 0 auto;
+  color: #f5f1e8;
+}
+
+.completionActions {
+  display: grid;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.completionActions button {
+  min-height: 48px;
+  border: 1px solid var(--training-accent);
+  border-radius: 13px;
+  background: var(--training-accent);
+  color: #17120a;
+  font-family: var(--font-alt, sans-serif);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.completionSecondaryAction {
+  background: transparent;
+  color: var(--training-accent);
+}
+
+.completionPrimaryAction,
+.completionSecondaryAction {
+  width: 100%;
+}
+
+.completionActions button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
 .restTimer button:focus-visible,
 .exerciseTools button:focus-visible,
 .trainingSheet button:focus-visible,
@@ -1053,5 +1218,27 @@
 
   .setEditorControls {
     grid-template-columns: 1fr;
+  }
+
+  .completionShell {
+    padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .completionCard {
+    padding: 20px 16px;
+  }
+
+  .completionIcon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+  }
+
+  .completionSessionName {
+    margin-bottom: 14px;
+  }
+
+  .completionActions {
+    margin-top: 16px;
   }
 }

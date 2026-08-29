@@ -56,8 +56,11 @@ describe('Training V2 no-session hierarchy', () => {
   })
 
   it('limits the primary history to three sessions and hides advanced filters until expanded', () => {
-    expect(recentSessions).toContain('const limit = showFullHistory ? 20 : 3')
-    expect(recentSessions).toContain('{showFullHistory && <div data-training-history-filters="advanced"')
+    expect(recentSessions).toContain('workoutHistory.slice(0, 3)')
+    expect(recentSessions).toContain('filtered.slice(0, 20)')
+    expect(recentSessions).toContain('{showFullHistory && (')
+    expect(recentSessions).toContain('data-training-history-filters="advanced"')
+    expect(recentSessions).toContain('<TrainingSheet')
     expect(frenchMessages.training_tab.recent.viewAll).toBe('Voir l’historique ›')
   })
 

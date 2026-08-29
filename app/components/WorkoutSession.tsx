@@ -1,13 +1,11 @@
 'use client'
 import { Fragment, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
-import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
-import { colors, BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, cardStyle, titleStyle, cardTitleAbove, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, mutedStyle, badgeStyle, btnPrimary, pageTitleStyle, bodyStyle } from '../../lib/design-tokens'
+import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, btnPrimary } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
 import { initAudio, playBeep, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
 import ExercisePreview from './ExercisePreview'
@@ -15,7 +13,6 @@ import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
 import { computeProgression, getIncrementForExercise, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
-import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
 import {
@@ -34,6 +31,7 @@ import CurrentSetEditor from './training-v2/CurrentSetEditor'
 import ExerciseTools from './training-v2/ExerciseTools'
 import RestTimerCompact from './training-v2/RestTimerCompact'
 import TrainingSheet from './training-v2/TrainingSheet'
+import SessionCompletion from './training-v2/SessionCompletion'
 import trainingV2Styles from './training-v2/TrainingV2.module.css'
 import {
   adjustRepsValue,
@@ -53,11 +51,17 @@ interface ExSet { id: string; num: number; weight: number | ''; weightRaw: strin
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
+interface WorkoutFinishResult {
+  newPRs?: { exercise: string; value: number }[]
+  secondary?: Promise<{ newPRs: { exercise: string; value: number }[] }>
+}
 interface WorkoutSessionProps {
   draft: ActiveWorkoutDraft
   onDraftChange: (draft: ActiveWorkoutDraft) => void
-  onFinish: (data: CompletedWorkoutData, draft?: ActiveWorkoutDraft) => Promise<unknown>
+  onFinish: (data: CompletedWorkoutData, draft?: ActiveWorkoutDraft) => Promise<WorkoutFinishResult>
   onClose: () => void
+  onNavigateHome: () => void
+  onNavigateProgress: () => void
   rirTrackingEnabled?: boolean
   rirScaleAdvanced?: boolean
 }
@@ -251,9 +255,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   )
 }
 
-const AUTO_REDIRECT_SECONDS = 8
-
-export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
+export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled, rirScaleAdvanced }: WorkoutSessionProps) {
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
   const raw = draft.exercises
@@ -337,19 +339,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [elapsed, setElapsed] = useState(() => startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
   const elT = useRef<NodeJS.Timeout | null>(null)
   const [done, setDone] = useState(false)
-  const [autoRedirectCountdown, setAutoRedirectCountdown] = useState(AUTO_REDIRECT_SECONDS)
-  const [summary, setSummary] = useState<{
-    previousSessions: { id: string; name: string; date: string; volume: number }[]
-    currentWeekVolume: number
-    lastWeekVolume: number
-  } | null>(null)
-  const [summaryLoading, setSummaryLoading] = useState(true)
+  const [completionRecords, setCompletionRecords] = useState<{ exercise: string; value: number }[]>([])
   const [showVideo, setShowVideo] = useState<string | null>(null)
   const [sessionModified, setSessionModified] = useState(false)
-  const [showSavePopup, setShowSavePopup] = useState(false)
   const [exerciseMenu, setExerciseMenu] = useState<number | null>(null)
-  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
-  const [templateName, setTemplateName] = useState(sessionName || 'Séance libre') // DB value, do not translate
   const [variantPopup, setVariantPopup] = useState<VariantPopupState | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [exerciseInfoLoading, setExerciseInfoLoading] = useState(false)
@@ -470,47 +463,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   }, [previousPerformance])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
-
-  useEffect(() => {
-    if (!done) return
-    setAutoRedirectCountdown(AUTO_REDIRECT_SECONDS)
-    const interval = setInterval(() => {
-      setAutoRedirectCountdown(prev => (prev <= 1 ? 0 : prev - 1))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [done])
-
-  // Effet séparé : quand le countdown atteint 0, fermer
-  useEffect(() => {
-    if (done && autoRedirectCountdown === 0) onClose()
-  }, [done, autoRedirectCountdown, onClose])
-
-  useEffect(() => {
-    if (!done) return
-    let cancelled = false
-    ;(async () => {
-      setSummaryLoading(true)
-      try {
-        const { data: userData } = await supabase.auth.getUser()
-        if (!userData.user) return
-        const { data, error } = await supabase.rpc('get_workout_session_summary', {
-          target_user_id: userData.user.id,
-          exclude_session_id: null
-        })
-        if (cancelled) return
-        if (error) {
-          console.error('[workout-summary]', error.message)
-          return
-        }
-        setSummary(data as any)
-      } catch (e: any) {
-        console.error('[workout-summary] unexpected', e?.message)
-      } finally {
-        if (!cancelled) setSummaryLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [done])
 
   const prevRemaining = useRef(Infinity)
   useEffect(() => {
@@ -730,28 +682,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaving(true)
     setSaveError(false)
     try {
-      await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
+      setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
-      if (exos.length > 0) setShowSaveTemplate(true)
-      else setDone(true)
+      setDone(true)
+      void result.secondary?.then(secondary => setCompletionRecords(secondary.newPRs)).catch(() => undefined)
     } catch {
       setSaving(false)
       setSaveError(true)
     }
   }
-  async function saveAsTemplate() {
-    await supabase.from('custom_programs').insert({
-      user_id: (await supabase.auth.getUser()).data.user?.id,
-      name: templateName.trim() || 'Séance libre',
-      days: [{ name: templateName.trim() || 'Séance libre', exercises: exos.map(e => ({ exercise_name: e.name, muscle_group: e.muscle, sets: e.targetSets, reps: parseInt(String(e.targetReps)) || 10, rest_seconds: e.rest })), is_rest: false }],
-      source: 'free_session',
-      is_active: false,
-    })
-    toast.success(t('templateSaved'))
-    setShowSaveTemplate(false)
-    setDone(true)
-  }
-
   async function loadVariantsForSession(exo: Exo, exIdx: number) {
     setExerciseMenu(null)
     setVariantPopup({ exIdx, variants: [], originalName: exo.name, status: 'loading' })
@@ -827,181 +767,23 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       exerciseId: v.id || e.exerciseId,
       videoUrl: v.video_url || undefined,
     } : e))
+    setSessionModified(true)
     setVariantPopup(null)
   }
 
   if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, exerciseId: null, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) {
-    // Compute volume comparison
-    const volumeDelta = summary ? summary.currentWeekVolume - summary.lastWeekVolume : 0
-    const volumePercent = summary && summary.lastWeekVolume > 0
-      ? ((volumeDelta / summary.lastWeekVolume) * 100)
-      : null
-    const trend: 'up' | 'down' | 'neutral' =
-      volumePercent === null ? 'neutral' :
-      volumePercent > 0.5 ? 'up' :
-      volumePercent < -0.5 ? 'down' : 'neutral'
-    const trendColor = trend === 'up' ? GREEN : trend === 'down' ? RED : TEXT_DIM
-
-    // Top 3 exos by max weight
-    const performances = exos
-      .map(e => {
-        const doneSets = e.sets.filter(s => s.done)
-        if (!doneSets.length) return null
-        const best = Math.max(...doneSets.map(s => Number(s.weight) || 0))
-        return { name: e.name, muscle: e.muscle, setsCount: doneSets.length, best }
-      })
-      .filter((p): p is NonNullable<typeof p> => p !== null && p.best > 0)
-      .sort((a, b) => b.best - a.best)
-      .slice(0, 3)
-
-    // Format date contextually — locale-aware
-    const now = new Date()
-    const dateLabel = `${now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
-
-    // Mini-graph : up to 4 previous sessions, oldest first
-    const graphSessions = summary?.previousSessions
-      ? [...summary.previousSessions].reverse().slice(-4)
-      : []
-    const maxGraphVolume = graphSessions.length
-      ? Math.max(...graphSessions.map(s => s.volume), volume)
-      : volume
-
     return (
-      <>
-      <WorkoutCelebration visible={done} />
-      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: BG_BASE, fontFamily: FONT_BODY, overflowY: 'auto' }}>
-
-        {/* Glow décoratif top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] pointer-events-none rounded-full" style={{ background: `radial-gradient(circle, ${GOLD_DIM} 0%, transparent 65%)`, filter: 'blur(80px)', opacity: 0.4 }} />
-
-        {/* Contenu principal scrollable */}
-        <div className="relative z-10 flex-1 flex flex-col pt-8 pb-36 w-full" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
-
-          {/* Header : date + trend badge */}
-          <div className="flex items-center justify-between mb-6">
-            <div style={mutedStyle}>{dateLabel}</div>
-            {summaryLoading ? (
-              <div style={{ width: 64, height: 22, background: BG_CARD_2, borderRadius: 12, opacity: 0.5 }} />
-            ) : volumePercent !== null ? (
-              <div style={{ ...badgeStyle, color: trendColor, background: trend === 'up' ? 'rgba(74,222,128,0.12)' : trend === 'down' ? 'rgba(239,68,68,0.12)' : colors.goldDim, fontSize: 11, padding: '4px 10px' }}>
-                {trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→'} {volumePercent > 0 ? '+' : ''}{volumePercent.toFixed(1)}%
-              </div>
-            ) : null}
-          </div>
-
-          {/* Titre éditorial */}
-          <h1 className="mb-1" style={{ ...pageTitleStyle, fontSize: 40, letterSpacing: '0.04em', lineHeight: 1.05 }}>
-            {t('done.title')}<span style={{ color: GOLD }}></span>
-          </h1>
-          <p className="mb-10" style={{ ...subtitleStyle, color: TEXT_MUTED, fontStyle: 'italic', textTransform: 'none' as const, letterSpacing: '0.02em', fontWeight: 400 }}>
-            {sessionName}
-          </p>
-
-          {/* CARD : Volume HERO */}
-          <div className="flex items-center gap-3 mb-2">
-            <span style={titleStyle}>{t('done.totalVolume')}</span>
-            <div style={titleLineStyle} />
-          </div>
-          <div style={{ ...cardStyle, padding: '32px 24px', marginBottom: 24, textAlign: 'center', background: `linear-gradient(135deg, ${colors.surface}, ${BG_CARD_2})` }}>
-            <div className="flex items-baseline justify-center gap-3">
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 64, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                {Math.round(volume).toLocaleString('fr-FR')}
-              </span>
-              <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 600, color: TEXT_MUTED, letterSpacing: '0.05em' }}>kg</span>
-            </div>
-          </div>
-
-          {/* CARD : Mini-graph dernières séances */}
-          {graphSessions.length > 0 && (
-            <>
-              <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>{t('done.lastSessions')}</span>
-                <div style={titleLineStyle} />
-              </div>
-              <div style={{ ...cardStyle, padding: '20px 16px', marginBottom: 24 }}>
-                <div className="flex items-end gap-3 h-24">
-                  {graphSessions.map((s, i) => {
-                    const heightPct = (s.volume / maxGraphVolume) * 100
-                    const isCurrent = i === graphSessions.length - 1
-                    return (
-                      <div key={s.id} className="flex-1 flex flex-col items-center gap-2">
-                        <div className="w-full rounded-t" style={{
-                          height: `${Math.max(heightPct, 6)}%`,
-                          background: isCurrent ? GOLD : GOLD_DIM,
-                          minHeight: 8,
-                        }} />
-                        <div style={{ ...mutedStyle, fontSize: 10 }}>
-                          {new Date(s.date).getDate()}/{new Date(s.date).getMonth() + 1}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* CARDS : Stats secondaires 2 colonnes */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.duration')}</div>
-              <div style={{ ...statStyle, fontSize: 32 }}>{dur(elapsed)}</div>
-            </div>
-            <div style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
-              <div style={{ ...titleStyle, fontSize: 10, marginBottom: 8 }}>{t('done.sets')}</div>
-              <div style={{ ...statStyle, fontSize: 32 }}>
-                {completed}<span style={{ color: TEXT_DIM, fontSize: 22 }}>/{total}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD : Liste exercices */}
-          {performances.length > 0 && (
-            <>
-              <div className="flex items-center gap-3 mb-2">
-                <span style={titleStyle}>{t('done.exercises')}</span>
-                <div style={titleLineStyle} />
-              </div>
-              <div style={{ ...cardStyle, padding: '8px 20px' }}>
-                {performances.map((p, i) => (
-                  <div key={i}>
-                    <div className="py-3 flex justify-between items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div style={{ fontFamily: FONT_ALT, fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.01em' }} className="truncate">
-                          {getExerciseName(p, locale)}
-                        </div>
-                        <div className="mt-0.5" style={{ ...mutedStyle, fontSize: 11 }}>
-                          {t('done.setsCount', { count: p.setsCount })} · {getMuscleLabel(p.muscle, locale, tMuscle)}
-                        </div>
-                      </div>
-                      <div style={{ ...statSmallStyle, fontSize: 18 }}>{p.best} kg</div>
-                    </div>
-                    {i < performances.length - 1 && (
-                      <div style={{ height: 1, background: BORDER, opacity: 0.5 }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-        </div>
-
-        {/* Bottom bar fixe : bouton premium + compteur */}
-        <div className="fixed bottom-0 left-0 right-0 z-20" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
-          <div className="pt-6" style={{ paddingLeft: 20, paddingRight: 20, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto', background: 'linear-gradient(to top, rgba(13,11,8,0.98) 0%, rgba(13,11,8,0.95) 60%, transparent 100%)' }}>
-            <button onClick={onClose} style={{ ...btnPrimary, width: '100%', padding: '16px 0', fontSize: 14 }} className="active:scale-[0.98] transition-transform">
-              {t('done.backToDashboard')}
-            </button>
-            <p className="text-center mt-3" style={{ ...mutedStyle, fontSize: 11 }}>
-              {t('done.autoRedirect', { seconds: autoRedirectCountdown })}
-            </p>
-          </div>
-        </div>
-      </div>
-      </>
+      <SessionCompletion
+        sessionName={sessionName}
+        duration={dur(elapsed)}
+        completedSets={completed}
+        completedExercises={completedExercises}
+        records={completionRecords}
+        onGoHome={onNavigateHome}
+        onGoProgress={onNavigateProgress}
+      />
     )
   }
 
@@ -1034,16 +816,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         <div role="alertdialog" aria-modal="true" aria-labelledby="workout-save-status" style={{ position: 'fixed', inset: 0, zIndex: 10020, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 360, padding: 24, borderRadius: 18, background: BG_BASE, border: `1px solid ${saveError ? RED : GOLD}`, textAlign: 'center' }}>
             <h2 id="workout-save-status" style={{ margin: '0 0 10px', color: saveError ? RED : GOLD, fontFamily: FONT_ALT, fontSize: 17 }}>
-              {saving ? 'Sauvegarde de la séance…' : 'Sauvegarde interrompue'}
+              {saving ? t('done.saving') : t('done.saveErrorTitle')}
             </h2>
             <p style={{ margin: '0 0 20px', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5 }}>
               {saving
-                ? 'Tes séries restent protégées sur cet appareil.'
-                : 'Tes séries sont conservées. Vérifie ta connexion puis réessaie.'}
+                ? t('done.saving')
+                : t('done.saveErrorDescription')}
             </p>
             {saveError && (
               <button onClick={() => void finish()} style={{ ...btnPrimary, width: '100%', padding: 14 }}>
-                Réessayer
+                {t('done.retry')}
               </button>
             )}
           </div>
@@ -1115,7 +897,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>{t('reorder.title')}</div>
               <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>{t('reorder.hint')}</div>
             </div>
-            <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => setExos(newOrder)} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => { setExos(newOrder); setSessionModified(true) }} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {exos.map((exo, idx) => (
                 <Reorder.Item
                   key={exo.id}
@@ -1611,8 +1393,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </div>
               ))}
             </div>
+            {sessionModified && (
+              <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 16px' }}>
+                {t('endModal.sessionOnly')}
+              </p>
+            )}
             {/* Save button */}
-            <button onClick={() => { setShowEndModal(false); sessionModified ? setShowSavePopup(true) : finish() }} className="active:scale-[0.98]" style={{
+            <button onClick={() => { setShowEndModal(false); void finish() }} className="active:scale-[0.98]" style={{
               width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
               fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
@@ -1702,40 +1489,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         </div>
       )}
 
-      {/* Save as template popup */}
-      {showSaveTemplate && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>{t('saveTemplate.title')}</div>
-            <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
-              {t('saveTemplate.description')}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
-              {SESSION_TYPE_OPTIONS.filter(t => t.key !== 'repos').map(t => (
-                <button key={t.key} onClick={() => setTemplateName(t.label)} style={{
-                  padding: '10px 6px', borderRadius: 10, cursor: 'pointer',
-                  background: templateName === t.label ? `${t.color}20` : colors.surface2,
-                  border: `1.5px solid ${templateName === t.label ? t.color : colors.divider}`,
-                  color: templateName === t.label ? t.color : TEXT_MUTED,
-                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                }}>
-                  <span style={{ fontSize: 14 }}>{t.emoji}</span> {t.shortLabel}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={saveAsTemplate} style={{ width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer' }}>
-                {t('saveTemplate.yes')}
-              </button>
-              <button onClick={() => { setShowSaveTemplate(false); setDone(true) }} style={{ width: '100%', padding: 14, borderRadius: 14, background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>
-                {t('saveTemplate.no')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Exercise info popup */}
       {exerciseInfo && (
         <TrainingSheet title={getExerciseName(exerciseInfo, locale)} onClose={() => setExerciseInfo(null)}>
@@ -1792,32 +1545,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         </TrainingSheet>
       )}
 
-      {/* Save changes popup */}
-      {showSavePopup && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: 24, maxWidth: 380, width: '100%' }}>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>{t('savePopup.title')}</div>
-            <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 24 }}>
-              {t('savePopup.description')}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => { setShowSavePopup(false); finish() }} style={{
-                width: '100%', padding: 14, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
-                fontFamily: FONT_DISPLAY, fontSize: 17, letterSpacing: 2, cursor: 'pointer',
-              }}>{t('savePopup.save')}</button>
-              <button onClick={() => { setSessionModified(false); setShowSavePopup(false); finish() }} style={{
-                width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
-                border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
-                fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 2, cursor: 'pointer',
-              }}>{t('savePopup.justThisTime')}</button>
-              <button onClick={() => setShowSavePopup(false)} style={{
-                width: '100%', padding: 12, background: 'transparent', border: 'none',
-                color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 13, cursor: 'pointer',
-              }}>{t('cancel')}</button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Tempo modal */}
       {tempoModal && (
         <TempoModal

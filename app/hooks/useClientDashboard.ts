@@ -76,6 +76,7 @@ export default function useClientDashboard() {
   const [measurements, setMeasurements] = useState<any[]>([])
   const [progressPhotos, setProgressPhotos] = useState<any[]>([])
   const [wSessions, setWSessions] = useState<any[]>([])
+  const [workoutHistoryState, setWorkoutHistoryState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
   const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
   const [sessionDates, setSessionDates] = useState<{ created_at: string }[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
@@ -213,6 +214,7 @@ export default function useClientDashboard() {
         setSessionDates(cached.sessionDatesData || [])
         setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
         setProgressionBaseErrors(cached.progressionBaseErrorsData || {})
+        setWorkoutHistoryState(cached.progressionBaseErrorsData?.sessions ? 'error' : cached.sessData?.some((item: { completed?: boolean }) => item.completed) ? 'ready' : 'empty')
         const planningProgram = context.source === 'personal' ? personalToDays(context.program) : coachToDays(context.program)
         setPlanningDays(planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
@@ -303,6 +305,7 @@ export default function useClientDashboard() {
     if (measureRes.error) baseErrors.measurements = 'PROGRESSION_MEASUREMENTS_READ_FAILED'
     if (photosRes.error) baseErrors.photos = 'PROGRESSION_PHOTOS_READ_FAILED'
     setProgressionBaseErrors(baseErrors)
+    setWorkoutHistoryState(sessRes.error ? 'error' : sessData.some(item => item.completed) ? 'ready' : 'empty')
     const relation = toActiveCoachResolutionState(relationResult)
     const trainingContext = normalizeActiveTrainingContext(resolveActiveTrainingProgram({
       coachRelation: relation,
@@ -425,7 +428,11 @@ export default function useClientDashboard() {
     setWorkoutSession(draft)
   }
 
-  async function onFinishWorkout(data: CompletedWorkoutData, submittedDraft?: ActiveWorkoutDraft): Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }> {
+  async function onFinishWorkout(data: CompletedWorkoutData, submittedDraft?: ActiveWorkoutDraft): Promise<{
+    newPRs: { exercise: string; value: number }[]
+    newBadges: Badge[]
+    secondary: Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
+  }> {
     const activeDraft = submittedDraft ?? workoutSession
     if (!activeDraft || !session?.user?.id) throw new Error('WORKOUT_DRAFT_UNAVAILABLE')
     const newPRs: { exercise: string; value: number }[] = []
@@ -481,6 +488,54 @@ export default function useClientDashboard() {
     })
     removeActiveWorkoutDraft(localStorage, critical.draft.draftId)
 
+    const completedAt = new Date().toISOString()
+    const todayStr = toDateStr(new Date(completedAt))
+    const workoutSets = data.exercises.flatMap(exercise => exercise.sets.map((set, index) => ({
+      session_id: critical.sessionId,
+      user_id: session.user.id,
+      exercise_name: exercise.name,
+      exercise_id: exercise.exerciseId ?? null,
+      set_number: index + 1,
+      reps: Number(set.reps) || 0,
+      weight: Number(set.weight) || 0,
+      completed: true,
+      rir: set.rir ?? null,
+      created_at: completedAt,
+    })))
+    const completedSession = {
+      id: critical.sessionId,
+      user_id: session.user.id,
+      name: activeDraft.sessionName,
+      completed: true,
+      duration_minutes: Math.round(data.duration / 60000),
+      notes: `${data.completedSets}/${data.totalSets} sets · ${Math.round(data.totalVolume)} kg volume`,
+      muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
+      date: todayStr,
+      created_at: completedAt,
+      workout_sets: workoutSets,
+    }
+    setWSessions(previous => [completedSession, ...previous.filter(item => item.id !== critical.sessionId)].slice(0, 90))
+    setWorkoutHistoryState('ready')
+    setSessionDates(previous => [{ created_at: completedAt }, ...previous.filter(item => item.created_at !== completedAt)].slice(0, 400))
+    setHasTrainedBefore(true)
+    scheduledHook.markDateCompletedLocally(todayStr, completedAt)
+    cache.remove(`dashboard_${session.user.id}`)
+
+    if (clientProgramIdRef.current && activeDraft.trainingDay) {
+      const weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+      const sessionIndex = weekdays.indexOf(activeDraft.trainingDay)
+      if (sessionIndex >= 0) {
+        const nextLastCompleted = new Map(lastCompletedByIndex).set(sessionIndex, completedAt)
+        setLastCompletedByIndex(nextLastCompleted)
+        setNextSession(suggestNextSession(coachProgram, nextLastCompleted))
+        setCompletedThisWeek(previous => new Map(previous).set(sessionIndex, completedAt))
+      }
+    }
+
+    // The durable completion UI can render now. Every remaining write is
+    // observable but secondary and must not delay or revoke critical success.
+    const secondary = (async () => {
+
     // Secondary writes never turn a durable workout back into an apparent failure.
     try {
       await addXP(session.user.id, 100, supabase)
@@ -520,7 +575,6 @@ export default function useClientDashboard() {
       }).catch(() => console.warn('[workout-secondary] overload suggestion failed'))
     }
     // Mark today's scheduled session as completed
-    const todayStr = toDateStr(new Date())
     try {
       await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
         .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
@@ -545,7 +599,13 @@ export default function useClientDashboard() {
     }
 
     toast.success('Séance terminée ! Bien joué 💪')
-    return { newPRs, newBadges }
+    return { newPRs: [...newPRs], newBadges: [...newBadges] }
+    })().catch(error => {
+      console.error('[workout-secondary] unexpected failure', error)
+      return { newPRs: [...newPRs], newBadges: [...newBadges] }
+    })
+
+    return { newPRs: [], newBadges: [], secondary }
   }
 
   async function saveWeight(value: number, date: string) {
@@ -757,7 +817,7 @@ export default function useClientDashboard() {
     // Auth / loading
     mounted, session, loading, roleChecked, userRole, router, supabase,
     // Profile / data
-    profile, measurements, progressPhotos, wSessions,
+    profile, measurements, progressPhotos, wSessions, workoutHistoryState,
     coachProgram, activeTrainingProgram, coachMealPlan, planningDays, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
     // Tabs
     activeTab, setActiveTab,

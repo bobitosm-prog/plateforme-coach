@@ -1675,11 +1675,14 @@
     },
     "recent": {
       "noSessions": "Aucune seance",
+      "loading": "Chargement de l’historique…",
       "loadError": "Historique temporairement indisponible.",
       "lastSessions": "Dernières séances",
       "sessionsCount": "{count} séances",
       "viewAll": "Voir l’historique ›",
       "reduce": "Réduire",
+      "historyTitle": "Historique des séances",
+      "completed": "Terminée",
       "sessionFallback": "Séance",
       "filters": {
         "all": "Tout",
@@ -1879,15 +1882,18 @@
         "rest": "REPOS"
       },
       "done": {
-        "title": "Séance terminée.",
-        "totalVolume": "Volume total",
-        "lastSessions": "Dernières séances",
+        "title": "Séance terminée",
         "duration": "Durée",
         "sets": "Séries",
         "exercises": "Exercices",
         "setsCount": "{count} séries",
-        "backToDashboard": "Retour au Dashboard",
-        "autoRedirect": "Auto dans {seconds}s"
+        "newRecord": "Nouveau record",
+        "backHome": "Retour à l’accueil",
+        "viewProgress": "Voir ma progression",
+        "saving": "Enregistrement de la séance…",
+        "saveErrorTitle": "Enregistrement incomplet",
+        "saveErrorDescription": "La séance n’a pas pu être enregistrée complètement. Tes séries restent récupérables sur cet appareil.",
+        "retry": "Réessayer"
       },
       "reorder": {
         "title": "RÉORGANISER",
@@ -1917,6 +1923,7 @@
         "duration": "Duree",
         "save": "SAUVEGARDER LA SEANCE",
         "saveHint": "Enregistre ta progression et tes records",
+        "sessionOnly": "Les modifications s'appliquent uniquement a cette seance.",
         "delete": "SUPPRIMER LA SEANCE",
         "deleteHint": "Les donnees de cette seance seront perdues",
         "continue": "CONTINUER LA SEANCE"
@@ -1943,12 +1950,6 @@
         "description": "DESCRIPTION",
         "execution": "EXÉCUTION",
         "tips": "CONSEILS"
-      },
-      "savePopup": {
-        "title": "PROGRAMME MODIFIÉ",
-        "description": "Tu as modifié les exercices. Sauvegarder dans ton programme ?",
-        "save": "SAUVEGARDER LE PROGRAMME",
-        "justThisTime": "JUSTE CETTE SÉANCE"
       }
     },
     "builder": {
