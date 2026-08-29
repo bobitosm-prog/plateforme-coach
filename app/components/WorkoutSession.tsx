@@ -1,10 +1,9 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, useCallback, Fragment } from 'react'
+import { Fragment, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Check, ChevronDown, ChevronUp, Trophy, RotateCcw, Plus, ArrowLeft, Search, X, Play, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
-import { normalizeExerciseName } from '../../lib/exercise-matching'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { SESSION_TYPES as SESSION_TYPE_OPTIONS } from '../../lib/session-types'
 import { createBrowserClient } from '@supabase/ssr'
@@ -15,7 +14,7 @@ import ExercisePreview from './ExercisePreview'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
-import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
+import { computeProgression, getIncrementForExercise, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
 import WorkoutCelebration from './tabs/training/WorkoutCelebration'
 import TempoModal from './training/TempoModal'
 import TempoExecutor from './training/TempoExecutor'
@@ -31,7 +30,17 @@ import { TrainingV2 } from './training-v2/TrainingV2'
 import TrainingSessionHero from './training-v2/TrainingSessionHero'
 import SessionTimeline from './training-v2/SessionTimeline'
 import ActiveExerciseFocus from './training-v2/ActiveExerciseFocus'
+import CurrentSetEditor from './training-v2/CurrentSetEditor'
 import trainingV2Styles from './training-v2/TrainingV2.module.css'
+import {
+  adjustRepsValue,
+  adjustWeightValue,
+  buildPreviousPerformanceMap,
+  getPreviousPerformanceLimit,
+  resolveCurrentSetPrefill,
+  type PreviousPerformance,
+  type PreviousExerciseReference,
+} from '../../lib/training/set-logging'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -327,9 +336,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [variantPopup, setVariantPopup] = useState<{exIdx: number, variants: any[], originalName: string} | null>(null)
   const [exerciseInfo, setExerciseInfo] = useState<any>(null)
   const [reorderMode, setReorderMode] = useState(false)
-  const [previousData, setPreviousData] = useState<Record<string, { weight: number; reps: number }[]>>({})
-  // null means read error; [] means a successful read with no history.
-  const [prevSessionsByExo, setPrevSessionsByExo] = useState<Record<string, PrevSessionSet[][] | null>>({})
+  const [previousPerformance, setPreviousPerformance] = useState<Record<string, PreviousPerformance>>({})
+  const previousLoadStartedRef = useRef(false)
+  const [setStatusMessage, setSetStatusMessage] = useState('')
   const [showTimerAlert, setShowTimerAlert] = useState(false)
   const [motivationalMsg, setMotivationalMsg] = useState('')
   const [showEndModal, setShowEndModal] = useState(false)
@@ -358,92 +367,88 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
     for (const exo of exos) {
-      map[exo.name] = computeProgression(
-        prevSessionsByExo[exo.name] ?? [],
+      const progression = computeProgression(
+        previousPerformance[exo.id]?.sessions ?? [],
         parseRepsTarget(exo.targetReps),
         exo.name,
       )
+      map[exo.id] = progression
+      map[exo.name] = progression
     }
     return map
-  }, [exos, prevSessionsByExo])
+  }, [exos, previousPerformance])
 
-  // Stable key derived from current exercise names — re-fires when exos are added/removed
-  const exoNamesKey = useMemo(() => exos.map(e => e.name).filter(Boolean).join('|'), [exos])
+  // Compatibility adapters for non-visual timer/tempo helpers pending their own extraction.
+  const previousData = useMemo<Record<string, { weight: number; reps: number }[]>>(() => Object.fromEntries(
+    exos.map(exercise => [exercise.name, (previousPerformance[exercise.id]?.latestSets ?? []).map(set => ({
+      weight: set.weight,
+      reps: set.reps,
+    }))]),
+  ), [exos, previousPerformance])
+  const prevSessionsByExo = useMemo<Record<string, PrevSessionSet[][] | null>>(() => Object.fromEntries(
+    exos.map(exercise => {
+      const performance = previousPerformance[exercise.id]
+      return [exercise.name, performance?.state === 'error' ? null : performance?.sessions ?? []]
+    }),
+  ), [exos, previousPerformance])
 
-  // Fetch previous performance (incremental: only missing names)
+  const previousReferences = useMemo<PreviousExerciseReference[]>(() => exos.map(exercise => ({
+    key: exercise.id,
+    exerciseId: exercise.exerciseId ?? null,
+    name: exercise.name,
+  })), [exos])
+
+  // Exactly one bounded previous-performance read per mounted active draft.
   useEffect(() => {
-    const names = exos.map(e => e.name).filter(Boolean)
-    if (!names.length) return
+    if (previousLoadStartedRef.current || previousReferences.length === 0) return
+    previousLoadStartedRef.current = true
     const fetchPrev = async () => {
-      // Skip names already cached
-      const missing = names.filter(n => !(n in prevSessionsByExo))
-      if (!missing.length) return
-
       const { data: userData } = await supabase.auth.getUser()
       const userId = userData?.user?.id
-      if (!userId) return
-      // Fetch distinct exercise_name for this user once, to enable normalized matching
-      const { data: allUserSets, error: namesError } = await supabase
-        .from('workout_sets')
-        .select('exercise_name')
-        .eq('user_id', userId)
-      if (namesError) {
-        setPrevSessionsByExo(previous => ({
-          ...previous,
-          ...Object.fromEntries(missing.map(name => [name, null])),
-        }))
+      if (!userId) {
+        setPreviousPerformance(buildPreviousPerformanceMap(previousReferences, [], true))
         return
       }
-      const allCandidates = new Set<string>()
-      for (const row of (allUserSets || [])) {
-        if (row.exercise_name) allCandidates.add(row.exercise_name)
-      }
-
-      const newPrev: Record<string, { weight: number; reps: number }[]> = {}
-      const newPrevSessions: Record<string, PrevSessionSet[][] | null> = {}
-      for (const name of missing) {
-        const target = normalizeExerciseName(name)
-        const matchingNames = Array.from(allCandidates).filter(c => normalizeExerciseName(c) === target)
-        if (matchingNames.length === 0) matchingNames.push(name)
-        const { data, error } = await supabase
-          .from('workout_sets')
-          .select('weight, reps, set_number, session_id, completed, created_at, rir')
-          .eq('user_id', userId)
-          .in('exercise_name', matchingNames)
-          .order('created_at', { ascending: false })
-          .limit(30)
-        if (error) {
-          newPrevSessions[name] = null
-          continue
-        }
-        if (data?.length) {
-          const sessionIds: string[] = []
-          for (const row of data) {
-            if (row.session_id && !sessionIds.includes(row.session_id)) {
-              sessionIds.push(row.session_id)
-              if (sessionIds.length >= 2) break
-            }
-          }
-          const sessions: PrevSessionSet[][] = sessionIds.map(sid =>
-            data
-              .filter((d: any) => d.session_id === sid)
-              .sort((a: any, b: any) => (a.set_number || 0) - (b.set_number || 0))
-              .map((s: any) => ({ weight: s.weight || 0, reps: s.reps || 0, completed: s.completed !== false, rir: s.rir ?? null }))
-          )
-          newPrevSessions[name] = sessions
-          const latestCompleted = sessions[0]?.filter(s => s.completed) ?? []
-          if (latestCompleted.length > 0) newPrev[name] = latestCompleted.map(s => ({ weight: s.weight, reps: s.reps }))
-        } else {
-          // Mark as fetched (empty) to avoid re-fetching
-          newPrevSessions[name] = []
-        }
-      }
-      // Merge with existing, don't overwrite
-      setPreviousData(prev => ({ ...prev, ...newPrev }))
-      setPrevSessionsByExo(prev => ({ ...prev, ...newPrevSessions }))
+      const { data, error } = await supabase
+        .from('workout_sets')
+        .select('exercise_id, exercise_name, weight, reps, set_number, session_id, completed, created_at, rir')
+        .eq('user_id', userId)
+        .eq('completed', true)
+        .order('created_at', { ascending: false })
+        .limit(getPreviousPerformanceLimit(previousReferences.length))
+      setPreviousPerformance(buildPreviousPerformanceMap(previousReferences, data || [], Boolean(error)))
     }
-    fetchPrev()
-  }, [exoNamesKey])
+    void fetchPrev()
+  }, [draft.draftId, previousReferences, supabase])
+
+  // Prefill empty draft values only: draft > prescription > previous > empty.
+  useEffect(() => {
+    if (Object.keys(previousPerformance).length === 0) return
+    setExos(current => {
+      let changed = false
+      const next = current.map(exercise => {
+        const performance = previousPerformance[exercise.id]
+        const prescribedReps = parseRepsTarget(exercise.targetReps)
+        const sets = exercise.sets.map((set, index) => {
+          if (set.done) return set
+          const previousSet = performance?.latestSets[index]
+          const prefill = resolveCurrentSetPrefill({
+            draftWeight: set.weight,
+            draftWeightRaw: set.weightRaw,
+            draftReps: set.reps,
+            prescribedReps,
+            previousWeight: previousSet?.weight,
+            previousReps: previousSet?.reps,
+          })
+          if (prefill.weight === set.weight && prefill.weightRaw === set.weightRaw && prefill.reps === set.reps) return set
+          changed = true
+          return { ...set, weight: prefill.weight, weightRaw: prefill.weightRaw, reps: prefill.reps }
+        })
+        return sets === exercise.sets ? exercise : { ...exercise, sets }
+      })
+      return changed ? next : current
+    })
+  }, [previousPerformance])
 
   useEffect(() => { elT.current = setInterval(() => setElapsed(Date.now() - t0), 1000); return () => { if (elT.current) clearInterval(elT.current) } }, [])
 
@@ -648,10 +653,20 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setExos(updatedExercises)
     const exerciseIndex = updatedExercises.findIndex(exercise => exercise.id === eid)
     const setIndex = updatedExercises[exerciseIndex]?.sets.findIndex(set => set.id === sid) ?? 0
+    const nextPosition = findNextWorkoutPosition(updatedExercises as WorkoutDraftExercise[], exerciseIndex, setIndex)
     persistDraft({
       exercises: updatedExercises as WorkoutDraftExercise[],
-      ...findNextWorkoutPosition(updatedExercises as WorkoutDraftExercise[], exerciseIndex, setIndex),
+      ...nextPosition,
     })
+    setActiveExerciseIndex(nextPosition.currentExerciseIndex)
+
+    if (nextPosition.currentExerciseIndex > exerciseIndex) {
+      setSetStatusMessage(tv2('nextExerciseReady'))
+    } else if (nextUndone) {
+      setSetStatusMessage(tv2('nextSetReady', { set: nextUndone.num }))
+    } else {
+      setSetStatusMessage(tv2('workoutComplete'))
+    }
 
     const prev = previousData[exoName]
     const prevInfo = prev?.[nextSetNum - 1]
@@ -669,9 +684,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   }
   const unvalidate = (eid: string, sid: string) => { skipRest(); setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, done: false }) })) }
   const addSet = (eid: string) => setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: [...e.sets, { id: uid(), num: e.sets.length + 1, weight: e.sets.at(-1)?.weight ?? '', weightRaw: e.sets.at(-1)?.weightRaw ?? '', reps: e.sets.at(-1)?.reps ?? '', done: false, rir: null }] }))
+  const setSetRir = (eid: string, sid: string, value: number) => {
+    setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, rir: value }) }))
+  }
   const setRir = (value: number) => {
     if (!restExoId || !restSetId) return
-    setExos(p => p.map(e => e.id !== restExoId ? e : { ...e, sets: e.sets.map(s => s.id !== restSetId ? s : { ...s, rir: value }) }))
+    setSetRir(restExoId, restSetId, value)
   }
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
@@ -1132,13 +1150,28 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             return Math.round(((curVol - prevVol) / prevVol) * 100)
           })()
           const firstUndone = exo.sets.findIndex(set => !set.done)
-          const activeSetNumber = firstUndone >= 0 ? exo.sets[firstUndone].num : exo.sets.length
+          const activeSetIndex = firstUndone >= 0 ? firstUndone : Math.max(exo.sets.length - 1, 0)
+          const activeSet = exo.sets[activeSetIndex]
+          const activeSetNumber = activeSet?.num ?? 1
           const previousState = prevSessionsByExo[exo.name]
-          const previousSet = previousData[exo.name]?.[Math.max(activeSetNumber - 1, 0)]
-          const previousLabel = previousSet ? `${previousSet.weight} kg × ${previousSet.reps}` : null
-          const targetLabel = progressionByExo[exo.name]
-            ? `${fmtStep(progressionByExo[exo.name]!.weight)} kg × ${parseRepsTarget(exo.targetReps) ?? exo.targetReps}`
+          const previousSet = previousPerformance[exo.id]?.latestSets[activeSetIndex]
+          const previousLabel = previousSet
+            ? `${previousSet.weight} kg × ${previousSet.reps}${previousSet.rir != null ? ` · RIR ${previousSet.rir === 4 ? '4+' : previousSet.rir}` : ''}`
+            : null
+          const progression = progressionByExo[exo.id]
+          const targetLabel = progression
+            ? `${fmtStep(progression.weight)} kg × ${parseRepsTarget(exo.targetReps) ?? exo.targetReps}`
             : `${exo.targetReps} reps`
+          const suggestion = progression && !activeSet?.done
+            ? {
+                label: progression.status === 'progress'
+                  ? tv2('suggestionIncrease', { step: fmtStep(progression.step), weight: fmtStep(progression.weight) })
+                  : progression.status === 'deload'
+                    ? tv2('suggestionReduce', { weight: fmtStep(progression.weight) })
+                    : tv2('suggestionKeep', { weight: fmtStep(progression.weight) }),
+                weight: progression.weight,
+              }
+            : null
           return (
             <ActiveExerciseFocus
               key={exo.id}
@@ -1229,6 +1262,53 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 <button type="button" aria-label={tv2('exerciseTools')} onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)}>•••</button>
               </div>
 
+              {activeSet && (
+                <CurrentSetEditor
+                  setNumber={activeSet.num}
+                  totalSets={exo.sets.length}
+                  weight={activeSet.weightRaw ?? ''}
+                  reps={activeSet.reps}
+                  rir={activeSet.rir}
+                  weightStep={getIncrementForExercise(exo.name)}
+                  showRir={Boolean(rirTrackingEnabled)}
+                  canValidate={!activeSet.done && (activeSet.weightRaw !== '' || activeSet.reps !== '')}
+                  suggestion={suggestion}
+                  statusMessage={setStatusMessage}
+                  onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}
+                  onWeightBlur={() => commitWeight(exo.id, activeSet.id)}
+                  onAdjustWeight={direction => {
+                    setSetStatusMessage('')
+                    setField(exo.id, activeSet.id, 'weight', adjustWeightValue(activeSet.weightRaw || String(activeSet.weight || ''), direction, getIncrementForExercise(exo.name)))
+                  }}
+                  onRepsChange={value => {
+                    setSetStatusMessage('')
+                    setField(exo.id, activeSet.id, 'reps', value.replace(/\D/g, ''))
+                  }}
+                  onAdjustReps={direction => {
+                    setSetStatusMessage('')
+                    setField(exo.id, activeSet.id, 'reps', String(adjustRepsValue(activeSet.reps, direction)))
+                  }}
+                  onRirChange={value => setSetRir(exo.id, activeSet.id, value)}
+                  onUseSuggestion={() => {
+                    if (!suggestion) return
+                    setSetStatusMessage('')
+                    setField(exo.id, activeSet.id, 'weight', fmtStep(suggestion.weight))
+                  }}
+                  onValidate={() => validate(exo.id, activeSet.id)}
+                />
+              )}
+
+              {restOn && (
+                <aside className={trainingV2Styles.compactRest} aria-live="polite">
+                  <div>
+                    <span>{tv2('restTimer')}</span>
+                    <strong>{restSecs}s</strong>
+                  </div>
+                  <button type="button" onClick={addRestTime}>+30s</button>
+                  <button type="button" onClick={skipRest}>{t('skipRest')}</button>
+                </aside>
+              )}
+
               {/* Exercise menu */}
               {exerciseMenu === idx && (
                 <div style={{ display: 'flex', gap: 6, padding: '10px 0 4px', flexWrap: 'wrap' }}>
@@ -1241,7 +1321,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
               {/* ── Sets Big Stack ── */}
               {exo.open && (
-                <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className={trainingV2Styles.legacyLoggerHidden} aria-hidden="true" style={{ paddingTop: 8, flexDirection: 'column', gap: 8 }}>
 
                   {/* Set cards */}
                   {exo.sets.map((set: ExSet, si: number) => {

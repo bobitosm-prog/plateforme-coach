@@ -462,6 +462,205 @@
   outline-offset: 3px;
 }
 
+.setEditor {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--training-border);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.setEditorTitle,
+.setControlLabel,
+.rirFieldset legend,
+.suggestionRow span,
+.compactRest span {
+  font-family: var(--font-alt, sans-serif);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.setEditorTitle {
+  color: var(--training-accent);
+}
+
+.setEditorControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.setControlGroup {
+  min-width: 0;
+}
+
+.setControlLabel,
+.rirFieldset legend,
+.suggestionRow span,
+.compactRest span {
+  color: rgba(245, 241, 232, 0.48);
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  margin-top: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(230, 195, 100, 0.24);
+  border-radius: 14px;
+  background: rgba(230, 195, 100, 0.06);
+}
+
+.stepper > button,
+.rirOptions button,
+.suggestionRow button,
+.compactRest button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--training-accent);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.stepperValue {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 0;
+  border-inline: 1px solid rgba(230, 195, 100, 0.14);
+}
+
+.stepperValue input {
+  min-width: 0;
+  width: 100%;
+  padding: 8px 2px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f5f1e8;
+  font-size: clamp(22px, 7vw, 30px);
+  font-weight: 850;
+  line-height: 1;
+  text-align: center;
+}
+
+.stepperValue span {
+  padding-right: 6px;
+  color: rgba(245, 241, 232, 0.45);
+  font-size: 11px;
+}
+
+.rirFieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rirOptions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(44px, 1fr));
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.rirOptions button {
+  border: 1px solid rgba(230, 195, 100, 0.18);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.rirOptions button[aria-pressed='true'] {
+  border-color: var(--training-accent);
+  background: var(--training-accent);
+  color: #17120a;
+}
+
+.suggestionRow,
+.compactRest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(230, 195, 100, 0.14);
+  border-radius: 13px;
+  background: rgba(230, 195, 100, 0.06);
+}
+
+.suggestionRow > div,
+.compactRest > div {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+}
+
+.suggestionRow strong,
+.compactRest strong {
+  font-size: 14px;
+}
+
+.suggestionRow button,
+.compactRest button {
+  padding-inline: 10px;
+  border: 1px solid rgba(230, 195, 100, 0.24);
+  border-radius: 10px;
+  font-family: var(--font-alt, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.validateSetButton {
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--training-accent);
+  color: #17120a;
+  font-family: var(--font-alt, sans-serif);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.validateSetButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.setStatus {
+  min-height: 16px;
+  color: #86efac;
+  font-size: 12px;
+}
+
+.compactRest {
+  margin: 12px 0;
+}
+
+.compactRest strong {
+  color: var(--training-accent);
+  font-size: 22px;
+}
+
+.stepper > button:focus-visible,
+.stepperValue input:focus-visible,
+.rirOptions button:focus-visible,
+.suggestionRow button:focus-visible,
+.validateSetButton:focus-visible,
+.compactRest button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
 .contextRail {
   display: flex;
   flex-direction: column;
@@ -554,6 +753,10 @@
   }
 
   .emptyActions {
+    grid-template-columns: 1fr;
+  }
+
+  .setEditorControls {
     grid-template-columns: 1fr;
   }
 }
