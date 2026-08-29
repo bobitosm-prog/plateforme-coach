@@ -27,6 +27,11 @@ import {
   type WorkoutDraftExercise,
 } from '../../lib/training/active-workout-draft'
 import type { CompletedWorkoutData } from '../../lib/training/session-persistence'
+import { TrainingV2 } from './training-v2/TrainingV2'
+import TrainingSessionHero from './training-v2/TrainingSessionHero'
+import SessionTimeline from './training-v2/SessionTimeline'
+import ActiveExerciseFocus from './training-v2/ActiveExerciseFocus'
+import trainingV2Styles from './training-v2/TrainingV2.module.css'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -238,12 +243,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const startedAt = draft.startedAt
   const raw = draft.exercises
   const t = useTranslations('training_tab.ws')
+  const tv2 = useTranslations('training_tab.v2')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => raw as Exo[])
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => (
+    Math.min(Math.max(draft.currentExerciseIndex, 0), Math.max(raw.length - 1, 0))
+  ))
   const draftRef = useRef(draft)
   const [draftPrompt, setDraftPrompt] = useState<Exo[] | null>(null)
   const [saving, setSaving] = useState(draft.status === 'saving')
@@ -263,6 +272,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (typeof window === 'undefined' || mode !== 'session') return
     persistDraft({ exercises: exos as WorkoutDraftExercise[] })
   }, [exos, mode, persistDraft])
+  useEffect(() => {
+    if (activeExerciseIndex < exos.length) return
+    setActiveExerciseIndex(Math.max(exos.length - 1, 0))
+  }, [activeExerciseIndex, exos.length])
   const resumeDraft = () => {
     if (draftPrompt) {
       setExos(draftPrompt.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, weightRaw: s.weightRaw ?? (s.weight !== '' ? String(s.weight).replace('.', ',') : '') })) })))
@@ -664,8 +677,24 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
   const volume = exos.reduce((v, e) => v + e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0), 0)
-  const pct = total > 0 ? (completed / total) * 100 : 0
   const allDone = completed === total && total > 0
+  const completedExercises = exos.filter(exercise => (
+    exercise.sets.length > 0 && exercise.sets.every(set => set.done)
+  )).length
+  const timelineExercises = exos.map(exercise => ({
+    id: exercise.id,
+    name: getExerciseName(exercise, locale),
+    completedSets: exercise.sets.filter(set => set.done).length,
+    totalSets: exercise.sets.length,
+  }))
+
+  const selectExercise = (index: number) => {
+    const exercise = exos[index]
+    if (!exercise) return
+    const currentSetIndex = Math.max(exercise.sets.findIndex(set => !set.done), 0)
+    setActiveExerciseIndex(index)
+    persistDraft({ currentExerciseIndex: index, currentSetIndex })
+  }
 
   const finish = async () => {
     if (saving) return
@@ -923,7 +952,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
+    <TrainingV2 session>
+    <div className={`${trainingV2Styles.sessionShell} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
       <style>{`
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
@@ -1005,26 +1035,28 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       )}
       {showVideo && (<div className="fixed inset-0 z-[70] flex items-center justify-center p-5" style={{ background: 'rgba(0,0,0,0.95)' }}><div className="w-full max-w-sm"><div className="flex justify-between items-center mb-4"><span style={{ color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.875rem' }}>{t('demo')}</span><button aria-label={t('closeVideo')} onClick={() => setShowVideo(null)} className="w-9 h-9 flex items-center justify-center" style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: '50%' }}><X size={16} style={{ color: TEXT_PRIMARY }} /></button></div><video src={showVideo} controls autoPlay className="w-full" style={{ borderRadius: RADIUS_CARD }} /></div></div>)}
 
-      {/* HEADER */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: '#0D0B08', borderColor: BORDER, padding: '0 16px 10px', paddingTop: 'max(12px, env(safe-area-inset-top, 12px))', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
-            <ArrowLeft size={22} color={TEXT_PRIMARY} />
-          </button>
-          <h1 style={{ flex: 1, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', margin: 0, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionName || t('freeSession')}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: GREEN, animation: 'pulse 2s infinite' }} />
-            <span style={{ fontSize: 14, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '1px' }}>{dur(elapsed)}</span>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 10, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('progression')}</span>
-          <span style={{ fontSize: 11, color: GOLD, fontFamily: FONT_DISPLAY }}>{completed}/{total} sets</span>
-        </div>
-        <div style={{ height: 2, background: TEXT_DIM, overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: GOLD, transition: 'width 0.5s ease' }} />
-        </div>
+      {/* Compact safe exit; application bottom navigation remains behind this fullscreen shell. */}
+      <div style={{ width: 'min(100%, 1180px)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px 12px' }}>
+        <button aria-label={t('back')} onClick={onClose} style={{ width: 44, height: 44, display: 'grid', placeItems: 'center', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, cursor: 'pointer' }}>
+          <ArrowLeft size={20} color={TEXT_PRIMARY} />
+        </button>
+        <span style={{ fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{draft.programSource === 'coach' ? 'Plan coach' : 'Programme personnel'}</span>
       </div>
+
+      <div style={{ width: 'min(100%, 1180px)', margin: '0 auto' }}>
+        <TrainingSessionHero
+          mode="active"
+          title={sessionName || t('freeSession')}
+          exerciseCount={exos.length}
+          completedExercises={completedExercises}
+          totalSets={total}
+          completedSets={completed}
+          elapsed={dur(elapsed)}
+        />
+      </div>
+
+      <div className={trainingV2Styles.sessionGrid}>
+      <SessionTimeline exercises={timelineExercises} activeIndex={activeExerciseIndex} onSelect={selectExercise} />
 
       {/* EXERCICES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
@@ -1083,6 +1115,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
         {/* ── Normal exercise list ── */}
         {!reorderMode && exos.map((exo, idx) => {
+          if (idx !== activeExerciseIndex) return null
           const cnt = exo.sets.filter(s => s.done).length
           const isDone = cnt === exo.sets.length
           const last = exo.sets.filter(s => s.done).at(-1)
@@ -1098,10 +1131,30 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             if (!prevVol) return null
             return Math.round(((curVol - prevVol) / prevVol) * 100)
           })()
+          const firstUndone = exo.sets.findIndex(set => !set.done)
+          const activeSetNumber = firstUndone >= 0 ? exo.sets[firstUndone].num : exo.sets.length
+          const previousState = prevSessionsByExo[exo.name]
+          const previousSet = previousData[exo.name]?.[Math.max(activeSetNumber - 1, 0)]
+          const previousLabel = previousSet ? `${previousSet.weight} kg × ${previousSet.reps}` : null
+          const targetLabel = progressionByExo[exo.name]
+            ? `${fmtStep(progressionByExo[exo.name]!.weight)} kg × ${parseRepsTarget(exo.targetReps) ?? exo.targetReps}`
+            : `${exo.targetReps} reps`
           return (
-            <div key={exo.id} style={{ marginBottom: 12 }}>
+            <ActiveExerciseFocus
+              key={exo.id}
+              name={getExerciseName(exo, locale)}
+              exerciseIndex={idx}
+              exerciseCount={exos.length}
+              activeSet={activeSetNumber}
+              totalSets={exo.sets.length}
+              previous={previousLabel}
+              previousError={previousState === null}
+              target={targetLabel}
+            >
+            <div style={{ marginBottom: 12 }}>
               {/* ── Exercise Hero Banner ── */}
               <div
+                className={trainingV2Styles.legacyHeaderHidden}
                 onClick={() => setExos(p => p.map(e => e.id === exo.id ? { ...e, open: !e.open } : e))}
                 style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: exo.open ? 14 : 0, cursor: 'pointer', background: colors.surface2 }}
               >
@@ -1169,6 +1222,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                     )}
                   </div>
                 </div>
+              </div>
+
+              <div className={trainingV2Styles.focusTools} aria-label={tv2('exerciseTools')}>
+                <button type="button" onClick={() => openExerciseInfo(exo)}>{tv2('details')}</button>
+                <button type="button" aria-label={tv2('exerciseTools')} onClick={() => setExerciseMenu(exerciseMenu === idx ? null : idx)}>•••</button>
               </div>
 
               {/* Exercise menu */}
@@ -1367,9 +1425,15 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                   }}>
                     <Plus size={12} /> {t('addSet')}
                   </button>
+                  {isDone && idx < exos.length - 1 && (
+                    <button type="button" onClick={() => selectExercise(idx + 1)} style={{ ...btnPrimary, width: '100%', minHeight: 44, marginTop: 10 }}>
+                      {t('exerciseDone')} · →
+                    </button>
+                  )}
                 </div>
               )}
             </div>
+            </ActiveExerciseFocus>
           )
         })}
 
@@ -1382,6 +1446,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
         {/* Spacer to keep scroll above bottom bar */}
         <div style={{ height: 8 }} />
+      </div>
       </div>
 
       {/* FAB ajout exercice — flottant, au-dessus de la barre TERMINER */}
@@ -1696,5 +1761,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         />
       )}
     </div>
+    </TrainingV2>
   )
 }

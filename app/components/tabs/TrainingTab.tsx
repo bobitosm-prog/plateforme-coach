@@ -52,6 +52,9 @@ import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
 import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
+import { TrainingV2 } from '../training-v2/TrainingV2'
+import NoActiveSession from '../training-v2/NoActiveSession'
+import trainingV2Styles from '../training-v2/TrainingV2.module.css'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 
@@ -697,8 +700,62 @@ export default function TrainingTab({
     setLoadingDetail(false)
   }
 
+  const v2SessionName = (() => {
+    if (activeCustomProgram?.days?.length) {
+      const index = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(trainingDay)
+      const day = padTo7Days(activeCustomProgram.days)[index]
+      if (day?.name && day.name !== 'Repos') return day.name
+    }
+    const scheduled = weekSessions.find(item => item.scheduled_date === todayStr && item.session_type !== 'rest')
+    return scheduled?.title || trainingDay
+  })()
+  const v2ProgramName = activeTrainingProgram.source === 'coach'
+    ? v2SessionName
+    : activeCustomProgram?.name || ''
+  const v2Muscles = Array.from(new Set(trainingExercises
+    .map(exercise => exercise.muscle_group || exercise.muscle)
+    .filter(Boolean))) as string[]
+  const v2EstimatedMinutes = trainingExercises.length > 0
+    ? Math.round(trainingExercises.reduce((sum: number, exercise) => (
+      sum + (Number(exercise.sets) || 3) * 2.5
+    ), 8))
+    : 0
+  const v2CanStart = ['ready', 'partial'].includes(activeTrainingProgram.state)
+    && trainingExercises.length > 0
+    && !(todaySessionDone && trainingIsToday)
+  const v2NextSession = (() => {
+    const dayKeys = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+    const currentIndex = Math.max(0, dayKeys.indexOf(trainingDay))
+    for (let offset = 1; offset <= 7; offset += 1) {
+      const dayIndex = (currentIndex + offset) % 7
+      const dayKey = dayKeys[dayIndex]
+      const exercises = activeCustomProgram?.days?.length
+        ? getSessionForDay(activeCustomProgram.days, dayIndex).exercises
+        : coachProgram?.[dayKey]?.exercises || []
+      if (exercises.length > 0) {
+        return { dayKey, dayIndex, weekOffset: currentIndex + offset > 6 ? 1 : 0 }
+      }
+    }
+    return null
+  })()
+
+  function showNextPlannedSession() {
+    if (!v2NextSession) return
+    const now = new Date()
+    const monday = new Date(now)
+    const dow = now.getDay()
+    monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
+    monday.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(monday)
+    selectedDate.setDate(monday.getDate() + v2NextSession.dayIndex + v2NextSession.weekOffset * 7)
+    setTrainingDay(v2NextSession.dayKey)
+    setCalendarSelectedDate(selectedDate)
+    setWeekOffset(v2NextSession.weekOffset)
+  }
+
   // ══════════════════════════════════════════
   return (
+    <TrainingV2>
     <div style={{ minHeight: '100vh', background: colors.background, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
       <style>{`
         .set-input { -webkit-appearance: none; appearance: none; }
@@ -756,8 +813,26 @@ export default function TrainingTab({
 
       {/* ── WORKOUT FINISHED CELEBRATION ── */}
 
+      <NoActiveSession
+        programState={activeTrainingProgram.state}
+        programSource={activeTrainingProgram.source}
+        programName={v2ProgramName}
+        sessionName={v2SessionName}
+        exerciseCount={trainingExercises.length}
+        totalSets={trainingTotalSets}
+        estimatedMinutes={v2EstimatedMinutes}
+        muscles={v2Muscles}
+        isToday={trainingIsToday}
+        canStart={v2CanStart}
+        canViewNext={v2NextSession != null}
+        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName }, trainingExercises, trainingDay)}
+        onViewNext={showNextPlannedSession}
+        onManage={() => setShowProgramManager(true)}
+        onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
+      />
+
       {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div className={trainingV2Styles.legacyHeaderHidden} style={{ padding: '16px 20px', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div>
           <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
             {t('header.title')}
@@ -795,7 +870,7 @@ export default function TrainingTab({
         const monthLabel = displayDays[3].date.toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()
 
         const glassBtn: React.CSSProperties = {
-          width: 32, height: 32, borderRadius: 10,
+          width: 28, height: 28, borderRadius: 9,
           background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
           border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -805,7 +880,8 @@ export default function TrainingTab({
         return (
           <div
             data-no-tab-swipe="true"
-            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 24 }}
+            data-training-calendar="compact"
+            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 12, marginBottom: 16 }}
             onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
@@ -816,7 +892,7 @@ export default function TrainingTab({
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
@@ -842,7 +918,7 @@ export default function TrainingTab({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -weekDir * 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32, mass: 0.7 }}
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}
             >
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
@@ -852,10 +928,18 @@ export default function TrainingTab({
                 const isDone = (ws?.completed || doneDates.has(dateStr)) && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
                 const dotColor = isRest ? 'rgba(255,255,255,0.2)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
+                const statusLabel = isRest
+                  ? t('calendar.legendRest')
+                  : isDone
+                    ? t('calendar.legendDone')
+                    : isMissed
+                      ? t('calendar.legendMissed')
+                      : ws?.title || t('calendar.session', { num: i + 1 })
 
                 return (
                   <button
                     key={i}
+                    aria-label={`${dayName} ${dayNum} · ${statusLabel}`}
                     onClick={() => {
                       const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
                       setTrainingDay(dayKey)
@@ -864,14 +948,14 @@ export default function TrainingTab({
                     style={{
                       background: isToday ? `${colors.gold}12` : 'transparent',
                       border: isToday ? `2px solid ${colors.gold}` : `1px solid ${colors.divider}`,
-                      borderRadius: 12, padding: '10px 6px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                      borderRadius: 9, padding: '7px 2px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
                       transition: 'all 0.15s ease',
                     }}
                   >
                     <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const }}>{dayName}</span>
-                    <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, marginTop: 2 }} />
+                    <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
+                    <div aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
                   </button>
                 )
               })}
@@ -879,7 +963,7 @@ export default function TrainingTab({
             </AnimatePresence>
 
             {/* Legend compact */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 9 }}>
               {[
                 { color: colors.success, label: t('calendar.legendDone') },
                 { color: colors.error, label: t('calendar.legendMissed') },
@@ -914,6 +998,7 @@ export default function TrainingTab({
       })()}
 
       {/* ═══ SECTION 2.5 — MES PROGRAMMES (always visible for AUTO clients) ═══ */}
+      <div className={trainingV2Styles.legacyHeaderHidden} aria-hidden="true">
       {aiAllowed && (
         <div style={{ margin: '0 24px' }}>
           <SectionTitle noPadding title={t('programs.title')} trailing={String(customPrograms.length)} />
@@ -933,8 +1018,10 @@ export default function TrainingTab({
           </button>
         </div>
       )}
+      </div>
 
       {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (coach-managed only) ═══ */}
+      <div className={trainingV2Styles.legacyHeaderHidden} aria-hidden="true">
       {!aiAllowed && coachProgram && (
         <div style={{ margin: '16px 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
@@ -996,8 +1083,10 @@ export default function TrainingTab({
           </div>
         </div>
       )}
+      </div>
 
       {/* ═══ SECTION 3 — SÉANCE DU JOUR (HeroSessionCard compact) ═══ */}
+      <div className={trainingV2Styles.legacyHeroHidden} aria-hidden="true">
       {(() => {
         const dayStatus = (() => {
           if (trainingIsToday) return 'today' as const
@@ -1296,8 +1385,10 @@ export default function TrainingTab({
           </>
         )
       })()}
+      </div>
 
       {/* ═══ SECTION 4 — ACTIVE SESSION BAR ═══ */}
+      <div className={trainingV2Styles.legacyLoggerHidden} aria-hidden="true">
       <TrainingActiveBar
         workoutStarted={workoutStarted}
         elapsedSecs={elapsedSecs}
@@ -1306,6 +1397,7 @@ export default function TrainingTab({
         onFinish={handleFinishWithCheck}
         fmtElapsed={fmtElapsed}
       />
+      </div>
 
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
       <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} />
@@ -1669,5 +1761,6 @@ export default function TrainingTab({
         </div>
       </RailOverlay>)}
     </div>
+    </TrainingV2>
   )
 }

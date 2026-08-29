@@ -1,0 +1,559 @@
+.shell {
+  --training-accent: #e6c364;
+  --training-accent-soft: rgba(230, 195, 100, 0.12);
+  --training-border: rgba(230, 195, 100, 0.18);
+  --training-surface: rgba(22, 19, 15, 0.92);
+  width: 100%;
+  color: #f5f1e8;
+}
+
+.landing {
+  position: relative;
+  isolation: isolate;
+  padding: 18px 20px 8px;
+}
+
+.landing::before {
+  position: absolute;
+  z-index: -1;
+  inset: -80px 0 auto;
+  height: 320px;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(230, 195, 100, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(230, 195, 100, 0.06), transparent 82%);
+  content: '';
+  pointer-events: none;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid var(--training-border);
+  border-radius: 24px;
+  background:
+    linear-gradient(145deg, rgba(230, 195, 100, 0.13), rgba(13, 11, 8, 0.96) 58%),
+    var(--training-surface);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.32);
+}
+
+.hero::after {
+  position: absolute;
+  top: -54px;
+  right: -52px;
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(230, 195, 100, 0.22);
+  border-radius: 50%;
+  box-shadow: 0 0 0 22px rgba(230, 195, 100, 0.035);
+  content: '';
+  pointer-events: none;
+}
+
+.emptyHero {
+  padding: 18px 20px;
+  background:
+    linear-gradient(145deg, rgba(230, 195, 100, 0.08), rgba(13, 11, 8, 0.96) 64%),
+    var(--training-surface);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.emptyHero::after {
+  top: -46px;
+  right: -44px;
+  width: 100px;
+  height: 100px;
+  opacity: 0.55;
+}
+
+.eyebrow,
+.sectionLabel,
+.metricLabel,
+.focusLabel,
+.timelineState {
+  font-family: var(--font-alt, sans-serif);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.focusLabel {
+  color: var(--training-accent);
+}
+
+.heroTitle {
+  max-width: 80%;
+  margin: 12px 0 8px;
+  font-family: var(--font-headline, sans-serif);
+  font-size: clamp(30px, 9vw, 50px);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.emptyTitle {
+  max-width: 100%;
+  margin: 8px 0 6px;
+  font-family: var(--font-headline, sans-serif);
+  font-size: clamp(32px, 8.5vw, 40px);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.emptyDescription {
+  max-width: 34rem;
+  margin: 0;
+  color: rgba(245, 241, 232, 0.58);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.heroMeta,
+.sourceRow,
+.metricRow,
+.focusMeta,
+.focusStats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.heroMeta {
+  min-height: 24px;
+  color: rgba(245, 241, 232, 0.68);
+  font-size: 13px;
+}
+
+.heroMuscles {
+  margin-top: 4px;
+  color: rgba(245, 241, 232, 0.52);
+  font-size: 12px;
+}
+
+.heroMeta span + span::before {
+  margin-right: 8px;
+  color: rgba(230, 195, 100, 0.5);
+  content: '·';
+}
+
+.primaryAction,
+.secondaryAction,
+.timelineButton,
+.toolAction {
+  min-height: 44px;
+  border-radius: 13px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primaryAction {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 18px;
+  border: 0;
+  background: var(--training-accent);
+  color: #17120a;
+  font-family: var(--font-alt, sans-serif);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.primaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible,
+.tertiaryAction:focus-visible,
+.timelineButton:focus-visible,
+.toolAction:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.metricRow {
+  margin-top: 18px;
+}
+
+.metric {
+  min-width: 88px;
+  padding-right: 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metric:last-child {
+  border-right: 0;
+}
+
+.metricValue {
+  display: block;
+  font-family: var(--font-headline, sans-serif);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.metricLabel {
+  display: block;
+  margin-top: 5px;
+  color: rgba(245, 241, 232, 0.42);
+  letter-spacing: 0.12em;
+}
+
+.progressTrack {
+  height: 3px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--training-accent);
+  transition: width 180ms ease;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.summaryTitle {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sourceRow {
+  margin-top: 6px;
+  color: rgba(245, 241, 232, 0.55);
+  font-size: 12px;
+}
+
+.sourceBadge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--training-accent-soft);
+  color: var(--training-accent);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.secondaryAction,
+.tertiaryAction,
+.toolAction {
+  padding: 10px 14px;
+  border: 1px solid var(--training-border);
+  background: transparent;
+  color: var(--training-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tertiaryAction {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: rgba(245, 241, 232, 0.62);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(230, 195, 100, 0.45);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.secondaryTools {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.emptyActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.emptyActions .secondaryAction,
+.emptyActions .toolAction {
+  min-height: 44px;
+}
+
+.emptyActionsSingle {
+  grid-template-columns: minmax(0, 220px);
+}
+
+.sessionShell {
+  min-height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top, 12px)) 12px calc(112px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 50% -10%, rgba(230, 195, 100, 0.12), transparent 38%),
+    #0d0b08;
+}
+
+.sessionGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: min(100%, 1180px);
+  margin: 12px auto 0;
+}
+
+.timeline {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.timelineButton {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(245, 241, 232, 0.62);
+  text-align: left;
+}
+
+.timelineButton[data-active='true'] {
+  border-color: var(--training-border);
+  background: var(--training-accent-soft);
+  color: #f5f1e8;
+}
+
+.timelineButton[data-done='true'] {
+  color: rgba(245, 241, 232, 0.52);
+}
+
+.timelineStatus {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  font-size: 11px;
+}
+
+.timelineButton[data-active='true'] .timelineStatus {
+  border-color: var(--training-accent);
+  background: var(--training-accent);
+  color: #17120a;
+}
+
+.timelineButton[data-done='true'] .timelineStatus {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #4ade80;
+}
+
+.timelineName {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timelineProgress {
+  font-family: var(--font-alt, sans-serif);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.focus {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--training-border);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(230, 195, 100, 0.08), rgba(255, 255, 255, 0.025) 50%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.focusHeading {
+  margin: 8px 0 10px;
+  font-family: var(--font-headline, sans-serif);
+  font-size: clamp(28px, 8vw, 44px);
+  font-weight: 500;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.focusMeta {
+  color: rgba(245, 241, 232, 0.5);
+  font-size: 12px;
+}
+
+.focusStats {
+  margin: 16px 0;
+}
+
+.focusStat {
+  flex: 1;
+  min-width: 130px;
+  padding: 12px;
+  border-radius: 13px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.focusStat strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+.focusBody {
+  min-width: 0;
+}
+
+.focusTools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.focusTools button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--training-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--training-accent);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.focusTools button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.contextRail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saveError {
+  padding: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #fecaca;
+}
+
+.legacyHeaderHidden,
+.legacyHeroHidden,
+.legacyLoggerHidden {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .landing {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: 26px 28px 12px;
+  }
+
+  .hero {
+    padding: 30px;
+  }
+
+  .emptyHero {
+    padding: 22px 24px;
+  }
+
+  .emptyTitle {
+    font-size: 42px;
+  }
+
+  .primaryAction {
+    width: auto;
+    min-width: 220px;
+  }
+
+  .sessionGrid {
+    grid-template-columns: minmax(210px, 0.7fr) minmax(420px, 1.7fr);
+    align-items: start;
+  }
+
+  .timeline {
+    position: sticky;
+    top: 12px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .sessionGrid {
+    grid-template-columns: 240px minmax(500px, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill,
+  .primaryAction,
+  .secondaryAction,
+  .timelineButton,
+  .toolAction {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
+
+@media (max-width: 374px) {
+  .landing {
+    padding-inline: 14px;
+  }
+
+  .hero,
+  .focus {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .secondaryAction {
+    width: 100%;
+  }
+
+  .emptyActions {
+    grid-template-columns: 1fr;
+  }
+}

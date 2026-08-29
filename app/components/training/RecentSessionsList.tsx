@@ -33,8 +33,8 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
     <div style={{ padding: '0 20px', marginBottom: 24 }}>
       <SectionTitle noPadding title={t('lastSessions')} trailing={t('sessionsCount', { count: workoutHistory.length })} />
 
-      {/* Filter chips */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
+      {/* Advanced filters belong to the expanded history, not the primary Training view. */}
+      {showFullHistory && <div data-training-history-filters="advanced" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' as any }}>
         {HISTORY_FILTERS.map(f => {
           const active = historyFilter === f.key
           return (
@@ -56,7 +56,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
             </button>
           )
         })}
-      </div>
+      </div>}
 
       {/* Session items */}
       {state === 'error' ? (
