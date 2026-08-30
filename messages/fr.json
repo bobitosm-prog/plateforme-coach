@@ -20,6 +20,22 @@
     "reps": "Reps",
     "restSec": "Repos (s)"
   },
+  "initialGeneration": {
+    "title": "Préparation de votre espace",
+    "training": "Programme d’entraînement",
+    "nutrition": "Plan nutrition",
+    "retry": "Réessayer",
+    "retryDomain": "Réessayer {domain}",
+    "finalizationError": "Les ressources sont prêtes, mais la finalisation doit être relancée.",
+    "status": {
+      "ready": "Prêt",
+      "generating": "En préparation…",
+      "missing": "À préparer",
+      "waitingForCoach": "En attente du plan coach",
+      "quotaExhausted": "Quota atteint — réessayez plus tard",
+      "error": "Erreur temporaire"
+    }
+  },
   "muscles": {
     "all": "Tous",
     "quads": "Quadriceps",

@@ -53,7 +53,7 @@ describe('Training to Account program-management cutover', () => {
   })
 
   it('keeps onboarding generation navigation unchanged', () => {
-    expect(initialGeneration).toContain("if (!profile.needs_initial_generation) return")
+    expect(initialGeneration).toContain("if (!userId || !profile || !profile.needs_initial_generation) return")
     expect(initialGeneration).toContain('needs_initial_generation: false')
     expect(initialGeneration).not.toMatch(/router\.(push|replace)|window\.location|<ProgramBuilder/)
   })

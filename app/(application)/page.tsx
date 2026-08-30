@@ -13,6 +13,7 @@ import Paywall from '../components/Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../components/ClientIntlProvider'
 import PostAuthFatalState from '../../components/auth/PostAuthFatalState'
+import InitialGenerationStatus from '../../components/initial-generation/InitialGenerationStatus'
 import BadgeCelebration from '../components/BadgeCelebration'
 import type { Badge } from '../../lib/check-badges'
 import FeedbackTab from '../components/client/FeedbackTab'
@@ -47,7 +48,7 @@ import { getHomeDayWindow } from '../../lib/home/home-date'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL, Z_TOAST,
+  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL,
 } from '../../lib/design-tokens'
 import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
@@ -100,7 +101,11 @@ const TAB_RAIL_KEYS = ['home', 'training', 'nutrition', 'progress', 'compte'] as
 
 export default function CoachApp() {
   const h = useClientDashboard()
-  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
+  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase, {
+    capabilities: h.capabilities,
+    coachRelationStatus: h.coachRelationStatus,
+    coachId: h.coachId,
+  })
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
@@ -496,31 +501,7 @@ export default function CoachApp() {
         }
       `}</style>
 
-      {/* ── F6.B.5a : auto-gen progress banner ── */}
-      {initialGen.generating && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: Z_TOAST,
-          background: GOLD,
-          color: '#000',
-          padding: '8px 16px',
-          fontSize: 13,
-          fontWeight: 600,
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-        }}>
-          <Sparkles size={16} />
-          {initialGen.step === 'meal'
-            ? 'Préparation de ton plan nutrition...'
-            : 'Préparation de ton programme d\'entraînement...'}
-        </div>
-      )}
+      <InitialGenerationStatus generation={initialGen} />
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (

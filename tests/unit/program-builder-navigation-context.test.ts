@@ -32,7 +32,7 @@ describe('ProgramBuilder navigation context contract', () => {
   })
 
   it('keeps onboarding generation on the app flow without ProgramBuilder navigation', () => {
-    expect(initialGeneration).toContain("if (!profile.needs_initial_generation) return")
+    expect(initialGeneration).toContain("if (!userId || !profile || !profile.needs_initial_generation) return")
     expect(initialGeneration).not.toMatch(/router\.(push|replace)|window\.location|<ProgramBuilder/)
     expect(initialGeneration).toContain('needs_initial_generation: false')
   })

@@ -20,6 +20,22 @@
     "reps": "Reps",
     "restSec": "Rest (s)"
   },
+  "initialGeneration": {
+    "title": "Preparing your space",
+    "training": "Training program",
+    "nutrition": "Nutrition plan",
+    "retry": "Try again",
+    "retryDomain": "Try {domain} again",
+    "finalizationError": "Your resources are ready, but finalization needs to be retried.",
+    "status": {
+      "ready": "Ready",
+      "generating": "Preparing…",
+      "missing": "To prepare",
+      "waitingForCoach": "Waiting for your coach’s plan",
+      "quotaExhausted": "Quota reached — try again later",
+      "error": "Temporary error"
+    }
+  },
   "muscles": {
     "all": "All",
     "quads": "Quads",

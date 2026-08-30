@@ -20,6 +20,22 @@
     "reps": "Wdh.",
     "restSec": "Pause (s)"
   },
+  "initialGeneration": {
+    "title": "Dein Bereich wird vorbereitet",
+    "training": "Trainingsprogramm",
+    "nutrition": "Ernährungsplan",
+    "retry": "Erneut versuchen",
+    "retryDomain": "{domain} erneut versuchen",
+    "finalizationError": "Die Ressourcen sind bereit, aber der Abschluss muss erneut versucht werden.",
+    "status": {
+      "ready": "Bereit",
+      "generating": "Wird vorbereitet…",
+      "missing": "Vorbereitung ausstehend",
+      "waitingForCoach": "Warten auf den Plan des Coaches",
+      "quotaExhausted": "Kontingent erreicht — später erneut versuchen",
+      "error": "Vorübergehender Fehler"
+    }
+  },
   "muscles": {
     "all": "Alle",
     "quads": "Quadrizeps",
