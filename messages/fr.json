@@ -860,7 +860,11 @@
         "changeProfile": "← Changer de profil",
         "hasAccount": "Déjà un compte ?",
         "loginLink": "Se connecter",
-        "heroAlt": "Gym luxe Geneve"
+        "heroAlt": "Gym luxe Geneve",
+        "termsPrefix": "J’accepte les",
+        "termsLink": "conditions d’utilisation",
+        "termsAnd": "et la",
+        "privacyLink": "politique de confidentialité"
       },
       "emailSent": {
         "title": "VERIFIE TA BOITE MAIL",
@@ -878,7 +882,8 @@
         "experienceRequired": "Expérience requise",
         "emailAlreadyUsed": "Cet email est déjà utilisé. Connecte-toi.",
         "profileUnavailable": "Impossible de vérifier ton profil pour le moment. Réessaie.",
-        "oauthRole": "Impossible de sécuriser le rôle choisi pour cette connexion. Réessaie."
+        "oauthRole": "Impossible de sécuriser le rôle choisi pour cette connexion. Réessaie.",
+        "termsRequired": "Accepte les conditions d’utilisation et la politique de confidentialité pour continuer."
       }
     },
     "onboarding": {
@@ -982,11 +987,14 @@
       "title": "REJOINS MOOVX",
       "coachInvitation": "Invitation de coach {coachName}",
       "subtitle": "Crée ton compte pour accepter l'invitation de ton coach.",
+      "invitedEmail": "Invitation destinée à {email}",
       "continueGoogle": "Continuer avec Google",
       "or": "OU",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Mot de passe (min. 8 car.)",
       "confirmPasswordPlaceholder": "Confirmer le mot de passe",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
       "submitButton": "Créer mon compte",
       "loadingButton": "Creation du compte...",
       "hasAccount": "Deja un compte ?",
@@ -1002,6 +1010,8 @@
         "expired": "Cette invitation a expiré. Demande un nouveau lien à ton coach.",
         "revoked": "Cette invitation n'est plus disponible. Demande un nouveau lien à ton coach.",
         "used": "Cette invitation a déjà été utilisée.",
+        "emailMismatch": "Ce compte ne correspond pas à l’adresse email invitée.",
+        "coachConflict": "Un autre coach est déjà actif sur ce compte.",
         "forbidden": "Connecte-toi avec l'adresse email invitée ou vérifie qu'aucun autre coach n'est actif.",
         "temporary": "Une erreur temporaire empêche l'activation. Réessaie dans quelques instants."
       },
@@ -1016,13 +1026,20 @@
         "instruction": "Clique sur le lien pour activer ton compte et commencer.",
         "messageWithEmail": "Un email de confirmation a été envoyé à {email}. L'invitation reprendra après confirmation."
       },
+      "terms": {
+        "prefix": "J’accepte les",
+        "terms": "conditions d’utilisation",
+        "and": "et la",
+        "privacy": "politique de confidentialité"
+      },
       "errors": {
         "emailRequired": "Email requis",
         "emailInvalid": "Email invalide",
         "passwordTooShort": "Le mot de passe doit faire au moins 8 caracteres",
         "passwordMismatch": "Les mots de passe ne correspondent pas",
         "invalidLink": "Lien d'invitation invalide",
-        "alreadyRegistered": "Ce compte existe deja. Connecte-toi depuis la page de login."
+        "alreadyRegistered": "Ce compte existe deja. Connecte-toi depuis la page de login.",
+        "termsRequired": "Accepte les conditions d’utilisation et la politique de confidentialité pour continuer."
       }
     },
     "onboardingFitness": {

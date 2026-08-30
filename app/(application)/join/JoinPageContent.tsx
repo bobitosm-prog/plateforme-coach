@@ -6,7 +6,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { invitationTerminalState } from './invitation-state'
 import {
   BG_BASE, BG_CARD, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GREEN,
@@ -30,6 +30,8 @@ type JoinState =
   | 'expired'
   | 'revoked'
   | 'used'
+  | 'email-mismatch'
+  | 'coach-conflict'
   | 'forbidden'
   | 'temporary'
 
@@ -37,6 +39,7 @@ const GoogleIcon = () => <svg width="18" height="18" viewBox="0 0 18 18"><path d
 
 function JoinContent() {
   const t = useTranslations('auth.join')
+  const locale = useLocale()
   const params = useSearchParams()
   const router = useRouter()
   const tokenRef = useRef<string | null>(null)
@@ -49,10 +52,22 @@ function JoinContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [emailSent, setEmailSent] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [maskedEmail, setMaskedEmail] = useState('')
 
   function clearToken() {
     tokenRef.current = null
     sessionStorage.removeItem(STORAGE_KEY)
+    void fetch('/api/coach/invitations/intent', { method: 'DELETE' })
+  }
+
+  async function rememberToken(token: string) {
+    const response = await fetch('/api/coach/invitations/intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+    return response.ok
   }
 
   async function consumeInvitation(token: string) {
@@ -93,31 +108,42 @@ function JoinContent() {
       return
     }
 
-    const urlToken = params.get('token')
-    const token = urlToken || sessionStorage.getItem(STORAGE_KEY)
-    if (urlToken) {
-      sessionStorage.setItem(STORAGE_KEY, urlToken)
-      window.history.replaceState({}, '', '/join')
-    }
-    if (!token || !TOKEN_PATTERN.test(token)) {
-      clearToken()
-      setState('invalid')
-      return
-    }
-    tokenRef.current = token
-
     void (async () => {
       try {
+        const urlToken = params.get('token')
+        let token = urlToken || sessionStorage.getItem(STORAGE_KEY)
+        if (urlToken) {
+          sessionStorage.setItem(STORAGE_KEY, urlToken)
+          window.history.replaceState({}, '', '/join')
+          await rememberToken(urlToken)
+        } else {
+          const intentResponse = await fetch('/api/coach/invitations/intent')
+          if (intentResponse.ok) {
+            const intentPayload = await intentResponse.json()
+            token = intentPayload.data?.token || token
+          }
+        }
+        if (!token || !TOKEN_PATTERN.test(token)) {
+          clearToken()
+          setState('invalid')
+          return
+        }
+        tokenRef.current = token
+
         const response = await fetch('/api/coach/invitations/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
         })
         if (!response.ok) {
-          clearToken()
-          setState('invalid')
+          const payload = await response.json().catch(() => null)
+          const nextState = invitationTerminalState(payload?.error?.code)
+          if (nextState !== 'temporary') clearToken()
+          setState(nextState)
           return
         }
+        const payload = await response.json()
+        setMaskedEmail(payload.data?.maskedEmail || '')
         const { data: { session } } = await supabase.auth.getSession()
         if (session) await consumeInvitation(token)
         else setState('ready')
@@ -135,6 +161,7 @@ function JoinContent() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError(t('errors.emailInvalid')); return }
     if (password.length < 8) { setError(t('errors.passwordTooShort')); return }
     if (password !== confirmPassword) { setError(t('errors.passwordMismatch')); return }
+    if (!acceptedTerms) { setError(t('errors.termsRequired')); return }
     const token = tokenRef.current
     if (!token) { setState('invalid'); return }
 
@@ -158,6 +185,10 @@ function JoinContent() {
   }
 
   function handleGoogleSignUp() {
+    if (!acceptedTerms) {
+      setError(t('errors.termsRequired'))
+      return
+    }
     void supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback?next=/join` },
@@ -170,6 +201,8 @@ function JoinContent() {
     expired: t('states.expired'),
     revoked: t('states.revoked'),
     used: t('states.used'),
+    'email-mismatch': t('states.emailMismatch'),
+    'coach-conflict': t('states.coachConflict'),
     forbidden: t('states.forbidden'),
     temporary: t('states.temporary'),
     success: t('states.success'),
@@ -184,35 +217,41 @@ function JoinContent() {
   if (emailSent) return <StatusScreen message={t('emailSent.messageWithEmail', { email })} success />
 
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;background:${BG_BASE};border:1px solid ${BORDER};border-radius:0;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}`}</style>
-      <div style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40 }}>
+    <main style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;min-height:48px;background:${BG_BASE};border:1px solid ${BORDER};border-radius:12px;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}@media(max-width:480px){.join-card{padding:24px!important}}`}</style>
+      <section className="join-card" style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Image src="/logo-moovx-96.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>{t('title')}</h1>
           <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0 }}>{t('subtitle')}</p>
+          {maskedEmail && <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD, margin: '12px 0 0' }}>{t('invitedEmail', { email: maskedEmail })}</p>}
         </div>
         <button onClick={handleGoogleSignUp} style={{ width: '100%', background: '#fff', border: 'none', borderRadius: 12, padding: '12px 16px', color: '#000', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24 }}>
           <GoogleIcon /> {t('continueGoogle')}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}><div style={{ flex: 1, height: 1, background: BORDER }} /><span style={{ fontFamily: FONT_ALT, fontSize: 11, color: TEXT_DIM }}>{t('or')}</span><div style={{ flex: 1, height: 1, background: BORDER }} /></div>
-        <input type="email" className="join-input" value={email} onChange={event => { setEmail(event.target.value); setError('') }} placeholder={t('emailPlaceholder')} style={{ marginBottom: 14 }} />
+        <label htmlFor="join-email" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>{t('emailPlaceholder')}</label>
+        <input id="join-email" type="email" autoComplete="email" className="join-input" value={email} onChange={event => { setEmail(event.target.value); setError('') }} placeholder={t('emailPlaceholder')} style={{ marginBottom: 14 }} />
         <div style={{ position: 'relative', marginBottom: 14 }}>
-          <input type={showPassword ? 'text' : 'password'} className="join-input" value={password} onChange={event => { setPassword(event.target.value); setError('') }} placeholder={t('passwordPlaceholder')} />
-          <button type="button" aria-label="Afficher le mot de passe" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none' }}>{showPassword ? <EyeOff size={16} color={TEXT_DIM} /> : <Eye size={16} color={TEXT_DIM} />}</button>
+          <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="join-input" value={password} onChange={event => { setPassword(event.target.value); setError('') }} placeholder={t('passwordPlaceholder')} />
+          <button type="button" aria-label={t(showPassword ? 'hidePassword' : 'showPassword')} onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 4, top: 2, width: 44, height: 44, background: 'none', border: 'none' }}>{showPassword ? <EyeOff size={16} color={TEXT_DIM} /> : <Eye size={16} color={TEXT_DIM} />}</button>
         </div>
-        <input type={showPassword ? 'text' : 'password'} className="join-input" value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); setError('') }} placeholder={t('confirmPasswordPlaceholder')} onKeyDown={event => { if (event.key === 'Enter') void handleSignUp() }} style={{ marginBottom: 20 }} />
-        {error && <p style={{ color: RED, fontSize: 13, fontFamily: FONT_BODY }}>{error}</p>}
+        <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="join-input" value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); setError('') }} placeholder={t('confirmPasswordPlaceholder')} onKeyDown={event => { if (event.key === 'Enter') void handleSignUp() }} style={{ marginBottom: 16 }} />
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, marginBottom: 16 }}>
+          <input type="checkbox" checked={acceptedTerms} onChange={event => { setAcceptedTerms(event.target.checked); setError('') }} style={{ marginTop: 2 }} />
+          <span>{t('terms.prefix')} <Link href={`/${locale}/cgu`} target="_blank">{t('terms.terms')}</Link> {t('terms.and')} <Link href={`/${locale}/privacy`} target="_blank">{t('terms.privacy')}</Link>.</span>
+        </label>
+        {error && <p role="alert" aria-live="polite" style={{ color: RED, fontSize: 13, fontFamily: FONT_BODY }}>{error}</p>}
         <button onClick={() => void handleSignUp()} disabled={loading} style={{ width: '100%', background: loading ? BORDER : GOLD, color: BG_BASE, border: 'none', borderRadius: 12, padding: 14, fontWeight: 800, fontFamily: FONT_ALT }}>{loading ? t('loadingButton') : t('submitButton')}</button>
         <p style={{ textAlign: 'center', marginTop: 16, fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED }}>{t('hasAccount')} <Link href="/login?next=/join" style={{ color: GOLD }}>{t('loginLink')}</Link></p>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }
 
 function StatusScreen({ message, loading = false, success = false }: { message: string; loading?: boolean; success?: boolean }) {
   return (
-    <div style={{ minHeight: '100vh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         {loading && <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 18px' }} />}
         <p style={{ color: success ? GREEN : TEXT_PRIMARY, fontFamily: FONT_BODY, lineHeight: 1.6 }}>{message}</p>

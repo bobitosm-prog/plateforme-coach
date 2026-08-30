@@ -860,7 +860,11 @@
         "changeProfile": "← Profil wechseln",
         "hasAccount": "Schon ein Konto?",
         "loginLink": "Anmelden",
-        "heroAlt": "Luxus-Fitnessstudio Genf"
+        "heroAlt": "Luxus-Fitnessstudio Genf",
+        "termsPrefix": "Ich akzeptiere die",
+        "termsLink": "Nutzungsbedingungen",
+        "termsAnd": "und die",
+        "privacyLink": "Datenschutzerklärung"
       },
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
@@ -878,18 +882,22 @@
         "experienceRequired": "Erfahrung erforderlich",
         "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an.",
         "profileUnavailable": "Dein Profil kann derzeit nicht geprüft werden. Versuche es erneut.",
-        "oauthRole": "Die gewählte Rolle konnte für diese Anmeldung nicht sicher übernommen werden. Versuche es erneut."
+        "oauthRole": "Die gewählte Rolle konnte für diese Anmeldung nicht sicher übernommen werden. Versuche es erneut.",
+        "termsRequired": "Akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung, um fortzufahren."
       }
     },
     "join": {
       "title": "TRITT MOOVX BEI",
       "coachInvitation": "Einladung von Coach {coachName}",
       "subtitle": "Erstelle dein Konto, um die Einladung deines Coaches anzunehmen.",
+      "invitedEmail": "Einladung bestimmt für {email}",
       "continueGoogle": "Weiter mit Google",
       "or": "ODER",
       "emailPlaceholder": "E-Mail",
       "passwordPlaceholder": "Passwort (min. 8 Zeichen)",
       "confirmPasswordPlaceholder": "Passwort bestätigen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
       "submitButton": "Konto erstellen",
       "loadingButton": "Konto wird erstellt...",
       "hasAccount": "Schon ein Konto?",
@@ -905,6 +913,8 @@
         "expired": "Diese Einladung ist abgelaufen. Bitte deinen Coach um einen neuen Link.",
         "revoked": "Diese Einladung ist nicht mehr verfügbar. Bitte deinen Coach um einen neuen Link.",
         "used": "Diese Einladung wurde bereits verwendet.",
+        "emailMismatch": "Dieses Konto stimmt nicht mit der eingeladenen E-Mail-Adresse überein.",
+        "coachConflict": "Für dieses Konto ist bereits ein anderer Coach aktiv.",
         "forbidden": "Melde dich mit der eingeladenen E-Mail-Adresse an oder prüfe, dass kein anderer Coach aktiv ist.",
         "temporary": "Ein vorübergehender Fehler verhindert die Aktivierung. Versuche es gleich erneut."
       },
@@ -919,13 +929,20 @@
         "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen.",
         "messageWithEmail": "Eine Bestätigungs-E-Mail wurde an {email} gesendet. Die Einladung wird nach der Bestätigung fortgesetzt."
       },
+      "terms": {
+        "prefix": "Ich akzeptiere die",
+        "terms": "Nutzungsbedingungen",
+        "and": "und die",
+        "privacy": "Datenschutzerklärung"
+      },
       "errors": {
         "emailRequired": "E-Mail erforderlich",
         "emailInvalid": "Ungültige E-Mail",
         "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen haben",
         "passwordMismatch": "Passwörter stimmen nicht überein",
         "invalidLink": "Ungültiger Einladungslink",
-        "alreadyRegistered": "Dieses Konto existiert bereits. Melde dich auf der Login-Seite an."
+        "alreadyRegistered": "Dieses Konto existiert bereits. Melde dich auf der Login-Seite an.",
+        "termsRequired": "Akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung, um fortzufahren."
       }
     },
     "onboarding": {

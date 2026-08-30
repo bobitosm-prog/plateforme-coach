@@ -2,8 +2,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
@@ -34,13 +36,15 @@ const CoachIcon = () => (
 function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const t = useTranslations('auth.register')
   const tLogin = useTranslations('auth.login')
+  const locale = useLocale()
   const T = titleStyle
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
   const [checking, setChecking] = useState(true)
-  const [step, setStep] = useState<'choose' | 'client' | 'coach'>('choose')
-  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>('client')
+  const initialRole = searchParams.get('role') === 'coach' ? 'coach' : 'client'
+  const [step, setStep] = useState<'choose' | 'client' | 'coach'>(initialRole === 'coach' ? 'coach' : 'choose')
+  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>(initialRole)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -51,6 +55,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const [fullName, setFullName] = useState('')
   const [speciality, setSpeciality] = useState('')
   const [experience, setExperience] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const SPECIALITIES = [
     t('coach.specialities.musculation'),
@@ -66,14 +71,6 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     t('coach.experience.5to10'),
     t('coach.experience.10plus'),
   ]
-
-  useEffect(() => {
-    const roleParam = searchParams.get('role')
-    if (roleParam === 'coach') {
-      setSelectedRole('coach')
-      setStep('coach')
-    }
-  }, [searchParams])
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -96,6 +93,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
   async function handleOAuth(provider: 'google' | 'apple') {
     setError('')
+    if (!acceptedTerms) { setError(t('errors.termsRequired')); return }
     const intent = await fetch('/auth/oauth-role-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -114,6 +112,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return t('errors.emailInvalid')
     if (password.length < 8) return t('errors.passwordTooShort')
     if (password !== confirmPassword) return t('errors.passwordMismatch')
+    if (!acceptedTerms) return t('errors.termsRequired')
     if (step === 'coach') {
       if (!fullName.trim()) return t('errors.fullNameRequired')
       if (!speciality) return t('errors.specialityRequired')
@@ -177,9 +176,26 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     </div>
   )
 
+  const termsConsent = (
+    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: TEXT_MUTED, fontSize: 12, lineHeight: 1.5 }}>
+      <input
+        type="checkbox"
+        checked={acceptedTerms}
+        onChange={event => { setAcceptedTerms(event.target.checked); setError('') }}
+        style={{ marginTop: 2 }}
+      />
+      <span>
+        {t('shared.termsPrefix')}{' '}
+        <Link href={`/${locale}/cgu`} target="_blank" style={{ color: GOLD }}>{t('shared.termsLink')}</Link>{' '}
+        {t('shared.termsAnd')}{' '}
+        <Link href={`/${locale}/privacy`} target="_blank" style={{ color: GOLD }}>{t('shared.privacyLink')}</Link>.
+      </span>
+    </label>
+  )
+
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
-      <img src="/images/hero-gym.webp" alt={t('shared.heroAlt')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+      <Image src="/images/hero-gym.webp" alt={t('shared.heroAlt')} fill priority sizes="100vw" style={{ position: 'fixed', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -211,13 +227,13 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
         {/* Mobile logo + back link */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
-            <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
+          <Link href={`/${locale}/landing`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+            <Image src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
             <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
-          </a>
-          <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+          </Link>
+          <Link href={`/${locale}/landing`} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
             {t('shared.backToHome')}
-          </a>
+          </Link>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 
@@ -323,6 +339,8 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
                 <input id="register-client-confirmation" type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="auth-input" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError('') }} placeholder={t('shared.confirmPasswordPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') handleEmailSignUp() }} />
               </div>
 
+              {termsConsent}
+
               {error && (
                 <div role="alert" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: RADIUS_CARD }}>
                   <AlertCircle size={14} color={RED} style={{ flexShrink: 0 }} />
@@ -414,6 +432,8 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
                 </select>
               </div>
 
+              {termsConsent}
+
               {error && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: RADIUS_CARD }}>
                   <AlertCircle size={14} color={RED} style={{ flexShrink: 0 }} />
@@ -463,7 +483,7 @@ function LeftPanel({ tLogin }: { tLogin: ReturnType<typeof useTranslations<'auth
       <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, background: 'radial-gradient(circle,${colors.goldDim},transparent 60%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
+        <Image src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
         <div style={{ fontFamily: fonts.headline, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>

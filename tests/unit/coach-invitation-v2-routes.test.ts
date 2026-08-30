@@ -36,7 +36,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.getUser.mockResolvedValue({ data: { user: { id: 'client-1' } } })
   mocks.maybeSingle.mockResolvedValue({
-    data: { status: 'pending', expires_at: '2099-01-01T00:00:00.000Z' },
+    data: { status: 'pending', expires_at: '2099-01-01T00:00:00.000Z', recipient_email: 'client@example.com' },
     error: null,
   })
   mocks.rpc.mockResolvedValue({
@@ -59,8 +59,21 @@ describe('Invitation V2 validation and consumption routes', () => {
     expect(mocks.eq).toHaveBeenCalledWith('token_hash', HASH)
     await expect(response.json()).resolves.toEqual({
       success: true,
-      data: { valid: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      data: { valid: true, expiresAt: '2099-01-01T00:00:00.000Z', maskedEmail: 'cl****@example.com' },
     })
+  })
+
+  it.each([
+    ['revoked', 'INVITATION_REVOKED', 410],
+    ['consumed', 'INVITATION_ALREADY_USED', 409],
+  ])('preserves the public %s terminal state', async (status, code, expectedStatus) => {
+    mocks.maybeSingle.mockResolvedValueOnce({
+      data: { status, expires_at: '2099-01-01T00:00:00.000Z', recipient_email: 'client@example.com' },
+      error: null,
+    })
+    const response = await validate(request({ token: TOKEN }))
+    expect(response.status).toBe(expectedStatus)
+    await expect(response.json()).resolves.toMatchObject({ error: { code } })
   })
 
   it('requires authentication and passes only the token hash to atomic consumption', async () => {

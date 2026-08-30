@@ -2,8 +2,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
 
@@ -15,6 +17,7 @@ const AppleIcon = () => <svg width="16" height="19" viewBox="0 0 16 19" fill="wh
 
 export default function LoginPageContent() {
   const t = useTranslations('auth.login')
+  const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
@@ -72,7 +75,7 @@ export default function LoginPageContent() {
     if (!email.trim()) { setError(t('errors.emailRequired')); return }
     if (!password) { setError(t('errors.passwordRequired')); return }
     setError(''); setSubmitting(true)
-    supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_ATTEMPT', details: { email: email.trim(), method: 'password' }, page_url: '/login' })
+    supabase.from('app_logs').insert({ level: 'info', message: 'LOGIN_ATTEMPT', details: { method: 'password' }, page_url: '/login' })
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     if (signInError) {
       supabase.from('app_logs').insert({ level: 'warning', message: 'LOGIN_ERROR', details: { error: signInError.message }, page_url: '/login' })
@@ -117,7 +120,7 @@ export default function LoginPageContent() {
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
       {/* Hero gym background */}
-      <img src="/images/hero-gym.webp" alt={t('panel.heroAlt')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+      <Image src="/images/hero-gym.webp" alt={t('panel.heroAlt')} fill priority sizes="100vw" style={{ position: 'fixed', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -141,13 +144,13 @@ export default function LoginPageContent() {
 
           {/* Mobile logo + back link */}
           <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-            <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
-              <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
+            <Link href={`/${locale}/landing`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+              <Image src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
               <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
-            </a>
-            <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+            </Link>
+            <Link href={`/${locale}/landing`} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
               {t('backToHome')}
-            </a>
+            </Link>
           </div>
           <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 
@@ -294,7 +297,7 @@ function LeftPanel({ t }: { t: ReturnType<typeof useTranslations<'auth.login'>> 
       <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, background: `radial-gradient(circle,${colors.goldDim},transparent 60%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: `0 16px 48px ${colors.goldRule}` }} />
+        <Image src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: `0 16px 48px ${colors.goldRule}` }} />
         <div style={{ fontFamily: fonts.headline, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>
