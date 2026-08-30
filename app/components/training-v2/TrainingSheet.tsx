@@ -7,9 +7,10 @@ interface TrainingSheetProps {
   description?: string
   children: ReactNode
   onClose: () => void
+  viewportContained?: boolean
 }
 
-export default function TrainingSheet({ title, description, children, onClose }: TrainingSheetProps) {
+export default function TrainingSheet({ title, description, children, onClose, viewportContained = false }: TrainingSheetProps) {
   const t = useTranslations('training_tab.v2')
   const titleId = useId()
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -57,10 +58,10 @@ export default function TrainingSheet({ title, description, children, onClose }:
   }, [])
 
   return (
-    <div className={styles.sheetBackdrop} onMouseDown={event => {
+    <div className={`${styles.sheetBackdrop} ${viewportContained ? styles.viewportSheetBackdrop : ''}`} onMouseDown={event => {
       if (event.target === event.currentTarget) onClose()
     }}>
-      <div ref={sheetRef} className={styles.trainingSheet} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div ref={sheetRef} className={`${styles.trainingSheet} ${viewportContained ? styles.viewportTrainingSheet : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className={styles.trainingSheetHeader}>
           <div>
             <h2 id={titleId}>{title}</h2>

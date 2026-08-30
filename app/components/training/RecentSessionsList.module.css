@@ -1,0 +1,50 @@
+.historyContent {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.filterRail {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filterRail::-webkit-scrollbar {
+  height: 4px;
+}
+
+.filterRail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(230, 195, 100, 0.28);
+}
+
+.filterButton {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--font-alt), 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filterButton:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

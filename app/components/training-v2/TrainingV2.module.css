@@ -863,6 +863,34 @@
   overscroll-behavior: contain;
 }
 
+.viewportSheetBackdrop {
+  z-index: 1100;
+  overflow: hidden;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px 0;
+}
+
+.viewportTrainingSheet {
+  width: min(calc(100vw - 24px), 560px);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
+  min-width: 0;
+}
+
+.viewportTrainingSheet .trainingSheetHeader,
+.viewportTrainingSheet .trainingSheetBody,
+.viewportTrainingSheet .trainingSheetHeader > div {
+  min-width: 0;
+}
+
+.viewportTrainingSheet .trainingSheetHeader h2,
+.viewportTrainingSheet .trainingSheetHeader p {
+  overflow-wrap: anywhere;
+}
+
+.viewportTrainingSheet .trainingSheetBody {
+  overflow-x: hidden;
+}
+
 .toolState,
 .toolError {
   padding: 24px 14px;

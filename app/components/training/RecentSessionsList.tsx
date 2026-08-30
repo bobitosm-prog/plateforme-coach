@@ -1,11 +1,13 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { CheckCircle2, ChevronRight } from 'lucide-react'
 import { resolveSessionType, HISTORY_FILTERS } from '../../../lib/session-types'
 import { colors, fonts } from '../../../lib/design-tokens'
 import type { TrainingReadState } from '../../../lib/training/active-program'
 import TrainingSheet from '../training-v2/TrainingSheet'
+import { RailOverlay } from '../ui/RailOverlay'
+import styles from './RecentSessionsList.module.css'
 
 interface RecentSessionsListProps {
   workoutHistory: WorkoutHistoryItem[]
@@ -27,6 +29,12 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
   const filterLabels: Record<string, string> = Object.fromEntries(HISTORY_FILTERS.map(f => [f.key, t(`filters.${f.key}`)]))
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('all')
+  const activeFilterRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!showFullHistory) return
+    activeFilterRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [historyFilter, showFullHistory])
 
   const filtered = workoutHistory.filter(session => {
     if (historyFilter === 'all') return true
@@ -120,33 +128,37 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
       </section>
 
       {showFullHistory && (
-        <TrainingSheet title={t('historyTitle')} description={t('historyTotal', { count: workoutHistory.length })} onClose={() => { setShowFullHistory(false); setHistoryFilter('all') }}>
-          <div data-training-history-filters="advanced" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: 'touch' }}>
-            {HISTORY_FILTERS.map(filter => {
-              const active = historyFilter === filter.key
-              return (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() => setHistoryFilter(filter.key)}
-                  style={{
-                    flexShrink: 0, minHeight: 44, padding: '8px 14px', borderRadius: 10,
-                    background: active ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${active ? colors.gold : 'rgba(255,255,255,0.1)'}`,
-                    fontFamily: fonts.alt, fontSize: 9, fontWeight: 700,
-                    letterSpacing: '0.18em', color: active ? colors.gold : colors.textDim,
-                    textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
-                >
-                  {filterLabels[filter.key]}
-                </button>
-              )
-            })}
-          </div>
-          {expanded.length > 0 ? renderRows(expanded) : (
-            <div style={{ textAlign: 'center', padding: 24, color: colors.textDim }}>{t('noSessions')}</div>
-          )}
-        </TrainingSheet>
+        <RailOverlay>
+          <TrainingSheet viewportContained title={t('historyTitle')} description={t('historyTotal', { count: workoutHistory.length })} onClose={() => { setShowFullHistory(false); setHistoryFilter('all') }}>
+            <div className={styles.historyContent}>
+              <div className={styles.filterRail} data-training-history-filters="advanced">
+                {HISTORY_FILTERS.map(filter => {
+                  const active = historyFilter === filter.key
+                  return (
+                    <button
+                      ref={active ? activeFilterRef : undefined}
+                      key={filter.key}
+                      type="button"
+                      className={styles.filterButton}
+                      aria-pressed={active}
+                      onClick={() => setHistoryFilter(filter.key)}
+                      style={{
+                        background: active ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${active ? colors.gold : 'rgba(255,255,255,0.1)'}`,
+                        color: active ? colors.gold : colors.textDim,
+                      }}
+                    >
+                      {filterLabels[filter.key]}
+                    </button>
+                  )
+                })}
+              </div>
+              {expanded.length > 0 ? renderRows(expanded) : (
+                <div style={{ textAlign: 'center', padding: 24, color: colors.textDim }}>{t('noSessions')}</div>
+              )}
+            </div>
+          </TrainingSheet>
+        </RailOverlay>
       )}
     </div>
   )
