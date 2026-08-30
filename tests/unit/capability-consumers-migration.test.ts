@@ -116,7 +116,6 @@ describe('capability consumers migration', () => {
       'app/(application)/onboarding-v2/OnboardingV2Content.tsx',
       'app/components/ChatAI.tsx',
       'app/components/tabs/NutritionTab.tsx',
-      'app/components/tabs/TrainingTab.tsx',
     ].map(path => readFileSync(path, 'utf8'))
 
     expect(serverConsumer).toContain('loadEffectiveEntitlementContext')

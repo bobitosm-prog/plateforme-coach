@@ -58,7 +58,7 @@ describe('Training V2 shell and focus mode', () => {
   })
 
   it('keeps generation secondary and out of visual V2 components', () => {
-    expect(trainingTab).toContain("dynamic(() => import('../training/TrainingProgramManager')")
+    expect(trainingTab).not.toContain('TrainingProgramManager')
     expect(trainingTab).not.toContain('<ProgramBuilder')
     expect(v2Sources).not.toMatch(/ProgramBuilder|generate-program|generate-custom-program|anthropic|openai/i)
   })

@@ -25,9 +25,9 @@ describe('ProgramBuilder navigation context contract', () => {
     expect(manager).not.toContain('/onboarding')
   })
 
-  it('returns the legacy Training entry to the same shared manager', () => {
-    expect(training).toContain('<TrainingProgramManager')
-    expect(training).toContain('onClose={() => setShowProgramManager(false)}')
+  it('removes the legacy Training entry and routes management to Account', () => {
+    expect(training).not.toContain('TrainingProgramManager')
+    expect(training).toContain('onOpenProgramSettings={onOpenProgramSettings}')
     expect(training).not.toContain('<ProgramBuilder')
   })
 

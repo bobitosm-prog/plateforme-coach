@@ -12,7 +12,7 @@ const api = read('app/api/generate-custom-program/route.ts')
 describe('Account training program management', () => {
   it('loads the shared manager and ProgramBuilder lazily', () => {
     expect(accountSection).toContain("dynamic(() => import('../../training/TrainingProgramManager')")
-    expect(trainingTab).toContain("dynamic(() => import('../training/TrainingProgramManager')")
+    expect(trainingTab).not.toContain('TrainingProgramManager')
     expect(manager).toContain("dynamic(() => import('./ProgramBuilder')")
     expect(trainingTab).not.toMatch(/import ProgramBuilder/)
     expect(trainingTab).not.toMatch(/from\('custom_programs'\)/)

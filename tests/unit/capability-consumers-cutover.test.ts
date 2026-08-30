@@ -80,7 +80,6 @@ describe('capability consumers cutover', () => {
       'app/(application)/onboarding-v2/OnboardingV2Content.tsx',
       'app/components/ChatAI.tsx',
       'app/components/tabs/NutritionTab.tsx',
-      'app/components/tabs/TrainingTab.tsx',
     ])
 
     for (const { path, source } of consumers) {

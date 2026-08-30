@@ -17,7 +17,7 @@ interface NoActiveSessionProps {
   canViewNext: boolean
   onStart: () => void
   onViewNext: () => void
-  onManage: () => void
+  onOpenProgramSettings: () => void
   onFreeSession: () => void
 }
 
@@ -35,7 +35,7 @@ export default function NoActiveSession({
   canViewNext,
   onStart,
   onViewNext,
-  onManage,
+  onOpenProgramSettings,
   onFreeSession,
 }: NoActiveSessionProps) {
   const t = useTranslations('training_tab.v2')
@@ -46,6 +46,13 @@ export default function NoActiveSession({
       : t('noProgram')
   const hasPlannedSession = exerciseCount > 0
   const isSettledEmpty = !hasPlannedSession && programState !== 'loading' && programState !== 'error'
+  const programActionLabel = programState === 'loading' || programState === 'error'
+    ? t('viewInAccount')
+    : programSource === 'personal'
+      ? t('manageInAccount')
+      : programSource === 'coach'
+        ? t('viewInAccount')
+        : t('configureProgram')
   const stateTitle = programState === 'loading'
     ? t('programLoading')
     : programState === 'error'
@@ -92,7 +99,7 @@ export default function NoActiveSession({
             {totalSets > 0 && <span>{t('setCount', { count: totalSets })}</span>}
           </div>
         </div>
-        <button type="button" className={styles.tertiaryAction} onClick={onManage}>{t('viewProgram')}</button>
+        <button type="button" className={styles.tertiaryAction} onClick={onOpenProgramSettings}>{programActionLabel}</button>
       </section>
       {hasPlannedSession && <div className={styles.secondaryTools}>
         <button type="button" className={styles.toolAction} onClick={onFreeSession}>{t('freeSession')}</button>

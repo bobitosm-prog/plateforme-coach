@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef } from 'react'
-import dynamic from 'next/dynamic'
 import { RailOverlay } from '../ui/RailOverlay'
 import WorkoutDetailList from '../training/WorkoutDetailList'
 import ModalHeader from '../ui/ModalHeader'
@@ -23,12 +22,9 @@ import { getEffectiveWeek } from '../../../lib/training/program-week'
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import RecentSessionsList from '../training/RecentSessionsList'
-import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
 import { TrainingV2 } from '../training-v2/TrainingV2'
 import NoActiveSession from '../training-v2/NoActiveSession'
-
-const TrainingProgramManager = dynamic(() => import('../training/TrainingProgramManager'), { ssr: false })
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 type PersonalProgram = NonNullable<Parameters<typeof getEffectiveWeek>[0]> & {
@@ -41,28 +37,26 @@ interface TrainingTabProps {
   supabase: any
   session: any
   profile?: any
-  capabilities: UserCapabilities
   activeTrainingProgram: ActiveTrainingProgramContext
   todayKey: string
   todaySessionDone: boolean
   workoutHistory: any[]
   workoutHistoryState: TrainingReadState
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
-  fetchAll: (forceRefresh?: boolean) => Promise<void>
+  onOpenProgramSettings: () => void
   scheduledSessions: ScheduledSession[]
   setCalendarSelectedDate: (d: Date) => void
   setModal: (m: string | null) => void
 }
 
 export default function TrainingTab({
-  supabase, session, profile, capabilities, activeTrainingProgram, todayKey, todaySessionDone, workoutHistory, workoutHistoryState, startProgramWorkout, fetchAll,
+  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings,
   scheduledSessions, setCalendarSelectedDate, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
-  const [showProgramManager, setShowProgramManager] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
   const [weekDir, setWeekDir] = useState(0)
   const calTouchStart = useRef<number | null>(null)
@@ -260,7 +254,7 @@ export default function TrainingTab({
         canViewNext={v2NextSession != null}
         onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName }, trainingExercises, trainingDay)}
         onViewNext={showNextPlannedSession}
-        onManage={() => setShowProgramManager(true)}
+        onOpenProgramSettings={onOpenProgramSettings}
         onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
       />
 
@@ -406,18 +400,6 @@ export default function TrainingTab({
       {/* Video Feedback History */}
       {session?.user?.id && (
         <VideoFeedbackHistory userId={session.user.id} />
-      )}
-
-      {showProgramManager && (
-        <TrainingProgramManager
-          supabase={supabase}
-          session={session}
-          profile={profile}
-          capabilities={capabilities}
-          activeProgramContext={activeTrainingProgram}
-          onRefresh={fetchAll}
-          onClose={() => setShowProgramManager(false)}
-        />
       )}
 
       {/* Workout detail popup */}
