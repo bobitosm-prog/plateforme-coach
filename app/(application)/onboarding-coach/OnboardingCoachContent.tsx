@@ -1,44 +1,39 @@
 'use client'
-import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ChevronLeft, Check, Camera, CreditCard, Upload, Sparkles, LayoutDashboard } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, GREEN } from '../../../lib/design-tokens'
-import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
-const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+import { createBrowserClient } from '@supabase/ssr'
+import { Camera, Check, ChevronLeft, CreditCard } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { capitalizeFullName } from '@/lib/utils/capitalize-name'
+import styles from './OnboardingCoachContent.module.css'
 
 const TOTAL_STEPS = 4
-
-// DB labels — stored as-is in profiles.coach_speciality (FR labels for retrocompat)
 const SPECIALITY_DB_LABELS = ['Musculation / Hypertrophie', 'Perte de poids', 'Nutrition sportive', 'Fitness général', 'CrossFit / Fonctionnel', 'Préparation physique', 'Rééducation sportive', 'Autre']
 const EXPERIENCE_DB_LABELS = ['1-2 ans', '3-5 ans', '5-10 ans', '10+ ans']
 const DAYS_DB_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MAX_CLIENTS_DB_LABELS = ['5', '10', '20', '50', 'Illimité']
 const FOLLOW_UP_DB_LABELS = ["Chat dans l'app", 'Appels vidéo', 'Plans personnalisés automatiques', 'Suivi hebdomadaire']
-
-const HOURS = Array.from({ length: 15 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`)
-
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%', opacity: 0 }),
-}
-const transition = { type: 'tween' as const, duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
+const HOURS = Array.from({ length: 15 }, (_, index) => `${String(index + 6).padStart(2, '0')}:00`)
+type Answers = Record<string, unknown>
+type Translate = (key: string, values?: Record<string, string | number>) => string
 
 export default function OnboardingCoachContent() {
-  const t = useTranslations('auth.onboardingCoach')
+  const rawT = useTranslations('auth.onboardingCoach')
+  const t: Translate = useCallback((key, values) => (rawT as Translate)(key, values), [rawT])
   const router = useRouter()
-  const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [session, setSession] = useState<any>(null)
+  const supabase = useRef(createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())).current
+  const answersRef = useRef<Answers>({})
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState('')
   const [step, setStep] = useState(1)
-  const [dir, setDir] = useState(1)
+  const [editingFromSummary, setEditingFromSummary] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-
+  const [fatal, setFatal] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [stripeError, setStripeError] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [fullName, setFullName] = useState('')
@@ -46,439 +41,179 @@ export default function OnboardingCoachContent() {
   const [speciality, setSpeciality] = useState('')
   const [certifications, setCertifications] = useState('')
   const [experience, setExperience] = useState('')
-
   const [maxClients, setMaxClients] = useState('')
   const [availableDays, setAvailableDays] = useState<string[]>([])
   const [hoursFrom, setHoursFrom] = useState('08:00')
   const [hoursTo, setHoursTo] = useState('20:00')
   const [followUpModes, setFollowUpModes] = useState<string[]>([])
-
   const [stripeConnected, setStripeConnected] = useState(false)
   const [stripeLoading, setStripeLoading] = useState(false)
 
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!s) { router.replace('/login'); return }
-      setSession(s)
-      const meta = s.user.user_metadata
-      if (meta?.full_name) setFullName(meta.full_name)
-      if (meta?.coach_speciality) setSpeciality(meta.coach_speciality)
-      if (meta?.coach_experience_years) setExperience(meta.coach_experience_years)
-      supabase.from('profiles').select('*').eq('id', s.user.id).single().then(({ data }) => {
-        if (!data) return
-        if (data.full_name) setFullName(data.full_name)
-        if (data.coach_bio) setBio(data.coach_bio)
-        if (data.coach_speciality) setSpeciality(data.coach_speciality)
-        if (data.coach_experience_years) setExperience(data.coach_experience_years)
-        if (data.coach_certifications) setCertifications(data.coach_certifications)
-        if (data.coach_max_clients) setMaxClients(String(data.coach_max_clients))
-        if (data.coach_available_days) setAvailableDays(data.coach_available_days)
-        if (data.coach_availability_hours) {
-          setHoursFrom(data.coach_availability_hours.from || '08:00')
-          setHoursTo(data.coach_availability_hours.to || '20:00')
-        }
-        if (data.coach_follow_up_mode) setFollowUpModes(data.coach_follow_up_mode)
-        if (data.avatar_url) setAvatarUrl(data.avatar_url)
-        if (data.coach_onboarding_complete) router.replace('/')
-        if (data.stripe_account_id) setStripeConnected(true)
-      })
+    let mounted = true
+    void (async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) { if (mounted) { setFatal(true); setLoading(false) }; return }
+      if (!session) { router.replace('/login'); return }
+      const { data: profile, error: profileError } = await supabase.from('profiles').select('role,coach_onboarding_complete,full_name,coach_bio,coach_speciality,coach_experience_years,coach_certifications,coach_max_clients,coach_available_days,coach_availability_hours,coach_follow_up_mode,avatar_url,stripe_account_id,onboarding_answers').eq('id', session.user.id).single()
+      if (!mounted) return
+      if (profileError || !profile || profile.role !== 'coach') { setFatal(true); setLoading(false); return }
+      if (profile.coach_onboarding_complete) { router.replace('/'); return }
+      setUserId(session.user.id); setUserEmail(session.user.email || '')
+      setFullName(profile.full_name || session.user.user_metadata?.full_name || '')
+      setBio(profile.coach_bio || ''); setSpeciality(profile.coach_speciality || '')
+      setExperience(profile.coach_experience_years || ''); setCertifications(profile.coach_certifications || '')
+      setMaxClients(profile.coach_max_clients === 999 ? 'Illimité' : profile.coach_max_clients ? String(profile.coach_max_clients) : '')
+      setAvailableDays(Array.isArray(profile.coach_available_days) ? profile.coach_available_days : [])
+      const availability = profile.coach_availability_hours as { from?: string; to?: string } | null
+      setHoursFrom(availability?.from || '08:00'); setHoursTo(availability?.to || '20:00')
+      setFollowUpModes(Array.isArray(profile.coach_follow_up_mode) ? profile.coach_follow_up_mode : [])
+      setAvatarUrl(profile.avatar_url || ''); setStripeConnected(Boolean(profile.stripe_account_id))
+      const answers = profile.onboarding_answers && typeof profile.onboarding_answers === 'object' ? profile.onboarding_answers as Answers : {}
+      answersRef.current = answers
+      const restored = typeof answers.coach_onboarding_step === 'number' ? answers.coach_onboarding_step : 1
       const params = new URLSearchParams(window.location.search)
       if (params.get('stripe') === 'success') {
         const accountId = params.get('account')
         if (accountId) {
-          supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', s.user.id)
+          const { error: stripeSaveError } = await supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', session.user.id)
+          if (stripeSaveError) setStripeError(t('redesign.errors.stripe'))
+          else setStripeConnected(true)
         }
-        setStripeConnected(true)
-        setStep(3)
         window.history.replaceState({}, '', '/onboarding-coach')
       }
-    })
-  }, [])
+      setStep(Math.min(TOTAL_STEPS, Math.max(1, params.get('stripe') === 'success' ? 3 : restored)))
+      setLoading(false)
+    })()
+    return () => { mounted = false }
+  }, [router, supabase, t])
 
-  function goNext() { setDir(1); setStep(s => Math.min(s + 1, TOTAL_STEPS)) }
-  function goBack() { setDir(-1); setStep(s => Math.max(s - 1, 1)) }
+  async function update(fields: Record<string, unknown>, resumeStep: number) {
+    if (!userId) return false
+    const answers = { ...answersRef.current, coach_onboarding_step: resumeStep }
+    const { error: saveError } = await supabase.from('profiles').update({ ...fields, onboarding_answers: answers }).eq('id', userId)
+    if (saveError) return false
+    answersRef.current = answers
+    return true
+  }
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !session) return
-    setAvatarUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `avatars/${session.user.id}.${ext}`
-    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (!error) {
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-      setAvatarUrl(data.publicUrl)
+  function profileFields() {
+    const fields: Record<string, unknown> = {
+      full_name: capitalizeFullName(fullName), coach_bio: bio.trim() || null,
+      coach_speciality: speciality || null, coach_certifications: certifications.trim() || null,
+      coach_experience_years: experience || null,
     }
-    setAvatarUploading(false)
+    if (avatarUrl) fields.avatar_url = avatarUrl
+    return fields
+  }
+
+  function coachingFields() {
+    return {
+      coach_max_clients: maxClients === 'Illimité' ? 999 : maxClients ? Number(maxClients) : null,
+      coach_available_days: availableDays.length ? availableDays : null,
+      coach_availability_hours: { from: hoursFrom, to: hoursTo },
+      coach_follow_up_mode: followUpModes.length ? followUpModes : null,
+    }
+  }
+
+  async function saveCurrentStep() {
+    const resume = editingFromSummary ? TOTAL_STEPS : Math.min(step + 1, TOTAL_STEPS)
+    if (step === 1) return update(profileFields(), resume)
+    if (step === 2) return update(coachingFields(), resume)
+    if (step === 3) return update({}, resume)
+    return finalize()
+  }
+
+  async function finalize() {
+    if (!userId) return false
+    const answers = { ...answersRef.current, coach_onboarding_step: TOTAL_STEPS }
+    const { error: finalError } = await supabase.from('profiles').update({
+      ...profileFields(), ...coachingFields(), onboarding_answers: answers,
+      coach_onboarding_complete: true, onboarding_completed: true,
+    }).eq('id', userId)
+    if (finalError) return false
+    const { data: confirmation, error: confirmError } = await supabase.from('profiles').select('role,coach_onboarding_complete').eq('id', userId).single()
+    if (confirmError || confirmation?.role !== 'coach' || confirmation.coach_onboarding_complete !== true) return false
+    answersRef.current = answers
+    return true
+  }
+
+  async function handleNext() {
+    setSaving(true); setError(null)
+    try {
+      if (!await saveCurrentStep()) { setError(t('redesign.errors.save')); return }
+      if (step === TOTAL_STEPS) { router.replace('/'); return }
+      if (editingFromSummary) { setEditingFromSummary(false); setStep(TOTAL_STEPS); return }
+      setStep(current => current + 1)
+    } finally { setSaving(false) }
+  }
+
+  function goBack() {
+    if (editingFromSummary) { setEditingFromSummary(false); setStep(TOTAL_STEPS); void update({}, TOTAL_STEPS); return }
+    const target = Math.max(1, step - 1); setStep(target); void update({}, target)
+  }
+
+  function edit(target: number) { setEditingFromSummary(true); setStep(target); void update({}, target) }
+  function toggleDay(day: string) { setAvailableDays(days => days.includes(day) ? days.filter(value => value !== day) : [...days, day]) }
+  function toggleFollowUp(mode: string) { setFollowUpModes(modes => modes.includes(mode) ? modes.filter(value => value !== mode) : [...modes, mode]) }
+
+  async function handleAvatarUpload(file: File) {
+    if (!userId) return
+    setAvatarUploading(true); setError(null)
+    try {
+      const path = `avatars/${userId}.${file.name.split('.').pop() || 'jpg'}`
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+      if (uploadError) throw uploadError
+      const publicUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
+      if (!await update({ avatar_url: publicUrl }, step)) throw new Error('avatar-save')
+      setAvatarUrl(publicUrl)
+    } catch { setError(t('redesign.errors.avatar')) } finally { setAvatarUploading(false) }
   }
 
   async function handleStripeConnect() {
-    if (!session) return
-    setStripeLoading(true)
+    if (!userId) return
+    setStripeLoading(true); setStripeError(null)
     try {
-      const res = await fetch('/api/stripe/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coachId: session.user.id, email: session.user.email }),
-      })
-      const data = await res.json()
-      if (data.url) {
-        if (data.accountId) {
-          await supabase.from('profiles').update({ stripe_account_id: data.accountId }).eq('id', session.user.id)
-        }
-        window.location.href = data.url
-      } else {
-        alert(t('stripe.errorGeneric') + ': ' + (data.error || ''))
-        setStripeLoading(false)
+      if (!await update({}, 3)) throw new Error('resume-save')
+      const response = await fetch('/api/stripe/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ coachId: userId, email: userEmail }) })
+      const payload = await response.json()
+      if (!response.ok || !payload.url) throw new Error('provider')
+      if (payload.accountId) {
+        const { error: accountError } = await supabase.from('profiles').update({ stripe_account_id: payload.accountId }).eq('id', userId)
+        if (accountError) throw accountError
       }
-    } catch {
-      alert(t('stripe.errorConnect'))
-      setStripeLoading(false)
-    }
+      window.location.assign(payload.url)
+    } catch { setStripeError(t('redesign.errors.stripe')); setStripeLoading(false) }
   }
 
-  function toggleDay(day: string) {
-    setAvailableDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
-  }
+  if (loading) return <main className={styles.shell}><p role="status">{t('redesign.loading')}</p></main>
+  if (fatal) return <main className={styles.shell}><div className={styles.error} role="alert"><p>{t('redesign.errors.profile')}</p><button type="button" onClick={() => window.location.reload()}>{t('redesign.retry')}</button></div></main>
+  const valid = step !== 1 || fullName.trim().length >= 2
 
-  function toggleFollowUp(mode: string) {
-    setFollowUpModes(prev => prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode])
-  }
-
-  async function finish() {
-    if (!session) return
-    setSaving(true)
-    const uid = session.user.id
-    // Poser role via RPC (bypass trigger guard_profile_sensitive_columns)
-    const { error: roleErr } = await supabase.rpc('set_role', { p_role: 'coach' })
-    if (roleErr) console.error('set_role failed:', roleErr)
-    const update: Record<string, any> = {
-      id: uid,
-      full_name: capitalizeFullName(fullName),
-      coach_bio: bio.trim() || null,
-      coach_speciality: speciality || null,
-      coach_certifications: certifications.trim() || null,
-      coach_experience_years: experience || null,
-      coach_max_clients: maxClients === MAX_CLIENTS_DB_LABELS[4] ? 999 : maxClients ? parseInt(maxClients) : null,
-      coach_available_days: availableDays.length > 0 ? availableDays : null,
-      coach_availability_hours: { from: hoursFrom, to: hoursTo },
-      coach_follow_up_mode: followUpModes.length > 0 ? followUpModes : null,
-      coach_onboarding_complete: true,
-      onboarding_completed: true,
-    }
-    if (avatarUrl) update.avatar_url = avatarUrl
-    const { error } = await supabase.from('profiles').update(update).eq('id', uid).select()
-    if (error) await supabase.from('profiles').upsert(update).select()
-    const { data: check } = await supabase.from('profiles').select('coach_onboarding_complete').eq('id', uid).single()
-    if (!check?.coach_onboarding_complete) {
-      await supabase.from('profiles').update({ coach_onboarding_complete: true, onboarding_completed: true }).eq('id', uid)
-    }
-    setSaving(false)
-    window.location.replace('/')
-  }
-
-  return (
-    <div style={{ minHeight: '100svh', background: BG_BASE, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: FONT_BODY }}>
-      <style>{`
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-
-      {/* Progress bar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '12px 16px 0' }}>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <div key={i} style={{ flex: 1, height: 3, borderRadius: 12, background: BORDER, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 12, background: GOLD, width: i < step ? '100%' : '0%', transition: 'width 400ms ease' }} />
-            </div>
-          ))}
-        </div>
-        <div style={{ textAlign: 'center', fontSize: '0.68rem', color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 600, marginTop: 6 }}>{t('nav.progress', { current: step, total: TOTAL_STEPS })}</div>
-      </div>
-
-      {step > 1 && step < 4 && (
-        <button onClick={goBack} style={{ position: 'fixed', top: 36, left: 16, zIndex: 50, background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', padding: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, fontFamily: FONT_BODY }}>
-          <ChevronLeft size={18} strokeWidth={2.5} /> {t('nav.back')}
-        </button>
-      )}
-
-      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-        <AnimatePresence custom={dir} mode="wait">
-
-          {/* STEP 1: Profile */}
-          {step === 1 && (
-            <motion.div key="s1" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '64px 24px 32px', gap: 18, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-              <div>
-                <h2 style={h2Style}>{t('profile.title')}</h2>
-                <p style={subStyle}>{t('profile.subtitle')}</p>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <button onClick={() => fileInputRef.current?.click()}
-                  style={{ position: 'relative', width: 96, height: 96, borderRadius: '50%', border: `2.5px dashed ${avatarUrl ? GOLD : BORDER}`, background: avatarUrl ? 'transparent' : BG_CARD, cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 200ms' }}>
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt={t('profile.avatarAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <Camera size={28} color={TEXT_MUTED} />}
-                  <div style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${BG_BASE}` }}>
-                    {avatarUploading
-                      ? <div style={{ width: 12, height: 12, border: '2px solid #0004', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                      : <Upload size={12} color="#000" strokeWidth={2.5} />}
-                  </div>
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
-              </div>
-
-              <div><label style={labelStyle}>{t('profile.nameLabel')}</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t('profile.namePlaceholder')} style={inputStyle} /></div>
-
-              <div><label style={labelStyle}>{t('profile.bioLabel')}</label>
-                <textarea value={bio} onChange={e => { if (e.target.value.length <= 500) setBio(e.target.value) }}
-                  placeholder={t('profile.bioPlaceholder')}
-                  style={{ ...inputStyle, minHeight: 100, resize: 'vertical', lineHeight: 1.6 } as React.CSSProperties} />
-                <div style={{ textAlign: 'right', fontSize: '0.7rem', color: bio.length > 450 ? '#EF4444' : TEXT_MUTED, marginTop: 4, fontFamily: FONT_ALT }}>{bio.length}/500</div></div>
-
-              <div><label style={labelStyle}>{t('profile.specialityLabel')}</label>
-                <select value={speciality} onChange={e => setSpeciality(e.target.value)} style={selectStyle}>
-                  <option value="" style={{ background: BG_CARD, color: TEXT_MUTED }}>{t('profile.specialityPlaceholder')}</option>
-                  {SPECIALITY_DB_LABELS.map((dbLabel, i) => <option key={dbLabel} value={dbLabel} style={{ background: BG_CARD, color: TEXT_PRIMARY }}>{t(`constants.specialities.${i}`)}</option>)}
-                </select></div>
-
-              <div><label style={labelStyle}>{t('profile.certificationsLabel')}</label>
-                <textarea value={certifications} onChange={e => setCertifications(e.target.value)}
-                  placeholder={t('profile.certificationsPlaceholder')}
-                  style={{ ...inputStyle, minHeight: 60, resize: 'vertical', lineHeight: 1.5 } as React.CSSProperties} /></div>
-
-              <div><label style={labelStyle}>{t('profile.experienceLabel')}</label>
-                <select value={experience} onChange={e => setExperience(e.target.value)} style={selectStyle}>
-                  <option value="" style={{ background: BG_CARD, color: TEXT_MUTED }}>{t('profile.experiencePlaceholder')}</option>
-                  {EXPERIENCE_DB_LABELS.map((dbLabel, i) => <option key={dbLabel} value={dbLabel} style={{ background: BG_CARD, color: TEXT_PRIMARY }}>{t(`constants.experience.${i}`)}</option>)}
-                </select></div>
-
-              <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-                <NextBtn onClick={goNext} disabled={!fullName.trim()} label={t('nav.next')} />
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 2: Business */}
-          {step === 2 && (
-            <motion.div key="s2" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '64px 24px 32px', gap: 18, maxWidth: 480, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-              <div>
-                <h2 style={h2Style}>{t('business.title')}</h2>
-                <p style={subStyle}>{t('business.subtitle')}</p>
-              </div>
-
-              <div><label style={labelStyle}>{t('business.maxClientsLabel')}</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {MAX_CLIENTS_DB_LABELS.map((dbLabel, i) => {
-                    const sel = maxClients === dbLabel
-                    return (
-                      <button key={dbLabel} onClick={() => setMaxClients(dbLabel)}
-                        style={{ padding: '10px 16px', borderRadius: 12, border: `1.5px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, fontFamily: FONT_ALT, color: sel ? GOLD : TEXT_PRIMARY, transition: 'all 200ms' }}>
-                        {t(`constants.maxClients.${i}`)}
-                      </button>
-                    )
-                  })}
-                </div></div>
-
-              <div><label style={labelStyle}>{t('business.daysLabel')}</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {DAYS_DB_LABELS.map((dbLabel, i) => {
-                    const sel = availableDays.includes(dbLabel)
-                    return (
-                      <button key={dbLabel} onClick={() => toggleDay(dbLabel)}
-                        style={{ padding: '10px 14px', borderRadius: 12, border: `1.5px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, fontFamily: FONT_ALT, color: sel ? GOLD : TEXT_PRIMARY, transition: 'all 200ms', minWidth: 44, textAlign: 'center' }}>
-                        {t(`constants.days.${i}`)}
-                      </button>
-                    )
-                  })}
-                </div></div>
-
-              <div><label style={labelStyle}>{t('business.hoursLabel')}</label>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <select value={hoursFrom} onChange={e => setHoursFrom(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-                    {HOURS.map(h => <option key={h} value={h} style={{ background: BG_CARD, color: TEXT_PRIMARY }}>{h}</option>)}
-                  </select>
-                  <span style={{ color: TEXT_MUTED, fontSize: '0.85rem', fontWeight: 600, fontFamily: FONT_ALT }}>{t('business.hoursTo')}</span>
-                  <select value={hoursTo} onChange={e => setHoursTo(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
-                    {HOURS.map(h => <option key={h} value={h} style={{ background: BG_CARD, color: TEXT_PRIMARY }}>{h}</option>)}
-                  </select>
-                </div></div>
-
-              <div><label style={labelStyle}>{t('business.followUpLabel')}</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {FOLLOW_UP_DB_LABELS.map((dbLabel, i) => {
-                    const sel = followUpModes.includes(dbLabel)
-                    return (
-                      <button key={dbLabel} onClick={() => toggleFollowUp(dbLabel)}
-                        style={{ padding: '12px 16px', borderRadius: RADIUS_CARD, border: `1.5px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD_DIM : BG_CARD, cursor: 'pointer', fontSize: '0.88rem', fontWeight: 300, fontFamily: FONT_BODY, color: sel ? GOLD : TEXT_PRIMARY, transition: 'all 200ms', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 12, border: `2px solid ${sel ? GOLD : BORDER}`, background: sel ? GOLD : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 200ms' }}>
-                          {sel && <Check size={12} color="#000" strokeWidth={3} />}
-                        </div>
-                        {t(`constants.followUpModes.${i}`)}
-                      </button>
-                    )
-                  })}
-                </div></div>
-
-              <div style={{ background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: '16px 18px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, fontFamily: FONT_ALT, color: GOLD, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 8 }}>{t('business.businessModelTitle')}</div>
-                <p style={{ fontSize: '0.85rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_PRIMARY, lineHeight: 1.6, margin: 0, opacity: 0.85 }}>{t('business.businessModelDesc')}</p>
-              </div>
-
-              <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-                <NextBtn onClick={goNext} label={t('nav.next')} />
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 3: Stripe */}
-          {step === 3 && (
-            <motion.div key="s3" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px 32px', gap: 24, maxWidth: 480, width: '100%', margin: '0 auto' }}>
-
-              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 20 }}
-                style={{ width: 80, height: 80, borderRadius: '50%', background: GOLD_DIM, border: `2px solid ${GOLD_RULE}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CreditCard size={36} color={GOLD} strokeWidth={1.5} />
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ textAlign: 'center' }}>
-                <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.8rem', fontWeight: 400, color: TEXT_PRIMARY, margin: '0 0 16px', letterSpacing: '2px' }}>{t('stripe.title')}</h2>
-                <p style={{ color: TEXT_MUTED, fontSize: '0.88rem', fontFamily: FONT_BODY, fontWeight: 300, margin: '0 0 8px', lineHeight: 1.6 }}>{t('stripe.subtitle')}</p>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[t('stripe.point1'), t('stripe.point2'), t('stripe.point3')].map((text, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ minWidth: 28, height: 28, borderRadius: '50%', background: GOLD_DIM, border: `1.5px solid ${GOLD_RULE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 700, fontFamily: FONT_ALT, color: GOLD }}>{i + 1}</div>
-                    <p style={{ fontSize: '0.88rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.5, opacity: 0.85 }}>{text}</p>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleStripeConnect} disabled={stripeLoading || stripeConnected}
-                  style={{ width: '100%', padding: '16px', background: stripeConnected ? GREEN : GOLD, border: 'none', borderRadius: 12, color: stripeConnected ? '#fff' : BG_BASE, fontSize: '1rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: stripeLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '2px' }}>
-                  {stripeLoading ? (<><div style={{ width: 18, height: 18, border: '2px solid #0004', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> {t('stripe.connecting')}</>)
-                    : stripeConnected ? (<><Check size={18} strokeWidth={2.5} /> {t('stripe.connected')}</>)
-                    : t('stripe.connectButton')}
-                </motion.button>
-                <button onClick={goNext}
-                  style={{ width: '100%', padding: '14px', background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, borderRadius: 12, color: TEXT_MUTED, fontSize: '0.92rem', fontFamily: FONT_ALT, fontWeight: 600, cursor: 'pointer', transition: 'all 200ms' }}>
-                  {t('stripe.later')}
-                </button>
-              </motion.div>
-
-              <p style={{ color: TEXT_DIM, fontSize: '0.72rem', fontFamily: FONT_BODY, fontWeight: 300, fontStyle: 'italic', textAlign: 'center', margin: 0 }}>{t('stripe.note')}</p>
-            </motion.div>
-          )}
-
-          {/* STEP 4: Welcome */}
-          {step === 4 && (
-            <motion.div key="s4" custom={dir} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={transition}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 24px 32px', gap: 20, maxWidth: 520, width: '100%', margin: '0 auto', overflowY: 'auto' }}>
-
-              <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 20 }}
-                style={{ width: 80, height: 80, borderRadius: '50%', background: GOLD_DIM, border: `2.5px solid ${GOLD}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Check size={40} color={GOLD} strokeWidth={2.5} />
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ textAlign: 'center' }}>
-                <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '2.2rem', fontWeight: 400, color: TEXT_PRIMARY, margin: '0 0 6px', letterSpacing: '2px' }}>{t('welcome.title')}</h2>
-                <p style={{ color: TEXT_MUTED, fontSize: '1rem', fontFamily: FONT_BODY, fontWeight: 300, margin: 0 }}>{t('welcome.subtitle')}</p>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                style={{ width: '100%', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt={t('profile.avatarAlt')} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${GOLD_RULE}` }} />
-                    : <div style={{ width: 48, height: 48, borderRadius: '50%', background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${GOLD_RULE}` }}>
-                        <span style={{ fontSize: '1.2rem', color: GOLD, fontFamily: FONT_DISPLAY, fontWeight: 700 }}>{fullName.charAt(0).toUpperCase()}</span>
-                      </div>}
-                  <div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 700, fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{fullName || 'Coach'}</div>
-                    <div style={{ fontSize: '0.78rem', color: GOLD, fontFamily: FONT_ALT, fontWeight: 600 }}>{speciality || t('welcome.defaultSpeciality')}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {[
-                    { l: t('welcome.experienceLabel'), v: experience || '--' },
-                    { l: t('welcome.maxClientsLabel'), v: maxClients || '--' },
-                  ].map(({ l, v }) => (
-                    <div key={l}>
-                      <div style={{ fontSize: 11, fontFamily: FONT_ALT, color: TEXT_MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px' }}>{l}</div>
-                      <div style={{ fontSize: '0.88rem', fontFamily: FONT_BODY, color: TEXT_PRIMARY, fontWeight: 600, marginTop: 2 }}>{v}</div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={() => router.push('/coach')}
-                  style={{ width: '100%', padding: '14px 16px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', transition: 'border-color 200ms' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <LayoutDashboard size={18} color={GOLD} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{t('welcome.inviteTitle')}</div>
-                    <div style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{t('welcome.inviteDesc')}</div>
-                  </div>
-                </button>
-
-                <div style={{ padding: '14px 16px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Sparkles size={18} color={GOLD} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{t('welcome.aiPlanTitle')}</div>
-                    <div style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{t('welcome.aiPlanDesc')}</div>
-                  </div>
-                </div>
-
-                <div style={{ padding: '14px 16px', background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: GOLD_DIM, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <LayoutDashboard size={18} color={GOLD} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, fontFamily: FONT_BODY, color: TEXT_PRIMARY }}>{t('welcome.dashboardTitle')}</div>
-                    <div style={{ fontSize: '0.75rem', fontFamily: FONT_BODY, fontWeight: 300, color: TEXT_MUTED }}>{t('welcome.dashboardDesc')}</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ width: '100%' }}>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={finish} disabled={saving}
-                  style={{ width: '100%', padding: '18px', background: saving ? BORDER : GOLD, border: 'none', borderRadius: 12, color: saving ? TEXT_MUTED : BG_BASE, fontSize: '1.1rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '2px' }}>
-                  {saving ? (<><div style={{ width: 18, height: 18, border: '2px solid #fff4', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> {t('nav.saving')}</>)
-                    : (<>{t('nav.submit')} <ChevronRight size={20} strokeWidth={2.5} /></>)}
-                </motion.button>
-              </motion.div>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
+  return <main className={styles.shell}><section className={styles.app} aria-label={t('redesign.a11y.flow')}>
+    <header className={styles.header}><div><strong>MoovX</strong><span>{t('redesign.step', { current: step, total: TOTAL_STEPS })}</span></div><ol aria-label={t('redesign.a11y.progress')}>{Array.from({ length: TOTAL_STEPS }, (_, index) => <li key={index} className={index < step ? styles.active : undefined} aria-current={index + 1 === step ? 'step' : undefined} />)}</ol></header>
+    <div className={styles.content}>
+      {step === 1 && <><Title title={t('redesign.profile.title')} subtitle={t('redesign.profile.subtitle')} />
+        <button type="button" className={styles.avatar} onClick={() => avatarInputRef.current?.click()} aria-label={t('profile.avatarAlt')}>{avatarUrl ? <CoachAvatar src={avatarUrl} /> : <Camera aria-hidden="true" />}{avatarUploading && <span role="status">…</span>}</button>
+        <input ref={avatarInputRef} className={styles.hidden} type="file" accept="image/*" onChange={event => { const file = event.target.files?.[0]; if (file) void handleAvatarUpload(file) }} />
+        <div className={styles.form}><Field id="coach-name" label={t('profile.nameLabel')} value={fullName} onChange={setFullName} /><Field id="coach-bio" label={t('profile.bioLabel')} value={bio} onChange={value => setBio(value.slice(0, 500))} multiline /><Select id="coach-speciality" label={t('profile.specialityLabel')} value={speciality} onChange={setSpeciality} options={SPECIALITY_DB_LABELS} labels={SPECIALITY_DB_LABELS.map((_, index) => t(`constants.specialities.${index}`))} placeholder={t('profile.specialityPlaceholder')} /><Field id="coach-certifications" label={t('profile.certificationsLabel')} value={certifications} onChange={setCertifications} multiline /><Select id="coach-experience" label={t('profile.experienceLabel')} value={experience} onChange={setExperience} options={EXPERIENCE_DB_LABELS} labels={EXPERIENCE_DB_LABELS.map((_, index) => t(`constants.experience.${index}`))} placeholder={t('profile.experiencePlaceholder')} /></div></>}
+      {step === 2 && <><Title title={t('redesign.coaching.title')} subtitle={t('redesign.coaching.subtitle')} /><Group title={t('business.maxClientsLabel')}><Choices options={MAX_CLIENTS_DB_LABELS} selected={maxClients ? [maxClients] : []} labels={MAX_CLIENTS_DB_LABELS.map((_, index) => t(`constants.maxClients.${index}`))} toggle={setMaxClients} /></Group><Group title={t('business.daysLabel')}><Choices options={DAYS_DB_LABELS} selected={availableDays} labels={DAYS_DB_LABELS.map((_, index) => t(`constants.days.${index}`))} toggle={toggleDay} /></Group><Group title={t('business.hoursLabel')}><div className={styles.hours}><SelectBare value={hoursFrom} onChange={setHoursFrom} options={HOURS} /><span>{t('business.hoursTo')}</span><SelectBare value={hoursTo} onChange={setHoursTo} options={HOURS} /></div></Group><Group title={t('business.followUpLabel')}><Choices options={FOLLOW_UP_DB_LABELS} selected={followUpModes} labels={FOLLOW_UP_DB_LABELS.map((_, index) => t(`constants.followUpModes.${index}`))} toggle={toggleFollowUp} stacked /></Group></>}
+      {step === 3 && <><Title title={t('redesign.stripe.title')} subtitle={t('redesign.stripe.subtitle')} /><section className={styles.stripe}><CreditCard aria-hidden="true" /><strong>{stripeConnected ? t('stripe.connected') : t('redesign.stripe.optional')}</strong><p>{t('stripe.note')}</p><button type="button" className={styles.secondary} disabled={stripeLoading || stripeConnected} onClick={() => void handleStripeConnect()}>{stripeLoading ? t('stripe.connecting') : stripeConnected ? t('stripe.connected') : t('stripe.connectButton')}</button>{stripeError && <div className={styles.recoverable} role="alert" aria-live="assertive"><p>{stripeError}</p><button type="button" onClick={() => void handleStripeConnect()}>{t('redesign.retry')}</button></div>}<p className={styles.optional}>{t('redesign.stripe.skip')}</p></section></>}
+      {step === 4 && <><Title title={t('redesign.summary.title')} subtitle={t('redesign.summary.subtitle')} /><div className={styles.summary}><Summary title={t('redesign.profile.title')} value={`${fullName} · ${speciality || '—'} · ${experience || '—'}`} edit={() => edit(1)} label={t('redesign.edit')} /><Summary title={t('redesign.coaching.title')} value={`${maxClients || '—'} · ${availableDays.join(', ') || '—'} · ${hoursFrom}–${hoursTo}`} edit={() => edit(2)} label={t('redesign.edit')} /><Summary title={t('redesign.stripe.title')} value={stripeConnected ? t('stripe.connected') : t('redesign.stripe.later')} edit={() => edit(3)} label={t('redesign.edit')} /></div></>}
+      {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
     </div>
-  )
+    <footer className={styles.nav}>{step > 1 && <button type="button" className={styles.back} onClick={goBack} aria-label={t('nav.back')}><ChevronLeft aria-hidden="true" /></button>}<button type="button" className={styles.primary} disabled={!valid || saving} onClick={() => void handleNext()}>{saving ? t('nav.saving') : step === TOTAL_STEPS ? t('redesign.finish') : t('nav.next')}</button></footer>
+  </section></main>
 }
 
-const h2Style: React.CSSProperties = { fontFamily: FONT_DISPLAY, fontSize: '2rem', fontWeight: 400, color: TEXT_PRIMARY, margin: '0 0 4px', letterSpacing: '2px' }
-const subStyle: React.CSSProperties = { color: TEXT_MUTED, fontSize: '0.9rem', fontFamily: FONT_BODY, fontWeight: 300, margin: 0 }
-const labelStyle: React.CSSProperties = { display: 'block', fontFamily: FONT_ALT, color: TEXT_MUTED, fontSize: 11, fontWeight: 700, marginBottom: 8, letterSpacing: '2px', textTransform: 'uppercase' }
-const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', background: BG_BASE, border: `1.5px solid ${BORDER}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: '1rem', fontFamily: FONT_BODY, fontWeight: 300, outline: 'none', transition: 'border-color 200ms, box-shadow 200ms', boxSizing: 'border-box' }
-const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238A8580' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' } as React.CSSProperties
-
-function NextBtn({ onClick, disabled, label }: { onClick: () => void; disabled?: boolean; label: string }) {
-  return (
-    <motion.button whileTap={disabled ? {} : { scale: 0.97 }} onClick={onClick} disabled={disabled}
-      style={{ width: '100%', padding: '18px', background: disabled ? BORDER : GOLD, border: 'none', borderRadius: 12, color: disabled ? TEXT_MUTED : BG_BASE, fontSize: '1.05rem', fontWeight: 800, fontFamily: FONT_ALT, cursor: disabled ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 200ms, color 200ms', letterSpacing: '2px', clipPath: disabled ? 'none' : 'polygon(0 0,100% 0,96% 100%,0 100%)' }}>
-      {label} <ChevronRight size={20} strokeWidth={2.5} />
-    </motion.button>
-  )
-}
+function Title({ title, subtitle }: { title: string; subtitle: string }) { return <div className={styles.title}><h1>{title}</h1><p>{subtitle}</p></div> }
+function CoachAvatar({ src }: { src: string }) { return (// Runtime user uploads are intentionally rendered outside the static Next image pipeline.
+  // eslint-disable-next-line @next/next/no-img-element
+  <img src={src} alt="" />
+) }
+function Field({ id, label, value, onChange, multiline = false }: { id: string; label: string; value: string; onChange: (value: string) => void; multiline?: boolean }) { return <label className={styles.field} htmlFor={id}><span>{label}</span>{multiline ? <textarea id={id} value={value} onChange={event => onChange(event.target.value)} /> : <input id={id} value={value} onChange={event => onChange(event.target.value)} />}</label> }
+function Select({ id, label, value, onChange, options, labels, placeholder }: { id: string; label: string; value: string; onChange: (value: string) => void; options: string[]; labels: string[]; placeholder: string }) { return <label className={styles.field} htmlFor={id}><span>{label}</span><select id={id} value={value} onChange={event => onChange(event.target.value)}><option value="">{placeholder}</option>{options.map((option, index) => <option key={option} value={option}>{labels[index]}</option>)}</select></label> }
+function SelectBare({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: string[] }) { return <select aria-label={value} value={value} onChange={event => onChange(event.target.value)}>{options.map(option => <option key={option}>{option}</option>)}</select> }
+function Group({ title, children }: { title: string; children: React.ReactNode }) { return <fieldset className={styles.group}><legend>{title}</legend>{children}</fieldset> }
+function Choices({ options, labels, selected, toggle, stacked = false }: { options: string[]; labels: string[]; selected: string[]; toggle: (value: string) => void; stacked?: boolean }) { return <div className={stacked ? styles.choicesStacked : styles.choices}>{options.map((option, index) => <button type="button" key={option} aria-pressed={selected.includes(option)} onClick={() => toggle(option)}>{labels[index]}{selected.includes(option) && <Check aria-hidden="true" />}</button>)}</div> }
+function Summary({ title, value, edit, label }: { title: string; value: string; edit: () => void; label: string }) { return <section className={styles.summaryRow}><div><h2>{title}</h2><p>{value}</p></div><button type="button" onClick={edit}>{label}</button></section> }

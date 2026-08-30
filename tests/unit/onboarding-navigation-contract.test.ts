@@ -33,7 +33,7 @@ describe('onboarding navigation contract', () => {
   it('replaces historical onboarding entries instead of stacking a back loop', () => {
     expect(fitness).toContain("window.location.replace('/onboarding')")
     expect(photo.match(/window\.location\.replace\('\/'\)/g)).toHaveLength(2)
-    expect(coach).toContain("window.location.replace('/')")
+    expect(coach).toContain("router.replace('/')")
     expect(fitness).not.toContain("window.location.href = '/onboarding'")
     expect(photo).not.toContain("window.location.href = '/'")
   })

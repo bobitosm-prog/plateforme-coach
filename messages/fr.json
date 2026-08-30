@@ -1211,6 +1211,15 @@
         "dashboardTitle": "Explore ton dashboard",
         "dashboardDesc": "Decouvre toutes les fonctionnalites coach"
       },
+      "redesign": {
+        "step": "Étape {current} sur {total}", "loading": "Chargement de votre espace coach…", "retry": "Réessayer", "edit": "Modifier", "finish": "Entrer dans mon espace coach",
+        "profile": { "title": "Votre profil coach", "subtitle": "Présentez votre expertise. La photo reste facultative." },
+        "coaching": { "title": "Votre coaching", "subtitle": "Configurez votre capacité et votre manière d’accompagner." },
+        "stripe": { "title": "Vos paiements", "subtitle": "Stripe est facultatif et peut être configuré plus tard.", "optional": "Connexion Stripe facultative", "skip": "Vous pouvez continuer sans connecter Stripe.", "later": "À configurer plus tard" },
+        "summary": { "title": "Vérifiez votre espace", "subtitle": "Relisez vos choix avant d’accéder au dashboard." },
+        "errors": { "profile": "Impossible de vérifier votre profil coach.", "save": "L’enregistrement a échoué. Vos réponses sont conservées : réessayez.", "avatar": "La photo n’a pas pu être enregistrée.", "stripe": "Stripe est momentanément indisponible. Vous pouvez réessayer ou continuer sans Stripe." },
+        "a11y": { "flow": "Configuration de l’espace coach", "progress": "Progression de l’onboarding coach" }
+      },
       "constants": {
         "specialities": {
           "0": "Musculation / Hypertrophie",

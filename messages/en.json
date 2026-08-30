@@ -1211,6 +1211,15 @@
         "dashboardTitle": "Explore your dashboard",
         "dashboardDesc": "Discover all coach features"
       },
+      "redesign": {
+        "step": "Step {current} of {total}", "loading": "Loading your coach space…", "retry": "Retry", "edit": "Edit", "finish": "Enter my coach space",
+        "profile": { "title": "Your coach profile", "subtitle": "Introduce your expertise. The photo remains optional." },
+        "coaching": { "title": "Your coaching", "subtitle": "Configure your capacity and how you support clients." },
+        "stripe": { "title": "Your payments", "subtitle": "Stripe is optional and can be configured later.", "optional": "Optional Stripe connection", "skip": "You can continue without connecting Stripe.", "later": "Set up later" },
+        "summary": { "title": "Review your space", "subtitle": "Check your choices before entering the dashboard." },
+        "errors": { "profile": "We could not verify your coach profile.", "save": "Saving failed. Your answers are still here — please retry.", "avatar": "The photo could not be saved.", "stripe": "Stripe is temporarily unavailable. You can retry or continue without Stripe." },
+        "a11y": { "flow": "Coach space setup", "progress": "Coach onboarding progress" }
+      },
       "constants": {
         "specialities": {
           "0": "Weight Training / Hypertrophy",

@@ -1211,6 +1211,15 @@
         "dashboardTitle": "Entdecke dein Dashboard",
         "dashboardDesc": "Entdecke alle Coach-Funktionen"
       },
+      "redesign": {
+        "step": "Schritt {current} von {total}", "loading": "Dein Coach-Bereich wird geladen…", "retry": "Erneut versuchen", "edit": "Ändern", "finish": "Meinen Coach-Bereich öffnen",
+        "profile": { "title": "Dein Coach-Profil", "subtitle": "Stelle deine Expertise vor. Das Foto bleibt optional." },
+        "coaching": { "title": "Dein Coaching", "subtitle": "Konfiguriere deine Kapazität und deine Betreuung." },
+        "stripe": { "title": "Deine Zahlungen", "subtitle": "Stripe ist optional und kann später eingerichtet werden.", "optional": "Optionale Stripe-Verbindung", "skip": "Du kannst ohne Stripe-Verbindung fortfahren.", "later": "Später einrichten" },
+        "summary": { "title": "Prüfe deinen Bereich", "subtitle": "Kontrolliere deine Auswahl, bevor du das Dashboard öffnest." },
+        "errors": { "profile": "Dein Coach-Profil konnte nicht geprüft werden.", "save": "Speichern fehlgeschlagen. Deine Antworten bleiben erhalten — versuche es erneut.", "avatar": "Das Foto konnte nicht gespeichert werden.", "stripe": "Stripe ist vorübergehend nicht verfügbar. Du kannst es erneut versuchen oder ohne Stripe fortfahren." },
+        "a11y": { "flow": "Coach-Bereich einrichten", "progress": "Fortschritt des Coach-Onboardings" }
+      },
       "constants": {
         "specialities": {
           "0": "Krafttraining / Hypertrophie",
