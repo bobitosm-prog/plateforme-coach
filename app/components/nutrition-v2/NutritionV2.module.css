@@ -900,6 +900,92 @@
   outline-offset: 2px;
 }
 
+.mealChooserLayer {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  padding: 16px;
+  place-items: center;
+}
+
+.mealChooserBackdrop {
+  position: absolute;
+  border: 0;
+  background: rgba(0, 0, 0, .82);
+  inset: 0;
+}
+
+.mealChooser {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 18px;
+  border: 1px solid rgba(230, 195, 100, .18);
+  border-radius: 18px;
+  background: #171511;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+}
+
+.mealChooserHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mealChooserHeader h2 {
+  margin: 2px 0 0;
+  color: #eee9df;
+  font-size: 1.15rem;
+}
+
+.mealChooserClose {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 11px;
+  color: #aaa195;
+  background: rgba(255, 255, 255, .04);
+  cursor: pointer;
+}
+
+.mealChooserDescription {
+  margin: 12px 0 16px;
+  color: #948c80;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.mealChooserGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mealChooserGrid button {
+  min-width: 0;
+  min-height: 52px;
+  padding: 10px;
+  border: 1px solid rgba(230, 195, 100, .16);
+  border-radius: 12px;
+  color: #d8c27d;
+  background: rgba(230, 195, 100, .06);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.mealChooserClose:focus-visible,
+.mealChooserGrid button:focus-visible {
+  outline: 3px solid rgba(230, 195, 100, .42);
+  outline-offset: 2px;
+}
+
 @keyframes shimmer { to { background-position: -200% 0; } }
 
 @media (max-width: 767px) {

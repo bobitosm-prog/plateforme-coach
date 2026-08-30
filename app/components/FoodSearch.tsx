@@ -5,12 +5,13 @@ import { normalizeFoodItem } from '../../lib/utils/food'
 import BarcodeScanner from './BarcodeScanner'
 import { colors, fonts } from '../../lib/design-tokens'
 import { RailOverlay } from './ui/RailOverlay'
+import { useTranslations } from 'next-intl'
 
 const MEAL_OPTIONS = [
-  { id: 'petit_dejeuner', label: 'Petit-dejeuner' },
-  { id: 'dejeuner', label: 'Dejeuner' },
-  { id: 'collation', label: 'Collation' },
-  { id: 'diner', label: 'Diner' },
+  { id: 'petit_dejeuner', key: 'breakfast' },
+  { id: 'dejeuner', key: 'lunch' },
+  { id: 'collation', key: 'snack' },
+  { id: 'diner', key: 'dinner' },
 ]
 
 const CATS = [
@@ -35,13 +36,14 @@ function categorize(name: string) {
 interface FoodSearchProps {
   supabase: any
   userId: string
-  defaultMealType?: string
+  defaultMealType: string
   dateOverride?: string
   onAdded: (insertedLog?: any) => void
   onClose: () => void
 }
 
 export default function FoodSearch({ supabase, userId, defaultMealType, dateOverride, onAdded, onClose }: FoodSearchProps) {
+  const mealT = useTranslations('nutrition_tab.v2.mealChooser')
   const [query, setQuery] = useState('')
   const [allFoods, setAllFoods] = useState<any[]>([])
   const [ansesResults, setAnsesResults] = useState<any[]>([])
@@ -50,7 +52,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   const [selected, setSelected] = useState<any>(null)
   const [quantityStr, setQuantityStr] = useState('100')
   const quantity = parseFloat(quantityStr) || 0
-  const [mealType, setMealType] = useState(defaultMealType || 'dejeuner')
+  const [mealType, setMealType] = useState(defaultMealType)
   const [saving, setSaving] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -165,15 +167,15 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
             {MEAL_OPTIONS.map(m => (
-              <button key={m.id} onClick={() => setMealType(m.id)} style={{
-                flex: 1, padding: '8px 4px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
+              <button key={m.id} type="button" aria-pressed={mealType === m.id} onClick={() => setMealType(m.id)} style={{
+                flex: 1, minHeight: 44, padding: '8px 4px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
                 fontFamily: fonts.alt, fontSize: '0.68rem', fontWeight: 700,
                 letterSpacing: '0.15em', textTransform: 'uppercase' as const,
                 background: mealType === m.id ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
                 backdropFilter: 'blur(8px)',
                 border: `1px solid ${mealType === m.id ? colors.gold : 'rgba(255,255,255,0.1)'}`,
                 color: mealType === m.id ? colors.gold : colors.textDim,
-              }}>{m.label}</button>
+              }}>{mealT(m.key)}</button>
             ))}
           </div>
           <button onClick={addFood} disabled={saving} style={{

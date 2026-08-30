@@ -51,7 +51,8 @@ describe('Nutrition V2 shell hierarchy', () => {
 
   it('reuses the existing meal-add flow', () => {
     expect(tab).toContain("setSubTab('today')")
-    expect(tab).toContain("setShowFoodSearch('dejeuner')")
+    expect(tab).toContain("setPendingMealAction('food')")
+    expect(tab).toContain('<MealContextChooser')
     expect(tab).toContain('defaultMealType={showFoodSearch}')
   })
 })

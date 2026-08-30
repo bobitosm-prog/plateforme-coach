@@ -1,4 +1,5 @@
 import type { UserCapabilities } from '../entitlements/capabilities'
+import { deriveTodayTrainingState } from '../training/today-training-state'
 import { isInHomeDay, type HomeDayWindow } from './home-date'
 
 export type HomeDomainState = 'loading' | 'ready' | 'empty' | 'error'
@@ -253,7 +254,23 @@ export function resolveHomeTrainingData(
     item.completed !== false && isInHomeDay(item.created_at, source.day)
   ))
   const program = source.programSession ?? null
-  const isCompleted = Boolean(scheduled?.completed || completedWorkout)
+  const todayTraining = deriveTodayTrainingState({
+    day: source.day,
+    plannedSession: scheduled || program
+      ? {
+          exerciseCount: scheduled ? Math.max(1, program?.exercises?.length ?? 0) : program?.exercises?.length ?? 0,
+          isRest: scheduled ? false : Boolean(program?.isRest),
+        }
+      : null,
+    programSource: program?.source === 'coach_program'
+      ? 'coach'
+      : program?.source === 'custom_program'
+        ? 'personal'
+        : 'none',
+    scheduledCompleted: Boolean(scheduled?.completed),
+    workoutSessions: source.workoutSessions,
+  })
+  const isCompleted = todayTraining.kind === 'completed'
 
   let session: HomeTrainingSession | null = null
   let sessionSource: HomeViewModel['training']['source'] = 'none'

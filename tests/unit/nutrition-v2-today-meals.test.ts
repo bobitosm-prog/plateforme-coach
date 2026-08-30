@@ -121,7 +121,7 @@ describe('Nutrition V2 deterministic next action', () => {
 
   it('suggests a first meal without data and protein later in the day', () => {
     expect(resolveNutritionNextAction({ model: model(), selectedDate: day.localDateKey, hour: 9 }))
-      .toEqual({ kind: 'add_first', mealType: 'breakfast' })
+      .toEqual({ kind: 'add_first', mealType: null })
 
     const logged = model({
       dailyLogs: [{ id: 'lunch', date: day.localDateKey, meal_type: 'lunch', calories: 800, protein: 50 }],

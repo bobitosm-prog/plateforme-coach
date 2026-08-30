@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl'
 import type { TrainingProgramSource, TrainingProgramState } from '../../../lib/training/active-program'
+import type { TodayTrainingKind } from '../../../lib/training/today-training-state'
 import TrainingSessionHero from './TrainingSessionHero'
 import styles from './TrainingV2.module.css'
 
@@ -13,10 +14,13 @@ interface NoActiveSessionProps {
   estimatedMinutes: number
   muscles: string[]
   isToday: boolean
+  todayState: TodayTrainingKind | null
+  completedSessionName: string | null
   canStart: boolean
   canViewNext: boolean
   onStart: () => void
   onViewNext: () => void
+  onViewCompleted?: () => void
   onOpenProgramSettings: () => void
   onFreeSession: () => void
 }
@@ -31,10 +35,13 @@ export default function NoActiveSession({
   estimatedMinutes,
   muscles,
   isToday,
+  todayState,
+  completedSessionName,
   canStart,
   canViewNext,
   onStart,
   onViewNext,
+  onViewCompleted,
   onOpenProgramSettings,
   onFreeSession,
 }: NoActiveSessionProps) {
@@ -62,10 +69,20 @@ export default function NoActiveSession({
         : hasPlannedSession
           ? sessionName
           : t('noSessionToday')
+  const completedToday = isToday && todayState === 'completed'
 
   return (
     <div className={styles.landing} data-training-v2="no-active-session">
-      {hasPlannedSession ? <TrainingSessionHero
+      {completedToday ? (
+        <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-completed-title">
+          <div className={styles.eyebrow}>{t('sessionCompletedLabel')}</div>
+          <h1 id="training-completed-title" className={styles.emptyTitle}>{t('sessionCompletedToday')}</h1>
+          {completedSessionName && <p className={styles.emptyDescription}>{completedSessionName}</p>}
+          {onViewCompleted && <div className={`${styles.emptyActions} ${styles.emptyActionsSingle}`}>
+            <button type="button" className={styles.secondaryAction} onClick={onViewCompleted}>{t('viewCompletedSession')}</button>
+          </div>}
+        </section>
+      ) : hasPlannedSession ? <TrainingSessionHero
         mode="planned"
         title={stateTitle}
         exerciseCount={exerciseCount}

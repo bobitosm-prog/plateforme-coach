@@ -1659,6 +1659,9 @@
       "sessionToday": "Séance du jour",
       "nextSession": "Prochaine séance",
       "sessionActive": "Séance en cours",
+      "sessionCompletedLabel": "Terminé aujourd’hui",
+      "sessionCompletedToday": "Séance terminée aujourd’hui",
+      "viewCompletedSession": "Voir la séance",
       "trainingLabel": "Training",
       "noSessionToday": "Pas de séance aujourd’hui",
       "noSessionDescription": "Journée de repos ou aucune séance planifiée.",
@@ -2791,6 +2794,16 @@
       "calorieProgress": "Progression des calories consommées",
       "proteinProgress": "Consommation réelle aujourd’hui",
       "partial": "Certaines cibles ne sont pas encore définies. Les valeurs consommées restent disponibles.",
+      "mealChooser": {
+        "eyebrow": "Contexte du repas",
+        "title": "Choisir le repas",
+        "description": "Sélectionne le repas auquel ajouter cet aliment.",
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "snack": "Collation",
+        "dinner": "Dîner",
+        "close": "Fermer le choix du repas"
+      },
       "macrosTitle": "Macros",
       "macrosCopy": "Consommation enregistrée aujourd’hui",
       "macro": {

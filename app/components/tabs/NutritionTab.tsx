@@ -24,6 +24,7 @@ import NutritionV2 from '../nutrition-v2/NutritionV2'
 import TodayMeals from '../nutrition-v2/TodayMeals'
 import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
 import NutritionTools from '../nutrition-v2/NutritionTools'
+import MealContextChooser from '../nutrition-v2/MealContextChooser'
 
 const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -36,6 +37,7 @@ const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
 }
 
 type SubTab = 'today' | 'plan' | 'recipes' | 'meals'
+type PendingMealAction = 'food' | 'photo'
 export type SavedMealsLoadState = 'idle' | 'loading' | 'ready' | 'empty' | 'error'
 
 export function resolveSavedMealsLoadState(error: unknown, meals: unknown[]): SavedMealsLoadState {
@@ -75,6 +77,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
+  const [pendingMealAction, setPendingMealAction] = useState<PendingMealAction | null>(null)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
   const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
@@ -318,6 +321,20 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
   const nutritionManaged = nutritionModel.coachRelation.status === 'active' && !capabilities.nutrition
 
+  function chooseMealContext(mealType: MealKey) {
+    const action = pendingMealAction
+    setPendingMealAction(null)
+    if (action === 'food') {
+      setShowFoodSearch(mealType)
+      return
+    }
+    if (action === 'photo') {
+      setPhotoMealTarget(mealType)
+      setPhotoError(null)
+      setShowPhotoCapture(true)
+    }
+  }
+
 
   return (
     <NutritionV2
@@ -325,7 +342,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       selectedDate={selectedDate}
       onAddMeal={() => {
         setSubTab('today')
-        setShowFoodSearch('dejeuner')
+        setPendingMealAction('food')
       }}
       onRetry={() => void refreshNutrition()}
     >
@@ -367,6 +384,11 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
+
+      {pendingMealAction && <MealContextChooser
+        onClose={() => setPendingMealAction(null)}
+        onSelect={chooseMealContext}
+      />}
 
       {/* MON PLAN TAB — daily logs as source of truth */}
       {subTab === 'today' && ((): React.ReactNode => {
@@ -421,6 +443,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               selectedDate={selectedDate}
               actionError={mealActionError}
               onRetry={() => void refreshNutrition()}
+              onChooseMeal={() => setPendingMealAction('food')}
               onAddFood={mealType => setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])}
               onImportPlan={mealType => setImportingMeal({
                 mealType: NUTRITION_MEAL_TO_KEY[mealType],
@@ -478,12 +501,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
             <NutritionTools
               photoEnabled={capabilities.ai}
               recipesEnabled={capabilities.nutrition}
-              onAddFood={() => setShowFoodSearch('dejeuner')}
-              onPhoto={() => {
-                setPhotoMealTarget('dejeuner')
-                setPhotoError(null)
-                setShowPhotoCapture(true)
-              }}
+              onAddFood={() => setPendingMealAction('food')}
+              onPhoto={() => setPendingMealAction('photo')}
               onSavedMeals={() => setSubTab('meals')}
               onRecipes={() => setSubTab('recipes')}
             />

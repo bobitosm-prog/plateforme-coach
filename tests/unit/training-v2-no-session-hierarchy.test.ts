@@ -19,7 +19,8 @@ describe('Training V2 no-session hierarchy', () => {
   })
 
   it('renders a calm compact hero only for the empty-day branch', () => {
-    expect(noActiveSession).toContain('{hasPlannedSession ? <TrainingSessionHero')
+    expect(noActiveSession).toContain('{completedToday ? (')
+    expect(noActiveSession).toContain(') : hasPlannedSession ? <TrainingSessionHero')
     expect(noActiveSession).toContain('styles.emptyHero')
     expect(noActiveSession).toContain('styles.emptyTitle')
     expect(frenchMessages.training_tab.v2.noSessionToday).toBe('Pas de séance aujourd’hui')

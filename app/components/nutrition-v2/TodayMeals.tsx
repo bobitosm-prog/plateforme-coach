@@ -54,7 +54,7 @@ export function resolveNutritionNextAction({
   if (planned) return { kind: 'log_planned', mealType: planned.type }
 
   const loggedCount = meals.reduce((count, meal) => count + meal.logged.length, 0)
-  if (loggedCount === 0) return { kind: 'add_first', mealType: 'breakfast' }
+  if (loggedCount === 0) return { kind: 'add_first', mealType: null }
 
   const protein = model.consumed.data?.protein
   const proteinTarget = model.targets.data?.protein
@@ -86,6 +86,7 @@ interface TodayMealsProps {
   selectedDate: string
   actionError: string | null
   onRetry: () => void
+  onChooseMeal: () => void
   onAddFood: (mealType: NutritionMealType) => void
   onImportPlan: (mealType: NutritionMealType) => void
   onPhoto: (mealType: NutritionMealType) => void
@@ -103,6 +104,7 @@ export default function TodayMeals({
   selectedDate,
   actionError,
   onRetry,
+  onChooseMeal,
   onAddFood,
   onImportPlan,
   onPhoto,
@@ -178,9 +180,10 @@ export default function TodayMeals({
 
   const runNextAction = () => {
     if (nextAction.kind === 'retry') return onRetry()
+    if (nextAction.kind === 'add_first') return onChooseMeal()
     if (!nextAction.mealType) return setOpenMeal(meals.find(meal => meal.logged.length)?.type ?? null)
     if (nextAction.kind === 'log_planned' && isToday) return onImportPlan(nextAction.mealType)
-    if (nextAction.kind === 'add_first' || nextAction.kind === 'complete_protein' || nextAction.kind === 'complete_day') {
+    if (nextAction.kind === 'complete_protein' || nextAction.kind === 'complete_day') {
       return onAddFood(nextAction.mealType)
     }
     setOpenMeal(nextAction.mealType)

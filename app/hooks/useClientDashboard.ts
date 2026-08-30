@@ -48,6 +48,7 @@ import {
   persistCriticalWorkout,
   type CompletedWorkoutData,
 } from '../../lib/training/session-persistence'
+import { deriveTodayTrainingState } from '../../lib/training/today-training-state'
 import {
   classifyProfileResult,
   resolvePostAuthDestination,
@@ -715,7 +716,10 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
-  const todaySessionDone = sessionDates.some(s => toLocal(new Date(s.created_at)) === toLocal(new Date()))
+  const todaySessionDone = deriveTodayTrainingState({
+    programSource: activeTrainingProgram.source,
+    workoutSessions: sessionDates,
+  }).kind === 'completed'
   const displayAvatar = session ? (profile?.avatar_url || session.user.user_metadata?.avatar_url) : undefined
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]

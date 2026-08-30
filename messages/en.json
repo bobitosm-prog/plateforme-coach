@@ -1659,6 +1659,9 @@
       "sessionToday": "Today’s session",
       "nextSession": "Next session",
       "sessionActive": "Session in progress",
+      "sessionCompletedLabel": "Completed today",
+      "sessionCompletedToday": "Session completed today",
+      "viewCompletedSession": "View session",
       "trainingLabel": "Training",
       "noSessionToday": "No session today",
       "noSessionDescription": "Rest day or no session scheduled.",
@@ -2791,6 +2794,16 @@
       "calorieProgress": "Consumed calorie progress",
       "proteinProgress": "Actual intake today",
       "partial": "Some targets are not set yet. Consumed values remain available.",
+      "mealChooser": {
+        "eyebrow": "Meal context",
+        "title": "Choose a meal",
+        "description": "Select the meal this food should be added to.",
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "snack": "Snack",
+        "dinner": "Dinner",
+        "close": "Close meal selection"
+      },
       "macrosTitle": "Macros",
       "macrosCopy": "Intake logged today",
       "macro": {

@@ -19,6 +19,7 @@ import {
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
+import { deriveTodayTrainingState } from '../../../lib/training/today-training-state'
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import RecentSessionsList from '../training/RecentSessionsList'
@@ -40,6 +41,7 @@ interface TrainingTabProps {
   activeTrainingProgram: ActiveTrainingProgramContext
   todayKey: string
   todaySessionDone: boolean
+  hasActiveDraft: boolean
   workoutHistory: any[]
   workoutHistoryState: TrainingReadState
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
@@ -50,7 +52,7 @@ interface TrainingTabProps {
 }
 
 export default function TrainingTab({
-  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings,
+  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, hasActiveDraft, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings,
   scheduledSessions, setCalendarSelectedDate, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
@@ -191,6 +193,17 @@ export default function TrainingTab({
   const v2CanStart = ['ready', 'partial'].includes(activeTrainingProgram.state)
     && trainingExercises.length > 0
     && !(todaySessionDone && trainingIsToday)
+  const todayTrainingState = deriveTodayTrainingState({
+    activeDraft: hasActiveDraft,
+    plannedSession: {
+      exerciseCount: trainingExercises.length,
+      isRest: Boolean(trainingDayData?.repos),
+    },
+    programSource: activeTrainingProgram.source,
+    programState: activeTrainingProgram.state,
+    scheduledCompleted: todaySessionDone,
+    workoutSessions: workoutHistory,
+  })
   const v2NextSession = (() => {
     const dayKeys = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
     const currentIndex = Math.max(0, dayKeys.indexOf(trainingDay))
@@ -250,10 +263,15 @@ export default function TrainingTab({
         estimatedMinutes={v2EstimatedMinutes}
         muscles={v2Muscles}
         isToday={trainingIsToday}
+        todayState={trainingIsToday ? todayTrainingState.kind : null}
+        completedSessionName={todayTrainingState.completedSession?.name || null}
         canStart={v2CanStart}
         canViewNext={v2NextSession != null}
         onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName }, trainingExercises, trainingDay)}
         onViewNext={showNextPlannedSession}
+        onViewCompleted={todayTrainingState.completedSession
+          ? () => openWorkoutDetail(todayTrainingState.completedSession)
+          : undefined}
         onOpenProgramSettings={onOpenProgramSettings}
         onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
       />

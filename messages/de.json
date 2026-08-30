@@ -1659,6 +1659,9 @@
       "sessionToday": "Heutige Einheit",
       "nextSession": "Nächste Einheit",
       "sessionActive": "Training läuft",
+      "sessionCompletedLabel": "Heute abgeschlossen",
+      "sessionCompletedToday": "Training heute abgeschlossen",
+      "viewCompletedSession": "Training ansehen",
       "trainingLabel": "Training",
       "noSessionToday": "Heute kein Training",
       "noSessionDescription": "Ruhetag oder keine Einheit geplant.",
@@ -2791,6 +2794,16 @@
       "calorieProgress": "Fortschritt der aufgenommenen Kalorien",
       "proteinProgress": "Tatsächliche Aufnahme heute",
       "partial": "Einige Ziele sind noch nicht festgelegt. Die aufgenommenen Werte bleiben sichtbar.",
+      "mealChooser": {
+        "eyebrow": "Mahlzeitenkontext",
+        "title": "Mahlzeit auswählen",
+        "description": "Wähle die Mahlzeit aus, zu der dieses Lebensmittel hinzugefügt wird.",
+        "breakfast": "Frühstück",
+        "lunch": "Mittagessen",
+        "snack": "Zwischenmahlzeit",
+        "dinner": "Abendessen",
+        "close": "Mahlzeitenauswahl schließen"
+      },
       "macrosTitle": "Makros",
       "macrosCopy": "Heute erfasste Aufnahme",
       "macro": {
