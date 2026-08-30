@@ -48,7 +48,8 @@ describe('remaining entitlement consumers', () => {
     const permissions = readFileSync('lib/use-client-permissions.ts', 'utf8')
 
     expect(page).toContain('perms.isCoachManaged')
-    expect(onboarding).toContain('capabilities.coachManaged')
+    expect(onboarding).toContain('resolveActiveCoachForOnboarding')
+    expect(onboarding).toContain("relation.kind==='active'")
     expect(permissions).toContain('capabilities.coachManaged')
     expect(permissions).toContain('capabilities.training')
     expect(permissions).toContain('capabilities.nutrition')

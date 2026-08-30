@@ -25,7 +25,7 @@ export default function SoloStep2Profile({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* First name */}
       <div>
-        <label
+        <label htmlFor="onboarding-first-name"
           style={{
             fontFamily: fonts.body,
             fontSize: 12,
@@ -40,6 +40,7 @@ export default function SoloStep2Profile({
           {t('profile.firstNameLabel')}
         </label>
         <input
+          id="onboarding-first-name"
           type="text"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -50,7 +51,7 @@ export default function SoloStep2Profile({
 
       {/* Birth date */}
       <div>
-        <label
+        <label htmlFor="onboarding-birth-date"
           style={{
             fontFamily: fonts.body,
             fontSize: 12,
@@ -65,6 +66,7 @@ export default function SoloStep2Profile({
           {t('profile.birthDateLabel')}
         </label>
         <input
+          id="onboarding-birth-date"
           type="date"
           value={birthDate}
           onChange={(e) => setBirthDate(e.target.value)}
@@ -78,7 +80,7 @@ export default function SoloStep2Profile({
 
       {/* Gender */}
       <div>
-        <label
+        <div
           style={{
             fontFamily: fonts.body,
             fontSize: 12,
@@ -91,10 +93,12 @@ export default function SoloStep2Profile({
           }}
         >
           {t('profile.genderLabel')}
-        </label>
-        <div style={{ display: 'flex', gap: 12 }}>
+        </div>
+        <div role="group" aria-label={t('profile.genderLabel')} style={{ display: 'flex', gap: 12 }}>
           {(['male', 'female'] as const).map((g) => (
             <button
+              type="button"
+              aria-pressed={gender === g}
               key={g}
               onClick={() => setGender(g)}
               style={{

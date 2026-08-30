@@ -3355,6 +3355,17 @@
         "fat": "Fett",
         "trialBadge": "Dein kostenloser Zugang ist aktiv"
       }
+    },
+    "redesign": {
+      "step": "Schritt {current} von {total}", "loading": "Dein Bereich wird geladen…", "back": "Zum vorherigen Schritt zurückkehren", "finish": "Meinen MoovX-Bereich erstellen", "edit": "Ändern",
+      "goal": { "title": "Dein Ziel", "subtitle": "Wähle die Priorität, die dein Erlebnis bestimmen soll." },
+      "profile": { "title": "Dein Profil", "subtitle": "Die wichtigsten Angaben für persönliche Richtwerte." },
+      "training": { "title": "Dein Training", "subtitle": "Ein Rhythmus und Umfeld, die zu deinem Alltag passen." },
+      "nutrition": { "title": "Deine Ernährung", "subtitle": "Wähle deinen Ansatz. Du kannst später alles anpassen.", "advanced": "Erweiterte Präferenzen (optional)", "restrictions": "Allergien oder Ernährungseinschränkungen", "none": "Keine", "some": "Ich habe Einschränkungen", "details": "Beschreibe deine Einschränkungen" },
+      "summary": { "title": "Alles ist bereit", "subtitle": "Prüfe deine Antworten, bevor du deinen Bereich erstellst.", "macros": "Unverbindlicher Tagesrichtwert" },
+      "coach": { "profile": "Die wichtigsten Angaben für deine Betreuung.", "optional": "Dieser Schritt ist optional." },
+      "errors": { "profile": "Dein Profil konnte nicht geladen werden. Versuche es gleich erneut.", "save": "Speichern fehlgeschlagen. Deine Antworten bleiben erhalten — versuche es erneut.", "photo": "Das Foto konnte nicht gespeichert werden." },
+      "a11y": { "progress": "Onboarding-Fortschritt" }
     }
   },
   "cardio": {

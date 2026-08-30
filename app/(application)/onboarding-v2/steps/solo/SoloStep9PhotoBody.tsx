@@ -44,7 +44,9 @@ export default function SoloStep9PhotoBody({ photoUrl, onUpload, uploading }: So
       </p>
 
       {/* Photo area */}
-      <div
+      <button
+        type="button"
+        aria-label={photoUrl ? t('solo.step9.change') : t('solo.step9.choosePhoto')}
         onClick={() => fileRef.current?.click()}
         style={{
           width: 200,
@@ -58,9 +60,12 @@ export default function SoloStep9PhotoBody({ photoUrl, onUpload, uploading }: So
           cursor: 'pointer',
           overflow: 'hidden',
           transition: 'border-color 0.2s',
+          padding: 0,
         }}
       >
         {photoUrl ? (
+          // Signed runtime URLs expire and cannot safely use the static Next image pipeline.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoUrl}
             alt="Body"
@@ -74,7 +79,7 @@ export default function SoloStep9PhotoBody({ photoUrl, onUpload, uploading }: So
             </p>
           </div>
         )}
-      </div>
+      </button>
 
       <input
         ref={fileRef}
@@ -87,6 +92,7 @@ export default function SoloStep9PhotoBody({ photoUrl, onUpload, uploading }: So
       {/* Change button (visible only when photo set) */}
       {photoUrl && (
         <button
+          type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
           style={{

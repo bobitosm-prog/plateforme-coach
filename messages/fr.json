@@ -3355,6 +3355,17 @@
         "fat": "Lipides",
         "trialBadge": "Ton accès gratuit est activé"
       }
+    },
+    "redesign": {
+      "step": "Étape {current} sur {total}", "loading": "Chargement de votre espace…", "back": "Revenir à l’étape précédente", "finish": "Créer mon espace MoovX", "edit": "Modifier",
+      "goal": { "title": "Votre objectif", "subtitle": "Choisissez la priorité qui guidera votre expérience." },
+      "profile": { "title": "Votre profil", "subtitle": "Les informations essentielles pour personnaliser vos repères." },
+      "training": { "title": "Votre entraînement", "subtitle": "Un rythme et un environnement adaptés à votre quotidien." },
+      "nutrition": { "title": "Votre nutrition", "subtitle": "Choisissez votre approche. Vous pourrez tout ajuster plus tard.", "advanced": "Préférences avancées (facultatif)", "restrictions": "Allergies ou restrictions alimentaires", "none": "Aucune", "some": "J’ai des restrictions", "details": "Précisez vos restrictions" },
+      "summary": { "title": "Tout est prêt", "subtitle": "Vérifiez vos réponses avant de créer votre espace.", "macros": "Objectif indicatif quotidien" },
+      "coach": { "profile": "Les informations essentielles pour votre accompagnement.", "optional": "Cette étape est facultative." },
+      "errors": { "profile": "Impossible de charger votre profil. Réessayez dans un instant.", "save": "L’enregistrement a échoué. Vos réponses sont conservées : réessayez.", "photo": "La photo n’a pas pu être enregistrée." },
+      "a11y": { "progress": "Progression de l’onboarding" }
     }
   },
   "cardio": {

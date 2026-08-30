@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Upload } from 'lucide-react'
-import { colors, fonts, cardStyle, radii, btnSecondary } from '@/lib/design-tokens'
+import { colors, fonts, btnSecondary } from '@/lib/design-tokens'
 
 interface InvitedStep2AvatarProps {
   avatarUrl: string | null
@@ -39,7 +39,9 @@ export default function InvitedStep2Avatar({
       }}
     >
       {/* Avatar circle */}
-      <div
+      <button
+        type="button"
+        aria-label={t('avatar.choosePhoto')}
         onClick={() => fileRef.current?.click()}
         style={{
           width: 140,
@@ -53,9 +55,12 @@ export default function InvitedStep2Avatar({
           cursor: 'pointer',
           overflow: 'hidden',
           transition: 'border-color 0.2s',
+          padding: 0,
         }}
       >
         {avatarUrl ? (
+          // Signed/user-provided runtime URLs are intentionally rendered without Next image optimization.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={avatarUrl}
             alt="Avatar"
@@ -64,7 +69,7 @@ export default function InvitedStep2Avatar({
         ) : (
           <Camera size={40} color={colors.textDim} />
         )}
-      </div>
+      </button>
 
       <input
         ref={fileRef}
@@ -76,6 +81,7 @@ export default function InvitedStep2Avatar({
 
       {/* Upload button */}
       <button
+        type="button"
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
         style={{

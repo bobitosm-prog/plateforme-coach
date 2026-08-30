@@ -1,6 +1,6 @@
 'use client'
 import { CheckCircle2 } from 'lucide-react'
-import { colors, fonts, cardStyle, radii } from '@/lib/design-tokens'
+import { colors, fonts, cardStyle } from '@/lib/design-tokens'
 import { ICON_MAP } from './iconMap'
 
 interface OptionCardProps {
@@ -15,6 +15,8 @@ export default function OptionCard({ iconName, label, selected, onClick }: Optio
 
   return (
     <button
+      type="button"
+      aria-pressed={selected}
       onClick={onClick}
       style={{
         ...cardStyle,

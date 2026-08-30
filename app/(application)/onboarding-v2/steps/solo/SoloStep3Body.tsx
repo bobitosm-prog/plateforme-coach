@@ -12,12 +12,14 @@ interface SoloStep3BodyProps {
 }
 
 function NumField({
+  id,
   label,
   unit,
   value,
   onChange,
   placeholder,
 }: {
+  id: string
   label: string
   unit: string
   value: string
@@ -26,7 +28,7 @@ function NumField({
 }) {
   return (
     <div>
-      <label
+      <label htmlFor={id}
         style={{
           fontFamily: fonts.body,
           fontSize: 12,
@@ -42,6 +44,7 @@ function NumField({
       </label>
       <div style={{ position: 'relative' }}>
         <input
+          id={id}
           type="number"
           inputMode="decimal"
           value={value}
@@ -80,6 +83,7 @@ export default function SoloStep3Body({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <NumField
+        id="onboarding-weight"
         label={t('solo.step3.weightLabel')}
         unit="kg"
         value={weight}
@@ -87,6 +91,7 @@ export default function SoloStep3Body({
         placeholder="75"
       />
       <NumField
+        id="onboarding-height"
         label={t('solo.step3.heightLabel')}
         unit="cm"
         value={height}
@@ -94,6 +99,7 @@ export default function SoloStep3Body({
         placeholder="178"
       />
       <NumField
+        id="onboarding-goal-weight"
         label={t('solo.step3.goalWeightLabel')}
         unit="kg"
         value={goalWeight}

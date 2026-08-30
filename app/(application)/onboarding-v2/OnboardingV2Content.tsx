@@ -1,23 +1,16 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft } from 'lucide-react'
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
-import { colors, fonts, calcMifflinStJeor } from '@/lib/design-tokens'
+import { calcMifflinStJeor } from '@/lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import { fetchEffectiveEntitlementSnapshot } from '@/lib/entitlements/client-snapshot'
 import { resolveActiveCoachForOnboarding } from '@/lib/coach-relations/onboarding-reader'
-
-import OnboardingHeader from './steps/shared/OnboardingHeader'
-import OnboardingNav from './steps/shared/OnboardingNav'
-import OnboardingScreen from './steps/shared/OnboardingScreen'
-import CoachManagedStep1Profile from './steps/invited/InvitedStep1Profile'
-import CoachManagedStep2Avatar from './steps/invited/InvitedStep2Avatar'
-import CoachManagedStep3Welcome from './steps/invited/InvitedStep3Welcome'
-import SoloStep1Welcome from './steps/solo/SoloStep1Welcome'
+import { GOALS, GOAL_TO_OBJECTIVE, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
 import SoloStep2Profile from './steps/solo/SoloStep2Profile'
 import SoloStep3Body from './steps/solo/SoloStep3Body'
 import SoloStep4Goal from './steps/solo/SoloStep4Goal'
@@ -27,844 +20,86 @@ import SoloStep7Nutrition from './steps/solo/SoloStep7Nutrition'
 import SoloStep8Experience from './steps/solo/SoloStep8Experience'
 import SoloStep9PhotoBody from './steps/solo/SoloStep9PhotoBody'
 import SoloStep7Equipment from './steps/solo/SoloStep7Equipment'
-import SoloStep12Recap from './steps/solo/SoloStep12Recap'
 import SoloStep11Preferences, { type MealPrefsState } from './steps/solo/SoloStep11Preferences'
-import { GOALS, GOAL_TO_OBJECTIVE, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS } from '@/lib/onboarding-options'
+import InvitedStep1Profile from './steps/invited/InvitedStep1Profile'
+import InvitedStep2Avatar from './steps/invited/InvitedStep2Avatar'
+import InvitedStep3Welcome from './steps/invited/InvitedStep3Welcome'
+import styles from './OnboardingV2Content.module.css'
 
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
-const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
-
-// ─── State machine ───
-
-type Flow = 'coachManaged' | 'solo' | null
-type CoachManagedStep = 1 | 2 | 3
-type SoloStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
-
-interface State {
-  flow: Flow
-  step: CoachManagedStep | SoloStep
-  direction: number
-}
-
-type Action =
-  | { type: 'SET_FLOW'; flow: Flow }
-  | { type: 'NEXT' }
-  | { type: 'BACK' }
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'SET_FLOW':
-      return { ...state, flow: action.flow, step: 1, direction: 1 }
-    case 'NEXT':
-      return { ...state, step: (state.step + 1) as any, direction: 1 }
-    case 'BACK':
-      return { ...state, step: (state.step - 1) as any, direction: -1 }
-    default:
-      return state
-  }
-}
-
+const SOLO_TOTAL_STEPS = 5
 const COACH_MANAGED_TOTAL_STEPS = 3
-const SOLO_TOTAL_STEPS = 12
+type Flow = 'solo' | 'coachManaged'
+type Answers = Record<string, unknown>
+type Translate = (message: string, values?: Record<string, string | number>) => string
+const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 export default function OnboardingV2Content() {
-  const t = useTranslations('onboarding_v2')
+  const onboardingT = useTranslations('onboarding_v2')
+  const t: Translate = useCallback((message, values) =>
+    (onboardingT as Translate)(message, values), [onboardingT])
   const router = useRouter()
-  const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
+  const supabase = useRef(createBrowserClient(url, key)).current
+  const answersRef = useRef<Answers>({})
+  const [flow,setFlow]=useState<Flow|null>(null); const [step,setStep]=useState(1)
+  const [editingFromSummary,setEditingFromSummary]=useState(false)
+  const [userId,setUserId]=useState<string|null>(null); const [loading,setLoading]=useState(true)
+  const [saving,setSaving]=useState(false); const [error,setError]=useState<string|null>(null)
+  const [firstName,setFirstName]=useState(''); const [birthDate,setBirthDate]=useState(''); const [gender,setGender]=useState<'male'|'female'|''>('')
+  const [avatarUrl,setAvatarUrl]=useState<string|null>(null); const [coachName,setCoachName]=useState<string|null>(null)
+  const [weight,setWeight]=useState(''); const [height,setHeight]=useState(''); const [goalWeight,setGoalWeight]=useState('')
+  const [goal,setGoal]=useState<number|null>(null); const [activityLevel,setActivityLevel]=useState<number|null>(null)
+  const [sessionsPerWeek,setSessionsPerWeek]=useState(3); const [nutrition,setNutrition]=useState<number|null>(null)
+  const [experience,setExperience]=useState<number|null>(null); const [locationIndex,setLocationIndex]=useState<number|null>(null)
+  const [homeEquipment,setHomeEquipment]=useState<string[]>([]); const [photoBodyUrl,setPhotoBodyUrl]=useState<string|null>(null)
+  const [uploadingPhoto,setUploadingPhoto]=useState(false); const [advancedOpen,setAdvancedOpen]=useState(false)
+  const [mealPrefs,setMealPrefs]=useState<MealPrefsState>({breakfast:[],snack:[],lunch:[],dinner:[]}); const [dislikedFoods,setDislikedFoods]=useState<string[]>([])
+  const [restrictions,setRestrictions]=useState<'unanswered'|'none'|'some'>('unanswered'); const [restrictionDetails,setRestrictionDetails]=useState('')
 
-  const [state, dispatch] = useReducer(reducer, {
-    flow: null,
-    step: 1,
-    direction: 1,
-  })
+  useEffect(()=>{ let mounted=true; void (async()=>{
+    const {data:{session}}=await supabase.auth.getSession(); if(!session){router.replace('/login');return}
+    const uid=session.user.id; setUserId(uid)
+    const {data:p,error:e}=await supabase.from('profiles').select('full_name,birth_date,gender,avatar_url,current_weight,height,target_weight,objective,activity_level,dietary_type,training_location,home_equipment,meal_preferences,onboarding_answers').eq('id',uid).single()
+    if(!mounted)return; if(e||!p){setError(t('redesign.errors.profile'));setLoading(false);return}
+    try{await fetchEffectiveEntitlementSnapshot()}catch{setError(t('redesign.errors.profile'));setLoading(false);return}
+    const relation=await resolveActiveCoachForOnboarding(supabase,uid); if(relation.kind==='denied'){setError(t('redesign.errors.profile'));setLoading(false);return}
+    const nextFlow:Flow=relation.kind==='active'?'coachManaged':'solo'
+    if(relation.kind==='active'){const {data:c}=await supabase.from('profiles').select('full_name').eq('id',relation.coachId).single();setCoachName(c?.full_name||null)}
+    const a=p.onboarding_answers&&typeof p.onboarding_answers==='object'?p.onboarding_answers as Answers:{}; answersRef.current=a
+    setFirstName(p.full_name?.split(' ')[0]||session.user.user_metadata?.full_name?.split(' ')[0]||'');setBirthDate(p.birth_date||'');setGender(p.gender==='male'||p.gender==='female'?p.gender:'');setAvatarUrl(p.avatar_url||null)
+    setWeight(p.current_weight?String(p.current_weight):'');setHeight(p.height?String(p.height):'');setGoalWeight(p.target_weight?String(p.target_weight):'')
+    const gi=GOALS.findIndex(o=>GOAL_TO_OBJECTIVE[o.id]===p.objective);setGoal(gi<0?null:gi)
+    const ai=ACTIVITY_OPTS.findIndex(o=>o.dbLabel===p.activity_level);setActivityLevel(ai<0?null:ai)
+    const ni=NUTRITION_OPTS.findIndex(o=>o.dbLabel===p.dietary_type);setNutrition(ni<0?null:ni)
+    const ei=EXPERIENCE_OPTS.findIndex(o=>o.dbLabel===a.experience_level);setExperience(ei<0?null:ei)
+    setSessionsPerWeek(typeof a.sessions_per_week==='number'?a.sessions_per_week:3);const li=['home','gym','both'].indexOf(p.training_location);setLocationIndex(li<0?null:li);setHomeEquipment(Array.isArray(p.home_equipment)?p.home_equipment:[])
+    if(p.meal_preferences&&typeof p.meal_preferences==='object'){const m=p.meal_preferences as MealPrefsState&{disliked_foods?:string[];dietary_restrictions?:string};setMealPrefs({breakfast:m.breakfast||[],snack:m.snack||[],lunch:m.lunch||[],dinner:m.dinner||[]});setDislikedFoods(m.disliked_foods||[]);if(typeof m.dietary_restrictions==='string'){setRestrictions(m.dietary_restrictions?'some':'none');setRestrictionDetails(m.dietary_restrictions)}}
+    const max=nextFlow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS;setStep(Math.min(max,Math.max(1,typeof a.onboarding_v2_step==='number'?a.onboarding_v2_step:1)));setFlow(nextFlow);setLoading(false)
+  })();return()=>{mounted=false}},[router,supabase,t])
 
-  const [userId, setUserId] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [runtimeDenied, setRuntimeDenied] = useState(false)
-
-  // ─── Form state ───
-  const [firstName, setFirstName] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | ''>('')
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [coachName, setCoachName] = useState<string | null>(null)
-
-  // ─── SOLO body state ───
-  const [weight, setWeight] = useState('')
-  const [height, setHeight] = useState('')
-  const [goalWeight, setGoalWeight] = useState('')
-
-  // ─── SOLO steps 4-8 state ───
-  const [goal, setGoal] = useState<number | null>(null)
-  const [activityLevel, setActivityLevel] = useState<number | null>(null)
-  const [sessionsPerWeek, setSessionsPerWeek] = useState(3)
-  const [nutrition, setNutrition] = useState<number | null>(null)
-  const [experience, setExperience] = useState<number | null>(null)
-
-  // ─── SOLO steps 9-11 state ───
-  const [photoBodyUrl, setPhotoBodyUrl] = useState<string | null>(null)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
-
-  // ─── SOLO step 10 equipment state (F6.B.1) ───
-  const [locationIndex, setLocationIndex] = useState<number | null>(null)
-  const [homeEquipment, setHomeEquipment] = useState<string[]>([])
-
-  // F6.B.7 — préférences alimentaires
-  const [mealPrefs, setMealPrefs] = useState<MealPrefsState>({ breakfast: [], snack: [], lunch: [], dinner: [] })
-  const [dislikedFoods, setDislikedFoods] = useState<string[]>([])
-
-  // ─── Flow detection on mount ───
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        router.replace('/login')
-        return
-      }
-
-      const uid = session.user.id
-      setUserId(uid)
-
-      // Pre-fill from metadata
-      const meta = session.user.user_metadata
-      if (meta?.full_name) setFirstName(meta.full_name.split(' ')[0])
-
-      // Fetch profile to detect flow
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, birth_date, gender, avatar_url, current_weight, height, target_weight, training_location, home_equipment, meal_preferences')
-        .eq('id', uid)
-        .single()
-
-      if (profile) {
-        // Pre-fill existing data
-        if (profile.full_name) setFirstName(profile.full_name.split(' ')[0])
-        if (profile.birth_date) setBirthDate(profile.birth_date)
-        if (profile.gender) setGender(profile.gender as 'male' | 'female')
-        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
-        if (profile.current_weight) setWeight(String(profile.current_weight))
-        if (profile.height) setHeight(String(profile.height))
-        if (profile.target_weight) setGoalWeight(String(profile.target_weight))
-        if (profile.training_location) {
-          const loc = profile.training_location as 'home' | 'gym' | 'both'
-          setLocationIndex(['home', 'gym', 'both'].indexOf(loc))
-        }
-        if (profile.home_equipment) setHomeEquipment(profile.home_equipment as string[])
-        if (profile.meal_preferences && typeof profile.meal_preferences === 'object') {
-          const mp = profile.meal_preferences as any
-          setMealPrefs({
-            breakfast: Array.isArray(mp.breakfast) ? mp.breakfast : [],
-            snack: Array.isArray(mp.snack) ? mp.snack : [],
-            lunch: Array.isArray(mp.lunch) ? mp.lunch : [],
-            dinner: Array.isArray(mp.dinner) ? mp.dinner : [],
-          })
-          if (Array.isArray(mp.disliked_foods)) setDislikedFoods(mp.disliked_foods)
-        }
-
-        let capabilities
-        try {
-          ;({ capabilities } = await fetchEffectiveEntitlementSnapshot())
-        } catch {
-          setRuntimeDenied(true)
-          setLoading(false)
-          return
-        }
-        if (capabilities.coachManaged) {
-          dispatch({ type: 'SET_FLOW', flow: 'coachManaged' })
-
-          const relation = await resolveActiveCoachForOnboarding(supabase, uid)
-          if (relation.kind === 'denied') {
-            setRuntimeDenied(true)
-            setLoading(false)
-            return
-          }
-          if (relation.kind === 'active') {
-            const { data: coach } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', relation.coachId)
-              .single()
-            if (coach?.full_name) setCoachName(coach.full_name)
-          }
-        } else {
-          dispatch({ type: 'SET_FLOW', flow: 'solo' })
-        }
-      } else {
-        dispatch({ type: 'SET_FLOW', flow: 'solo' })
-      }
-
-      setLoading(false)
-    })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ─── Macros calculation (Step 10) ───
-  const macrosCalc = useMemo(() => {
-    if (!weight || !height || !birthDate || !gender) return null
-    if (activityLevel === null || goal === null) return null
-
-    const age = Math.floor(
-      (Date.now() - new Date(birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-    )
-    const w = parseFloat(weight)
-    const h = parseFloat(height)
-    if (!w || !h || age <= 0) return null
-
-    const bmr = calcMifflinStJeor(w, h, age, gender)
-
-    const ACTIVITY_MULT: Record<string, number> = {
-      sedentary: 1.2,
-      active: 1.375,
-      regular: 1.55,
-      advanced: 1.725,
-    }
-    const mult = ACTIVITY_MULT[ACTIVITY_OPTS[activityLevel].id] || 1.55
-    const tdee = Math.round(bmr * mult)
-
-    const goalLabel = GOALS[goal].dbLabel
-    let calorieGoal = tdee
-    if (goalLabel === 'Perdre du poids') calorieGoal = tdee - 400
-    else if (goalLabel === 'Prendre du muscle') calorieGoal = tdee + 300
-
-    const protein = Math.round(w * 2)
-    const fat = Math.round((calorieGoal * 0.25) / 9)
-    const carbs = Math.round((calorieGoal - protein * 4 - fat * 9) / 4)
-
-    return { tdee, calorieGoal, protein, fat, carbs, goalLabel }
-  }, [weight, height, birthDate, gender, activityLevel, goal])
-
-  // ─── Auto-save per step ───
-  async function saveCurrentStep(): Promise<boolean> {
-    if (!userId) return false
-    setSaving(true)
-    try {
-      if (state.flow === 'coachManaged') {
-        switch (state.step) {
-          case 1: {
-            const { error } = await updateProfile(userId, {
-              full_name: capitalizeFullName(firstName),
-              birth_date: birthDate || null,
-              gender: gender || null,
-            }, supabase)
-            if (error) { console.error('Save step 1:', error); return false }
-            break
-          }
-          case 2:
-            // Avatar already uploaded in handleAvatarUpload
-            break
-          case 3: {
-            // Mark onboarding complete
-            const { error } = await updateProfile(userId, {
-              onboarding_completed: true,
-              onboarding_completed_at: new Date().toISOString(),
-              // Premier diagnostic hebdomadaire dans 7 jours
-              next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            }, supabase)
-            if (error) { console.error('Save step 3:', error); return false }
-            invalidateProfileCache()
-            cache.remove(`dashboard_${userId}`)
-            break
-          }
-        }
-      }
-
-      if (state.flow === 'solo') {
-        switch (state.step) {
-          case 1:
-            // Welcome screen — nothing to save
-            break
-          case 2: {
-            const { error } = await updateProfile(userId, {
-              full_name: capitalizeFullName(firstName),
-              birth_date: birthDate || null,
-              gender: gender || null,
-            }, supabase)
-            if (error) { console.error('Save solo step 2:', error); return false }
-            break
-          }
-          case 3: {
-            const w = parseFloat(weight)
-            const h = parseFloat(height)
-            const gw = parseFloat(goalWeight)
-            if (!w || !h || !gw) return false
-            const { error } = await updateProfile(userId, {
-              current_weight: w,
-              start_weight: w,
-              height: h,
-              target_weight: gw,
-            }, supabase)
-            if (error) { console.error('Save solo step 3:', error); return false }
-            // Upsert weight_logs
-            const today = new Date().toISOString().slice(0, 10)
-            await supabase
-              .from('weight_logs')
-              .upsert({ user_id: userId, date: today, poids: w }, { onConflict: 'user_id,date' })
-            break
-          }
-          case 4: {
-            if (goal === null) return false
-            const { error } = await updateProfile(userId, {
-              objective: GOAL_TO_OBJECTIVE[GOALS[goal].id],
-            }, supabase)
-            if (error) { console.error('Save solo step 4:', error); return false }
-            break
-          }
-          case 5: {
-            if (activityLevel === null) return false
-            const { error } = await updateProfile(userId, {
-              activity_level: ACTIVITY_OPTS[activityLevel].dbLabel,
-            }, supabase)
-            if (error) { console.error('Save solo step 5:', error); return false }
-            break
-          }
-          case 6: {
-            // Save sessions_per_week into onboarding_answers
-            const { data: current } = await supabase
-              .from('profiles')
-              .select('onboarding_answers')
-              .eq('id', userId)
-              .single()
-            const existing = (current?.onboarding_answers as Record<string, unknown>) || {}
-            const { error } = await updateProfile(userId, {
-              onboarding_answers: { ...existing, sessions_per_week: sessionsPerWeek },
-            }, supabase)
-            if (error) { console.error('Save solo step 6:', error); return false }
-            break
-          }
-          case 7: {
-            if (nutrition === null) return false
-            const { error } = await updateProfile(userId, {
-              dietary_type: NUTRITION_OPTS[nutrition].dbLabel,
-            }, supabase)
-            if (error) { console.error('Save solo step 7:', error); return false }
-            break
-          }
-          case 8: {
-            if (experience === null) return false
-            const { data: current } = await supabase
-              .from('profiles')
-              .select('onboarding_answers')
-              .eq('id', userId)
-              .single()
-            const existing = (current?.onboarding_answers as Record<string, unknown>) || {}
-            const { error } = await updateProfile(userId, {
-              onboarding_answers: { ...existing, experience_level: EXPERIENCE_OPTS[experience].dbLabel },
-            }, supabase)
-            if (error) { console.error('Save solo step 8:', error); return false }
-            break
-          }
-          case 9:
-            // Photo already uploaded in handlePhotoBodyUpload — nothing extra to save
-            break
-          case 10: {
-            // F6.B.1 — save equipment selections
-            if (locationIndex === null) return false
-            const trainingLocation = ['home', 'gym', 'both'][locationIndex] as 'home' | 'gym' | 'both'
-            const { error } = await updateProfile(userId, {
-              training_location: trainingLocation,
-              home_equipment: homeEquipment,
-            }, supabase)
-            if (error) { console.error('Save solo step 10 equipment:', error); return false }
-            break
-          }
-          case 11: {
-            // F6.B.7 — save préférences alimentaires
-            const { error: errPrefs } = await updateProfile(userId, {
-              meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
-            }, supabase)
-            if (errPrefs) { console.error('Save solo step 11 preferences:', errPrefs); return false }
-            break
-          }
-          case 12: {
-            if (!macrosCalc) {
-              console.error('Save solo step 12: macros calc null')
-              return false
-            }
-            // Système campagne beta : tenter de réclamer un slot gratuit
-            let trialEndsAt: string | null = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-            try {
-              const { data: betaResult } = await supabase.rpc('claim_beta_slot')
-              if (betaResult?.claimed) {
-                // Slot beta obtenu : la RPC a déjà posé subscription_type/status/end_date.
-                // Pas de trial_ends_at (l'user a un accès beta, pas un essai).
-                trialEndsAt = null
-              }
-            } catch (e) {
-              // En cas d'échec RPC, fallback silencieux sur l'essai 10j normal
-              console.error('claim_beta_slot failed, fallback trial 10j:', e)
-            }
-            const { error: err11 } = await updateProfile(userId, {
-              tdee: macrosCalc.tdee,
-              calorie_goal: macrosCalc.calorieGoal,
-              protein_goal: macrosCalc.protein,
-              carbs_goal: macrosCalc.carbs,
-              fat_goal: macrosCalc.fat,
-              onboarding_completed: true,
-              onboarding_completed_at: new Date().toISOString(),
-              // Premier diagnostic hebdomadaire dans 7 jours
-              next_diagnostic_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              // F6.B.5a : trigger auto-gen meal plan + programme sur la home
-              needs_initial_generation: true,
-            }, supabase)
-            if (err11) { console.error('Save solo step 12:', err11); return false }
-            // Poser trial_ends_at via RPC (bypass trigger guard_profile_sensitive_columns)
-            if (trialEndsAt) {
-              const { error: trialErr } = await supabase.rpc('set_initial_trial', { p_days: 14 })
-              if (trialErr) console.error('set_initial_trial failed:', trialErr)
-            }
-            invalidateProfileCache()
-            cache.remove(`dashboard_${userId}`)
-            break
-          }
-        }
-      }
-
-      return true
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  // ─── Avatar upload handler ───
-  async function handleAvatarUpload(file: File) {
-    if (!userId) return
-    const ext = file.name.split('.').pop() || 'jpg'
-    const path = `avatars/${userId}/${Date.now()}.${ext}`
-
-    const { error: upErr } = await supabase.storage
-      .from('avatars')
-      .upload(path, file, { upsert: true })
-    if (upErr) {
-      console.error('Avatar upload:', upErr)
-      return
-    }
-
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
-    const publicUrl = urlData?.publicUrl || ''
-
-    await updateProfile(userId, { avatar_url: publicUrl }, supabase)
-    setAvatarUrl(publicUrl)
-  }
-
-  // ─── Photo body upload handler (Step 9) ───
-  async function handlePhotoBodyUpload(file: File) {
-    if (!userId) return
-    setUploadingPhoto(true)
-    try {
-      const ext = file.name.split('.').pop() || 'jpg'
-      const path = `${userId}/onboarding-${Date.now()}.${ext}`
-
-      const { error: upErr } = await supabase.storage
-        .from('progress-photos')
-        .upload(path, file, { upsert: false })
-      if (upErr) { console.error('Photo body upload:', upErr); return }
-
-      const today = new Date().toISOString().slice(0, 10)
-      const { data: photoRow } = await supabase
-        .from('progress_photos')
-        .insert({ user_id: userId, date: today, photo_url: path, view_type: 'front' })
-        .select()
-        .single()
-
-      const { data: signed } = await supabase.storage
-        .from('progress-photos')
-        .createSignedUrl(path, 3600)
-      setPhotoBodyUrl(signed?.signedUrl || '')
-
-      // AI analysis (best-effort, non-blocking)
-      if (signed?.signedUrl && goal !== null) {
-        try {
-          const profileData = {
-            weight: parseFloat(weight),
-            height: parseFloat(height),
-            gender,
-            objective: GOAL_TO_OBJECTIVE[GOALS[goal].id],
-          }
-          const res = await fetch('/api/analyze-progress-photo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ photoUrl: signed.signedUrl, profileData }),
-          })
-          if (res.ok) {
-            const { analysis } = await res.json()
-            if (analysis && photoRow?.id) {
-              await supabase.from('progress_photos').update({
-                ai_analysis: analysis,
-                ai_analyzed_at: new Date().toISOString(),
-              }).eq('id', photoRow.id)
-            }
-          }
-        } catch (aiErr) {
-          console.warn('AI analysis failed (non-blocking):', aiErr)
-        }
-      }
-    } finally {
-      setUploadingPhoto(false)
-    }
-  }
-
-  // Handler for multi-select home equipment (F6.B.1)
-  function toggleHomeEquipment(equipmentId: string) {
-    setHomeEquipment((prev) =>
-      prev.includes(equipmentId)
-        ? prev.filter((id) => id !== equipmentId)
-        : [...prev, equipmentId]
-    )
-  }
-
-  // F6.B.7 — handlers préférences alimentaires
-  function toggleMealFood(meal: keyof MealPrefsState, food: string) {
-    setMealPrefs((prev) => {
-      const list = prev[meal] || []
-      const updated = list.includes(food) ? list.filter((f) => f !== food) : [...list, food]
-      return { ...prev, [meal]: updated }
-    })
-  }
-  function addDislikedFood(food: string) {
-    setDislikedFoods((prev) => (prev.includes(food) ? prev : [...prev, food]))
-  }
-  function removeDislikedFood(food: string) {
-    setDislikedFoods((prev) => prev.filter((f) => f !== food))
-  }
-
-  // ─── Navigation handlers ───
-  async function handleNext() {
-    const saved = await saveCurrentStep()
-    if (!saved) return
-
-    const totalSteps = state.flow === 'coachManaged' ? COACH_MANAGED_TOTAL_STEPS : SOLO_TOTAL_STEPS
-    if (state.step >= totalSteps) {
-      // Final step → redirect to app
-      router.replace('/')
-      return
-    }
-    dispatch({ type: 'NEXT' })
-  }
-
-  function handleBack() {
-    if (state.step <= 1) return
-    dispatch({ type: 'BACK' })
-  }
-
-  // ─── Loading ───
-  if (runtimeDenied) {
-    return (
-      <div style={{ minHeight: '100dvh', background: colors.background, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, color: colors.text, textAlign: 'center' }}>
-        Impossible de vérifier tes droits pour le moment. Réessaie dans quelques instants.
-      </div>
-    )
-  }
-
-  if (loading || !state.flow) {
-    return (
-      <div
-        style={{
-          minHeight: '100dvh',
-          background: colors.background,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            border: `3px solid ${colors.goldBorder}`,
-            borderTop: `3px solid ${colors.gold}`,
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      </div>
-    )
-  }
-
-  // ─── Validation helpers ───
-  const isCoachManaged = state.flow === 'coachManaged'
-  const totalSteps = isCoachManaged ? COACH_MANAGED_TOTAL_STEPS : SOLO_TOTAL_STEPS
-
-  // Coach-managed validations
-  const canProceedCoachManagedStep1 = firstName.trim().length >= 2
-
-  // SOLO validations
-  const canProceedSoloStep2 = firstName.trim().length >= 2 && !!birthDate && !!gender
-  const canProceedSoloStep3 =
-    !!weight && !!height && !!goalWeight &&
-    parseFloat(weight) > 0 && parseFloat(height) > 0 && parseFloat(goalWeight) > 0
-
-  function getNextDisabled(): boolean {
-    if (isCoachManaged) {
-      return state.step === 1 && !canProceedCoachManagedStep1
-    }
-    // SOLO
-    switch (state.step) {
-      case 1: return false // welcome, always OK
-      case 2: return !canProceedSoloStep2
-      case 3: return !canProceedSoloStep3
-      case 4: return goal === null
-      case 5: return activityLevel === null
-      case 6: return false // slider always has a value
-      case 7: return nutrition === null
-      case 8: return experience === null
-      case 9: return false // photo is skippable
-      case 10: return locationIndex === null
-      case 11: return false // préférences optionnelles, toujours OK
-      case 12: return !macrosCalc
-      default: return false
-    }
-  }
-
-  function getNextLabel(): string | undefined {
-    if (isCoachManaged) {
-      if (state.step === COACH_MANAGED_TOTAL_STEPS) return t('nav.finish')
-      if (state.step === 2) return avatarUrl ? t('nav.continue') : t('nav.skip')
-      return undefined
-    }
-    // SOLO
-    if (state.step === 1) return t('nav.letsGo')
-    if (state.step === 9 && !photoBodyUrl) return t('nav.skip')
-    if (state.step === 12) return t('nav.start')
-    return undefined
-  }
-
-  // ─── Render ───
-  return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        background: colors.background,
-        display: 'flex',
-        flexDirection: 'column',
-        maxWidth: 512,
-        marginLeft: 'auto',
-        marginRight: 'auto',
-      }}
-    >
-      <OnboardingHeader
-        currentStep={state.step}
-        totalSteps={totalSteps}
-      />
-
-      {/* Step content */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <AnimatePresence mode="wait" custom={state.direction}>
-          {/* ─── Coach-managed steps ─── */}
-          {isCoachManaged && state.step === 1 && (
-            <OnboardingScreen
-              stepKey="invited-profile"
-              title={t('profile.title')}
-              subtitle={t('profile.subtitle')}
-              direction={state.direction}
-            >
-              <CoachManagedStep1Profile
-                firstName={firstName}
-                setFirstName={setFirstName}
-                birthDate={birthDate}
-                setBirthDate={setBirthDate}
-                gender={gender}
-                setGender={setGender}
-              />
-            </OnboardingScreen>
-          )}
-
-          {isCoachManaged && state.step === 2 && (
-            <OnboardingScreen
-              stepKey="invited-avatar"
-              title={t('avatar.title')}
-              subtitle={t('avatar.subtitle')}
-              direction={state.direction}
-            >
-              <CoachManagedStep2Avatar
-                avatarUrl={avatarUrl}
-                onUpload={handleAvatarUpload}
-              />
-            </OnboardingScreen>
-          )}
-
-          {isCoachManaged && state.step === 3 && (
-            <OnboardingScreen
-              stepKey="invited-welcome"
-              title=""
-              direction={state.direction}
-            >
-              <CoachManagedStep3Welcome
-                firstName={firstName}
-                coachName={coachName}
-              />
-            </OnboardingScreen>
-          )}
-
-          {/* ─── SOLO steps ─── */}
-          {!isCoachManaged && state.step === 1 && (
-            <OnboardingScreen
-              stepKey="solo-welcome"
-              title=""
-              direction={state.direction}
-            >
-              <SoloStep1Welcome />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 2 && (
-            <OnboardingScreen
-              stepKey="solo-profile"
-              title={t('profile.title')}
-              subtitle={t('profile.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep2Profile
-                firstName={firstName}
-                setFirstName={setFirstName}
-                birthDate={birthDate}
-                setBirthDate={setBirthDate}
-                gender={gender}
-                setGender={setGender}
-              />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 3 && (
-            <OnboardingScreen
-              stepKey="solo-body"
-              title={t('solo.step3.title')}
-              subtitle={t('solo.step3.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep3Body
-                weight={weight}
-                setWeight={setWeight}
-                height={height}
-                setHeight={setHeight}
-                goalWeight={goalWeight}
-                setGoalWeight={setGoalWeight}
-              />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 4 && (
-            <OnboardingScreen
-              stepKey="solo-goal"
-              title={t('solo.step4.title')}
-              subtitle={t('solo.step4.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep4Goal selected={goal} onSelect={setGoal} />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 5 && (
-            <OnboardingScreen
-              stepKey="solo-activity"
-              title={t('solo.step5.title')}
-              subtitle={t('solo.step5.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep5Activity selected={activityLevel} onSelect={setActivityLevel} />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 6 && (
-            <OnboardingScreen
-              stepKey="solo-sessions"
-              title={t('solo.step6.title')}
-              subtitle={t('solo.step6.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep6Sessions sessions={sessionsPerWeek} setSessions={setSessionsPerWeek} />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 7 && (
-            <OnboardingScreen
-              stepKey="solo-nutrition"
-              title={t('solo.step7.title')}
-              subtitle={t('solo.step7.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep7Nutrition selected={nutrition} onSelect={setNutrition} />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 8 && (
-            <OnboardingScreen
-              stepKey="solo-experience"
-              title={t('solo.step8.title')}
-              subtitle={t('solo.step8.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep8Experience selected={experience} onSelect={setExperience} />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 9 && (
-            <OnboardingScreen
-              stepKey="solo-photo-body"
-              title={t('solo.step9.title')}
-              subtitle={t('solo.step9.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep9PhotoBody
-                photoUrl={photoBodyUrl}
-                onUpload={handlePhotoBodyUpload}
-                uploading={uploadingPhoto}
-              />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 10 && (
-            <OnboardingScreen
-              stepKey="solo-equipment"
-              title={t('solo.stepEquipment.title')}
-              subtitle={t('solo.stepEquipment.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep7Equipment
-                locationIndex={locationIndex}
-                homeEquipment={homeEquipment}
-                onLocationSelect={setLocationIndex}
-                onHomeEquipmentToggle={toggleHomeEquipment}
-              />
-            </OnboardingScreen>
-          )}
-
-          {!isCoachManaged && state.step === 11 && (
-            <OnboardingScreen
-              stepKey="solo-preferences"
-              title="Tes préférences alimentaires"
-              subtitle="Aide-nous à personnaliser ton plan repas (optionnel)"
-              direction={state.direction}
-            >
-              <SoloStep11Preferences
-                mealPrefs={mealPrefs}
-                dislikedFoods={dislikedFoods}
-                onToggleFood={toggleMealFood}
-                onAddDisliked={addDislikedFood}
-                onRemoveDisliked={removeDislikedFood}
-              />
-            </OnboardingScreen>
-          )}
-          {!isCoachManaged && state.step === 12 && macrosCalc && (
-            <OnboardingScreen
-              stepKey="solo-recap"
-              title={t('solo.step10.title')}
-              subtitle={t('solo.step10.subtitle')}
-              direction={state.direction}
-            >
-              <SoloStep12Recap {...macrosCalc} />
-            </OnboardingScreen>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <OnboardingNav
-        onBack={state.step > 1 ? handleBack : undefined}
-        onNext={handleNext}
-        showBack={state.step > 1}
-        nextDisabled={getNextDisabled()}
-        loading={saving}
-        nextLabel={getNextLabel()}
-      />
-    </div>
-  )
+  const macros=useMemo(()=>{if(!weight||!height||!birthDate||!gender||activityLevel===null||goal===null)return null;const age=Math.floor((Date.now()-new Date(birthDate).getTime())/31557600000),w=Number(weight),h=Number(height);if(!w||!h||age<=0)return null;const tdee=Math.round(calcMifflinStJeor(w,h,age,gender)*([1.2,1.375,1.55,1.725][activityLevel]||1.55));const obj=GOAL_TO_OBJECTIVE[GOALS[goal].id],calorieGoal=tdee+(obj==='cut'?-400:obj==='mass'?300:0),protein=Math.round(w*2),fat=Math.round(calorieGoal*.25/9);return{tdee,calorieGoal,protein,fat,carbs:Math.round((calorieGoal-protein*4-fat*9)/4)}},[weight,height,birthDate,gender,activityLevel,goal])
+  async function persist(fields:Record<string,unknown>,next?:number){if(!userId)return false;const a=next?{...answersRef.current,onboarding_v2_step:next}:answersRef.current;const {error:e}=await updateProfile(userId,{...fields,onboarding_answers:a},supabase);if(e)return false;answersRef.current=a;return true}
+  async function save(){if(!flow||!userId)return false;const total=flow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS;const next=editingFromSummary?total:Math.min(step+1,total)
+    if(flow==='coachManaged'){if(step===1)return persist({full_name:capitalizeFullName(firstName),birth_date:birthDate||null,gender:gender||null},next);if(step===2)return persist({},next);const ok=await persist({onboarding_completed:true,onboarding_completed_at:new Date().toISOString(),next_diagnostic_at:new Date(Date.now()+604800000).toISOString()});if(ok){invalidateProfileCache();cache.remove(`dashboard_${userId}`)}return ok}
+    if(step===1&&goal!==null)return persist({objective:GOAL_TO_OBJECTIVE[GOALS[goal].id]},next)
+    if(step===2){const w=Number(weight),h=Number(height),gw=Number(goalWeight);if(!w||!h||!gw)return false;const {error:e}=await supabase.from('weight_logs').upsert({user_id:userId,date:new Date().toISOString().slice(0,10),poids:w},{onConflict:'user_id,date'});if(e)return false;return persist({full_name:capitalizeFullName(firstName),birth_date:birthDate,gender,current_weight:w,start_weight:w,height:h,target_weight:gw},next)}
+    if(step===3&&activityLevel!==null&&experience!==null&&locationIndex!==null){answersRef.current={...answersRef.current,sessions_per_week:sessionsPerWeek,experience_level:EXPERIENCE_OPTS[experience].dbLabel};return persist({activity_level:ACTIVITY_OPTS[activityLevel].dbLabel,training_location:['home','gym','both'][locationIndex],home_equipment:locationIndex===1?[]:homeEquipment},next)}
+    if(step===4&&nutrition!==null&&restrictions!=='unanswered')return persist({dietary_type:NUTRITION_OPTS[nutrition].dbLabel,meal_preferences:{...mealPrefs,disliked_foods:dislikedFoods,dietary_restrictions:restrictions==='some'?restrictionDetails.trim():''}},next)
+    if(step===5&&macros){const ok=await persist({tdee:macros.tdee,calorie_goal:macros.calorieGoal,protein_goal:macros.protein,carbs_goal:macros.carbs,fat_goal:macros.fat,onboarding_completed:true,onboarding_completed_at:new Date().toISOString(),next_diagnostic_at:new Date(Date.now()+604800000).toISOString(),needs_initial_generation:true});if(ok){invalidateProfileCache();cache.remove(`dashboard_${userId}`)}return ok}return false}
+  async function next(){setSaving(true);setError(null);try{if(!await save()){setError(t('redesign.errors.save'));return}const total=flow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS;if(step===total){router.replace('/');return}if(editingFromSummary){setEditingFromSummary(false);setStep(total);return}setStep(s=>s+1)}finally{setSaving(false)}}
+  function editStep(target:number){setEditingFromSummary(true);setStep(target);void persist({},target)}
+  function back(){if(editingFromSummary){setEditingFromSummary(false);setStep(SOLO_TOTAL_STEPS);void persist({},SOLO_TOTAL_STEPS);return}const target=Math.max(1,step-1);setStep(target);void persist({},target)}
+  async function upload(file:File,avatar=false){if(!userId)return;setUploadingPhoto(true);try{if(avatar){const path=`avatars/${userId}/${Date.now()}.${file.name.split('.').pop()||'jpg'}`;const {error:e}=await supabase.storage.from('avatars').upload(path,file,{upsert:true});if(e)throw e;const publicUrl=supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;if(!await persist({avatar_url:publicUrl}))throw new Error();setAvatarUrl(publicUrl)}else{const path=`${userId}/onboarding-${Date.now()}.${file.name.split('.').pop()||'jpg'}`;const {error:e}=await supabase.storage.from('progress-photos').upload(path,file);if(e)throw e;const {error:i}=await supabase.from('progress_photos').insert({user_id:userId,date:new Date().toISOString().slice(0,10),photo_url:path,view_type:'front'});if(i)throw i;const {data}=await supabase.storage.from('progress-photos').createSignedUrl(path,3600);setPhotoBodyUrl(data?.signedUrl||'')}}catch{setError(t('redesign.errors.photo'))}finally{setUploadingPhoto(false)}}
+  function toggleFood(meal:keyof MealPrefsState,food:string){setMealPrefs(p=>({...p,[meal]:p[meal].includes(food)?p[meal].filter(x=>x!==food):[...p[meal],food]}))}
+  if(loading)return <main className={styles.shell}><p role="status">{t('redesign.loading')}</p></main>;if(!flow)return <main className={styles.shell}><p role="alert">{error}</p></main>
+  const total=flow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS, valid=flow==='coachManaged'?(step!==1||firstName.trim().length>=2):[goal!==null,firstName.trim().length>=2&&!!birthDate&&!!gender&&Number(weight)>0&&Number(height)>0&&Number(goalWeight)>0,activityLevel!==null&&experience!==null&&locationIndex!==null,nutrition!==null&&restrictions!=='unanswered'&&(restrictions==='none'||restrictionDetails.trim().length>0),!!macros][step-1]
+  return <main className={styles.shell}><section className={styles.app}><header className={styles.header}><div><strong>MoovX</strong><span>{t('redesign.step',{current:step,total})}</span></div><ol aria-label={t('redesign.a11y.progress')}>{Array.from({length:total},(_,i)=><li key={i} aria-current={i+1===step?'step':undefined} className={i<step?styles.active:''}/>)}</ol></header><div className={styles.content}>
+    {flow==='solo'&&step===1&&<><Title title={t('redesign.goal.title')} sub={t('redesign.goal.subtitle')}/><SoloStep4Goal selected={goal} onSelect={setGoal}/></>}
+    {flow==='solo'&&step===2&&<><Title title={t('redesign.profile.title')} sub={t('redesign.profile.subtitle')}/><SoloStep2Profile {...{firstName,setFirstName,birthDate,setBirthDate,gender,setGender}}/><SoloStep3Body {...{weight,setWeight,height,setHeight,goalWeight,setGoalWeight}}/></>}
+    {flow==='solo'&&step===3&&<><Title title={t('redesign.training.title')} sub={t('redesign.training.subtitle')}/><Group><SoloStep6Sessions sessions={sessionsPerWeek} setSessions={setSessionsPerWeek}/></Group><Group><SoloStep8Experience selected={experience} onSelect={setExperience}/></Group><Group><SoloStep5Activity selected={activityLevel} onSelect={setActivityLevel}/></Group><Group><SoloStep7Equipment locationIndex={locationIndex} homeEquipment={homeEquipment} onLocationSelect={setLocationIndex} onHomeEquipmentToggle={id=>setHomeEquipment(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])}/></Group></>}
+    {flow==='solo'&&step===4&&<><Title title={t('redesign.nutrition.title')} sub={t('redesign.nutrition.subtitle')}/><SoloStep7Nutrition selected={nutrition} onSelect={setNutrition}/><fieldset className={styles.restrictions}><legend>{t('redesign.nutrition.restrictions')}</legend><label><input type="radio" name="restrictions" checked={restrictions==='none'} onChange={()=>{setRestrictions('none');setRestrictionDetails('')}}/>{t('redesign.nutrition.none')}</label><label><input type="radio" name="restrictions" checked={restrictions==='some'} onChange={()=>setRestrictions('some')}/>{t('redesign.nutrition.some')}</label>{restrictions==='some'&&<label htmlFor="restriction-details"><span>{t('redesign.nutrition.details')}</span><input id="restriction-details" value={restrictionDetails} onChange={e=>setRestrictionDetails(e.target.value)}/></label>}</fieldset><button className={styles.disclosure} type="button" aria-expanded={advancedOpen} onClick={()=>setAdvancedOpen(v=>!v)}>{t('redesign.nutrition.advanced')}</button>{advancedOpen&&<SoloStep11Preferences mealPrefs={mealPrefs} dislikedFoods={dislikedFoods} onToggleFood={toggleFood} onAddDisliked={f=>setDislikedFoods(p=>p.includes(f)?p:[...p,f])} onRemoveDisliked={f=>setDislikedFoods(p=>p.filter(x=>x!==f))}/>}</>}
+    {flow==='solo'&&step===5&&<><Title title={t('redesign.summary.title')} sub={t('redesign.summary.subtitle')}/><div className={styles.summary}><Summary label={t('redesign.goal.title')} value={goal===null?'—':t(`solo.step4.options.${GOALS[goal].id}`)} edit={()=>editStep(1)} t={t}/><Summary label={t('redesign.profile.title')} value={`${firstName} · ${weight} kg · ${height} cm`} edit={()=>editStep(2)} t={t}/><Summary label={t('redesign.training.title')} value={`${sessionsPerWeek} ${t('solo.step6.unit')}`} edit={()=>editStep(3)} t={t}/><Summary label={t('redesign.nutrition.title')} value={nutrition===null?'—':t(`solo.step7.options.${NUTRITION_OPTS[nutrition].id}`)} edit={()=>editStep(4)} t={t}/>{macros&&<div className={styles.macros}><strong>{t('redesign.summary.macros')}</strong><b>{macros.calorieGoal} kcal</b><span>{macros.protein}g · {macros.carbs}g · {macros.fat}g</span></div>}<SoloStep9PhotoBody photoUrl={photoBodyUrl} uploading={uploadingPhoto} onUpload={f=>upload(f)}/></div></>}
+     {flow==='coachManaged'&&step===1&&<><Title title={t('redesign.profile.title')} sub={t('redesign.coach.profile')}/><InvitedStep1Profile {...{firstName,setFirstName,birthDate,setBirthDate,gender,setGender}}/></>}{flow==='coachManaged'&&step===2&&<><Title title={t('avatar.title')} sub={t('redesign.coach.optional')}/><InvitedStep2Avatar avatarUrl={avatarUrl} onUpload={f=>upload(f,true)}/></>}{flow==='coachManaged'&&step===3&&<InvitedStep3Welcome firstName={firstName} coachName={coachName}/>} {error&&<p className={styles.error} role="alert" aria-live="assertive">{error}</p>}</div><footer className={styles.nav}>{step>1&&<button type="button" className={styles.back} onClick={back} aria-label={t('redesign.back')}><ChevronLeft/></button>}<button type="button" className={styles.primary} disabled={!valid||saving} onClick={()=>void next()}>{saving?t('nav.saving'):step===total?t('redesign.finish'):t('nav.continue')}</button></footer></section></main>
 }
+function Title({title,sub}:{title:string;sub:string}){return <div className={styles.title}><h1>{title}</h1><p>{sub}</p></div>};function Group({children}:{children:React.ReactNode}){return <div className={styles.group}>{children}</div>}
+function Summary({label,value,edit,t}:{label:string;value:string;edit:()=>void;t:Translate}){return <div className={styles.row}><div><strong>{label}</strong><p>{value}</p></div><button type="button" onClick={edit}>{t('redesign.edit')}</button></div>}

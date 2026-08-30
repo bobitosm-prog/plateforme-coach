@@ -3355,6 +3355,17 @@
         "fat": "Fat",
         "trialBadge": "Your free access is active"
       }
+    },
+    "redesign": {
+      "step": "Step {current} of {total}", "loading": "Loading your space…", "back": "Go back to the previous step", "finish": "Create my MoovX space", "edit": "Edit",
+      "goal": { "title": "Your goal", "subtitle": "Choose the priority that will guide your experience." },
+      "profile": { "title": "Your profile", "subtitle": "The essentials we need to personalize your targets." },
+      "training": { "title": "Your training", "subtitle": "A pace and environment that fit your routine." },
+      "nutrition": { "title": "Your nutrition", "subtitle": "Choose your approach. You can adjust everything later.", "advanced": "Advanced preferences (optional)", "restrictions": "Food allergies or restrictions", "none": "None", "some": "I have restrictions", "details": "Describe your restrictions" },
+      "summary": { "title": "Everything is ready", "subtitle": "Review your answers before creating your space.", "macros": "Indicative daily target" },
+      "coach": { "profile": "The essentials for your coaching experience.", "optional": "This step is optional." },
+      "errors": { "profile": "We could not load your profile. Try again in a moment.", "save": "Saving failed. Your answers are still here — please retry.", "photo": "The photo could not be saved." },
+      "a11y": { "progress": "Onboarding progress" }
     }
   },
   "cardio": {
