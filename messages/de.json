@@ -715,6 +715,8 @@
       "createAccount": "Registrieren",
       "continueGoogle": "Weiter mit Google",
       "continueApple": "Weiter mit Apple",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
       "or": "ODER",
       "backToHome": "← Zurück zur Startseite",
       "backToLogin": "← Zurück zur Anmeldung",
@@ -735,13 +737,49 @@
         "emailRequired": "E-Mail erforderlich",
         "passwordRequired": "Passwort erforderlich",
         "invalidCredentials": "Ungültige E-Mail oder Passwort",
-        "emailNotConfirmed": "E-Mail nicht bestätigt. Überprüfe dein Postfach."
+        "emailNotConfirmed": "E-Mail nicht bestätigt. Überprüfe dein Postfach.",
+        "profileUnavailable": "Dein Profil kann derzeit nicht geprüft werden. Versuche es erneut.",
+        "recoveryRequest": "Der Link konnte derzeit nicht gesendet werden. Versuche es später erneut."
+      },
+      "callbackErrors": {
+        "callback_invalid": "Dieser Anmeldelink ist ungültig oder abgelaufen.",
+        "oauth_error": "Die Anmeldung über den Anbieter wurde nicht abgeschlossen. Versuche es erneut.",
+        "recovery_error": "Dieser Wiederherstellungslink ist ungültig oder abgelaufen.",
+        "confirmation_error": "Die Kontobestätigung wurde nicht abgeschlossen. Fordere einen neuen Link an."
       },
       "banner": {
         "confirmed": {
           "title": "KONTO BESTÄTIGT",
           "body": "Ihre E-Mail ist bestätigt. Melden Sie sich an, um zu beginnen."
+        },
+        "reset": {
+          "title": "PASSWORT AKTUALISIERT",
+          "body": "Dein Passwort wurde aktualisiert. Du kannst dich jetzt anmelden."
         }
+      }
+    },
+    "routing": {
+      "loading": "Profil wird geprüft",
+      "profileErrorTitle": "PROFIL VORÜBERGEHEND NICHT VERFÜGBAR",
+      "profileErrorBody": "Dein Profil kann derzeit nicht geprüft werden. Es werden keine Einrichtungsdaten geändert.",
+      "profileMissingTitle": "PROFIL NICHT GEFUNDEN",
+      "profileMissingBody": "Dein Konto ist angemeldet, aber das Profil ist noch nicht verfügbar.",
+      "retry": "Erneut versuchen"
+    },
+    "resetPassword": {
+      "title": "NEUES PASSWORT",
+      "subtitle": "Wähle ein sicheres neues Passwort.",
+      "passwordLabel": "Neues Passwort",
+      "confirmationLabel": "Neues Passwort bestätigen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
+      "checking": "Wiederherstellungslink wird geprüft",
+      "submit": "Passwort aktualisieren",
+      "saving": "Wird aktualisiert…",
+      "errors": {
+        "tooShort": "Das Passwort muss mindestens 8 Zeichen enthalten.",
+        "mismatch": "Die Passwörter stimmen nicht überein.",
+        "generic": "Das Passwort konnte nicht aktualisiert werden. Fordere einen neuen Link an."
       }
     },
     "register": {
@@ -822,7 +860,9 @@
         "fullNameRequired": "Vollständiger Name erforderlich",
         "specialityRequired": "Spezialisierung erforderlich",
         "experienceRequired": "Erfahrung erforderlich",
-        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an."
+        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an.",
+        "profileUnavailable": "Dein Profil kann derzeit nicht geprüft werden. Versuche es erneut.",
+        "oauthRole": "Die gewählte Rolle konnte für diese Anmeldung nicht sicher übernommen werden. Versuche es erneut."
       }
     },
     "join": {

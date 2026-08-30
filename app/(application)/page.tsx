@@ -12,6 +12,7 @@ import useInitialGeneration from '../hooks/useInitialGeneration'
 import Paywall from '../components/Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../components/ClientIntlProvider'
+import PostAuthFatalState from '../../components/auth/PostAuthFatalState'
 import BadgeCelebration from '../components/BadgeCelebration'
 import type { Badge } from '../../lib/check-badges'
 import FeedbackTab from '../components/client/FeedbackTab'
@@ -365,7 +366,7 @@ export default function CoachApp() {
   }, [h.session?.user?.id, h.supabase])
 
   /* ── Loading splash ── */
-  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
+  if (!h.mounted || h.loading || (h.session && (!h.roleChecked || h.postAuthProfileState === 'loading'))) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
       <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 20, filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }} />
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -374,9 +375,15 @@ export default function CoachApp() {
 
   /* ── Not authenticated → /login (same-origin, préserve le conteneur PWA iOS) ── */
   if (!h.session && !h.loading) {
-    h.router.push('/login')
+    h.router.replace('/login')
     return null
   }
+
+  if (h.postAuthProfileState === 'error' || h.postAuthProfileState === 'missing') return (
+    <ClientIntlProvider>
+      <PostAuthFatalState state={h.postAuthProfileState} onRetry={h.retryPostAuth} />
+    </ClientIntlProvider>
+  )
 
   /* ── Coach role → render coach dashboard directly (no redirect) ── */
   if (h.userRole === 'coach') return <CoachDashboard initialSession={h.session} />

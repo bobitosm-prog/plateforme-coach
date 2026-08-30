@@ -715,6 +715,8 @@
       "createAccount": "S'inscrire",
       "continueGoogle": "Continuer avec Google",
       "continueApple": "Continuer avec Apple",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
       "or": "OU",
       "backToHome": "← Retour à l'accueil",
       "backToLogin": "← Retour à la connexion",
@@ -735,13 +737,49 @@
         "emailRequired": "Email requis",
         "passwordRequired": "Mot de passe requis",
         "invalidCredentials": "Email ou mot de passe incorrect",
-        "emailNotConfirmed": "Email non confirmé. Vérifie ta boîte mail."
+        "emailNotConfirmed": "Email non confirmé. Vérifie ta boîte mail.",
+        "profileUnavailable": "Impossible de vérifier ton profil pour le moment. Réessaie.",
+        "recoveryRequest": "Impossible d’envoyer le lien pour le moment. Réessaie plus tard."
+      },
+      "callbackErrors": {
+        "callback_invalid": "Le lien de connexion est invalide ou a expiré.",
+        "oauth_error": "La connexion avec ce fournisseur n’a pas abouti. Réessaie.",
+        "recovery_error": "Le lien de récupération est invalide ou a expiré.",
+        "confirmation_error": "La confirmation du compte n’a pas abouti. Demande un nouveau lien."
       },
       "banner": {
         "confirmed": {
           "title": "COMPTE VALIDÉ",
           "body": "Votre email est confirmé. Connectez-vous pour démarrer."
+        },
+        "reset": {
+          "title": "MOT DE PASSE MODIFIÉ",
+          "body": "Ton mot de passe a été mis à jour. Tu peux maintenant te connecter."
         }
+      }
+    },
+    "routing": {
+      "loading": "Vérification du profil",
+      "profileErrorTitle": "PROFIL TEMPORAIREMENT INDISPONIBLE",
+      "profileErrorBody": "Nous ne pouvons pas vérifier ton profil pour le moment. Aucune configuration ne sera modifiée.",
+      "profileMissingTitle": "PROFIL INTROUVABLE",
+      "profileMissingBody": "Ton compte est connecté, mais son profil n’est pas encore disponible.",
+      "retry": "Réessayer"
+    },
+    "resetPassword": {
+      "title": "NOUVEAU MOT DE PASSE",
+      "subtitle": "Choisis un nouveau mot de passe sécurisé.",
+      "passwordLabel": "Nouveau mot de passe",
+      "confirmationLabel": "Confirmer le nouveau mot de passe",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "checking": "Vérification du lien de récupération",
+      "submit": "Mettre à jour le mot de passe",
+      "saving": "Mise à jour…",
+      "errors": {
+        "tooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+        "mismatch": "Les mots de passe ne correspondent pas.",
+        "generic": "Le mot de passe n’a pas pu être modifié. Demande un nouveau lien."
       }
     },
     "register": {
@@ -822,7 +860,9 @@
         "fullNameRequired": "Nom complet requis",
         "specialityRequired": "Spécialité requise",
         "experienceRequired": "Expérience requise",
-        "emailAlreadyUsed": "Cet email est déjà utilisé. Connecte-toi."
+        "emailAlreadyUsed": "Cet email est déjà utilisé. Connecte-toi.",
+        "profileUnavailable": "Impossible de vérifier ton profil pour le moment. Réessaie.",
+        "oauthRole": "Impossible de sécuriser le rôle choisi pour cette connexion. Réessaie."
       }
     },
     "onboarding": {

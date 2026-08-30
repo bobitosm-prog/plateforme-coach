@@ -48,6 +48,11 @@ import {
   persistCriticalWorkout,
   type CompletedWorkoutData,
 } from '../../lib/training/session-persistence'
+import {
+  classifyProfileResult,
+  resolvePostAuthDestination,
+  type ProfileState,
+} from '../../lib/auth/post-auth-routing'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -91,6 +96,7 @@ export default function useClientDashboard() {
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [postAuthProfileState, setPostAuthProfileState] = useState<ProfileState>('loading')
   const [entitlementSnapshot, setEntitlementSnapshot] = useState<EffectiveEntitlementSnapshot>(
     DENIED_ENTITLEMENT_SNAPSHOT,
   )
@@ -185,6 +191,7 @@ export default function useClientDashboard() {
   async function fetchAll(forceRefresh = false) {
     const uid = session?.user?.id
     if (!uid) return
+    if (!fetchAllComplete.current) setPostAuthProfileState('loading')
     const today = new Date().toISOString().split('T')[0]
 
     let resolvedEntitlementSnapshot = entitlementSnapshot
@@ -200,6 +207,27 @@ export default function useClientDashboard() {
     if (!forceRefresh) {
       const cached = cache.get(`dashboard_${uid}`)
       if (cached) {
+        const cachedProfileDecision = resolvePostAuthDestination({
+          authenticated: true,
+          profileState: cached.profileData ? 'ready' : 'missing',
+          profile: cached.profileData,
+          adminExempt: cached.profileData?.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'),
+        })
+        if (!cachedProfileDecision.route) {
+          setPostAuthProfileState(cached.profileData ? 'error' : 'missing')
+          return
+        }
+        if (cachedProfileDecision.route !== '/') {
+          router.replace(cachedProfileDecision.route)
+          return
+        }
+        if (cachedProfileDecision.destination === 'coach_app') {
+          setUserRole(cached.profileData.role)
+          setPostAuthProfileState('ready')
+          fetchAllComplete.current = true
+          return
+        }
+        setUserRole(cached.profileData.role)
         const relation = toActiveCoachResolutionState(await findActiveCoachForClient(supabase, uid))
         const context = normalizeActiveTrainingContext(resolveActiveTrainingProgram({
           coachRelation: relation,
@@ -219,6 +247,7 @@ export default function useClientDashboard() {
         setPlanningDays(planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
         fetchAllComplete.current = true
+        setPostAuthProfileState('ready')
         return
       }
     }
@@ -240,18 +269,54 @@ export default function useClientDashboard() {
       findActiveCoachForClient(supabase, uid),
     ])
 
+    const classifiedProfile = classifyProfileResult(profRes)
     // A transient/provider read error is not proof that onboarding is incomplete.
-    if (profRes.error && profRes.error.code !== 'PGRST116') {
-      console.error('[client-dashboard] Profile read failed:', profRes.error.code)
+    if (classifiedProfile.state === 'error') {
+      console.error('[client-dashboard] Profile read failed:', profRes.error?.code)
+      setPostAuthProfileState('error')
       return
     }
-    if (!profRes.data) { router.replace('/onboarding-v2'); return }
+    if (classifiedProfile.state === 'missing' || !profRes.data) {
+      setPostAuthProfileState('missing')
+      return
+    }
     // If role is missing but user_metadata has it (trigger guard_profile_sensitive_columns blocks client role updates), fix via RPC
     const metaRole = session?.user?.user_metadata?.role
-    if (!profRes.data.role && metaRole) {
+    if (!profRes.data.role && (metaRole === 'client' || metaRole === 'coach')) {
       const { error: roleErr } = await supabase.rpc('set_role', { p_role: metaRole })
-      if (!roleErr) profRes.data.role = metaRole
+      if (roleErr) {
+        setPostAuthProfileState('error')
+        return
+      }
+      const { data: repaired, error: repairedError } = await supabase.from('profiles').select('role').eq('id', uid).single()
+      if (repairedError || !repaired?.role) {
+        setPostAuthProfileState('error')
+        return
+      }
+      profRes.data.role = repaired.role
     }
+    setUserRole(profRes.data.role)
+
+    const postAuthDecision = resolvePostAuthDestination({
+      authenticated: true,
+      profileState: 'ready',
+      profile: profRes.data,
+      adminExempt: profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'),
+    })
+    if (!postAuthDecision.route) {
+      setPostAuthProfileState('error')
+      return
+    }
+    if (postAuthDecision.route !== '/') {
+      router.replace(postAuthDecision.route)
+      return
+    }
+    if (postAuthDecision.destination === 'coach_app') {
+      setPostAuthProfileState('ready')
+      fetchAllComplete.current = true
+      return
+    }
+
     if (profRes.data.role === 'client') {
       try {
         const assignmentResponse = await fetch('/api/coach/default-assignment', { method: 'POST' })
@@ -263,42 +328,6 @@ export default function useClientDashboard() {
         console.error('[client-dashboard] Default coach assignment request failed')
       }
     }
-    if (profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')) {
-      // Admin users skip all onboarding → proceed to dashboard
-    } else if (profRes.data.role === 'coach') {
-      if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
-      // Coach with completed onboarding → proceed to dashboard
-    } else {
-      // onboarding_completed = true → authoritative flag, skip all checks
-      if (profRes.data.onboarding_completed) {
-        // Proceed to dashboard
-      } else {
-        const V2_MIGRATION_DATE = new Date('2026-05-27')
-        const createdAt = profRes.data.created_at ? new Date(profRes.data.created_at) : null
-        const isLegacyUser = createdAt && createdAt < V2_MIGRATION_DATE
-
-        if (isLegacyUser) {
-          // Legacy users (pre-v2) → preserve v1 onboarding checks
-          if (!profRes.data.onboarding_completed_at && !profRes.data.objective) {
-            router.replace('/onboarding-fitness'); return
-          }
-          const fn = profRes.data.full_name?.trim()
-          if (!fn || fn === 'Athlete') {
-            router.replace('/onboarding'); return
-          }
-          if (!profRes.data.onboarding_photo_completed_at) {
-            const photoFeatureDate = new Date('2026-04-03')
-            if (createdAt && createdAt >= photoFeatureDate) {
-              router.replace('/onboarding-photo'); return
-            }
-          }
-        } else {
-          // New users (post-v2) → unified v2 onboarding
-          router.replace('/onboarding-v2'); return
-        }
-      }
-    }
-
     const profileData = profRes.data
     const weightsData = [...(weightsRes.data || [])].sort((a, b) => a.date.localeCompare(b.date))
     const sessData = sessRes.data || []
@@ -353,6 +382,7 @@ export default function useClientDashboard() {
     setPlanningDays(planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     fetchAllComplete.current = true
+    setPostAuthProfileState('ready')
   }
 
   function normalizeActiveTrainingContext(context: ActiveTrainingProgramContext): ActiveTrainingProgramContext {
@@ -820,7 +850,7 @@ export default function useClientDashboard() {
 
   return {
     // Auth / loading
-    mounted, session, loading, roleChecked, userRole, router, supabase,
+    mounted, session, loading, roleChecked, userRole, postAuthProfileState, retryPostAuth: () => fetchAll(true), router, supabase,
     // Profile / data
     profile, measurements, progressPhotos, wSessions, workoutHistoryState,
     coachProgram, activeTrainingProgram, coachMealPlan, planningDays, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,

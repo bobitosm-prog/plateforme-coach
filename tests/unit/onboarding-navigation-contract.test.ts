@@ -14,20 +14,20 @@ describe('onboarding navigation contract', () => {
   const coach = read('app/(application)/onboarding-coach/OnboardingCoachContent.tsx')
   const login = read('app/(application)/login/LoginPageContent.tsx')
   const join = read('app/(application)/join/JoinPageContent.tsx')
+  const resolver = read('lib/auth/post-auth-routing.ts')
 
   it('uses onboarding_completed as the authoritative client completion flag', () => {
-    const completed = proxy.indexOf('if (prof.onboarding_completed)')
-    const legacyFallback = proxy.indexOf('const V2_MIGRATION_DATE')
-    expect(completed).toBeGreaterThan(-1)
-    expect(completed).toBeLessThan(legacyFallback)
-    expect(proxy.slice(completed, legacyFallback)).not.toContain('custom_programs')
+    expect(proxy).toContain('resolvePostAuthDestination')
+    expect(resolver).toContain("profile.onboarding_completed === true")
+    expect(resolver).not.toContain('custom_programs')
   })
 
   it('does not classify a profile provider error as incomplete onboarding', () => {
-    const errorGuard = dashboard.indexOf("profRes.error && profRes.error.code !== 'PGRST116'")
-    const missingRedirect = dashboard.indexOf("if (!profRes.data) { router.replace('/onboarding-v2'); return }")
+    const errorGuard = dashboard.indexOf("classifiedProfile.state === 'error'")
+    const missingGuard = dashboard.indexOf("classifiedProfile.state === 'missing'")
     expect(errorGuard).toBeGreaterThan(-1)
-    expect(errorGuard).toBeLessThan(missingRedirect)
+    expect(missingGuard).toBeGreaterThan(errorGuard)
+    expect(dashboard).not.toContain("if (!profRes.data) { router.replace('/onboarding-v2'); return }")
   })
 
   it('replaces historical onboarding entries instead of stacking a back loop', () => {
@@ -40,7 +40,9 @@ describe('onboarding navigation contract', () => {
 
   it('keeps modern onboarding success and client/coach auth routing distinct', () => {
     expect(v2).toContain("router.replace('/')")
-    expect(login).toContain("role === 'coach' && !profile?.coach_onboarding_complete ? '/onboarding-coach' : '/'")
+    expect(login).toContain('resolveClientPostAuth')
+    expect(resolver).toContain("profile.role === 'coach'")
+    expect(resolver).toContain("profile.coach_onboarding_complete === true")
     expect(join).toContain("router.replace(payload.data?.redirectTo || '/')")
     expect(coach).toContain('coach_onboarding_complete: true')
   })

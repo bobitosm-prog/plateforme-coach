@@ -715,6 +715,8 @@
       "createAccount": "Sign up",
       "continueGoogle": "Continue with Google",
       "continueApple": "Continue with Apple",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "or": "OR",
       "backToHome": "← Back to home",
       "backToLogin": "← Back to sign in",
@@ -735,13 +737,49 @@
         "emailRequired": "Email required",
         "passwordRequired": "Password required",
         "invalidCredentials": "Invalid email or password",
-        "emailNotConfirmed": "Email not confirmed. Check your inbox."
+        "emailNotConfirmed": "Email not confirmed. Check your inbox.",
+        "profileUnavailable": "We cannot verify your profile right now. Please try again.",
+        "recoveryRequest": "We could not send the link right now. Please try again later."
+      },
+      "callbackErrors": {
+        "callback_invalid": "This sign-in link is invalid or has expired.",
+        "oauth_error": "The provider sign-in did not complete. Please try again.",
+        "recovery_error": "This recovery link is invalid or has expired.",
+        "confirmation_error": "Account confirmation did not complete. Request a new link."
       },
       "banner": {
         "confirmed": {
           "title": "ACCOUNT VERIFIED",
           "body": "Your email is confirmed. Sign in to get started."
+        },
+        "reset": {
+          "title": "PASSWORD UPDATED",
+          "body": "Your password has been updated. You can now sign in."
         }
+      }
+    },
+    "routing": {
+      "loading": "Checking profile",
+      "profileErrorTitle": "PROFILE TEMPORARILY UNAVAILABLE",
+      "profileErrorBody": "We cannot verify your profile right now. No setup data will be changed.",
+      "profileMissingTitle": "PROFILE NOT FOUND",
+      "profileMissingBody": "Your account is signed in, but its profile is not available yet.",
+      "retry": "Try again"
+    },
+    "resetPassword": {
+      "title": "NEW PASSWORD",
+      "subtitle": "Choose a secure new password.",
+      "passwordLabel": "New password",
+      "confirmationLabel": "Confirm new password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "checking": "Checking recovery link",
+      "submit": "Update password",
+      "saving": "Updating…",
+      "errors": {
+        "tooShort": "The password must contain at least 8 characters.",
+        "mismatch": "The passwords do not match.",
+        "generic": "The password could not be updated. Request a new link."
       }
     },
     "register": {
@@ -822,7 +860,9 @@
         "fullNameRequired": "Full name required",
         "specialityRequired": "Speciality required",
         "experienceRequired": "Experience required",
-        "emailAlreadyUsed": "This email is already in use. Sign in instead."
+        "emailAlreadyUsed": "This email is already in use. Sign in instead.",
+        "profileUnavailable": "We cannot verify your profile right now. Please try again.",
+        "oauthRole": "We could not secure the selected role for this sign-in. Please try again."
       }
     },
     "join": {
