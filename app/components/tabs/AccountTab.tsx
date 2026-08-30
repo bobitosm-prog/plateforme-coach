@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed, Dumbbell } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import BugReport from '../BugReport'
 import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
@@ -24,7 +24,7 @@ interface AccountTabProps {
   supabase: any
   userId?: string
   session: Session | null
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program') => void
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program' | 'training_program') => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
@@ -152,6 +152,17 @@ export default function AccountTab({
               <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('nutritionProgramDescription')}</span>
             </span>
             <span style={{ flex: 1 }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
+          <div style={divider} />
+          <button onClick={() => onNavigate('training_program')} style={itemStyle}>
+            <Dumbbell size={18} color={GOLD} />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('trainingProgram')}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('trainingProgramDescription')}</span>
+            </span>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: TEXT_DIM, textTransform: 'uppercase' }}>{t('open')}</span>
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
         </div>

@@ -1,0 +1,186 @@
+.page {
+  min-height: 100%;
+  padding: 16px 16px calc(160px + env(safe-area-inset-bottom, 0px));
+  color: #f7f2e8;
+  background: #0d0b08;
+}
+
+.shell { width: min(100%, 680px); margin: 0 auto; }
+
+.back,
+.configureButton {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: #c9bda8;
+  background: transparent;
+}
+
+.header { margin: 20px 0 22px; }
+
+.header > span,
+.summaryContent > span {
+  color: #c8a96e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.header h1,
+.summary h2 {
+  margin: 5px 0 0;
+  font-family: var(--font-bebas-neue), sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.header h1 { font-size: clamp(2rem, 7vw, 3rem); }
+.header p { max-width: 52ch; margin: 8px 0 0; color: #9f9587; line-height: 1.55; }
+
+.summary,
+.loading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(200, 169, 110, 0.2);
+  border-radius: 18px;
+  background: #17130f;
+}
+
+.summaryIcon,
+.loadingIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: rgba(200, 169, 110, 0.1);
+}
+
+.summaryIcon { display: grid; place-items: center; color: #c8a96e; }
+.summary h2 { font-size: 1.55rem; }
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.meta div { padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.035); }
+.meta dt { color: #8f8577; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.meta dd { margin: 4px 0 0; color: #f7f2e8; font-size: 0.86rem; }
+
+.coachNotice,
+.notice,
+.error,
+.disabledReason {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  color: #c9bda8;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.coachNotice { color: #c8a96e; }
+.error { color: #f4a3a3; }
+.coachNotice svg,
+.notice svg,
+.error svg { flex: 0 0 auto; margin-top: 2px; }
+
+.actions { margin-top: 14px; }
+.configureButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #0d0b08;
+  background: #c8a96e;
+  font-weight: 800;
+}
+.configureButton span { flex: 1; text-align: left; }
+.configureButton[aria-expanded='true'] svg { transform: rotate(180deg); }
+.configureButton:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.preparation {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: #12100d;
+}
+.preparation h2 { margin: 0; color: #f7f2e8; font-size: 0.95rem; font-weight: 700; }
+.preparation p { margin: 5px 0 0; color: #9f9587; font-size: 0.8rem; line-height: 1.45; }
+
+.loadingLines { display: grid; gap: 9px; align-content: center; }
+.loadingLines i { display: block; width: 100%; height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); }
+.loadingLines i:nth-child(2) { width: 78%; }
+.loadingLines i:nth-child(3) { width: 55%; }
+.loadingIcon,
+.loadingLines i { animation: pulse 1.4s ease-in-out infinite; }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.back:focus-visible,
+.configureButton:focus-visible {
+  outline: 2px solid #f0c978;
+  outline-offset: 3px;
+}
+
+@keyframes pulse { 50% { opacity: 0.45; } }
+
+@media (max-width: 430px) {
+  .page { padding-inline: 12px; }
+  .header { margin-block: 16px 18px; }
+  .header h1 {
+    max-width: 13ch;
+    font-size: clamp(1.75rem, 9vw, 2.25rem);
+    line-height: 0.98;
+  }
+  .header p { font-size: 0.88rem; line-height: 1.45; }
+  .summary,
+  .loading { gap: 10px; padding: 14px; }
+  .summaryIcon,
+  .loadingIcon { width: 38px; height: 38px; border-radius: 11px; }
+  .summary h2 { font-size: 1.3rem; line-height: 1; }
+  .meta { gap: 8px; margin-top: 12px; }
+  .meta div { padding: 8px; }
+  .meta dd { font-size: 0.8rem; }
+}
+
+@media (min-width: 768px) {
+  .page { padding-top: 28px; padding-bottom: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .configureButton,
+  .configureButton svg,
+  .loadingIcon,
+  .loadingLines i {
+    transition: none !important;
+    animation: none !important;
+  }
+}
