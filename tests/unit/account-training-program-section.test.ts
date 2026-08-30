@@ -29,11 +29,13 @@ describe('Account training program section', () => {
     expect(section).toContain('resolveTrainingProgramAccess({ capabilities, activeProgramContext: activeProgram })')
     expect(section).toContain('resolveTrainingProgramFrequency(activeProgram)')
     expect(section).not.toMatch(/from\(['"](?:custom_programs|client_programs)['"]\)/)
-    expect(section).not.toMatch(/createClient|supabase|fetch\(/i)
+    expect(section).not.toMatch(/createClient|\.from\(|fetch\(/i)
   })
 
-  it('mounts no builder, quota, writer, or generation API', () => {
-    expect(section).not.toMatch(/ProgramBuilder|useAiQuota|quota|generate-program|custom_programs|client_programs/)
+  it('keeps manager, builder and quota behind the configuration interaction', () => {
+    expect(section).toContain("dynamic(() => import('../../training/TrainingProgramManager')")
+    expect(section).toContain('preparationOpen && access.canConfigure')
+    expect(section).not.toMatch(/ProgramBuilder|useAiQuota|generate-program|custom_programs|client_programs/)
     expect(page).not.toMatch(/training_program['"][\s\S]{0,250}ProgramBuilder/)
   })
 
@@ -64,11 +66,10 @@ describe('Account training program section', () => {
     expect(styles).toContain('font-size: clamp(1.75rem, 9vw, 2.25rem)')
   })
 
-  it('keeps the preparatory panel compact and explicitly non-mutating', () => {
-    expect(section).not.toContain("t('preparationEyebrow')")
-    expect(section).toContain("t('preparationTitle')")
-    expect(section).toContain("t('preparationDescription')")
-    expect(styles).toMatch(/\.preparation \{[\s\S]*padding: 12px 14px/)
+  it('replaces the preparatory placeholder with the shared real manager', () => {
+    expect(section).toContain('<TrainingProgramManager')
+    expect(section).toContain('activeProgramContext={activeProgram}')
+    expect(section).toContain('onRefresh={onRefresh}')
   })
 
   it('provides every Training Account message in French, English and German', () => {

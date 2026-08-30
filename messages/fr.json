@@ -1961,7 +1961,8 @@
       "newExercise": "NOUVEL EXERCICE",
       "aiCard": "GÉNÉRER AVEC L'IA",
       "aiCardDesc": "Décris ton objectif et l'IA crée tout",
-      "aiLocked": "Ton coach gère ton programme. Contacte-le directement.",
+      "aiLocked": "La génération IA n'est pas disponible actuellement. La création manuelle reste accessible.",
+      "close": "Fermer le configurateur",
       "manualCard": "CRÉER MOI-MÊME",
       "manualCardDesc": "Sélectionne tes exercices par jour",
       "customCard": "EXERCICE PERSONNALISÉ",
@@ -2016,7 +2017,8 @@
         "allMuscles": "Tous",
         "myExercise": "MON EXERCICE",
         "noResults": "Aucun exercice trouvé",
-        "createExercise": "CRÉER UN EXERCICE"
+        "createExercise": "CRÉER UN EXERCICE",
+        "loadError": "Le catalogue d'exercices est temporairement indisponible."
       },
       "day": {
         "reorderDays": "Réorganiser les jours",
@@ -2053,7 +2055,8 @@
         "deleteTitle": "Supprimer cet exercice ?",
         "deleteMessage": "L'exercice \"{name}\" sera retire du programme. Cette action ne peut pas etre annulee.",
         "deleteConfirm": "Supprimer",
-        "deleteCancel": "Annuler"
+        "deleteCancel": "Annuler",
+        "closeGenerating": "Une génération est en cours. Voulez-vous vraiment fermer ?"
       },
       "toast": {
         "generating": "Génération de ton programme...",
@@ -2061,7 +2064,10 @@
         "generationError": "Erreur de génération",
         "networkError": "Erreur réseau",
         "exerciseCreated": "Exercice créé !",
-        "programSaved": "Programme sauvegardé !"
+        "programSaved": "Programme sauvegardé !",
+        "actionUnavailable": "Cette action n'est pas disponible actuellement.",
+        "persistenceError": "La sauvegarde a échoué. Vos modifications restent affichées.",
+        "scheduleError": "Le programme est sauvegardé, mais le planning n'a pas pu être mis à jour."
       }
     }
   },
@@ -2539,7 +2545,27 @@
       "configure": "Configurer",
       "preparationTitle": "Configuration",
       "preparationDescription": "La gestion complète du programme sera disponible à l'étape suivante. Aucune donnée n'est modifiée ici.",
-      "aiUnavailable": "La future génération IA n'est pas disponible avec vos droits actuels."
+      "aiUnavailable": "La future génération IA n'est pas disponible avec vos droits actuels.",
+      "management": {
+        "eyebrow": "Configuration", "title": "Gérer mes programmes", "close": "Fermer la gestion des programmes",
+        "create": "Créer", "import": "Importer", "template": "Modèle vierge",
+        "loading": "Chargement des programmes…", "listError": "La liste des programmes est temporairement indisponible.", "empty": "Aucun programme personnel",
+        "coachBlocked": "Votre programme est actuellement fourni par votre coach. Les modifications personnelles sont protégées.",
+        "relationBlocked": "La relation coach est indisponible ou ambiguë. Les modifications sont désactivées par sécurité.",
+        "mutationBlocked": "Cette action n'est pas disponible avec vos droits actuels.",
+        "persistenceError": "Le programme n'a pas pu être enregistré. Aucune réussite n'a été confirmée.",
+        "activationError": "L'activation a échoué. Le statut des programmes a été actualisé.", "scheduleError": "La planification du programme a échoué.",
+        "scheduleSyncError": "Le programme est actif, mais son planning n'a pas pu être synchronisé.", "deleteError": "Le programme n'a pas pu être supprimé.",
+        "importError": "Le programme n'a pas pu être importé.", "importValidationError": "Le fichier importé n'est pas un programme valide.",
+        "activated": "Programme activé", "deactivated": "Programme désactivé", "deleted": "Programme supprimé", "scheduled": "Programme planifié pour le {date}",
+        "active": "Actif", "inactive": "Inactif", "scheduledBadge": "Planifié", "activateOrSchedule": "Activer / planifier", "deactivate": "Désactiver",
+        "edit": "Éditer", "export": "Exporter", "delete": "Supprimer", "confirmDelete": "Confirmer la suppression", "cancel": "Annuler",
+        "programMeta": "{count, plural, one {# jour} other {# jours}} · {source}", "sourceAi": "IA", "sourceImport": "Import", "sourceManual": "Manuel",
+        "restDay": "Jour {count} · Repos", "trainingDay": "Jour {count}", "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}",
+        "quotaLoading": "Chargement du quota IA…", "importPreview": "Aperçu de l'import", "programName": "Nom du programme",
+        "importDays": "{count, plural, one {# jour détecté} other {# jours détectés}}", "importSkipped": "{count, plural, one {# feuille ignorée} other {# feuilles ignorées}}",
+        "importedName": "Programme importé", "continue": "Continuer"
+      }
     }
   },
   "nutrition_tab": {

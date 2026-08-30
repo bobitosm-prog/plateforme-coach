@@ -1961,7 +1961,8 @@
       "newExercise": "NEUE ÜBUNG",
       "aiCard": "MIT KI GENERIEREN",
       "aiCardDesc": "Beschreibe dein Ziel und die KI erstellt alles",
-      "aiLocked": "Dein Coach verwaltet dein Programm. Kontaktiere ihn direkt.",
+      "aiLocked": "Die KI-Generierung ist derzeit nicht verfügbar. Die manuelle Erstellung bleibt verfügbar.",
+      "close": "Programmkonfigurator schließen",
       "manualCard": "SELBST ERSTELLEN",
       "manualCardDesc": "Wähle deine Übungen pro Tag",
       "customCard": "EIGENE ÜBUNG",
@@ -2016,7 +2017,8 @@
         "allMuscles": "Alle",
         "myExercise": "MEINE ÜBUNG",
         "noResults": "Keine Übung gefunden",
-        "createExercise": "ÜBUNG ERSTELLEN"
+        "createExercise": "ÜBUNG ERSTELLEN",
+        "loadError": "Der Übungskatalog ist vorübergehend nicht verfügbar."
       },
       "day": {
         "reorderDays": "Tage umordnen",
@@ -2053,7 +2055,8 @@
         "deleteTitle": "Diese Übung löschen?",
         "deleteMessage": "Die Übung \"{name}\" wird aus dem Programm entfernt. Das kann nicht rückgängig gemacht werden.",
         "deleteConfirm": "Löschen",
-        "deleteCancel": "Abbrechen"
+        "deleteCancel": "Abbrechen",
+        "closeGenerating": "Eine Generierung läuft. Möchtest du wirklich schließen?"
       },
       "toast": {
         "generating": "Dein Programm wird generiert...",
@@ -2061,7 +2064,10 @@
         "generationError": "Generierungsfehler",
         "networkError": "Netzwerkfehler",
         "exerciseCreated": "Übung erstellt!",
-        "programSaved": "Programm gespeichert!"
+        "programSaved": "Programm gespeichert!",
+        "actionUnavailable": "Diese Aktion ist derzeit nicht verfügbar.",
+        "persistenceError": "Speichern fehlgeschlagen. Deine Änderungen bleiben sichtbar.",
+        "scheduleError": "Das Programm wurde gespeichert, aber der Zeitplan konnte nicht aktualisiert werden."
       }
     }
   },
@@ -2539,7 +2545,27 @@
       "configure": "Konfigurieren",
       "preparationTitle": "Konfiguration",
       "preparationDescription": "Die vollständige Programmverwaltung wird im nächsten Schritt verfügbar sein. Hier werden keine Daten geändert.",
-      "aiUnavailable": "Die zukünftige KI-Generierung ist mit deinem aktuellen Zugriff nicht verfügbar."
+      "aiUnavailable": "Die zukünftige KI-Generierung ist mit deinem aktuellen Zugriff nicht verfügbar.",
+      "management": {
+        "eyebrow": "Konfiguration", "title": "Meine Programme verwalten", "close": "Programmverwaltung schließen",
+        "create": "Erstellen", "import": "Importieren", "template": "Leere Vorlage",
+        "loading": "Programme werden geladen…", "listError": "Die Programmliste ist vorübergehend nicht verfügbar.", "empty": "Kein persönliches Programm",
+        "coachBlocked": "Dein Programm wird derzeit von deinem Coach bereitgestellt. Persönliche Änderungen sind geschützt.",
+        "relationBlocked": "Die Coach-Beziehung ist nicht verfügbar oder mehrdeutig. Änderungen sind zur Sicherheit deaktiviert.",
+        "mutationBlocked": "Diese Aktion ist mit deinem aktuellen Zugriff nicht verfügbar.",
+        "persistenceError": "Das Programm konnte nicht gespeichert werden. Es wurde kein Erfolg bestätigt.",
+        "activationError": "Die Aktivierung ist fehlgeschlagen. Die Programmstatus wurden aktualisiert.", "scheduleError": "Die Programmplanung ist fehlgeschlagen.",
+        "scheduleSyncError": "Das Programm ist aktiv, aber sein Zeitplan konnte nicht synchronisiert werden.", "deleteError": "Das Programm konnte nicht gelöscht werden.",
+        "importError": "Das Programm konnte nicht importiert werden.", "importValidationError": "Die importierte Datei ist kein gültiges Programm.",
+        "activated": "Programm aktiviert", "deactivated": "Programm deaktiviert", "deleted": "Programm gelöscht", "scheduled": "Programm für den {date} geplant",
+        "active": "Aktiv", "inactive": "Inaktiv", "scheduledBadge": "Geplant", "activateOrSchedule": "Aktivieren / planen", "deactivate": "Deaktivieren",
+        "edit": "Bearbeiten", "export": "Exportieren", "delete": "Löschen", "confirmDelete": "Löschen bestätigen", "cancel": "Abbrechen",
+        "programMeta": "{count, plural, one {# Tag} other {# Tage}} · {source}", "sourceAi": "KI", "sourceImport": "Import", "sourceManual": "Manuell",
+        "restDay": "Tag {count} · Pause", "trainingDay": "Tag {count}", "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+        "quotaLoading": "KI-Kontingent wird geladen…", "importPreview": "Importvorschau", "programName": "Programmname",
+        "importDays": "{count, plural, one {# Tag erkannt} other {# Tage erkannt}}", "importSkipped": "{count, plural, one {# Blatt übersprungen} other {# Blätter übersprungen}}",
+        "importedName": "Importiertes Programm", "continue": "Weiter"
+      }
     }
   },
   "nutrition_tab": {

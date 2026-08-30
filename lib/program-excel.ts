@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
 
 /* ─── Types ─── */
-interface ExerciseData {
+export interface ExerciseData {
   exercise_name?: string
   custom_name?: string
   name?: string
@@ -16,7 +16,7 @@ interface ExerciseData {
   muscle_group?: string
 }
 
-interface DayData {
+export interface DayData {
   name?: string
   weekday?: string
   is_rest?: boolean
@@ -24,7 +24,7 @@ interface DayData {
   exercises?: ExerciseData[]
 }
 
-interface ProgramData {
+export interface ProgramData {
   name: string
   description?: string
   source?: string

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-interface AiQuotaState {
+export interface AiQuotaState {
   remaining: number
   limit: number
   days: number

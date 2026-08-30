@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { FONT_ALT, FONT_BODY, RADIUS_CARD } from '../../../lib/design-tokens'
 import { useAiQuota } from '../../hooks/useAiQuota'
+import type { AiQuotaState } from '../../hooks/useAiQuota'
 
 export type AiQuotaBadgeState = 'loading' | 'available' | 'exhausted' | 'error'
 
@@ -20,9 +21,10 @@ export function resolveAiQuotaBadgeState({
   return remaining <= 0 ? 'exhausted' : 'available'
 }
 
-export default function AiQuotaBadge() {
+type AiQuotaBadgeViewProps = Pick<AiQuotaState, 'remaining' | 'days' | 'loading' | 'error'>
+
+export function AiQuotaBadgeView({ remaining, days, loading, error }: AiQuotaBadgeViewProps) {
   const t = useTranslations('aiQuotaBadge')
-  const { remaining, days, loading, error } = useAiQuota()
   const state = resolveAiQuotaBadgeState({ loading, error, remaining })
 
   if (state === 'loading') return null
@@ -84,4 +86,9 @@ export default function AiQuotaBadge() {
       </div>
     </div>
   )
+}
+
+export default function AiQuotaBadge() {
+  const quota = useAiQuota()
+  return <AiQuotaBadgeView {...quota} />
 }

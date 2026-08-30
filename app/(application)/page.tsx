@@ -701,7 +701,7 @@ export default function CoachApp() {
               {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
               {h.activeTab === 'nutrition_program' && <NutritionProgramSection profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} profile={h.profile} supabase={h.supabase} session={h.session} onRefresh={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
             </motion.div>
           </AnimatePresence>
         </main>

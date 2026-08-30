@@ -1961,7 +1961,8 @@
       "newExercise": "NEW EXERCISE",
       "aiCard": "GENERATE WITH AI",
       "aiCardDesc": "Describe your goal and AI creates everything",
-      "aiLocked": "Your coach manages your program. Contact them directly.",
+      "aiLocked": "AI generation is currently unavailable. Manual creation remains available.",
+      "close": "Close program builder",
       "manualCard": "CREATE MYSELF",
       "manualCardDesc": "Select your exercises by day",
       "customCard": "CUSTOM EXERCISE",
@@ -2016,7 +2017,8 @@
         "allMuscles": "All",
         "myExercise": "MY EXERCISE",
         "noResults": "No exercise found",
-        "createExercise": "CREATE AN EXERCISE"
+        "createExercise": "CREATE AN EXERCISE",
+        "loadError": "The exercise catalog is temporarily unavailable."
       },
       "day": {
         "reorderDays": "Reorder days",
@@ -2053,7 +2055,8 @@
         "deleteTitle": "Delete this exercise?",
         "deleteMessage": "The exercise \"{name}\" will be removed from the program. This cannot be undone.",
         "deleteConfirm": "Delete",
-        "deleteCancel": "Cancel"
+        "deleteCancel": "Cancel",
+        "closeGenerating": "A generation is in progress. Do you really want to close?"
       },
       "toast": {
         "generating": "Generating your program...",
@@ -2061,7 +2064,10 @@
         "generationError": "Generation error",
         "networkError": "Network error",
         "exerciseCreated": "Exercise created!",
-        "programSaved": "Program saved!"
+        "programSaved": "Program saved!",
+        "actionUnavailable": "This action is currently unavailable.",
+        "persistenceError": "Saving failed. Your changes remain displayed.",
+        "scheduleError": "The program was saved, but the schedule could not be updated."
       }
     }
   },
@@ -2539,7 +2545,27 @@
       "configure": "Configure",
       "preparationTitle": "Configuration",
       "preparationDescription": "Full program management will be available in the next step. No data is changed here.",
-      "aiUnavailable": "Future AI generation is not available with your current access."
+      "aiUnavailable": "Future AI generation is not available with your current access.",
+      "management": {
+        "eyebrow": "Configuration", "title": "Manage my programs", "close": "Close program management",
+        "create": "Create", "import": "Import", "template": "Blank template",
+        "loading": "Loading programs…", "listError": "The program list is temporarily unavailable.", "empty": "No personal program",
+        "coachBlocked": "Your program is currently provided by your coach. Personal changes are protected.",
+        "relationBlocked": "The coach relationship is unavailable or ambiguous. Changes are disabled for safety.",
+        "mutationBlocked": "This action is not available with your current access.",
+        "persistenceError": "The program could not be saved. No success was confirmed.",
+        "activationError": "Activation failed. Program statuses were refreshed.", "scheduleError": "Program scheduling failed.",
+        "scheduleSyncError": "The program is active, but its schedule could not be synchronized.", "deleteError": "The program could not be deleted.",
+        "importError": "The program could not be imported.", "importValidationError": "The imported file is not a valid program.",
+        "activated": "Program activated", "deactivated": "Program deactivated", "deleted": "Program deleted", "scheduled": "Program scheduled for {date}",
+        "active": "Active", "inactive": "Inactive", "scheduledBadge": "Scheduled", "activateOrSchedule": "Activate / schedule", "deactivate": "Deactivate",
+        "edit": "Edit", "export": "Export", "delete": "Delete", "confirmDelete": "Confirm deletion", "cancel": "Cancel",
+        "programMeta": "{count, plural, one {# day} other {# days}} · {source}", "sourceAi": "AI", "sourceImport": "Import", "sourceManual": "Manual",
+        "restDay": "Day {count} · Rest", "trainingDay": "Day {count}", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+        "quotaLoading": "Loading AI quota…", "importPreview": "Import preview", "programName": "Program name",
+        "importDays": "{count, plural, one {# day detected} other {# days detected}}", "importSkipped": "{count, plural, one {# sheet skipped} other {# sheets skipped}}",
+        "importedName": "Imported program", "continue": "Continue"
+      }
     }
   },
   "nutrition_tab": {

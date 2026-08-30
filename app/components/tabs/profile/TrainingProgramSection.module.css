@@ -131,6 +131,7 @@
 .loadingLines i:nth-child(3) { width: 55%; }
 .loadingIcon,
 .loadingLines i { animation: pulse 1.4s ease-in-out infinite; }
+.configurationLoading { min-height: 180px; margin-top: 14px; border-radius: 18px; background: rgba(255,255,255,.035); }
 
 .srOnly {
   position: absolute;

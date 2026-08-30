@@ -129,7 +129,7 @@ export default function OnboardingFitnessContent() {
       .eq('id', userId)
 
     setSaving(false)
-    if (!error) window.location.href = '/onboarding'
+    if (!error) window.location.replace('/onboarding')
   }
 
   const canContinue =

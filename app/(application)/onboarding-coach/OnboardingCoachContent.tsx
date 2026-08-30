@@ -175,7 +175,7 @@ export default function OnboardingCoachContent() {
       await supabase.from('profiles').update({ coach_onboarding_complete: true, onboarding_completed: true }).eq('id', uid)
     }
     setSaving(false)
-    window.location.href = '/'
+    window.location.replace('/')
   }
 
   return (

@@ -240,6 +240,11 @@ export default function useClientDashboard() {
       findActiveCoachForClient(supabase, uid),
     ])
 
+    // A transient/provider read error is not proof that onboarding is incomplete.
+    if (profRes.error && profRes.error.code !== 'PGRST116') {
+      console.error('[client-dashboard] Profile read failed:', profRes.error.code)
+      return
+    }
     if (!profRes.data) { router.replace('/onboarding-v2'); return }
     // If role is missing but user_metadata has it (trigger guard_profile_sensitive_columns blocks client role updates), fix via RPC
     const metaRole = session?.user?.user_metadata?.role

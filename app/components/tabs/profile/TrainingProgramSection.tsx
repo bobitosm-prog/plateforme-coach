@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { AlertTriangle, ArrowLeft, ChevronDown, Dumbbell, ShieldCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { UserCapabilities } from '../../../../lib/entitlements/capabilities'
 import type { ActiveTrainingProgramContext } from '../../../../lib/training/active-program'
 import {
@@ -12,10 +14,19 @@ import {
 } from '../../../../lib/training/training-program-access'
 import styles from './TrainingProgramSection.module.css'
 
+const TrainingProgramManager = dynamic(() => import('../../training/TrainingProgramManager'), {
+  ssr: false,
+  loading: () => <div role="status" aria-live="polite" className={styles.configurationLoading} />,
+})
+
 interface TrainingProgramSectionProps {
   activeProgram: ActiveTrainingProgramContext
   capabilities: UserCapabilities
   profileObjective: unknown
+  supabase: SupabaseClient
+  session: Session | null
+  profile?: unknown
+  onRefresh: (forceRefresh?: boolean) => Promise<void>
   onBack: () => void
 }
 
@@ -23,6 +34,10 @@ export default function TrainingProgramSection({
   activeProgram,
   capabilities,
   profileObjective,
+  supabase,
+  session,
+  profile,
+  onRefresh,
   onBack,
 }: TrainingProgramSectionProps) {
   const t = useTranslations('accountPrograms.training')
@@ -138,11 +153,18 @@ export default function TrainingProgramSection({
         )}
 
         {preparationOpen && access.canConfigure && (
-          <aside id="training-program-preparation" className={styles.preparation} aria-labelledby="training-preparation-title">
-            <h2 id="training-preparation-title">{t('preparationTitle')}</h2>
-            <p>{t('preparationDescription')}</p>
-            {!access.canGenerateLater && <p className={styles.notice}>{t('aiUnavailable')}</p>}
-          </aside>
+          <div id="training-program-preparation">
+            <TrainingProgramManager
+              embedded
+              supabase={supabase}
+              session={session}
+              profile={profile}
+              capabilities={capabilities}
+              activeProgramContext={activeProgram}
+              onRefresh={onRefresh}
+              onClose={() => setPreparationOpen(false)}
+            />
+          </div>
         )}
       </div>
     </section>
