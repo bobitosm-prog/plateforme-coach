@@ -34,7 +34,7 @@ describe('Account training program section', () => {
 
   it('keeps manager, builder and quota behind the configuration interaction', () => {
     expect(section).toContain("dynamic(() => import('../../training/TrainingProgramManager')")
-    expect(section).toContain('preparationOpen && access.canConfigure')
+    expect(section).toContain('configureOpen && access.canConfigure')
     expect(section).not.toMatch(/ProgramBuilder|useAiQuota|generate-program|custom_programs|client_programs/)
     expect(page).not.toMatch(/training_program['"][\s\S]{0,250}ProgramBuilder/)
   })

@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
@@ -53,6 +54,12 @@ import {
 import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
+import {
+  appNavigationHref,
+  normalizeAppNavigationQuery,
+  parseAppNavigation,
+  type AppNavigationState,
+} from '../../lib/navigation/app-navigation'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
@@ -99,8 +106,47 @@ function WorkoutSessionWithCelebrations({ draft, onDraftChange, onFinish, onClos
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
 const TAB_RAIL_KEYS = ['home', 'training', 'nutrition', 'progress', 'compte'] as const
 
-export default function CoachApp() {
-  const h = useClientDashboard()
+const ACCOUNT_SECTION_BY_TAB: Partial<Record<Tab, NonNullable<AppNavigationState['section']>>> = {
+  profil: 'profile',
+  messages: 'messages',
+  feedback: 'feedback',
+  preferences: 'preferences',
+  account_section: 'account',
+  goals: 'goals',
+  nutrition_program: 'nutrition-program',
+  training_program: 'training-program',
+}
+
+function tabFromNavigation(navigation: AppNavigationState): Tab {
+  if (navigation.tab === 'progression') return 'progress'
+  if (navigation.tab !== 'account') return navigation.tab
+  if (navigation.section === 'profile') return 'profil'
+  if (navigation.section === 'messages') return 'messages'
+  if (navigation.section === 'feedback') return 'feedback'
+  if (navigation.section === 'preferences') return 'preferences'
+  if (navigation.section === 'account') return 'account_section'
+  if (navigation.section === 'goals') return 'goals'
+  if (navigation.section === 'nutrition-program') return 'nutrition_program'
+  if (navigation.section === 'training-program') return 'training_program'
+  return 'compte'
+}
+
+function navigationFromTab(tab: Tab): AppNavigationState | null {
+  if (tab === 'home') return { tab: 'home' }
+  if (tab === 'training' || tab === 'nutrition') return { tab }
+  if (tab === 'progress') return { tab: 'progression' }
+  if (tab === 'compte') return { tab: 'account' }
+  const section = ACCOUNT_SECTION_BY_TAB[tab]
+  return section ? { tab: 'account', section } : null
+}
+
+function CoachAppContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const navigation = React.useMemo(() => parseAppNavigation(searchParams), [searchParams])
+  const initialNavigation = React.useRef(navigation)
+  const h = useClientDashboard(tabFromNavigation(initialNavigation.current))
+  const setActiveTab = h.setActiveTab
   const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase, {
     capabilities: h.capabilities,
     coachRelationStatus: h.coachRelationStatus,
@@ -109,6 +155,28 @@ export default function CoachApp() {
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
+
+  const navigateApp = React.useCallback((target: AppNavigationState, replace = false) => {
+    const href = appNavigationHref(target)
+    const current = `${window.location.pathname}${window.location.search}`
+    if (current === href) return
+    if (replace) router.replace(href, { scroll: false })
+    else router.push(href, { scroll: false })
+  }, [router])
+
+  const navigateTo = React.useCallback((tab: Tab) => {
+    const target = navigationFromTab(tab)
+    if (target) navigateApp(target)
+    else setActiveTab(tab)
+  }, [setActiveTab, navigateApp])
+
+  React.useEffect(() => {
+    const normalizedQuery = normalizeAppNavigationQuery(searchParams)
+    if (normalizedQuery !== searchParams.toString()) {
+      router.replace(normalizedQuery ? `/?${normalizedQuery}` : '/', { scroll: false })
+    }
+    setActiveTab(tabFromNavigation(navigation))
+  }, [navigation, searchParams, router, setActiveTab])
 
   // ── Badge celebration queue (global — survives workout unmount) ──
   const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
@@ -130,7 +198,7 @@ export default function CoachApp() {
   }, [h.supabase, h.session?.user?.id])
 
   // ── Rail horizontal: lazy keep-alive ──
-  const visitedTabs = React.useRef(new Set<string>(['home']))
+  const visitedTabs = React.useRef(new Set<string>(['home', tabFromNavigation(initialNavigation.current)]))
   const lastRailIndex = React.useRef(0)
   const [, forceRender] = React.useState(0)
   const [mainSize, setMainSize] = React.useState({ w: 0, h: 0 })
@@ -219,7 +287,7 @@ export default function CoachApp() {
     if (dx < -D || vx < -V) target = railIndex + 1
     else if (dx > D || vx > V) target = railIndex - 1
     target = Math.max(0, Math.min(4, target)) as typeof railIndex
-    if (target !== railIndex) h.setActiveTab(TAB_RAIL_KEYS[target] as any)
+    if (target !== railIndex) navigateTo(TAB_RAIL_KEYS[target] as Tab)
     else fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
   }
   // Mark active tab as visited (triggers render to mount it)
@@ -434,10 +502,10 @@ export default function CoachApp() {
             { id: 'progress', icon: TrendingUp, label: 'Analytics' },
             { id: 'compte', icon: User, label: 'Compte' },
           ] as const).map(({ id, icon: Icon, label }) => {
-            const active = h.activeTab === id
+            const active = h.activeTab === id || (id === 'compte' && navigation.tab === 'account')
             const badge = id === 'compte' && h.unreadCount > 0
             return (
-              <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: overlayOpen ? 'default' : 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms, opacity 0.2s ease', opacity: overlayOpen ? 0.4 : 1 }}>
+              <button key={id} aria-current={active ? 'page' : undefined} onClick={() => { if (overlayOpen) return; navigateTo(id) }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: overlayOpen ? 'default' : 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms, opacity 0.2s ease', opacity: overlayOpen ? 0.4 : 1 }}>
                 <div style={{ position: 'relative' }}>
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
@@ -510,8 +578,8 @@ export default function CoachApp() {
           onDraftChange={h.updateWorkoutSessionDraft}
           onFinish={h.onFinishWorkout}
           onClose={() => h.setWorkoutSession(null)}
-          onNavigateHome={() => { h.setWorkoutSession(null); h.setActiveTab('home') }}
-          onNavigateProgress={() => { h.setWorkoutSession(null); h.setActiveTab('progress') }}
+          onNavigateHome={() => { h.setWorkoutSession(null); navigateTo('home') }}
+          onNavigateProgress={() => { h.setWorkoutSession(null); navigateTo('progress') }}
           onBadgesEarned={handleBadgesEarned}
           rirTrackingEnabled={h.profile?.rir_tracking_enabled}
         />
@@ -682,14 +750,14 @@ export default function CoachApp() {
         <main className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <AnimatePresence mode="wait">
             <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
-              {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isCoachManaged={perms.isCoachManaged} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'feedback' && <FeedbackTab onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'nutrition_program' && <NutritionProgramSection profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} profile={h.profile} supabase={h.supabase} session={h.session} onRefresh={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isCoachManaged={perms.isCoachManaged} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'feedback' && <FeedbackTab onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'nutrition_program' && <NutritionProgramSection profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} profile={h.profile} supabase={h.supabase} session={h.session} onRefresh={h.fetchAll} onBack={() => navigateTo('compte')} configureOpen={navigation.section === 'training-program' && navigation.mode === 'configure'} onConfigureChange={(open) => navigateApp({ tab: 'account', section: 'training-program', mode: open ? 'configure' : undefined })} />}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -705,19 +773,19 @@ export default function CoachApp() {
           onTouchCancel={onRailTouchEnd}
         >
           <div className="client-main-scroll client-main-scroll-home" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
+            {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={navigateTo} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} activeTrainingProgram={h.activeTrainingProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} workoutHistory={h.wSessions.filter(item => item.completed)} workoutHistoryState={h.workoutHistoryState} startProgramWorkout={h.startProgramWorkout} onOpenProgramSettings={() => h.setActiveTab('training_program')} scheduledSessions={h.scheduledSessions} setCalendarSelectedDate={h.setCalendarSelectedDate} setModal={h.setModal} />}
+            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} activeTrainingProgram={h.activeTrainingProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} workoutHistory={h.wSessions.filter(item => item.completed)} workoutHistoryState={h.workoutHistoryState} startProgramWorkout={h.startProgramWorkout} onOpenProgramSettings={() => navigateTo('training_program')} scheduledSessions={h.scheduledSessions} setCalendarSelectedDate={h.setCalendarSelectedDate} setModal={h.setModal} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('nutrition') && <NutritionTab profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onOpenProgramSettings={() => h.setActiveTab('nutrition_program')} />}
+            {visitedTabs.current.has('nutrition') && <NutritionTab profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onOpenProgramSettings={() => navigateTo('nutrition_program')} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} setModal={h.setModal} profile={h.profile} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} currentWeight={h.currentWeight} progressionModel={h.progressionModel} onProgressionPeriodChange={h.setProgressionPeriod} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} session={h.session} onNavigate={(tab) => h.setActiveTab(tab)} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
+            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} session={h.session} onNavigate={navigateTo} focusPrograms={navigation.tab === 'account' && navigation.section === 'programs'} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
           </div>
         </motion.div>
       </main>
@@ -738,7 +806,7 @@ export default function CoachApp() {
             profile={h.profile}
             capabilities={h.capabilities}
             externalOpen={h.activeTab === 'coachIA'}
-            onExternalClose={() => h.setActiveTab('compte')}
+            onExternalClose={() => navigateTo('compte')}
             hideFloatingButton={true}
           />
       )}
@@ -765,9 +833,9 @@ export default function CoachApp() {
           { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
           { id: 'compte' as Tab, Icon: User, label: 'Compte' },
         ]).map(({ id, Icon, label }) => {
-          const active = h.activeTab === id
+          const active = h.activeTab === id || (id === 'compte' && navigation.tab === 'account')
           return (
-            <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
+            <button key={id} aria-current={active ? 'page' : undefined} onClick={() => { if (overlayOpen) return; navigateTo(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
               <div
                 className={active ? 'nav-glass-active' : undefined}
                 style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 14, transition: 'all 0.3s ease' }}
@@ -792,5 +860,15 @@ export default function CoachApp() {
 
     </div>
     </ClientIntlProvider>
+  )
+}
+
+export default function CoachApp() {
+  return (
+    <React.Suspense fallback={(
+      <main role="status" aria-label="Loading" style={{ minHeight: '100dvh', background: BG_BASE }} />
+    )}>
+      <CoachAppContent />
+    </React.Suspense>
   )
 }

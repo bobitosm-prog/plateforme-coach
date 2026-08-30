@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
 import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed, Dumbbell } from 'lucide-react'
@@ -29,6 +29,7 @@ interface AccountTabProps {
   trialDaysLeft?: number
   isInBeta?: boolean
   betaDaysLeft?: number
+  focusPrograms?: boolean
 }
 
 const menuCard: React.CSSProperties = {
@@ -53,16 +54,24 @@ const divider: React.CSSProperties = {
 export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate,
   session, isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
+  focusPrograms = false,
 }: AccountTabProps) {
   const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [bugReportOpen, setBugReportOpen] = useState(false)
+  const programsHeadingRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!supabase || !userId) return
     supabase.from('user_xp').select('total_xp').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
   }, [supabase, userId])
+
+  useEffect(() => {
+    if (!focusPrograms) return
+    programsHeadingRef.current?.scrollIntoView({ block: 'start' })
+    programsHeadingRef.current?.focus({ preventScroll: true })
+  }, [focusPrograms])
 
   const feedbackUnread = useMyFeedbackBadge()
   const xp = xpData?.total_xp || 0
@@ -143,7 +152,9 @@ export default function AccountTab({
         </div>
 
         {/* ── PROGRAMMES ── */}
-        <SectionTitle noPadding title={t('programs')} />
+        <div ref={programsHeadingRef} tabIndex={-1} aria-label={t('programs')}>
+          <SectionTitle noPadding title={t('programs')} />
+        </div>
         <div style={menuCard}>
           <button onClick={() => onNavigate('nutrition_program')} style={itemStyle}>
             <UtensilsCrossed size={18} color={GOLD} />

@@ -73,7 +73,7 @@ function personalToDays(program: unknown): { days: unknown[] } | null {
   return Array.isArray(days) ? { days } : null
 }
 
-export default function useClientDashboard() {
+export default function useClientDashboard(initialTab: Tab = 'home') {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [session, setSession] = useState<any>(null)
@@ -92,7 +92,7 @@ export default function useClientDashboard() {
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
-  const [activeTab, setActiveTab] = useState<Tab>('home')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)

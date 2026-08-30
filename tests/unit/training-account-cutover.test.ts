@@ -21,7 +21,7 @@ describe('Training to Account program-management cutover', () => {
 
   it('routes active, coach, personal and empty states to the Account sub-screen', () => {
     expect(training).toContain('onOpenProgramSettings={onOpenProgramSettings}')
-    expect(application).toContain("onOpenProgramSettings={() => h.setActiveTab('training_program')}")
+    expect(application).toContain("onOpenProgramSettings={() => navigateTo('training_program')}")
     expect(noSession).toContain("programSource === 'personal'")
     expect(noSession).toContain("t('manageInAccount')")
     expect(noSession).toContain("programSource === 'coach'")
@@ -42,7 +42,7 @@ describe('Training to Account program-management cutover', () => {
     expect(accountSection).toContain('<TrainingProgramManager')
     expect(manager).toContain("dynamic(() => import('./ProgramBuilder')")
     expect(accountSection).toContain("onBack")
-    expect(application).toContain("onBack={() => h.setActiveTab('compte')}")
+    expect(application).toContain("onBack={() => navigateTo('compte')}")
   })
 
   it('preserves session-only workout modifications', () => {

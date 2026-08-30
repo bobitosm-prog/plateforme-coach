@@ -51,7 +51,7 @@ describe('Nutrition generation relocation', () => {
 
   it('routes the empty-plan action directly to Account Programs', () => {
     expect(nutrition).toContain('onConfigurePlan={capabilities.nutrition ? onOpenProgramSettings : undefined}')
-    expect(page).toContain("onOpenProgramSettings={() => h.setActiveTab('nutrition_program')}")
+    expect(page).toContain("onOpenProgramSettings={() => navigateTo('nutrition_program')}")
     expect(messages).toContain('"configure": "Configurer mon programme"')
   })
 

@@ -1,6 +1,4 @@
 'use client'
-
-import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { AlertTriangle, ArrowLeft, ChevronDown, Dumbbell, ShieldCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -28,6 +26,8 @@ interface TrainingProgramSectionProps {
   profile?: unknown
   onRefresh: (forceRefresh?: boolean) => Promise<void>
   onBack: () => void
+  configureOpen: boolean
+  onConfigureChange: (open: boolean) => void
 }
 
 export default function TrainingProgramSection({
@@ -39,9 +39,10 @@ export default function TrainingProgramSection({
   profile,
   onRefresh,
   onBack,
+  configureOpen,
+  onConfigureChange,
 }: TrainingProgramSectionProps) {
   const t = useTranslations('accountPrograms.training')
-  const [preparationOpen, setPreparationOpen] = useState(false)
   const access = resolveTrainingProgramAccess({ capabilities, activeProgramContext: activeProgram })
   const frequency = resolveTrainingProgramFrequency(activeProgram)
   const objective = resolveProfileTrainingObjective(profileObjective)
@@ -138,9 +139,9 @@ export default function TrainingProgramSection({
                     type="button"
                     className={styles.configureButton}
                     disabled={!access.canConfigure}
-                    aria-expanded={access.canConfigure ? preparationOpen : undefined}
+                    aria-expanded={access.canConfigure ? configureOpen : undefined}
                     aria-controls={access.canConfigure ? 'training-program-preparation' : undefined}
-                    onClick={() => setPreparationOpen(open => !open)}
+                    onClick={() => onConfigureChange(!configureOpen)}
                   >
                     <span>{t('configure')}</span>
                     <ChevronDown size={18} aria-hidden="true" />
@@ -152,7 +153,7 @@ export default function TrainingProgramSection({
           </article>
         )}
 
-        {preparationOpen && access.canConfigure && (
+        {configureOpen && access.canConfigure && (
           <div id="training-program-preparation">
             <TrainingProgramManager
               embedded
@@ -162,7 +163,7 @@ export default function TrainingProgramSection({
               capabilities={capabilities}
               activeProgramContext={activeProgram}
               onRefresh={onRefresh}
-              onClose={() => setPreparationOpen(false)}
+              onClose={() => onConfigureChange(false)}
             />
           </div>
         )}

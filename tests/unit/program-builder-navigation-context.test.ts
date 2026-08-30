@@ -19,7 +19,7 @@ describe('ProgramBuilder navigation context contract', () => {
   })
 
   it('returns Account builder success and close to the Account manager', () => {
-    expect(account).toContain('onClose={() => setPreparationOpen(false)}')
+    expect(account).toContain('onClose={() => onConfigureChange(false)}')
     expect(manager).toContain('onSave={() => { quota.refresh(); void refreshAuthorities() }}')
     expect(manager).toContain('onClose={() => { setBuilderOpen(false); setEditingProgram(null) }}')
     expect(manager).not.toContain('/onboarding')

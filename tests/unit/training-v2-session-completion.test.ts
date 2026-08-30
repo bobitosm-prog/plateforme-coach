@@ -116,8 +116,8 @@ describe('Training V2 session completion', () => {
     expect(completion).toContain('onClick={onGoProgress}')
     expect(completion).toContain("t('backHome')")
     expect(completion).toContain("t('viewProgress')")
-    expect(application).toContain("onNavigateHome={() => { h.setWorkoutSession(null); h.setActiveTab('home') }}")
-    expect(application).toContain("onNavigateProgress={() => { h.setWorkoutSession(null); h.setActiveTab('progress') }}")
+    expect(application).toContain("onNavigateHome={() => { h.setWorkoutSession(null); navigateTo('home') }}")
+    expect(application).toContain("onNavigateProgress={() => { h.setWorkoutSession(null); navigateTo('progress') }}")
   })
 
   it('keeps both completion actions visibly styled outside the Training V2 shell', () => {
