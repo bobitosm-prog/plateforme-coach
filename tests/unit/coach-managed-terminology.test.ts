@@ -45,7 +45,8 @@ describe('coach-managed terminology', () => {
         canCreatePrograms: false,
         canUseAI: false,
         canModifyNutrition: false,
-        isCoachManaged: true,
+        isCoachManaged: false,
+        coachRelationStatus: 'not_found',
       })
   })
 

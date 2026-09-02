@@ -31,7 +31,17 @@ describe('Account training program access', () => {
       activeProgramContext: context({ coachRelation: { status, coachId: null } }),
     })
 
-    expect(result).toEqual({ canView: true, canConfigure: true, canGenerateLater: true, reason: null })
+    expect(result).toMatchObject({
+      authority: 'solo',
+      source: 'none',
+      isCoachManaged: false,
+      canConfigure: true,
+      canManagePersonalProgram: true,
+      canGenerateLater: true,
+      canGenerateWithAI: true,
+      reason: null,
+      generationReason: null,
+    })
   })
 
   it('protects personal configuration only for a proven active coach program', () => {
@@ -46,7 +56,16 @@ describe('Account training program access', () => {
       }),
     })
 
-    expect(result).toMatchObject({ canConfigure: false, canGenerateLater: false, reason: 'coach_plan_protected' })
+    expect(result).toMatchObject({
+      authority: 'coach_managed',
+      source: 'coach',
+      isCoachManaged: true,
+      canConfigure: false,
+      canGenerateLater: false,
+      canGenerateWithAI: false,
+      reason: 'coach_plan_protected',
+      generationReason: 'managed_by_active_coach',
+    })
   })
 
   it.each(['multiple_active', 'error'] as const)('fails safe for a %s relation', status => {
@@ -55,7 +74,15 @@ describe('Account training program access', () => {
       activeProgramContext: context({ coachRelation: { status, coachId: null } }),
     })
 
-    expect(result).toMatchObject({ canConfigure: false, canGenerateLater: false, reason: 'relation_uncertain' })
+    expect(result).toMatchObject({
+      authority: 'fail_safe',
+      isCoachManaged: false,
+      canConfigure: false,
+      canGenerateLater: false,
+      canGenerateWithAI: false,
+      reason: 'relation_uncertain',
+      generationReason: status === 'error' ? 'coach_relation_error' : 'multiple_active_coach_relations',
+    })
   })
 
   it('keeps program authority errors distinct from an empty configurable state', () => {
@@ -82,7 +109,13 @@ describe('Account training program access', () => {
       activeProgramContext: context(),
     })
 
-    expect(result).toMatchObject({ canConfigure: true, canGenerateLater: false, reason: 'ai_unavailable' })
+    expect(result).toMatchObject({
+      canConfigure: true,
+      canGenerateLater: false,
+      canGenerateWithAI: false,
+      reason: 'ai_unavailable',
+      generationReason: 'ai_not_available',
+    })
   })
 })
 

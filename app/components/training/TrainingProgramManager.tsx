@@ -66,10 +66,10 @@ export default function TrainingProgramManager({
 }: TrainingProgramManagerProps) {
   const t = useTranslations('accountPrograms.training.management')
   const locale = useLocale()
-  const access = resolveTrainingProgramAccess({ capabilities, activeProgramContext })
   const quota = useAiQuota()
   const quotaState = resolveAiQuotaBadgeState(quota)
-  const canGenerate = access.canGenerateLater && quotaState === 'available'
+  const access = resolveTrainingProgramAccess({ capabilities, activeProgramContext, quotaState })
+  const canGenerate = access.canGenerateWithAI
   const [programs, setPrograms] = useState<ProgramRecord[]>([])
   const [listState, setListState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
   const [expandedId, setExpandedId] = useState<string | null>(null)

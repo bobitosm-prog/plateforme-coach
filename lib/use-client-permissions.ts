@@ -26,12 +26,14 @@ export function deriveClientPermissions(
 ): LoadedClientPermissions {
   const capabilities = resolveUserCapabilities({ subscriptionType })
   const coach = toActiveCoachResolutionState(relation)
+  const hasActiveCoach = coach.status === 'active' && Boolean(coach.coachId)
+  const relationUncertain = coach.status === 'error' || coach.status === 'multiple_active'
 
   return {
     canCreatePrograms: capabilities.training,
-    canUseAI: capabilities.ai,
+    canUseAI: capabilities.ai && !hasActiveCoach && !relationUncertain,
     canModifyNutrition: capabilities.nutrition,
-    isCoachManaged: capabilities.coachManaged,
+    isCoachManaged: hasActiveCoach,
     coachId: coach.coachId,
     coachRelationStatus: coach.status,
   }

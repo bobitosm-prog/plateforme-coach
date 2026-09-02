@@ -800,7 +800,7 @@ function CoachAppContent() {
         </button>
       )}
       {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
-      {!perms.isCoachManaged && (
+      {perms.canUseAI && (
           <ChatAI
             session={h.session}
             profile={h.profile}

@@ -24,12 +24,13 @@ describe('client permission relation and entitlement separation', () => {
     })
   })
 
-  it('combines an active coach with independently active product rights', () => {
+  it('uses an active relation as coach authority and blocks personal AI', () => {
     expect(deriveClientPermissions('client_monthly', ACTIVE_RELATION)).toMatchObject({
       coachId: 'coach-1',
       coachRelationStatus: 'active',
+      isCoachManaged: true,
       canCreatePrograms: true,
-      canUseAI: true,
+      canUseAI: false,
       canModifyNutrition: true,
     })
   })
@@ -39,7 +40,7 @@ describe('client permission relation and entitlement separation', () => {
       canCreatePrograms: false,
       canUseAI: false,
       canModifyNutrition: false,
-      isCoachManaged: true,
+      isCoachManaged: false,
       coachId: null,
       coachRelationStatus: 'not_found',
     })
@@ -49,9 +50,21 @@ describe('client permission relation and entitlement separation', () => {
     expect(deriveClientPermissions('invited', ACTIVE_RELATION)).toMatchObject({
       coachId: 'coach-1',
       coachRelationStatus: 'active',
+      isCoachManaged: true,
       canCreatePrograms: false,
       canUseAI: false,
       canModifyNutrition: false,
+    })
+  })
+
+  it.each(['multiple_active', 'error'] as const)('fails safe for %s without inventing a coach', kind => {
+    expect(deriveClientPermissions('client_monthly', kind === 'error'
+      ? { kind, code: 'RELATION_LOOKUP_FAILED' }
+      : { kind })).toMatchObject({
+      coachId: null,
+      coachRelationStatus: kind,
+      isCoachManaged: false,
+      canUseAI: false,
     })
   })
 

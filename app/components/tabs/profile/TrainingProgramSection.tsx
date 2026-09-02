@@ -48,7 +48,7 @@ export default function TrainingProgramSection({
   const objective = resolveProfileTrainingObjective(profileObjective)
   const isLoading = activeProgram.state === 'loading'
   const isRelationUncertain = access.reason === 'relation_uncertain'
-  const isCoachPlan = activeProgram.source === 'coach' && activeProgram.coachRelation.status === 'active'
+  const isCoachPlan = access.isCoachManaged
 
   const status = activeProgram.state === 'error'
     ? t('statusUnavailable')

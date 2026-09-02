@@ -20,14 +20,15 @@ describe('Account training program management', () => {
 
   it('mounts quota only with the lazy manager and fails safe before generation', () => {
     expect(manager).toContain('const quota = useAiQuota()')
-    expect(manager).toContain("quotaState === 'available'")
+    expect(manager).toContain('resolveTrainingProgramAccess({ capabilities, activeProgramContext, quotaState })')
+    expect(manager).toContain('const canGenerate = access.canGenerateWithAI')
     expect(manager).toContain('aiAllowed={canGenerate}')
     expect(accountSection).not.toContain('useAiQuota')
     expect(trainingTab).not.toContain('useAiQuota')
   })
 
   it('uses the Wave 5B access contract for all personal mutations', () => {
-    expect(manager).toContain('resolveTrainingProgramAccess({ capabilities, activeProgramContext })')
+    expect(manager).toContain('resolveTrainingProgramAccess({ capabilities, activeProgramContext, quotaState })')
     expect(manager).toContain('if (access.canConfigure) return false')
     expect(manager.match(/mutationBlocked\(\)/g)?.length).toBeGreaterThanOrEqual(7)
     expect(builder).toContain('if (!canMutate || !aiAllowed)')
