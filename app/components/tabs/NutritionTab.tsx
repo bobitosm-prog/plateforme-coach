@@ -63,6 +63,7 @@ interface NutritionTabProps {
   profile: any
   capabilities: UserCapabilities
   coachRelationStatus: ActiveCoachResolutionState['status']
+  coachRelationIsAuthoritative: boolean
   coachId: string | null
   supabase: any
   userId: string
@@ -70,7 +71,7 @@ interface NutritionTabProps {
   onOpenProgramSettings: () => void
 }
 
-export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachId, supabase, userId, onOpenProgramSettings }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachRelationIsAuthoritative, coachId, supabase, userId, onOpenProgramSettings }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
@@ -118,7 +119,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     userId,
     profile,
     capabilities,
-    coachRelation: { status: coachRelationStatus, coachId },
+    coachRelation: { status: coachRelationStatus, coachId, isAuthoritative: coachRelationIsAuthoritative },
   })
   const { model: nutritionModel, selectedDate, setSelectedDate, dailyLogs, daysWithMeals, refresh: refreshNutrition } = nutritionDashboard
   const today = nutritionModel.day.localDateKey

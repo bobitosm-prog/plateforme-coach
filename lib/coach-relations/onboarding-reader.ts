@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   findActiveCoachForClient,
+  resolveCoachRelationAuthority,
   type ActiveRelationLookupResult,
 } from './repository'
 
@@ -21,10 +22,13 @@ export async function resolveActiveCoachForOnboarding(
 ): Promise<OnboardingCoachLookup> {
   try {
     const result = await findActiveCoach(client, clientId)
-    if (result.kind === 'active') {
-      return { kind: 'active', coachId: result.relation.coach_id }
+    const authority = resolveCoachRelationAuthority(result)
+    if (authority.isAuthoritative && authority.relation) {
+      return { kind: 'active', coachId: authority.relation.coach_id }
     }
-    if (result.kind === 'not_found') return { kind: 'inactive' }
+    if (authority.physicalState === 'not_found' || authority.authorityState === 'non_authoritative') {
+      return { kind: 'inactive' }
+    }
     return { kind: 'denied' }
   } catch {
     return { kind: 'denied' }

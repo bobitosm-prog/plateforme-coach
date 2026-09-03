@@ -50,7 +50,7 @@ describe('remaining entitlement consumers', () => {
     expect(page).toContain('perms.canUseAI')
     expect(onboarding).toContain('resolveActiveCoachForOnboarding')
     expect(onboarding).toContain("relation.kind==='active'")
-    expect(permissions).toContain("coach.status === 'active'")
+    expect(permissions).toContain('coach.isAuthoritative')
     expect(permissions).not.toContain('isCoachManaged: capabilities.coachManaged')
     expect(permissions).toContain('capabilities.training')
     expect(permissions).toContain('capabilities.nutrition')

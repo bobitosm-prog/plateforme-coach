@@ -1,12 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { CoachRelationSource } from './types'
 
-export const ACTIVE_COACH_RELATION_PROJECTION = 'id,coach_id,client_id,status,created_at,invited_by_coach' as const
+export const ACTIVE_COACH_RELATION_PROJECTION = 'id,coach_id,client_id,status,source,created_at,invited_by_coach' as const
 
 export interface ActiveCoachRelation {
   id: string
   coach_id: string
   client_id: string
   status: 'active'
+  source: CoachRelationSource
   created_at?: string
   invited_by_coach?: boolean | null
 }
@@ -23,16 +25,75 @@ export type ActiveClientListResult =
   | { kind: 'error'; code: string }
 
 export interface ActiveCoachResolutionState {
+  /** Authoritative coach only. Null for default, legacy and uncertain states. */
   coachId: string | null
+  physicalCoachId: string | null
   status: ActiveRelationLookupResult['kind']
+  authorityState: CoachRelationAuthorityState
+  source: CoachRelationSource | null
+  isAuthoritative: boolean
+  requiresReconciliation: boolean
+}
+
+export type CoachRelationAuthorityState =
+  | 'authoritative'
+  | 'non_authoritative'
+  | 'not_found'
+  | 'multiple_active'
+  | 'error'
+
+export interface CoachRelationAuthorityResolution {
+  physicalState: ActiveRelationLookupResult['kind']
+  authorityState: CoachRelationAuthorityState
+  relation: ActiveCoachRelation | null
+  source: CoachRelationSource | null
+  isAuthoritative: boolean
+  requiresReconciliation: boolean
+  errorCode: string | null
+}
+
+export function resolveCoachRelationAuthority(
+  result: ActiveRelationLookupResult,
+): CoachRelationAuthorityResolution {
+  if (result.kind === 'active') {
+    const authoritative = result.relation.source === 'invitation'
+      || result.relation.source === 'admin'
+
+    return {
+      physicalState: 'active',
+      authorityState: authoritative ? 'authoritative' : 'non_authoritative',
+      relation: result.relation,
+      source: result.relation.source,
+      isAuthoritative: authoritative,
+      requiresReconciliation: result.relation.source === 'legacy',
+      errorCode: null,
+    }
+  }
+
+  return {
+    physicalState: result.kind,
+    authorityState: result.kind,
+    relation: null,
+    source: null,
+    isAuthoritative: false,
+    requiresReconciliation: false,
+    errorCode: result.kind === 'error' ? result.code : null,
+  }
 }
 
 export function toActiveCoachResolutionState(
   result: ActiveRelationLookupResult,
 ): ActiveCoachResolutionState {
-  return result.kind === 'active'
-    ? { coachId: result.relation.coach_id, status: 'active' }
-    : { coachId: null, status: result.kind }
+  const authority = resolveCoachRelationAuthority(result)
+  return {
+    coachId: authority.isAuthoritative ? authority.relation?.coach_id ?? null : null,
+    physicalCoachId: authority.relation?.coach_id ?? null,
+    status: authority.physicalState,
+    authorityState: authority.authorityState,
+    source: authority.source,
+    isAuthoritative: authority.isAuthoritative,
+    requiresReconciliation: authority.requiresReconciliation,
+  }
 }
 
 function errorCode(error: unknown): string {
@@ -52,6 +113,7 @@ function parseActiveRelations(data: unknown): ActiveCoachRelation[] | null {
       typeof row !== 'object'
       || row === null
       || Reflect.get(row, 'status') !== 'active'
+      || !isCoachRelationSource(Reflect.get(row, 'source'))
       || typeof Reflect.get(row, 'id') !== 'string'
       || typeof Reflect.get(row, 'coach_id') !== 'string'
       || typeof Reflect.get(row, 'client_id') !== 'string'
@@ -65,6 +127,13 @@ function parseActiveRelations(data: unknown): ActiveCoachRelation[] | null {
     relations.push(row as ActiveCoachRelation)
   }
   return relations
+}
+
+function isCoachRelationSource(value: unknown): value is CoachRelationSource {
+  return value === 'default'
+    || value === 'invitation'
+    || value === 'admin'
+    || value === 'legacy'
 }
 
 async function findActiveRelations(

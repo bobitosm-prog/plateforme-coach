@@ -30,6 +30,7 @@ interface NutritionProgramSectionProps {
   profile: Record<string, unknown> | null
   capabilities: UserCapabilities
   coachRelationStatus: ActiveCoachResolutionState['status']
+  coachRelationIsAuthoritative: boolean
   coachId: string | null
   supabase: SupabaseClient
   userId: string
@@ -69,7 +70,7 @@ function NutritionPlanConfiguration({
   planStatus,
   onSaved,
   onGenerated,
-}: Omit<NutritionProgramSectionProps, 'coachRelationStatus' | 'coachId' | 'onBack'> & {
+}: Omit<NutritionProgramSectionProps, 'coachRelationStatus' | 'coachRelationIsAuthoritative' | 'coachId' | 'onBack'> & {
   hasPersonalPlan: boolean
   coachPlanActive: boolean
   coachRelationStatus: ActiveCoachResolutionState['status']
@@ -126,6 +127,7 @@ export default function NutritionProgramSection({
   profile,
   capabilities,
   coachRelationStatus,
+  coachRelationIsAuthoritative,
   coachId,
   supabase,
   userId,
@@ -147,7 +149,7 @@ export default function NutritionProgramSection({
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    const coachRequest = coachRelationStatus === 'active' && coachId
+    const coachRequest = coachRelationIsAuthoritative && coachId
       ? supabase
         .from('client_meal_plans')
         .select('id,coach_id,plan,created_at,updated_at')
@@ -164,7 +166,7 @@ export default function NutritionProgramSection({
       loading: false,
       error: Boolean(personal.error || coach.error),
     })
-  }, [coachId, coachRelationStatus, supabase, userId])
+  }, [coachId, coachRelationIsAuthoritative, supabase, userId])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -176,9 +178,10 @@ export default function NutritionProgramSection({
   const activePlan = useMemo(() => resolveActiveNutritionPlan({
     coachRelationStatus,
     coachId,
+    isAuthoritative: coachRelationIsAuthoritative,
     coachMealPlan: snapshot.coachPlan,
     personalMealPlan: snapshot.personalPlan,
-  }), [coachId, coachRelationStatus, snapshot.coachPlan, snapshot.personalPlan])
+  }), [coachId, coachRelationIsAuthoritative, coachRelationStatus, snapshot.coachPlan, snapshot.personalPlan])
   const coachPlanActive = activePlan.source === 'coach'
   const hasPersonalPlan = activePlan.source === 'personal'
   const planStatus = resolveNutritionPlanStatus({

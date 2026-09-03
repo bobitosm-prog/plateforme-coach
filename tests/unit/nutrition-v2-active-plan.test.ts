@@ -63,6 +63,7 @@ describe('Nutrition V2 active plan authority', () => {
     const active = resolveActiveNutritionPlan({
       coachRelationStatus: 'active',
       coachId: 'coach-1',
+      isAuthoritative: true,
       coachMealPlan: coachPlan,
       personalMealPlan: personalPlan,
     })
@@ -74,10 +75,11 @@ describe('Nutrition V2 active plan authority', () => {
     const active = resolveActiveNutritionPlan({
       coachRelationStatus: status,
       coachId: null,
+      isAuthoritative: false,
       coachMealPlan: coachPlan,
       personalMealPlan: personalPlan,
     })
-    expect(active.source).toBe('personal')
+    expect(active.source).toBe(status === 'not_found' ? 'personal' : 'none')
     expect(active.coachId).toBeNull()
   })
 
@@ -86,6 +88,7 @@ describe('Nutrition V2 active plan authority', () => {
     const active = resolveActiveNutritionPlan({
       coachRelationStatus: 'not_found',
       coachId: null,
+      isAuthoritative: false,
       coachMealPlan: coachPlan,
       personalMealPlan: personalPlan,
     })
@@ -96,6 +99,7 @@ describe('Nutrition V2 active plan authority', () => {
     const active = resolveActiveNutritionPlan({
       coachRelationStatus: 'active',
       coachId: 'coach-2',
+      isAuthoritative: true,
       coachMealPlan: coachPlan,
       personalMealPlan: personalPlan,
     })
@@ -104,11 +108,11 @@ describe('Nutrition V2 active plan authority', () => {
     expect(active.plan).not.toBe(coachPlan.plan)
   })
 
-  it('uses partial for a personal fallback when relation verification fails', () => {
+  it('fails safe instead of selecting a personal plan when relation verification fails', () => {
     const model = buildNutritionViewModel(input({ coachRelation: { status: 'error', coachId: null }, coachPlan }))
-    expect(model.activePlan.state).toBe('partial')
-    expect(model.activePlan.source).toBe('personal')
-    expect(model.activePlan.plan).toBe(personalPlan.plan)
+    expect(model.activePlan.state).toBe('error')
+    expect(model.activePlan.source).toBe('none')
+    expect(model.activePlan.plan).toBeNull()
   })
 
   it('keeps coach read errors explicit without masking the journal', () => {

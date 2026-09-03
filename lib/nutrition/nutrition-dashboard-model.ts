@@ -110,11 +110,14 @@ export interface NutritionViewModel {
   tools: NutritionTools
   weekSummary: NutritionDomain<NutritionWeekSummary>
   capabilities: UserCapabilities
-  coachRelation: ActiveCoachResolutionState
+  coachRelation: NutritionCoachRelationState
   loading: boolean
   errors: Partial<Record<NutritionDataSource, string>>
   freshness: { loadedAt: string | null; dataDate: string }
 }
+
+export type NutritionCoachRelationState = Pick<ActiveCoachResolutionState, 'status' | 'coachId'>
+  & Partial<Pick<ActiveCoachResolutionState, 'isAuthoritative' | 'requiresReconciliation'>>
 
 export type NutritionDataSource = 'dailyLogs' | 'tracking' | 'personalPlan' | 'coachPlan' | 'hydration'
 
@@ -124,7 +127,7 @@ export interface NutritionViewModelInput {
   selectedDate: string
   profile: Record<string, unknown> | null
   capabilities: UserCapabilities
-  coachRelation: ActiveCoachResolutionState
+  coachRelation: NutritionCoachRelationState
   dailyLogs: NutritionLogRow[]
   tracking: MealTrackingRow[]
   personalPlan: PersonalNutritionPlan | null
@@ -161,16 +164,33 @@ function isPlanPayload(value: unknown): boolean {
 export function resolveActiveNutritionPlan({
   coachRelationStatus,
   coachId,
+  isAuthoritative,
   coachMealPlan,
   personalMealPlan,
 }: {
   coachRelationStatus: ActiveCoachResolutionState['status']
   coachId: string | null
+  isAuthoritative: boolean
   coachMealPlan: CoachNutritionPlan | null
   personalMealPlan: PersonalNutritionPlan | null
 }): ActiveNutritionPlan {
+  if (coachRelationStatus === 'error' || coachRelationStatus === 'multiple_active') {
+    return {
+      state: 'error',
+      source: 'none',
+      id: null,
+      plan: null,
+      coachId: null,
+      updatedAt: null,
+      errorCode: coachRelationStatus === 'error'
+        ? 'NUTRITION_COACH_RELATION_UNAVAILABLE'
+        : 'NUTRITION_MULTIPLE_ACTIVE_COACH_RELATIONS',
+    }
+  }
+
   if (
     coachRelationStatus === 'active'
+    && isAuthoritative
     && coachId
     && coachMealPlan?.coach_id === coachId
     && isPlanPayload(coachMealPlan.plan)
@@ -242,6 +262,7 @@ export function buildNutritionViewModel(input: NutritionViewModelInput): Nutriti
   let activePlan = resolveActiveNutritionPlan({
     coachRelationStatus: input.coachRelation.status,
     coachId: input.coachRelation.coachId,
+    isAuthoritative: input.coachRelation.isAuthoritative === true,
     coachMealPlan: input.coachPlan,
     personalMealPlan: input.personalPlan,
   })

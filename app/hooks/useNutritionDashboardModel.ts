@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { UserCapabilities } from '../../lib/entitlements/capabilities'
-import type { ActiveCoachResolutionState } from '../../lib/coach-relations/repository'
+import type { NutritionCoachRelationState } from '../../lib/nutrition/nutrition-dashboard-model'
 import {
   buildNutritionViewModel,
   type CoachNutritionPlan,
@@ -25,7 +25,7 @@ interface UseNutritionDashboardModelInput {
   userId: string
   profile: Record<string, unknown> | null
   capabilities: UserCapabilities
-  coachRelation: ActiveCoachResolutionState
+  coachRelation: NutritionCoachRelationState
 }
 
 interface NutritionSnapshot {
@@ -69,7 +69,7 @@ export default function useNutritionDashboardModel({
     // relation can never expose a stale coach plan.
     setSnapshot(current => ({ ...current, coachPlan: null, errors: {} }))
 
-    const coachPlanRead = coachRelation.status === 'active' && coachRelation.coachId
+    const coachPlanRead = coachRelation.isAuthoritative !== false && coachRelation.coachId
       ? supabase
         .from('client_meal_plans')
         .select('id,client_id,coach_id,plan,created_at,updated_at')
@@ -131,7 +131,7 @@ export default function useNutritionDashboardModel({
       loadedAt: new Date().toISOString(),
     })
     setLoading(false)
-  }, [coachRelation.coachId, coachRelation.status, day.localDateKey, historyStart, supabase, userId])
+  }, [coachRelation.coachId, coachRelation.isAuthoritative, day.localDateKey, historyStart, supabase, userId])
 
   useEffect(() => {
     let active = true

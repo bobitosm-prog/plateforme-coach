@@ -19,7 +19,7 @@ function relationClient(data: unknown[]) {
   return { from: () => chain } as unknown as SupabaseClient
 }
 
-const ACTIVE = { id: 'relation-1', coach_id: 'coach-1', client_id: 'client-1', status: 'active' }
+const ACTIVE = { id: 'relation-1', coach_id: 'coach-1', client_id: 'client-1', status: 'active', source: 'invitation' }
 
 describe('video feedback active-coach authorization', () => {
   it('resolves the active coach', async () => {
@@ -45,7 +45,8 @@ describe('video feedback active-coach authorization', () => {
   it('authorizes before upload and no longer performs an unfiltered relation lookup', () => {
     const source = readFileSync('app/components/VideoFeedbackModal.tsx', 'utf8')
     expect(source).toContain('findActiveCoachForClient(supabase, userId)')
-    expect(source).toContain("relation.kind !== 'active'")
+    expect(source).toContain('resolveCoachRelationAuthority(relation)')
+    expect(source).toContain('!authority.isAuthoritative')
     expect(source.indexOf('findActiveCoachForClient(supabase, userId)')).toBeLessThan(source.indexOf(".from('exercise-videos')"))
     expect(source).not.toContain(".from('coach_clients')")
     expect(source).not.toContain('relation?.coach_id || null')

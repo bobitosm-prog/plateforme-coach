@@ -29,7 +29,7 @@ function resolve(overrides: Partial<ResolveActiveTrainingProgramInput> = {}) {
 describe('Training V2 active program authority', () => {
   it('selects an exact matching active coach program and never merges personal data', () => {
     const result = resolve({
-      coachRelation: { status: 'active', coachId: 'coach-a' },
+      coachRelation: { status: 'active', coachId: 'coach-a', isAuthoritative: true },
       coachPrograms: [{ id: 'coach-program', coach_id: 'coach-a', program: coachProgram }],
     })
 
@@ -49,7 +49,7 @@ describe('Training V2 active program authority', () => {
     ['stale coach program', [{ id: 'old', coach_id: 'former-coach', program: coachProgram }]],
   ])('rejects a %s and falls back to the active personal program', (_label, coachPrograms) => {
     const result = resolve({
-      coachRelation: { status: 'active', coachId: 'coach-a' },
+      coachRelation: { status: 'active', coachId: 'coach-a', isAuthoritative: true },
       coachPrograms,
     })
 
@@ -59,7 +59,7 @@ describe('Training V2 active program authority', () => {
 
   it('rejects an invalid matching coach payload before authority selection', () => {
     const result = resolve({
-      coachRelation: { status: 'active', coachId: 'coach-a' },
+      coachRelation: { status: 'active', coachId: 'coach-a', isAuthoritative: true },
       coachPrograms: [{ id: 'invalid', coach_id: 'coach-a', program: { malformed: true } }],
       coachProgramValidator: () => false,
     })

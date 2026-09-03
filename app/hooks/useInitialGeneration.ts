@@ -23,10 +23,22 @@ import {
   type ResourceReadResult,
 } from '@/lib/initial-generation/engine'
 
-interface InitialGenerationAuthority {
+export interface InitialGenerationAuthority {
   capabilities: UserCapabilities
   coachRelationStatus: ActiveRelationLookupResult['kind']
   coachId: string | null
+  coachRelationIsAuthoritative: boolean
+}
+
+export function resolveInitialGenerationAuthority(authority: InitialGenerationAuthority) {
+  const relationUncertain = authority.coachRelationStatus === 'error'
+    || authority.coachRelationStatus === 'multiple_active'
+  return {
+    relationUncertain,
+    coachManaged: !relationUncertain
+      && authority.coachRelationIsAuthoritative
+      && Boolean(authority.coachId),
+  }
 }
 
 export interface UseInitialGenerationResult extends InitialGenerationSnapshot {
@@ -140,9 +152,7 @@ export default function useInitialGeneration(
   const execute = useCallback((domains: readonly InitialGenerationDomain[]) => {
     if (!userId || !profile || !profile.needs_initial_generation) return
 
-    const relationUncertain = authority.coachRelationStatus === 'error'
-      || authority.coachRelationStatus === 'multiple_active'
-    const coachManaged = authority.coachRelationStatus === 'active' && Boolean(authority.coachId)
+    const { relationUncertain, coachManaged } = resolveInitialGenerationAuthority(authority)
 
     const readTraining = async (): Promise<ResourceReadResult> => {
       if (relationUncertain) return { kind: 'error', reason: 'relation' }

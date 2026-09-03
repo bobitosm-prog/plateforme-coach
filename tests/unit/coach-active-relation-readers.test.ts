@@ -11,6 +11,7 @@ type RelationRow = {
   coach_id: string
   client_id: string
   status: 'active' | 'ended'
+  source: 'default' | 'invitation' | 'admin' | 'legacy'
   created_at: string
   invited_by_coach: boolean
 }
@@ -20,6 +21,7 @@ const ACTIVE: RelationRow = {
   coach_id: 'coach-1',
   client_id: 'client-1',
   status: 'active',
+  source: 'invitation',
   created_at: '2026-08-22T10:00:00Z',
   invited_by_coach: false,
 }
@@ -151,7 +153,8 @@ describe('client detail active relation guard', () => {
     const relationGuard = source.indexOf('findActiveBetween(supabase, coachId, id)')
     expect(relationGuard).toBeGreaterThan(-1)
     expect(relationGuard).toBeLessThan(source.indexOf("supabase.from('profiles')"))
-    expect(source).toContain("relation.kind !== 'active'")
+    expect(source).toContain('resolveCoachRelationAuthority(relation)')
+    expect(source).toContain('!authority.isAuthoritative')
     expect(source).toContain("coachRelationStatus !== 'active'")
   })
 })

@@ -123,17 +123,17 @@ describe('Nutrition V2 active plan authority', () => {
   const coachPlan = { id: 'coach-plan', coach_id: 'coach-1', plan: { lundi: { repas: {} } } }
 
   it('prefers a matching coach plan only for an active relation', () => {
-    expect(resolveActiveNutritionPlan({ coachRelationStatus: 'active', coachId: 'coach-1', coachMealPlan: coachPlan, personalMealPlan: personalPlan }).source).toBe('coach')
+    expect(resolveActiveNutritionPlan({ coachRelationStatus: 'active', coachId: 'coach-1', isAuthoritative: true, coachMealPlan: coachPlan, personalMealPlan: personalPlan }).source).toBe('coach')
   })
 
   it.each(['not_found', 'multiple_active', 'error'] as const)('rejects stale coach plans for %s', status => {
-    const result = resolveActiveNutritionPlan({ coachRelationStatus: status, coachId: null, coachMealPlan: coachPlan, personalMealPlan: personalPlan })
-    expect(result.source).toBe('personal')
+    const result = resolveActiveNutritionPlan({ coachRelationStatus: status, coachId: null, isAuthoritative: false, coachMealPlan: coachPlan, personalMealPlan: personalPlan })
+    expect(result.source).toBe(status === 'not_found' ? 'personal' : 'none')
     expect(result.coachId).toBeNull()
   })
 
   it('rejects a plan from a different coach', () => {
-    expect(resolveActiveNutritionPlan({ coachRelationStatus: 'active', coachId: 'coach-2', coachMealPlan: coachPlan, personalMealPlan: personalPlan }).source).toBe('personal')
+    expect(resolveActiveNutritionPlan({ coachRelationStatus: 'active', coachId: 'coach-2', isAuthoritative: true, coachMealPlan: coachPlan, personalMealPlan: personalPlan }).source).toBe('personal')
   })
 
   it('does not use coachManaged as relation proof', () => {

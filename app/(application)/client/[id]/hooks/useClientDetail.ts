@@ -4,7 +4,11 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useExerciseInfo } from '../../../../hooks/useExerciseInfo'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
-import { findActiveBetween, type ActiveRelationLookupResult } from '@/lib/coach-relations/repository'
+import {
+  findActiveBetween,
+  resolveCoachRelationAuthority,
+  type ActiveRelationLookupResult,
+} from '@/lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -421,8 +425,13 @@ export default function useClientDetail() {
     relationAuthorizedRef.current = false
     const relation = await findActiveBetween(supabase, coachId, id)
     setCoachRelationStatus(relation.kind)
-    if (relation.kind !== 'active') {
-      setError(relation.kind === 'not_found' ? 'Relation de coaching inactive' : 'Autorisation impossible')
+    const authority = resolveCoachRelationAuthority(relation)
+    if (!authority.isAuthoritative) {
+      setError(
+        authority.physicalState === 'not_found' || authority.authorityState === 'non_authoritative'
+          ? 'Relation de coaching inactive'
+          : 'Autorisation impossible',
+      )
       setLoading(false)
       return
     }

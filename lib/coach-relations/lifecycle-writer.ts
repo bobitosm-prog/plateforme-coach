@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { AuthoritativeCoachRelationSource } from './types'
 
 export type EndRelationReason = 'client_request' | 'coach_request'
 
@@ -27,7 +28,7 @@ type CreateRelationInput = {
   clientId: string
   coachId: string
   actorId: string
-  source: 'default' | 'invitation' | 'admin' | 'legacy'
+  source: AuthoritativeCoachRelationSource
 }
 
 function stringField(value: unknown, field: string): string | null {

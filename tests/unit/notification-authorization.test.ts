@@ -23,7 +23,8 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/push-server', () => ({
   sendPushToUser: mocks.sendPushToUser,
 }))
-vi.mock('@/lib/coach-relations/repository', () => ({
+vi.mock('@/lib/coach-relations/repository', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/lib/coach-relations/repository')>()),
   findActiveBetween: mocks.findActiveBetween,
 }))
 
@@ -66,7 +67,7 @@ function createSessionClient({
     from,
   }
   mocks.findActiveBetween.mockResolvedValue(linked
-    ? { kind: 'active', relation: { id: 'relation-1', coach_id: COACH_ID, client_id: CLIENT_ID, status: 'active' } }
+    ? { kind: 'active', relation: { id: 'relation-1', coach_id: COACH_ID, client_id: CLIENT_ID, status: 'active', source: 'invitation' } }
     : { kind: 'not_found' })
 
   return {

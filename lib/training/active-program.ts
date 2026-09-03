@@ -10,6 +10,8 @@ export type TrainingCoachRelationStatus = ActiveCoachResolutionState['status'] |
 export interface TrainingCoachRelationState {
   status: TrainingCoachRelationStatus
   coachId: string | null
+  isAuthoritative?: boolean
+  requiresReconciliation?: boolean
 }
 
 export interface PersonalTrainingProgram {
@@ -107,7 +109,7 @@ export function resolveActiveTrainingProgram({
     }
   }
 
-  if (coachRelation.status === 'active' && coachRelation.coachId) {
+  if (coachRelation.status === 'active' && coachRelation.isAuthoritative === true && coachRelation.coachId) {
     if (coachProgramReadError) {
       return { ...emptyActiveTrainingProgram(coachRelation), state: 'error', errors }
     }

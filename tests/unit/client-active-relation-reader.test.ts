@@ -11,6 +11,7 @@ type RelationRow = {
   coach_id: string
   client_id: string
   status: 'active' | 'ended'
+  source: 'default' | 'invitation' | 'admin' | 'legacy'
 }
 
 const ACTIVE: RelationRow = {
@@ -18,6 +19,7 @@ const ACTIVE: RelationRow = {
   coach_id: 'coach-active',
   client_id: 'client-1',
   status: 'active',
+  source: 'invitation',
 }
 
 function relationClient(rows: RelationRow[], error: unknown = null): SupabaseClient {
@@ -51,32 +53,32 @@ async function resolve(rows: RelationRow[], error: unknown = null) {
 
 describe('client dashboard active relation reader', () => {
   it('keeps the dashboard coachless when no active relation exists', async () => {
-    await expect(resolve([])).resolves.toEqual({ coachId: null, status: 'not_found' })
+    await expect(resolve([])).resolves.toMatchObject({ coachId: null, status: 'not_found' })
   })
 
   it('uses the single active coach', async () => {
-    await expect(resolve([ACTIVE])).resolves.toEqual({ coachId: 'coach-active', status: 'active' })
+    await expect(resolve([ACTIVE])).resolves.toMatchObject({ coachId: 'coach-active', status: 'active' })
   })
 
   it('ignores ended history and uses the active relation', async () => {
     await expect(resolve([
       { ...ACTIVE, id: 'relation-ended', coach_id: 'coach-former', status: 'ended' },
       ACTIVE,
-    ])).resolves.toEqual({ coachId: 'coach-active', status: 'active' })
+    ])).resolves.toMatchObject({ coachId: 'coach-active', status: 'active' })
   })
 
   it('keeps the dashboard coachless when only ended history exists', async () => {
     await expect(resolve([{ ...ACTIVE, coach_id: 'coach-former', status: 'ended' }]))
-      .resolves.toEqual({ coachId: null, status: 'not_found' })
+      .resolves.toMatchObject({ coachId: null, status: 'not_found' })
   })
 
   it('fails closed when several active coaches exist', async () => {
     await expect(resolve([ACTIVE, { ...ACTIVE, id: 'relation-2', coach_id: 'coach-2' }]))
-      .resolves.toEqual({ coachId: null, status: 'multiple_active' })
+      .resolves.toMatchObject({ coachId: null, status: 'multiple_active' })
   })
 
   it('fails closed on database errors', async () => {
-    await expect(resolve([], { code: '42501' })).resolves.toEqual({ coachId: null, status: 'error' })
+    await expect(resolve([], { code: '42501' })).resolves.toMatchObject({ coachId: null, status: 'error' })
   })
 
   it('uses the central repository and contains no browser relation writer or legacy read', () => {

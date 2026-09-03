@@ -86,8 +86,9 @@ describe('Plan authority and safety', () => {
   })
 
   it('accepts a coach plan only for the active relation and matching coach', () => {
-    expect(program).toContain("coachRelationStatus === 'active' && coachId")
+    expect(program).toContain('coachRelationIsAuthoritative && coachId')
     expect(program).toContain(".eq('coach_id', coachId)")
+    expect(program).toContain('isAuthoritative: coachRelationIsAuthoritative')
     expect(program).toContain("const coachPlanActive = activePlan.source === 'coach'")
     expect(access).toContain("if (coachPlanActive) generationBlockReason = 'coach_plan'")
     expect(messages).toContain('"coachPlanNotice": "Votre plan alimentaire est actuellement fourni par votre coach."')

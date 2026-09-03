@@ -8,7 +8,10 @@ import {
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
-import { findActiveCoachForClient } from '../../lib/coach-relations/repository'
+import {
+  findActiveCoachForClient,
+  resolveCoachRelationAuthority,
+} from '../../lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -42,7 +45,10 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
     setUploading(true)
     try {
       const relation = await findActiveCoachForClient(supabase, userId)
-      if (relation.kind !== 'active') throw new Error('ACTIVE_COACH_REQUIRED')
+      const authority = resolveCoachRelationAuthority(relation)
+      if (!authority.isAuthoritative || !authority.relation) {
+        throw new Error('AUTHORITATIVE_COACH_REQUIRED')
+      }
 
       const ext = videoFile.name.split('.').pop() || 'mp4'
       const fileName = `${userId}/${Date.now()}-${exerciseName.replace(/\s+/g, '-').toLowerCase()}.${ext}`
@@ -58,7 +64,7 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
 
       const { error: dbError } = await supabase.from('exercise_feedback').insert({
         client_id: userId,
-        coach_id: relation.relation.coach_id,
+        coach_id: authority.relation.coach_id,
         exercise_name: exerciseName,
         video_url: publicUrl,
         client_note: clientNote.trim() || null,

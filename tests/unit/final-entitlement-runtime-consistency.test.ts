@@ -108,6 +108,7 @@ describe('final entitlement runtime consistency', () => {
           coach_id: COACH_ID,
           client_id: USER_ID,
           status: 'active',
+          source: 'invitation',
         },
       }),
     )

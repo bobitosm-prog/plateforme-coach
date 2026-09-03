@@ -117,6 +117,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const [coachId, setCoachId] = useState<string | null>(null)
   const [isDefaultCoach, setIsDefaultCoach] = useState(false)
   const [coachRelationStatus, setCoachRelationStatus] = useState<ActiveCoachResolutionState['status']>('not_found')
+  const [coachRelationIsAuthoritative, setCoachRelationIsAuthoritative] = useState(false)
+  const [coachRelationRequiresReconciliation, setCoachRelationRequiresReconciliation] = useState(false)
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
@@ -318,17 +320,6 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       return
     }
 
-    if (profRes.data.role === 'client') {
-      try {
-        const assignmentResponse = await fetch('/api/coach/default-assignment', { method: 'POST' })
-        if (!assignmentResponse.ok && assignmentResponse.status !== 409) {
-          const assignmentError = await assignmentResponse.json().catch(() => null)
-          console.error('[client-dashboard] Default coach assignment failed:', assignmentError?.code || assignmentResponse.status)
-        }
-      } catch {
-        console.error('[client-dashboard] Default coach assignment request failed')
-      }
-    }
     const profileData = profRes.data
     const weightsData = [...(weightsRes.data || [])].sort((a, b) => a.date.localeCompare(b.date))
     const sessData = sessRes.data || []
@@ -428,6 +419,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   async function applyCoachResolution(resolution: ActiveCoachResolutionState) {
     setCoachId(resolution.coachId)
     setCoachRelationStatus(resolution.status)
+    setCoachRelationIsAuthoritative(resolution.isAuthoritative)
+    setCoachRelationRequiresReconciliation(resolution.requiresReconciliation)
 
     if (!resolution.coachId) {
       setIsDefaultCoach(false)
@@ -879,7 +872,9 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     photoUploading, photoRef, avatarRef,
     uploadAvatar, uploadProgressPhoto, deletePhoto,
     // Messages (from sub-hook)
-    coachId, coachRelationStatus, isDefaultCoach, hasRealCoach: !isDefaultCoach && !!coachId,
+    coachId, coachRelationStatus, coachRelationIsAuthoritative,
+    coachRelationRequiresReconciliation, isDefaultCoach,
+    hasRealCoach: coachRelationIsAuthoritative && !!coachId,
     messages: messagesHook.messages, msgInput: messagesHook.msgInput,
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,

@@ -61,6 +61,7 @@ function activeRelation(coachId = COACH_ID, clientId = CLIENT_ID) {
       coach_id: coachId,
       client_id: clientId,
       status: 'active',
+      source: 'invitation',
     },
   }
 }

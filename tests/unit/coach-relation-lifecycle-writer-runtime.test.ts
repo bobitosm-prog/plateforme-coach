@@ -73,7 +73,7 @@ describe('canonical relation lifecycle writer runtime wrapper', () => {
     })).resolves.toEqual({ kind: 'error', code: 'RELATION_TRANSITION_FAILED' })
   })
 
-  it('delegates default creation to the canonical serialized writer', async () => {
+  it('delegates an explicit invitation creation to the canonical serialized writer', async () => {
     mocks.rpc.mockResolvedValue({
       data: {
         success: true,
@@ -88,7 +88,7 @@ describe('canonical relation lifecycle writer runtime wrapper', () => {
       clientId: CLIENT_ID,
       coachId: COACH_ID,
       actorId: CLIENT_ID,
-      source: 'default',
+      source: 'invitation',
     })).resolves.toEqual({
       kind: 'created',
       relationId: 'relation-new',
@@ -99,7 +99,7 @@ describe('canonical relation lifecycle writer runtime wrapper', () => {
       p_client_id: CLIENT_ID,
       p_coach_id: COACH_ID,
       p_operation: 'create',
-      p_source: 'default',
+      p_source: 'invitation',
       p_actor_id: CLIENT_ID,
       p_end_reason: null,
     })
@@ -130,7 +130,7 @@ describe('canonical relation lifecycle writer runtime wrapper', () => {
       clientId: CLIENT_ID,
       coachId: COACH_ID,
       actorId: CLIENT_ID,
-      source: 'default' as const,
+      source: 'invitation' as const,
     }
     await expect(Promise.all([
       createCoachClientRelation(input),

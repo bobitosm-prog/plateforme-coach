@@ -7,7 +7,10 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { sendPushToUser } from '../../../lib/push-server'
-import { findActiveBetween } from '../../../lib/coach-relations/repository'
+import {
+  findActiveBetween,
+  resolveCoachRelationAuthority,
+} from '../../../lib/coach-relations/repository'
 
 const internalPathSchema = z.string().trim().max(2048).refine(
   value => /^\/(?!\/)[^\\\u0000-\u001F\u007F]*$/.test(value),
@@ -74,10 +77,11 @@ export async function POST(req: NextRequest) {
   }
 
   const relation = await findActiveBetween(supabaseAuth, coachId, clientId)
-  if (relation.kind === 'not_found') {
+  const authority = resolveCoachRelationAuthority(relation)
+  if (authority.physicalState === 'not_found' || authority.authorityState === 'non_authoritative') {
     return NextResponse.json({ error: 'Interdit' }, { status: 403 })
   }
-  if (relation.kind !== 'active') {
+  if (!authority.isAuthoritative) {
     return NextResponse.json({ error: 'Autorisation impossible' }, { status: 500 })
   }
 

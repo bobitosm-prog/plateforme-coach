@@ -13,6 +13,7 @@ type RelationFixture = {
   coach_id: string
   client_id: string
   status: 'active' | 'ended'
+  source: 'default' | 'invitation' | 'admin' | 'legacy'
   created_at: string
 }
 
@@ -24,6 +25,7 @@ function relation(overrides: Partial<RelationFixture> = {}): RelationFixture {
     coach_id: 'coach-1',
     client_id: 'client-1',
     status: 'active',
+    source: 'invitation',
     created_at: '2026-08-22T10:00:00Z',
     ...overrides,
   }

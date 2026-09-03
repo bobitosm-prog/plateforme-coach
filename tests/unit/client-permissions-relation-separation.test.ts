@@ -9,6 +9,7 @@ const ACTIVE_RELATION = {
     coach_id: 'coach-1',
     client_id: 'client-1',
     status: 'active' as const,
+    source: 'invitation' as const,
   },
 }
 
