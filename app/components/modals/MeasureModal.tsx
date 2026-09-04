@@ -9,10 +9,13 @@ import {
   BG_CARD, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
 } from '../../../lib/design-tokens'
+import type { BodyMeasurementRow } from '../../../lib/client-dashboard/nutrition-measurements-loader'
 import DashboardMeasurementDialogShell from './DashboardMeasurementDialogShell'
 
+type MeasureModalMeasurement = BodyMeasurementRow & Partial<Record<'arms' | 'thighs', number | null>>
+
 interface MeasureModalProps {
-  measurements: any[]
+  measurements: readonly MeasureModalMeasurement[]
   onSave: (data: Record<string, number>, date: string) => Promise<void>
   onClose: () => void
 }
@@ -110,7 +113,7 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
           <div>
             <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, display: 'block', marginBottom: 12 }}>{t('measureModal.history')}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {last5.map((m: any, i: number) => (
+              {last5.map((m, i) => (
                 <div key={m.id || i} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '12px 16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <span style={{ fontFamily: FONT_ALT, fontSize: '0.75rem', fontWeight: 700, color: i === 0 ? GOLD : TEXT_MUTED }}>
