@@ -1,15 +1,173 @@
-# Contrat statistique de stabilité CI Phase 9
+# Contrat statistique de stabilité CI Phase 9 — V1 et addendum V2
 
 ## Statut
 
 Ce contrat définit la transition de `CI_STABILITY_CANDIDATE` vers `CI_STABLE`.
-Il ne réalise pas cette transition. La collecte automatique a été validée sur
-le run GitHub Actions `31784233843`, attempt `1`, puis son artefact primaire
-`PASS` a été importé exactement une fois. Le registre append-only contient donc
-`1/150` run complet primaire sur `1/7` jour UTC. Les deux runs historiques ne
-sont pas rétro-enregistrés, car leur SHA, leur horodatage et, pour le second,
-leur durée ne sont pas tous versionnés. Le statut reste
-`CI_STABILITY_CANDIDATE`.
+Il ne réalise pas cette transition. Le contrat V1 et son registre restent
+immuables et auditables. La collecte automatique a été validée sur le run
+GitHub Actions `31784233843`, attempt `1`, puis son artefact primaire `PASS` a
+été importé exactement une fois. Le registre append-only contient donc encore
+`1/150` run complet primaire sur `1/7` jour UTC. Dix-neuf autres observations
+V1 complètes et importables ont été identifiées ; elles seront toutes ajoutées
+dans le sous-batch 9R.1, PASS comme FAIL, sans réécriture des lignes existantes.
+Le statut reste `CI_STABILITY_CANDIDATE`.
+
+## Addendum V2 — décision d'échantillonnage
+
+Le modèle `phase-9-ci-stability-v2` est adopté le **2026-09-04**. Cette date
+versionne la décision ; elle n'ouvre pas la fenêtre statistique. La date UTC,
+l'heure et le SHA de départ effectifs seront enregistrés explicitement lors de
+l'activation de 9R.4, une fois toutes les conditions de départ satisfaites.
+V2 est additif et non rétroactif : les observations V1 et l'en-tête V1 du
+registre sont conservés. Aucun résultat historique n'est requalifié, supprimé
+ou remplacé par cette décision.
+
+V2 ne change aucun seuil ni aucune gate. Il complète uniquement le modèle
+d'échantillonnage pour qu'une branche stable puisse continuer à produire une
+preuve statistique sans push organique.
+
+### Observation primaire V2 et indépendance
+
+Une exécution périodique sur un SHA inchangé constitue une nouvelle observation
+primaire admissible uniquement si toutes les conditions suivantes sont vraies :
+
+1. sa cadence a été préenregistrée avant l'ouverture de la fenêtre ;
+2. son déclenchement ne dépend pas du résultat précédent ;
+3. elle possède un nouveau GitHub `run_id` et `run_attempt=1` ;
+4. elle recrée un environnement CI éphémère neuf, sans état du run précédent ;
+5. PostgreSQL, navigateurs et services sont recréés et isolés selon le contrat
+   existant ;
+6. elle ne chevauche aucune autre observation statistique ;
+7. A, B, C1 et C2 sont tous exécutés jusqu'à un état terminal ;
+8. elle produit un artefact `collected_observation` valide ;
+9. aucun retry ou rerun silencieux n'est utilisé ;
+10. toutes les observations admissibles sont importées, PASS comme FAIL, sans
+    sélection humaine ni suppression.
+
+L'indépendance désigne donc une exécution, un environnement et un déclenchement
+indépendants. Elle n'impose pas un SHA différent. Plusieurs observations
+primaires du même SHA canonique sont explicitement admissibles en V2.
+
+### SHA canonique et remise à zéro
+
+Le SHA applicatif canonique observé au début de la fenêtre reste fixe. Si un
+bug produit ou CI nécessite une modification de code, de test, de fixture, de
+configuration exécutable ou de dépendance pouvant influencer A/B/C1/C2, la
+fenêtre est stoppée, la correction est validée normalement, puis une nouvelle
+fenêtre V2 repart de zéro sur le nouveau SHA. Les populations avant et après
+correction ne sont jamais mélangées pour déclarer une stabilité continue.
+
+Une modification purement documentaire, ou une modification du collecteur qui
+ne change ni les gates ni leur environnement, doit être identifiée séparément.
+Elle ne remet pas la fenêtre à zéro seulement si son absence d'effet sur le
+code observé et sur A/B/C1/C2 est démontrée et inscrite dans la piste d'audit.
+Dans le doute, la règle fail-closed s'applique : nouvelle fenêtre.
+
+### Cadence horaire, scheduling et absence de chevauchement
+
+Le workflow **Statistical Observation** peut utiliser `schedule/cron` à raison
+d'une observation par heure. Cette autorisation vaut uniquement pour le
+workflow statistique ; elle ne remplace pas les validations de développement.
+La fenêtre doit couvrir au minimum 7 dates UTC distinctes et reste ouverte
+jusqu'à au moins 150 observations primaires complètes.
+
+Une observation durant environ 17 minutes, la cadence horaire laisse une marge
+normale. Si une observation est encore active à l'échéance suivante, la
+nouvelle observation attend dans une file dédiée. Elle ne démarre pas en
+parallèle, n'annule pas la précédente et n'est pas artificiellement substituée
+par un dispatch. L'ordre de la file et l'échéance manquée restent traçables.
+
+Le workflow statistique est séparé de la CI de développement. La CI de
+développement peut conserver `cancel-in-progress` si nécessaire. Le workflow
+statistique utilise une concurrency dédiée avec `cancel-in-progress: false` et
+une sérialisation garantissant une seule observation active. Cette architecture
+sera implémentée dans 9R.3 ; le présent addendum ne modifie aucun workflow.
+
+### Rôle de `workflow_dispatch` et distinction des reruns
+
+`workflow_dispatch` reste autorisé pour le diagnostic, la reprise contrôlée et
+la vérification. Des dispatches choisis après lecture des résultats ne peuvent
+pas être le mécanisme principal des 150 observations : la fenêtre V2 est
+principalement pilotée par la cadence préenregistrée.
+
+Un rerun GitHub appartient à la même famille de run et au même SHA. Il reste
+exclu des 150 primaires et des percentiles ; il sert uniquement à classifier un
+primaire FAIL selon les règles V1. À l'inverse, le run horaire suivant possède
+un nouveau `run_id`, `run_attempt=1`, et constitue un nouveau primaire s'il
+respecte toutes les conditions V2.
+
+### Fenêtre roulante V2 et préservation des échecs
+
+Après le démarrage V2, l'évaluation porte exactement sur les **150 dernières
+observations primaires admissibles de la fenêtre V2**. Ces 150 observations
+doivent couvrir au moins 7 dates calendaires UTC distinctes. Tant que la fenêtre
+V2 contient moins de 150 primaires complets, ou que ses 150 derniers primaires
+ne couvrent pas 7 dates UTC, le statut reste `CI_STABILITY_CANDIDATE`.
+
+Les calculs de p50, p95, flaky rate, unresolved et unknown portent sur ce même
+suffixe de 150 primaires. Les reruns sont associés à leur racine mais ne sont
+jamais comptés comme primaires. Les observations V1 et les observations V2
+sorties de la fenêtre roulante restent dans le registre append-only. Un FAIL,
+un incomplete ou un cancelled n'est jamais caché : tout artefact admissible est
+conservé ; seuls les primaires complets entrent dans le dénominateur des 150.
+
+Cette sémantique V2 sera implémentée et testée dans le lot workflow/évaluateur
+approprié avant activation. Jusqu'alors, l'évaluateur V1 reste l'autorité
+exécutable et aucune fenêtre V2 ne peut être déclarée ouverte.
+
+### Conditions de démarrage, arrêt et reprise
+
+La fenêtre V2 peut démarrer uniquement après validation simultanée de :
+
+1. cet addendum V2 versionné ;
+2. la récupération du registre canonique à 20 observations V1 ;
+3. la correction des erreurs reproductibles de `MeasureModal.tsx` ;
+4. la correction des erreurs reproductibles de `NutritionPreferences.tsx` ;
+5. la suite complète verte ;
+6. le workflow statistique non annulable et non chevauchant prêt ;
+7. le schedule horaire prêt ;
+8. le SHA canonique, la date et l'heure UTC de départ enregistrés.
+
+Si une vraie correction du code observé devient nécessaire, le scheduling est
+stoppé proprement, le run éventuellement actif termine sans annulation, puis la
+fenêtre est close sans déclaration stable. Après correction et validation, une
+nouvelle fenêtre repart de zéro selon la politique SHA ci-dessus.
+
+### Exigences inchangées
+
+V2 conserve strictement :
+
+- `COMPLETE_RUNS >= 150` sur les primaires admissibles ;
+- `DISTINCT_UTC_DATES >= 7` dans les 150 derniers primaires ;
+- p95 nearest-rank strictement inférieur à 20 minutes ;
+- flaky rate strictement inférieur à 2 % ;
+- `unresolved = 0` et `unknown = 0` ;
+- A, B, C1 et C2 tous terminaux ;
+- artefacts valides et absence de retry masqué.
+
+Il est interdit de réduire les tests ou Gate C2, de diminuer 150 ou 7 jours,
+d'assouplir p95 ou le flaky rate, d'accepter unresolved/unknown, de cacher des
+FAIL, de compter des incomplete/cancelled ou d'inclure des reruns dans les 150.
+
+### Lots de récupération approuvés et estimation
+
+L'ordre approuvé est : 9R.1 récupération des 19 observations historiques ;
+9R.2a correction `MeasureModal` ; 9R.2b correction `NutritionPreferences` ;
+9R.3 workflow statistique non annulable ; 9R.4 cadence horaire ; 9R.5 fenêtre
+d'observation ; 9R.6 audit statistique final. Phase 10 reprend ensuite avec
+10R.1 corpus organique, 10R.2 assessments et 10R.3 readiness staging.
+
+À une observation par heure, 7 jours représentent 168 tentatives théoriques.
+Atteindre 150 complètes exige environ 89,3 % de completion et laisse une marge
+de 18 tentatives. La durée minimale est 7 jours à compter de l'activation
+effective, jamais de la date de décision. Si moins de 150 runs sont complets à
+ce terme, la cadence continue jusqu'à satisfaire simultanément tous les gates.
+
+## Contrat historique V1 — conservé
+
+Les sections suivantes décrivent le contrat V1 historique. Elles restent
+normatives pour ses observations et pour l'implémentation actuelle jusqu'à
+l'activation explicite de V2. L'addendum ne réécrit pas leur historique.
 
 ## Unité d'observation
 
