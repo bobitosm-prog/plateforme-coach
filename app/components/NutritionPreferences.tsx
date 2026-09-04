@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useNutritionGoals } from '../hooks/nutrition'
-import { useTranslations, useLocale } from 'next-intl'
-import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Check, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus, type LucideIcon } from 'lucide-react'
 import { ACTIVITY_LEVELS, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
+import type { DatabaseClient, Json, Tables } from '../../lib/supabase/types'
 import {
   calculateAutomaticCalorieMacroTargets,
   type CalorieMacroObjective,
@@ -22,10 +23,19 @@ const ALLERGY_IDS = ['gluten', 'lactose', 'eggs', 'tree_nuts', 'peanuts', 'soy',
 
 type MacroMode = 'auto' | 'manual' | 'ratio'
 type ObjectiveType = CalorieMacroObjective
+type MealPreferences = Record<string, string[]>
+type NutritionPreferencesProfile = Pick<Tables<'profiles'>,
+  | 'activity_level' | 'allergies' | 'birth_date' | 'calorie_goal'
+  | 'current_weight' | 'dietary_type' | 'gender' | 'height'
+  | 'meal_preferences' | 'objective' | 'protein_goal' | 'target_weight'>
+type MealSearchResult = Pick<Tables<'food_items'>, 'id' | 'name' | 'source'> & {
+  calories_per_100g: number
+  protein_per_100g: number
+}
 
 // ─── Helpers ───
 
-function normalizeObjective(obj: string | undefined): ObjectiveType {
+function normalizeObjective(obj: string | null | undefined): ObjectiveType {
   if (!obj) return 'maintain'
   if (['cut', 'seche', 'perte_poids', 'weight_loss'].includes(obj)) return 'cut'
   if (['bulk', 'prise_masse', 'mass'].includes(obj)) return 'bulk'
@@ -34,11 +44,20 @@ function normalizeObjective(obj: string | undefined): ObjectiveType {
 
 function fmtNum(n: number) { return n.toLocaleString() }
 
+function readMealPreferences(value: Json | null): MealPreferences | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const preferences: MealPreferences = {}
+  for (const [meal, foods] of Object.entries(value)) {
+    if (Array.isArray(foods) && foods.every(food => typeof food === 'string')) preferences[meal] = foods
+  }
+  return preferences
+}
+
 // ─── Component ───
 
 interface NutritionPreferencesProps {
-  profile: any
-  supabase: any
+  profile: NutritionPreferencesProfile | null
+  supabase: DatabaseClient
   userId: string
   onSaved: () => void
   onPlanRegenerated?: () => void
@@ -47,6 +66,7 @@ interface NutritionPreferencesProps {
 export default function NutritionPreferences({ profile, supabase, userId, onSaved, onPlanRegenerated }: NutritionPreferencesProps) {
   const persistedGoals = useNutritionGoals(profile)
   const t = useTranslations('nutritionPrefs')
+  const initialMealPreferences = readMealPreferences(profile?.meal_preferences ?? null)
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
   const [targetWeight, setTargetWeight] = useState<number>(profile?.target_weight || 0)
@@ -75,17 +95,16 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   // ─── Diet ───
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
   const [allergies, setAllergies] = useState<string[]>(profile?.allergies || [])
-  const [dislikedFoods, setDislikedFoods] = useState<string[]>(profile?.meal_preferences?.disliked_foods || [])
+  const [dislikedFoods, setDislikedFoods] = useState<string[]>(initialMealPreferences?.disliked_foods || [])
   const [dislikedInput, setDislikedInput] = useState('')
 
   // ─── Meal Preferences ───
   const [mealPrefs, setMealPrefs] = useState<Record<string, string[]>>(() => {
-    const mp = profile?.meal_preferences
-    if (mp && typeof mp === 'object' && !Array.isArray(mp)) return mp
+    if (initialMealPreferences) return initialMealPreferences
     return { breakfast: [], snack: [], lunch: [], dinner: [] }
   })
   const [mealSearchQuery, setMealSearchQuery] = useState('')
-  const [mealSearchResults, setMealSearchResults] = useState<any[]>([])
+  const [mealSearchResults, setMealSearchResults] = useState<MealSearchResult[]>([])
   const [activeMealTab, setActiveMealTab] = useState<string>('breakfast')
 
   // ─── UI State ───
@@ -95,11 +114,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   const [regenerating, setRegenerating] = useState(false)
 
   // ─── Age Calculation ───
+  const [calculationTime] = useState(Date.now)
   const age = useMemo(() => {
     const bd = profile?.birth_date
     if (!bd) return 0
-    return Math.floor((Date.now() - new Date(bd).getTime()) / 31557600000)
-  }, [profile?.birth_date])
+    return Math.floor((calculationTime - new Date(bd).getTime()) / 31557600000)
+  }, [calculationTime, profile?.birth_date])
 
   // ─── Automatic calorie and macro targets ───
   const automaticTargets = useMemo(() => calculateAutomaticCalorieMacroTargets({
@@ -188,7 +208,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
 
   // Debounced food search — fitness first, then ANSES
   useEffect(() => {
-    if (mealSearchQuery.length < 2) { setMealSearchResults([]); return }
+    if (mealSearchQuery.length < 2) return
     const timer = setTimeout(async () => {
       try {
         const [{ data: fitness }, { data: anses }] = await Promise.all([
@@ -196,7 +216,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
           supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${mealSearchQuery}%`).limit(10),
         ])
         const data = [...(fitness || []), ...(anses || [])]
-        const results = data.map((f: any) => ({
+        const results = data.map(f => ({
           id: f.id,
           name: f.name,
           source: f.source,
@@ -207,7 +227,12 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       } catch { setMealSearchResults([]) }
     }, 300)
     return () => clearTimeout(timer)
-  }, [mealSearchQuery])
+  }, [mealSearchQuery, supabase])
+
+  function updateMealSearchQuery(value: string) {
+    setMealSearchQuery(value)
+    if (value.length < 2) setMealSearchResults([])
+  }
 
   function addSearchedFood(name: string) {
     setMealPrefs(prev => {
@@ -223,7 +248,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
   async function save() {
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'cut', maintain: 'maintain', bulk: 'mass' }
-    const { data, error } = await updateProfile(userId, {
+    const { error } = await updateProfile(userId, {
       calorie_goal: objectiveKcal,
       protein_goal: finalMacros.protein,
       carbs_goal: finalMacros.carbs,
@@ -258,7 +283,6 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     setToastMsg('Generation en cours...')
     try {
       const objMap: Record<ObjectiveType, string> = { cut: 'seche', maintain: 'maintien', bulk: 'bulk' }
-      const kcal = objectiveKcal || profile?.calorie_goal || 2200
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -291,7 +315,7 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
       const reader = res.body?.getReader()
       if (!reader) throw new Error('No reader')
       const decoder = new TextDecoder()
-      let planData: any = null
+      let planData: Json | null = null
       let buffer = ''
       while (true) {
         const { done, value } = await reader.read()
@@ -683,14 +707,14 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
             <Search size={14} color={colors.textMuted} style={{ marginLeft: 12 }} />
             <input
               value={mealSearchQuery}
-              onChange={e => setMealSearchQuery(e.target.value)}
+              onChange={e => updateMealSearchQuery(e.target.value)}
               placeholder={t('labels.addFoodPlaceholder')}
               style={{ flex: 1, padding: '10px 14px 10px 0', background: 'transparent', border: 'none', color: colors.text, fontSize: '0.82rem', fontFamily: fonts.body, outline: 'none' }}
             />
           </div>
           {mealSearchResults.length > 0 && (
             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: colors.surface2, border: `1px solid ${colors.divider}`, zIndex: 10, maxHeight: 200, overflowY: 'auto' }}>
-              {mealSearchResults.map((r: any) => (
+              {mealSearchResults.map(r => (
                 <button key={r.id} onClick={() => addSearchedFood(r.name)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
                   <Plus size={12} color={colors.gold} />
                   <span style={{ fontSize: '0.78rem', fontFamily: fonts.body, color: colors.text }}>{r.name}</span>
@@ -765,7 +789,7 @@ function MacroDisplay({ protein, carbs, fat, targetKcal }: { protein: number; ca
   )
 }
 
-function MacroItem({ icon: Icon, label, grams, pct, color }: { icon: any; label: string; grams: number; pct: number; color: string }) {
+function MacroItem({ icon: Icon, label, grams, pct, color }: { icon: LucideIcon; label: string; grams: number; pct: number; color: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
       <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
