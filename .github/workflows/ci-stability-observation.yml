@@ -1,14 +1,14 @@
-name: MoovX Quality Gates
+name: MoovX Statistical Stability Observation
 
 on:
-  pull_request:
-  push:
-    branches:
-      - phase-6-staging
   workflow_dispatch:
     inputs:
+      observed_sha:
+        description: Exact phase-6-staging HEAD SHA observed by this primary run
+        required: true
+        type: string
       base_sha:
-        description: Exact ancestor SHA used as the comparison base
+        description: Exact ancestor SHA used as the Gate A comparison base
         required: true
         type: string
 
@@ -16,12 +16,52 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: phase-9-statistical-observation-v2
+  cancel-in-progress: false
 
 jobs:
+  validate-observation-target:
+    name: Validate Statistical Observation Target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout canonical dispatch revision
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate phase-6-staging branch and exact SHAs
+        shell: bash
+        env:
+          DISPATCH_REF: ${{ github.ref }}
+          DISPATCH_SHA: ${{ github.sha }}
+          OBSERVED_SHA: ${{ inputs.observed_sha }}
+          BASE_SHA: ${{ inputs.base_sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$DISPATCH_REF" != "refs/heads/phase-6-staging" ]]; then
+            echo "Statistical observations must be dispatched from phase-6-staging" >&2
+            exit 1
+          fi
+          for candidate in "$OBSERVED_SHA" "$BASE_SHA"; do
+            if [[ ! "$candidate" =~ ^[0-9a-fA-F]{40}$ ]]; then
+              echo "Observation and comparison SHAs must contain exactly 40 hexadecimal characters" >&2
+              exit 1
+            fi
+            git cat-file -e "${candidate}^{commit}"
+          done
+          if [[ "${OBSERVED_SHA,,}" != "${DISPATCH_SHA,,}" ]]; then
+            echo "Observed SHA must equal phase-6-staging HEAD at dispatch time" >&2
+            exit 1
+          fi
+          git merge-base --is-ancestor "$BASE_SHA" "$OBSERVED_SHA"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "$OBSERVED_SHA")"
+          echo "Observed phase-6-staging SHA: $(git rev-parse "$OBSERVED_SHA")"
+          echo "Gate A comparison base: $(git rev-parse "$BASE_SHA")"
+
   fast:
     name: Gate A - Fast
+    needs: validate-observation-target
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -101,6 +141,7 @@ jobs:
 
   standard:
     name: Gate B - Standard
+    needs: validate-observation-target
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -137,7 +178,7 @@ jobs:
 
   database-heavy:
     name: Gate C1 - Database Heavy
-    if: github.event_name != 'pull_request'
+    needs: validate-observation-target
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -237,7 +278,7 @@ jobs:
 
   browser-heavy:
     name: Gate C2 - Browser Heavy
-    if: github.event_name != 'pull_request'
+    needs: validate-observation-target
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -340,3 +381,38 @@ jobs:
           const residual = open.filter(Boolean)
           if (residual.length) throw new Error(`Residual Gate C2 ports: ${residual.join(', ')}`)
           NODE
+
+  stability-observation:
+    name: CI Stability Observation
+    if: ${{ always() }}
+    needs: [fast, standard, database-heavy, browser-heavy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout observed revision
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Collect complete gate observation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/collect-ci-stability-observation.ts
+          --output "${{ runner.temp }}/ci-stability-observation.json"
+
+      - name: Persist immutable observation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-stability-observation-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-stability-observation.json
+          if-no-files-found: error
+          retention-days: 90

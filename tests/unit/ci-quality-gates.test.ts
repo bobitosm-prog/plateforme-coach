@@ -9,8 +9,7 @@ const contributingGuide = readFileSync(resolve(root, 'docs/CONTRIBUTING.md'), 'u
 const fastJob = workflow.slice(workflow.indexOf('\n  fast:'), workflow.indexOf('\n  standard:'))
 const standardJob = workflow.slice(workflow.indexOf('\n  standard:'), workflow.indexOf('\n  database-heavy:'))
 const databaseHeavyJob = workflow.slice(workflow.indexOf('\n  database-heavy:'), workflow.indexOf('\n  browser-heavy:'))
-const browserHeavyJob = workflow.slice(workflow.indexOf('\n  browser-heavy:'), workflow.indexOf('\n  stability-observation:'))
-const stabilityObservationJob = workflow.slice(workflow.indexOf('\n  stability-observation:'))
+const browserHeavyJob = workflow.slice(workflow.indexOf('\n  browser-heavy:'))
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   engines?: { node?: string }
   packageManager?: string
@@ -37,9 +36,9 @@ describe('progressive CI quality gates contract', () => {
   })
 
   it('runs official JavaScript actions on Node 24 tags without changing gate cache policy', () => {
-    expect(workflow.match(/uses: actions\/checkout@v7/g)).toHaveLength(5)
-    expect(workflow.match(/uses: actions\/setup-node@v7/g)).toHaveLength(5)
-    expect(workflow.match(/uses: actions\/upload-artifact@v7/g)).toHaveLength(1)
+    expect(workflow.match(/uses: actions\/checkout@v7/g)).toHaveLength(4)
+    expect(workflow.match(/uses: actions\/setup-node@v7/g)).toHaveLength(4)
+    expect(workflow).not.toContain('actions/upload-artifact')
     expect(workflow).not.toMatch(/actions\/(?:checkout|setup-node|upload-artifact)@v4/)
     for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
       expect(gate).toContain('uses: actions/checkout@v7')
@@ -47,11 +46,6 @@ describe('progressive CI quality gates contract', () => {
       expect(gate).toContain('cache: npm')
       expect(gate).not.toContain('package-manager-cache: false')
     }
-    expect(stabilityObservationJob).toContain('uses: actions/checkout@v7')
-    expect(stabilityObservationJob).toMatch(
-      /uses: actions\/setup-node@v7\n\s+with:\n\s+node-version: '24'\n\s+package-manager-cache: false/,
-    )
-    expect(stabilityObservationJob).not.toContain('cache: npm')
   })
 
   it('runs on pull requests, staging pushes and explicit manual dispatches', () => {
@@ -73,15 +67,13 @@ describe('progressive CI quality gates contract', () => {
     expect(workflow).toContain('cancel-in-progress: true')
   })
 
-  it('defines the bounded gates plus a separate non-blocking observation job', () => {
+  it('defines the four bounded development gates', () => {
     expect(workflow).toMatch(/^jobs:\n  fast:/m)
-    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(5)
+    expect(workflow.match(/^  [a-z][a-z0-9_-]*:\n    name:/gm)).toHaveLength(4)
     expect(workflow).toContain('timeout-minutes: 10')
     expect(standardJob).toContain('timeout-minutes: 15')
     expect(databaseHeavyJob).toContain('timeout-minutes: 20')
     expect(browserHeavyJob).toContain('timeout-minutes: 20')
-    expect(stabilityObservationJob).toContain('timeout-minutes: 5')
-    expect(stabilityObservationJob).toContain('continue-on-error: true')
   })
 
   it('installs the exact lockfile dependency graph', () => {
@@ -113,6 +105,7 @@ describe('progressive CI quality gates contract', () => {
       'npm run i18n:check',
       'npm run supabase:factories:check',
       'tests/unit/ci-quality-gates.test.ts',
+      'tests/unit/ci-statistical-observation-workflow.test.ts',
       'tests/unit/developer-onboarding.test.ts',
       'tests/unit/code-review-checklist.test.ts',
       'tests/unit/domain-documentation.test.ts',
@@ -245,22 +238,10 @@ describe('progressive CI quality gates contract', () => {
     expect(browserHeavyJob).toContain('BROWSER_HEAVY_SYNTHETIC_TABLE_RESIDUE')
   })
 
-  it('collects stability evidence after all gates without changing their commands or auto-pushing', () => {
-    expect(stabilityObservationJob).toContain('needs: [fast, standard, database-heavy, browser-heavy]')
-    expect(stabilityObservationJob).toContain("if: ${{ always() && github.event_name != 'pull_request' }}")
-    expect(stabilityObservationJob).toContain('actions: read')
-    expect(stabilityObservationJob).toContain('contents: read')
-    expect(stabilityObservationJob).toContain('node scripts/collect-ci-stability-observation.ts')
-    expect(stabilityObservationJob).toContain('uses: actions/upload-artifact@v7')
-    expect(stabilityObservationJob).toContain(
-      'name: ci-stability-observation-${{ github.run_id }}-attempt-${{ github.run_attempt }}',
-    )
-    expect(stabilityObservationJob).toContain(
-      'path: ${{ runner.temp }}/ci-stability-observation.json',
-    )
-    expect(stabilityObservationJob).toContain('if-no-files-found: error')
-    expect(stabilityObservationJob).toContain('retention-days: 90')
-    expect(stabilityObservationJob).not.toMatch(/git (?:add|commit|push)|contents: write/)
+  it('keeps observation collection out of cancellable development runs', () => {
+    expect(workflow).not.toContain('stability-observation')
+    expect(workflow).not.toContain('collect-ci-stability-observation')
+    expect(workflow).not.toContain('upload-artifact')
     for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
       expect(gate).not.toContain('collect-ci-stability-observation')
       expect(gate).not.toContain('upload-artifact')
