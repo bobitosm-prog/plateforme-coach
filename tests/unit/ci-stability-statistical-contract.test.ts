@@ -50,9 +50,9 @@ describe('Phase 9 CI stability statistical contract', () => {
     const source = readFileSync('ci/stability/observations.jsonl', 'utf8')
     expect(evaluateCiStability(parseCiStabilityRegistry(source))).toMatchObject({
       status: 'CI_STABILITY_CANDIDATE',
-      completeRunCount: 1,
-      calendarDayCount: 1,
-      passCount: 1,
+      completeRunCount: 20,
+      calendarDayCount: 4,
+      passCount: 8,
       reasons: expect.arrayContaining(['MINIMUM_RUNS_NOT_MET', 'MINIMUM_DAYS_NOT_MET']),
     })
   })
