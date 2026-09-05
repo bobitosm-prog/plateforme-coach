@@ -15,8 +15,14 @@ export type GithubCiJobSnapshot = {
   }[]
 }
 
-export type CollectedCiStabilityObservation = Omit<CiStabilityObservation, 'sequence' | 'record_type'> & {
+export type CollectedCiStabilityObservation = Omit<
+  CiStabilityObservation,
+  'sequence' | 'record_type' | 'observation_contract_version' | 'execution_sha' | 'base_sha'
+> & {
   readonly record_type: 'collected_observation'
+  readonly observation_contract_version: 2
+  readonly execution_sha: string
+  readonly base_sha: string
 }
 
 export type IncompleteCiStabilityCollection = {
@@ -76,19 +82,24 @@ const incomplete = (
 export function collectCiStabilityObservation(input: {
   readonly githubRunId: string
   readonly runAttempt: number
-  readonly sha: string
+  readonly executionSha: string
+  readonly observedSha: string
+  readonly baseSha: string
   readonly runStartedAt: string
   readonly jobs: readonly GithubCiJobSnapshot[]
 }): CiStabilityCollectionArtifact {
   const runId = `github-${input.githubRunId}-attempt-${input.runAttempt}`
   if (!/^\d+$/.test(input.githubRunId)
     || !Number.isInteger(input.runAttempt) || input.runAttempt < 1
-    || !/^[0-9a-f]{40}$/.test(input.sha)
+    || !/^[0-9a-f]{40}$/.test(input.executionSha)
+    || !/^[0-9a-f]{40}$/.test(input.observedSha)
+    || !/^[0-9a-f]{40}$/.test(input.baseSha)
     || Number.isNaN(Date.parse(input.runStartedAt))) return incomplete(runId, 'INVALID_RUN_METADATA')
 
-  const jobs = Object.fromEntries(Object.entries(GATES).map(([gate, name]) => [
-    gate, input.jobs.find(job => job.name === name),
-  ])) as Record<keyof typeof GATES, GithubCiJobSnapshot | undefined>
+  const jobs = Object.fromEntries(Object.entries(GATES).map(([gate, name]) => {
+    const matches = input.jobs.filter(job => job.name === name || job.name.endsWith(` / ${name}`))
+    return [gate, matches.length === 1 ? matches[0] : undefined]
+  })) as Record<keyof typeof GATES, GithubCiJobSnapshot | undefined>
   if (Object.values(jobs).some(job => !job)) return incomplete(runId, 'MISSING_GATE')
   const gateResults = Object.fromEntries(Object.entries(jobs).map(([gate, job]) => [
     gate, terminalResult(job?.conclusion ?? null),
@@ -108,8 +119,11 @@ export function collectCiStabilityObservation(input: {
   return {
     record_type: 'collected_observation',
     schema_version: 1,
+    observation_contract_version: 2,
     run_id: runId,
-    sha: input.sha,
+    sha: input.observedSha,
+    execution_sha: input.executionSha,
+    base_sha: input.baseSha,
     started_at: new Date(startedAt).toISOString(),
     duration_ms: durationMs,
     result: failedGate ? 'FAIL' : 'PASS',
@@ -118,6 +132,31 @@ export function collectCiStabilityObservation(input: {
     retry_masked: false,
     gates,
   }
+}
+
+export function validateCiObservationIdentity(input: {
+  readonly executionSha: string
+  readonly githubSha: string
+  readonly apiHeadSha: unknown
+  readonly observedSha: string
+  readonly workingTreeSha: string
+  readonly stagingHeadSha: string
+  readonly baseSha: string
+  readonly observedCommitExists: boolean
+  readonly baseCommitExists: boolean
+  readonly baseIsAncestor: boolean
+}): boolean {
+  const sha = /^[0-9a-f]{40}$/
+  return sha.test(input.executionSha)
+    && input.executionSha === input.githubSha
+    && input.apiHeadSha === input.executionSha
+    && sha.test(input.observedSha)
+    && input.workingTreeSha === input.observedSha
+    && input.stagingHeadSha === input.observedSha
+    && sha.test(input.baseSha)
+    && input.observedCommitExists
+    && input.baseCommitExists
+    && input.baseIsAncestor
 }
 
 const isCollectedObservation = (value: unknown): value is CollectedCiStabilityObservation => {

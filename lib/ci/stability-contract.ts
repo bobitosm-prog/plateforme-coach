@@ -19,9 +19,12 @@ export type CiFailureClassification =
 export type CiStabilityObservation = {
   readonly record_type: 'observation'
   readonly schema_version: 1
+  readonly observation_contract_version?: 2
   readonly sequence: number
   readonly run_id: string
   readonly sha: string
+  readonly execution_sha?: string
+  readonly base_sha?: string
   readonly started_at: string
   readonly duration_ms: number
   readonly result: CiGateResult
@@ -78,11 +81,19 @@ const exactKeys = (value: Record<string, unknown>, keys: readonly string[]): boo
 
 function parseObservation(value: unknown, line: number): CiStabilityObservation | string {
   const input = record(value)
-  const keys = [
+  const historicalKeys = [
     'duration_ms', 'failure_classification', 'gates', 'record_type', 'rerun_of',
     'result', 'retry_masked', 'run_id', 'schema_version', 'sequence', 'sha', 'started_at',
   ]
-  if (!input || !exactKeys(input, keys)) return `line ${line}: invalid observation fields`
+  const v2Keys = [
+    ...historicalKeys, 'base_sha', 'execution_sha', 'observation_contract_version',
+  ]
+  const hasHistoricalFields = input ? exactKeys(input, historicalKeys) : false
+  const hasV2Fields = input ? exactKeys(input, v2Keys) : false
+  if (!input || (!hasHistoricalFields && !hasV2Fields)) {
+    return `line ${line}: invalid observation fields`
+  }
+  const isV2 = hasV2Fields && input.observation_contract_version === 2
   const gates = record(input.gates)
   if (!gates || !exactKeys(gates, ['A', 'B', 'C1', 'C2'])
     || !RESULTS.has(gates.A as CiGateResult)
@@ -91,10 +102,12 @@ function parseObservation(value: unknown, line: number): CiStabilityObservation 
     || !RESULTS.has(gates.C2 as CiGateResult)) return `line ${line}: incomplete A/B/C1/C2 results`
   const startedAt = typeof input.started_at === 'string' ? input.started_at : ''
   const failureClass = input.failure_classification
-  if (input.record_type !== 'observation' || input.schema_version !== 1
+  if (input.record_type !== 'observation' || input.schema_version !== 1 || (hasV2Fields && !isV2)
     || !Number.isInteger(input.sequence) || Number(input.sequence) < 1
     || typeof input.run_id !== 'string' || input.run_id.length === 0
     || typeof input.sha !== 'string' || !/^[0-9a-f]{40}$/.test(input.sha)
+    || (isV2 && (typeof input.execution_sha !== 'string' || !/^[0-9a-f]{40}$/.test(input.execution_sha)
+      || typeof input.base_sha !== 'string' || !/^[0-9a-f]{40}$/.test(input.base_sha)))
     || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(startedAt)
     || Number.isNaN(Date.parse(startedAt))
     || !Number.isInteger(input.duration_ms) || Number(input.duration_ms) <= 0
