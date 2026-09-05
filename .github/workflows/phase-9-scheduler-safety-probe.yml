@@ -1,0 +1,14 @@
+name: Phase 9 Scheduler Safety Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  noop:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Phase 9 scheduler safety probe"
