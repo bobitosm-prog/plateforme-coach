@@ -61,6 +61,12 @@ describe('payments and application grants migration', () => {
 
   it('removes legacy and all coach payment write policies', () => {
     expect(migration).toContain('DROP POLICY IF EXISTS "payments_coach_all"')
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "coach see own payments"',
+    )
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "Coaches can view their payments"',
+    )
     expect(migration).not.toContain('CREATE POLICY "payments_coach_all"')
     expect(migration).not.toMatch(
       /CREATE POLICY "[^"]*payments[^"]*coach[^"]*"[\s\S]*FOR (?:ALL|INSERT|UPDATE|DELETE)/,
@@ -76,10 +82,23 @@ describe('payments and application grants migration', () => {
     expect(migration).not.toMatch(/REVOKE[^;]*FROM service_role/)
   })
 
+  it('keeps Stripe webhook event access server-only', () => {
+    expect(migration).toContain("'stripe_webhook_events'")
+    expect(migration).toMatch(
+      /REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLE\s+public\.stripe_webhook_events\s+FROM anon, authenticated/,
+    )
+    expect(migration).toContain('STRIPE_WEBHOOK_BROWSER_GRANT_REMAINS')
+    expect(migration).toContain('STRIPE_WEBHOOK_SERVICE_ROLE_GRANT_MISSING')
+    expect(migration).not.toMatch(
+      /REVOKE[^;]*public\.stripe_webhook_events[^;]*FROM service_role/,
+    )
+  })
+
   it('removes administrative grants on the bounded table allowlist', () => {
     expect(migration).toContain(
-      'REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE',
+      'REVOKE TRUNCATE, REFERENCES, TRIGGER ON TABLE',
     )
+    expect(migration).not.toMatch(/\bMAINTAIN\b/)
     expect(migration).toContain('FROM anon, authenticated')
     for (const table of targetTables) {
       expect(migration).toContain(`public.${table}`)
@@ -90,7 +109,10 @@ describe('payments and application grants migration', () => {
   it('removes anonymous business DML while preserving SELECT grants', () => {
     expect(migration).toContain('REVOKE INSERT, UPDATE, DELETE ON TABLE')
     expect(migration).toContain('ANON_APPLICATION_DML_GRANT_REMAINS')
-    expect(migration).not.toMatch(/REVOKE SELECT[^;]*FROM anon/)
+    const anonSelectRevokes =
+      migration.match(/REVOKE SELECT[^;]*FROM anon(?:, authenticated)?;/g) ?? []
+    expect(anonSelectRevokes).toHaveLength(1)
+    expect(anonSelectRevokes[0]).toContain('public.stripe_webhook_events')
   })
 
   it('preserves the messages read-only column grant', () => {

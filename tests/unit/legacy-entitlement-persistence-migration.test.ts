@@ -52,10 +52,23 @@ describe('legacy entitlement dark persistence migration', () => {
       'ALTER TABLE public.legacy_entitlements FORCE ROW LEVEL SECURITY',
     )
     expect(migration).toMatch(
-      /REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN[\s\S]*FROM PUBLIC, anon, authenticated/,
+      /REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER[\s\S]*FROM PUBLIC, anon, authenticated/,
     )
+    expect(migration).not.toMatch(/\bMAINTAIN\b/)
     expect(migration).not.toMatch(/CREATE POLICY/)
     expect(migration).not.toMatch(/GRANT [\s\S]* TO (?:anon|authenticated)/)
+  })
+
+  it('keeps only the required service role privileges', () => {
+    expect(migration).toMatch(
+      /REVOKE TRUNCATE, REFERENCES, TRIGGER[\s\S]*FROM service_role/,
+    )
+    expect(migration).toMatch(
+      /GRANT SELECT, INSERT, UPDATE, DELETE[\s\S]*TO service_role/,
+    )
+    expect(migration).toContain('LEGACY_ENTITLEMENTS_PUBLIC_GRANT_PRESENT')
+    expect(migration).toContain('LEGACY_ENTITLEMENTS_SERVICE_ROLE_GRANT_MISSING')
+    expect(migration).toContain('LEGACY_ENTITLEMENTS_SERVICE_ROLE_GRANT_EXCESS')
   })
 
   it('is transactional, repeatable and validates its dark-table postconditions', () => {

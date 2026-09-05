@@ -51,6 +51,7 @@ describe('training active coach RLS migration', () => {
   it('replaces duplicate client program ALL policies with four active-bound operations', () => {
     expect(migration).toContain('DROP POLICY IF EXISTS "client_programs_coach_all"')
     expect(migration).toContain('DROP POLICY IF EXISTS "client_programs_coach_write"')
+    expect(migration).toContain('DROP POLICY IF EXISTS "coaches manage programs"')
     for (const command of ['select', 'insert', 'update', 'delete']) {
       expect(migration).toContain(`CREATE POLICY "client_programs_coach_${command}_active"`)
     }
@@ -61,6 +62,7 @@ describe('training active coach RLS migration', () => {
   })
 
   it('limits coach feedback access to active SELECT and row-coach UPDATE', () => {
+    expect(migration).toContain('DROP POLICY IF EXISTS "Coaches manage client feedback"')
     expect(migration).toContain('DROP POLICY IF EXISTS "exercise_feedback_coach"')
     expect(migration).toMatch(
       /CREATE POLICY "exercise_feedback_coach_select_active"[\s\S]*FOR SELECT[\s\S]*is_active_coach_client_relation\(auth\.uid\(\), exercise_feedback\.client_id\)/,
@@ -88,6 +90,9 @@ describe('training active coach RLS migration', () => {
     expect(migration).toContain('TRAINING_LEGACY_COACH_BYPASS_REMAINS')
     expect(migration).toContain("coalesce(qual, '') LIKE '%coach_clients%'")
     expect(migration).toMatch(/coach_id\|created_by/)
+    expect(migration).toContain(
+      '(?:coach_id|created_by)\\s*=\\s*auth\\.uid\\(\\)',
+    )
     expect(migration).not.toMatch(/invited_by_coach|subscription_(?:type|status)/)
   })
 

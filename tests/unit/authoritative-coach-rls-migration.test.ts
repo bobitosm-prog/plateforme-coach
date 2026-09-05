@@ -66,8 +66,51 @@ describe('authoritative coach relation RLS hardening', () => {
     expect(messagingHelper).not.toMatch(/FROM\s+public\.coach_clients/i)
   })
 
-  it('changes no policy or client ownership rule in this focused migration', () => {
-    expect(migration).not.toMatch(/(?:CREATE|ALTER|DROP) POLICY/i)
+  it('retires every proven legacy authority bypass', () => {
+    for (const [table, policy] of [
+      ['body_analyses', 'body_analyses_coach_read'],
+      ['profiles', 'coaches can read their clients profiles'],
+      ['program_days', 'program_days_coach_all'],
+      ['program_exercises', 'program_exercises_coach_all'],
+      ['program_days', 'program days visible'],
+      ['program_exercises', 'program exercises visible'],
+      ['user_badges', 'user_badges_coach_read'],
+      ['user_xp', 'user_xp_coach_read'],
+      ['client_meal_plans', 'coaches manage meal plans'],
+      ['coach_clients', 'coach clients'],
+      ['coach_clients', 'coach_clients_manage'],
+      ['coach_clients', 'coach_clients_self_insert_safe'],
+    ]) {
+      expect(migration).toContain(
+        `DROP POLICY IF EXISTS "${policy}" ON public.${table}`,
+      )
+    }
+  })
+
+  it('replaces downstream coach access with the authoritative helper', () => {
+    for (const policy of [
+      'body_analyses_coach_read',
+      'program_days_coach_select_active',
+      'program_days_coach_insert_active',
+      'program_days_coach_update_active',
+      'program_days_coach_delete_active',
+      'program_exercises_coach_select_active',
+      'program_exercises_coach_insert_active',
+      'program_exercises_coach_update_active',
+      'program_exercises_coach_delete_active',
+      'user_badges_coach_read',
+      'user_xp_coach_read',
+    ]) {
+      const policyStart = migration.indexOf(`CREATE POLICY "${policy}"`)
+      expect(policyStart).toBeGreaterThan(-1)
+      const nextStatement = migration.indexOf(';', policyStart)
+      expect(migration.slice(policyStart, nextStatement)).toContain(
+        'is_active_coach_client_relation',
+      )
+    }
+  })
+
+  it('preserves client ownership and adds no table grant or data mutation', () => {
     expect(migration).not.toMatch(/(?:GRANT|REVOKE)[\s\S]*ON TABLE/i)
     expect(migration).not.toMatch(/INSERT INTO|UPDATE public\.|DELETE FROM/i)
   })
@@ -93,9 +136,28 @@ describe('authoritative coach relation RLS hardening', () => {
     expect(defaultAssignmentRoute).not.toMatch(/createCoachClientRelation|transition_coach_client_relation/)
   })
 
-  it('requires all 49 coach-sensitive policies during migration postflight', () => {
-    expect(migration).toContain('IF protected_policy_count <> 49 THEN')
+  it('requires all 60 coach-sensitive policies during migration postflight', () => {
+    expect(migration).toContain('IF protected_policy_count <> 60 THEN')
     expect(migration).toContain('AUTHORITATIVE_RELATION_POLICIES_INCOMPLETE')
+  })
+
+  it('scans globally for direct authority and browser relation writers', () => {
+    expect(migration).toContain('WITH client_data_tables AS')
+    expect(migration).toContain("column_name IN ('client_id', 'user_id')")
+    expect(migration).toContain("coalesce(policy.qual, '') LIKE '%coach_clients%'")
+    expect(migration).toContain('unsafe_direct_policy_count')
+    expect(migration).toContain('AUTHORITATIVE_DIRECT_COACH_BYPASS_REMAINS')
+    expect(migration).toContain('unrestricted_sensitive_policy_count')
+    expect(migration).toContain(
+      'AUTHORITATIVE_UNRESTRICTED_SENSITIVE_POLICY_REMAINS',
+    )
+    expect(migration).toContain('AUTHORITATIVE_BROWSER_RELATION_WRITER_REMAINS')
+    expect(migration.indexOf('WITH helper_scoped_tables AS')).toBeGreaterThan(
+      migration.indexOf('AUTHORITATIVE_DIRECT_COACH_BYPASS_REMAINS'),
+    )
+    expect(migration).not.toMatch(
+      /policyname\s+IN\s*\([^)]*body_analyses_coach_read[^)]*\)[\s\S]*DIRECT_COACH_BYPASS/,
+    )
   })
 
   it('adds no application query, index, table or runtime authority implementation', () => {

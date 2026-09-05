@@ -51,8 +51,10 @@ GRANT UPDATE (read) ON public.messages TO authenticated;
 
 DROP POLICY IF EXISTS "can read own messages" ON public.messages;
 DROP POLICY IF EXISTS "users can read own messages" ON public.messages;
+DROP POLICY IF EXISTS "users can read their messages" ON public.messages;
 DROP POLICY IF EXISTS "users can send messages" ON public.messages;
 DROP POLICY IF EXISTS "users can mark own messages read" ON public.messages;
+DROP POLICY IF EXISTS "users can mark messages read" ON public.messages;
 DROP POLICY IF EXISTS "messages_read_own" ON public.messages;
 DROP POLICY IF EXISTS "messages_send" ON public.messages;
 DROP POLICY IF EXISTS "messages_mark_read" ON public.messages;
@@ -93,6 +95,7 @@ WITH CHECK (
 );
 
 DROP POLICY IF EXISTS "coach_notes_coach_all" ON public.coach_notes;
+DROP POLICY IF EXISTS "coaches can manage their notes" ON public.coach_notes;
 
 DROP POLICY IF EXISTS "coach_notes_coach_select_active" ON public.coach_notes;
 CREATE POLICY "coach_notes_coach_select_active"
@@ -206,6 +209,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "feed_read_same_coach" ON public.activity_feed;
 DROP POLICY IF EXISTS "activity_feed_own" ON public.activity_feed;
 CREATE POLICY "activity_feed_own"
 ON public.activity_feed
@@ -280,8 +284,10 @@ BEGIN
       AND policyname IN (
         'can read own messages',
         'users can read own messages',
+        'users can read their messages',
         'users can send messages',
         'users can mark own messages read',
+        'users can mark messages read',
         'messages_read_own',
         'messages_send',
         'messages_mark_read',
@@ -303,6 +309,8 @@ BEGIN
           (
             coalesce(qual, '') ~ 'auth\.uid\(\)\s*=\s*(?:[a-z_]+\.)?coach_id'
             OR coalesce(with_check, '') ~ 'auth\.uid\(\)\s*=\s*(?:[a-z_]+\.)?coach_id'
+            OR coalesce(qual, '') ~ '(?:[a-z_]+\.)?coach_id\s*=\s*auth\.uid\(\)'
+            OR coalesce(with_check, '') ~ '(?:[a-z_]+\.)?coach_id\s*=\s*auth\.uid\(\)'
           )
           AND coalesce(qual, '') NOT LIKE '%is_active_coach_client_relation%'
           AND coalesce(with_check, '') NOT LIKE '%is_active_coach_client_relation%'

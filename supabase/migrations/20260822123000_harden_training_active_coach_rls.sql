@@ -98,6 +98,8 @@ DROP POLICY IF EXISTS "client_programs_coach_all"
   ON public.client_programs;
 DROP POLICY IF EXISTS "client_programs_coach_write"
   ON public.client_programs;
+DROP POLICY IF EXISTS "coaches manage programs"
+  ON public.client_programs;
 
 DROP POLICY IF EXISTS "client_programs_coach_select_active"
   ON public.client_programs;
@@ -172,6 +174,9 @@ USING (
 
 -- Clients create their own feedback through the existing owner policy. Coaches
 -- only read and review feedback, and updates remain row-coach plus active-bound.
+DROP POLICY IF EXISTS "Coaches manage client feedback"
+  ON public.exercise_feedback;
+
 DROP POLICY IF EXISTS "exercise_feedback_coach"
   ON public.exercise_feedback;
 
@@ -327,6 +332,8 @@ BEGIN
           (
             coalesce(qual, '') ~ 'auth\.uid\(\)\s*=\s*(?:[a-z_]+\.)?(?:coach_id|created_by)'
             OR coalesce(with_check, '') ~ 'auth\.uid\(\)\s*=\s*(?:[a-z_]+\.)?(?:coach_id|created_by)'
+            OR coalesce(qual, '') ~ '(?:[a-z_]+\.)?(?:coach_id|created_by)\s*=\s*auth\.uid\(\)'
+            OR coalesce(with_check, '') ~ '(?:[a-z_]+\.)?(?:coach_id|created_by)\s*=\s*auth\.uid\(\)'
           )
           AND coalesce(qual, '') NOT LIKE '%is_active_coach_client_relation%'
           AND coalesce(with_check, '') NOT LIKE '%is_active_coach_client_relation%'

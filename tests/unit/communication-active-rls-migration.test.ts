@@ -43,8 +43,10 @@ describe('communication active coach RLS migration', () => {
     for (const policy of [
       'can read own messages',
       'users can read own messages',
+      'users can read their messages',
       'users can send messages',
       'users can mark own messages read',
+      'users can mark messages read',
       'messages_read_own',
       'messages_send',
       'messages_mark_read',
@@ -72,6 +74,9 @@ describe('communication active coach RLS migration', () => {
 
   it('replaces coach notes ALL access with the runtime-required operations', () => {
     expect(migration).toContain('DROP POLICY IF EXISTS "coach_notes_coach_all"')
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "coaches can manage their notes"',
+    )
     for (const command of ['select', 'insert', 'update']) {
       expect(migration).toContain(`CREATE POLICY "coach_notes_coach_${command}_active"`)
     }
@@ -98,6 +103,7 @@ describe('communication active coach RLS migration', () => {
   })
 
   it('preserves feed owner access and active-bounds the coach branch', () => {
+    expect(migration).toContain('DROP POLICY IF EXISTS "feed_read_same_coach"')
     expect(migration).toMatch(
       /CREATE POLICY "activity_feed_own"[\s\S]*FOR SELECT[\s\S]*auth\.uid\(\) = activity_feed\.user_id[\s\S]*auth\.uid\(\) = activity_feed\.coach_id[\s\S]*is_active_coach_client_relation/,
     )
@@ -112,6 +118,7 @@ describe('communication active coach RLS migration', () => {
     expect(migration).toContain('COMMUNICATION_LEGACY_COACH_BYPASS_REMAINS')
     expect(migration).toContain('COMMUNICATION_MESSAGE_PARTICIPANT_BYPASS_REMAINS')
     expect(migration).toContain("coalesce(qual, '') LIKE '%coach_clients%'")
+    expect(migration).toContain('coach_id\\s*=\\s*auth\\.uid\\(\\)')
   })
 
   it('leaves hardened scheduled sessions and unrelated domains untouched', () => {

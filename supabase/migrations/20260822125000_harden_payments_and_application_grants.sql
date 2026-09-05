@@ -42,7 +42,8 @@ BEGIN
     'coach_notes',
     'coach_appointments',
     'activity_feed',
-    'payments'
+    'payments',
+    'stripe_webhook_events'
   ]
   LOOP
     IF to_regclass(format('public.%I', target_table)) IS NULL THEN
@@ -72,6 +73,8 @@ TO authenticated
 USING (payments.client_id = auth.uid());
 
 DROP POLICY IF EXISTS "payments_coach_all" ON public.payments;
+DROP POLICY IF EXISTS "coach see own payments" ON public.payments;
+DROP POLICY IF EXISTS "Coaches can view their payments" ON public.payments;
 DROP POLICY IF EXISTS "payments_coach_select_active_clients" ON public.payments;
 CREATE POLICY "payments_coach_select_active_clients"
 ON public.payments
@@ -89,9 +92,15 @@ USING (
 -- service_role privileges and RLS bypass; browser roles retain SELECT only.
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.payments FROM anon, authenticated;
 
+-- Stripe webhook idempotency is exclusively managed by the server-side
+-- service_role client. Browser roles do not need read or write access.
+REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLE
+  public.stripe_webhook_events
+FROM anon, authenticated;
+
 -- Remove administrative table privileges from browser roles on the explicit
 -- application-table allowlist. service_role is intentionally untouched.
-REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE
+REVOKE TRUNCATE, REFERENCES, TRIGGER ON TABLE
   public.coach_clients,
   public.profiles,
   public.workout_sessions,
@@ -173,6 +182,7 @@ DECLARE
   browser_role text;
   admin_privilege text;
   dml_privilege text;
+  server_only_privilege text;
   payment_policy_count integer;
 BEGIN
   SELECT count(*)
@@ -203,7 +213,11 @@ BEGIN
     WHERE schemaname = 'public'
       AND tablename = 'payments'
       AND (
-        policyname = 'payments_coach_all'
+        policyname IN (
+          'payments_coach_all',
+          'coach see own payments',
+          'Coaches can view their payments'
+        )
         OR (
           policyname LIKE '%coach%'
           AND cmd IN ('ALL', 'INSERT', 'UPDATE', 'DELETE')
@@ -226,7 +240,7 @@ BEGIN
     FOREACH browser_role IN ARRAY ARRAY['anon', 'authenticated']
     LOOP
       FOREACH admin_privilege IN ARRAY ARRAY[
-        'TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN'
+        'TRUNCATE', 'REFERENCES', 'TRIGGER'
       ]
       LOOP
         IF has_table_privilege(
@@ -263,6 +277,24 @@ BEGIN
       RAISE EXCEPTION 'AUTHENTICATED_PAYMENT_WRITE_GRANT_REMAINS: %',
         dml_privilege;
     END IF;
+  END LOOP;
+
+  FOREACH browser_role IN ARRAY ARRAY['anon', 'authenticated']
+  LOOP
+    FOREACH server_only_privilege IN ARRAY ARRAY[
+      'SELECT', 'INSERT', 'UPDATE', 'DELETE',
+      'TRUNCATE', 'REFERENCES', 'TRIGGER'
+    ]
+    LOOP
+      IF has_table_privilege(
+        browser_role,
+        'public.stripe_webhook_events',
+        server_only_privilege
+      ) THEN
+        RAISE EXCEPTION 'STRIPE_WEBHOOK_BROWSER_GRANT_REMAINS: % %',
+          browser_role, server_only_privilege;
+      END IF;
+    END LOOP;
   END LOOP;
 
   IF NOT has_column_privilege(
@@ -307,6 +339,26 @@ BEGIN
     OR NOT has_table_privilege('service_role', 'public.payments', 'UPDATE')
     OR NOT has_table_privilege('service_role', 'public.payments', 'DELETE') THEN
     RAISE EXCEPTION 'PAYMENTS_SERVICE_ROLE_WRITER_GRANT_MISSING';
+  END IF;
+
+  IF NOT has_table_privilege(
+    'service_role',
+    'public.stripe_webhook_events',
+    'SELECT'
+  ) OR NOT has_table_privilege(
+    'service_role',
+    'public.stripe_webhook_events',
+    'INSERT'
+  ) OR NOT has_table_privilege(
+    'service_role',
+    'public.stripe_webhook_events',
+    'UPDATE'
+  ) OR NOT has_table_privilege(
+    'service_role',
+    'public.stripe_webhook_events',
+    'DELETE'
+  ) THEN
+    RAISE EXCEPTION 'STRIPE_WEBHOOK_SERVICE_ROLE_GRANT_MISSING';
   END IF;
 END
 $postflight$;

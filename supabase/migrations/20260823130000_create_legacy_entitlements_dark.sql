@@ -58,10 +58,13 @@ ALTER TABLE public.legacy_entitlements FORCE ROW LEVEL SECURITY;
 
 -- The dark table has no browser policy. Future access must cross a reviewed,
 -- server-only repository; service_role deliberately receives no TRUNCATE,
--- REFERENCES, TRIGGER or MAINTAIN privilege.
-REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN
+-- REFERENCES or TRIGGER privilege.
+REVOKE SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
   ON TABLE public.legacy_entitlements
   FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE, REFERENCES, TRIGGER
+  ON TABLE public.legacy_entitlements
+  FROM service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE
   ON TABLE public.legacy_entitlements
   TO service_role;
@@ -91,11 +94,21 @@ BEGIN
     RAISE EXCEPTION 'LEGACY_ENTITLEMENTS_BROWSER_POLICY_PRESENT';
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.table_privileges
+    WHERE table_schema = 'public'
+      AND table_name = 'legacy_entitlements'
+      AND grantee = 'PUBLIC'
+  ) THEN
+    RAISE EXCEPTION 'LEGACY_ENTITLEMENTS_PUBLIC_GRANT_PRESENT';
+  END IF;
+
   FOREACH browser_role IN ARRAY ARRAY['anon', 'authenticated']
   LOOP
     FOREACH table_privilege IN ARRAY ARRAY[
       'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE',
-      'REFERENCES', 'TRIGGER', 'MAINTAIN'
+      'REFERENCES', 'TRIGGER'
     ]
     LOOP
       IF has_table_privilege(
@@ -107,6 +120,34 @@ BEGIN
           browser_role, table_privilege;
       END IF;
     END LOOP;
+  END LOOP;
+
+  FOREACH table_privilege IN ARRAY ARRAY[
+    'SELECT', 'INSERT', 'UPDATE', 'DELETE'
+  ]
+  LOOP
+    IF NOT has_table_privilege(
+      'service_role',
+      'public.legacy_entitlements',
+      table_privilege
+    ) THEN
+      RAISE EXCEPTION 'LEGACY_ENTITLEMENTS_SERVICE_ROLE_GRANT_MISSING: %',
+        table_privilege;
+    END IF;
+  END LOOP;
+
+  FOREACH table_privilege IN ARRAY ARRAY[
+    'TRUNCATE', 'REFERENCES', 'TRIGGER'
+  ]
+  LOOP
+    IF has_table_privilege(
+      'service_role',
+      'public.legacy_entitlements',
+      table_privilege
+    ) THEN
+      RAISE EXCEPTION 'LEGACY_ENTITLEMENTS_SERVICE_ROLE_GRANT_EXCESS: %',
+        table_privilege;
+    END IF;
   END LOOP;
 END
 $postflight$;
