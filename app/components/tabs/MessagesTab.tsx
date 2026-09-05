@@ -21,7 +21,7 @@ interface MessagesTabProps {
   setMsgInput: (v: string) => void
   sendMessage: (imageUrl?: string | null) => Promise<void>
   msgEndRef: React.RefObject<HTMLDivElement | null>
-  isInvited?: boolean
+  isCoachManaged?: boolean
   onBack?: () => void
 }
 
@@ -33,7 +33,7 @@ function dateLabel(dateStr: string): string {
 }
 
 export default function MessagesTab({
-  session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isInvited = true, onBack,
+  session, coachId, supabase, messages, msgInput, setMsgInput, sendMessage, msgEndRef, isCoachManaged = true, onBack,
 }: MessagesTabProps) {
   const tc = useTranslations('common')
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -111,7 +111,7 @@ export default function MessagesTab({
       <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
         <div>
-          <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>{isInvited ? 'MON COACH' : 'SUPPORT'}</h1>
+          <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>{isCoachManaged ? 'MON COACH' : 'SUPPORT'}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
             <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600, fontFamily: FONT_BODY }}>En ligne</span>

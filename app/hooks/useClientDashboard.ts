@@ -9,6 +9,8 @@ import { JS_DAYS_FR } from '../../lib/design-tokens'
 import { cache } from '../../lib/cache'
 import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
+import useProgressionViewModel from './useProgressionViewModel'
+import type { ProgressionPeriod } from '../../lib/progression/progression-dashboard-model'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
 import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
@@ -18,20 +20,61 @@ import { computeStreak } from '../../lib/streak'
 import { projectRestDates } from '../../lib/project-rest-days'
 import { checkAndUnlockBadges, type Badge } from '../../lib/check-badges'
 import { addXP, updateStreak } from '../../lib/gamification'
+import {
+  findActiveCoachForClient,
+  toActiveCoachResolutionState,
+  type ActiveCoachResolutionState,
+} from '../../lib/coach-relations/repository'
+import {
+  DENIED_ENTITLEMENT_SNAPSHOT,
+  fetchEffectiveEntitlementSnapshot,
+  type EffectiveEntitlementSnapshot,
+} from '../../lib/entitlements/client-snapshot'
+import {
+  emptyActiveTrainingProgram,
+  resolveActiveTrainingProgram,
+  type ActiveTrainingProgramContext,
+  type CoachTrainingProgramRow,
+  type PersonalTrainingProgram,
+} from '../../lib/training/active-program'
+import {
+  createActiveWorkoutDraft,
+  readActiveWorkoutDraft,
+  removeActiveWorkoutDraft,
+  writeActiveWorkoutDraft,
+  type ActiveWorkoutDraft,
+} from '../../lib/training/active-workout-draft'
+import {
+  persistCriticalWorkout,
+  type CompletedWorkoutData,
+} from '../../lib/training/session-persistence'
+import { deriveTodayTrainingState } from '../../lib/training/today-training-state'
+import {
+  classifyProfileResult,
+  resolvePostAuthDestination,
+  type ProfileState,
+} from '../../lib/auth/post-auth-routing'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'compte' | 'profil' | 'messages' | 'coachIA' | 'feedback' | 'preferences' | 'account_section' | 'goals'
+export type Tab = 'home' | 'training' | 'nutrition' | 'progress' | 'compte' | 'profil' | 'messages' | 'coachIA' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program' | 'training_program'
 
 // Convertit un coach program normalisé (objet {lundi,...}) en forme .days[]
-function coachToDays(normalized: any): { days: any[] } | null {
-  if (!normalized) return null
+function coachToDays(normalized: unknown): { days: unknown[] } | null {
+  if (typeof normalized !== 'object' || normalized === null || Array.isArray(normalized)) return null
+  const program = normalized as Record<string, unknown>
   const WD = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche']
-  return { days: WD.map(d => normalized[d] || { is_rest: true, name: '', exercises: [] }) }
+  return { days: WD.map(d => program[d] || { is_rest: true, name: '', exercises: [] }) }
 }
 
-export default function useClientDashboard() {
+function personalToDays(program: unknown): { days: unknown[] } | null {
+  if (typeof program !== 'object' || program === null || Array.isArray(program)) return null
+  const days = (program as { days?: unknown }).days
+  return Array.isArray(days) ? { days } : null
+}
+
+export default function useClientDashboard(initialTab: Tab = 'home') {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [session, setSession] = useState<any>(null)
@@ -39,22 +82,27 @@ export default function useClientDashboard() {
   const [measurements, setMeasurements] = useState<any[]>([])
   const [progressPhotos, setProgressPhotos] = useState<any[]>([])
   const [wSessions, setWSessions] = useState<any[]>([])
+  const [workoutHistoryState, setWorkoutHistoryState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
   const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
   const [sessionDates, setSessionDates] = useState<{ created_at: string }[]>([])
   const [coachProgram, setCoachProgram] = useState<any>(null)
+  const [activeTrainingProgram, setActiveTrainingProgram] = useState<ActiveTrainingProgramContext>(() => (
+    emptyActiveTrainingProgram()
+  ))
   const [planningDays, setPlanningDays] = useState<any[] | null>(null)
   const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
-  const [activeTab, setActiveTab] = useState<Tab>('home')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [loading, setLoading] = useState(true)
   const [roleChecked, setRoleChecked] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [postAuthProfileState, setPostAuthProfileState] = useState<ProfileState>('loading')
+  const [entitlementSnapshot, setEntitlementSnapshot] = useState<EffectiveEntitlementSnapshot>(
+    DENIED_ENTITLEMENT_SNAPSHOT,
+  )
 
-  const [workoutSession, setWorkoutSession] = useState<{ name: string; exercises: any[]; startedAt?: string; weekdayKey?: string } | null>(() => {
-    if (typeof window === 'undefined') return null
-    try { const s = localStorage.getItem('moovx_active_workout'); return s ? JSON.parse(s) : null } catch { return null }
-  })
+  const [workoutSession, setWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
   const [modal, setModal] = useState<string | null>(null)
   const [latestDiagnostic, setLatestDiagnostic] = useState<any>(null)
 
@@ -68,6 +116,9 @@ export default function useClientDashboard() {
   // Coach link
   const [coachId, setCoachId] = useState<string | null>(null)
   const [isDefaultCoach, setIsDefaultCoach] = useState(false)
+  const [coachRelationStatus, setCoachRelationStatus] = useState<ActiveCoachResolutionState['status']>('not_found')
+  const [coachRelationIsAuthoritative, setCoachRelationIsAuthoritative] = useState(false)
+  const [coachRelationRequiresReconciliation, setCoachRelationRequiresReconciliation] = useState(false)
 
   const initialFetchDone = useRef(false)
   const fetchAllComplete = useRef(false)
@@ -75,6 +126,8 @@ export default function useClientDashboard() {
   const coachOfProgramIdRef = useRef<string | null>(null)
   const [completedThisWeek, setCompletedThisWeek] = useState<Map<number, string>>(new Map())
   const [nextSession, setNextSession] = useState<SuggestedSession | null>(null)
+  const [progressionBaseErrors, setProgressionBaseErrors] = useState<Partial<Record<'weight' | 'sessions' | 'measurements' | 'photos', string>>>({})
+  const [progressionPeriod, setProgressionPeriod] = useState<ProgressionPeriod>('30d')
 
   const mainRef = useRef<HTMLElement>(null)
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -83,7 +136,13 @@ export default function useClientDashboard() {
   const userId = session?.user?.id
 
   const messagesHook = useMessages({ supabase, userId, coachId, activeTab })
-  const analyticsHook = useAnalytics({ supabase })
+  const analyticsHook = useAnalytics({
+    supabase,
+    enabled: activeTab === 'progress',
+    userId,
+    workoutSessions: wSessions,
+    weightHistory: weightHistory30,
+  })
   const scheduledHook = useScheduledSessions({ supabase })
   const foodHook = useFoodLog({
     supabase,
@@ -120,6 +179,8 @@ export default function useClientDashboard() {
   useEffect(() => {
     if (!session || initialFetchDone.current) return
     initialFetchDone.current = true
+    const restored = readActiveWorkoutDraft(localStorage, session.user.id)
+    if (restored && restored.status !== 'completed') setWorkoutSession(restored)
     fetchAll()
   }, [session])
 
@@ -133,94 +194,157 @@ export default function useClientDashboard() {
   async function fetchAll(forceRefresh = false) {
     const uid = session?.user?.id
     if (!uid) return
+    if (!fetchAllComplete.current) setPostAuthProfileState('loading')
     const today = new Date().toISOString().split('T')[0]
+
+    let resolvedEntitlementSnapshot = entitlementSnapshot
+    try {
+      resolvedEntitlementSnapshot = await fetchEffectiveEntitlementSnapshot()
+      setEntitlementSnapshot(resolvedEntitlementSnapshot)
+    } catch {
+      setEntitlementSnapshot(DENIED_ENTITLEMENT_SNAPSHOT)
+      console.error('[client-dashboard] Effective entitlement unavailable')
+    }
 
     // Try cache first (only on initial load, not forced refreshes)
     if (!forceRefresh) {
       const cached = cache.get(`dashboard_${uid}`)
       if (cached) {
-        applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, cached.coachProgData, cached.coachMealData)
+        const cachedProfileDecision = resolvePostAuthDestination({
+          authenticated: true,
+          profileState: cached.profileData ? 'ready' : 'missing',
+          profile: cached.profileData,
+          adminExempt: cached.profileData?.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'),
+        })
+        if (!cachedProfileDecision.route) {
+          setPostAuthProfileState(cached.profileData ? 'error' : 'missing')
+          return
+        }
+        if (cachedProfileDecision.route !== '/') {
+          router.replace(cachedProfileDecision.route)
+          return
+        }
+        if (cachedProfileDecision.destination === 'coach_app') {
+          setUserRole(cached.profileData.role)
+          setPostAuthProfileState('ready')
+          fetchAllComplete.current = true
+          return
+        }
+        setUserRole(cached.profileData.role)
+        const relation = toActiveCoachResolutionState(await findActiveCoachForClient(supabase, uid))
+        const context = normalizeActiveTrainingContext(resolveActiveTrainingProgram({
+          coachRelation: relation,
+          coachPrograms: cached.coachProgramsData || [],
+          personalProgram: cached.customProgData || null,
+          capabilities: resolvedEntitlementSnapshot.capabilities,
+          coachProgramValidator: program => Boolean(normalizeCoachProgram(program)),
+        }))
+        applyActiveTrainingContext(context)
+        await applyCoachResolution(relation)
+        applyFetchedData(cached.profileData, cached.weightsData, cached.sessData, cached.measureData, cached.photosData, context.source === 'coach' ? context.program : null, cached.coachMealData)
         setSessionDates(cached.sessionDatesData || [])
         setHasTrainedBefore(cached.hasTrainedBeforeVal || false)
-        resolveCoachLink(uid)
-        const planningProgram = cached.customProgData || coachToDays(cached.coachProgData)
+        setProgressionBaseErrors(cached.progressionBaseErrorsData || {})
+        setWorkoutHistoryState(cached.progressionBaseErrorsData?.sessions ? 'error' : cached.sessData?.some((item: { completed?: boolean }) => item.completed) ? 'ready' : 'empty')
+        const planningProgram = context.source === 'personal' ? personalToDays(context.program) : coachToDays(context.program)
         setPlanningDays(planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
-        analyticsHook.fetchAnalyticsData(uid)
         fetchAllComplete.current = true
+        setPostAuthProfileState('ready')
         return
       }
     }
 
-    const [profRes, weightsRes, , sessRes, measureRes, photosRes, , , coachProgRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes] = await Promise.all([
+    const [profRes, weightsRes, , sessRes, measureRes, photosRes, coachProgramsRes, coachMealRes, completedSessionsRes, diagRes, customProgRes, trainedCountRes, sessionDatesRes, relationResult] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
-      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: true }).limit(30),
+      supabase.from('weight_logs').select('date, poids').eq('user_id', uid).order('date', { ascending: false }).limit(100),
       supabase.from('daily_food_logs').select('*').eq('user_id', uid).eq('date', today).limit(100),
       supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).order('created_at', { ascending: false }).limit(90),
       supabase.from('body_measurements').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(10),
       supabase.from('progress_photos').select('*').eq('user_id', uid).order('date', { ascending: false }).limit(20),
-      supabase.from('training_programs').select('*').eq('is_template', true).limit(50),
-      supabase.from('user_programs').select('*, training_programs(*)').eq('user_id', uid).eq('active', true).maybeSingle(),
-      supabase.from('client_programs').select('id, program, coach_id').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('client_programs').select('id, program, coach_id, created_at, updated_at').eq('client_id', uid).order('created_at', { ascending: false }).limit(20),
       supabase.from('client_meal_plans').select('plan').eq('client_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('completed_sessions').select('session_index, session_name, completed_at').eq('client_id', uid).order('completed_at', { ascending: false }).limit(50),
       supabase.from('weekly_diagnostics').select('*').eq('user_id', uid).order('week_start', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('custom_programs').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle(),
       supabase.from('workout_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('completed', true),
       supabase.from('workout_sessions').select('created_at').eq('user_id', uid).eq('completed', true).order('created_at', { ascending: false }).limit(400),
+      findActiveCoachForClient(supabase, uid),
     ])
 
-    if (!profRes.data) { router.replace('/onboarding-v2'); return }
+    const classifiedProfile = classifyProfileResult(profRes)
+    // A transient/provider read error is not proof that onboarding is incomplete.
+    if (classifiedProfile.state === 'error') {
+      console.error('[client-dashboard] Profile read failed:', profRes.error?.code)
+      setPostAuthProfileState('error')
+      return
+    }
+    if (classifiedProfile.state === 'missing' || !profRes.data) {
+      setPostAuthProfileState('missing')
+      return
+    }
     // If role is missing but user_metadata has it (trigger guard_profile_sensitive_columns blocks client role updates), fix via RPC
     const metaRole = session?.user?.user_metadata?.role
-    if (!profRes.data.role && metaRole) {
+    if (!profRes.data.role && (metaRole === 'client' || metaRole === 'coach')) {
       const { error: roleErr } = await supabase.rpc('set_role', { p_role: metaRole })
-      if (!roleErr) profRes.data.role = metaRole
-    }
-    if (profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com')) {
-      // Admin users skip all onboarding → proceed to dashboard
-    } else if (profRes.data.role === 'coach') {
-      if (!profRes.data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
-      // Coach with completed onboarding → proceed to dashboard
-    } else {
-      // onboarding_completed = true → authoritative flag, skip all checks
-      if (profRes.data.onboarding_completed) {
-        // Proceed to dashboard
-      } else {
-        const V2_MIGRATION_DATE = new Date('2026-05-27')
-        const createdAt = profRes.data.created_at ? new Date(profRes.data.created_at) : null
-        const isLegacyUser = createdAt && createdAt < V2_MIGRATION_DATE
-
-        if (isLegacyUser) {
-          // Legacy users (pre-v2) → preserve v1 onboarding checks
-          if (!profRes.data.onboarding_completed_at && !profRes.data.objective) {
-            router.replace('/onboarding-fitness'); return
-          }
-          const fn = profRes.data.full_name?.trim()
-          if (!fn || fn === 'Athlete') {
-            router.replace('/onboarding'); return
-          }
-          if (!profRes.data.onboarding_photo_completed_at) {
-            const photoFeatureDate = new Date('2026-04-03')
-            if (createdAt && createdAt >= photoFeatureDate) {
-              router.replace('/onboarding-photo'); return
-            }
-          }
-        } else {
-          // New users (post-v2) → unified v2 onboarding
-          router.replace('/onboarding-v2'); return
-        }
+      if (roleErr) {
+        setPostAuthProfileState('error')
+        return
       }
+      const { data: repaired, error: repairedError } = await supabase.from('profiles').select('role').eq('id', uid).single()
+      if (repairedError || !repaired?.role) {
+        setPostAuthProfileState('error')
+        return
+      }
+      profRes.data.role = repaired.role
+    }
+    setUserRole(profRes.data.role)
+
+    const postAuthDecision = resolvePostAuthDestination({
+      authenticated: true,
+      profileState: 'ready',
+      profile: profRes.data,
+      adminExempt: profRes.data.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'),
+    })
+    if (!postAuthDecision.route) {
+      setPostAuthProfileState('error')
+      return
+    }
+    if (postAuthDecision.route !== '/') {
+      router.replace(postAuthDecision.route)
+      return
+    }
+    if (postAuthDecision.destination === 'coach_app') {
+      setPostAuthProfileState('ready')
+      fetchAllComplete.current = true
+      return
     }
 
     const profileData = profRes.data
-    const weightsData = weightsRes.data || []
+    const weightsData = [...(weightsRes.data || [])].sort((a, b) => a.date.localeCompare(b.date))
     const sessData = sessRes.data || []
     const measureData = measureRes.data || []
     const photosData = photosRes.data || []
-    const coachProgData = normalizeCoachProgram(coachProgRes.data?.program)
-    clientProgramIdRef.current = coachProgRes.data?.id ?? null
-    coachOfProgramIdRef.current = coachProgRes.data?.coach_id ?? null
+    const baseErrors: typeof progressionBaseErrors = {}
+    if (weightsRes.error) baseErrors.weight = 'PROGRESSION_WEIGHT_READ_FAILED'
+    if (sessRes.error) baseErrors.sessions = 'PROGRESSION_SESSIONS_READ_FAILED'
+    if (measureRes.error) baseErrors.measurements = 'PROGRESSION_MEASUREMENTS_READ_FAILED'
+    if (photosRes.error) baseErrors.photos = 'PROGRESSION_PHOTOS_READ_FAILED'
+    setProgressionBaseErrors(baseErrors)
+    setWorkoutHistoryState(sessRes.error ? 'error' : sessData.some(item => item.completed) ? 'ready' : 'empty')
+    const relation = toActiveCoachResolutionState(relationResult)
+    const trainingContext = normalizeActiveTrainingContext(resolveActiveTrainingProgram({
+      coachRelation: relation,
+      coachPrograms: (coachProgramsRes.data || []) as CoachTrainingProgramRow[],
+      personalProgram: customProgRes.data as PersonalTrainingProgram | null,
+      capabilities: resolvedEntitlementSnapshot.capabilities,
+      coachProgramReadError: Boolean(coachProgramsRes.error),
+      personalProgramReadError: Boolean(customProgRes.error),
+      coachProgramValidator: program => Boolean(normalizeCoachProgram(program)),
+    }))
+    const coachProgData = trainingContext.source === 'coach'
+      ? normalizeCoachProgram(trainingContext.program)
+      : null
     const coachMealData = coachMealRes.data?.plan || null
 
     // Build last-completed map for session cards
@@ -238,19 +362,38 @@ export default function useClientDashboard() {
     setCompletedThisWeek(cwMap)
     setNextSession(suggestNextSession(coachProgData, lcMap))
 
-    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0 }, 5 * 60 * 1000)
+    cache.set(`dashboard_${uid}`, { profileData, weightsData, sessData, measureData, photosData, coachProgramsData: coachProgramsRes.data || [], coachMealData, customProgData: customProgRes?.data || null, sessionDatesData: sessionDatesRes?.data || [], hasTrainedBeforeVal: (trainedCountRes?.count ?? 0) > 0, progressionBaseErrorsData: baseErrors }, 5 * 60 * 1000)
 
+    applyActiveTrainingContext(trainingContext)
+    await applyCoachResolution(relation)
     applyFetchedData(profileData, weightsData, sessData, measureData, photosData, coachProgData, coachMealData)
     setHasTrainedBefore((trainedCountRes?.count ?? 0) > 0)
     setSessionDates(sessionDatesRes?.data || [])
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
-    const customProg = customProgRes?.data || null
-    const planningProgram = customProg || coachToDays(coachProgData)
+    const planningProgram = trainingContext.source === 'personal' ? personalToDays(trainingContext.program) : coachToDays(coachProgData)
     setPlanningDays(planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
-    analyticsHook.fetchAnalyticsData(uid)
-    await resolveCoachLink(uid)
     fetchAllComplete.current = true
+    setPostAuthProfileState('ready')
+  }
+
+  function normalizeActiveTrainingContext(context: ActiveTrainingProgramContext): ActiveTrainingProgramContext {
+    if (context.source !== 'coach') return context
+    const normalized = normalizeCoachProgram(context.program)
+    if (normalized) return { ...context, program: normalized }
+    return {
+      ...emptyActiveTrainingProgram(context.coachRelation),
+      state: 'error',
+      errors: [...context.errors, 'TRAINING_COACH_PROGRAM_INVALID'],
+    }
+  }
+
+  function applyActiveTrainingContext(context: ActiveTrainingProgramContext) {
+    setActiveTrainingProgram(context)
+    const coachProgramValue = context.source === 'coach' ? context.program : null
+    setCoachProgram(coachProgramValue)
+    clientProgramIdRef.current = context.source === 'coach' ? context.programId : null
+    coachOfProgramIdRef.current = context.source === 'coach' ? context.coachRelation.coachId : null
   }
 
   function applyFetchedData(profileData: any, weightsData: any[], sessData: any[], measureData: any[], photosData: any[], coachProgData: any, coachMealData: any) {
@@ -269,153 +412,208 @@ export default function useClientDashboard() {
     setMeasurements(measureData)
     setProgressPhotos(photosData)
     setWeightHistory30(weightsData.map(w => ({ date: w.date, poids: w.poids })))
-    if (coachProgData) setCoachProgram(coachProgData)
+    setCoachProgram(coachProgData || null)
     if (coachMealData) setCoachMealPlan(coachMealData)
   }
 
-  async function resolveCoachLink(uid: string) {
+  async function applyCoachResolution(resolution: ActiveCoachResolutionState) {
+    setCoachId(resolution.coachId)
+    setCoachRelationStatus(resolution.status)
+    setCoachRelationIsAuthoritative(resolution.isAuthoritative)
+    setCoachRelationRequiresReconciliation(resolution.requiresReconciliation)
+
+    if (!resolution.coachId) {
+      setIsDefaultCoach(false)
+      if (resolution.status === 'multiple_active' || resolution.status === 'error') {
+        console.error('[client-dashboard] Active coach relation resolution failed:', resolution.status)
+      }
+      return
+    }
+
     const defaultEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
     const { data: defaultCoachId } = await supabase.rpc('get_default_coach_id', { coach_email: defaultEmail })
-
-    const { data: coachLink } = await supabase.from('coach_clients').select('coach_id').eq('client_id', uid).maybeSingle()
-    if (coachLink?.coach_id) {
-      setCoachId(coachLink.coach_id)
-      setIsDefaultCoach(!!defaultCoachId && coachLink.coach_id === defaultCoachId)
-    } else if (defaultCoachId) {
-      await supabase.from('coach_clients').upsert({ coach_id: defaultCoachId, client_id: uid }, { onConflict: 'coach_id,client_id', ignoreDuplicates: true }).select().maybeSingle()
-      setCoachId(defaultCoachId)
-      setIsDefaultCoach(true)
-    }
+    setIsDefaultCoach(!!defaultCoachId && resolution.coachId === defaultCoachId)
   }
 
   /* ── Handlers ── */
   async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
-    const ws = { name: day.day_name || day.name || 'Séance', exercises, startedAt: new Date().toISOString(), weekdayKey }
-    setWorkoutSession(ws)
-    try { localStorage.setItem('moovx_active_workout', JSON.stringify(ws)) } catch {}
+    if (!session?.user?.id) return
+    const name = day.day_name || day.name || 'Séance'
+    const draft = createActiveWorkoutDraft({
+      userId: session.user.id,
+      programSource: activeTrainingProgram.source,
+      programId: activeTrainingProgram.programId,
+      sessionKey: `${activeTrainingProgram.programId || 'free'}:${weekdayKey || name}`,
+      sessionName: name,
+      trainingDay: weekdayKey || null,
+      exercises,
+    })
+    writeActiveWorkoutDraft(localStorage, draft)
+    setWorkoutSession(draft)
   }
 
-  async function onFinishWorkout(data: any): Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }> {
+  function updateWorkoutSessionDraft(draft: ActiveWorkoutDraft) {
+    writeActiveWorkoutDraft(localStorage, draft)
+    setWorkoutSession(draft)
+  }
+
+  async function onFinishWorkout(data: CompletedWorkoutData, submittedDraft?: ActiveWorkoutDraft): Promise<{
+    newPRs: { exercise: string; value: number }[]
+    newBadges: Badge[]
+    secondary: Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
+  }> {
+    const activeDraft = submittedDraft ?? workoutSession
+    if (!activeDraft || !session?.user?.id) throw new Error('WORKOUT_DRAFT_UNAVAILABLE')
     const newPRs: { exercise: string; value: number }[] = []
     const newBadges: Badge[] = []
-    try { localStorage.removeItem('moovx_active_workout') } catch {}
-    // Extract unique muscles worked from exercises
-    const musclesWorked = [...new Set(data.exercises.map((e: any) => e.muscle).filter(Boolean))] as string[]
-    const { data: sess } = await supabase.from('workout_sessions').insert({
-      user_id: session.user.id, name: workoutSession?.name, completed: true,
+    const persistDraft = (draft: ActiveWorkoutDraft) => {
+      writeActiveWorkoutDraft(localStorage, draft)
+      setWorkoutSession(draft)
+    }
+    const musclesWorked = [...new Set(data.exercises.map(exercise => exercise.muscle).filter(Boolean))] as string[]
+    const critical = await persistCriticalWorkout({
+      draft: activeDraft,
+      data,
+      persistDraft,
+      port: {
+        createSession: async () => {
+          const { data: created, error } = await supabase.from('workout_sessions').insert({
+            user_id: session.user.id,
+            name: activeDraft.sessionName,
+            completed: false,
+            duration_minutes: Math.round(data.duration / 60000),
+            notes: `${data.completedSets}/${data.totalSets} sets · ${Math.round(data.totalVolume)} kg volume`,
+            muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
+          }).select('id').single()
+          if (error || !created?.id) throw new Error('WORKOUT_SESSION_SAVE_FAILED')
+          return created.id
+        },
+        countSessionSets: async (sessionId) => {
+          const { count, error } = await supabase.from('workout_sets').select('id', { count: 'exact', head: true }).eq('session_id', sessionId)
+          if (error) throw new Error('WORKOUT_SETS_READ_FAILED')
+          return count ?? 0
+        },
+        insertSessionSets: async (sessionId) => {
+          const setsToInsert = data.exercises.flatMap(exercise => exercise.sets.map((set, index) => ({
+            session_id: sessionId,
+            user_id: session.user.id,
+            exercise_name: exercise.name,
+            exercise_id: exercise.exerciseId ?? null,
+            set_number: index + 1,
+            reps: Number(set.reps) || 0,
+            weight: Number(set.weight) || 0,
+            completed: true,
+            rir: set.rir ?? null,
+          })))
+          if (setsToInsert.length === 0) return
+          const { error } = await supabase.from('workout_sets').insert(setsToInsert)
+          if (error) throw new Error('WORKOUT_SETS_SAVE_FAILED')
+        },
+        completeSession: async (sessionId) => {
+          const { error } = await supabase.from('workout_sessions').update({ completed: true }).eq('id', sessionId).eq('user_id', session.user.id)
+          if (error) throw new Error('WORKOUT_SESSION_FINALIZE_FAILED')
+        },
+      },
+    })
+    removeActiveWorkoutDraft(localStorage, critical.draft.draftId)
+
+    const completedAt = new Date().toISOString()
+    const todayStr = toDateStr(new Date(completedAt))
+    const workoutSets = data.exercises.flatMap(exercise => exercise.sets.map((set, index) => ({
+      session_id: critical.sessionId,
+      user_id: session.user.id,
+      exercise_name: exercise.name,
+      exercise_id: exercise.exerciseId ?? null,
+      set_number: index + 1,
+      reps: Number(set.reps) || 0,
+      weight: Number(set.weight) || 0,
+      completed: true,
+      rir: set.rir ?? null,
+      created_at: completedAt,
+    })))
+    const completedSession = {
+      id: critical.sessionId,
+      user_id: session.user.id,
+      name: activeDraft.sessionName,
+      completed: true,
       duration_minutes: Math.round(data.duration / 60000),
       notes: `${data.completedSets}/${data.totalSets} sets · ${Math.round(data.totalVolume)} kg volume`,
       muscles_worked: musclesWorked.length > 0 ? musclesWorked : null,
-    }).select().single()
-    if (sess) {
-      // Marquer la séance planifiée du jour comme complétée (sync calendrier).
-      // Update ciblé : si aucune ligne planifiée aujourd'hui (séance libre), 0 ligne touchée — voulu.
-      const todayFinish = toDateStr(new Date())
-      await supabase
-        .from('scheduled_sessions')
-        .update({ completed: true, completed_at: new Date().toISOString() })
-        .eq('user_id', session.user.id)
-        .eq('scheduled_date', todayFinish)
-        .eq('completed', false)
+      date: todayStr,
+      created_at: completedAt,
+      workout_sets: workoutSets,
+    }
+    setWSessions(previous => [completedSession, ...previous.filter(item => item.id !== critical.sessionId)].slice(0, 90))
+    setWorkoutHistoryState('ready')
+    setSessionDates(previous => [{ created_at: completedAt }, ...previous.filter(item => item.created_at !== completedAt)].slice(0, 400))
+    setHasTrainedBefore(true)
+    scheduledHook.markDateCompletedLocally(todayStr, completedAt)
+    cache.remove(`dashboard_${session.user.id}`)
 
-      // Gamification : +100 XP séance + streak (flux réel de fin de séance)
-      try {
-        await addXP(session.user.id, 100, supabase)
-        await updateStreak(session.user.id, supabase)
-      } catch (e) { console.error('[gamification] fin de séance:', e) }
-
-      // PR detection : 1 appel checkForPR par exercice (meilleur set Epley)
-      // Le hook n'a pas useTranslations — on collecte les PRs et on les
-      // retourne pour que l'appelant (page.tsx) toast avec la bonne locale.
-      try {
-        for (const exo of data.exercises) {
-          const valid = (exo.sets || []).filter((s: any) => Number(s.weight) > 0 && Number(s.reps) > 0)
-          if (valid.length === 0) continue
-          const best = valid.reduce((a: any, b: any) => {
-            const scoreA = Number(a.weight) * (1 + Number(a.reps) / 30)
-            const scoreB = Number(b.weight) * (1 + Number(b.reps) / 30)
-            return scoreA >= scoreB ? a : b
-          })
-          const result = await checkForPR(exo.name, Number(best.weight), Number(best.reps))
-          if (result.newPR && result.exercise && result.value) {
-            newPRs.push({ exercise: result.exercise, value: result.value })
-          }
-        }
-      } catch (e) { console.error('[PR detection] fin de séance:', e) }
-
-      const setsToInsert: any[] = []
-      data.exercises.forEach((exo: any) => {
-        exo.sets.forEach((s: any, i: number) => {
-          setsToInsert.push({
-            session_id: sess.id, user_id: session.user.id,
-            exercise_name: exo.name, exercise_id: exo.exerciseId ?? null, set_number: i + 1,
-            reps: Number(s.reps) || 0,
-            weight: Number(s.weight) || 0,
-            completed: true,
-            rir: s.rir ?? null,
-          })
-        })
-      })
-      if (setsToInsert.length > 0) await supabase.from('workout_sets').insert(setsToInsert)
-
-      // Badge check: after sets insert so stats include this session
-      try {
-        const { newlyUnlockedIds } = await checkAndUnlockBadges(session.user.id, supabase)
-        if (newlyUnlockedIds.length > 0) {
-          const { data: badges } = await supabase.from('badges').select('*').in('id', newlyUnlockedIds)
-          if (badges?.length) newBadges.push(...badges)
-        }
-      } catch (e) { console.error('[badges] fin de séance:', e) }
-
-      // ── Sprint 6 - Progressive Overload IA (fire-and-forget) ──
-      // Pour chaque exercice où tous les sets ont meme reps + meme weight,
-      // declencher une suggestion IA pour la prochaine seance.
-      // L'API fait elle-meme la gate canUseAI (refuse les invites).
-      for (const exo of data.exercises) {
-        if (!exo.sets || exo.sets.length === 0) continue
-        // Sprint 6 tech debt fix : ne pas suggerer un overload si le user
-        // a oublie un ou plusieurs sets (n'a pas fait tous les sets prevus).
-        // WorkoutSession filtre les sets non-done avant l'envoi, donc exo.sets.length
-        // = sets reellement faits. setsTarget = sets prevus par le programme.
-        if (exo.setsTarget && exo.sets.length < exo.setsTarget) continue
-
-        const reps = Number(exo.sets[0].reps) || 0
-        const weight = Number(exo.sets[0].weight) || 0
-        if (reps <= 0 || weight <= 0) continue
-
-        const allSameReps = exo.sets.every((s: any) => Number(s.reps) === reps)
-        const allSameWeight = exo.sets.every((s: any) => Number(s.weight) === weight)
-        if (!allSameReps || !allSameWeight) continue
-
-        // Fire-and-forget : on ne bloque pas la fin de seance
-        fetch('/api/suggest-overload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            exerciseName: exo.name,
-            currentWeight: weight,
-            currentReps: reps,
-            setsCompleted: exo.sets.length,
-            setsTarget: exo.setsTarget || exo.sets.length,
-            sessionId: sess.id,
-          }),
-        }).catch(err => {
-          // Silent fail : pas grave si l'IA est down ou refuse (invited)
-          console.warn('[overload] fetch error:', err?.message)
-        })
+    if (clientProgramIdRef.current && activeDraft.trainingDay) {
+      const weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+      const sessionIndex = weekdays.indexOf(activeDraft.trainingDay)
+      if (sessionIndex >= 0) {
+        const nextLastCompleted = new Map(lastCompletedByIndex).set(sessionIndex, completedAt)
+        setLastCompletedByIndex(nextLastCompleted)
+        setNextSession(suggestNextSession(coachProgram, nextLastCompleted))
+        setCompletedThisWeek(previous => new Map(previous).set(sessionIndex, completedAt))
       }
     }
-    // Mark today's scheduled session as completed
-    const todayStr = toDateStr(new Date())
-    await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
-      .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
-    // Update last_workout_at
-    await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
 
-    // Track completed session for invited clients with coach program
-    if (clientProgramIdRef.current && workoutSession?.weekdayKey) {
+    // The durable completion UI can render now. Every remaining write is
+    // observable but secondary and must not delay or revoke critical success.
+    const secondary = (async () => {
+
+    // Secondary writes never turn a durable workout back into an apparent failure.
+    try {
+      await addXP(session.user.id, 100, supabase)
+      await updateStreak(session.user.id, supabase)
+    } catch (error) { console.error('[workout-secondary] gamification failed', error) }
+
+    try {
+      for (const exercise of data.exercises) {
+        const valid = exercise.sets.filter(set => Number(set.weight) > 0 && Number(set.reps) > 0)
+        if (valid.length === 0) continue
+        const best = valid.reduce((left, right) => (
+          Number(left.weight) * (1 + Number(left.reps) / 30) >= Number(right.weight) * (1 + Number(right.reps) / 30) ? left : right
+        ))
+        const result = await checkForPR(exercise.name, Number(best.weight), Number(best.reps))
+        if (result.newPR && result.exercise && result.value) newPRs.push({ exercise: result.exercise, value: result.value })
+      }
+    } catch (error) { console.error('[workout-secondary] PR detection failed', error) }
+
+    try {
+      const { newlyUnlockedIds } = await checkAndUnlockBadges(session.user.id, supabase)
+      if (newlyUnlockedIds.length > 0) {
+        const { data: badges } = await supabase.from('badges').select('*').in('id', newlyUnlockedIds)
+        if (badges?.length) newBadges.push(...badges)
+      }
+    } catch (error) { console.error('[workout-secondary] badges failed', error) }
+
+    for (const exercise of data.exercises) {
+      if (!exercise.sets.length || (exercise.setsTarget && exercise.sets.length < exercise.setsTarget)) continue
+      const reps = Number(exercise.sets[0].reps) || 0
+      const weight = Number(exercise.sets[0].weight) || 0
+      if (reps <= 0 || weight <= 0) continue
+      if (!exercise.sets.every(set => Number(set.reps) === reps && Number(set.weight) === weight)) continue
+      fetch('/api/suggest-overload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exerciseName: exercise.name, currentWeight: weight, currentReps: reps, setsCompleted: exercise.sets.length, setsTarget: exercise.setsTarget, sessionId: critical.sessionId }),
+      }).catch(() => console.warn('[workout-secondary] overload suggestion failed'))
+    }
+    // Mark today's scheduled session as completed
+    try {
+      await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })
+        .eq('user_id', session.user.id).eq('scheduled_date', todayStr).eq('completed', false)
+      await updateProfile(session.user.id, { last_workout_at: new Date().toISOString() }, supabase)
+    } catch (error) { console.error('[workout-secondary] schedule/profile update failed', error) }
+
+    // Track completed sessions for clients using coach-managed programs.
+    if (clientProgramIdRef.current && activeDraft.trainingDay) {
       const WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-      const sessionIndex = WEEKDAYS.indexOf(workoutSession.weekdayKey)
+      const sessionIndex = WEEKDAYS.indexOf(activeDraft.trainingDay)
       const { error: trackingError } = await supabase
         .from('completed_sessions')
         .insert({
@@ -423,26 +621,41 @@ export default function useClientDashboard() {
           coach_id: coachOfProgramIdRef.current,
           program_id: clientProgramIdRef.current,
           session_index: sessionIndex >= 0 ? sessionIndex : 0,
-          session_name: workoutSession.name,
+          session_name: activeDraft.sessionName,
           duration_minutes: data.duration ? Math.round(data.duration / 60000) : null,
         })
       if (trackingError) console.error('Error tracking completed_sessions:', trackingError)
     }
 
     toast.success('Séance terminée ! Bien joué 💪')
-    fetchAll(true)
-    return { newPRs, newBadges }
+    return { newPRs: [...newPRs], newBadges: [...newBadges] }
+    })().catch(error => {
+      console.error('[workout-secondary] unexpected failure', error)
+      return { newPRs: [...newPRs], newBadges: [...newBadges] }
+    })
+
+    return { newPRs: [], newBadges: [], secondary }
   }
 
   async function saveWeight(value: number, date: string) {
-    await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
+    const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
+    if (error) { toast.error('Erreur lors de l’enregistrement'); return }
     await updateProfile(session.user.id, { current_weight: value, ...(profile?.start_weight ? {} : { start_weight: value }) }, supabase)
-    toast.success('Poids enregistré !'); setModal(null); fetchAll(true)
+    setWeightHistory30(previous => [
+      ...previous.filter(entry => entry.date !== date),
+      { date, poids: value },
+    ].sort((a, b) => a.date.localeCompare(b.date)).slice(-100))
+    setProfile(profile ? { ...profile, current_weight: value, start_weight: profile.start_weight || value } : profile)
+    cache.remove(`dashboard_${session.user.id}`)
+    toast.success('Poids enregistré !'); setModal(null)
   }
 
   async function saveMeasurements(data: Record<string, number>, date: string) {
-    await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
-    toast.success('Mensurations enregistrées !'); setModal(null); fetchAll(true)
+    const { error } = await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
+    if (error) { toast.error('Erreur lors de l’enregistrement'); return }
+    setMeasurements(previous => [{ date, ...data }, ...previous].slice(0, 10))
+    cache.remove(`dashboard_${session.user.id}`)
+    toast.success('Mensurations enregistrées !'); setModal(null)
   }
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -496,35 +709,81 @@ export default function useClientDashboard() {
   const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
   const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
-  const todaySessionDone = sessionDates.some(s => toLocal(new Date(s.created_at)) === toLocal(new Date()))
-  const chartMin = weightHistory30.length > 0 ? Math.min(...weightHistory30.map(p => p.poids)) - 1 : 0
-  const chartMax = weightHistory30.length > 0 ? Math.max(...weightHistory30.map(p => p.poids)) + 1 : 1
+  const todaySessionDone = deriveTodayTrainingState({
+    programSource: activeTrainingProgram.source,
+    workoutSessions: sessionDates,
+  }).kind === 'completed'
   const displayAvatar = session ? (profile?.avatar_url || session.user.user_metadata?.avatar_url) : undefined
   const fullName = session ? (profile?.full_name || session.user.user_metadata?.full_name || 'Athlete') : 'Athlete'
   const firstName = fullName.split(' ')[0]
 
+  const progressionModel = useProgressionViewModel({
+    enabled: activeTab === 'progress',
+    period: progressionPeriod,
+    goal: profile?.objective,
+    weight: {
+      logs: weightHistory30,
+      profileCurrentWeight: profile?.current_weight ?? null,
+      targetWeight: profile?.target_weight ?? null,
+      isTruncated: weightHistory30.length === 100,
+      state: progressionBaseErrors.weight ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.weight,
+    },
+    sessions: {
+      rows: wSessions,
+      isTruncated: wSessions.length === 90,
+      state: progressionBaseErrors.sessions ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.sessions,
+    },
+    records: {
+      rows: analyticsHook.personalRecords,
+      isTruncated: analyticsHook.personalRecords.length === 50,
+      state: analyticsHook.sourceStates.records,
+      errorCode: analyticsHook.sourceStates.records === 'error' ? 'PROGRESSION_RECORDS_READ_FAILED' : undefined,
+    },
+    measurements: {
+      rows: measurements,
+      isTruncated: measurements.length === 10,
+      state: progressionBaseErrors.measurements ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.measurements,
+    },
+    photos: {
+      rows: progressPhotos,
+      isTruncated: progressPhotos.length === 20,
+      state: progressionBaseErrors.photos ? 'error' : profile ? 'ready' : 'loading',
+      errorCode: progressionBaseErrors.photos,
+    },
+    wellbeing: {
+      rows: analyticsHook.wellbeingEntries,
+      isTruncated: analyticsHook.wellbeingEntries.length === 100,
+      state: analyticsHook.sourceStates.wellbeing,
+      errorCode: analyticsHook.sourceStates.wellbeing === 'error' ? 'PROGRESSION_WELLBEING_READ_FAILED' : undefined,
+    },
+    freshness: fetchAllComplete.current ? 'mixed' : 'network',
+  })
+
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
+  const { effectiveEntitlement, capabilities } = entitlementSnapshot
 
   const hasPaidSub = (() => {
     if (!profile) return false
 
-    // Bypass priority: subscription_type is the source of truth for
-    // lifetime/invited accounts. This protects against subscription_status
-    // being temporarily desynced (e.g. Stripe webhook missed an event).
-    if (profile.subscription_type === 'lifetime') return true
-    if (profile.subscription_type === 'invited') return true
+    // Product authority is centralized; subscription_status remains only the
+    // billing lifecycle fallback for older or temporarily desynced profiles.
+    if (effectiveEntitlement.type === 'lifetime') return true
+    if (capabilities.coachManaged) return true
 
     // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
-    if (profile.subscription_type === 'beta') {
+    if (effectiveEntitlement.type === 'beta') {
       if (!profile.subscription_end_date) return false
       return new Date(profile.subscription_end_date) > new Date()
     }
 
     // Fallback: subscription_status (for older profiles or status-driven flows)
     const st = profile.subscription_status
-    if (st === 'lifetime' || st === 'invited') return true
+    if (st === 'lifetime') return true
     if (st === 'beta') {
       if (!profile.subscription_end_date) return false
       return new Date(profile.subscription_end_date) > new Date()
@@ -537,17 +796,17 @@ export default function useClientDashboard() {
   })()
 
   const isExempt = !!profile && (profile.email === OWNER_EMAIL || profile.email === ADMIN_EMAIL)
-  const isInvited = profile?.subscription_type === 'invited'
+  const coachManaged = capabilities.coachManaged
   const trialEndsAt = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null
   const now = new Date()
   const isInTrial = !hasPaidSub && !isExempt && !!trialEndsAt && trialEndsAt > now
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const trialExpired = !hasPaidSub && !isExempt && !isInvited && !!trialEndsAt && trialEndsAt <= now
+  const trialExpired = !hasPaidSub && !isExempt && !coachManaged && !!trialEndsAt && trialEndsAt <= now
   const subEndsAt = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
-  const isInBeta = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt > now
+  const isInBeta = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt > now
   const betaDaysLeft = subEndsAt ? Math.max(0, Math.ceil((subEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const betaExpired = profile?.subscription_type === 'beta' && !!subEndsAt && subEndsAt <= now
-  const isSubActive = hasPaidSub || isExempt || isInvited || isInTrial
+  const betaExpired = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt <= now
+  const isSubActive = hasPaidSub || isExempt || coachManaged || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
     try {
@@ -572,9 +831,11 @@ export default function useClientDashboard() {
     analyticsHook.checkForPR(userId, exerciseName, weight, reps)
 
   const regenerateWeekSchedule = async () => {
-    const { data: customProg } = await supabase.from('custom_programs')
-      .select('*').eq('user_id', userId).eq('is_active', true).maybeSingle()
-    const prog = customProg || coachToDays(coachProgram)
+    const prog = activeTrainingProgram.source === 'personal'
+      ? activeTrainingProgram.program
+      : activeTrainingProgram.source === 'coach'
+        ? coachToDays(activeTrainingProgram.program)
+        : null
     return scheduledHook.regenerateWeekSchedule(userId, profile, prog)
   }
 
@@ -586,14 +847,14 @@ export default function useClientDashboard() {
 
   return {
     // Auth / loading
-    mounted, session, loading, roleChecked, userRole, router, supabase,
+    mounted, session, loading, roleChecked, userRole, postAuthProfileState, retryPostAuth: () => fetchAll(true), router, supabase,
     // Profile / data
-    profile, measurements, progressPhotos, wSessions,
-    coachProgram, coachMealPlan, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
+    profile, measurements, progressPhotos, wSessions, workoutHistoryState,
+    coachProgram, activeTrainingProgram, coachMealPlan, planningDays, weightHistory30, lastCompletedByIndex, completedThisWeek, nextSession,
     // Tabs
     activeTab, setActiveTab,
     // Workout session
-    workoutSession, setWorkoutSession,
+    workoutSession, setWorkoutSession, updateWorkoutSessionDraft,
     // Modals
     modal, setModal,
     // Food modal (from sub-hook)
@@ -611,16 +872,19 @@ export default function useClientDashboard() {
     photoUploading, photoRef, avatarRef,
     uploadAvatar, uploadProgressPhoto, deletePhoto,
     // Messages (from sub-hook)
-    coachId, isDefaultCoach, hasRealCoach: !isDefaultCoach && !!coachId,
+    coachId, coachRelationStatus, coachRelationIsAuthoritative,
+    coachRelationRequiresReconciliation, isDefaultCoach,
+    hasRealCoach: coachRelationIsAuthoritative && !!coachId,
     messages: messagesHook.messages, msgInput: messagesHook.msgInput,
     setMsgInput: messagesHook.setMsgInput, unreadCount: messagesHook.unreadCount,
     msgEndRef: messagesHook.msgEndRef, sendMessage: messagesHook.sendMessage,
     // Computed
     calorieGoal, goalWeight, currentWeight, completedSessions, hasTrainedBefore, streak, sessionDates,
-    todayKey, todayCoachDay, todaySessionDone, chartMin, chartMax,
+    todayKey, todayCoachDay, todaySessionDone,
     displayAvatar, fullName, firstName,
     // Subscription & trial
-    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe, aiAllowed: !isInvited,
+    isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe,
+    aiAllowed: capabilities.ai, capabilities,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)
@@ -635,6 +899,9 @@ export default function useClientDashboard() {
     weeklyWater: analyticsHook.weeklyWater,
     weeklyVolume: analyticsHook.weeklyVolume,
     weightHistoryFull: analyticsHook.weightHistoryFull,
+    wellbeingEntries: analyticsHook.wellbeingEntries,
+    progressionModel,
+    setProgressionPeriod,
     checkForPR,
     // Weekly diagnostic
     latestDiagnostic, setLatestDiagnostic,

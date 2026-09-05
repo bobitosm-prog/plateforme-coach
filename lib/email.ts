@@ -12,7 +12,19 @@ interface SendEmailOptions {
 interface SendResult {
   success: boolean
   method: 'sent' | 'skipped' | 'error'
+  errorCode?: string
   error?: string
+}
+
+function resolveEmailErrorCode(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code?: unknown }).code
+    if (typeof code === 'string' && /^[A-Z0-9_]+$/.test(code)) return code
+  }
+
+  return error instanceof Error && /^[A-Za-z0-9_]+$/.test(error.name)
+    ? error.name
+    : 'UNKNOWN_EMAIL_ERROR'
 }
 
 /**
@@ -23,7 +35,7 @@ export async function sendEmail({
   to, subject, html, replyTo, fromName = 'MoovX',
 }: SendEmailOptions): Promise<SendResult> {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('[email] SMTP non configure, envoi skipped pour:', to)
+    console.warn('[email] SMTP non configure, envoi skipped')
     return { success: true, method: 'skipped' }
   }
 
@@ -48,13 +60,75 @@ export async function sendEmail({
 
     return { success: true, method: 'sent' }
   } catch (err) {
-    console.error('[email] Erreur envoi:', err)
+    const errorCode = resolveEmailErrorCode(err)
+    console.error('[email] Envoi echoue', { emailMethod: 'error', errorCode })
     return {
       success: false,
       method: 'error',
+      errorCode,
       error: err instanceof Error ? err.message : 'Unknown error',
     }
   }
+}
+
+const BUG_REPORT_ADMIN_EMAIL_FALLBACK = 'bobitosm@gmail.com'
+
+export function resolveBugReportAdminEmail(
+  configuredEmail = process.env.BUG_REPORT_ADMIN_EMAIL,
+): string {
+  return configuredEmail?.trim() || BUG_REPORT_ADMIN_EMAIL_FALLBACK
+}
+
+interface BugReportNotificationTemplateData {
+  reportId: string
+  createdAt: string
+  reportType: 'bug' | 'amelioration' | 'autre'
+  title: string
+  description: string
+  pageUrl?: string | null
+  reporterEmail?: string | null
+  reporterRole: string
+  adminUrl?: string | null
+}
+
+export function renderBugReportNotificationTemplate({
+  reportId,
+  createdAt,
+  reportType,
+  title,
+  description,
+  pageUrl,
+  reporterEmail,
+  reporterRole,
+  adminUrl,
+}: BugReportNotificationTemplateData): string {
+  const safeReportId = escapeHtml(reportId)
+  const safeCreatedAt = escapeHtml(createdAt)
+  const safeType = escapeHtml(reportType)
+  const safeTitle = escapeHtml(title)
+  const safeDescription = escapeHtml(description).replace(/\n/g, '<br>')
+  const safePageUrl = pageUrl ? escapeHtml(pageUrl) : null
+  const safeReporterEmail = reporterEmail ? escapeHtml(reporterEmail) : null
+  const safeReporterRole = escapeHtml(reporterRole)
+  const safeAdminUrl = adminUrl ? escapeHtml(adminUrl) : null
+
+  return `<!doctype html>
+<html lang="fr"><body style="margin:0;background:#0D0B08;font-family:Arial,sans-serif;color:#F5EDD8">
+  <div style="max-width:600px;margin:0 auto;padding:40px 24px">
+    <h1 style="color:#D4A843;letter-spacing:3px;text-align:center">NOUVEAU SIGNALEMENT</h1>
+    <div style="background:#141209;border:1px solid rgba(212,168,67,.2);border-radius:12px;padding:24px">
+      <p><strong>ID :</strong> ${safeReportId}</p>
+      <p><strong>Date :</strong> ${safeCreatedAt}</p>
+      <p><strong>Catégorie :</strong> ${safeType}</p>
+      <p><strong>Rôle :</strong> ${safeReporterRole}</p>
+      ${safeReporterEmail ? `<p><strong>Reporter :</strong> ${safeReporterEmail}</p>` : ''}
+      <h2 style="color:#D4A843;font-size:18px">${safeTitle}</h2>
+      <p style="line-height:1.6">${safeDescription}</p>
+      ${safePageUrl ? `<p><strong>Page :</strong> <a style="color:#D4A843" href="${safePageUrl}">${safePageUrl}</a></p>` : ''}
+    </div>
+    ${safeAdminUrl ? `<p style="text-align:center;margin-top:24px"><a href="${safeAdminUrl}" style="display:inline-block;padding:14px 28px;background:#D4A843;color:#0D0B08;font-weight:700;text-decoration:none;border-radius:12px">Ouvrir l'administration</a></p>` : ''}
+  </div>
+</body></html>`
 }
 
 /**

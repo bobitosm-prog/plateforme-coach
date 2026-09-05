@@ -38,9 +38,21 @@ interface NutritionPreferencesProps {
   userId: string
   onSaved: () => void
   onPlanRegenerated?: () => void
+  generationEnabled?: boolean
+  hasPersonalPlan?: boolean
+  generationBlockedReason?: string | null
 }
 
-export default function NutritionPreferences({ profile, supabase, userId, onSaved, onPlanRegenerated }: NutritionPreferencesProps) {
+export default function NutritionPreferences({
+  profile,
+  supabase,
+  userId,
+  onSaved,
+  onPlanRegenerated,
+  generationEnabled = true,
+  hasPersonalPlan = false,
+  generationBlockedReason = null,
+}: NutritionPreferencesProps) {
   const t = useTranslations('nutritionPrefs')
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
@@ -241,14 +253,14 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
     setSaving(false)
     if (error) {
       console.error('Save error:', error)
-      setToastMsg('Erreur: ' + error.message)
+      setToastMsg(t('save.saveError'))
       setTimeout(() => setToastMsg(''), 3000)
       return
     }
     setToastMsg('Preferences sauvegardees !')
     setTimeout(() => setToastMsg(''), 2500)
     onSaved()
-    setShowRegenCard(true)
+    if (generationEnabled) setShowRegenCard(true)
   }
 
   // ─── Regenerate Meal Plan ───
@@ -313,16 +325,16 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         setTimeout(() => setToastMsg(''), 3000)
       } else {
         // Deactivate old plans first
-        await supabase.from('meal_plans').update({ is_active: false }).eq('user_id', userId).eq('is_active', true)
+        await supabase.from('meal_plans').update({ active: false }).eq('user_id', userId).eq('active', true)
         // Insert new plan
         const { error: insertErr } = await supabase.from('meal_plans').insert({
           user_id: userId,
-          plan_data: planData,
-          is_active: true,
+          plan: planData,
+          active: true,
         })
         if (insertErr) {
           console.error('Insert meal_plans error:', insertErr)
-          setToastMsg('Erreur: ' + insertErr.message)
+          setToastMsg(t('save.generationError'))
           setTimeout(() => setToastMsg(''), 3000)
         } else {
           setToastMsg('Plan regenere !')
@@ -706,18 +718,24 @@ export default function NutritionPreferences({ profile, supabase, userId, onSave
         {saving ? t('save.saving') : t('save.saveButton')}
       </button>
 
+      {generationBlockedReason && (
+        <p role="status" style={{ fontFamily: fonts.body, fontSize: '0.78rem', color: colors.textMuted, lineHeight: 1.5, margin: '8px 0 0' }}>
+          {generationBlockedReason}
+        </p>
+      )}
+
       {/* ═══ REGEN CARD ═══ */}
       {showRegenCard && (
         <div style={{ background: colors.surface2, border: `1.5px solid ${colors.goldRule}`, padding: 16, marginTop: 8 }}>
           <p style={{ fontFamily: fonts.body, fontSize: '0.82rem', color: colors.text, margin: '0 0 14px', lineHeight: 1.5 }}>
-            {t('save.regenPrompt')}
+            {t(hasPersonalPlan ? 'save.regenPrompt' : 'save.generatePrompt')}
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setShowRegenCard(false)} style={{ flex: 1, padding: '12px', background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 700, color: colors.textMuted, letterSpacing: '1px' }}>
               {t('save.noThanks')}
             </button>
             <button onClick={regeneratePlan} disabled={regenerating} style={{ flex: 1, padding: '12px', background: colors.gold, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: colors.onGold, letterSpacing: '1px', opacity: regenerating ? 0.6 : 1 }}>
-              {regenerating ? t('save.regenerating') : t('save.regenerate')}
+              {regenerating ? t('save.regenerating') : t(hasPersonalPlan ? 'save.regenerate' : 'save.generate')}
             </button>
           </div>
         </div>

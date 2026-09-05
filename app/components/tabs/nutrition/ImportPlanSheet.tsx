@@ -6,12 +6,12 @@ import type { Food } from '../../../../lib/meal-plan'
 interface Props {
   mealLabel: string
   foods: Food[]
-  isInvited?: boolean
+  isCoachManaged?: boolean
   onImport: () => void
   onClose: () => void
 }
 
-export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport, onClose }: Props) {
+export default function ImportPlanSheet({ mealLabel, foods, isCoachManaged, onImport, onClose }: Props) {
   return (<RailOverlay>
     <>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} onClick={onClose} />
@@ -20,7 +20,7 @@ export default function ImportPlanSheet({ mealLabel, foods, isInvited, onImport,
           <div style={{ width: 40, height: 4, borderRadius: 2, background: colors.goldRule }} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-          <h3 style={{ fontFamily: fonts.headline, fontSize: 22, letterSpacing: 2, color: colors.text, margin: '0 0 4px' }}>{isInvited ? 'IMPORTER DU PLAN' : 'IMPORTER LE PLAN IA'}</h3>
+          <h3 style={{ fontFamily: fonts.headline, fontSize: 22, letterSpacing: 2, color: colors.text, margin: '0 0 4px' }}>{isCoachManaged ? 'IMPORTER DU PLAN' : 'IMPORTER LE PLAN IA'}</h3>
           <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textMuted, margin: '0 0 16px' }}>Ajouter les aliments recommandes pour {mealLabel} ?</p>
           {foods.map((f, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < foods.length - 1 ? `1px solid ${colors.divider}` : 'none' }}>

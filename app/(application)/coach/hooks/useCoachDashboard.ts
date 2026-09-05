@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getRole } from '../../../../lib/getRole'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { listActiveClientsForCoach } from '../../../../lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -102,8 +103,6 @@ export default function useCoachDashboard(initialSession?: any) {
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(!initialSession)
   const [search, setSearch]     = useState('')
-  const [copied, setCopied]     = useState(false)
-  const [showInvite, setShowInvite] = useState(false)
   const [section, setSection]   = useState<'accueil' | 'dashboard' | 'suivi' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
   const [coachProfile, setCoachProfile] = useState<any>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
@@ -111,7 +110,8 @@ export default function useCoachDashboard(initialSession?: any) {
   const [yearRevenue, setYearRevenue] = useState(0)
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [monthPaymentsCount, setMonthPaymentsCount] = useState(0)
-  const [activeSubscribers, setActiveSubscribers] = useState(0)
+  const [activeCoachingClients, setActiveCoachingClients] = useState(0)
+  const [clientRelationsError, setClientRelationsError] = useState<string | null>(null)
   const [allPayments, setAllPayments] = useState<{ amount: number; paid_at: string }[]>([])
   const [atRiskClients, setAtRiskClients] = useState<any[]>([])
   const [pendingVideoCount, setPendingVideoCount] = useState(0)
@@ -158,10 +158,6 @@ export default function useCoachDashboard(initialSession?: any) {
   /* ── Derived values ────────────────────────────────────── */
 
   const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
-
-  const inviteLink = session && typeof window !== 'undefined'
-    ? `${window.location.origin}/join?coach=${session.user.id}`
-    : ''
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -261,9 +257,6 @@ export default function useCoachDashboard(initialSession?: any) {
           })
         }
       })
-      supabase.from('coach_clients').select('client_id').eq('coach_id', session.user.id).limit(100).then(({ data: links }) => {
-        setActiveSubscribers(links?.length || 0)
-      })
     }
 
     // If initialSession was provided, role already confirmed by page.tsx — skip getRole
@@ -357,6 +350,7 @@ export default function useCoachDashboard(initialSession?: any) {
         filter: `receiver_id=eq.${coachId}`,
       }, (payload: any) => {
         const m = payload.new
+        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
         setLastMessages(prev => {
           const next = new Map(prev)
           next.set(m.sender_id, {
@@ -379,6 +373,7 @@ export default function useCoachDashboard(initialSession?: any) {
         filter: `receiver_id=eq.${coachId}`,
       }, (payload: any) => {
         const m = payload.new
+        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
         if (m.read === true) {
           setUnreadCounts(prev => {
             const cur = prev[m.sender_id] || 0
@@ -398,7 +393,7 @@ export default function useCoachDashboard(initialSession?: any) {
     const coachId = session.user.id
     const id = setInterval(async () => {
       const clientIds = clientsRef.current.map(c => c.client_id)
-      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId) }
+      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId, clientIds) }
     }, 120000)
     return () => clearInterval(id)
   }, [session?.user?.id])
@@ -443,44 +438,72 @@ export default function useCoachDashboard(initialSession?: any) {
   useEffect(() => {
     if (!session?.user?.id) return
     fetchScheduledSessions(session.user.id, calWeekOffset)
-  }, [session?.user?.id, calWeekOffset, section])
+  }, [session?.user?.id, calWeekOffset, section, clients])
 
   /* ── Data fetching ─────────────────────────────────────── */
 
   async function fetchClients(coachId: string) {
     setLoading(true)
-    const { data: links, error: linksError } = await supabase
-      .from('coach_clients')
-      .select('id, client_id, created_at, invited_by_coach')
-      .eq('coach_id', coachId)
-      .order('created_at', { ascending: false })
-      .limit(100)
+    const relationResult = await listActiveClientsForCoach(supabase, coachId)
+    if (relationResult.kind !== 'success') {
+      setClients([])
+      setActiveCoachingClients(0)
+      setClientRelationsError(relationResult.kind)
+      setUnreadCounts({})
+      setLastMessages(new Map())
+      setAtRiskClients([])
+      setLastSessionByClient(new Map())
+      setSessionsThisWeekByClient(new Map())
+      setLoading(false)
+      return
+    }
 
-    if (linksError || !links?.length) { setClients([]); setLoading(false); return }
+    const links = relationResult.relations
+    setClientRelationsError(null)
+    setActiveCoachingClients(links.length)
+    if (links.length === 0) {
+      setClients([])
+      setUnreadCounts({})
+      setLastMessages(new Map())
+      setAtRiskClients([])
+      setLastSessionByClient(new Map())
+      setSessionsThisWeekByClient(new Map())
+      setLoading(false)
+      return
+    }
 
     const clientIds = links.map(l => l.client_id)
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name, email, avatar_url, current_weight, calorie_goal')
       .in('id', clientIds)
       .limit(100)
 
+    if (profilesError) {
+      setClients([])
+      setActiveCoachingClients(0)
+      setClientRelationsError('profile_error')
+      setLoading(false)
+      return
+    }
+
     const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
     const rows: ClientRow[] = links.map(l => ({
-      id: l.id, client_id: l.client_id, created_at: l.created_at,
+      id: l.id, client_id: l.client_id, created_at: l.created_at ?? '',
       invited_by_coach: l.invited_by_coach ?? false,
       profiles: profileMap[l.client_id] ?? null,
     }))
     setClients(rows)
     setLoading(false)
     fetchUnreadCounts(coachId, clientIds)
-    fetchLastMessages(coachId)
+    fetchLastMessages(coachId, clientIds)
     fetchAtRiskClients(rows)
 
     // Fetch completed sessions for all clients of this coach
     supabase.from('completed_sessions')
       .select('client_id, session_name, completed_at')
       .eq('coach_id', coachId)
+      .in('client_id', clientIds)
       .order('completed_at', { ascending: false })
       .limit(200)
       .then(({ data: completedRows }) => {
@@ -545,7 +568,8 @@ export default function useCoachDashboard(initialSession?: any) {
     setUnreadCounts(counts)
   }
 
-  async function fetchLastMessages(coachId: string) {
+  async function fetchLastMessages(coachId: string, clientIds: string[]) {
+    if (!clientIds.length) { setLastMessages(new Map()); return }
     const { data } = await supabase
       .from('messages')
       .select('sender_id, receiver_id, content, image_url, created_at')
@@ -553,9 +577,10 @@ export default function useCoachDashboard(initialSession?: any) {
       .order('created_at', { ascending: false })
       .limit(200)
     const map = new Map<string, { content: string; image_url: string | null; created_at: string }>()
+    const activeClientIds = new Set(clientIds)
     for (const msg of (data || [])) {
       const other = msg.sender_id === coachId ? msg.receiver_id : msg.sender_id
-      if (!other || map.has(other)) continue
+      if (!other || !activeClientIds.has(other) || map.has(other)) continue
       map.set(other, { content: msg.content || '', image_url: msg.image_url || null, created_at: msg.created_at })
     }
     setLastMessages(map)
@@ -574,7 +599,8 @@ export default function useCoachDashboard(initialSession?: any) {
       .order('scheduled_at', { ascending: true })
       .limit(100)
     if (error) console.warn('[fetchScheduledSessions]', error.message)
-    setScheduledSessions(data ?? [])
+    const activeClientIds = new Set(clientsRef.current.map(client => client.client_id))
+    setScheduledSessions((data ?? []).filter(session => activeClientIds.has(session.client_id)))
   }
 
   /* ── Handlers ──────────────────────────────────────────── */
@@ -666,22 +692,6 @@ export default function useCoachDashboard(initialSession?: any) {
     }).catch(() => {})
     // Replace optimistic with real server row
     loadChat(selectedClient.client_id, session.user.id)
-  }
-
-  function copyInviteLink() {
-    if (!inviteLink) return
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(inviteLink).catch(() => fallbackCopy(inviteLink))
-    } else { fallbackCopy(inviteLink) }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  function fallbackCopy(text: string) {
-    const el = document.createElement('textarea')
-    el.value = text; el.style.cssText = 'position:fixed;opacity:0'
-    document.body.appendChild(el); el.focus(); el.select()
-    document.execCommand('copy'); document.body.removeChild(el)
   }
 
   // Food management functions
@@ -781,15 +791,11 @@ export default function useCoachDashboard(initialSession?: any) {
     yearRevenue,
     totalRevenue,
     monthPaymentsCount,
-    activeSubscribers,
+    activeSubscribers: activeCoachingClients,
+    clientRelationsError,
     allPayments,
 
     // Invite
-    showInvite, setShowInvite,
-    inviteLink,
-    copied,
-    copyInviteLink,
-
     // Messaging
     selectedClient, setSelectedClient,
     chatMessages,

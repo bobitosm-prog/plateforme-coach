@@ -15,14 +15,14 @@ interface ClientCardProps {
   statusLabel: string
   sinceLabel: string
   unread: number
-  invited?: boolean
+  showInvitationOrigin?: boolean
   onOpen: () => void
   onMessage: () => void
 }
 
 export default function ClientCard({
   name, email, avatarUrl, initials, statusColor, statusLabel,
-  sinceLabel, unread, invited, onOpen, onMessage,
+  sinceLabel, unread, showInvitationOrigin, onOpen, onMessage,
 }: ClientCardProps) {
   return (
     <div className="coach-clickable" onClick={onOpen} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -37,7 +37,7 @@ export default function ClientCard({
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
           <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: statusColor }}>{statusLabel}</span>
           <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_DIM }}>{sinceLabel}</span>
-          {invited && <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: GOLD_DIM, color: GOLD, letterSpacing: '0.08em' }}>INVITE</span>}
+          {showInvitationOrigin && <span style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: GOLD_DIM, color: GOLD, letterSpacing: '0.08em' }}>INVITATION</span>}
         </div>
       </div>
       <button

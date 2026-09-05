@@ -20,6 +20,22 @@
     "reps": "Reps",
     "restSec": "Rest (s)"
   },
+  "initialGeneration": {
+    "title": "Preparing your space",
+    "training": "Training program",
+    "nutrition": "Nutrition plan",
+    "retry": "Try again",
+    "retryDomain": "Try {domain} again",
+    "finalizationError": "Your resources are ready, but finalization needs to be retried.",
+    "status": {
+      "ready": "Ready",
+      "generating": "Preparing…",
+      "missing": "To prepare",
+      "waitingForCoach": "Waiting for your coach’s plan",
+      "quotaExhausted": "Quota reached — try again later",
+      "error": "Temporary error"
+    }
+  },
   "muscles": {
     "all": "All",
     "quads": "Quads",
@@ -402,7 +418,7 @@
     "client_label": "For clients",
     "client_title": "Full access",
     "client_subtitle1": "Without coach: direct subscription.",
-    "client_subtitle2": "With invited coach: free access.",
+    "client_subtitle2": "With coach support: access included.",
     "plan_monthly_label": "Monthly",
     "plan_monthly_period": "/mo",
     "plan_yearly_label": "Yearly",
@@ -578,10 +594,22 @@
       "saving": "Saving...",
       "saveButton": "Save & recalculate",
       "regenPrompt": "Your goal has changed. Do you want to regenerate your meal plan with these new parameters?",
+      "generatePrompt": "Your preferences are saved. Would you like to generate your 7-day meal plan?",
       "noThanks": "No thanks",
       "regenerating": "Generating...",
-      "regenerate": "Regenerate my AI plan"
+      "regenerate": "Regenerate my AI plan",
+      "generate": "Generate my plan",
+      "saveError": "Unable to save your preferences. Please try again.",
+      "generationError": "Unable to save the new plan. Please try again."
     }
+  },
+  "aiQuotaBadge": {
+    "remaining": "{count, plural, one {# AI generation remaining} other {# AI generations remaining}}",
+    "period": "this month",
+    "exhausted": "Quota reached",
+    "nextAvailable": "Available in {days, plural, one {# day} other {# days}}",
+    "unavailable": "Quota unavailable",
+    "unavailableHint": "The quota cannot be checked right now."
   },
   "recipesSection": {
     "title": "Fitness recipes",
@@ -599,6 +627,8 @@
     "empty": "No recipes yet. Generate one!",
     "generated": "Recipe generated!",
     "genError": "Generation error",
+    "loadError": "Recipes are currently unavailable.",
+    "retry": "Try again",
     "deleted": "Recipe deleted",
     "categories": {
       "all": "All",
@@ -701,6 +731,8 @@
       "createAccount": "Sign up",
       "continueGoogle": "Continue with Google",
       "continueApple": "Continue with Apple",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "or": "OR",
       "backToHome": "← Back to home",
       "backToLogin": "← Back to sign in",
@@ -721,13 +753,49 @@
         "emailRequired": "Email required",
         "passwordRequired": "Password required",
         "invalidCredentials": "Invalid email or password",
-        "emailNotConfirmed": "Email not confirmed. Check your inbox."
+        "emailNotConfirmed": "Email not confirmed. Check your inbox.",
+        "profileUnavailable": "We cannot verify your profile right now. Please try again.",
+        "recoveryRequest": "We could not send the link right now. Please try again later."
+      },
+      "callbackErrors": {
+        "callback_invalid": "This sign-in link is invalid or has expired.",
+        "oauth_error": "The provider sign-in did not complete. Please try again.",
+        "recovery_error": "This recovery link is invalid or has expired.",
+        "confirmation_error": "Account confirmation did not complete. Request a new link."
       },
       "banner": {
         "confirmed": {
           "title": "ACCOUNT VERIFIED",
           "body": "Your email is confirmed. Sign in to get started."
+        },
+        "reset": {
+          "title": "PASSWORD UPDATED",
+          "body": "Your password has been updated. You can now sign in."
         }
+      }
+    },
+    "routing": {
+      "loading": "Checking profile",
+      "profileErrorTitle": "PROFILE TEMPORARILY UNAVAILABLE",
+      "profileErrorBody": "We cannot verify your profile right now. No setup data will be changed.",
+      "profileMissingTitle": "PROFILE NOT FOUND",
+      "profileMissingBody": "Your account is signed in, but its profile is not available yet.",
+      "retry": "Try again"
+    },
+    "resetPassword": {
+      "title": "NEW PASSWORD",
+      "subtitle": "Choose a secure new password.",
+      "passwordLabel": "New password",
+      "confirmationLabel": "Confirm new password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "checking": "Checking recovery link",
+      "submit": "Update password",
+      "saving": "Updating…",
+      "errors": {
+        "tooShort": "The password must contain at least 8 characters.",
+        "mismatch": "The passwords do not match.",
+        "generic": "The password could not be updated. Request a new link."
       }
     },
     "register": {
@@ -792,7 +860,11 @@
         "changeProfile": "← Change profile",
         "hasAccount": "Already have an account?",
         "loginLink": "Sign in",
-        "heroAlt": "Luxury gym Geneva"
+        "heroAlt": "Luxury gym Geneva",
+        "termsPrefix": "I accept the",
+        "termsLink": "terms of use",
+        "termsAnd": "and the",
+        "privacyLink": "privacy policy"
       },
       "emailSent": {
         "title": "CHECK YOUR INBOX",
@@ -808,28 +880,60 @@
         "fullNameRequired": "Full name required",
         "specialityRequired": "Speciality required",
         "experienceRequired": "Experience required",
-        "emailAlreadyUsed": "This email is already in use. Sign in instead."
+        "emailAlreadyUsed": "This email is already in use. Sign in instead.",
+        "profileUnavailable": "We cannot verify your profile right now. Please try again.",
+        "oauthRole": "We could not secure the selected role for this sign-in. Please try again.",
+        "termsRequired": "Accept the terms of use and privacy policy to continue."
       }
     },
     "join": {
       "title": "JOIN MOOVX",
       "coachInvitation": "Invitation from coach {coachName}",
-      "subtitle": "Create your account to be coached. Free access.",
+      "subtitle": "Create your account to accept your coach invitation.",
+      "invitedEmail": "Invitation intended for {email}",
       "continueGoogle": "Continue with Google",
       "or": "OR",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Password (min. 8 chars)",
       "confirmPasswordPlaceholder": "Confirm password",
-      "submitButton": "Create my free account",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "submitButton": "Create my account",
       "loadingButton": "Creating account...",
       "hasAccount": "Already have an account?",
       "loginLink": "Sign in",
       "features": "✓ Free access · ✓ Coached by your trainer · ✓ All features",
       "invalidLink": "Invalid invitation link.",
+      "states": {
+        "validating": "Validating invitation...",
+        "consuming": "Activating your invitation...",
+        "success": "Invitation activated. Redirecting...",
+        "invalid": "This invitation is invalid. Ask your coach for a new link.",
+        "legacy": "This old link is no longer valid. Ask your coach for a new invitation.",
+        "expired": "This invitation has expired. Ask your coach for a new link.",
+        "revoked": "This invitation is no longer available. Ask your coach for a new link.",
+        "used": "This invitation has already been used.",
+        "emailMismatch": "This account does not match the invited email address.",
+        "coachConflict": "Another coach is already active on this account.",
+        "forbidden": "Sign in with the invited email address or verify that no other coach is active.",
+        "temporary": "A temporary error prevented activation. Please try again shortly."
+      },
+      "legacyUnavailable": {
+        "title": "Invitation temporarily unavailable",
+        "message": "This invitation link is no longer supported. Ask your coach for a new invitation or create a client account without automatic assignment.",
+        "register": "Create a client account"
+      },
       "emailSent": {
         "title": "CHECK YOUR INBOX",
         "message": "A confirmation email has been sent to",
-        "instruction": "Click the link to activate your account and get started."
+        "instruction": "Click the link to activate your account and get started.",
+        "messageWithEmail": "A confirmation email was sent to {email}. The invitation will resume after confirmation."
+      },
+      "terms": {
+        "prefix": "I accept the",
+        "terms": "terms of use",
+        "and": "and the",
+        "privacy": "privacy policy"
       },
       "errors": {
         "emailRequired": "Email required",
@@ -837,7 +941,8 @@
         "passwordTooShort": "Password must be at least 8 characters",
         "passwordMismatch": "Passwords don't match",
         "invalidLink": "Invalid invitation link",
-        "alreadyRegistered": "This account already exists. Sign in from the login page."
+        "alreadyRegistered": "This account already exists. Sign in from the login page.",
+        "termsRequired": "Accept the terms of use and privacy policy to continue."
       }
     },
     "onboarding": {
@@ -1094,11 +1199,7 @@
         "hoursTo": "to",
         "followUpLabel": "Preferred follow-up mode",
         "businessModelTitle": "How it works",
-        "businessModelDesc": "You pay CHF 50/month to access all MoovX tools. Your clients sign up for free via your invite link and get access to all features.",
-        "inviteLinkLabel": "Your invite link",
-        "inviteLinkCopy": "Copy",
-        "inviteLinkCopied": "Copied",
-        "inviteLinkNote": "Share this link with your clients. They sign up and are automatically assigned to you."
+        "businessModelDesc": "You pay CHF 50/month to access MoovX tools. Invite each client by email from your dashboard."
       },
       "stripe": {
         "title": "RECEIVE YOUR PAYMENTS",
@@ -1121,12 +1222,20 @@
         "experienceLabel": "Experience",
         "maxClientsLabel": "Max clients",
         "inviteTitle": "Invite your clients",
-        "inviteDesc": "Share your unique invite link",
-        "inviteCopied": "Link copied!",
+        "inviteDesc": "Send a secure email invitation from your dashboard",
         "aiPlanTitle": "Generate an AI plan",
         "aiPlanDesc": "Create a nutrition or training program for a client",
         "dashboardTitle": "Explore your dashboard",
         "dashboardDesc": "Discover all coach features"
+      },
+      "redesign": {
+        "step": "Step {current} of {total}", "loading": "Loading your coach space…", "retry": "Retry", "edit": "Edit", "finish": "Enter my coach space",
+        "profile": { "title": "Your coach profile", "subtitle": "Introduce your expertise. The photo remains optional." },
+        "coaching": { "title": "Your coaching", "subtitle": "Configure your capacity and how you support clients." },
+        "stripe": { "title": "Your payments", "subtitle": "Stripe is optional and can be configured later.", "optional": "Optional Stripe connection", "skip": "You can continue without connecting Stripe.", "later": "Set up later" },
+        "summary": { "title": "Review your space", "subtitle": "Check your choices before entering the dashboard." },
+        "errors": { "profile": "We could not verify your coach profile.", "save": "Saving failed. Your answers are still here — please retry.", "avatar": "The photo could not be saved.", "stripe": "Stripe is temporarily unavailable. You can retry or continue without Stripe." },
+        "a11y": { "flow": "Coach space setup", "progress": "Coach onboarding progress" }
       },
       "constants": {
         "specialities": {
@@ -1333,8 +1442,8 @@
     "subscription": {
       "lifetime": "Lifetime access",
       "lifetimeDesc": "Permanent access to all MoovX features.",
-      "coachAccess": "Coach Access",
-      "coachAccessDesc": "Your access is included via your coach.",
+      "legacyAccess": "Historical access",
+      "legacyAccessDesc": "Your historical access to MoovX remains active.",
       "planMonthly": "Monthly Plan — CHF 10/month",
       "planYearly": "Yearly Plan — CHF 80/year",
       "planCoach": "Coach Pro — CHF 50/month",
@@ -1494,7 +1603,7 @@
       "kcalDay": "KCAL/DAY",
       "sessions": "SESSIONS"
     },
-    "invited": {
+    "coachManaged": {
       "title": "AI COACH",
       "message": "Your coach manages your program and nutrition. Contact them directly via messaging.",
       "close": "CLOSE"
@@ -1546,6 +1655,92 @@
       "noActiveProgram": "NO ACTIVE PROGRAM",
       "managePrograms": "Manage my programs"
     },
+    "v2": {
+      "sessionToday": "Today’s session",
+      "nextSession": "Next session",
+      "sessionActive": "Session in progress",
+      "sessionCompletedLabel": "Completed today",
+      "sessionCompletedToday": "Session completed today",
+      "viewCompletedSession": "View session",
+      "trainingLabel": "Training",
+      "noSessionToday": "No session today",
+      "noSessionDescription": "Rest day or no session scheduled.",
+      "sessionSummary": "Session progress",
+      "start": "Start session",
+      "resume": "Resume",
+      "exercises": "Exercises",
+      "sets": "Sets",
+      "exerciseCount": "{count} exercises",
+      "setCount": "{count} sets",
+      "estimatedDuration": "~{minutes} min",
+      "exerciseProgress": "{current} / {total} exercises",
+      "setProgress": "{current} / {total} sets",
+      "activeProgram": "Active program",
+      "coachPlan": "Coach plan",
+      "personalProgram": "Personal program",
+      "noProgram": "No active program",
+      "manage": "Manage",
+      "viewProgram": "View",
+      "viewInAccount": "View in Account",
+      "manageInAccount": "Manage in Account",
+      "configureProgram": "Configure my program",
+      "viewNextSession": "View next session",
+      "freeSession": "Free session",
+      "programLoading": "Loading program",
+      "programError": "Program unavailable",
+      "programEmpty": "Choose your next program",
+      "timeline": "Session timeline",
+      "done": "Done",
+      "active": "Active",
+      "upcoming": "Upcoming",
+      "focus": "Exercise focus",
+      "previous": "Last time",
+      "noPrevious": "No previous performance",
+      "previousError": "Previous performance unavailable",
+      "target": "Target",
+      "details": "Details",
+      "exerciseTools": "Exercise tools",
+      "currentSet": "Set {current} of {total}",
+      "weight": "Weight",
+      "repetitions": "Repetitions",
+      "rir": "Repetitions in reserve",
+      "decreaseWeight": "Decrease weight by {step} kg",
+      "increaseWeight": "Increase weight by {step} kg",
+      "decreaseReps": "Remove one repetition",
+      "increaseReps": "Add one repetition",
+      "suggestion": "Local suggestion",
+      "suggestionIncrease": "+{step} kg · target {weight} kg",
+      "suggestionKeep": "Keep {weight} kg",
+      "suggestionReduce": "Reduce to {weight} kg",
+      "useSuggestion": "Use",
+      "validateSet": "Validate set",
+      "nextSetReady": "Set {set} ready",
+      "nextExerciseReady": "Next exercise ready",
+      "workoutComplete": "All sets are complete",
+      "restTimer": "Rest",
+      "restRemaining": "{seconds} seconds of rest remaining",
+      "restFinished": "Rest complete",
+      "nextSetReadyShort": "Your next set is ready",
+      "dismissRestFinished": "Dismiss rest completion message",
+      "continue": "Continue",
+      "skipRest": "Skip",
+      "addRestTime": "Add 30 seconds of rest",
+      "video": "Video",
+      "technique": "Technique",
+      "notes": "Notes",
+      "replaceForSession": "Replace for this session",
+      "replaceCompletedConfirm": "Some sets are already complete. Replace this exercise only for the rest of this session?",
+      "replacementSessionOnly": "This replacement is limited to this session and does not change the program.",
+      "replacementLoading": "Finding relevant alternatives…",
+      "replacementError": "Alternatives are temporarily unavailable.",
+      "noReplacement": "No relevant alternative is available.",
+      "toolLoading": "Loading details…",
+      "detailsError": "Details are temporarily unavailable.",
+      "detailsUnavailable": "No additional details are available.",
+      "videoError": "The video cannot be loaded right now.",
+      "retry": "Retry",
+      "closeTools": "Close"
+    },
     "hero": {
       "session": "SESSION",
       "restDay": "REST DAY",
@@ -1568,10 +1763,15 @@
     },
     "recent": {
       "noSessions": "No sessions",
+      "loading": "Loading history…",
+      "loadError": "History is temporarily unavailable.",
       "lastSessions": "Recent sessions",
       "sessionsCount": "{count} sessions",
-      "viewAll": "View all ›",
+      "viewAll": "View history ›",
       "reduce": "Reduce",
+      "historyTitle": "Workout history",
+      "historyTotal": "{count, plural, one {# recorded workout} other {# recorded workouts}}",
+      "completed": "Completed",
       "sessionFallback": "Session",
       "filters": {
         "all": "All",
@@ -1771,15 +1971,18 @@
         "rest": "REST"
       },
       "done": {
-        "title": "Workout complete.",
-        "totalVolume": "Total volume",
-        "lastSessions": "Recent workouts",
+        "title": "Workout complete",
         "duration": "Duration",
         "sets": "Sets",
         "exercises": "Exercises",
         "setsCount": "{count} sets",
-        "backToDashboard": "Back to Dashboard",
-        "autoRedirect": "Auto in {seconds}s"
+        "newRecord": "New record",
+        "backHome": "Back home",
+        "viewProgress": "View my progress",
+        "saving": "Saving workout…",
+        "saveErrorTitle": "Incomplete save",
+        "saveErrorDescription": "The workout could not be saved completely. Your sets remain recoverable on this device.",
+        "retry": "Retry"
       },
       "reorder": {
         "title": "REORDER",
@@ -1809,6 +2012,7 @@
         "duration": "Duration",
         "save": "SAVE WORKOUT",
         "saveHint": "Record your progress and records",
+        "sessionOnly": "Changes apply only to this workout.",
         "delete": "DELETE WORKOUT",
         "deleteHint": "This workout data will be lost",
         "continue": "CONTINUE WORKOUT"
@@ -1835,12 +2039,6 @@
         "description": "DESCRIPTION",
         "execution": "EXECUTION",
         "tips": "TIPS"
-      },
-      "savePopup": {
-        "title": "PROGRAM MODIFIED",
-        "description": "You modified the exercises. Save to your program?",
-        "save": "SAVE PROGRAM",
-        "justThisTime": "JUST THIS WORKOUT"
       }
     },
     "builder": {
@@ -1851,7 +2049,8 @@
       "newExercise": "NEW EXERCISE",
       "aiCard": "GENERATE WITH AI",
       "aiCardDesc": "Describe your goal and AI creates everything",
-      "aiLocked": "Your coach manages your program. Contact them directly.",
+      "aiLocked": "AI generation is currently unavailable. Manual creation remains available.",
+      "close": "Close program builder",
       "manualCard": "CREATE MYSELF",
       "manualCardDesc": "Select your exercises by day",
       "customCard": "CUSTOM EXERCISE",
@@ -1906,7 +2105,8 @@
         "allMuscles": "All",
         "myExercise": "MY EXERCISE",
         "noResults": "No exercise found",
-        "createExercise": "CREATE AN EXERCISE"
+        "createExercise": "CREATE AN EXERCISE",
+        "loadError": "The exercise catalog is temporarily unavailable."
       },
       "day": {
         "reorderDays": "Reorder days",
@@ -1943,7 +2143,8 @@
         "deleteTitle": "Delete this exercise?",
         "deleteMessage": "The exercise \"{name}\" will be removed from the program. This cannot be undone.",
         "deleteConfirm": "Delete",
-        "deleteCancel": "Cancel"
+        "deleteCancel": "Cancel",
+        "closeGenerating": "A generation is in progress. Do you really want to close?"
       },
       "toast": {
         "generating": "Generating your program...",
@@ -1951,12 +2152,158 @@
         "generationError": "Generation error",
         "networkError": "Network error",
         "exerciseCreated": "Exercise created!",
-        "programSaved": "Program saved!"
+        "programSaved": "Program saved!",
+        "actionUnavailable": "This action is currently unavailable.",
+        "persistenceError": "Saving failed. Your changes remain displayed.",
+        "scheduleError": "The program was saved, but the schedule could not be updated."
       }
     }
   },
   "progress": {
     "headerSubtitle": "{sessions} sessions · {records} PR",
+    "v2": {
+      "eyebrow": "Overview",
+      "title": "Your progress",
+      "subtitle": "Understand how you are evolving over time while keeping the essentials in view.",
+      "addMeasurement": "Add a measurement",
+      "periodLabel": "Period",
+      "periods": { "7d": "7 days", "30d": "30 days", "90d": "90 days", "all": "All" },
+      "availableSince": "Data available since {date}",
+      "currentWeight": "Current weight",
+      "weight": "Weight",
+      "regularity": "Consistency",
+      "volume": "Volume",
+      "weightChange": "{value} kg over {period}",
+      "volumeChange": "{value}% compared with the previous week",
+      "sessionsPerWeek": "{value} sessions / week",
+      "weeksWindow": "Summary over {count} weeks",
+      "plannedUnavailable": "Planned target unavailable",
+      "comparisonUnavailable": "Comparison unavailable",
+      "trends": { "eyebrow": "Key trends", "title": "The essentials at a glance", "subtitle": "Weight, consistency and training load for the selected period." },
+      "states": { "loading": "Loading your progress", "unavailable": "Data unavailable", "unavailableCopy": "Part of your progress could not be loaded.", "insufficient": "Not enough data yet", "insufficientCopy": "Add a few measurements or sessions to reveal a trend.", "partial": "Some data is still partial." },
+      "trend": { "up": "Upward trend", "down": "Downward trend", "stable": "Stable trend", "unknown": "Trend unavailable" },
+      "units": { "kg": "kg" },
+      "weightHistory": {
+        "eyebrow": "Body history",
+        "title": "Weight evolution",
+        "subtitle": "Your actual measurements over {period}, without automatic judgement.",
+        "add": "Add weight",
+        "target": "Target",
+        "notSet": "Not set",
+        "change": "Change",
+        "actual": "Measured weight",
+        "chartTitle": "Weight history",
+        "accessibleSummary": "{count} measurements over {period}. Current weight {current} kg, change {delta} kg.",
+        "empty": "Add your first measurement to start your history.",
+        "unavailable": "Weight history is currently unavailable."
+      },
+      "measurements": {
+        "eyebrow": "Body",
+        "title": "Measurements",
+        "subtitle": "Latest values and evolution for the six canonical measurements.",
+        "add": "Add measurements",
+        "empty": "Add your first body measurements to track their evolution.",
+        "unavailable": "Body measurements are currently unavailable.",
+        "partial": "Some measurements do not have a complete history yet.",
+        "noComparison": "No comparison yet",
+        "delta": "{value} cm since the previous measurement",
+        "trendLabel": "Trend: {field}",
+        "fields": { "chest": "Chest", "waist": "Waist", "hips": "Hips", "biceps": "Biceps", "thighs": "Thighs", "calves": "Calves" }
+      },
+      "records": {
+        "eyebrow": "Performance",
+        "title": "Personal records",
+        "subtitle": "Your best logged results, with their actual type and date.",
+        "emptyTitle": "No record yet",
+        "empty": "Complete logged sets to reveal your first records.",
+        "unavailable": "Personal records are currently unavailable.",
+        "dateUnavailable": "Date unavailable",
+        "muscleGroupsLabel": "Records by muscle group",
+        "recordCount": "{count, plural, one {# record} other {# records}}",
+        "otherGroup": "Other",
+        "showMore": "Show {count} more",
+        "collapse": "Show less",
+        "types": { "estimated1rm": "Estimated 1RM", "maxWeight": "Maximum weight", "maxReps": "Maximum repetitions", "bestVolume": "Best volume", "other": "Logged performance" }
+      },
+      "exercise": {
+        "eyebrow": "Strength",
+        "title": "Exercise progression",
+        "subtitle": "A timeline based only on sets already logged.",
+        "selectorLabel": "Exercise",
+        "chartTitle": "{exercise} progression",
+        "summary": "{exercise}: {count} points for {metric}, from {start} to {end}.",
+        "visibleSummary": "{metric}: from {start} to {end} kg over the period.",
+        "needsHistory": "A second session is needed to chart a progression.",
+        "empty": "No exercise has enough logged sets for this period yet.",
+        "unavailable": "Exercise progression is currently unavailable.",
+        "metrics": { "estimated1rm": "Estimated 1RM", "maxWeight": "Maximum weight", "volume": "Logged volume" }
+      },
+      "weeklyVolume": {
+        "eyebrow": "Training load",
+        "title": "Weekly volume",
+        "subtitle": "Compare weeks without treating volume as a universal quality score.",
+        "current": "This week",
+        "previous": "Previous week",
+        "change": "Change",
+        "chartTitle": "Weekly volume trend",
+        "summary": "Logged volume across {count} weeks.",
+        "definition": "Total load moved across logged sets.",
+        "empty": "Log sets with weight and repetitions to display volume.",
+        "unavailable": "Weekly volume is currently unavailable."
+      },
+      "history": {
+        "eyebrow": "Secondary history",
+        "title": "History and tools",
+        "subtitle": "Photos, wellbeing, advanced analytics and exports grouped without weighing down the main view.",
+        "navigationLabel": "Progress navigation",
+        "navigation": { "weight": "Weight", "performance": "Performance", "body": "Body", "history": "History" },
+        "photos": {
+          "title": "Transformation",
+          "subtitle": "Photos and before/after comparison",
+          "add": "Add a photo",
+          "compare": "Compare",
+          "emptyTitle": "No photos",
+          "empty": "Add a photo whenever you want to document your evolution.",
+          "unavailable": "Photos cannot be loaded right now.",
+          "before": "Before",
+          "after": "After",
+          "comparisonTitle": "Photo comparison",
+          "align": "Align",
+          "aligning": "Aligning",
+          "alignError": "Automatic alignment is unavailable.",
+          "close": "Close comparison",
+          "sliderLabel": "Before and after comparison position",
+          "photoNumber": "Photo {number}"
+        },
+        "wellbeing": {
+          "title": "Wellbeing",
+          "subtitle": "Compact mood and sleep trends for the period.",
+          "mood": "Mood",
+          "sleep": "Sleep",
+          "empty": "Add check-ins to reveal wellbeing trends.",
+          "partial": "Only one trend has enough data so far.",
+          "unavailable": "Wellbeing data is unavailable."
+        },
+        "advanced": {
+          "title": "Advanced analytics",
+          "subtitle": "Muscle volume and perceived effort, loaded on demand.",
+          "rir": "Perceived effort / RIR",
+          "volumeHelp": "Logged sets and tonnage over the last 28 days.",
+          "volumeSummary": "Breakdown available for {count} muscle groups.",
+          "rirHelp": "Average shown from {count} logged RIR sets per muscle.",
+          "rirSummary": "Reliable RIR available for {count} muscle groups.",
+          "insufficient": "Not enough data for this analysis."
+        },
+        "exports": {
+          "eyebrow": "Your data",
+          "title": "Export my data",
+          "subtitle": "Existing formats are grouped in one place.",
+          "csv": "Analytics CSV",
+          "xlsx": "Weight and measurements XLSX",
+          "done": "Export created"
+        }
+      }
+    },
     "pills": {
       "poids": "WEIGHT",
       "records": "RECORDS",
@@ -2036,7 +2383,8 @@
         "hips": "Hips",
         "chest": "Chest",
         "arms": "Arms",
-        "thighs": "Thighs"
+        "thighs": "Thighs",
+        "calves": "Calves"
       },
       "graphLabels": {
         "poids": "Weight",
@@ -2044,7 +2392,8 @@
         "chest": "Chest",
         "hips": "Hips",
         "arms": "Biceps",
-        "body_fat": "BF%"
+        "body_fat": "BF%",
+        "calves": "Calves"
       },
       "transformation": "TRANSFORMATION",
       "aiSection": "AI ANALYSIS",
@@ -2190,15 +2539,122 @@
     "profile": "PROFILE",
     "myProfile": "My profile",
     "myReports": "My reports",
+    "reportProblem": "Report a problem",
+    "reportProblemDescription": "Something wrong with the app? Send us a report.",
     "goals": "Goals",
     "goalsSoon": "Goals section: coming soon",
     "preferences": "Preferences",
+    "programs": "PROGRAMS",
+    "nutritionProgram": "Meal plan",
+    "nutritionProgramDescription": "Goals, preferences and generation",
+    "trainingProgram": "Training program",
+    "trainingProgramDescription": "Configure and manage your training program.",
+    "open": "Open",
     "language": "Language",
     "accountSection": "ACCOUNT",
     "betaAccess": "Beta access",
     "trialPeriod": "Trial period",
     "daysLeft": "{count, plural, one {# day left} other {# days left}}",
     "signOut": "Sign out"
+  },
+  "accountPrograms": {
+    "back": "Back to account",
+    "programsEyebrow": "Programs",
+    "title": "Meal plan",
+    "subtitle": "Configure your goals and preferences, then generate your meal plan from one place.",
+    "nutritionProgram": "Meal plan",
+    "loading": "Loading status…",
+    "statusUnavailable": "Status unavailable",
+    "activePlan": "Active plan",
+    "noPlan": "No plan",
+    "source": "Source",
+    "coachSource": "Coach",
+    "personalSource": "Personal",
+    "noneSource": "None",
+    "objective": "Goal",
+    "objectives": { "cut": "Fat loss", "maintain": "Maintenance", "bulk": "Muscle gain" },
+    "loadError": "The plan status could not be loaded. No data was replaced.",
+    "relationUncertain": "The coach relationship could not be verified. Generation remains disabled for safety.",
+    "coachPlanNotice": "Your meal plan is currently provided by your coach.",
+    "configure": "Configure my program",
+    "regenerate": "Regenerate meal plan",
+    "closeConfiguration": "Close configuration",
+    "configurationUnavailable": "Personal configuration is not available with your current access.",
+    "configurationEyebrow": "Configuration",
+    "configurationTitle": "Goals and preferences",
+    "quota": "{remaining}/{limit} generations available",
+    "quotaLoading": "Checking generation quota…",
+    "quotaUnavailable": "The quota cannot be verified. Generation remains disabled.",
+    "quotaReached": "Generation quota reached. Try again in {days} day(s).",
+    "generationBlockedCoach": "The active coach plan is protected. You may save preferences, but no personal plan will be generated.",
+    "generationBlockedRelation": "Generation is disabled until the coach relationship can be verified.",
+    "generationBlockedPlanStatus": "Generation is disabled until the plan status can be verified.",
+    "generationBlockedCapability": "AI generation is not available with your current access.",
+    "regenerationHint": "Open configuration to adjust preferences or explicitly regenerate the plan.",
+    "training": {
+      "back": "Back to account",
+      "eyebrow": "Programs",
+      "title": "Training program",
+      "subtitle": "Review your active program and prepare its future configuration from your account.",
+      "summary": "Program summary",
+      "loading": "Loading program…",
+      "status": "Status",
+      "statusUnavailable": "Unavailable",
+      "statusActive": "Active",
+      "statusEmpty": "No program",
+      "statusPartial": "Active — partial data",
+      "summaryTitleCoach": "Coach plan",
+      "summaryTitlePersonal": "Personal program",
+      "summaryTitleEmpty": "Training program",
+      "summaryTitleUnavailable": "Program unavailable",
+      "source": "Source",
+      "sourceCoach": "Coach plan",
+      "sourcePersonal": "Personal program",
+      "sourceNone": "No program",
+      "profileObjective": "Profile goal",
+      "objectiveUndefined": "Goal not defined",
+      "objectives": {
+        "cut": "Fat loss",
+        "maintain": "Maintenance",
+        "bulk": "Muscle gain",
+        "strength": "Strength",
+        "endurance": "Endurance",
+        "fitness": "Fitness"
+      },
+      "frequency": "Frequency",
+      "daysPerWeek": "{count, plural, one {# day / week} other {# days / week}}",
+      "frequencyUnavailable": "Unavailable",
+      "partialNotice": "The program is available, but some secondary data is missing.",
+      "authorityError": "Program authority could not be determined. No program was replaced.",
+      "relationUncertain": "The coach relationship is unavailable or ambiguous. Configuration remains disabled for safety.",
+      "coachNotice": "Your program is provided by your coach.",
+      "coachProtected": "Personal configuration is protected while the coach plan is active.",
+      "configurationUnavailable": "Configuration is not available with your current access.",
+      "configure": "Configure",
+      "preparationTitle": "Configuration",
+      "preparationDescription": "Full program management will be available in the next step. No data is changed here.",
+      "aiUnavailable": "Future AI generation is not available with your current access.",
+      "management": {
+        "eyebrow": "Configuration", "title": "Manage my programs", "close": "Close program management",
+        "create": "Create", "import": "Import", "template": "Blank template",
+        "loading": "Loading programs…", "listError": "The program list is temporarily unavailable.", "empty": "No personal program",
+        "coachBlocked": "Your program is currently provided by your coach. Personal changes are protected.",
+        "relationBlocked": "The coach relationship is unavailable or ambiguous. Changes are disabled for safety.",
+        "mutationBlocked": "This action is not available with your current access.",
+        "persistenceError": "The program could not be saved. No success was confirmed.",
+        "activationError": "Activation failed. Program statuses were refreshed.", "scheduleError": "Program scheduling failed.",
+        "scheduleSyncError": "The program is active, but its schedule could not be synchronized.", "deleteError": "The program could not be deleted.",
+        "importError": "The program could not be imported.", "importValidationError": "The imported file is not a valid program.",
+        "activated": "Program activated", "deactivated": "Program deactivated", "deleted": "Program deleted", "scheduled": "Program scheduled for {date}",
+        "active": "Active", "inactive": "Inactive", "scheduledBadge": "Scheduled", "activateOrSchedule": "Activate / schedule", "deactivate": "Deactivate",
+        "edit": "Edit", "export": "Export", "delete": "Delete", "confirmDelete": "Confirm deletion", "cancel": "Cancel",
+        "programMeta": "{count, plural, one {# day} other {# days}} · {source}", "sourceAi": "AI", "sourceImport": "Import", "sourceManual": "Manual",
+        "restDay": "Day {count} · Rest", "trainingDay": "Day {count}", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+        "quotaLoading": "Loading AI quota…", "importPreview": "Import preview", "programName": "Program name",
+        "importDays": "{count, plural, one {# day detected} other {# days detected}}", "importSkipped": "{count, plural, one {# sheet skipped} other {# sheets skipped}}",
+        "importedName": "Imported program", "continue": "Continue"
+      }
+    }
   },
   "nutrition_tab": {
     "meals": {
@@ -2269,7 +2725,12 @@
       "addAll": "ADD ALL",
       "today": "TODAY",
       "remaining": "remaining: {count}",
-      "myMeals": "My meals"
+      "myMeals": "My meals",
+      "savedMealsError": "Saved meals could not be loaded.",
+      "photoError": "Photo analysis failed. Try again with another image.",
+      "photoSaveError": "The detected foods could not be added.",
+      "photoEstimate": "AI estimate to review. Adjust quantities before adding foods to your journal.",
+      "quantityEstimate": "Estimated quantity"
     },
     "macrosShort": {
       "p": "P",
@@ -2304,9 +2765,146 @@
     },
     "savedMeals": {
       "title": "MY MEALS",
+      "loading": "Loading saved meals...",
+      "error": "Your saved meals could not be loaded.",
+      "retry": "Try again",
       "empty": "No saved meals.",
       "foodCount": "{count} foods",
       "usedCount": "{count}x used"
+    },
+    "v2": {
+      "eyebrow": "Daily tracking",
+      "title": "Nutrition",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "addMeal": "Add a meal",
+      "addFirstMeal": "Add my first meal",
+      "loading": "Loading nutrition tracking",
+      "errorTitle": "Nutrition tracking unavailable",
+      "errorCopy": "Nutrition tracking could not be loaded. No value is replaced with zero.",
+      "retry": "Try again",
+      "emptyTitle": "No meal logged for this day",
+      "emptyCopy": "Add your first meal to start tracking the day’s actual intake.",
+      "calories": "Calories",
+      "protein": "Protein",
+      "remaining": "{count} kcal remaining",
+      "above": "+{count} kcal above target",
+      "reached": "Target reached",
+      "targetMissing": "Target not set",
+      "calorieProgress": "Consumed calorie progress",
+      "proteinProgress": "Actual intake today",
+      "partial": "Some targets are not set yet. Consumed values remain available.",
+      "mealChooser": {
+        "eyebrow": "Meal context",
+        "title": "Choose a meal",
+        "description": "Select the meal this food should be added to.",
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "snack": "Snack",
+        "dinner": "Dinner",
+        "close": "Close meal selection"
+      },
+      "macrosTitle": "Macros",
+      "macrosCopy": "Intake logged today",
+      "macro": {
+        "protein": "Protein",
+        "carbs": "Carbs",
+        "fat": "Fat"
+      },
+      "macroTargetDefined": "Consumed / target",
+      "macrosError": "Macros unavailable",
+      "macrosErrorCopy": "The data could not be loaded.",
+      "todayMeals": {
+        "eyebrow": "Today’s log",
+        "title": "Meals",
+        "count": "{count} moments",
+        "loading": "Loading meals",
+        "error": "The meal log is unavailable. No value is replaced with zero.",
+        "retry": "Try again",
+        "open": "Open",
+        "partial": "Some sources are unavailable. Logged foods remain visible.",
+        "importError": "The planned meal could not be imported. No food was added.",
+        "meal": {
+          "breakfast": "Breakfast",
+          "lunch": "Lunch",
+          "snack": "Snack",
+          "dinner": "Dinner"
+        },
+        "status": {
+          "empty": "No meal",
+          "planned": "Planned",
+          "partially_logged": "Partially logged",
+          "logged": "Logged",
+          "completed": "Completed"
+        },
+        "action": {
+          "add": "Add",
+          "log": "Log",
+          "continue": "Continue",
+          "view": "View"
+        },
+        "plannedSummary": "{food}",
+        "plannedMeal": "Planned meal",
+        "loggedSummary": "{count} kcal",
+        "emptySummary": "No food logged",
+        "planned": "Planned meal",
+        "logged": "Actual log",
+        "noLoggedFoods": "No food logged for this meal.",
+        "foodFallback": "Food",
+        "quantity": "Quantity in grams",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit quantity",
+        "replace": "Replace food",
+        "delete": "Delete food",
+        "addOptions": "Add options",
+        "mealActions": "Meal actions",
+        "compactEdit": "Edit",
+        "compactSave": "Save",
+        "more": "More",
+        "moreActions": "More actions",
+        "fromPlan": "From plan",
+        "food": "Food",
+        "photo": "Photo",
+        "savedMeals": "My meals",
+        "saveMeal": "Save meal",
+        "copyMeal": "Copy",
+        "clearMeal": "Clear",
+        "nextAction": {
+          "title": "Next action",
+          "retry": "Try loading the log again",
+          "add_first": "Add your first meal",
+          "log_planned": "Log your planned {meal}",
+          "continue_partial": "Continue your {meal}",
+          "complete_protein": "Complete today’s protein intake",
+          "view_journal": "View the journal",
+          "complete_day": "Complete this day with your {meal}"
+        }
+      },
+      "activePlan": {
+        "eyebrow": "Active plan", "loading": "Loading active plan", "errorTitle": "Plan unavailable",
+        "errorBody": "The active plan could not be loaded. Your journal remains available.", "retry": "Try again",
+        "emptyTitle": "No active meal plan", "emptyBody": "Daily tracking remains available without a plan.",
+        "configure": "Configure my program", "coachSource": "Coach plan", "personalSource": "Personal plan",
+        "coachBody": "Created by your active coach", "personalBody": "Your active meal plan",
+        "updated": "Updated {date}", "partial": "The plan remains available, but the coach relationship could not be verified.",
+        "viewPlan": "View plan", "hidePlan": "Hide plan", "shoppingList": "Shopping list",
+        "today": "Today", "selectedDay": "Selected day", "todayShort": "today", "chooseDay": "Choose a plan day",
+        "noMeals": "No meals planned for this day.", "mealSummary": "{count} foods · {calories} kcal",
+        "addToJournal": "Add to journal", "macros": "P {protein} g · C {carbs} g · F {fat} g",
+        "dayTotal": "Planned total: {calories} kcal",
+        "days": { "lundi": "Monday", "mardi": "Tuesday", "mercredi": "Wednesday", "jeudi": "Thursday", "vendredi": "Friday", "samedi": "Saturday", "dimanche": "Sunday" },
+        "daysShort": { "lundi": "Mon", "mardi": "Tue", "mercredi": "Wed", "jeudi": "Thu", "vendredi": "Fri", "samedi": "Sat", "dimanche": "Sun" },
+        "meals": { "petit_dejeuner": "Breakfast", "dejeuner": "Lunch", "collation": "Snack", "diner": "Dinner" }
+      },
+      "tools": {
+        "eyebrow": "Quick access", "title": "Tools", "secondary": "Secondary actions",
+        "addFood": "Add food", "addFoodBody": "Search for a food",
+        "photo": "AI photo", "photoBody": "Estimate then review",
+        "savedMeals": "My meals", "savedMealsBody": "Reuse a meal",
+        "recipes": "Recipes", "recipesBody": "Browse ideas",
+        "scannerPending": "Barcode scanning is available through food search."
+      }
     }
   },
   "coach_dashboard": {
@@ -2320,7 +2918,6 @@
       "coachPro": "COACH PRO · {count} clients",
       "clientsActive": "{count} active client(s) · {unread} unread message(s)",
       "searchPlaceholder": "Search a client...",
-      "invited": "INVITED",
       "videosToReview": "Videos to review"
     },
     "invite": {
@@ -2343,6 +2940,145 @@
     }
   },
   "home": {
+    "v2": {
+      "hello": "Hello {name}",
+      "today": "Today",
+      "secondaryMetrics": "Secondary progress metrics",
+      "avatarAlt": "Profile picture",
+      "hero": {
+        "label": "Up next",
+        "loading": "Loading today’s workout",
+        "errorTitle": "Workout temporarily unavailable",
+        "errorCopy": "We couldn’t load your training. Your data is not being treated as an empty day.",
+        "completedLabel": "Completed today",
+        "completedTitle": "Workout complete",
+        "viewSession": "View workout",
+        "restTitle": "Rest day",
+        "restCopy": "Recovery is part of the plan. Recharge for your next workout.",
+        "emptyTodayTitle": "Nothing planned today",
+        "emptyTodayCopy": "Your program is active. Enjoy the day or start a free workout.",
+        "noProgramTitle": "Choose your next goal",
+        "noProgramCopy": "Choose a program or start a free workout to get moving.",
+        "start": "Start workout",
+        "openProgram": "View program",
+        "freeSession": "Free workout",
+        "sessionFallback": "Today’s workout",
+        "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+        "source": { "scheduled": "Scheduled", "custom_program": "Personal program", "coach_program": "Coach program", "none": "Free workout" }
+      },
+      "dailyStatus": {
+        "title": "Today’s status",
+        "training": { "label": "Training", "scheduled": "To do", "completed": "Completed", "rest": "Rest", "empty": "Nothing planned", "loading": "Loading…", "error": "Unavailable", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}" },
+        "nutrition": { "label": "Nutrition", "loading": "Loading…", "ready": "In progress", "empty": "No entries", "error": "Unavailable", "protein": "Protein", "carbs": "Carbs", "fat": "Fat" },
+        "recovery": { "label": "Recovery", "ready": "Ready", "watch": "Keep watch", "recover": "Recover", "unavailable": "Unavailable", "loading": "Loading…", "error": "Unavailable" }
+      },
+      "nextBestAction": {
+        "label": "Recommended action",
+        "scheduled_training": { "title": "Your workout is ready", "description": "Today’s training is ready to start.", "cta": "Start workout" },
+        "missing_check_in": { "title": "How are you feeling today?", "description": "Complete your check-in to keep your tracking useful.", "cta": "Complete in 30 sec" },
+        "nutrition_incomplete": { "title": "Keep tracking nutrition", "description": "Your nutrition day is still in progress.", "cta": "Open Nutrition" },
+        "diagnostic_available": { "title": "Review your week", "description": "Your weekly diagnostic is available or ready to generate.", "cta": "View diagnostic" },
+        "rest_day": { "title": "Prioritize recovery", "description": "Your program schedules recovery today.", "cta": "View recovery" },
+        "missing_program": { "title": "Choose your next program", "description": "Prepare the next step in your training.", "cta": "View programs" },
+        "day_on_track": { "title": "Your day is on track", "description": "Keep the momentum and review your progress.", "cta": "View progress" }
+      },
+      "progression": {
+        "eyebrow": "This week",
+        "title": "Your progress",
+        "completeCopy": "Your essential progress markers are up to date.",
+        "partialCopy": "Your first markers are available and will grow with your tracking.",
+        "loading": "Loading your progress…",
+        "errorTitle": "Progress temporarily unavailable",
+        "errorCopy": "Your data is not being replaced by zero values.",
+        "emptyTitle": "Your progress starts here",
+        "emptyCopy": "Log a workout or measurement to reveal your first markers.",
+        "cta": "View my progress",
+        "weight": "Current weight",
+        "trendUnknown": "First measurement",
+        "trend": { "up": "+{value} kg since the previous measurement", "down": "−{value} kg since the previous measurement", "stable": "Weight stable" },
+        "sessionsLabel": "Consistency",
+        "sessions": "{count, plural, =0 {No workouts this week} one {# workout this week} other {# workouts this week}}",
+        "adherence": "Adherence",
+        "latestPR": "Latest record",
+        "recordGain": "+{value}"
+      },
+      "athenaInsight": {
+        "label": "Athena",
+        "loading": "Reviewing available data…",
+        "cta": "Talk to Athena",
+        "messages": {
+          "safe_fallback": "Some data is unavailable. Keep tracking for a more contextual insight.",
+          "training_recovery_ready": "The available recovery data looks favorable today. You can keep the planned workout.",
+          "training_recovery_warning": "The available recovery data suggests extra caution today. Pay attention to how you feel during the workout.",
+          "rest_day": "Use today to support your recovery.",
+          "nutrition_incomplete": "Your nutrition tracking is still incomplete today.",
+          "check_in_missing": "Today’s check-in can help provide more context for your tracking.",
+          "progression_available": "Your consistency this week is visible in your tracking.",
+          "generic_fallback": "Keep tracking your data to receive more relevant recommendations."
+        }
+      },
+      "activeCoach": {
+        "label": "Your coach",
+        "loading": "Loading coach information…",
+        "nameFallback": "Coach",
+        "avatarAlt": "Photo of {name}",
+        "lastMessage": "Latest message",
+        "nextAppointment": "Next appointment",
+        "cta": "Open messages"
+      },
+      "lower": {
+        "today": "Today",
+        "week": "This week",
+        "checkIn": {
+          "label": "Check-in",
+          "missing": "Take a few seconds to record how you feel today.",
+          "loading": "Loading check-in…",
+          "unavailable": "Check-in is temporarily unavailable.",
+          "start": "Complete my check-in",
+          "edit": "Edit",
+          "close": "Close",
+          "saved": "Saved",
+          "sleepSummary": "{hours} h of sleep",
+          "question": "How are you feeling today?",
+          "sleep": "Sleep",
+          "note": "Note for your coach (optional)…",
+          "save": "Save",
+          "update": "Update",
+          "saving": "Saving…",
+          "error": "The check-in could not be saved. Please try again.",
+          "moods": { "fatigue": "Tired", "normal": "Normal", "bien": "Good", "top": "Great", "energie": "Energy" }
+        },
+        "hydration": {
+          "label": "Hydration",
+          "value": "{current} L / {target} L",
+          "add": "+250 ml",
+          "addLabel": "Add 250 ml of water",
+          "error": "Water could not be added. The previous value was restored."
+        },
+        "diagnostic": {
+          "label": "Diagnostic",
+          "empty": "Your weekly review is ready to generate.",
+          "ready": "Your diagnostic is available.",
+          "loading": "Loading diagnostic…",
+          "unavailable": "The diagnostic is temporarily unavailable.",
+          "notAvailable": "Not available yet",
+          "generate": "Generate",
+          "generating": "Generating…",
+          "view": "View diagnostic",
+          "error": "The diagnostic could not be generated. Please try again."
+        },
+        "coachWeek": {
+          "label": "Coach plan",
+          "upcoming": "Up next",
+          "session": "Workout",
+          "today": "Today",
+          "planned": "Planned",
+          "completed": "Done",
+          "cta": "View program"
+        },
+        "days": { "lundi": "Monday", "mardi": "Tuesday", "mercredi": "Wednesday", "jeudi": "Thursday", "vendredi": "Friday", "samedi": "Saturday", "dimanche": "Sunday" }
+      }
+    },
     "nextAppointment": "Next appointment",
     "appointmentAt": "at",
     "nextAppointmentMore": "+{count, plural, one {# more} other {# more}}",
@@ -2499,6 +3235,7 @@
       "generate_cta": "Generate now",
       "generating": "AI analysis in progress...",
       "generating_time": "(15-25s)",
+      "generation_error": "The diagnostic could not be generated. Please try again shortly.",
       "points_forts_heading": "Strengths",
       "points_alerte_heading": "Warnings",
       "view_details": "View details"
@@ -2657,13 +3394,25 @@
         "fat": "Fat",
         "trialBadge": "Your free access is active"
       }
+    },
+    "redesign": {
+      "step": "Step {current} of {total}", "loading": "Loading your space…", "back": "Go back to the previous step", "finish": "Create my MoovX space", "edit": "Edit",
+      "goal": { "title": "Your goal", "subtitle": "Choose the priority that will guide your experience." },
+      "profile": { "title": "Your profile", "subtitle": "The essentials we need to personalize your targets." },
+      "training": { "title": "Your training", "subtitle": "A pace and environment that fit your routine." },
+      "nutrition": { "title": "Your nutrition", "subtitle": "Choose your approach. You can adjust everything later.", "advanced": "Advanced preferences (optional)", "restrictions": "Food allergies or restrictions", "none": "None", "some": "I have restrictions", "details": "Describe your restrictions" },
+      "summary": { "title": "Everything is ready", "subtitle": "Review your answers before creating your space.", "macros": "Indicative daily target" },
+      "coach": { "profile": "The essentials for your coaching experience.", "optional": "This step is optional." },
+      "errors": { "profile": "We could not load your profile. Try again in a moment.", "save": "Saving failed. Your answers are still here — please retry.", "photo": "The photo could not be saved." },
+      "a11y": { "progress": "Onboarding progress" }
     }
   },
   "cardio": {
     "ui": {
       "title": "Cardio",
       "hide": "Hide",
-      "sessionsCount": "{count, plural, one {# session} other {# sessions}}",
+      "optionsCount": "{count} options",
+      "showOptions": "View {count} options",
       "all": "All",
       "minutes": "MINUTES",
       "kcal": "KCAL",

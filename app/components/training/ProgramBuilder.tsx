@@ -18,12 +18,15 @@ import {
 } from '../../../lib/design-tokens'
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
   supabase: any
   session: any
   aiAllowed?: boolean
+  canMutate?: boolean
+  onAiQuotaChange?: () => void
   onClose: () => void
   onSave: () => void
   editProgram?: any
@@ -71,13 +74,12 @@ const labelStyle: React.CSSProperties = {
 }
 
 import { padTo7Days, DAY_NAMES_FR } from '../../../lib/schedule-utils'
-export { padTo7Days } // re-export for existing importers
 
 const DAY_NAMES = DAY_NAMES_FR
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
 /* ─── Component ─── */
-export default function ProgramBuilder({ supabase, session, aiAllowed = true, onClose, onSave, editProgram }: ProgramBuilderProps) {
+export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -142,13 +144,28 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
   const [ceRest, setCeRest] = useState(90)
   const [saving, setSaving] = useState(false)
   const [userGender, setUserGender] = useState('male')
+  const [exerciseCatalogError, setExerciseCatalogError] = useState(false)
+  const [customExercisesError, setCustomExercisesError] = useState(false)
+  const builderRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap({
+    active: true,
+    containerRef: builderRef,
+    onEscape: requestClose,
+  })
 
   /* ─── Load exercises + profile gender (au montage) ─── */
   useEffect(() => {
     supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(200)
-      .then(({ data }: any) => setDbExercises(data || []))
+      .then(({ data, error }: any) => {
+        setExerciseCatalogError(Boolean(error))
+        if (!error) setDbExercises(data || [])
+      })
     supabase.from('custom_exercises').select('*').eq('user_id', session.user.id).order('name')
-      .then(({ data }: any) => setCustomExercises(data || []))
+      .then(({ data, error }: any) => {
+        setCustomExercisesError(Boolean(error))
+        if (!error) setCustomExercises(data || [])
+      })
     supabase.from('profiles').select('gender').eq('id', session.user.id).single()
       .then(({ data }: any) => { if (data?.gender) setUserGender(data.gender) })
   }, [])
@@ -165,6 +182,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
   /* ─── AI generate ─── */
   async function generateAI() {
+    if (!canMutate || !aiAllowed) {
+      toast.error(t('toast.actionUnavailable'))
+      return
+    }
     setAiGenerating(true)
     const tid = toast.loading(t('toast.generating'))
     try {
@@ -192,18 +213,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     }
     toast.dismiss(tid)
     setAiGenerating(false)
+    onAiQuotaChange?.()
   }
 
   /* ─── Save custom exercise ─── */
   async function saveCustomExercise() {
-    if (!ceName.trim()) return
+    if (!canMutate || !ceName.trim()) return
     setSaving(true)
-    const { data } = await supabase.from('custom_exercises').insert({
+    const { data, error } = await supabase.from('custom_exercises').insert({
       user_id: session.user.id, name: ceName.trim(), muscle_group: ceMuscle,
       equipment: ceEquipment, description: ceDescription,
       sets: ceSets, reps: ceReps, rest_seconds: ceRest, is_private: true,
     }).select().single()
-    if (data) {
+    if (error || !data) {
+      toast.error(t('toast.persistenceError'))
+    } else {
       setCustomExercises(prev => [...prev, data])
       toast.success(t('toast.exerciseCreated'))
       setCeName(''); setCeMuscle(''); setCeEquipment(''); setCeDescription('')
@@ -214,7 +238,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
   /* ─── Save program ─── */
   async function saveProgram() {
-    if (!programName.trim() || !programDays.length) return
+    if (!canMutate || !programName.trim() || !programDays.length) return
     setSaving(true)
     const payload = {
       user_id: session.user.id,
@@ -224,16 +248,25 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       source: aiResult ? 'ai' : 'manual',
       updated_at: new Date().toISOString(),
     }
+    let saveError: unknown = null
     if (editProgram?.id) {
       // Editing: keep current is_active status (don't deactivate on save)
-      await supabase.from('custom_programs').update(payload).eq('id', editProgram.id)
+      const { error } = await supabase.from('custom_programs').update(payload).eq('id', editProgram.id).eq('user_id', session.user.id)
+      saveError = error
     } else {
       // New program: start inactive, user activates explicitly
-      await supabase.from('custom_programs').insert({ ...payload, is_active: false })
+      const { error } = await supabase.from('custom_programs').insert({ ...payload, is_active: false })
+      saveError = error
     }
 
-    // Regenerate scheduled_sessions for current week with correct day names
-    try {
+    if (saveError) {
+      toast.error(t('toast.persistenceError'))
+      setSaving(false)
+      return
+    }
+
+    // A new inactive program must not alter the active schedule.
+    if (editProgram?.id && editProgram.is_active) try {
       const today = new Date()
       const dow = today.getDay()
       const monday = new Date(today)
@@ -244,10 +277,11 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
       const mondayStr = toDateStr(monday)
       const sundayStr = toDateStr(sunday)
 
-      await supabase.from('scheduled_sessions').delete()
+      const { error: deleteScheduleError } = await supabase.from('scheduled_sessions').delete()
         .eq('user_id', session.user.id)
         .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
         .eq('completed', false)
+      if (deleteScheduleError) throw new Error('SCHEDULE_DELETE_FAILED')
 
       const newSessions: any[] = []
       for (let i = 0; i < 7; i++) {
@@ -266,9 +300,16 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
         })
       }
       if (newSessions.length > 0) {
-        await supabase.from('scheduled_sessions').insert(newSessions)
+        const { error: insertScheduleError } = await supabase.from('scheduled_sessions').insert(newSessions)
+        if (insertScheduleError) throw new Error('SCHEDULE_INSERT_FAILED')
       }
-    } catch (e) { console.error('[saveProgram] scheduled_sessions sync error:', e) }
+    } catch (e) {
+      console.error('[saveProgram] scheduled_sessions sync error:', e)
+      toast.error(t('toast.scheduleError'))
+      setSaving(false)
+      onSave()
+      return
+    }
 
     toast.success(t('toast.programSaved'))
     setSaving(false)
@@ -381,10 +422,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
     })
   }
 
+  function requestClose() {
+    if (aiGenerating && !window.confirm(t('confirm.closeGenerating'))) return
+    onClose()
+  }
+
   /* ─── RENDER ─── */
   if (typeof document === 'undefined') return null
   const portalContent = (
-    <div data-no-tab-swipe="true" style={{
+    <div ref={builderRef} role="dialog" aria-modal="true" aria-label={t('createTitle')} data-no-tab-swipe="true" style={{
       position: 'fixed', inset: 0, zIndex: Z_MODAL, background: BG_BASE, overflowY: 'auto',
     }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px calc(120px + env(safe-area-inset-bottom, 0px))' }}>
@@ -394,7 +440,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
           <div>
             {/* Close button */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer' }}>
+              <button onClick={requestClose} aria-label={t('close')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', minWidth: 44, minHeight: 44 }}>
                 <X size={24} />
               </button>
             </div>
@@ -405,7 +451,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Card 1 - AI */}
-              {aiAllowed ? (
+              {aiAllowed && canMutate ? (
               <motion.button
                 whileHover={{ borderColor: GOLD }}
                 onClick={() => setMode('ai')}
@@ -434,6 +480,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               <motion.button
                 whileHover={{ borderColor: GOLD }}
                 onClick={() => setMode('manual')}
+                disabled={!canMutate}
                 style={{
                   background: BG_CARD, border: `1px solid ${BORDER}`, padding: 24,
                   cursor: 'pointer', textAlign: 'left', width: '100%',
@@ -450,6 +497,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
               <motion.button
                 whileHover={{ borderColor: GOLD }}
                 onClick={() => { previousMode.current = 'select'; setMode('custom-exercise') }}
+                disabled={!canMutate}
                 style={{
                   background: BG_CARD, border: `1px solid ${BORDER}`, padding: 24,
                   cursor: 'pointer', textAlign: 'left', width: '100%',
@@ -566,11 +614,12 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
             {/* Generate button */}
             <button
               onClick={generateAI}
-              disabled={aiGenerating}
+              aria-busy={aiGenerating}
+              disabled={aiGenerating || !aiAllowed || !canMutate}
               style={{
                 width: '100%', padding: '16px', background: aiGenerating ? GOLD_DIM : GOLD,
                 color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
-                cursor: aiGenerating ? 'not-allowed' : 'pointer', opacity: aiGenerating ? 0.6 : 1,
+                cursor: aiGenerating || !aiAllowed || !canMutate ? 'not-allowed' : 'pointer', opacity: aiGenerating || !aiAllowed || !canMutate ? 0.6 : 1,
               }}
             >
               {aiGenerating ? t('generating') : t('generate')}
@@ -602,7 +651,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             <button
               onClick={saveProgram}
-              disabled={saving}
+              disabled={saving || !canMutate}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
                 color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
@@ -697,7 +746,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
                 <button
                   onClick={saveProgram}
-                  disabled={saving}
+                  disabled={saving || !canMutate}
                   style={{
                     width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
                     color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
@@ -783,7 +832,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
 
             <button
               onClick={saveCustomExercise}
-              disabled={saving || !ceName.trim()}
+              disabled={saving || !ceName.trim() || !canMutate}
               style={{
                 width: '100%', padding: '16px', background: saving ? GOLD_DIM : GOLD,
                 color: colors.onGold, border: 'none', fontFamily: FONT_DISPLAY, fontSize: 18,
@@ -902,7 +951,12 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, on
                 </button>
               </div>
             ))}
-            {filteredExercises.length === 0 && (
+            {(exerciseCatalogError || customExercisesError) && (
+              <div role="alert" style={{ padding: 16, color: RED, fontFamily: FONT_BODY, fontSize: 13 }}>
+                {t('search.loadError')}
+              </div>
+            )}
+            {!exerciseCatalogError && !customExercisesError && filteredExercises.length === 0 && (
               <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14 }}>
                 {t('search.noResults')}
               </div>

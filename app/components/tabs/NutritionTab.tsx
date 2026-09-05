@@ -1,71 +1,94 @@
 'use client'
+import dynamic from 'next/dynamic'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { UtensilsCrossed, Sparkles, SlidersHorizontal, ShoppingCart, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Clock, Plus, Trash2, Download, ChefHat, List, ClipboardList, Camera, Star, Sun, Moon, Cookie, Save, Copy, Pencil, FolderOpen, RefreshCw, CalendarDays, Beef, Wheat, Droplet, Droplets, X } from 'lucide-react'
-import { downloadCsv } from '../../../lib/exportCsv'
-import NutritionPreferences from '../NutritionPreferences'
+import { ChevronLeft, ChevronRight, Trash2, Camera, Pencil, CalendarDays, Droplets } from 'lucide-react'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
-import BarcodeScanner from '../BarcodeScanner'
-import RecipesSection from '../RecipesSection'
 import ShoppingList from '../ShoppingList'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
 import AiQuotaBadge from '../ui/AiQuotaBadge'
 import {
-  fonts, colors, NUTRITION_DAYS, todayNutritionKey, titleStyle, titleLineStyle, subtitleStyle, statStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, cardTitleAbove, Z_MODAL,
+  fonts, colors, subtitleStyle, statSmallStyle, bodyStyle, labelStyle, mutedStyle, cardStyle, Z_MODAL,
 } from '../../../lib/design-tokens'
-import { parseMealPlan, getMealByKey, computeDayTotals, MEAL_KEYS, MEAL_KEY_TO_TYPE, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
-// MEAL_LABELS moved inside component to use translations — see getMealLabel()
-const MEAL_TIMES: Record<string, string> = {
-  petit_dejeuner: '7h00',
-  dejeuner: '12h30',
-  collation: '16h00',
-  diner: '19h30',
-}
-const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+import { parseMealPlan, getMealByKey, type Day, type DayPlan, type MealKey } from '../../../lib/meal-plan'
+import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
+import type { ActiveCoachResolutionState } from '../../../lib/coach-relations/repository'
+import useNutritionDashboardModel from '../../hooks/useNutritionDashboardModel'
+import { addNutritionDays, getNutritionDayKey } from '../../../lib/nutrition/nutrition-date'
+import { normalizeNutritionMealType, type NutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
+import NutritionV2 from '../nutrition-v2/NutritionV2'
+import TodayMeals from '../nutrition-v2/TodayMeals'
+import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
+import NutritionTools from '../nutrition-v2/NutritionTools'
+import MealContextChooser from '../nutrition-v2/MealContextChooser'
 
-type SubTab = 'today' | 'plan' | 'scanner' | 'prefs' | 'recipes' | 'meals'
+const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
+// MEAL_LABELS moved inside component to use translations — see getMealLabel()
+const MEAL_ORDER: MealKey[] = ['petit_dejeuner', 'dejeuner', 'collation', 'diner']
+const NUTRITION_MEAL_TO_KEY: Record<NutritionMealType, MealKey> = {
+  breakfast: 'petit_dejeuner',
+  lunch: 'dejeuner',
+  snack: 'collation',
+  dinner: 'diner',
+}
+
+type SubTab = 'today' | 'plan' | 'recipes' | 'meals'
+type PendingMealAction = 'food' | 'photo'
+export type SavedMealsLoadState = 'idle' | 'loading' | 'ready' | 'empty' | 'error'
+
+export function resolveSavedMealsLoadState(error: unknown, meals: unknown[]): SavedMealsLoadState {
+  if (error) return 'error'
+  return meals.length > 0 ? 'ready' : 'empty'
+}
+
+interface PhotoFoodEstimate {
+  name: string
+  quantity_g: number
+  calories: number
+  proteins: number
+  carbs: number
+  fats: number
+}
+
+interface PhotoAnalysisResult {
+  foods: PhotoFoodEstimate[]
+  total_calories?: number
+}
 
 interface NutritionTabProps {
-  coachMealPlan: any
-  todayKey: string
-  setModal: (modal: string) => void
   profile: any
+  capabilities: UserCapabilities
+  coachRelationStatus: ActiveCoachResolutionState['status']
+  coachRelationIsAuthoritative: boolean
+  coachId: string | null
   supabase: any
   userId: string
   fetchAll: () => Promise<void>
+  onOpenProgramSettings: () => void
 }
 
-export default function NutritionTab({ coachMealPlan, todayKey, setModal, profile, supabase, userId, fetchAll }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachRelationIsAuthoritative, coachId, supabase, userId, onOpenProgramSettings }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
-  const T = titleStyle
-  const [nutritionDay, setNutritionDay] = useState<string>(todayNutritionKey())
-  const [activeMealPlan, setActiveMealPlan] = useState<any>(null)
-  const [loadingPlan, setLoadingPlan] = useState(true)
-  const [showShoppingList, setShowShoppingList] = useState(false)
-  const [completedMeals, setCompletedMeals] = useState<Set<string>>(new Set())
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
-  const [showScanner, setShowScanner] = useState(false)
-  const [showFridgeScanner, setShowFridgeScanner] = useState(false)
+  const [pendingMealAction, setPendingMealAction] = useState<PendingMealAction | null>(null)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
-  const [dailyLogs, setDailyLogs] = useState<any[]>([])
-  const [importingMeal, setImportingMeal] = useState<MealKey | null>(null)
-  const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
-  const [editQty, setEditQty] = useState('')
+  const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
   const [swappingFoodId, setSwappingFoodId] = useState<string | null>(null)
   const [showPhotoCapture, setShowPhotoCapture] = useState(false)
   const [photoMealTarget, setPhotoMealTarget] = useState('')
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
-  const [photoResults, setPhotoResults] = useState<any>(null)
+  const [photoResults, setPhotoResults] = useState<PhotoAnalysisResult | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   // Meal save/copy/reuse
-  const [mealMenuOpen, setMealMenuOpen] = useState<string | null>(null)
+  const [mealActionError, setMealActionError] = useState<string | null>(null)
   const [showSaveMealPopup, setShowSaveMealPopup] = useState(false)
   const [saveMealData, setSaveMealData] = useState<any>(null)
   const [saveMealName, setSaveMealName] = useState('')
@@ -76,9 +99,11 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [copyTargetMealType, setCopyTargetMealType] = useState('')
   const [showSavedMeals, setShowSavedMeals] = useState(false)
   const [savedMeals, setSavedMeals] = useState<any[]>([])
+  const [savedMealsState, setSavedMealsState] = useState<SavedMealsLoadState>('idle')
   const [useSavedMealTarget, setUseSavedMealTarget] = useState('')
   // Mes repas tab state
   const [myMeals, setMyMeals] = useState<any[]>([])
+  const [myMealsError, setMyMealsError] = useState<string | null>(null)
   const [myMealsSearch, setMyMealsSearch] = useState('')
   const [myMealsFilter, setMyMealsFilter] = useState('all')
   const [editingMeal, setEditingMeal] = useState<any>(null)
@@ -89,66 +114,57 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
   const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   const calScrollRef = React.useRef<HTMLDivElement>(null)
-  const today = new Date().toISOString().split('T')[0]
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [daysWithMeals, setDaysWithMeals] = useState<Set<string>>(new Set())
-  const [waterToday, setWaterToday] = useState(0)
+  const nutritionDashboard = useNutritionDashboardModel({
+    supabase,
+    userId,
+    profile,
+    capabilities,
+    coachRelation: { status: coachRelationStatus, coachId, isAuthoritative: coachRelationIsAuthoritative },
+  })
+  const { model: nutritionModel, selectedDate, setSelectedDate, dailyLogs, daysWithMeals, refresh: refreshNutrition } = nutritionDashboard
+  const today = nutritionModel.day.localDateKey
+  const todayKey = nutritionModel.day.dayKey
+  const waterToday = nutritionModel.hydration.data?.consumedMl ?? 0
   const calendarDays = React.useMemo(() => {
-    const d: string[] = []
-    for (let i = -30; i <= 7; i++) { const dt = new Date(); dt.setDate(dt.getDate() + i); d.push(dt.toISOString().split('T')[0]) }
-    return d
-  }, [])
+    const dates: string[] = []
+    for (let i = -30; i <= 7; i += 1) dates.push(addNutritionDays(today, i))
+    return dates
+  }, [today])
 
-  const hasPlan = !!coachMealPlan || !!activeMealPlan
   const [subTab, setSubTab] = useState<SubTab>('today')
 
   useEffect(() => {
-    fetchActiveMealPlan()
-    fetchTodayTracking()
-    fetchDailyLogs()
-    // Load days with meals for calendar dots
-    const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-    supabase.from('daily_food_logs').select('date').eq('user_id', userId).gte('date', thirtyAgo)
-      .then(({ data }: any) => setDaysWithMeals(new Set((data || []).map((d: any) => d.date))))
-    // Auto-scroll calendar to today
-    setTimeout(() => { document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' }) }, 100)
-  }, [userId])
-
-  // Reload meals when date changes
-  useEffect(() => { fetchDailyLogs() }, [selectedDate])
-
-  // Load water intake for selected date
-  useEffect(() => {
-    if (!userId) return
-    supabase.from('water_intake').select('amount_ml').eq('user_id', userId).eq('date', selectedDate).limit(50)
-      .then(({ data }: any) => setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0)))
-  }, [userId, selectedDate])
+    const timer = window.setTimeout(() => {
+      document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' })
+    }, 100)
+    return () => window.clearTimeout(timer)
+  }, [today])
 
   async function addWater(ml: number) {
     if (!userId) return
     await supabase.from('water_intake').insert({ user_id: userId, amount_ml: ml, date: today })
-    setWaterToday(prev => prev + ml)
+    await refreshNutrition()
   }
 
   // Fetch saved meals for "Mes Repas" tab
   useEffect(() => {
     if (subTab === 'meals' && userId) {
+      setMyMealsError(null)
       supabase.from('saved_meals').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-        .then(({ data }: any) => setMyMeals(data || []))
+        .then(({ data, error }: any) => {
+          if (error) {
+            setMyMeals([])
+            setMyMealsError(nt('chrome.savedMealsError'))
+            return
+          }
+          setMyMeals(data || [])
+        })
     }
-  }, [subTab, userId])
-
-  useEffect(() => {
-  }, [activeMealPlan, subTab])
-
-  async function fetchDailyLogs() {
-    const { data } = await supabase.from('daily_food_logs').select('*').eq('user_id', userId).eq('date', selectedDate).order('created_at', { ascending: true })
-    setDailyLogs(data || [])
-  }
+  }, [nt, subTab, supabase, userId])
 
   async function deleteDailyLog(id: string) {
     await supabase.from('daily_food_logs').delete().eq('id', id)
-    setDailyLogs(prev => prev.filter(l => l.id !== id))
+    await refreshNutrition()
   }
 
   async function updateFoodQuantity(id: string, newQty: number) {
@@ -159,45 +175,95 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
     const ratio = newQty / oldQty
     const updated = { quantity_g: newQty, calories: Math.round((log.calories || 0) * ratio), protein: Math.round((log.protein || 0) * ratio * 10) / 10, carbs: Math.round((log.carbs || 0) * ratio * 10) / 10, fat: Math.round((log.fat || 0) * ratio * 10) / 10 }
     await supabase.from('daily_food_logs').update(updated).eq('id', id)
-    setDailyLogs(prev => prev.map(l => l.id === id ? { ...l, ...updated } : l))
-    setEditingFoodId(null)
+    await refreshNutrition()
+  }
+
+  async function loadSavedMeals(targetMealType: string) {
+    setUseSavedMealTarget(targetMealType)
+    setShowSavedMeals(true)
+    setSavedMealsState('loading')
+    const { data, error } = await supabase
+      .from('saved_meals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    const meals = Array.isArray(data) ? data : []
+    const nextState = resolveSavedMealsLoadState(error, meals)
+    setSavedMeals(nextState === 'error' ? [] : meals)
+    setSavedMealsState(nextState)
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setAnalyzingPhoto(true)
+    setPhotoError(null)
     const reader = new FileReader()
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1]
       try {
         const res = await fetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) })
-        const data = await res.json()
+        if (!res.ok) throw new Error('PHOTO_ANALYSIS_FAILED')
+        const data = await res.json() as PhotoAnalysisResult
+        if (!Array.isArray(data.foods)) throw new Error('PHOTO_ANALYSIS_INVALID')
         setPhotoResults(data)
-      } catch { setPhotoResults(null) }
+      } catch {
+        setPhotoResults(null)
+        setPhotoError(nt('chrome.photoError'))
+      }
       finally { setAnalyzingPhoto(false) }
     }
+    reader.onerror = () => {
+      setAnalyzingPhoto(false)
+      setPhotoError(nt('chrome.photoError'))
+    }
     reader.readAsDataURL(file)
+  }
+
+  function updatePhotoFoodQuantity(index: number, quantity: number) {
+    if (!Number.isFinite(quantity) || quantity <= 0) return
+    setPhotoResults(current => {
+      if (!current) return current
+      const foods = current.foods.map((food, foodIndex) => {
+        if (foodIndex !== index) return food
+        const previousQuantity = Math.max(food.quantity_g || 100, 1)
+        const ratio = quantity / previousQuantity
+        return {
+          ...food,
+          quantity_g: quantity,
+          calories: Math.round((food.calories || 0) * ratio),
+          proteins: Math.round((food.proteins || 0) * ratio * 10) / 10,
+          carbs: Math.round((food.carbs || 0) * ratio * 10) / 10,
+          fats: Math.round((food.fats || 0) * ratio * 10) / 10,
+        }
+      })
+      return { ...current, foods }
+    })
   }
 
   async function addPhotoFoods() {
     if (!photoResults?.foods) return
     for (const food of photoResults.foods) {
-      await supabase.from('daily_food_logs').insert({
+      const { error } = await supabase.from('daily_food_logs').insert({
         user_id: userId, date: today, meal_type: photoMealTarget,
         custom_name: food.name, quantity_g: food.quantity_g || 100,
         calories: food.calories || 0, protein: food.proteins || 0, carbs: food.carbs || 0, fat: food.fats || 0,
       })
+      if (error) {
+        setPhotoError(nt('chrome.photoSaveError'))
+        return
+      }
     }
     setShowPhotoCapture(false)
     setPhotoResults(null)
-    fetchDailyLogs()
+    await refreshNutrition()
   }
 
   async function clearMeal(mealType: string) {
-    const toDelete = dailyLogs.filter(l => l.meal_type === mealType)
+    const normalizedTarget = normalizeNutritionMealType(mealType)
+    const toDelete = dailyLogs.filter(l => normalizeNutritionMealType(l.meal_type) === normalizedTarget)
     for (const l of toDelete) await supabase.from('daily_food_logs').delete().eq('id', l.id)
-    setDailyLogs(prev => prev.filter(l => l.meal_type !== mealType))
+    await refreshNutrition()
   }
 
   async function applySavedMeal(meal: any, targetMealType: string) {
@@ -209,8 +275,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         carbs: food.carbs || 0, fat: food.fats || food.fat || 0,
       })
     }
-    await supabase.from('saved_meals').update({ use_count: (meal.use_count || 0) + 1 }).eq('id', meal.id)
-    fetchDailyLogs()
+    await refreshNutrition()
   }
 
   async function copyMealToDate(foods: any[], targetDate: string, targetMealType: string) {
@@ -222,408 +287,72 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         carbs: food.carbs || 0, fat: food.fat || food.fats || 0,
       })
     }
+    await refreshNutrition()
   }
 
-  async function importMealFromPlan(mealType: MealKey) {
-    if (nutritionDay !== todayKey) return
-    const todayPlan = getTodayPlanData()
-    if (!todayPlan) return
-    const foods = getMealByKey(todayPlan.day, mealType)
+  async function importMealFromPlan(mealType: MealKey, dayKey: Day) {
+    const planDay = getPlanDayData(dayKey)
+    if (!planDay || dayKey !== todayKey) return
+    const foods = getMealByKey(planDay.day, mealType)
     if (!foods.length) return
-    setImportingMeal(null)
+    setMealActionError(null)
     const inserts = foods.map(f => ({
       user_id: userId, date: today, meal_type: mealType,
       custom_name: f.name || 'Aliment', quantity_g: f.qty || 100,
       calories: f.kcal, protein: f.prot, carbs: f.carb, fat: f.fat,
     }))
-    await supabase.from('daily_food_logs').insert(inserts)
-    fetchDailyLogs()
-  }
-
-  function getDailyLogsMacros() {
-    const r = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const l of dailyLogs) { r.kcal += l.calories || 0; r.protein += l.protein || 0; r.carbs += l.carbs || 0; r.fat += l.fat || 0 }
-    return r
-  }
-
-  function getMealRecommendation(mealType: MealKey) {
-    const todayPlan = getTodayPlanData()
-    if (!todayPlan) return null
-    const foods = getMealByKey(todayPlan.day, mealType)
-    if (!foods.length) return null
-    return foods.reduce(
-      (acc, f) => ({ kcal: acc.kcal + f.kcal, protein: acc.protein + f.prot, carbs: acc.carbs + f.carb, fat: acc.fat + f.fat }),
-      { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    )
-  }
-
-  function getMealConsumed(mealType: string) {
-    const logs = dailyLogs.filter(l => l.meal_type === mealType)
-    return logs.reduce((acc, l) => ({ kcal: acc.kcal + (l.calories || 0), protein: acc.protein + (l.protein || 0), carbs: acc.carbs + (l.carbs || 0), fat: acc.fat + (l.fat || 0) }), { kcal: 0, protein: 0, carbs: 0, fat: 0 })
-  }
-
-  async function fetchActiveMealPlan() {
-    setLoadingPlan(true)
-    const { data } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    setActiveMealPlan(data)
-    if (data && !coachMealPlan) setSubTab('today')
-    setLoadingPlan(false)
-  }
-
-  async function fetchTodayTracking() {
-    const { data } = await supabase
-      .from('meal_tracking')
-      .select('meal_type')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .eq('is_completed', true)
-      .limit(50)
-    if (data) {
-      setCompletedMeals(new Set(data.map((r: any) => r.meal_type)))
+    const { error } = await supabase.from('daily_food_logs').insert(inserts)
+    if (error) {
+      setMealActionError(nt('v2.todayMeals.importError'))
+      return
     }
+    setImportingMeal(null)
+    await refreshNutrition()
   }
 
-
-
-  async function toggleMeal(mealType: string, planId: string | null) {
-    const isCompleted = !completedMeals.has(mealType)
-    const next = new Set(completedMeals)
-    if (isCompleted) next.add(mealType); else next.delete(mealType)
-    setCompletedMeals(next)
-
-    await supabase.from('meal_tracking').upsert({
-      user_id: userId,
-      meal_plan_id: planId,
-      date: today,
-      meal_type: mealType,
-      is_completed: isCompleted,
-      completed_at: isCompleted ? new Date().toISOString() : null,
-    }, { onConflict: 'user_id,date,meal_type' })
-  }
-
-  // Get today's plan data normalized to canonical DayPlan format.
-  // Prefers activeMealPlan (AI), falls back to coachMealPlan.
-  function getTodayPlanData(): { day: DayPlan; planId: string | null } | null {
-    const dayKey = todayNutritionKey().toLowerCase() as Day
-    if (activeMealPlan?.plan_data) {
-      const parsed = parseMealPlan(activeMealPlan.plan_data)
-      const day = parsed[dayKey]
-      if (day) return { day, planId: activeMealPlan.id }
-    }
-    if (coachMealPlan) {
-      const parsed = parseMealPlan(coachMealPlan)
-      const day = parsed[dayKey]
-      if (day) return { day, planId: coachMealPlan.id ?? null }
-    }
+  // Get plan data normalized to the canonical DayPlan format.
+  // Plan authority is resolved by the unified Nutrition model.
+  function getPlanDayData(dayKey: Day): { day: DayPlan; planId: string | null } | null {
+    const plan = nutritionModel.activePlan.plan
+    if (!plan) return null
+    const day = parseMealPlan(plan)[dayKey]
+    if (day) return { day, planId: nutritionModel.activePlan.id }
     return null
   }
 
-  // Calculate consumed macros from completed meals (canonical DayPlan)
-  function getConsumedMacros(day: DayPlan): { kcal: number; protein: number; carbs: number; fat: number } {
-    const result = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-    for (const key of MEAL_KEYS) {
-      if (!completedMeals.has(key)) continue
-      const foods = getMealByKey(day, key)
-      for (const f of foods) {
-        result.kcal += f.kcal
-        result.protein += f.prot
-        result.carbs += f.carb
-        result.fat += f.fat
-      }
+  const nutritionManaged = nutritionModel.coachRelation.status === 'active' && !capabilities.nutrition
+
+  function chooseMealContext(mealType: MealKey) {
+    const action = pendingMealAction
+    setPendingMealAction(null)
+    if (action === 'food') {
+      setShowFoodSearch(mealType)
+      return
     }
-    return result
-  }
-
-  const isInvited = profile?.subscription_type === 'invited'
-
-  // Waiting screen when no plan exists
-  function renderWaitingScreen() {
-    if (isInvited) {
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🔒</div>
-          <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>{nt('chrome.coachManaged')}</h2>
-          <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
-            Ton coach prépare ton plan nutrition personnalisé. Contacte-le via la messagerie.
-          </p>
-        </div>
-      )
+    if (action === 'photo') {
+      setPhotoMealTarget(mealType)
+      setPhotoError(null)
+      setShowPhotoCapture(true)
     }
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: '3.5rem', marginBottom: 24 }}>🍽️</div>
-        <h2 style={{ ...subtitleStyle, fontSize: '1.3rem', fontWeight: 800, letterSpacing: '2px', color: colors.text, margin: '0 0 10px' }}>{nt('chrome.noPlan')}</h2>
-        <p style={{ ...bodyStyle, fontSize: '0.82rem', margin: '0 0 24px', lineHeight: 1.6, maxWidth: 300 }}>
-          {nt('prefs.configurePrompt')}
-        </p>
-        <button onClick={() => setSubTab('prefs')} style={{ padding: '14px 32px', border: 'none', cursor: 'pointer', background: colors.gold, fontFamily: fonts.body, fontSize: '0.9rem', fontWeight: 800, color: colors.onGold, letterSpacing: '2px', textTransform: 'uppercase',  }}>
-          {nt('prefs.configureCta')}
-        </button>
-      </div>
-    )
   }
 
-  // Generate shopping list from plan_data (client-side, no API)
-  function generateShoppingList(planData: any): { name: string; totalG: number }[] {
-    const map = new Map<string, number>()
-    for (const day of Object.values(planData) as any[]) {
-      if (!day?.repas) continue
-      for (const foods of Object.values(day.repas) as any[]) {
-        if (!Array.isArray(foods)) continue
-        for (const f of foods) {
-          const name = (f.aliment || '').trim()
-          if (!name) continue
-          map.set(name, (map.get(name) || 0) + (f.quantite_g || 0))
-        }
-      }
-    }
-    return Array.from(map.entries())
-      .map(([name, totalG]) => ({ name, totalG }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-  }
-
-  // Render the AI-generated meal plan (from meal_plans table)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function renderAiPlan(plan: any) {
-    if (!plan.plan_data) return null
-    const parsed = parseMealPlan(plan.plan_data)
-    const dayData = parsed[nutritionDay as Day]
-    if (!dayData) {
-      return (
-        <div style={{ padding: 20, textAlign: 'center' }}>
-          <p style={{ ...bodyStyle, fontSize: '0.85rem', marginBottom: 12 }}>{nt('chrome.noPlanForDay', { day: nutritionDay })}</p>
-        </div>
-      )
-    }
-    const totals = dayData.totals ?? computeDayTotals(dayData)
-
-    return (
-      <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
-          {[
-            { label: nt('macros.kcal'), value: String(totals.kcal || plan.total_calories || '—') },
-            { label: nt('macros.protein'), value: `${totals.prot || plan.protein_g || '—'}g` },
-            { label: nt('macros.carbs'), value: `${totals.carb || plan.carbs_g || '—'}g` },
-            { label: nt('macros.fat'), value: `${totals.fat || plan.fat_g || '—'}g` },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-              <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
-              <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: '2px', marginTop: 4 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key }) => {
-            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
-            const isActive = nutritionDay === key
-            const isToday = key === todayKey
-            const dp = parsed[key as Day]
-            const dayKcal = dp ? (dp.totals?.kcal ?? computeDayTotals(dp).kcal) : 0
-            return (
-              <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                background: isActive ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(8px)',
-                border: `1px solid ${isActive ? colors.gold : isToday ? colors.goldRule : 'rgba(255,255,255,0.1)'}`,
-                color: isActive ? colors.gold : isToday ? colors.gold : colors.textDim,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              }}>
-                {label}
-                {dayKcal > 0 && <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        <button onClick={() => setShowShoppingModal(true)} style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-          padding: '12px 16px', borderRadius: 12, cursor: 'pointer', transition: 'all 0.15s',
-          background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)',
-          fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-          color: colors.gold, marginBottom: 12,
-        }}>
-          <ShoppingCart size={16} color={colors.gold} />
-          {nt('chrome.shoppingList')}
-        </button>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {MEAL_KEYS.map(mealKey => {
-            const foodList = getMealByKey(dayData, mealKey)
-            if (foodList.length === 0) return null
-            const mealKcal = foodList.reduce((s, f) => s + f.kcal, 0)
-            return (
-              <div key={mealKey} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {React.createElement(({ petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon } as Record<string, any>)[mealKey] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                  <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase', flex: 1 }}>{MEAL_KEY_TO_TYPE[mealKey]}</span>
-                  <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
-                </div>
-                <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
-                  {[
-                    { l: 'P', v: foodList.reduce((s, f) => s + f.prot, 0), color: colors.gold },
-                    { l: 'G', v: foodList.reduce((s, f) => s + f.carb, 0), color: colors.blue },
-                    { l: 'L', v: foodList.reduce((s, f) => s + f.fat, 0), color: colors.orange },
-                  ].map(({ l, v, color }) => (
-                    <span key={l} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
-                      <span style={{ color }}>{l}</span> {Math.round(v)}g
-                    </span>
-                  ))}
-                </div>
-                <div>
-                  {foodList.map((food, fi) => (
-                    <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
-                        {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </>
-    )
-  }
-
-  // Render the coach meal plan (from client_meal_plans)
-  function renderCoachPlan() {
-    const parsed = parseMealPlan(coachMealPlan)
-    const dayPlanData = parsed[nutritionDay as Day]
-    const dayTotals = dayPlanData ? computeDayTotals(dayPlanData) : { kcal: 0, prot: 0, carb: 0, fat: 0 }
-
-    return (
-      <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
-          {[
-            { label: nt('macros.kcal'), value: String(dayTotals.kcal || coachMealPlan.calorie_target || '—') },
-            { label: nt('macros.protein'), value: dayTotals.prot > 0 ? `${dayTotals.prot}g` : (coachMealPlan.protein_target ? `${coachMealPlan.protein_target}g` : '—') },
-            { label: nt('macros.carbs'), value: dayTotals.carb > 0 ? `${dayTotals.carb}g` : (coachMealPlan.carb_target ? `${coachMealPlan.carb_target}g` : '—') },
-            { label: nt('macros.fat'), value: dayTotals.fat > 0 ? `${dayTotals.fat}g` : (coachMealPlan.fat_target ? `${coachMealPlan.fat_target}g` : '—') },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-              <div style={{ ...statStyle, fontSize: 28, fontWeight: 400, color: colors.gold }}>{value}</div>
-              <div style={{ ...subtitleStyle, fontSize: 11, letterSpacing: '2px', marginTop: 4 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 16, scrollbarWidth: 'none' }}>
-          {NUTRITION_DAYS.map(({ key }) => {
-            const label = new Date(2024, 0, ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(key) + 1).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()
-            const isActive = nutritionDay === key
-            const isToday = key === todayKey
-            const dp = parsed[key as Day]
-            const dayKcal = dp ? computeDayTotals(dp).kcal : 0
-            return (
-              <button key={key} onClick={() => setNutritionDay(key)} style={{
-                flexShrink: 0, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
-                background: isActive ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(8px)',
-                border: `1px solid ${isActive ? colors.gold : isToday ? colors.goldRule : 'rgba(255,255,255,0.1)'}`,
-                color: isActive ? colors.gold : isToday ? colors.gold : colors.textDim,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              }}>
-                {label}
-                {dayKcal > 0 && <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.8 }}>{dayKcal}</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        {(() => {
-          if (!dayPlanData || dayPlanData.meals.length === 0) return (
-            <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-              <UtensilsCrossed size={28} color={colors.textMuted} style={{ marginBottom: 8 }} />
-              <p style={{ ...bodyStyle, fontSize: '0.85rem', margin: 0 }}>{nt('chrome.noMealsForDay')}</p>
-            </div>
-          )
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dayPlanData.meals.map((meal, mi) => {
-                const mealKcal = meal.foods.reduce((s, f) => s + f.kcal, 0)
-                const mealProt = meal.foods.reduce((s, f) => s + f.prot, 0)
-                const mealCarb = meal.foods.reduce((s, f) => s + f.carb, 0)
-                const mealFat = meal.foods.reduce((s, f) => s + f.fat, 0)
-                return (
-                  <div key={mi} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {React.createElement(({ 'Petit-déjeuner': Sun, 'Déjeuner': UtensilsCrossed, 'Collation': Cookie, 'Dîner': Moon } as Record<string, any>)[meal.type] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ ...statSmallStyle, fontWeight: 400, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase', flex: 1 }}>{({'Petit-déjeuner': nt('meals.breakfast'), 'Déjeuner': nt('meals.lunch'), 'Collation': nt('meals.snack'), 'Dîner': nt('meals.dinner')} as Record<string, string>)[meal.type] || meal.type}</span>
-                      <span style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{mealKcal} kcal</span>
-                    </div>
-                    <div style={{ padding: '8px 16px', borderBottom: `1px solid ${colors.goldBorder}`, display: 'flex', gap: 12 }}>
-                      {[
-                        { label: nt('macrosShort.p'), value: `${Math.round(mealProt)}g`, color: colors.gold },
-                        { label: nt('macrosShort.g'), value: `${Math.round(mealCarb)}g`, color: colors.blue },
-                        { label: nt('macrosShort.l'), value: `${Math.round(mealFat)}g`, color: colors.orange },
-                      ].map(({ label, value, color }) => (
-                        <span key={label} style={{ fontFamily: fonts.body, fontSize: '0.72rem', fontWeight: 700, color: colors.textMuted }}>
-                          <span style={{ color }}>{label}</span> {value}
-                        </span>
-                      ))}
-                    </div>
-                    <div>
-                      {meal.foods.map((food, fi) => (
-                        <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderTop: fi > 0 ? `1px solid ${colors.goldBorder}` : 'none' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 400, color: colors.text }}>{food.name}</div>
-                            {food.qty > 0 && <div style={{ fontFamily: fonts.body, fontSize: '0.65rem', color: colors.textMuted, marginTop: 2 }}>{food.qty}g</div>}
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ ...statSmallStyle, fontSize: '0.85rem' }}>{food.kcal} kcal</div>
-                            {(food.prot || food.carb || food.fat) ? (
-                              <div style={{ fontFamily: fonts.body, fontSize: '0.6rem', color: colors.textMuted }}>P{food.prot} G{food.carb} L{food.fat}</div>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })()}
-      </>
-    )
-  }
 
   return (
-    <div style={{ minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
-      {/* PAGE TITLE */}
-      <div style={{ padding: '16px 24px 0' }}>
-        <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-          NUTRITION
-        </div>
-        <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
-          {nt('chrome.calorieGoal', { kcal: profile?.calorie_goal || 2000 })}
-        </div>
-      </div>
+    <NutritionV2
+      model={nutritionModel}
+      selectedDate={selectedDate}
+      onAddMeal={() => {
+        setSubTab('today')
+        setPendingMealAction('food')
+      }}
+      onRetry={() => void refreshNutrition()}
+    >
 
       {/* PILLS NAVIGATION */}
       <div style={{ display: 'flex', gap: 6, padding: '12px 20px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {([
           { id: 'today' as SubTab, label: nt('tabs.journal') },
           { id: 'plan' as SubTab, label: nt('tabs.plan') },
-          ...(!isInvited ? [{ id: 'prefs' as SubTab, label: nt('tabs.prefs') }] : []),
-          ...(!isInvited ? [{ id: 'recipes' as SubTab, label: nt('tabs.recipes') }] : []),
-          { id: 'meals' as SubTab, label: nt('tabs.meals') },
         ]).map(({ id, label }) => {
           const active = subTab === id
           return (
@@ -641,20 +370,6 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         })}
       </div>
 
-      {/* Barcode scanner modal (single scan) */}
-      {showScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType="dejeuner"
-          onProductAdded={() => { setShowScanner(false); fetchDailyLogs() }}
-          onClose={() => setShowScanner(false)} />
-      )}
-
-      {/* Fridge scanner (continuous mode) */}
-      {showFridgeScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} continuousMode
-          onProductAdded={() => { setShowFridgeScanner(false); fetchAll() }}
-          onClose={() => setShowFridgeScanner(false)} />
-      )}
-
       {/* Food search modal */}
       {showFoodSearch && (
         <FoodSearch
@@ -662,50 +377,32 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           userId={userId}
           defaultMealType={showFoodSearch}
           dateOverride={selectedDate}
-          onAdded={async (insertedLog?: any) => {
+          onAdded={async () => {
             if (swappingFoodId) { await supabase.from('daily_food_logs').delete().eq('id', swappingFoodId); setSwappingFoodId(null) }
-            // Optimistic update — inject into state immediately (never null thanks to fallback)
-            if (insertedLog) { setDailyLogs(prev => [...prev, insertedLog]) }
-            setDaysWithMeals(prev => new Set([...prev, selectedDate]))
             setShowFoodSearch(null)
-            // Delayed refetch — wait for read replica sync before overwriting optimistic state
-            setTimeout(() => { fetchDailyLogs() }, 2000)
+            await refreshNutrition()
           }}
           onClose={() => { setShowFoodSearch(null); setSwappingFoodId(null) }}
         />
       )}
 
-      {/* MON PLAN TAB — daily logs as source of truth */}
-      {subTab === 'today' && (() => {
-        const isViewingPast = selectedDate < today
-        const consumed = getDailyLogsMacros()
-        const targetKcal = profile?.calorie_goal || 2000
-        const targetP = profile?.protein_goal || 140
-        const targetG = profile?.carbs_goal || 200
-        const targetL = profile?.fat_goal || 60
-        const remaining = Math.max(0, targetKcal - consumed.kcal)
-        const pctKcal = Math.min(100, Math.round((consumed.kcal / targetKcal) * 100))
+      {pendingMealAction && <MealContextChooser
+        onClose={() => setPendingMealAction(null)}
+        onSelect={chooseMealContext}
+      />}
 
-        const ringSize = 180
-        const ringStroke = 12
-        const ringRadius = (ringSize - ringStroke) / 2
-        const ringCircum = 2 * Math.PI * ringRadius
-        const ringOffset = ringCircum - (pctKcal / 100) * ringCircum
+      {/* MON PLAN TAB — daily logs as source of truth */}
+      {subTab === 'today' && ((): React.ReactNode => {
+        const isViewingPast = selectedDate < today
         const waterGoal = profile?.water_goal || 3000
         const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
-        const waterStroke = 10
-        const waterRadius = ringRadius - ringStroke - 5
-        const waterCircum = 2 * Math.PI * waterRadius
-        const waterOffset = waterCircum - (pctWater / 100) * waterCircum
         const canAddWater = selectedDate === today
-        const MEAL_ICONS: Record<string, React.ComponentType<any>> = { petit_dejeuner: Sun, dejeuner: UtensilsCrossed, collation: Cookie, diner: Moon }
-        const glassBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+        const glassBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
-          <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-            <style>{`@keyframes nutWaterPulse { 0%, 100% { filter: drop-shadow(0 0 4px rgba(111,183,232,0.4)); } 50% { filter: drop-shadow(0 0 9px rgba(111,183,232,0.85)); } }`}</style>
+          <div style={{ padding: '0 4px' }}>
             {/* ═══ CALENDAR STRIP ═══ */}
-            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 14, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -742,225 +439,106 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
-            {/* Ring */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-              <div style={{ position: 'relative' }}>
-                <svg width={ringSize} height={ringSize} style={{ transform: 'rotate(-90deg)' }}>
-                  <defs>
-                    <linearGradient id="nutRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#E8C97A" />
-                      <stop offset="100%" stopColor="#D4A843" />
-                    </linearGradient>
-                    <linearGradient id="nutWaterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#6FB7E8" />
-                      <stop offset="100%" stopColor="#3D7EA6" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={ringStroke} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={ringRadius} fill="none" stroke="url(#nutRingGrad)" strokeWidth={ringStroke} strokeLinecap="butt" strokeDasharray={ringCircum} strokeDashoffset={ringOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', filter: `drop-shadow(0 0 8px ${colors.goldRule})` }} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke={colors.surfaceHigh} strokeWidth={waterStroke} />
-                  <circle cx={ringSize/2} cy={ringSize/2} r={waterRadius} fill="none" stroke="url(#nutWaterGrad)" strokeWidth={waterStroke} strokeLinecap="butt" strokeDasharray={waterCircum} strokeDashoffset={waterOffset} style={{ transition: 'stroke-dashoffset 0.8s ease', animation: 'nutWaterPulse 2.5s ease-in-out infinite' }} />
-                </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ ...statStyle, fontSize: 40, color: colors.gold, lineHeight: 1 }}>{consumed.kcal}</span>
-                  <span style={{ ...mutedStyle, fontSize: 11 }}>/ {targetKcal} kcal</span>
-                  <span style={{ ...mutedStyle, fontSize: 10, marginTop: 2 }}>{nt('chrome.remaining', { count: remaining })}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
-                <Droplets size={15} color="#6FB7E8" />
-                <span style={{ fontFamily: fonts.headline, fontSize: 15, color: '#6FB7E8' }}>
-                  {(waterToday/1000).toFixed(1)}L <span style={{ ...mutedStyle, fontSize: 11 }}>/ {(waterGoal/1000).toFixed(1)}L · {pctWater}%</span>
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater250')}</button>
-                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(111,183,232,0.12)', backdropFilter: 'blur(8px)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4, transition: 'all 0.15s' }}>{nt('chrome.addWater500')}</button>
-              </div>
-            </div>
-
-            {/* Macros bar */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-              {[
-                { label: nt('macrosLong.prot'), current: consumed.protein, target: targetP, color: colors.gold, icon: Beef },
-                { label: nt('macrosLong.gluc'), current: consumed.carbs, target: targetG, color: colors.blue, icon: Wheat },
-                { label: nt('macrosLong.lip'), current: consumed.fat, target: targetL, color: colors.orange, icon: Droplet },
-              ].map(({ label, current, target, color, icon: Icon }) => {
-                const pct = Math.min(100, Math.round((current / target) * 100))
-                return (
-                  <div key={label} style={{ textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
-                      <Icon size={12} color={color} />
-                      <span style={{ ...subtitleStyle, fontSize: 10, letterSpacing: '0.1em' }}>{label}</span>
-                    </div>
-                    <div style={{ ...statSmallStyle, color }}>{Math.round(current)}<span style={{ fontSize: 12, color: colors.textMuted }}>/{target}g</span></div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, overflow: 'hidden', marginTop: 4 }}>
-                      <div style={{ height: '100%', background: color, width: `${pct}%`, borderRadius: 12, transition: 'width 300ms' }} />
-                    </div>
-                  </div>
-                )
+            <TodayMeals
+              model={nutritionModel}
+              selectedDate={selectedDate}
+              actionError={mealActionError}
+              onRetry={() => void refreshNutrition()}
+              onChooseMeal={() => setPendingMealAction('food')}
+              onAddFood={mealType => setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])}
+              onImportPlan={mealType => setImportingMeal({
+                mealType: NUTRITION_MEAL_TO_KEY[mealType],
+                dayKey: getNutritionDayKey(selectedDate) as Day,
               })}
+              onPhoto={mealType => {
+                setPhotoMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
+                setPhotoError(null)
+                setShowPhotoCapture(true)
+              }}
+              onSavedMeals={mealType => {
+                void loadSavedMeals(NUTRITION_MEAL_TO_KEY[mealType])
+              }}
+              onSaveMeal={meal => {
+                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                setSaveMealData({ mealType, foods: meal.logged.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) })
+                setSaveMealName('')
+                setSaveMealType(mealType)
+                setShowSaveMealPopup(true)
+              }}
+              onCopyMeal={meal => {
+                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                setCopyMealData({ mealType, foods: meal.logged })
+                setCopyTargetDate('')
+                setCopyTargetMealType(mealType)
+                setShowCopyMealPopup(true)
+              }}
+              onClearMeal={mealType => void clearMeal(NUTRITION_MEAL_TO_KEY[mealType])}
+              onReplaceFood={(mealType, logId) => {
+                setSwappingFoodId(logId)
+                setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])
+              }}
+              onDeleteFood={logId => void deleteDailyLog(logId)}
+              onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
+            />
+            {/* Hydration remains a separate legacy module during the progressive migration. */}
+            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'grid', width: 38, height: 38, placeItems: 'center', borderRadius: 12, background: 'rgba(111,183,232,0.12)' }}>
+                  <Droplets size={18} color="#6FB7E8" aria-hidden="true" />
+                </div>
+                <div>
+                  <span style={{ ...subtitleStyle, display: 'block', fontSize: 10, letterSpacing: '0.12em' }}>{nt('chrome.hydration')}</span>
+                  <strong style={{ fontFamily: fonts.headline, fontSize: 17, color: '#6FB7E8', fontWeight: 500 }}>
+                    {(waterToday / 1000).toFixed(1)}L <span style={{ ...mutedStyle, fontSize: 11 }}>/ {(waterGoal / 1000).toFixed(1)}L · {pctWater}%</span>
+                  </strong>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flex: '1 1 170px', maxWidth: 240 }}>
+                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater250')}</button>
+                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater500')}</button>
+              </div>
             </div>
 
-            {/* Meal sections — start empty, import IA optional */}
-            {MEAL_ORDER.map(mealType => {
-              const rec = getMealRecommendation(mealType)
-              const con = getMealConsumed(mealType)
-              const logs = dailyLogs.filter(l => l.meal_type === mealType)
-              const hasPlanFoods = !!rec
+            <NutritionTools
+              photoEnabled={capabilities.ai}
+              recipesEnabled={capabilities.nutrition}
+              onAddFood={() => setPendingMealAction('food')}
+              onPhoto={() => setPendingMealAction('photo')}
+              onSavedMeals={() => setSubTab('meals')}
+              onRecipes={() => setSubTab('recipes')}
+            />
 
-              return (
-                <div key={mealType} style={{ ...cardStyle, marginBottom: 12, overflow: 'hidden' }}>
-                  {/* Meal header */}
-                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      {React.createElement(MEAL_ICONS[mealType] || UtensilsCrossed, { size: 18, color: colors.gold })}
-                      <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: colors.text }}>{MEAL_LABELS[mealType]}</span>
-                      <span style={{ ...T, marginLeft: 'auto' }}>{con.kcal} kcal</span>
-                      {logs.length > 0 && (
-                        <div style={{ position: 'relative' }}>
-                          <button onClick={() => setMealMenuOpen(mealMenuOpen === mealType ? null : mealType)} style={{ background: 'none', border: 'none', color: colors.textMuted, fontSize: 18, cursor: 'pointer', padding: '4px 8px' }}>⋯</button>
-                          {mealMenuOpen === mealType && (
-                            <div style={{ position: 'absolute', top: 36, right: 0, background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 6, zIndex: 50, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                              <button onClick={() => { setMealMenuOpen(null); setSaveMealData({ mealType, foods: logs.map((l: any) => ({ name: l.custom_name || l.food_name, quantity: l.quantity_g, calories: l.calories, proteins: l.protein, carbs: l.carbs, fats: l.fat })) }); setSaveMealName(''); setSaveMealType(mealType); setShowSaveMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Save size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.saveMeal')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); setCopyMealData({ mealType, foods: logs }); setCopyTargetDate(''); setCopyTargetMealType(mealType); setShowCopyMealPopup(true) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Copy size={14} color={colors.textMuted} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.text }}>{nt('mealMenu.copyToDay')}</span></button>
-                              <button onClick={() => { setMealMenuOpen(null); clearMeal(mealType) }} style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}><Trash2 size={14} color={colors.error} /><span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.error }}>{nt('mealMenu.clearMeal')}</span></button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {rec && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, fontStyle: 'italic' }}>
-                        {nt('chrome.recommended', { kcal: rec.kcal, p: Math.round(rec.protein), c: Math.round(rec.carbs), f: Math.round(rec.fat) })}
-                      </div>
-                    )}
-                    {logs.length > 0 && (
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: con.kcal > (rec?.kcal || 9999) ? colors.error : colors.gold, marginTop: 2 }}>
-                        Consommé : {con.kcal} kcal · P:{Math.round(con.protein)}g · G:{Math.round(con.carbs)}g · L:{Math.round(con.fat)}g
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Daily food logs for this meal */}
-                  <div style={{ padding: '0 16px' }}>
-                    {logs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${colors.goldBorder}` }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{log.custom_name || log.food_name || 'Aliment'}</div>
-                          {editingFoodId === log.id ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                              <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') updateFoodQuantity(log.id, parseFloat(editQty)); if (e.key === 'Escape') setEditingFoodId(null) }} style={{ width: 60, padding: '4px 8px', background: colors.background, border: `1px solid ${colors.gold}`, borderRadius: 6, color: colors.text, fontFamily: fonts.headline, fontSize: 16, textAlign: 'center', outline: 'none' }} />
-                              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted }}>g</span>
-                              <button onClick={() => updateFoodQuantity(log.id, parseFloat(editQty))} style={{ background: colors.gold, border: 'none', borderRadius: 6, color: colors.onGold, padding: '4px 10px', fontFamily: fonts.body, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>OK</button>
-                              <button onClick={() => setEditingFoodId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><X size={14} color={colors.textMuted} /></button>
-                            </div>
-                          ) : (
-                            <div onClick={() => { setEditingFoodId(log.id); setEditQty(String(log.quantity_g || 100)) }} style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span>{log.quantity_g}g</span>
-                              <Pencil size={10} color={colors.textDim} />
-                              <span style={{ fontSize: 10, color: colors.textDim }}>· P:{Math.round(log.protein || 0)}g G:{Math.round(log.carbs || 0)}g L:{Math.round(log.fat || 0)}g</span>
-                            </div>
-                          )}
-                        </div>
-                        <span style={{ ...T, flexShrink: 0 }}>{Math.round(log.calories)}</span>
-                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setSwappingFoodId(log.id); setShowFoodSearch(mealType) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.replace')}><RefreshCw size={14} color={colors.textMuted} /></button>
-                          <button onClick={() => deleteDailyLog(log.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }} title={nt('mealMenu.delete')}><Trash2 size={14} color={colors.textMuted} /></button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {logs.length === 0 && (
-                      <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                        <span style={mutedStyle}>{nt('chrome.noFoodAdded')}</span>
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: 8, padding: '8px 0 12px', flexWrap: 'wrap' }}>
-                      {hasPlanFoods && logs.length === 0 && (() => {
-                        const isViewingToday = nutritionDay === todayKey
-                        return (
-                          <button
-                            onClick={() => isViewingToday && setImportingMeal(mealType)}
-                            disabled={!isViewingToday}
-                            title={!isViewingToday ? 'Disponible uniquement pour aujourd\'hui' : undefined}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: isViewingToday ? 'pointer' : 'not-allowed', opacity: isViewingToday ? 1 : 0.4, transition: 'all 0.15s' }}
-                          >
-                            <Download size={14} /> {isInvited ? nt('actions.import') : nt('actions.importAI')}
-                          </button>
-                        )
-                      })()}
-                      <button onClick={() => setShowFoodSearch(mealType)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all 0.15s' }}>
-                        <Plus size={14} strokeWidth={2.5} /> {nt('chrome.add')}
-                      </button>
-                      <button onClick={() => { setPhotoMealTarget(mealType); setShowPhotoCapture(true) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><Camera size={14} /></button>
-                      <button onClick={() => { setUseSavedMealTarget(mealType); setShowSavedMeals(true); supabase.from('saved_meals').select('*').eq('user_id', userId).order('use_count', { ascending: false }).then(({ data }: any) => setSavedMeals(data || [])) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: 'none', color: colors.gold, cursor: 'pointer', transition: 'all 0.15s' }}><FolderOpen size={14} /></button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-
-            {/* Import confirmation modal */}
-            {importingMeal && (() => {
-              const todayPlan = getTodayPlanData()
-              const foods = todayPlan ? getMealByKey(todayPlan.day, importingMeal) : []
-              return (
-                <ImportPlanSheet mealLabel={MEAL_LABELS[importingMeal]} foods={foods} isInvited={isInvited} onImport={() => importMealFromPlan(importingMeal)} onClose={() => setImportingMeal(null)} />
-              )
-            })()}
-
-            {/* Shopping button */}
-            {(activeMealPlan?.plan_data || coachMealPlan) && (
-              <button onClick={() => setShowShoppingModal(true)} style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '12px', border: `1px solid ${colors.goldRule}`, background: colors.goldDim, cursor: 'pointer',
-                fontFamily: fonts.body, fontSize: 12, color: colors.gold, marginBottom: 20,
-              }}>
-                <ShoppingCart size={14} /> {nt('chrome.shoppingList')}
-              </button>
-            )}
           </div>
         )
       })()}
 
-      {/* Plan sub-tab (kept for backward compatibility) */}
-      {subTab === 'plan' && loadingPlan && !coachMealPlan && (
-        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
-            {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 16 }} />)}
-          </div>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 16 }} />)}
-        </div>
-      )}
+      {/* The legacy Plan tab now delegates to the single V2 plan representation. */}
+      {subTab === 'plan' && <ActiveNutritionPlan
+        key={`${nutritionModel.activePlan.id ?? 'none'}-${nutritionModel.activePlan.state}-${nutritionModel.activePlan.updatedAt ?? 'none'}`}
+        activePlan={nutritionModel.activePlan}
+        todayKey={todayKey}
+        onImportMeal={(mealType, dayKey) => setImportingMeal({ mealType, dayKey })}
+        onOpenShoppingList={() => setShowShoppingModal(true)}
+        onConfigurePlan={capabilities.nutrition ? onOpenProgramSettings : undefined}
+        onRetry={() => void refreshNutrition()}
+      />}
 
-      {subTab === 'plan' && !loadingPlan && !coachMealPlan && !activeMealPlan && renderWaitingScreen()}
-
-      {/* Show AI meal plan from meal_plans table (priority) */}
-      {subTab === 'plan' && activeMealPlan && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderAiPlan(activeMealPlan)}</div>
-      )}
-
-      {/* Show old-style coach meal plan if no AI plan */}
-      {subTab === 'plan' && !activeMealPlan && coachMealPlan && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>{renderCoachPlan()}</div>
-      )}
-
-      {/* Preferences sub-tab */}
-      {subTab === 'prefs' && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <AiQuotaBadge />
-          <SectionTitle noPadding title={nt('chrome.prefsTitle')} icon={<SlidersHorizontal size={16} />} />
-          <NutritionPreferences profile={profile} supabase={supabase} userId={userId} onSaved={fetchAll} onPlanRegenerated={() => { fetchActiveMealPlan(); setSubTab('today') }} />
-        </div>
-      )}
+      {importingMeal && (() => {
+        const planDay = getPlanDayData(importingMeal.dayKey)
+        const foods = planDay ? getMealByKey(planDay.day, importingMeal.mealType) : []
+        return <ImportPlanSheet
+          mealLabel={MEAL_LABELS[importingMeal.mealType]}
+          foods={foods}
+          isCoachManaged={nutritionManaged}
+          onImport={() => void importMealFromPlan(importingMeal.mealType, importingMeal.dayKey)}
+          onClose={() => setImportingMeal(null)}
+        />
+      })()}
 
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <RecipesSection supabase={supabase} userId={userId} profile={profile} />
+          <RecipesSection supabase={supabase} userId={userId} profile={profile} aiAllowed={capabilities.ai} />
         </div>
       )}
 
@@ -969,6 +547,7 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
           <SectionTitle noPadding title={nt('chrome.myMeals')} />
           <div style={{ ...cardStyle, padding: 16 }}>
+            {myMealsError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 12px' }}>{myMealsError}</p>}
             {/* Search */}
             <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
             {/* Filter pills */}
@@ -1105,10 +684,10 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               setEditMealSaving(true)
               const foods = editingMeal.foods || []
               const totals = {
-                total_calories: foods.reduce((s: number, f: any) => s + (f.calories || 0), 0),
-                total_proteins: foods.reduce((s: number, f: any) => s + (f.protein || f.proteins || 0), 0),
-                total_carbs: foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0),
-                total_fats: foods.reduce((s: number, f: any) => s + (f.fat || f.fats || 0), 0),
+                total_calories: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.calories) || 0), 0),
+                total_protein: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.protein ?? f.proteins) || 0), 0),
+                total_carbs: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.carbs) || 0), 0),
+                total_fat: foods.reduce((s: number, f: Record<string, unknown>) => s + (Number(f.fat ?? f.fats) || 0), 0),
               }
               await supabase.from('saved_meals').update({ foods, ...totals }).eq('id', editingMeal.id)
               setMyMeals(prev => prev.map(m => m.id === editingMeal.id ? { ...m, foods, ...totals } : m))
@@ -1131,9 +710,9 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       </RailOverlay>)}
 
       {/* Shopping list modal */}
-      {showShoppingModal && (activeMealPlan?.plan_data || coachMealPlan) && (
+      {showShoppingModal && nutritionModel.activePlan.plan && (
         <ShoppingList
-          planData={activeMealPlan?.plan_data || coachMealPlan}
+          planData={nutritionModel.activePlan.plan}
           onClose={() => setShowShoppingModal(false)}
         />
       )}
@@ -1141,10 +720,13 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
       {/* ═══ PHOTO MEAL SCAN ═══ */}
       {showPhotoCapture && (<RailOverlay>
         <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
+          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null) }} />
+            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} />
             <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+              <AiQuotaBadge />
+              <p style={{ ...mutedStyle, margin: '0 0 14px', lineHeight: 1.5 }}>{nt('chrome.photoEstimate')}</p>
+              {photoError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 14px' }}>{photoError}</p>}
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
                 <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -1162,24 +744,36 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
               {photoResults?.foods && (
                 <>
                   <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 3, marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
-                  {photoResults.foods.map((f: any, i: number) => (
+                  {photoResults.foods.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
                       <div>
                         <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{f.name}</div>
-                        <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>{f.quantity_g}g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                          <span>{nt('chrome.quantityEstimate')}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={f.quantity_g}
+                            aria-label={`${nt('chrome.quantityEstimate')} ${f.name}`}
+                            onChange={event => updatePhotoFoodQuantity(i, Number(event.target.value))}
+                            style={{ width: 68, minHeight: 44, padding: '6px 8px', borderRadius: 8, border: `1px solid ${colors.goldBorder}`, background: colors.background, color: colors.text }}
+                          />
+                          <span>g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</span>
+                        </label>
                       </div>
                       <span style={{ ...statSmallStyle, fontSize: 16 }}>{f.calories}</span>
                     </div>
                   ))}
                   <div style={{ background: colors.goldDim, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
-                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.total_calories} KCAL</span>
+                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.foods.reduce((total, food) => total + (food.calories || 0), 0)} KCAL</span>
                   </div>
                 </>
               )}
             </div>
             {photoResults?.foods && (
               <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => setPhotoResults(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
+                <button onClick={() => { setPhotoResults(null); setPhotoError(null) }} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
                 <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: colors.onGold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
               </div>
             )}
@@ -1209,7 +803,17 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowSaveMealPopup(false)} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.cancel')}</button>
               <button disabled={!saveMealName.trim()} onClick={async () => {
-                await supabase.from('saved_meals').insert({ user_id: userId, name: saveMealName, meal_type: saveMealType, foods: saveMealData.foods, total_calories: saveMealData.foods.reduce((s: number, f: any) => s + (f.calories || 0), 0), total_proteins: saveMealData.foods.reduce((s: number, f: any) => s + (f.proteins || 0), 0), total_carbs: saveMealData.foods.reduce((s: number, f: any) => s + (f.carbs || 0), 0), total_fats: saveMealData.foods.reduce((s: number, f: any) => s + (f.fats || 0), 0) })
+                const foods = Array.isArray(saveMealData?.foods) ? saveMealData.foods as Record<string, unknown>[] : []
+                await supabase.from('saved_meals').insert({
+                  user_id: userId,
+                  name: saveMealName,
+                  meal_type: saveMealType,
+                  foods,
+                  total_calories: foods.reduce((sum, food) => sum + (Number(food.calories) || 0), 0),
+                  total_protein: foods.reduce((sum, food) => sum + (Number(food.proteins ?? food.protein) || 0), 0),
+                  total_carbs: foods.reduce((sum, food) => sum + (Number(food.carbs) || 0), 0),
+                  total_fat: foods.reduce((sum, food) => sum + (Number(food.fats ?? food.fat) || 0), 0),
+                })
                 setShowSaveMealPopup(false); setSaveMealName('')
               }} style={{ flex: 1, padding: 14, background: saveMealName.trim() ? `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)` : colors.surfaceHigh, border: 'none', borderRadius: 12, color: saveMealName.trim() ? colors.onGold : colors.textDim, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('saveMealPopup.save')}</button>
             </div>
@@ -1253,21 +857,28 @@ export default function NutritionTab({ coachMealPlan, todayKey, setModal, profil
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
             <ModalHeader title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)} />
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
-              {savedMeals.length === 0 ? (
+              {savedMealsState === 'loading' ? (
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.loading')}</div>
+              ) : savedMealsState === 'error' ? (
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>
+                  <p style={{ margin: '0 0 14px' }}>{nt('savedMeals.error')}</p>
+                  <button type="button" onClick={() => void loadSavedMeals(useSavedMealTarget)} style={{ minHeight: 44, padding: '8px 16px', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: 'transparent', color: colors.gold, cursor: 'pointer' }}>{nt('savedMeals.retry')}</button>
+                </div>
+              ) : savedMealsState === 'empty' ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
-              ) : savedMeals.map((meal: any) => (
+              ) : savedMealsState === 'ready' ? savedMeals.map((meal: any) => (
                 <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div>
                     <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}{meal.use_count > 0 && ` · ${nt('savedMeals.usedCount', { count: meal.use_count })}`}</div>
+                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}</div>
                   </div>
                   <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
                 </button>
-              ))}
+              )) : null}
             </div>
           </div>
         </>
       </RailOverlay>)}
-    </div>
+    </NutritionV2>
   )
 }

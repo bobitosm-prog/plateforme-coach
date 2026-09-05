@@ -46,6 +46,9 @@ export default function AccountSection({
           {(() => {
             const st = profile?.subscription_status
             const subType = profile?.subscription_type
+            const hasHistoricalCoachAccess = (
+              st === 'invited' || subType === 'invited'
+            )
             const hasEndDate = !!profile?.subscription_end_date
             const days = hasEndDate ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / 86400000)) : 0
             const endDate = hasEndDate ? new Date(profile.subscription_end_date).toLocaleDateString(locale) : ''
@@ -57,10 +60,10 @@ export default function AccountSection({
               </div>
             )
 
-            if (st === 'invited' || subType === 'invited') return (
+            if (hasHistoricalCoachAccess) return (
               <div>
-                <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.coachAccess')}</span>
-                <p style={{ fontSize: 12, color: colors.text, margin: 0 }}>{t('subscription.coachAccessDesc')}</p>
+                <span style={{ display: 'inline-block', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 999, padding: '4px 12px', marginBottom: 10 }}>{t('subscription.legacyAccess')}</span>
+                <p style={{ fontSize: 12, color: colors.text, margin: 0 }}>{t('subscription.legacyAccessDesc')}</p>
               </div>
             )
 

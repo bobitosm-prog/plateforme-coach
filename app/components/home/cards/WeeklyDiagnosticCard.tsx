@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { motion } from 'framer-motion'
 import { Sparkles, ChevronRight, Loader2 } from 'lucide-react'
 import { colors, fonts, btnPrimary } from '../../../../lib/design-tokens'
@@ -48,6 +48,7 @@ interface WeeklyDiagnosticCardProps {
   onViewDetails: () => void
   onGenerate?: () => void
   generating?: boolean
+  generationError?: boolean
 }
 
 export default function WeeklyDiagnosticCard({
@@ -55,14 +56,14 @@ export default function WeeklyDiagnosticCard({
   onViewDetails,
   onGenerate,
   generating = false,
+  generationError = false,
 }: WeeklyDiagnosticCardProps) {
   const t = useTranslations('home.weekly_diagnostic')
-  const locale = useLocale()
-
   // ─── Empty state ───
   if (!diagnostic) {
     return (
       <motion.div
+        aria-busy={generating}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -75,7 +76,11 @@ export default function WeeklyDiagnosticCard({
         <p style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textDim, margin: '0 0 16px' }}>
           {t('empty_state_subtitle')}
         </p>
+        {generationError && <p role="status" style={{ fontFamily: fonts.body, fontSize: 12, color: '#fca5a5', margin: '0 0 12px' }}>
+          {t('generation_error')}
+        </p>}
         <button
+          type="button"
           onClick={onGenerate}
           disabled={generating}
           style={{
@@ -91,7 +96,7 @@ export default function WeeklyDiagnosticCard({
         >
           {generating ? (
             <>
-              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" />
               {t('generating')} <span style={{ fontSize: 11, opacity: 0.7 }}>{t('generating_time')}</span>
             </>
           ) : (

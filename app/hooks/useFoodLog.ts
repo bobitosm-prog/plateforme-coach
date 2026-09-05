@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { toast } from 'sonner'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getNutritionDayWindow } from '../../lib/nutrition/nutrition-date'
 
 interface UseFoodLogParams {
   supabase: SupabaseClient
@@ -41,12 +42,12 @@ export default function useFoodLog({ supabase, userId, onMutate }: UseFoodLogPar
     if (!selectedFood || !userId) return
     const qty = parseFloat(foodQty) || 100
     const isCustom = searchTab === 'custom'
-    const cals = isCustom ? selectedFood.calories_per_100g : selectedFood.energy_kcal || selectedFood.calories || 0
-    const prot = isCustom ? selectedFood.proteins_per_100g : selectedFood.proteins || 0
-    const carb = isCustom ? selectedFood.carbs_per_100g : selectedFood.carbohydrates || selectedFood.carbs || 0
-    const fat = isCustom ? selectedFood.fats_per_100g : selectedFood.fat || selectedFood.fats || 0
+    const cals = isCustom ? selectedFood.calories : selectedFood.energy_kcal || selectedFood.calories || 0
+    const prot = isCustom ? selectedFood.proteins : selectedFood.proteins || 0
+    const carb = isCustom ? selectedFood.carbs : selectedFood.carbohydrates || selectedFood.carbs || 0
+    const fat = isCustom ? selectedFood.fat : selectedFood.fat || selectedFood.fats || 0
     await supabase.from('daily_food_logs').insert({
-      user_id: userId, meal_type: mealType, date: new Date().toISOString().split('T')[0],
+      user_id: userId, meal_type: mealType, date: getNutritionDayWindow().localDateKey,
       custom_name: `${selectedFood.name}${selectedFood.brand ? ` (${selectedFood.brand})` : ''} ${qty}g`,
       calories: Math.round(cals * qty / 100), protein: Math.round(prot * qty / 100 * 10) / 10,
       carbs: Math.round(carb * qty / 100 * 10) / 10, fat: Math.round(fat * qty / 100 * 10) / 10,
@@ -62,8 +63,8 @@ export default function useFoodLog({ supabase, userId, onMutate }: UseFoodLogPar
     if (!f.name || !f.calories_per_100g || !userId) return
     await supabase.from('custom_foods').insert({
       user_id: userId, name: f.name, brand: f.brand,
-      calories_per_100g: parseFloat(f.calories_per_100g), proteins_per_100g: parseFloat(f.proteins_per_100g) || 0,
-      carbs_per_100g: parseFloat(f.carbs_per_100g) || 0, fats_per_100g: parseFloat(f.fats_per_100g) || 0,
+      calories: parseFloat(f.calories_per_100g), proteins: parseFloat(f.proteins_per_100g) || 0,
+      carbs: parseFloat(f.carbs_per_100g) || 0, fat: parseFloat(f.fats_per_100g) || 0,
     })
     setCustomFoodForm({ name: '', brand: '', calories_per_100g: '', proteins_per_100g: '', carbs_per_100g: '', fats_per_100g: '' })
     toast.success('Aliment créé !')

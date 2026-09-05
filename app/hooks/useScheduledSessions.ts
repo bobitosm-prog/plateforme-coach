@@ -98,6 +98,14 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     }
   }
 
+  function markDateCompletedLocally(date: string, completedAt: string) {
+    setScheduledSessions(previous => previous.map(item => (
+      item.scheduled_date === date && item.session_type !== 'rest'
+        ? { ...item, completed: true, completed_at: completedAt }
+        : item
+    )))
+  }
+
   async function regenerateWeekSchedule(uid: string, profile: any, program?: any) {
     if (!uid || !profile) return
     const monday = getMonday(new Date())
@@ -168,6 +176,6 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
 
   return {
     scheduledSessions, calendarSelectedDate, setCalendarSelectedDate,
-    fetchScheduledSessions, markSessionCompleted, regenerateWeekSchedule, updateReminderSettings, updateRirSettings,
+    fetchScheduledSessions, markSessionCompleted, markDateCompletedLocally, regenerateWeekSchedule, updateReminderSettings, updateRirSettings,
   }
 }

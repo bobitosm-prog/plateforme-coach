@@ -97,7 +97,10 @@ export async function POST(
     }
 
     // Send email (si demande)
-    let emailResult: { method: string; error?: string } | null = null
+    let emailResult: {
+      method: 'sent' | 'skipped' | 'error'
+      code?: 'EMAIL_SEND_FAILED'
+    } | null = null
     if (parsed.data.send_email) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
       const html = renderReplyTemplate({
@@ -115,7 +118,10 @@ export async function POST(
         replyTo: ADMIN_EMAIL,
       })
 
-      emailResult = { method: result.method, ...(result.error ? { error: result.error } : {}) }
+      emailResult = {
+        method: result.method,
+        ...(result.method === 'error' ? { code: 'EMAIL_SEND_FAILED' as const } : {}),
+      }
     }
 
     // Audit log async

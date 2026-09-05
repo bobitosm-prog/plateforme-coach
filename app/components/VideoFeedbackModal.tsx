@@ -4,10 +4,14 @@ import { useTranslations } from 'next-intl'
 import { createBrowserClient } from '@supabase/ssr'
 import { X, Video } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
 } from '../../lib/design-tokens'
+import {
+  findActiveCoachForClient,
+  resolveCoachRelationAuthority,
+} from '../../lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
   (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(),
@@ -40,6 +44,12 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
     if (!videoFile || !userId) return
     setUploading(true)
     try {
+      const relation = await findActiveCoachForClient(supabase, userId)
+      const authority = resolveCoachRelationAuthority(relation)
+      if (!authority.isAuthoritative || !authority.relation) {
+        throw new Error('AUTHORITATIVE_COACH_REQUIRED')
+      }
+
       const ext = videoFile.name.split('.').pop() || 'mp4'
       const fileName = `${userId}/${Date.now()}-${exerciseName.replace(/\s+/g, '-').toLowerCase()}.${ext}`
 
@@ -52,16 +62,9 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
         .from('exercise-videos')
         .getPublicUrl(fileName)
 
-      const { data: relation } = await supabase
-        .from('coach_clients')
-        .select('coach_id')
-        .eq('client_id', userId)
-        .limit(1)
-        .maybeSingle()
-
       const { error: dbError } = await supabase.from('exercise_feedback').insert({
         client_id: userId,
-        coach_id: relation?.coach_id || null,
+        coach_id: authority.relation.coach_id,
         exercise_name: exerciseName,
         video_url: publicUrl,
         client_note: clientNote.trim() || null,
@@ -71,8 +74,9 @@ export default function VideoFeedbackModal({ exerciseName, userId, onClose }: Pr
 
       alert(t('sent'))
       onClose()
-    } catch (err: any) {
-      alert(t('error') + ': ' + (err.message || ''))
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : ''
+      alert(t('error') + ': ' + message)
     }
     setUploading(false)
   }

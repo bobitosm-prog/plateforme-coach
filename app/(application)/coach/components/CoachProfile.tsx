@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { Users, LogOut, Trash2, Save } from 'lucide-react'
+import { Users, LogOut, Trash2, Save, MessageSquare } from 'lucide-react'
+import BugReport from '../../../components/BugReport'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -34,6 +35,7 @@ export default function CoachProfile({
   const [rate, setRate] = useState(String(coachProfile?.coach_monthly_rate || 50))
   const [rateSaving, setRateSaving] = useState(false)
   const [rateSaved, setRateSaved] = useState(false)
+  const [bugReportOpen, setBugReportOpen] = useState(false)
 
   async function saveRate() {
     const val = parseFloat(rate)
@@ -112,6 +114,9 @@ export default function CoachProfile({
         <button className="btn-secondary" onClick={() => setSection('dashboard')}>
           <Users size={16} /> Tableau de bord
         </button>
+        <button className="btn-secondary" type="button" onClick={() => setBugReportOpen(true)}>
+          <MessageSquare size={16} /> Signaler un problème
+        </button>
         <button onClick={supabaseSignOut} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(239,68,68,0.08)', color: RED, border: `1px solid rgba(239,68,68,0.3)`, padding: '11px 20px', borderRadius: 12, fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer', width: '100%', letterSpacing: '1px', textTransform: 'uppercase' as const }}>
           <LogOut size={16} /> Se déconnecter
         </button>
@@ -122,6 +127,12 @@ export default function CoachProfile({
         <Trash2 size={14} color={RED} />
         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: RED, fontFamily: FONT_ALT, letterSpacing: '1px', textTransform: 'uppercase' as const }}>Supprimer mon compte</span>
       </button>
+
+      <BugReport
+        session={session}
+        open={bugReportOpen}
+        onOpenChange={setBugReportOpen}
+      />
 
       {showDelete && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>

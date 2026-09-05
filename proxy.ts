@@ -1,6 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import {
+  POST_AUTH_PROFILE_SELECT,
+  classifyProfileResult,
+  resolvePostAuthDestination,
+  type PostAuthProfile,
+} from '@/lib/auth/post-auth-routing'
 
 // ===== Host-based redirect helpers =====
 const MARKETING_HOSTS = ['moovx.ch', 'www.moovx.ch']
@@ -143,10 +149,12 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // Validate the cookie-backed identity with Supabase instead of trusting the
+  // locally decoded session for server-side authorization decisions.
+  const { data: { user } } = await supabase.auth.getUser()
 
   // ===== ROOT PATH: locale detection for non-auth visitors =====
-  if (pathname === '/' && !session) {
+  if (pathname === '/' && !user) {
     const url = request.nextUrl.clone()
     // Sur l'app : non-authentifié → /login (same-origin, préserve le conteneur PWA iOS)
     if ((request.headers.get('host') || '') === APP_HOST) {
@@ -160,38 +168,21 @@ export async function proxy(request: NextRequest) {
   }
 
   // Chained onboarding redirect — applies to authenticated clients on /
-  if (session && pathname === '/') {
-    const { data: prof } = await supabase
+  if (user && pathname === '/') {
+    const profileResult = await supabase
       .from('profiles')
-      .select('role, onboarding_completed, onboarding_completed_at, full_name, onboarding_photo_completed_at, objective, created_at')
-      .eq('id', session.user.id)
+      .select(POST_AUTH_PROFILE_SELECT)
+      .eq('id', user.id)
       .single()
-    if (prof?.role === 'client') {
-      // onboarding_completed = true → authoritative flag, proceed to dashboard
-      if (prof.onboarding_completed) {
-        // Pass through
-      } else {
-        const V2_MIGRATION_DATE = new Date('2026-05-27')
-        const createdAt = prof.created_at ? new Date(prof.created_at) : null
-        const isLegacyUser = createdAt && createdAt < V2_MIGRATION_DATE
-
-        if (isLegacyUser) {
-          // Legacy v1 chained checks preserved
-          if (!prof.onboarding_completed_at && !prof.objective) {
-            return NextResponse.redirect(new URL('/onboarding-fitness', request.url))
-          }
-          const fn = prof.full_name?.trim()
-          if (!fn || fn === 'Athlete') {
-            return NextResponse.redirect(new URL('/onboarding', request.url))
-          }
-          if (!prof.onboarding_photo_completed_at) {
-            return NextResponse.redirect(new URL('/onboarding-photo', request.url))
-          }
-        } else {
-          // New users → unified v2 onboarding
-          return NextResponse.redirect(new URL('/onboarding-v2', request.url))
-        }
-      }
+    const classified = classifyProfileResult<PostAuthProfile>(profileResult)
+    const decision = resolvePostAuthDestination({
+      authenticated: true,
+      profileState: classified.state,
+      profile: classified.profile,
+      adminExempt: classified.profile?.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'),
+    })
+    if (decision.route && decision.route !== '/') {
+      return NextResponse.redirect(new URL(decision.route, request.url))
     }
   }
 
@@ -200,7 +191,7 @@ export async function proxy(request: NextRequest) {
   if (!matchedPrefix) return response
 
   // Not authenticated → back to home
-  if (!session) {
+  if (!user) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
@@ -208,7 +199,7 @@ export async function proxy(request: NextRequest) {
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
   const role = (profile?.role ?? 'client') as string
 

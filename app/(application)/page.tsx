@@ -1,10 +1,11 @@
 'use client'
 import React from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import {
   Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
-  User, MessageCircle, Bot, Plus, ChevronRight, Search, X,
+  User, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
 import useClientDashboard, { type Tab } from '../hooks/useClientDashboard'
@@ -12,7 +13,8 @@ import useInitialGeneration from '../hooks/useInitialGeneration'
 import Paywall from '../components/Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../components/ClientIntlProvider'
-import BugReport from '../components/BugReport'
+import PostAuthFatalState from '../../components/auth/PostAuthFatalState'
+import InitialGenerationStatus from '../../components/initial-generation/InitialGenerationStatus'
 import BadgeCelebration from '../components/BadgeCelebration'
 import type { Badge } from '../../lib/check-badges'
 import FeedbackTab from '../components/client/FeedbackTab'
@@ -21,6 +23,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
 import { cache } from '../../lib/cache'
 import { useOverlayOpen } from '../hooks/useOverlayOpen'
 import { resyncPushSubscription } from '../../lib/push-resync'
+import type { ActiveWorkoutDraft } from '../../lib/training/active-workout-draft'
 
 import WorkoutSession from '../components/WorkoutSession'
 import WeightModal from '../components/modals/WeightModal'
@@ -28,6 +31,7 @@ import MeasureModal from '../components/modals/MeasureModal'
 import BmrModal from '../components/modals/BmrModal'
 import ObjectiveModal from '../components/modals/ObjectiveModal'
 import HomeTab from '../components/tabs/HomeTab'
+import useHomeDashboardModel from '../hooks/useHomeDashboardModel'
 import TrainingTab from '../components/tabs/TrainingTab'
 import NutritionTab from '../components/tabs/NutritionTab'
 import ProgressTab from '../components/tabs/ProgressTab'
@@ -36,17 +40,26 @@ import MessagesTab from '../components/tabs/MessagesTab'
 import PreferencesSection from '../components/tabs/profile/PreferencesSection'
 import AccountSection from '../components/tabs/profile/AccountSection'
 import GoalsSection from '../components/tabs/profile/GoalsSection'
+import NutritionProgramSection from '../components/tabs/profile/NutritionProgramSection'
+import TrainingProgramSection from '../components/tabs/profile/TrainingProgramSection'
 import AccountTab from '../components/tabs/AccountTab'
-import DesktopDashboard from '../(dashboard)/page-desktop'
+import { getSessionForDay } from '../../lib/get-today-session'
+import { getHomeDayWindow } from '../../lib/home/home-date'
 
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL, Z_TOAST,
+  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL,
 } from '../../lib/design-tokens'
 import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
+import {
+  appNavigationHref,
+  normalizeAppNavigationQuery,
+  parseAppNavigation,
+  type AppNavigationState,
+} from '../../lib/navigation/app-navigation'
 
 const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
 
@@ -59,37 +72,112 @@ function NavAccountLabel() {
 }
 
 /** Wrapper: PR toasts + pushes newBadges to global queue — rendered INSIDE ClientIntlProvider */
-function WorkoutSessionWithCelebrations({ sessionName, exercises, startedAt, onFinish, onClose, onBadgesEarned, rirTrackingEnabled, rirScaleAdvanced }: {
-  sessionName: string; exercises: any[]; startedAt?: string
-  onFinish: (data: any) => Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
-  onClose: () => void; onBadgesEarned: (badges: Badge[]) => void
-  rirTrackingEnabled?: boolean; rirScaleAdvanced?: boolean
+function WorkoutSessionWithCelebrations({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, onBadgesEarned, rirTrackingEnabled }: {
+  draft: ActiveWorkoutDraft
+  onDraftChange: (draft: ActiveWorkoutDraft) => void
+  onFinish: (data: any, draft?: ActiveWorkoutDraft) => Promise<{
+    newPRs: { exercise: string; value: number }[]
+    newBadges: Badge[]
+    secondary: Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
+  }>
+  onClose: () => void
+  onNavigateHome: () => void
+  onNavigateProgress: () => void
+  onBadgesEarned: (badges: Badge[]) => void
+  rirTrackingEnabled?: boolean
 }) {
   const t = useTranslations('training_tab')
-  const handleFinish = React.useCallback(async (data: any) => {
-    const result = await onFinish(data)
-    const prs = result?.newPRs
-    if (prs && prs.length === 1) {
-      toast.success(t('calendar.toasts.newPR', { exercise: prs[0].exercise, value: prs[0].value }), { duration: 5000 })
-    } else if (prs && prs.length > 1) {
-      const list = prs.map(p => `${p.exercise} ${p.value}kg`).join(' \u00b7 ')
-      toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
-    }
-    if (result?.newBadges?.length) onBadgesEarned(result.newBadges)
-  }, [onFinish, t, onBadgesEarned])
-  return <WorkoutSession sessionName={sessionName} exercises={exercises} startedAt={startedAt} onFinish={handleFinish} onClose={onClose} rirTrackingEnabled={rirTrackingEnabled} rirScaleAdvanced={rirScaleAdvanced} />
+  const handleFinish = React.useCallback(async (data: any, submittedDraft?: ActiveWorkoutDraft) => {
+    const result = await onFinish(data, submittedDraft ?? draft)
+    void result.secondary.then(({ newPRs: prs, newBadges }) => {
+      if (prs.length === 1) {
+        toast.success(t('calendar.toasts.newPR', { exercise: prs[0].exercise, value: prs[0].value }), { duration: 5000 })
+      } else if (prs.length > 1) {
+        const list = prs.map(p => `${p.exercise} ${p.value}kg`).join(' \u00b7 ')
+        toast.success(t('calendar.toasts.newPRMultiple', { count: prs.length, list }), { duration: 6000 })
+      }
+      if (newBadges.length) onBadgesEarned(newBadges)
+    })
+    return result
+  }, [onFinish, draft, t, onBadgesEarned])
+  return <WorkoutSession draft={draft} onDraftChange={onDraftChange} onFinish={handleFinish} onClose={onClose} onNavigateHome={onNavigateHome} onNavigateProgress={onNavigateProgress} rirTrackingEnabled={rirTrackingEnabled} />
 }
 
 const TAB_INDEX = { home: 0, training: 1, nutrition: 2, progress: 3, compte: 4 } as const
 const TAB_RAIL_KEYS = ['home', 'training', 'nutrition', 'progress', 'compte'] as const
 
-export default function CoachApp() {
-  const h = useClientDashboard()
-  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase)
+const ACCOUNT_SECTION_BY_TAB: Partial<Record<Tab, NonNullable<AppNavigationState['section']>>> = {
+  profil: 'profile',
+  messages: 'messages',
+  feedback: 'feedback',
+  preferences: 'preferences',
+  account_section: 'account',
+  goals: 'goals',
+  nutrition_program: 'nutrition-program',
+  training_program: 'training-program',
+}
+
+function tabFromNavigation(navigation: AppNavigationState): Tab {
+  if (navigation.tab === 'progression') return 'progress'
+  if (navigation.tab !== 'account') return navigation.tab
+  if (navigation.section === 'profile') return 'profil'
+  if (navigation.section === 'messages') return 'messages'
+  if (navigation.section === 'feedback') return 'feedback'
+  if (navigation.section === 'preferences') return 'preferences'
+  if (navigation.section === 'account') return 'account_section'
+  if (navigation.section === 'goals') return 'goals'
+  if (navigation.section === 'nutrition-program') return 'nutrition_program'
+  if (navigation.section === 'training-program') return 'training_program'
+  return 'compte'
+}
+
+function navigationFromTab(tab: Tab): AppNavigationState | null {
+  if (tab === 'home') return { tab: 'home' }
+  if (tab === 'training' || tab === 'nutrition') return { tab }
+  if (tab === 'progress') return { tab: 'progression' }
+  if (tab === 'compte') return { tab: 'account' }
+  const section = ACCOUNT_SECTION_BY_TAB[tab]
+  return section ? { tab: 'account', section } : null
+}
+
+function CoachAppContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const navigation = React.useMemo(() => parseAppNavigation(searchParams), [searchParams])
+  const initialNavigation = React.useRef(navigation)
+  const h = useClientDashboard(tabFromNavigation(initialNavigation.current))
+  const setActiveTab = h.setActiveTab
+  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase, {
+    capabilities: h.capabilities,
+    coachRelationStatus: h.coachRelationStatus,
+    coachId: h.coachId,
+    coachRelationIsAuthoritative: h.coachRelationIsAuthoritative,
+  })
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
-  const [isDesktop, setIsDesktop] = React.useState(false)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
+
+  const navigateApp = React.useCallback((target: AppNavigationState, replace = false) => {
+    const href = appNavigationHref(target)
+    const current = `${window.location.pathname}${window.location.search}`
+    if (current === href) return
+    if (replace) router.replace(href, { scroll: false })
+    else router.push(href, { scroll: false })
+  }, [router])
+
+  const navigateTo = React.useCallback((tab: Tab) => {
+    const target = navigationFromTab(tab)
+    if (target) navigateApp(target)
+    else setActiveTab(tab)
+  }, [setActiveTab, navigateApp])
+
+  React.useEffect(() => {
+    const normalizedQuery = normalizeAppNavigationQuery(searchParams)
+    if (normalizedQuery !== searchParams.toString()) {
+      router.replace(normalizedQuery ? `/?${normalizedQuery}` : '/', { scroll: false })
+    }
+    setActiveTab(tabFromNavigation(navigation))
+  }, [navigation, searchParams, router, setActiveTab])
 
   // ── Badge celebration queue (global — survives workout unmount) ──
   const [celebrateBadge, setCelebrateBadge] = React.useState<Badge | null>(null)
@@ -111,7 +199,7 @@ export default function CoachApp() {
   }, [h.supabase, h.session?.user?.id])
 
   // ── Rail horizontal: lazy keep-alive ──
-  const visitedTabs = React.useRef(new Set<string>(['home']))
+  const visitedTabs = React.useRef(new Set<string>(['home', tabFromNavigation(initialNavigation.current)]))
   const lastRailIndex = React.useRef(0)
   const [, forceRender] = React.useState(0)
   const [mainSize, setMainSize] = React.useState({ w: 0, h: 0 })
@@ -200,7 +288,7 @@ export default function CoachApp() {
     if (dx < -D || vx < -V) target = railIndex + 1
     else if (dx > D || vx > V) target = railIndex - 1
     target = Math.max(0, Math.min(4, target)) as typeof railIndex
-    if (target !== railIndex) h.setActiveTab(TAB_RAIL_KEYS[target] as any)
+    if (target !== railIndex) navigateTo(TAB_RAIL_KEYS[target] as Tab)
     else fmAnimate(railX, -railIndex * mainSize.w, RAIL_SPRING)
   }
   // Mark active tab as visited (triggers render to mount it)
@@ -259,13 +347,76 @@ export default function CoachApp() {
     }
   }, [])
 
-  // Detect desktop viewport
-  React.useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth > 1024)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const homeProgramSession = React.useMemo(() => {
+    const localDate = getHomeDayWindow().localDateKey
+    const [year, month, day] = localDate.split('-').map(Number)
+    const jsDay = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+    const mondayIndex = jsDay === 0 ? 6 : jsDay - 1
+    if (h.planningDays?.length) {
+      const value = getSessionForDay(h.planningDays, mondayIndex)
+      return { title: value.name, exercises: value.exercises, isRest: value.type === 'rest', source: 'custom_program' as const }
+    }
+    if (h.todayCoachDay) return {
+      title: h.todayCoachDay.day_name || h.todayCoachDay.name || '',
+      exercises: h.todayCoachDay.exercises || [],
+      isRest: Boolean(h.todayCoachDay.repos),
+      source: 'coach_program' as const,
+    }
+    return null
+  }, [h.planningDays, h.todayCoachDay])
+
+  const homeBase = React.useMemo(() => ({
+    identity: {
+      firstName: h.firstName || '', avatar: h.displayAvatar ?? null,
+      streak: h.streak ?? 0, state: h.profile ? 'ready' as const : 'loading' as const,
+    },
+    training: { state: h.loading ? 'loading' as const : 'empty' as const, hasProgram: Boolean(h.planningDays?.length || h.coachProgram) },
+    nutrition: {
+      caloriesConsumed: null, caloriesTarget: h.calorieGoal ?? null,
+      macrosTarget: { protein: h.profile?.protein_goal ?? null, carbs: h.profile?.carbs_goal ?? null, fat: h.profile?.fat_goal ?? null },
+      hasPlan: Boolean(h.coachMealPlan),
+    },
+    recovery: { sourceDataAvailable: false },
+    hydration: { consumedMl: null, targetMl: h.profile?.water_goal ?? null },
+    progression: {
+      currentWeight: h.currentWeight ?? null,
+      previousWeight: h.weightHistory30?.length > 1
+        ? h.weightHistory30[h.weightHistory30.length - 2].poids
+        : null,
+      sessionsThisWeek: h.completedThisWeek?.size ?? null,
+      adherence: (h.scheduledSessions?.filter((session: { session_type?: string }) => !['rest', 'repos'].includes(session.session_type ?? '')).length ?? 0) > 0
+        ? Math.min(1, (h.completedThisWeek?.size ?? 0) / h.scheduledSessions.filter((session: { session_type?: string }) => !['rest', 'repos'].includes(session.session_type ?? '')).length)
+        : null,
+      latestPR: h.personalRecords?.[0] ?? null,
+    },
+    diagnostic: { latest: h.latestDiagnostic ?? null, canGenerate: true },
+    coach: {
+      relationStatus: h.coachRelationStatus,
+      coachId: h.coachId ?? null,
+      lastMessage: h.messages?.length ? h.messages[h.messages.length - 1] : null,
+    },
+    capabilities: h.capabilities,
+    freshness: 'mixed' as const,
+  }), [h])
+
+  const homeTrainingSource = React.useMemo(() => ({
+    scheduledSessions: h.scheduledSessions ?? [],
+    programSession: homeProgramSession,
+    workoutSessions: h.wSessions ?? [],
+    nextSession: h.nextSession ?? null,
+    weeklyCompleted: h.completedThisWeek?.size ?? 0,
+    weeklyPlanned: h.scheduledSessions?.length ?? 0,
+    hasProgram: Boolean(h.planningDays?.length || h.coachProgram),
+    state: h.loading ? 'loading' as const : 'ready' as const,
+  }), [h.coachProgram, h.completedThisWeek, h.loading, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession])
+
+  const homeModel = useHomeDashboardModel({
+    enabled: h.userRole === 'client' && Boolean(h.session?.user?.id),
+    supabase: h.supabase,
+    userId: h.session?.user?.id,
+    base: homeBase,
+    trainingSource: homeTrainingSource,
+  })
 
   // Check and schedule workout reminders
   React.useEffect(() => {
@@ -289,7 +440,7 @@ export default function CoachApp() {
   }, [h.session?.user?.id, h.supabase])
 
   /* ── Loading splash ── */
-  if (!h.mounted || h.loading || (h.session && !h.roleChecked)) return (
+  if (!h.mounted || h.loading || (h.session && (!h.roleChecked || h.postAuthProfileState === 'loading'))) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#0D0B08', gap: 24 }}>
       <img src="/logo-moovx.png" alt="MoovX" width={80} height={80} style={{ borderRadius: 20, filter: 'drop-shadow(0 0 30px rgba(212,168,67,0.3))' }} />
       <div style={{ width: 32, height: 32, border: '3px solid #222', borderTopColor: '#D4A843', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -298,9 +449,15 @@ export default function CoachApp() {
 
   /* ── Not authenticated → /login (same-origin, préserve le conteneur PWA iOS) ── */
   if (!h.session && !h.loading) {
-    h.router.push('/login')
+    h.router.replace('/login')
     return null
   }
+
+  if (h.postAuthProfileState === 'error' || h.postAuthProfileState === 'missing') return (
+    <ClientIntlProvider>
+      <PostAuthFatalState state={h.postAuthProfileState} onRetry={h.retryPostAuth} />
+    </ClientIntlProvider>
+  )
 
   /* ── Coach role → render coach dashboard directly (no redirect) ── */
   if (h.userRole === 'coach') return <CoachDashboard initialSession={h.session} />
@@ -328,40 +485,6 @@ export default function CoachApp() {
   )
 
   /* ══════════════════════════════════════════════════════════════
-     DESKTOP DASHBOARD (>1024px)
-  ══════════════════════════════════════════════════════════════ */
-  if (isDesktop && h.profile) return (
-    <DesktopDashboard
-      session={h.session}
-      profile={h.profile}
-      supabase={h.supabase}
-      coachProgram={h.coachProgram}
-      coachMealPlan={h.coachMealPlan}
-      todayKey={h.todayKey}
-      todaySessionDone={h.todaySessionDone}
-      streak={h.streak}
-      wSessions={h.wSessions}
-      currentWeight={h.currentWeight}
-      goalWeight={h.goalWeight}
-      personalRecords={h.personalRecords}
-      weightHistory={h.weightHistoryFull?.length ? h.weightHistoryFull : h.weightHistory30}
-      progressPhotos={h.progressPhotos}
-      measurements={h.measurements}
-      weeklyCalories={h.weeklyCalories}
-      weeklyVolume={h.weeklyVolume}
-      scheduledSessions={h.scheduledSessions}
-      completedSessions={h.completedSessions}
-      calorieGoal={h.calorieGoal}
-      onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}
-      onNavigate={(tab) => { setIsDesktop(false); h.setActiveTab(tab as Tab) }}
-      startProgramWorkout={h.startProgramWorkout}
-      setModal={h.setModal}
-      aiAllowed={h.aiAllowed}
-      unreadCount={h.unreadCount}
-    />
-  )
-
-  /* ══════════════════════════════════════════════════════════════
      MAIN APP SHELL (Mobile <1024px)
   ══════════════════════════════════════════════════════════════ */
   return (
@@ -380,10 +503,10 @@ export default function CoachApp() {
             { id: 'progress', icon: TrendingUp, label: 'Analytics' },
             { id: 'compte', icon: User, label: 'Compte' },
           ] as const).map(({ id, icon: Icon, label }) => {
-            const active = h.activeTab === id
+            const active = h.activeTab === id || (id === 'compte' && navigation.tab === 'account')
             const badge = id === 'compte' && h.unreadCount > 0
             return (
-              <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: overlayOpen ? 'default' : 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms, opacity 0.2s ease', opacity: overlayOpen ? 0.4 : 1 }}>
+              <button key={id} aria-current={active ? 'page' : undefined} onClick={() => { if (overlayOpen) return; navigateTo(id) }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'transparent', border: 'none', borderLeft: `2px solid ${active ? GOLD : 'transparent'}`, cursor: overlayOpen ? 'default' : 'pointer', width: '100%', textAlign: 'left', transition: 'background 150ms, opacity 0.2s ease', opacity: overlayOpen ? 0.4 : 1 }}>
                 <div style={{ position: 'relative' }}>
                   <Icon size={20} color={active ? GOLD : TEXT_MUTED} strokeWidth={2} />
                   {badge && <span style={{ position: 'absolute', top: -4, right: -6, minWidth: 14, height: 14, background: '#EF4444', borderRadius: 7, fontSize: '0.5rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{h.unreadCount > 9 ? '9+' : h.unreadCount}</span>}
@@ -414,39 +537,53 @@ export default function CoachApp() {
         * { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
         .photo-cell:hover .photo-delete-btn { opacity: 1 !important; }
-        .client-main-scroll { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
-        @media (min-width: 768px) { .client-main-scroll { padding-bottom: 16px; } }
+        .app-shell {
+          --mobile-bottom-nav-height: 100px;
+          --mobile-bottom-visual-gap: 20px;
+          --mobile-floating-action-gap: 12px;
+          --mobile-athena-fab-size: 52px;
+        }
+        .client-main-scroll {
+          padding-bottom: calc(
+            var(--mobile-bottom-nav-height)
+            + var(--mobile-bottom-visual-gap)
+            + env(safe-area-inset-bottom, 0px)
+          );
+        }
+        .client-main-scroll-home {
+          padding-bottom: calc(
+            var(--mobile-bottom-nav-height)
+            + var(--mobile-floating-action-gap)
+            + var(--mobile-athena-fab-size)
+            + var(--mobile-bottom-visual-gap)
+            + env(safe-area-inset-bottom, 0px)
+          );
+        }
+        @media (max-width: 767px) {
+          .client-athena-fab {
+            bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-floating-action-gap) + env(safe-area-inset-bottom, 0px)) !important;
+          }
+        }
+        @media (min-width: 768px) {
+          .client-main-scroll,
+          .client-main-scroll-home { padding-bottom: 16px; }
+        }
       `}</style>
 
-      {/* ── F6.B.5a : auto-gen progress banner ── */}
-      {initialGen.generating && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: Z_TOAST,
-          background: GOLD,
-          color: '#000',
-          padding: '8px 16px',
-          fontSize: 13,
-          fontWeight: 600,
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-        }}>
-          <Sparkles size={16} />
-          {initialGen.step === 'meal'
-            ? 'Préparation de ton plan nutrition...'
-            : 'Préparation de ton programme d\'entraînement...'}
-        </div>
-      )}
+      <InitialGenerationStatus generation={initialGen} />
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
-        <WorkoutSessionWithCelebrations sessionName={h.workoutSession.name} exercises={h.workoutSession.exercises} startedAt={h.workoutSession.startedAt} onFinish={h.onFinishWorkout} onClose={() => { h.setWorkoutSession(null); try { localStorage.removeItem('moovx_active_workout') } catch {}; h.fetchAll() }} onBadgesEarned={handleBadgesEarned} rirTrackingEnabled={h.profile?.rir_tracking_enabled} rirScaleAdvanced={h.profile?.rir_scale_advanced} />
+        <WorkoutSessionWithCelebrations
+          draft={h.workoutSession}
+          onDraftChange={h.updateWorkoutSessionDraft}
+          onFinish={h.onFinishWorkout}
+          onClose={() => h.setWorkoutSession(null)}
+          onNavigateHome={() => { h.setWorkoutSession(null); navigateTo('home') }}
+          onNavigateProgress={() => { h.setWorkoutSession(null); navigateTo('progress') }}
+          onBadgesEarned={handleBadgesEarned}
+          rirTrackingEnabled={h.profile?.rir_tracking_enabled}
+        />
       )}
 
       {/* ── WEIGHT MODAL ── */}
@@ -501,8 +638,8 @@ export default function CoachApp() {
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {h.foodResults.map((food: any) => {
-                    const cals = h.searchTab === 'custom' ? food.calories_per_100g : (food.energy_kcal || food.calories || 0)
-                    const prot = h.searchTab === 'custom' ? food.proteins_per_100g : (food.proteins || 0)
+                    const cals = h.searchTab === 'custom' ? food.calories : (food.energy_kcal || food.calories || 0)
+                    const prot = food.proteins || 0
                     return (
                       <button key={food.id} onClick={() => h.setSelectedFood(food)} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left', transition: 'border-color 200ms' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -528,10 +665,10 @@ export default function CoachApp() {
                   <div style={{ fontWeight: 700, color: TEXT_PRIMARY, fontSize: '1rem', marginBottom: 12 }}>{h.selectedFood.name}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {[
-                      ['Calories', h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g, 'kcal', GOLD],
-                      ['Protéines', h.searchTab !== 'custom' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g, 'g', '#3b82f6'],
-                      ['Glucides', h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g, 'g', '#f59e0b'],
-                      ['Lipides', h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g, 'g', '#10b981'],
+                      ['Calories', h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories, 'kcal', GOLD],
+                      ['Protéines', h.selectedFood.proteins || 0, 'g', '#3b82f6'],
+                      ['Glucides', h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs, 'g', '#f59e0b'],
+                      ['Lipides', h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fat, 'g', '#10b981'],
                     ].map(([n, v, u, c]) => (
                       <div key={n as string} style={{ textAlign: 'center' }}>
                         <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, color: c as string }}>{Math.round(v as number)}</div>
@@ -549,10 +686,10 @@ export default function CoachApp() {
                   <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Pour {h.foodQty}g :</div>
                   <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     {[
-                      ['Kcal', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories_per_100g) * parseFloat(h.foodQty) / 100)],
-                      ['Prot', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.proteins || 0) : h.selectedFood.proteins_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
-                      ['Gluc', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
-                      ['Lip', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fats_per_100g) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Kcal', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.energy_kcal || 0) : h.selectedFood.calories) * parseFloat(h.foodQty) / 100)],
+                      ['Prot', Math.round((h.selectedFood.proteins || 0) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Gluc', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.carbohydrates || h.selectedFood.carbs || 0) : h.selectedFood.carbs) * parseFloat(h.foodQty) / 100 * 10) / 10],
+                      ['Lip', Math.round((h.searchTab !== 'custom' ? (h.selectedFood.fat || h.selectedFood.fats || 0) : h.selectedFood.fat) * parseFloat(h.foodQty) / 100 * 10) / 10],
                     ].map(([n, v]) => (
                       <div key={n as string} style={{ textAlign: 'center' }}>
                         <div style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, color: GOLD }}>{v}</div>
@@ -610,23 +747,25 @@ export default function CoachApp() {
 
       {/* ── TAB CONTENT — rail horizontal (S1 swipe nav) ── */}
       {/* Sous-écrans (hors rail) */}
-      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals') && (
+      {(h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals' || h.activeTab === 'nutrition_program' || h.activeTab === 'training_program') && (
         <main className="client-main-scroll" data-scroll-container style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <AnimatePresence mode="wait">
             <motion.div key={h.activeTab} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}>
-              {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isInvited={perms.isInvited} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'feedback' && <FeedbackTab onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => h.setActiveTab('compte')} />}
-              {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => h.setActiveTab('compte')} />}
+              {h.activeTab === 'profil' && <ProfileTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} fullName={h.fullName} firstName={h.firstName} avatarRef={h.avatarRef} uploadAvatar={h.uploadAvatar} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} coachProgram={h.coachProgram} coachId={h.coachId} setModal={h.setModal} fetchAll={h.fetchAll} regenerateWeekSchedule={h.regenerateWeekSchedule} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isCoachManaged={perms.isCoachManaged} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'feedback' && <FeedbackTab onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'nutrition_program' && <NutritionProgramSection profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachRelationIsAuthoritative={h.coachRelationIsAuthoritative} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} profile={h.profile} supabase={h.supabase} session={h.session} onRefresh={h.fetchAll} onBack={() => navigateTo('compte')} configureOpen={navigation.section === 'training-program' && navigation.mode === 'configure'} onConfigureChange={(open) => navigateApp({ tab: 'account', section: 'training-program', mode: open ? 'configure' : undefined })} />}
             </motion.div>
           </AnimatePresence>
         </main>
       )}
 
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
-      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals') ? 'none' : 'flex' }}>
+      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals' || h.activeTab === 'nutrition_program' || h.activeTab === 'training_program') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
           style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
@@ -634,20 +773,20 @@ export default function CoachApp() {
           onTouchEnd={onRailTouchEnd}
           onTouchCancel={onRailTouchEnd}
         >
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('home') && <HomeTab supabase={h.supabase} session={h.session} profile={h.profile} displayAvatar={h.displayAvatar} firstName={h.firstName} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} currentWeight={h.currentWeight} goalWeight={h.goalWeight} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} hasTrainedBefore={h.hasTrainedBefore} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={h.setActiveTab} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} sessionDates={h.sessionDates} activeTab={h.activeTab} />}
+          <div className="client-main-scroll client-main-scroll-home" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            {visitedTabs.current.has('home') && <HomeTab homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={navigateTo} setModal={h.setModal} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} coachProgram={h.coachProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} startProgramWorkout={h.startProgramWorkout} fetchAll={h.fetchAll} scheduledSessions={h.scheduledSessions} calendarSelectedDate={h.calendarSelectedDate} setCalendarSelectedDate={h.setCalendarSelectedDate} markSessionCompleted={h.markSessionCompleted} checkForPR={h.checkForPR} lastCompletedByIndex={h.lastCompletedByIndex} setModal={h.setModal} />}
+            {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} activeTrainingProgram={h.activeTrainingProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} hasActiveDraft={Boolean(h.workoutSession)} workoutHistory={h.wSessions.filter(item => item.completed)} workoutHistoryState={h.workoutHistoryState} startProgramWorkout={h.startProgramWorkout} onOpenProgramSettings={() => navigateTo('training_program')} scheduledSessions={h.scheduledSessions} setCalendarSelectedDate={h.setCalendarSelectedDate} setModal={h.setModal} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('nutrition') && <NutritionTab coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} setModal={h.setModal} profile={h.profile} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} />}
+            {visitedTabs.current.has('nutrition') && <NutritionTab profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachRelationIsAuthoritative={h.coachRelationIsAuthoritative} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onOpenProgramSettings={() => navigateTo('nutrition_program')} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} session={h.session} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} deletePhoto={h.deletePhoto} setModal={h.setModal} chartMin={h.chartMin} chartMax={h.chartMax} onRefresh={h.fetchAll} profile={h.profile} coachId={h.coachId} personalRecords={h.personalRecords} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weeklyVolume={h.weeklyVolume} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} calorieGoal={h.calorieGoal} goalWeight={h.goalWeight} waterGoal={h.profile?.water_goal || 3000} streak={h.streak} currentWeight={h.currentWeight} />}
+            {visitedTabs.current.has('progress') && <ProgressTab supabase={h.supabase} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} setModal={h.setModal} profile={h.profile} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} currentWeight={h.currentWeight} progressionModel={h.progressionModel} onProgressionPeriodChange={h.setProgressionPeriod} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} onNavigate={(tab) => h.setActiveTab(tab)} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
+            {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} session={h.session} onNavigate={navigateTo} focusPrograms={navigation.tab === 'account' && navigation.section === 'programs'} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
           </div>
         </motion.div>
       </main>
@@ -655,20 +794,20 @@ export default function CoachApp() {
       </div>{/* end main-content-area */}
 
       {!h.workoutSession && h.activeTab !== 'coachIA' && (
-        <button onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
+        <button className="client-athena-fab" onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
           style={{ position: 'fixed', bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${GOLD_RULE}`, zIndex: Z_FAB }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 700, color: '#0D0B08', lineHeight: 1, letterSpacing: '0.02em' }}>A</span>
           <Sparkles size={11} color="#0D0B08" style={{ position: 'absolute', top: 8, right: 9 }} />
         </button>
       )}
-      <BugReport session={h.session} profile={h.profile} />
       {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
-      {!perms.isInvited && (
+      {perms.canUseAI && (
           <ChatAI
             session={h.session}
             profile={h.profile}
+            capabilities={h.capabilities}
             externalOpen={h.activeTab === 'coachIA'}
-            onExternalClose={() => h.setActiveTab('compte')}
+            onExternalClose={() => navigateTo('compte')}
             hideFloatingButton={true}
           />
       )}
@@ -695,9 +834,9 @@ export default function CoachApp() {
           { id: 'progress' as Tab, Icon: TrendingUp, label: 'Analytics' },
           { id: 'compte' as Tab, Icon: User, label: 'Compte' },
         ]).map(({ id, Icon, label }) => {
-          const active = h.activeTab === id
+          const active = h.activeTab === id || (id === 'compte' && navigation.tab === 'account')
           return (
-            <button key={id} onClick={() => { if (overlayOpen) return; h.setActiveTab(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
+            <button key={id} aria-current={active ? 'page' : undefined} onClick={() => { if (overlayOpen) return; navigateTo(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
               <div
                 className={active ? 'nav-glass-active' : undefined}
                 style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 14, transition: 'all 0.3s ease' }}
@@ -722,5 +861,15 @@ export default function CoachApp() {
 
     </div>
     </ClientIntlProvider>
+  )
+}
+
+export default function CoachApp() {
+  return (
+    <React.Suspense fallback={(
+      <main role="status" aria-label="Loading" style={{ minHeight: '100dvh', background: BG_BASE }} />
+    )}>
+      <CoachAppContent />
+    </React.Suspense>
   )
 }

@@ -17,7 +17,7 @@ interface MeasureModalProps {
   onClose: () => void
 }
 
-const MEASURE_KEYS = ['waist', 'hips', 'chest', 'arms', 'thighs'] as const
+const MEASURE_KEYS = ['waist', 'hips', 'chest', 'biceps', 'thighs', 'calves'] as const
 
 export default function MeasureModal({ measurements, onSave, onClose }: MeasureModalProps) {
   const t = useTranslations('progress')
@@ -26,12 +26,12 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const MEASURE_FIELDS = MEASURE_KEYS.map(key => ({
     key,
-    label: t(`tab.measureLabels.${key}`),
-    shortLabel: t(`tab.graphLabels.${key === 'arms' ? 'arms' : key}`),
+    label: t(`tab.measureLabels.${key === 'biceps' ? 'arms' : key}`),
+    shortLabel: t(`tab.graphLabels.${key === 'biceps' ? 'arms' : key}`),
     unit: 'cm',
   }))
   const [measureForm, setMeasureForm] = useState<Record<string, string>>({
-    waist: '', hips: '', chest: '', arms: '', thighs: '',
+    waist: '', hips: '', chest: '', biceps: '', thighs: '', calves: '',
   })
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
@@ -111,7 +111,7 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
                     </span>
                     {i === 0 && <span style={{ fontSize: '0.62rem', color: GOLD, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', fontFamily: FONT_ALT }}>{t('measureModal.latest')}</span>}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                     {MEASURE_FIELDS.map(({ key, shortLabel }) => {
                       const val = m[key]
                       return val ? (

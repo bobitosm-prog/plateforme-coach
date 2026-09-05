@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Users, Zap, Calendar, Coins, Crown, CreditCard, UserCheck, Mail, TrendingDown } from 'lucide-react'
+import { Users, Zap, Calendar, Coins, Crown, CreditCard, UserCheck, Archive, TrendingDown } from 'lucide-react'
 import { adminFetch } from '@/lib/admin/api-client'
 import { PageHeader } from './_components/PageHeader'
 import { KpiCard } from './_components/KpiCard'
@@ -107,7 +107,7 @@ export default function AdminOverviewPage() {
         <KpiCard label="Total comptes" value={loading ? '—' : String(stats?.users.total || 0)} icon={Users} loading={loading} accent="zinc" />
         <KpiCard label="Lifetime" value={loading ? '—' : String(stats?.users.lifetime || 0)} subtext="Acces permanent" icon={Crown} loading={loading} accent="gold" />
         <KpiCard label="Monthly actifs" value={loading ? '—' : String(stats?.users.monthly || 0)} subtext="Abonnement en cours" icon={UserCheck} loading={loading} accent="emerald" />
-        <KpiCard label="Invites" value={loading ? '—' : String(stats?.users.invited || 0)} subtext="Pas encore actifs" icon={Mail} loading={loading} accent="zinc" />
+        <KpiCard label="Accès historiques" value={loading ? '—' : String(stats?.users.invited || 0)} subtext="Profils legacy" icon={Archive} loading={loading} accent="zinc" />
       </div>
 
       {stats?.generated_at && (

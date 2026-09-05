@@ -5,43 +5,36 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations, useLocale } from 'next-intl'
 import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle, Z_MODAL, Z_FAB } from '../../lib/design-tokens'
 import { useChatAI } from '../hooks/useChatAI'
+import AthenaMessageContent from './AthenaMessageContent'
+import type { UserCapabilities } from '../../lib/entitlements/capabilities'
 
 const SUGGESTION_ICONS = [UtensilsCrossed, Dumbbell, Heart, BarChart3]
-
-function renderMarkdown(text: string) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, `<strong style="color:${colors.gold}">$1</strong>`)
-    .replace(/^## (.*$)/gm, `<div style="font-family:${fonts.headline};font-size:18px;color:${colors.gold};letter-spacing:2px;margin:12px 0 6px">$1</div>`)
-    .replace(/^### (.*$)/gm, `<div style="font-family:${fonts.body};font-size:14px;font-weight:700;color:${colors.gold};letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase">$1</div>`)
-    .replace(/^- (.*$)/gm, '<div style="padding-left:12px;margin:2px 0">• $1</div>')
-    .replace(/\n/g, '<br/>')
-}
 
 interface ChatAIProps {
   session: any
   profile: any
+  capabilities: UserCapabilities
   externalOpen?: boolean
   onExternalClose?: () => void
   hideFloatingButton?: boolean
 }
 
-export default function ChatAI({ session, profile, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
+export default function ChatAI({ session, profile, capabilities, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
   const t = useTranslations('chat')
   const locale = useLocale()
-  const isInvited = profile?.subscription_type === 'invited'
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (externalOpen) setOpen(true)
   }, [externalOpen])
 
-  if (isInvited && open) {
+  if (!capabilities.ai && open) {
     return (
       <div style={{ position: 'fixed', bottom: 0, right: 0, width: '100%', maxWidth: 420, height: '100dvh', background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <div style={{ ...titleStyle, fontSize: 24, letterSpacing: '0.1em', color: colors.text, marginBottom: 12 }}>{t('invited.title')}</div>
-        <p style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6, marginBottom: 24 }}>{t('invited.message')}</p>
-        <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', cursor: 'pointer' }}>{t('invited.close')}</button>
+        <div style={{ ...titleStyle, fontSize: 24, letterSpacing: '0.1em', color: colors.text, marginBottom: 12 }}>{t('coachManaged.title')}</div>
+        <p style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6, marginBottom: 24 }}>{t('coachManaged.message')}</p>
+        <button onClick={() => { setOpen(false); onExternalClose?.() }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: `1px solid ${colors.goldRule}`, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: '0.1em', cursor: 'pointer' }}>{t('coachManaged.close')}</button>
       </div>
     )
   }
@@ -217,8 +210,9 @@ export default function ChatAI({ session, profile, externalOpen, onExternalClose
               <div>
                 {msg.role === 'assistant' ? (
                   <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px' }}>
-                    <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-                      style={{ ...bodyStyle, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }} />
+                    <div style={{ ...bodyStyle, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+                      <AthenaMessageContent content={msg.content} />
+                    </div>
                   </div>
                 ) : (
                   <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.goldBorder, border: `1px solid ${colors.gold}33`, borderRadius: '14px 14px 4px 14px', ...bodyStyle, fontSize: 12, color: colors.text, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

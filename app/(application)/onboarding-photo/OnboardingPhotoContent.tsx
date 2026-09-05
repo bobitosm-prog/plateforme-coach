@@ -141,10 +141,10 @@ export default function OnboardingPhotoContent() {
         )
       }
       await supabase.from('profiles').update({ onboarding_photo_completed_at: new Date().toISOString() }).eq('id', userId)
-      window.location.href = '/'
+      window.location.replace('/')
     } catch {
       await supabase.from('profiles').update({ onboarding_photo_completed_at: new Date().toISOString() }).eq('id', userId)
-      window.location.href = '/'
+      window.location.replace('/')
     }
   }
 

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed, Dumbbell } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
+import BugReport from '../BugReport'
 import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
 import SectionTitle from '../ui/SectionTitle'
@@ -21,11 +23,13 @@ interface AccountTabProps {
   unreadCount: number
   supabase: any
   userId?: string
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals') => void
+  session: Session | null
+  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program' | 'training_program') => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
   betaDaysLeft?: number
+  focusPrograms?: boolean
 }
 
 const menuCard: React.CSSProperties = {
@@ -49,16 +53,25 @@ const divider: React.CSSProperties = {
 
 export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate,
-  isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
+  session, isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
+  focusPrograms = false,
 }: AccountTabProps) {
   const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
+  const [bugReportOpen, setBugReportOpen] = useState(false)
+  const programsHeadingRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!supabase || !userId) return
     supabase.from('user_xp').select('total_xp').eq('user_id', userId).maybeSingle()
       .then(({ data }: any) => { if (data) setXpData(data) })
   }, [supabase, userId])
+
+  useEffect(() => {
+    if (!focusPrograms) return
+    programsHeadingRef.current?.scrollIntoView({ block: 'start' })
+    programsHeadingRef.current?.focus({ preventScroll: true })
+  }, [focusPrograms])
 
   const feedbackUnread = useMyFeedbackBadge()
   const xp = xpData?.total_xp || 0
@@ -138,6 +151,33 @@ export default function AccountTab({
           </button>
         </div>
 
+        {/* ── PROGRAMMES ── */}
+        <div ref={programsHeadingRef} tabIndex={-1} aria-label={t('programs')}>
+          <SectionTitle noPadding title={t('programs')} />
+        </div>
+        <div style={menuCard}>
+          <button onClick={() => onNavigate('nutrition_program')} style={itemStyle}>
+            <UtensilsCrossed size={18} color={GOLD} />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('nutritionProgram')}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('nutritionProgramDescription')}</span>
+            </span>
+            <span style={{ flex: 1 }} />
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
+          <div style={divider} />
+          <button onClick={() => onNavigate('training_program')} style={itemStyle}>
+            <Dumbbell size={18} color={GOLD} />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('trainingProgram')}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('trainingProgramDescription')}</span>
+            </span>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: TEXT_DIM, textTransform: 'uppercase' }}>{t('open')}</span>
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
+        </div>
+
         {/* ── PROFIL ── */}
         <SectionTitle noPadding title={t('profile')} />
         <div style={menuCard}>
@@ -145,18 +185,6 @@ export default function AccountTab({
             <User size={18} color={GOLD} />
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myProfile')}</span>
             <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button onClick={() => onNavigate('feedback')} style={itemStyle}>
-            <MessageSquare size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myReports')}</span>
-            <span style={{ flex: 1 }} />
-            {feedbackUnread > 0 && (
-              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
-                {feedbackUnread}
-              </span>
-            )}
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
           <div style={divider} />
@@ -184,7 +212,28 @@ export default function AccountTab({
             <span style={{ flex: 1 }} />
             <ChevronRight size={16} color={TEXT_DIM} />
           </button>
+          <div style={divider} />
+          <button type="button" onClick={() => setBugReportOpen(true)} style={itemStyle}>
+            <MessageSquare size={18} color={GOLD} />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('reportProblem')}</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('reportProblemDescription')}</span>
+            </span>
+            <span style={{ flex: 1 }} />
+            {feedbackUnread > 0 && (
+              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
+                {feedbackUnread}
+              </span>
+            )}
+            <ChevronRight size={16} color={TEXT_DIM} />
+          </button>
         </div>
+
+        <BugReport
+          session={session}
+          open={bugReportOpen}
+          onOpenChange={setBugReportOpen}
+        />
 
       </div>
     </div>

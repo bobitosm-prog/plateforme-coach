@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
     const { exerciseName, reason, muscleGroup, availableEquipment, isIsolation } = body
     const userId = user.id
 
-    // Guard: invited clients cannot use AI suggestions
+    // Coach-managed capabilities do not include AI suggestions.
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { guardInvitedClient } = await import('../../../lib/api-guard')
-      const blocked = await guardInvitedClient(userId)
+      const { guardCoachManagedCapabilities } = await import('../../../lib/api-guard')
+      const blocked = await guardCoachManagedCapabilities(userId)
       if (blocked) return blocked
     }
     if (!exerciseName) return NextResponse.json({ error: 'exerciseName requis' }, { status: 400 })

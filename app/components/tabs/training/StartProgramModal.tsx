@@ -1,14 +1,15 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { RailOverlay } from '../../ui/RailOverlay'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
-  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
+  BG_CARD, BORDER, GOLD, GOLD_RULE,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
 } from '../../../../lib/design-tokens'
+import { useFocusTrap } from '../../../hooks/useFocusTrap'
 
 interface StartProgramModalProps {
   programName: string
@@ -49,9 +50,12 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
     return { year: d.getFullYear(), month: d.getMonth() }
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const firstActionRef = useRef<HTMLButtonElement>(null)
+
+  useFocusTrap({ active: true, containerRef: dialogRef, initialFocusRef: firstActionRef, onEscape: onClose })
 
   const today = new Date()
-  const todayStr = toDateStr(today)
   const nextMonday = getNextMonday()
   const nextMondayStr = toDateStr(nextMonday)
 
@@ -93,6 +97,10 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
   return (<RailOverlay>
     <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="start-program-title"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
@@ -100,7 +108,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
         style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
       >
         <div style={{ padding: '24px 20px 0', flexShrink: 0 }}>
-          <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.08em' }}>{t('title')}</div>
+          <div id="start-program-title" style={{ fontFamily: FONT_DISPLAY, fontSize: 22, color: TEXT_PRIMARY, letterSpacing: '0.08em' }}>{t('title')}</div>
           <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, marginTop: 4 }}>{programName}</div>
         </div>
 
@@ -109,7 +117,7 @@ export default function StartProgramModal({ programName, onStart, onClose }: Sta
             {!showPicker ? (
               <motion.div key="options" initial={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* MAINTENANT */}
-                <button onClick={() => onStart('now')} style={{ ...btnBase, background: GOLD, color: colors.onGold, border: 'none' }}>
+                <button ref={firstActionRef} onClick={() => onStart('now')} style={{ ...btnBase, background: GOLD, color: colors.onGold, border: 'none' }}>
                   <span>{t('now')}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, fontFamily: FONT_BODY, opacity: 0.7 }}>
                     {t('today', { date: formatDateLocale(today, locale) })}

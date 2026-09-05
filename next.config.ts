@@ -3,6 +3,31 @@ import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
+const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1'])
+
+export function getLocalSupabaseCspSources(
+  nodeEnv = process.env.NODE_ENV,
+  supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL,
+): string[] {
+  if (nodeEnv === 'production' || !supabaseUrl) return []
+
+  try {
+    const url = new URL(supabaseUrl.trim())
+    const hostname = url.hostname.startsWith('[') && url.hostname.endsWith(']')
+      ? url.hostname.slice(1, -1)
+      : url.hostname
+
+    if (!['http:', 'https:'].includes(url.protocol) || !LOOPBACK_HOSTNAMES.has(hostname)) {
+      return []
+    }
+
+    const websocketProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+    return [url.origin, `${websocketProtocol}//${url.host}`]
+  } catch {
+    return []
+  }
+}
+
 const nextConfig: NextConfig = {
   // AVIF first (5-10x compression vs PNG), WebP fallback navigateurs anciens.
   // Quality default 75 = sweet spot Vercel/Next, ne pas surcharger.
@@ -11,6 +36,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const isDev = process.env.NODE_ENV === 'development'
+    const localSupabaseCspSources = getLocalSupabaseCspSources()
 
     const cspDirectives = [
       `default-src 'self'`,
@@ -18,7 +44,7 @@ const nextConfig: NextConfig = {
       `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
       `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch https://moovx.ch https://*.googleusercontent.com`,
       `font-src 'self' data: https://fonts.gstatic.com`,
-      `connect-src 'self' https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com`,
+      `connect-src 'self' https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com${localSupabaseCspSources.length ? ` ${localSupabaseCspSources.join(' ')}` : ''}`,
       `media-src 'self' https://*.supabase.co blob:`,
       `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com`,
       `frame-ancestors 'none'`,

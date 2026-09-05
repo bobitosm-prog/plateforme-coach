@@ -20,6 +20,22 @@
     "reps": "Wdh.",
     "restSec": "Pause (s)"
   },
+  "initialGeneration": {
+    "title": "Dein Bereich wird vorbereitet",
+    "training": "Trainingsprogramm",
+    "nutrition": "Ernährungsplan",
+    "retry": "Erneut versuchen",
+    "retryDomain": "{domain} erneut versuchen",
+    "finalizationError": "Die Ressourcen sind bereit, aber der Abschluss muss erneut versucht werden.",
+    "status": {
+      "ready": "Bereit",
+      "generating": "Wird vorbereitet…",
+      "missing": "Vorbereitung ausstehend",
+      "waitingForCoach": "Warten auf den Plan des Coaches",
+      "quotaExhausted": "Kontingent erreicht — später erneut versuchen",
+      "error": "Vorübergehender Fehler"
+    }
+  },
   "muscles": {
     "all": "Alle",
     "quads": "Quadrizeps",
@@ -402,7 +418,7 @@
     "client_label": "Für Kunden",
     "client_title": "Voller Zugang",
     "client_subtitle1": "Ohne Coach: Direkt-Abo.",
-    "client_subtitle2": "Mit eingeladenem Coach: kostenfreier Zugang.",
+    "client_subtitle2": "Mit Coach-Begleitung: Zugang inbegriffen.",
     "plan_monthly_label": "Monatlich",
     "plan_monthly_period": "/Mon",
     "plan_yearly_label": "Jährlich",
@@ -578,10 +594,22 @@
       "saving": "Speichern...",
       "saveButton": "Speichern & neu berechnen",
       "regenPrompt": "Dein Ziel hat sich geändert. Möchtest du deinen Ernährungsplan mit diesen neuen Parametern regenerieren?",
+      "generatePrompt": "Deine Präferenzen sind gespeichert. Möchtest du deinen 7-Tage-Ernährungsplan generieren?",
       "noThanks": "Nein danke",
       "regenerating": "Generierung...",
-      "regenerate": "Meinen KI-Plan regenerieren"
+      "regenerate": "Meinen KI-Plan regenerieren",
+      "generate": "Meinen Plan generieren",
+      "saveError": "Die Präferenzen konnten nicht gespeichert werden. Bitte versuche es erneut.",
+      "generationError": "Der neue Plan konnte nicht gespeichert werden. Bitte versuche es erneut."
     }
+  },
+  "aiQuotaBadge": {
+    "remaining": "{count, plural, one {# KI-Generierung verfügbar} other {# KI-Generierungen verfügbar}}",
+    "period": "diesen Monat",
+    "exhausted": "Kontingent erreicht",
+    "nextAvailable": "Verfügbar in {days, plural, one {# Tag} other {# Tagen}}",
+    "unavailable": "Kontingent nicht verfügbar",
+    "unavailableHint": "Das Kontingent kann derzeit nicht geprüft werden."
   },
   "recipesSection": {
     "title": "Fitness-Rezepte",
@@ -599,6 +627,8 @@
     "empty": "Keine Rezepte. Generiere eins!",
     "generated": "Rezept generiert!",
     "genError": "Generierungsfehler",
+    "loadError": "Rezepte sind derzeit nicht verfügbar.",
+    "retry": "Erneut versuchen",
     "deleted": "Rezept gelöscht",
     "categories": {
       "all": "Alle",
@@ -701,6 +731,8 @@
       "createAccount": "Registrieren",
       "continueGoogle": "Weiter mit Google",
       "continueApple": "Weiter mit Apple",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
       "or": "ODER",
       "backToHome": "← Zurück zur Startseite",
       "backToLogin": "← Zurück zur Anmeldung",
@@ -721,13 +753,49 @@
         "emailRequired": "E-Mail erforderlich",
         "passwordRequired": "Passwort erforderlich",
         "invalidCredentials": "Ungültige E-Mail oder Passwort",
-        "emailNotConfirmed": "E-Mail nicht bestätigt. Überprüfe dein Postfach."
+        "emailNotConfirmed": "E-Mail nicht bestätigt. Überprüfe dein Postfach.",
+        "profileUnavailable": "Dein Profil kann derzeit nicht geprüft werden. Versuche es erneut.",
+        "recoveryRequest": "Der Link konnte derzeit nicht gesendet werden. Versuche es später erneut."
+      },
+      "callbackErrors": {
+        "callback_invalid": "Dieser Anmeldelink ist ungültig oder abgelaufen.",
+        "oauth_error": "Die Anmeldung über den Anbieter wurde nicht abgeschlossen. Versuche es erneut.",
+        "recovery_error": "Dieser Wiederherstellungslink ist ungültig oder abgelaufen.",
+        "confirmation_error": "Die Kontobestätigung wurde nicht abgeschlossen. Fordere einen neuen Link an."
       },
       "banner": {
         "confirmed": {
           "title": "KONTO BESTÄTIGT",
           "body": "Ihre E-Mail ist bestätigt. Melden Sie sich an, um zu beginnen."
+        },
+        "reset": {
+          "title": "PASSWORT AKTUALISIERT",
+          "body": "Dein Passwort wurde aktualisiert. Du kannst dich jetzt anmelden."
         }
+      }
+    },
+    "routing": {
+      "loading": "Profil wird geprüft",
+      "profileErrorTitle": "PROFIL VORÜBERGEHEND NICHT VERFÜGBAR",
+      "profileErrorBody": "Dein Profil kann derzeit nicht geprüft werden. Es werden keine Einrichtungsdaten geändert.",
+      "profileMissingTitle": "PROFIL NICHT GEFUNDEN",
+      "profileMissingBody": "Dein Konto ist angemeldet, aber das Profil ist noch nicht verfügbar.",
+      "retry": "Erneut versuchen"
+    },
+    "resetPassword": {
+      "title": "NEUES PASSWORT",
+      "subtitle": "Wähle ein sicheres neues Passwort.",
+      "passwordLabel": "Neues Passwort",
+      "confirmationLabel": "Neues Passwort bestätigen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
+      "checking": "Wiederherstellungslink wird geprüft",
+      "submit": "Passwort aktualisieren",
+      "saving": "Wird aktualisiert…",
+      "errors": {
+        "tooShort": "Das Passwort muss mindestens 8 Zeichen enthalten.",
+        "mismatch": "Die Passwörter stimmen nicht überein.",
+        "generic": "Das Passwort konnte nicht aktualisiert werden. Fordere einen neuen Link an."
       }
     },
     "register": {
@@ -792,7 +860,11 @@
         "changeProfile": "← Profil wechseln",
         "hasAccount": "Schon ein Konto?",
         "loginLink": "Anmelden",
-        "heroAlt": "Luxus-Fitnessstudio Genf"
+        "heroAlt": "Luxus-Fitnessstudio Genf",
+        "termsPrefix": "Ich akzeptiere die",
+        "termsLink": "Nutzungsbedingungen",
+        "termsAnd": "und die",
+        "privacyLink": "Datenschutzerklärung"
       },
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
@@ -808,28 +880,60 @@
         "fullNameRequired": "Vollständiger Name erforderlich",
         "specialityRequired": "Spezialisierung erforderlich",
         "experienceRequired": "Erfahrung erforderlich",
-        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an."
+        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an.",
+        "profileUnavailable": "Dein Profil kann derzeit nicht geprüft werden. Versuche es erneut.",
+        "oauthRole": "Die gewählte Rolle konnte für diese Anmeldung nicht sicher übernommen werden. Versuche es erneut.",
+        "termsRequired": "Akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung, um fortzufahren."
       }
     },
     "join": {
       "title": "TRITT MOOVX BEI",
       "coachInvitation": "Einladung von Coach {coachName}",
-      "subtitle": "Erstelle dein Konto, um von deinem Coach betreut zu werden. Kostenloser Zugang.",
+      "subtitle": "Erstelle dein Konto, um die Einladung deines Coaches anzunehmen.",
+      "invitedEmail": "Einladung bestimmt für {email}",
       "continueGoogle": "Weiter mit Google",
       "or": "ODER",
       "emailPlaceholder": "E-Mail",
       "passwordPlaceholder": "Passwort (min. 8 Zeichen)",
       "confirmPasswordPlaceholder": "Passwort bestätigen",
-      "submitButton": "Kostenloses Konto erstellen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort ausblenden",
+      "submitButton": "Konto erstellen",
       "loadingButton": "Konto wird erstellt...",
       "hasAccount": "Schon ein Konto?",
       "loginLink": "Anmelden",
       "features": "✓ Kostenloser Zugang · ✓ Von deinem Coach betreut · ✓ Alle Funktionen",
       "invalidLink": "Ungültiger Einladungslink.",
+      "states": {
+        "validating": "Einladung wird geprüft...",
+        "consuming": "Einladung wird aktiviert...",
+        "success": "Einladung aktiviert. Weiterleitung...",
+        "invalid": "Diese Einladung ist ungültig. Bitte deinen Coach um einen neuen Link.",
+        "legacy": "Dieser alte Link ist nicht mehr gültig. Bitte deinen Coach um eine neue Einladung.",
+        "expired": "Diese Einladung ist abgelaufen. Bitte deinen Coach um einen neuen Link.",
+        "revoked": "Diese Einladung ist nicht mehr verfügbar. Bitte deinen Coach um einen neuen Link.",
+        "used": "Diese Einladung wurde bereits verwendet.",
+        "emailMismatch": "Dieses Konto stimmt nicht mit der eingeladenen E-Mail-Adresse überein.",
+        "coachConflict": "Für dieses Konto ist bereits ein anderer Coach aktiv.",
+        "forbidden": "Melde dich mit der eingeladenen E-Mail-Adresse an oder prüfe, dass kein anderer Coach aktiv ist.",
+        "temporary": "Ein vorübergehender Fehler verhindert die Aktivierung. Versuche es gleich erneut."
+      },
+      "legacyUnavailable": {
+        "title": "Einladung vorübergehend nicht verfügbar",
+        "message": "Dieser Einladungslink wird nicht mehr unterstützt. Bitte deinen Coach um eine neue Einladung oder erstelle ein Kundenkonto ohne automatische Zuordnung.",
+        "register": "Kundenkonto erstellen"
+      },
       "emailSent": {
         "title": "ÜBERPRÜFE DEIN POSTFACH",
         "message": "Eine Bestätigungs-E-Mail wurde gesendet an",
-        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen."
+        "instruction": "Klicke auf den Link, um dein Konto zu aktivieren und loszulegen.",
+        "messageWithEmail": "Eine Bestätigungs-E-Mail wurde an {email} gesendet. Die Einladung wird nach der Bestätigung fortgesetzt."
+      },
+      "terms": {
+        "prefix": "Ich akzeptiere die",
+        "terms": "Nutzungsbedingungen",
+        "and": "und die",
+        "privacy": "Datenschutzerklärung"
       },
       "errors": {
         "emailRequired": "E-Mail erforderlich",
@@ -837,7 +941,8 @@
         "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen haben",
         "passwordMismatch": "Passwörter stimmen nicht überein",
         "invalidLink": "Ungültiger Einladungslink",
-        "alreadyRegistered": "Dieses Konto existiert bereits. Melde dich auf der Login-Seite an."
+        "alreadyRegistered": "Dieses Konto existiert bereits. Melde dich auf der Login-Seite an.",
+        "termsRequired": "Akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung, um fortzufahren."
       }
     },
     "onboarding": {
@@ -1094,11 +1199,7 @@
         "hoursTo": "bis",
         "followUpLabel": "Bevorzugter Betreuungsmodus",
         "businessModelTitle": "So funktioniert's",
-        "businessModelDesc": "Du zahlst CHF 50/Monat für Zugang zu allen MoovX-Tools. Deine Kunden melden sich kostenlos über deinen Einladungslink an und erhalten Zugang zu allen Funktionen.",
-        "inviteLinkLabel": "Dein Einladungslink",
-        "inviteLinkCopy": "Kopieren",
-        "inviteLinkCopied": "Kopiert",
-        "inviteLinkNote": "Teile diesen Link mit deinen Kunden. Sie melden sich an und werden dir automatisch zugewiesen."
+        "businessModelDesc": "Du zahlst CHF 50/Monat für den Zugang zu den MoovX-Tools. Lade jeden Kunden per E-Mail über dein Dashboard ein."
       },
       "stripe": {
         "title": "ZAHLUNGEN EMPFANGEN",
@@ -1121,12 +1222,20 @@
         "experienceLabel": "Erfahrung",
         "maxClientsLabel": "Max. Kunden",
         "inviteTitle": "Lade deine Kunden ein",
-        "inviteDesc": "Teile deinen einzigartigen Einladungslink",
-        "inviteCopied": "Link kopiert!",
+        "inviteDesc": "Sende eine sichere E-Mail-Einladung über dein Dashboard",
         "aiPlanTitle": "Erstelle einen KI-Plan",
         "aiPlanDesc": "Erstelle ein Ernährungs- oder Trainingsprogramm für einen Kunden",
         "dashboardTitle": "Entdecke dein Dashboard",
         "dashboardDesc": "Entdecke alle Coach-Funktionen"
+      },
+      "redesign": {
+        "step": "Schritt {current} von {total}", "loading": "Dein Coach-Bereich wird geladen…", "retry": "Erneut versuchen", "edit": "Ändern", "finish": "Meinen Coach-Bereich öffnen",
+        "profile": { "title": "Dein Coach-Profil", "subtitle": "Stelle deine Expertise vor. Das Foto bleibt optional." },
+        "coaching": { "title": "Dein Coaching", "subtitle": "Konfiguriere deine Kapazität und deine Betreuung." },
+        "stripe": { "title": "Deine Zahlungen", "subtitle": "Stripe ist optional und kann später eingerichtet werden.", "optional": "Optionale Stripe-Verbindung", "skip": "Du kannst ohne Stripe-Verbindung fortfahren.", "later": "Später einrichten" },
+        "summary": { "title": "Prüfe deinen Bereich", "subtitle": "Kontrolliere deine Auswahl, bevor du das Dashboard öffnest." },
+        "errors": { "profile": "Dein Coach-Profil konnte nicht geprüft werden.", "save": "Speichern fehlgeschlagen. Deine Antworten bleiben erhalten — versuche es erneut.", "avatar": "Das Foto konnte nicht gespeichert werden.", "stripe": "Stripe ist vorübergehend nicht verfügbar. Du kannst es erneut versuchen oder ohne Stripe fortfahren." },
+        "a11y": { "flow": "Coach-Bereich einrichten", "progress": "Fortschritt des Coach-Onboardings" }
       },
       "constants": {
         "specialities": {
@@ -1333,8 +1442,8 @@
     "subscription": {
       "lifetime": "Lebenslanger Zugang",
       "lifetimeDesc": "Dauerhafter Zugang zu allen MoovX-Funktionen.",
-      "coachAccess": "Coach-Zugang",
-      "coachAccessDesc": "Dein Zugang ist über deinen Coach enthalten.",
+      "legacyAccess": "Historischer Zugang",
+      "legacyAccessDesc": "Dein historischer Zugang zu MoovX bleibt aktiv.",
       "planMonthly": "Monatsplan — CHF 10/Monat",
       "planYearly": "Jahresplan — CHF 80/Jahr",
       "planCoach": "Coach Pro — CHF 50/Monat",
@@ -1494,7 +1603,7 @@
       "kcalDay": "KCAL/TAG",
       "sessions": "EINHEITEN"
     },
-    "invited": {
+    "coachManaged": {
       "title": "KI-COACH",
       "message": "Dein Coach verwaltet dein Programm und deine Ernährung. Kontaktiere ihn direkt über die Nachrichten.",
       "close": "SCHLIESSEN"
@@ -1546,6 +1655,92 @@
       "noActiveProgram": "KEIN AKTIVES PROGRAMM",
       "managePrograms": "Meine Programme verwalten"
     },
+    "v2": {
+      "sessionToday": "Heutige Einheit",
+      "nextSession": "Nächste Einheit",
+      "sessionActive": "Training läuft",
+      "sessionCompletedLabel": "Heute abgeschlossen",
+      "sessionCompletedToday": "Training heute abgeschlossen",
+      "viewCompletedSession": "Training ansehen",
+      "trainingLabel": "Training",
+      "noSessionToday": "Heute kein Training",
+      "noSessionDescription": "Ruhetag oder keine Einheit geplant.",
+      "sessionSummary": "Trainingsfortschritt",
+      "start": "Einheit starten",
+      "resume": "Fortsetzen",
+      "exercises": "Übungen",
+      "sets": "Sätze",
+      "exerciseCount": "{count} Übungen",
+      "setCount": "{count} Sätze",
+      "estimatedDuration": "~{minutes} Min.",
+      "exerciseProgress": "{current} / {total} Übungen",
+      "setProgress": "{current} / {total} Sätze",
+      "activeProgram": "Aktives Programm",
+      "coachPlan": "Coach-Plan",
+      "personalProgram": "Eigenes Programm",
+      "noProgram": "Kein aktives Programm",
+      "manage": "Verwalten",
+      "viewProgram": "Ansehen",
+      "viewInAccount": "Im Konto ansehen",
+      "manageInAccount": "Im Konto verwalten",
+      "configureProgram": "Mein Programm konfigurieren",
+      "viewNextSession": "Nächste Einheit ansehen",
+      "freeSession": "Freies Training",
+      "programLoading": "Programm wird geladen",
+      "programError": "Programm nicht verfügbar",
+      "programEmpty": "Wähle dein nächstes Programm",
+      "timeline": "Trainings-Timeline",
+      "done": "Erledigt",
+      "active": "Aktiv",
+      "upcoming": "Bevorstehend",
+      "focus": "Übungsfokus",
+      "previous": "Letztes Mal",
+      "noPrevious": "Keine vorherige Leistung",
+      "previousError": "Vorherige Leistung nicht verfügbar",
+      "target": "Ziel",
+      "details": "Details",
+      "exerciseTools": "Übungswerkzeuge",
+      "currentSet": "Satz {current} von {total}",
+      "weight": "Gewicht",
+      "repetitions": "Wiederholungen",
+      "rir": "Wiederholungen in Reserve",
+      "decreaseWeight": "Gewicht um {step} kg reduzieren",
+      "increaseWeight": "Gewicht um {step} kg erhöhen",
+      "decreaseReps": "Eine Wiederholung entfernen",
+      "increaseReps": "Eine Wiederholung hinzufügen",
+      "suggestion": "Lokaler Vorschlag",
+      "suggestionIncrease": "+{step} kg · Ziel {weight} kg",
+      "suggestionKeep": "{weight} kg beibehalten",
+      "suggestionReduce": "Auf {weight} kg reduzieren",
+      "useSuggestion": "Übernehmen",
+      "validateSet": "Satz bestätigen",
+      "nextSetReady": "Satz {set} bereit",
+      "nextExerciseReady": "Nächste Übung bereit",
+      "workoutComplete": "Alle Sätze sind abgeschlossen",
+      "restTimer": "Pause",
+      "restRemaining": "Noch {seconds} Sekunden Pause",
+      "restFinished": "Pause beendet",
+      "nextSetReadyShort": "Der nächste Satz ist bereit",
+      "dismissRestFinished": "Meldung zum Pausenende schließen",
+      "continue": "Weiter",
+      "skipRest": "Überspringen",
+      "addRestTime": "30 Sekunden Pause hinzufügen",
+      "video": "Video",
+      "technique": "Technik",
+      "notes": "Notizen",
+      "replaceForSession": "Für diese Einheit ersetzen",
+      "replaceCompletedConfirm": "Einige Sätze sind bereits abgeschlossen. Diese Übung nur für den Rest der Einheit ersetzen?",
+      "replacementSessionOnly": "Dieser Ersatz gilt nur für diese Einheit und ändert das Programm nicht.",
+      "replacementLoading": "Passende Alternativen werden gesucht…",
+      "replacementError": "Alternativen sind vorübergehend nicht verfügbar.",
+      "noReplacement": "Keine passende Alternative verfügbar.",
+      "toolLoading": "Details werden geladen…",
+      "detailsError": "Details sind vorübergehend nicht verfügbar.",
+      "detailsUnavailable": "Keine weiteren Details verfügbar.",
+      "videoError": "Das Video kann derzeit nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "closeTools": "Schließen"
+    },
     "hero": {
       "session": "EINHEIT",
       "restDay": "RUHETAG",
@@ -1568,10 +1763,15 @@
     },
     "recent": {
       "noSessions": "Keine Einheiten",
+      "loading": "Verlauf wird geladen…",
+      "loadError": "Der Verlauf ist vorübergehend nicht verfügbar.",
       "lastSessions": "Letzte Einheiten",
       "sessionsCount": "{count} Einheiten",
-      "viewAll": "Alle anzeigen ›",
+      "viewAll": "Verlauf anzeigen ›",
       "reduce": "Reduzieren",
+      "historyTitle": "Trainingsverlauf",
+      "historyTotal": "{count, plural, one {# gespeicherte Einheit} other {# gespeicherte Einheiten}}",
+      "completed": "Beendet",
       "sessionFallback": "Einheit",
       "filters": {
         "all": "Alle",
@@ -1771,15 +1971,18 @@
         "rest": "PAUSE"
       },
       "done": {
-        "title": "Training abgeschlossen.",
-        "totalVolume": "Gesamtvolumen",
-        "lastSessions": "Letzte Trainings",
+        "title": "Training abgeschlossen",
         "duration": "Dauer",
         "sets": "Sätze",
         "exercises": "Übungen",
         "setsCount": "{count} Sätze",
-        "backToDashboard": "Zurück zum Dashboard",
-        "autoRedirect": "Auto in {seconds}s"
+        "newRecord": "Neuer Rekord",
+        "backHome": "Zur Startseite",
+        "viewProgress": "Meine Fortschritte ansehen",
+        "saving": "Training wird gespeichert…",
+        "saveErrorTitle": "Unvollständig gespeichert",
+        "saveErrorDescription": "Das Training konnte nicht vollständig gespeichert werden. Deine Sätze bleiben auf diesem Gerät wiederherstellbar.",
+        "retry": "Erneut versuchen"
       },
       "reorder": {
         "title": "UMORDNEN",
@@ -1809,6 +2012,7 @@
         "duration": "Dauer",
         "save": "TRAINING SPEICHERN",
         "saveHint": "Speichere deinen Fortschritt und deine Rekorde",
+        "sessionOnly": "Änderungen gelten nur für dieses Training.",
         "delete": "TRAINING LÖSCHEN",
         "deleteHint": "Die Daten dieses Trainings gehen verloren",
         "continue": "TRAINING FORTSETZEN"
@@ -1835,12 +2039,6 @@
         "description": "BESCHREIBUNG",
         "execution": "AUSFÜHRUNG",
         "tips": "TIPPS"
-      },
-      "savePopup": {
-        "title": "PROGRAMM GEÄNDERT",
-        "description": "Du hast die Übungen geändert. Im Programm speichern?",
-        "save": "PROGRAMM SPEICHERN",
-        "justThisTime": "NUR DIESES TRAINING"
       }
     },
     "builder": {
@@ -1851,7 +2049,8 @@
       "newExercise": "NEUE ÜBUNG",
       "aiCard": "MIT KI GENERIEREN",
       "aiCardDesc": "Beschreibe dein Ziel und die KI erstellt alles",
-      "aiLocked": "Dein Coach verwaltet dein Programm. Kontaktiere ihn direkt.",
+      "aiLocked": "Die KI-Generierung ist derzeit nicht verfügbar. Die manuelle Erstellung bleibt verfügbar.",
+      "close": "Programmkonfigurator schließen",
       "manualCard": "SELBST ERSTELLEN",
       "manualCardDesc": "Wähle deine Übungen pro Tag",
       "customCard": "EIGENE ÜBUNG",
@@ -1906,7 +2105,8 @@
         "allMuscles": "Alle",
         "myExercise": "MEINE ÜBUNG",
         "noResults": "Keine Übung gefunden",
-        "createExercise": "ÜBUNG ERSTELLEN"
+        "createExercise": "ÜBUNG ERSTELLEN",
+        "loadError": "Der Übungskatalog ist vorübergehend nicht verfügbar."
       },
       "day": {
         "reorderDays": "Tage umordnen",
@@ -1943,7 +2143,8 @@
         "deleteTitle": "Diese Übung löschen?",
         "deleteMessage": "Die Übung \"{name}\" wird aus dem Programm entfernt. Das kann nicht rückgängig gemacht werden.",
         "deleteConfirm": "Löschen",
-        "deleteCancel": "Abbrechen"
+        "deleteCancel": "Abbrechen",
+        "closeGenerating": "Eine Generierung läuft. Möchtest du wirklich schließen?"
       },
       "toast": {
         "generating": "Dein Programm wird generiert...",
@@ -1951,12 +2152,158 @@
         "generationError": "Generierungsfehler",
         "networkError": "Netzwerkfehler",
         "exerciseCreated": "Übung erstellt!",
-        "programSaved": "Programm gespeichert!"
+        "programSaved": "Programm gespeichert!",
+        "actionUnavailable": "Diese Aktion ist derzeit nicht verfügbar.",
+        "persistenceError": "Speichern fehlgeschlagen. Deine Änderungen bleiben sichtbar.",
+        "scheduleError": "Das Programm wurde gespeichert, aber der Zeitplan konnte nicht aktualisiert werden."
       }
     }
   },
   "progress": {
     "headerSubtitle": "{sessions} Einheiten · {records} PR",
+    "v2": {
+      "eyebrow": "Übersicht",
+      "title": "Dein Fortschritt",
+      "subtitle": "Verstehe deine Entwicklung im Zeitverlauf und behalte das Wesentliche im Blick.",
+      "addMeasurement": "Messwert hinzufügen",
+      "periodLabel": "Zeitraum",
+      "periods": { "7d": "7 Tage", "30d": "30 Tage", "90d": "90 Tage", "all": "Alles" },
+      "availableSince": "Daten verfügbar seit {date}",
+      "currentWeight": "Aktuelles Gewicht",
+      "weight": "Gewicht",
+      "regularity": "Regelmäßigkeit",
+      "volume": "Volumen",
+      "weightChange": "{value} kg über {period}",
+      "volumeChange": "{value}% gegenüber der Vorwoche",
+      "sessionsPerWeek": "{value} Einheiten / Woche",
+      "weeksWindow": "Zusammenfassung über {count} Wochen",
+      "plannedUnavailable": "Geplantes Ziel nicht verfügbar",
+      "comparisonUnavailable": "Vergleich nicht verfügbar",
+      "trends": { "eyebrow": "Wichtige Trends", "title": "Das Wesentliche auf einen Blick", "subtitle": "Gewicht, Regelmäßigkeit und Trainingsbelastung im gewählten Zeitraum." },
+      "states": { "loading": "Fortschritt wird geladen", "unavailable": "Daten nicht verfügbar", "unavailableCopy": "Ein Teil deines Fortschritts konnte nicht geladen werden.", "insufficient": "Noch nicht genügend Daten", "insufficientCopy": "Füge einige Messwerte oder Einheiten hinzu, damit ein Trend sichtbar wird.", "partial": "Einige Daten sind noch unvollständig." },
+      "trend": { "up": "Steigender Trend", "down": "Sinkender Trend", "stable": "Stabiler Trend", "unknown": "Trend nicht verfügbar" },
+      "units": { "kg": "kg" },
+      "weightHistory": {
+        "eyebrow": "Körperverlauf",
+        "title": "Gewichtsentwicklung",
+        "subtitle": "Deine tatsächlichen Messwerte über {period}, ohne automatische Bewertung.",
+        "add": "Gewicht hinzufügen",
+        "target": "Ziel",
+        "notSet": "Nicht festgelegt",
+        "change": "Veränderung",
+        "actual": "Gemessenes Gewicht",
+        "chartTitle": "Gewichtsverlauf",
+        "accessibleSummary": "{count} Messwerte über {period}. Aktuelles Gewicht {current} kg, Veränderung {delta} kg.",
+        "empty": "Füge deinen ersten Messwert hinzu, um den Verlauf zu starten.",
+        "unavailable": "Der Gewichtsverlauf ist derzeit nicht verfügbar."
+      },
+      "measurements": {
+        "eyebrow": "Körper",
+        "title": "Körpermaße",
+        "subtitle": "Aktuelle Werte und Entwicklung der sechs kanonischen Körpermaße.",
+        "add": "Körpermaße hinzufügen",
+        "empty": "Füge deine ersten Körpermaße hinzu, um ihre Entwicklung zu verfolgen.",
+        "unavailable": "Die Körpermaße sind derzeit nicht verfügbar.",
+        "partial": "Für einige Körpermaße liegt noch kein vollständiger Verlauf vor.",
+        "noComparison": "Noch kein Vergleich",
+        "delta": "{value} cm seit der vorherigen Messung",
+        "trendLabel": "Verlauf: {field}",
+        "fields": { "chest": "Brust", "waist": "Taille", "hips": "Hüfte", "biceps": "Bizeps", "thighs": "Oberschenkel", "calves": "Waden" }
+      },
+      "records": {
+        "eyebrow": "Leistung",
+        "title": "Persönliche Rekorde",
+        "subtitle": "Deine besten protokollierten Ergebnisse mit tatsächlichem Typ und Datum.",
+        "emptyTitle": "Noch kein Rekord",
+        "empty": "Schließe protokollierte Sätze ab, damit deine ersten Rekorde erscheinen.",
+        "unavailable": "Persönliche Rekorde sind derzeit nicht verfügbar.",
+        "dateUnavailable": "Datum nicht verfügbar",
+        "muscleGroupsLabel": "Rekorde nach Muskelgruppe",
+        "recordCount": "{count, plural, one {# Rekord} other {# Rekorde}}",
+        "otherGroup": "Andere",
+        "showMore": "{count} weitere anzeigen",
+        "collapse": "Weniger anzeigen",
+        "types": { "estimated1rm": "Geschätztes 1RM", "maxWeight": "Maximale Last", "maxReps": "Maximale Wiederholungen", "bestVolume": "Bestes Volumen", "other": "Protokollierte Leistung" }
+      },
+      "exercise": {
+        "eyebrow": "Kraft",
+        "title": "Übungsfortschritt",
+        "subtitle": "Eine zeitliche Entwicklung nur aus bereits protokollierten Sätzen.",
+        "selectorLabel": "Übung",
+        "chartTitle": "Entwicklung von {exercise}",
+        "summary": "{exercise}: {count} Punkte für {metric}, von {start} bis {end}.",
+        "visibleSummary": "{metric}: von {start} bis {end} kg im Zeitraum.",
+        "needsHistory": "Eine zweite Einheit ist nötig, um eine Entwicklung darzustellen.",
+        "empty": "Für diesen Zeitraum hat noch keine Übung genügend protokollierte Sätze.",
+        "unavailable": "Der Übungsfortschritt ist derzeit nicht verfügbar.",
+        "metrics": { "estimated1rm": "Geschätztes 1RM", "maxWeight": "Maximale Last", "volume": "Protokolliertes Volumen" }
+      },
+      "weeklyVolume": {
+        "eyebrow": "Trainingslast",
+        "title": "Wöchentliches Volumen",
+        "subtitle": "Vergleiche Wochen, ohne Volumen als universellen Qualitätswert darzustellen.",
+        "current": "Diese Woche",
+        "previous": "Vorwoche",
+        "change": "Veränderung",
+        "chartTitle": "Entwicklung des Wochenvolumens",
+        "summary": "Protokolliertes Volumen über {count} Wochen.",
+        "definition": "Gesamtlast aller protokollierten Sätze.",
+        "empty": "Protokolliere Sätze mit Last und Wiederholungen, um das Volumen anzuzeigen.",
+        "unavailable": "Das wöchentliche Volumen ist derzeit nicht verfügbar."
+      },
+      "history": {
+        "eyebrow": "Sekundärer Verlauf",
+        "title": "Verlauf und Werkzeuge",
+        "subtitle": "Fotos, Wohlbefinden, erweiterte Analysen und Exporte übersichtlich zusammengefasst.",
+        "navigationLabel": "Fortschrittsnavigation",
+        "navigation": { "weight": "Gewicht", "performance": "Leistung", "body": "Körper", "history": "Verlauf" },
+        "photos": {
+          "title": "Transformation",
+          "subtitle": "Fotos und Vorher-Nachher-Vergleich",
+          "add": "Foto hinzufügen",
+          "compare": "Vergleichen",
+          "emptyTitle": "Keine Fotos",
+          "empty": "Füge ein Foto hinzu, wenn du deine Entwicklung dokumentieren möchtest.",
+          "unavailable": "Fotos können derzeit nicht geladen werden.",
+          "before": "Vorher",
+          "after": "Nachher",
+          "comparisonTitle": "Fotovergleich",
+          "align": "Ausrichten",
+          "aligning": "Ausrichtung",
+          "alignError": "Die automatische Ausrichtung ist nicht verfügbar.",
+          "close": "Vergleich schließen",
+          "sliderLabel": "Position des Vorher-Nachher-Vergleichs",
+          "photoNumber": "Foto {number}"
+        },
+        "wellbeing": {
+          "title": "Wohlbefinden",
+          "subtitle": "Kompakte Trends für Stimmung und Schlaf im Zeitraum.",
+          "mood": "Stimmung",
+          "sleep": "Schlaf",
+          "empty": "Füge Check-ins hinzu, damit Trends sichtbar werden.",
+          "partial": "Bisher hat nur ein Trend genügend Daten.",
+          "unavailable": "Wohlbefindensdaten sind nicht verfügbar."
+        },
+        "advanced": {
+          "title": "Erweiterte Analysen",
+          "subtitle": "Muskelvolumen und wahrgenommene Anstrengung, bei Bedarf geladen.",
+          "rir": "Wahrgenommene Anstrengung / RIR",
+          "volumeHelp": "Protokollierte Sätze und Tonnage der letzten 28 Tage.",
+          "volumeSummary": "Aufteilung für {count} Muskelgruppen verfügbar.",
+          "rirHelp": "Durchschnitt ab {count} protokollierten RIR-Sätzen pro Muskel.",
+          "rirSummary": "Zuverlässiger RIR für {count} Muskelgruppen verfügbar.",
+          "insufficient": "Nicht genügend Daten für diese Analyse."
+        },
+        "exports": {
+          "eyebrow": "Deine Daten",
+          "title": "Meine Daten exportieren",
+          "subtitle": "Die bestehenden Formate sind an einem Ort gebündelt.",
+          "csv": "Analytics-CSV",
+          "xlsx": "Gewicht und Körpermaße XLSX",
+          "done": "Export erstellt"
+        }
+      }
+    },
     "pills": {
       "poids": "GEWICHT",
       "records": "REKORDE",
@@ -2036,7 +2383,8 @@
         "hips": "Hüfte",
         "chest": "Brust",
         "arms": "Arme",
-        "thighs": "Oberschenkel"
+        "thighs": "Oberschenkel",
+        "calves": "Waden"
       },
       "graphLabels": {
         "poids": "Gewicht",
@@ -2044,7 +2392,8 @@
         "chest": "Brust",
         "hips": "Hüfte",
         "arms": "Bizeps",
-        "body_fat": "KF%"
+        "body_fat": "KF%",
+        "calves": "Waden"
       },
       "transformation": "TRANSFORMATION",
       "aiSection": "KI-ANALYSE",
@@ -2190,15 +2539,122 @@
     "profile": "PROFIL",
     "myProfile": "Mein Profil",
     "myReports": "Meine Berichte",
+    "reportProblem": "Problem melden",
+    "reportProblemDescription": "Ein Problem mit der App? Sende uns einen Bericht.",
     "goals": "Ziele",
     "goalsSoon": "Bereich Ziele: bald verfügbar",
     "preferences": "Einstellungen",
+    "programs": "PROGRAMME",
+    "nutritionProgram": "Ernährungsprogramm",
+    "nutritionProgramDescription": "Ziele, Präferenzen und Generierung",
+    "trainingProgram": "Trainingsprogramm",
+    "trainingProgramDescription": "Konfiguriere und verwalte dein Trainingsprogramm.",
+    "open": "Öffnen",
     "language": "Sprache",
     "accountSection": "KONTO",
     "betaAccess": "Beta-Zugang",
     "trialPeriod": "Testphase",
     "daysLeft": "{count, plural, one {# Tag übrig} other {# Tage übrig}}",
     "signOut": "Abmelden"
+  },
+  "accountPrograms": {
+    "back": "Zurück zum Konto",
+    "programsEyebrow": "Programme",
+    "title": "Ernährungsprogramm",
+    "subtitle": "Konfiguriere deine Ziele und Präferenzen und generiere deinen Ernährungsplan an einem Ort.",
+    "nutritionProgram": "Ernährungsprogramm",
+    "loading": "Status wird geladen…",
+    "statusUnavailable": "Status nicht verfügbar",
+    "activePlan": "Aktiver Plan",
+    "noPlan": "Kein Plan",
+    "source": "Quelle",
+    "coachSource": "Coach",
+    "personalSource": "Persönlich",
+    "noneSource": "Keine",
+    "objective": "Ziel",
+    "objectives": { "cut": "Fettabbau", "maintain": "Erhaltung", "bulk": "Muskelaufbau" },
+    "loadError": "Der Planstatus konnte nicht geladen werden. Es wurden keine Daten ersetzt.",
+    "relationUncertain": "Die Coach-Beziehung konnte nicht geprüft werden. Die Generierung bleibt zur Sicherheit deaktiviert.",
+    "coachPlanNotice": "Dein Ernährungsplan wird derzeit von deinem Coach bereitgestellt.",
+    "configure": "Mein Programm konfigurieren",
+    "regenerate": "Ernährungsprogramm neu generieren",
+    "closeConfiguration": "Konfiguration schließen",
+    "configurationUnavailable": "Die persönliche Konfiguration ist mit deinem aktuellen Zugriff nicht verfügbar.",
+    "configurationEyebrow": "Konfiguration",
+    "configurationTitle": "Ziele und Präferenzen",
+    "quota": "{remaining}/{limit} Generierungen verfügbar",
+    "quotaLoading": "Generierungskontingent wird geprüft…",
+    "quotaUnavailable": "Das Kontingent kann nicht geprüft werden. Die Generierung bleibt deaktiviert.",
+    "quotaReached": "Generierungskontingent erreicht. Versuche es in {days} Tag(en) erneut.",
+    "generationBlockedCoach": "Der aktive Coach-Plan ist geschützt. Präferenzen können gespeichert werden, aber es wird kein persönlicher Plan generiert.",
+    "generationBlockedRelation": "Die Generierung ist deaktiviert, bis die Coach-Beziehung geprüft werden kann.",
+    "generationBlockedPlanStatus": "Die Generierung ist deaktiviert, bis der Planstatus geprüft werden kann.",
+    "generationBlockedCapability": "KI-Generierung ist mit deinem aktuellen Zugriff nicht verfügbar.",
+    "regenerationHint": "Öffne die Konfiguration, um Präferenzen anzupassen oder den Plan ausdrücklich neu zu generieren.",
+    "training": {
+      "back": "Zurück zum Konto",
+      "eyebrow": "Programme",
+      "title": "Trainingsprogramm",
+      "subtitle": "Prüfe dein aktives Programm und bereite die zukünftige Konfiguration in deinem Konto vor.",
+      "summary": "Programmübersicht",
+      "loading": "Programm wird geladen…",
+      "status": "Status",
+      "statusUnavailable": "Nicht verfügbar",
+      "statusActive": "Aktiv",
+      "statusEmpty": "Kein Programm",
+      "statusPartial": "Aktiv — teilweise Daten",
+      "summaryTitleCoach": "Coach-Plan",
+      "summaryTitlePersonal": "Persönliches Programm",
+      "summaryTitleEmpty": "Trainingsprogramm",
+      "summaryTitleUnavailable": "Programm nicht verfügbar",
+      "source": "Quelle",
+      "sourceCoach": "Coach-Plan",
+      "sourcePersonal": "Persönliches Programm",
+      "sourceNone": "Kein Programm",
+      "profileObjective": "Profilziel",
+      "objectiveUndefined": "Ziel nicht definiert",
+      "objectives": {
+        "cut": "Fettabbau",
+        "maintain": "Erhaltung",
+        "bulk": "Muskelaufbau",
+        "strength": "Kraft",
+        "endurance": "Ausdauer",
+        "fitness": "Fitness"
+      },
+      "frequency": "Häufigkeit",
+      "daysPerWeek": "{count, plural, one {# Tag / Woche} other {# Tage / Woche}}",
+      "frequencyUnavailable": "Nicht verfügbar",
+      "partialNotice": "Das Programm ist verfügbar, aber einige sekundäre Daten fehlen.",
+      "authorityError": "Die Programmautorität konnte nicht bestimmt werden. Kein Programm wurde ersetzt.",
+      "relationUncertain": "Die Coach-Beziehung ist nicht verfügbar oder mehrdeutig. Die Konfiguration bleibt zur Sicherheit deaktiviert.",
+      "coachNotice": "Dein Programm wird von deinem Coach bereitgestellt.",
+      "coachProtected": "Die persönliche Konfiguration ist geschützt, solange der Coach-Plan aktiv ist.",
+      "configurationUnavailable": "Die Konfiguration ist mit deinem aktuellen Zugriff nicht verfügbar.",
+      "configure": "Konfigurieren",
+      "preparationTitle": "Konfiguration",
+      "preparationDescription": "Die vollständige Programmverwaltung wird im nächsten Schritt verfügbar sein. Hier werden keine Daten geändert.",
+      "aiUnavailable": "Die zukünftige KI-Generierung ist mit deinem aktuellen Zugriff nicht verfügbar.",
+      "management": {
+        "eyebrow": "Konfiguration", "title": "Meine Programme verwalten", "close": "Programmverwaltung schließen",
+        "create": "Erstellen", "import": "Importieren", "template": "Leere Vorlage",
+        "loading": "Programme werden geladen…", "listError": "Die Programmliste ist vorübergehend nicht verfügbar.", "empty": "Kein persönliches Programm",
+        "coachBlocked": "Dein Programm wird derzeit von deinem Coach bereitgestellt. Persönliche Änderungen sind geschützt.",
+        "relationBlocked": "Die Coach-Beziehung ist nicht verfügbar oder mehrdeutig. Änderungen sind zur Sicherheit deaktiviert.",
+        "mutationBlocked": "Diese Aktion ist mit deinem aktuellen Zugriff nicht verfügbar.",
+        "persistenceError": "Das Programm konnte nicht gespeichert werden. Es wurde kein Erfolg bestätigt.",
+        "activationError": "Die Aktivierung ist fehlgeschlagen. Die Programmstatus wurden aktualisiert.", "scheduleError": "Die Programmplanung ist fehlgeschlagen.",
+        "scheduleSyncError": "Das Programm ist aktiv, aber sein Zeitplan konnte nicht synchronisiert werden.", "deleteError": "Das Programm konnte nicht gelöscht werden.",
+        "importError": "Das Programm konnte nicht importiert werden.", "importValidationError": "Die importierte Datei ist kein gültiges Programm.",
+        "activated": "Programm aktiviert", "deactivated": "Programm deaktiviert", "deleted": "Programm gelöscht", "scheduled": "Programm für den {date} geplant",
+        "active": "Aktiv", "inactive": "Inaktiv", "scheduledBadge": "Geplant", "activateOrSchedule": "Aktivieren / planen", "deactivate": "Deaktivieren",
+        "edit": "Bearbeiten", "export": "Exportieren", "delete": "Löschen", "confirmDelete": "Löschen bestätigen", "cancel": "Abbrechen",
+        "programMeta": "{count, plural, one {# Tag} other {# Tage}} · {source}", "sourceAi": "KI", "sourceImport": "Import", "sourceManual": "Manuell",
+        "restDay": "Tag {count} · Pause", "trainingDay": "Tag {count}", "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+        "quotaLoading": "KI-Kontingent wird geladen…", "importPreview": "Importvorschau", "programName": "Programmname",
+        "importDays": "{count, plural, one {# Tag erkannt} other {# Tage erkannt}}", "importSkipped": "{count, plural, one {# Blatt übersprungen} other {# Blätter übersprungen}}",
+        "importedName": "Importiertes Programm", "continue": "Weiter"
+      }
+    }
   },
   "nutrition_tab": {
     "meals": {
@@ -2269,7 +2725,12 @@
       "addAll": "ALLE HINZUFÜGEN",
       "today": "HEUTE",
       "remaining": "verbleibend: {count}",
-      "myMeals": "Meine Mahlzeiten"
+      "myMeals": "Meine Mahlzeiten",
+      "savedMealsError": "Gespeicherte Mahlzeiten konnten nicht geladen werden.",
+      "photoError": "Die Fotoanalyse ist fehlgeschlagen. Versuche es mit einem anderen Bild.",
+      "photoSaveError": "Die erkannten Lebensmittel konnten nicht hinzugefügt werden.",
+      "photoEstimate": "KI-Schätzung zur Prüfung. Passe die Mengen vor dem Hinzufügen zum Tagebuch an.",
+      "quantityEstimate": "Geschätzte Menge"
     },
     "macrosShort": {
       "p": "E",
@@ -2304,9 +2765,146 @@
     },
     "savedMeals": {
       "title": "MEINE MAHLZEITEN",
+      "loading": "Gespeicherte Mahlzeiten werden geladen...",
+      "error": "Gespeicherte Mahlzeiten konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
       "empty": "Keine gespeicherten Mahlzeiten.",
       "foodCount": "{count} Lebensmittel",
       "usedCount": "{count}x verwendet"
+    },
+    "v2": {
+      "eyebrow": "Tägliche Übersicht",
+      "title": "Ernährung",
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "addMeal": "Mahlzeit hinzufügen",
+      "addFirstMeal": "Erste Mahlzeit hinzufügen",
+      "loading": "Ernährungsdaten werden geladen",
+      "errorTitle": "Ernährungsübersicht nicht verfügbar",
+      "errorCopy": "Die Ernährungsdaten konnten nicht geladen werden. Keine Angabe wird durch 0 ersetzt.",
+      "retry": "Erneut versuchen",
+      "emptyTitle": "Für diesen Tag wurde keine Mahlzeit erfasst",
+      "emptyCopy": "Füge deine erste Mahlzeit hinzu, um die tatsächliche Tageszufuhr zu verfolgen.",
+      "calories": "Kalorien",
+      "protein": "Protein",
+      "remaining": "{count} kcal verbleibend",
+      "above": "+{count} kcal über dem Ziel",
+      "reached": "Ziel erreicht",
+      "targetMissing": "Ziel nicht festgelegt",
+      "calorieProgress": "Fortschritt der aufgenommenen Kalorien",
+      "proteinProgress": "Tatsächliche Aufnahme heute",
+      "partial": "Einige Ziele sind noch nicht festgelegt. Die aufgenommenen Werte bleiben sichtbar.",
+      "mealChooser": {
+        "eyebrow": "Mahlzeitenkontext",
+        "title": "Mahlzeit auswählen",
+        "description": "Wähle die Mahlzeit aus, zu der dieses Lebensmittel hinzugefügt wird.",
+        "breakfast": "Frühstück",
+        "lunch": "Mittagessen",
+        "snack": "Zwischenmahlzeit",
+        "dinner": "Abendessen",
+        "close": "Mahlzeitenauswahl schließen"
+      },
+      "macrosTitle": "Makros",
+      "macrosCopy": "Heute erfasste Aufnahme",
+      "macro": {
+        "protein": "Protein",
+        "carbs": "Kohlenhydrate",
+        "fat": "Fett"
+      },
+      "macroTargetDefined": "Aufgenommen / Ziel",
+      "macrosError": "Makros nicht verfügbar",
+      "macrosErrorCopy": "Die Daten konnten nicht geladen werden.",
+      "todayMeals": {
+        "eyebrow": "Heutiges Protokoll",
+        "title": "Mahlzeiten",
+        "count": "{count} Zeitpunkte",
+        "loading": "Mahlzeiten werden geladen",
+        "error": "Das Mahlzeitenprotokoll ist nicht verfügbar. Kein Wert wird durch 0 ersetzt.",
+        "retry": "Erneut versuchen",
+        "open": "Öffnen",
+        "partial": "Einige Quellen sind nicht verfügbar. Erfasste Lebensmittel bleiben sichtbar.",
+        "importError": "Die geplante Mahlzeit konnte nicht importiert werden. Es wurde nichts hinzugefügt.",
+        "meal": {
+          "breakfast": "Frühstück",
+          "lunch": "Mittagessen",
+          "snack": "Zwischenmahlzeit",
+          "dinner": "Abendessen"
+        },
+        "status": {
+          "empty": "Keine Mahlzeit",
+          "planned": "Geplant",
+          "partially_logged": "Teilweise erfasst",
+          "logged": "Erfasst",
+          "completed": "Abgeschlossen"
+        },
+        "action": {
+          "add": "Hinzufügen",
+          "log": "Erfassen",
+          "continue": "Fortsetzen",
+          "view": "Ansehen"
+        },
+        "plannedSummary": "{food}",
+        "plannedMeal": "Geplante Mahlzeit",
+        "loggedSummary": "{count} kcal",
+        "emptySummary": "Keine Lebensmittel erfasst",
+        "planned": "Im Plan vorgesehen",
+        "logged": "Tatsächliches Protokoll",
+        "noLoggedFoods": "Für diese Mahlzeit wurden keine Lebensmittel erfasst.",
+        "foodFallback": "Lebensmittel",
+        "quantity": "Menge in Gramm",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "edit": "Menge bearbeiten",
+        "replace": "Lebensmittel ersetzen",
+        "delete": "Lebensmittel löschen",
+        "addOptions": "Optionen zum Hinzufügen",
+        "mealActions": "Mahlzeitenaktionen",
+        "compactEdit": "Ändern",
+        "compactSave": "Sichern",
+        "more": "Mehr",
+        "moreActions": "Weitere Aktionen",
+        "fromPlan": "Aus dem Plan",
+        "food": "Lebensmittel",
+        "photo": "Foto",
+        "savedMeals": "Meine Mahlzeiten",
+        "saveMeal": "Mahlzeit speichern",
+        "copyMeal": "Kopieren",
+        "clearMeal": "Leeren",
+        "nextAction": {
+          "title": "Nächste Aktion",
+          "retry": "Protokoll erneut laden",
+          "add_first": "Erste Mahlzeit hinzufügen",
+          "log_planned": "Geplantes {meal} erfassen",
+          "continue_partial": "{meal} fortsetzen",
+          "complete_protein": "Heutige Proteinzufuhr ergänzen",
+          "view_journal": "Protokoll ansehen",
+          "complete_day": "Diesen Tag mit {meal} ergänzen"
+        }
+      },
+      "activePlan": {
+        "eyebrow": "Aktiver Plan", "loading": "Aktiver Plan wird geladen", "errorTitle": "Plan nicht verfügbar",
+        "errorBody": "Der aktive Plan konnte nicht geladen werden. Das Protokoll bleibt verfügbar.", "retry": "Erneut versuchen",
+        "emptyTitle": "Kein aktiver Ernährungsplan", "emptyBody": "Die tägliche Erfassung bleibt auch ohne Plan verfügbar.",
+        "configure": "Programm konfigurieren", "coachSource": "Coach-Plan", "personalSource": "Persönlicher Plan",
+        "coachBody": "Von Ihrem aktiven Coach erstellt", "personalBody": "Ihr aktiver Ernährungsplan",
+        "updated": "Aktualisiert am {date}", "partial": "Der Plan bleibt verfügbar, aber die Coach-Beziehung konnte nicht geprüft werden.",
+        "viewPlan": "Plan ansehen", "hidePlan": "Plan ausblenden", "shoppingList": "Einkaufsliste",
+        "today": "Heute", "selectedDay": "Ausgewählter Tag", "todayShort": "heute", "chooseDay": "Plantag auswählen",
+        "noMeals": "Für diesen Tag sind keine Mahlzeiten geplant.", "mealSummary": "{count} Lebensmittel · {calories} kcal",
+        "addToJournal": "Zum Protokoll hinzufügen", "macros": "P {protein} g · K {carbs} g · F {fat} g",
+        "dayTotal": "Geplant: {calories} kcal",
+        "days": { "lundi": "Montag", "mardi": "Dienstag", "mercredi": "Mittwoch", "jeudi": "Donnerstag", "vendredi": "Freitag", "samedi": "Samstag", "dimanche": "Sonntag" },
+        "daysShort": { "lundi": "Mo", "mardi": "Di", "mercredi": "Mi", "jeudi": "Do", "vendredi": "Fr", "samedi": "Sa", "dimanche": "So" },
+        "meals": { "petit_dejeuner": "Frühstück", "dejeuner": "Mittagessen", "collation": "Snack", "diner": "Abendessen" }
+      },
+      "tools": {
+        "eyebrow": "Schnellzugriff", "title": "Werkzeuge", "secondary": "Sekundäre Aktionen",
+        "addFood": "Lebensmittel", "addFoodBody": "Lebensmittel suchen",
+        "photo": "KI-Foto", "photoBody": "Schätzen und prüfen",
+        "savedMeals": "Meine Mahlzeiten", "savedMealsBody": "Mahlzeit wiederverwenden",
+        "recipes": "Rezepte", "recipesBody": "Ideen durchsuchen",
+        "scannerPending": "Barcode-Scannen ist über die Lebensmittelsuche verfügbar."
+      }
     }
   },
   "coach_dashboard": {
@@ -2320,7 +2918,6 @@
       "coachPro": "COACH PRO · {count} Klienten",
       "clientsActive": "{count} aktive(r) Klient(en) · {unread} ungelesene Nachricht(en)",
       "searchPlaceholder": "Klient suchen...",
-      "invited": "EINGELADEN",
       "videosToReview": "Videos zu überprüfen"
     },
     "invite": {
@@ -2343,6 +2940,145 @@
     }
   },
   "home": {
+    "v2": {
+      "hello": "Hallo {name}",
+      "today": "Heute",
+      "secondaryMetrics": "Weitere Fortschrittswerte",
+      "avatarAlt": "Profilbild",
+      "hero": {
+        "label": "Als Nächstes",
+        "loading": "Heutiges Training wird geladen",
+        "errorTitle": "Training vorübergehend nicht verfügbar",
+        "errorCopy": "Dein Training konnte nicht geladen werden. Die Daten werden nicht als leerer Tag behandelt.",
+        "completedLabel": "Heute abgeschlossen",
+        "completedTitle": "Training geschafft",
+        "viewSession": "Training ansehen",
+        "restTitle": "Ruhetag",
+        "restCopy": "Erholung gehört zum Plan. Lade deine Energie für das nächste Training auf.",
+        "emptyTodayTitle": "Heute ist nichts geplant",
+        "emptyTodayCopy": "Dein Programm ist aktiv. Genieße den Tag oder starte ein freies Training.",
+        "noProgramTitle": "Wähle dein nächstes Ziel",
+        "noProgramCopy": "Wähle ein Programm oder starte ein freies Training.",
+        "start": "Training starten",
+        "openProgram": "Programm ansehen",
+        "freeSession": "Freies Training",
+        "sessionFallback": "Heutiges Training",
+        "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+        "source": { "scheduled": "Geplant", "custom_program": "Eigenes Programm", "coach_program": "Coach-Programm", "none": "Freies Training" }
+      },
+      "dailyStatus": {
+        "title": "Heutiger Status",
+        "training": { "label": "Training", "scheduled": "Offen", "completed": "Abgeschlossen", "rest": "Ruhetag", "empty": "Nichts geplant", "loading": "Wird geladen…", "error": "Nicht verfügbar", "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}" },
+        "nutrition": { "label": "Ernährung", "loading": "Wird geladen…", "ready": "In Bearbeitung", "empty": "Keine Einträge", "error": "Nicht verfügbar", "protein": "Protein", "carbs": "Kohlenh.", "fat": "Fett" },
+        "recovery": { "label": "Erholung", "ready": "Bereit", "watch": "Beobachten", "recover": "Erholen", "unavailable": "Nicht verfügbar", "loading": "Wird geladen…", "error": "Nicht verfügbar" }
+      },
+      "nextBestAction": {
+        "label": "Empfohlene Aktion",
+        "scheduled_training": { "title": "Dein Training wartet", "description": "Dein heutiges Training ist startklar.", "cta": "Training starten" },
+        "missing_check_in": { "title": "Wie fühlst du dich heute?", "description": "Vervollständige deinen Check-in für eine hilfreiche Übersicht.", "cta": "In 30 Sek. ausfüllen" },
+        "nutrition_incomplete": { "title": "Ernährung weiter erfassen", "description": "Dein Ernährungstag ist noch nicht abgeschlossen.", "cta": "Ernährung öffnen" },
+        "diagnostic_available": { "title": "Prüfe deine Woche", "description": "Deine Wochenanalyse ist verfügbar oder kann erstellt werden.", "cta": "Analyse ansehen" },
+        "rest_day": { "title": "Erholung hat Priorität", "description": "Dein Programm sieht heute Erholung vor.", "cta": "Erholung ansehen" },
+        "missing_program": { "title": "Wähle dein nächstes Programm", "description": "Plane den nächsten Schritt deines Trainings.", "cta": "Programme ansehen" },
+        "day_on_track": { "title": "Dein Tag läuft gut", "description": "Bleib dran und sieh dir deinen Fortschritt an.", "cta": "Fortschritt ansehen" }
+      },
+      "progression": {
+        "eyebrow": "Diese Woche",
+        "title": "Dein Fortschritt",
+        "completeCopy": "Deine wichtigsten Fortschrittswerte sind aktuell.",
+        "partialCopy": "Deine ersten Werte sind verfügbar und wachsen mit deinem Tracking.",
+        "loading": "Fortschritt wird geladen…",
+        "errorTitle": "Fortschritt vorübergehend nicht verfügbar",
+        "errorCopy": "Deine Daten werden nicht durch Nullwerte ersetzt.",
+        "emptyTitle": "Dein Fortschritt beginnt hier",
+        "emptyCopy": "Erfasse ein Training oder eine Messung, um erste Werte zu sehen.",
+        "cta": "Meinen Fortschritt ansehen",
+        "weight": "Aktuelles Gewicht",
+        "trendUnknown": "Erste Messung",
+        "trend": { "up": "+{value} kg seit der letzten Messung", "down": "−{value} kg seit der letzten Messung", "stable": "Gewicht stabil" },
+        "sessionsLabel": "Regelmäßigkeit",
+        "sessions": "{count, plural, =0 {Keine Trainings diese Woche} one {# Training diese Woche} other {# Trainings diese Woche}}",
+        "adherence": "Planerfüllung",
+        "latestPR": "Letzter Rekord",
+        "recordGain": "+{value}"
+      },
+      "athenaInsight": {
+        "label": "Athena",
+        "loading": "Verfügbare Daten werden ausgewertet…",
+        "cta": "Mit Athena sprechen",
+        "messages": {
+          "safe_fallback": "Einige Daten sind nicht verfügbar. Erfasse weiter Daten, um einen besser eingeordneten Hinweis zu erhalten.",
+          "training_recovery_ready": "Die verfügbaren Erholungsdaten sind heute günstig. Du kannst das geplante Training beibehalten.",
+          "training_recovery_warning": "Die verfügbaren Erholungsdaten sprechen heute für zusätzliche Vorsicht. Achte während des Trainings auf dein Gefühl.",
+          "rest_day": "Nutze den heutigen Tag, um deine Erholung zu unterstützen.",
+          "nutrition_incomplete": "Dein Ernährungstracking ist heute noch unvollständig.",
+          "check_in_missing": "Der heutige Check-in kann helfen, dein Tracking besser einzuordnen.",
+          "progression_available": "Deine Regelmäßigkeit in dieser Woche ist in deinem Tracking sichtbar.",
+          "generic_fallback": "Erfasse weiter Daten, um relevantere Empfehlungen zu erhalten."
+        }
+      },
+      "activeCoach": {
+        "label": "Dein Coach",
+        "loading": "Coach-Informationen werden geladen…",
+        "nameFallback": "Coach",
+        "avatarAlt": "Foto von {name}",
+        "lastMessage": "Letzte Nachricht",
+        "nextAppointment": "Nächster Termin",
+        "cta": "Nachrichten öffnen"
+      },
+      "lower": {
+        "today": "Heute",
+        "week": "Diese Woche",
+        "checkIn": {
+          "label": "Check-in",
+          "missing": "Nimm dir kurz Zeit und halte fest, wie du dich heute fühlst.",
+          "loading": "Check-in wird geladen…",
+          "unavailable": "Der Check-in ist vorübergehend nicht verfügbar.",
+          "start": "Check-in ausfüllen",
+          "edit": "Bearbeiten",
+          "close": "Schliessen",
+          "saved": "Gespeichert",
+          "sleepSummary": "{hours} Std. Schlaf",
+          "question": "Wie fühlst du dich heute?",
+          "sleep": "Schlaf",
+          "note": "Notiz für deinen Coach (optional)…",
+          "save": "Speichern",
+          "update": "Aktualisieren",
+          "saving": "Wird gespeichert…",
+          "error": "Der Check-in konnte nicht gespeichert werden. Bitte versuche es erneut.",
+          "moods": { "fatigue": "Müde", "normal": "Normal", "bien": "Gut", "top": "Super", "energie": "Energie" }
+        },
+        "hydration": {
+          "label": "Hydrierung",
+          "value": "{current} L / {target} L",
+          "add": "+250 ml",
+          "addLabel": "250 ml Wasser hinzufügen",
+          "error": "Das Wasser konnte nicht hinzugefügt werden. Der vorherige Wert wurde wiederhergestellt."
+        },
+        "diagnostic": {
+          "label": "Wochenanalyse",
+          "empty": "Deine Wochenanalyse kann jetzt erstellt werden.",
+          "ready": "Deine Analyse ist verfügbar.",
+          "loading": "Analyse wird geladen…",
+          "unavailable": "Die Analyse ist vorübergehend nicht verfügbar.",
+          "notAvailable": "Noch nicht verfügbar",
+          "generate": "Erstellen",
+          "generating": "Wird erstellt…",
+          "view": "Analyse ansehen",
+          "error": "Die Analyse konnte nicht erstellt werden. Bitte versuche es erneut."
+        },
+        "coachWeek": {
+          "label": "Coach-Plan",
+          "upcoming": "Als Nächstes",
+          "session": "Training",
+          "today": "Heute",
+          "planned": "Geplant",
+          "completed": "Erledigt",
+          "cta": "Programm ansehen"
+        },
+        "days": { "lundi": "Montag", "mardi": "Dienstag", "mercredi": "Mittwoch", "jeudi": "Donnerstag", "vendredi": "Freitag", "samedi": "Samstag", "dimanche": "Sonntag" }
+      }
+    },
     "nextAppointment": "Nächster Termin",
     "appointmentAt": "um",
     "nextAppointmentMore": "+{count, plural, one {# weiterer} other {# weitere}}",
@@ -2499,6 +3235,7 @@
       "generate_cta": "Jetzt generieren",
       "generating": "KI-Analyse läuft...",
       "generating_time": "(15-25s)",
+      "generation_error": "Die Analyse konnte nicht erstellt werden. Bitte versuche es gleich noch einmal.",
       "points_forts_heading": "Stärken",
       "points_alerte_heading": "Warnungen",
       "view_details": "Details ansehen"
@@ -2657,13 +3394,25 @@
         "fat": "Fett",
         "trialBadge": "Dein kostenloser Zugang ist aktiv"
       }
+    },
+    "redesign": {
+      "step": "Schritt {current} von {total}", "loading": "Dein Bereich wird geladen…", "back": "Zum vorherigen Schritt zurückkehren", "finish": "Meinen MoovX-Bereich erstellen", "edit": "Ändern",
+      "goal": { "title": "Dein Ziel", "subtitle": "Wähle die Priorität, die dein Erlebnis bestimmen soll." },
+      "profile": { "title": "Dein Profil", "subtitle": "Die wichtigsten Angaben für persönliche Richtwerte." },
+      "training": { "title": "Dein Training", "subtitle": "Ein Rhythmus und Umfeld, die zu deinem Alltag passen." },
+      "nutrition": { "title": "Deine Ernährung", "subtitle": "Wähle deinen Ansatz. Du kannst später alles anpassen.", "advanced": "Erweiterte Präferenzen (optional)", "restrictions": "Allergien oder Ernährungseinschränkungen", "none": "Keine", "some": "Ich habe Einschränkungen", "details": "Beschreibe deine Einschränkungen" },
+      "summary": { "title": "Alles ist bereit", "subtitle": "Prüfe deine Antworten, bevor du deinen Bereich erstellst.", "macros": "Unverbindlicher Tagesrichtwert" },
+      "coach": { "profile": "Die wichtigsten Angaben für deine Betreuung.", "optional": "Dieser Schritt ist optional." },
+      "errors": { "profile": "Dein Profil konnte nicht geladen werden. Versuche es gleich erneut.", "save": "Speichern fehlgeschlagen. Deine Antworten bleiben erhalten — versuche es erneut.", "photo": "Das Foto konnte nicht gespeichert werden." },
+      "a11y": { "progress": "Onboarding-Fortschritt" }
     }
   },
   "cardio": {
     "ui": {
       "title": "Cardio",
       "hide": "Ausblenden",
-      "sessionsCount": "{count, plural, one {# Einheit} other {# Einheiten}}",
+      "optionsCount": "{count} Optionen",
+      "showOptions": "{count} Optionen anzeigen",
       "all": "Alle",
       "minutes": "MINUTEN",
       "kcal": "KCAL",

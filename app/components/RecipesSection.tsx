@@ -16,12 +16,14 @@ interface RecipesSectionProps {
   supabase: any
   userId: string
   profile: any
+  aiAllowed: boolean
 }
 
-export default function RecipesSection({ supabase, userId, profile }: RecipesSectionProps) {
+export default function RecipesSection({ supabase, userId, profile, aiAllowed }: RecipesSectionProps) {
   const t = useTranslations('recipesSection')
   const [recipes, setRecipes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState<any>(null)
   const [generating, setGenerating] = useState(false)
@@ -32,13 +34,19 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
 
   async function loadRecipes() {
     setLoading(true)
-    const { data } = await supabase
+    setLoadError(false)
+    const { data, error } = await supabase
       .from('recipes')
       .select('*')
       .or(`user_id.eq.${userId},is_public.eq.true`)
       .order('created_at', { ascending: false })
       .limit(50)
-    setRecipes(data || [])
+    if (error) {
+      setRecipes([])
+      setLoadError(true)
+    } else {
+      setRecipes(data || [])
+    }
     setLoading(false)
   }
 
@@ -68,8 +76,8 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       setSelected(saved)
       setShowGenerate(false)
       toast.success(t('generated'))
-    } catch (e: any) {
-      toast.error(e.message || t('genError'))
+    } catch {
+      toast.error(t('genError'))
     }
     setGenerating(false)
   }
@@ -211,9 +219,9 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: colors.text, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>{t('title')}</h2>
-        <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: colors.onGold, fontSize: '0.72rem', fontWeight: 800, fontFamily: fonts.alt, letterSpacing: '1px', textTransform: 'uppercase' }}>
+        {aiAllowed && <button onClick={() => setShowGenerate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '8px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', background: colors.gold, color: colors.onGold, fontSize: '0.72rem', fontWeight: 800, fontFamily: fonts.alt, letterSpacing: '1px', textTransform: 'uppercase' }}>
           <Sparkles size={13} /> {t('generateBtn')}
-        </button>
+        </button>}
       </div>
 
       {/* Category filter */}
@@ -234,6 +242,11 @@ export default function RecipesSection({ supabase, userId, profile }: RecipesSec
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 120, borderRadius: 16 }} />)}
+        </div>
+      ) : loadError ? (
+        <div role="status" style={{ textAlign: 'center', padding: '32px 0' }}>
+          <p style={{ fontSize: '0.85rem', fontFamily: fonts.body, color: colors.textMuted }}>{t('loadError')}</p>
+          <button type="button" onClick={() => void loadRecipes()} style={{ minHeight: 44, padding: '8px 14px', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, color: colors.gold, background: 'transparent', cursor: 'pointer' }}>{t('retry')}</button>
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>

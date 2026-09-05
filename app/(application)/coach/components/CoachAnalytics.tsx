@@ -193,16 +193,6 @@ export default function CoachAnalytics({ coachId }: Props) {
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
                       <span style={{ fontSize: '0.68rem', color: cfg.color, fontFamily: FONT_BODY, fontWeight: 600 }}>{cfg.label}</span>
-                      {c.subscription_type && (
-                        <span style={{
-                          fontSize: '0.58rem', fontFamily: FONT_ALT, fontWeight: 700,
-                          padding: '1px 6px', borderRadius: 4, letterSpacing: '0.5px', textTransform: 'uppercase',
-                          background: c.subscription_type === 'invited' ? GOLD_DIM : 'rgba(138,133,128,0.12)',
-                          color: c.subscription_type === 'invited' ? GOLD : TEXT_MUTED,
-                        }}>
-                          {c.subscription_type === 'invited' ? 'Invité' : 'Solo'}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <span style={{ fontSize: '0.68rem', color: TEXT_DIM, fontFamily: FONT_BODY, flexShrink: 0 }}>

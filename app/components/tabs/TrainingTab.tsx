@@ -1,158 +1,85 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { RailOverlay } from '../ui/RailOverlay'
-import SectionTitle from '../ui/SectionTitle'
 import WorkoutDetailList from '../training/WorkoutDetailList'
 import ModalHeader from '../ui/ModalHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
-import { getExerciseName } from '../../../lib/i18n-exercise'
 import { fr as frLocale } from 'date-fns/locale/fr'
 import { enUS } from 'date-fns/locale/en-US'
 import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
-import { addXP, updateStreak } from '../../../lib/gamification'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
-import { useWakeLock } from '../../hooks/useWakeLock'
-import { findExerciseMatch } from '../../../lib/exercise-matching'
-import { useBeforeUnload } from '../../hooks/useBeforeUnload'
 import {
-  Dumbbell, Search, Award, Moon, ChevronRight, ChevronLeft, X, BookOpen,
+  ChevronRight, ChevronLeft,
 } from 'lucide-react'
 import {
-  fonts, colors, JS_DAYS_FR, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, cardStyle, btnPrimary, btnSecondary,
+  fonts, colors, JS_DAYS_FR,
 } from '../../../lib/design-tokens'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, getRandomMessage } from '../../../lib/timer-audio'
-import { toast } from 'sonner'
-import ExerciseSearchModal from '../modals/ExerciseSearchModal'
-import ExerciseDetailModal from '../modals/ExerciseDetailModal'
 import CardioSection from '../CardioSection'
-import { ScheduledSession, toDateStr, buildWeekSessions } from '../../../lib/schedule-utils'
+import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
+import { deriveTodayTrainingState } from '../../../lib/training/today-training-state'
 
-import WorkoutCelebration from './training/WorkoutCelebration'
-import TrainingActiveBar from './training/TrainingActiveBar'
-import AddExercisePopup from './training/AddExercisePopup'
-import SaveChoicePopup from './training/SaveChoicePopup'
-import TrainingRestDay from './training/TrainingRestDay'
-import SessionDoneModal from '../training/SessionDoneModal'
-import TrainingExerciseCard from './training/TrainingExerciseCard'
-import { TechniqueTooltip } from './training/TechniquePopup'
-import StartProgramModal from './training/StartProgramModal'
-import { getRestSeconds } from '../../../lib/utils/exercise'
-import HeroSessionCard, { type HeroState } from '../home/HeroSessionCard'
-import SessionDetailModal from '../training/SessionDetailModal'
-import { formatRelativeTime } from '../../../lib/formatRelativeTime'
-import VideoFeedbackModal from '../VideoFeedbackModal'
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
-import ProgramBuilder, { padTo7Days } from '../training/ProgramBuilder'
-import AiQuotaBadge from '../ui/AiQuotaBadge'
-import ExerciseInfoPopup from '../ExerciseInfoPopup'
-import { useExerciseInfo } from '../../hooks/useExerciseInfo'
 import RecentSessionsList from '../training/RecentSessionsList'
-import PhaseProgressBanner from '../training/PhaseProgressBanner'
-import ExerciseLibrarySection from '../training/ExerciseLibrarySection'
-import { exportProgramToXlsx, parseProgramFromXlsx, downloadBlankTemplate, type ImportResult } from '../../../lib/program-excel'
+import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
+import { TrainingV2 } from '../training-v2/TrainingV2'
+import NoActiveSession from '../training-v2/NoActiveSession'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
+type PersonalProgram = NonNullable<Parameters<typeof getEffectiveWeek>[0]> & {
+  name?: string
+  days?: Parameters<typeof getSessionForDay>[0]
+}
+type CoachProgram = Record<string, { repos?: boolean; exercises?: ReturnType<typeof getSessionForDay>['exercises'] }>
 
 interface TrainingTabProps {
   supabase: any
   session: any
   profile?: any
-  coachProgram: any
+  activeTrainingProgram: ActiveTrainingProgramContext
   todayKey: string
   todaySessionDone: boolean
+  hasActiveDraft: boolean
+  workoutHistory: any[]
+  workoutHistoryState: TrainingReadState
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
-  fetchAll: () => Promise<void>
+  onOpenProgramSettings: () => void
   scheduledSessions: ScheduledSession[]
-  calendarSelectedDate: Date
   setCalendarSelectedDate: (d: Date) => void
-  markSessionCompleted: (id: string) => Promise<void>
-  checkForPR: (exerciseName: string, weight: number, reps: number) => Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }>
-  lastCompletedByIndex?: Map<number, string>
   setModal: (m: string | null) => void
 }
 
 export default function TrainingTab({
-  supabase, session, profile, coachProgram, todayKey, todaySessionDone, startProgramWorkout, fetchAll,
-  scheduledSessions, calendarSelectedDate, setCalendarSelectedDate, markSessionCompleted, checkForPR,
-  lastCompletedByIndex, setModal,
+  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, hasActiveDraft, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings,
+  scheduledSessions, setCalendarSelectedDate, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const dateLocale = DATE_LOCALES[locale] || frLocale
-  const T = titleStyle
-  // Source de vérité : profiles.subscription_type (pas coach_clients.invited_by_coach)
-  const aiAllowed = profile?.subscription_type !== 'invited'
-  const { exerciseInfo, setExerciseInfo, loadExerciseInfo } = useExerciseInfo(supabase)
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
-  const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
-  const [setInputs, setSetInputs]       = useState<Record<string, { kg: string; reps: string }[]>>({})
-  const [showExDbModal, setShowExDbModal] = useState(false)
-  const [exerciseDetail, setExerciseDetail] = useState<any>(null)
-  const [exercisesCache, setExercisesCache] = useState<any[]>([])
-  const exercisesCacheLoaded = useRef(false)
-  const [showProgramManager, setShowProgramManager] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
   const [weekDir, setWeekDir] = useState(0)
   const calTouchStart = useRef<number | null>(null)
-  const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [workoutHistory, setWorkoutHistory] = useState<any[]>([])
-  const [workoutFinished, setWorkoutFinished] = useState(false)
-  const [workoutStarted, setWorkoutStarted]   = useState<number | null>(null)
-  useBeforeUnload(workoutStarted !== null)
-  const [videoExercise, setVideoExercise]     = useState<string | null>(null)
-  const [activeRestExName, setActiveRestExName] = useState<string | null>(null)
-  const [restingSet, setRestingSet]     = useState<{ exName: string; setIdx: number } | null>(null)
-  const [restTimer, setRestTimer]       = useState<number>(0)
-  const [restMax, setRestMax]           = useState<number>(90)
-  const [restRunning, setRestRunning]   = useState(false)
-  const [elapsedSecs, setElapsedSecs]   = useState(0)
-  const [showTimerAlert, setShowTimerAlert] = useState(false)
-  const [motivationalMsg, setMotivationalMsg] = useState('')
-  const [customPrograms, setCustomPrograms] = useState<any[]>([])
-  const [showProgramBuilder, setShowProgramBuilder] = useState(false)
-  const [activeCustomProgram, setActiveCustomProgram] = useState<any>(null)
-  const [editingProgram, setEditingProgram] = useState<any>(null)
-  // Feature: add exercise in session
-  const [addedExercises, setAddedExercises] = useState<any[]>([])
-  const [showAddExercise, setShowAddExercise] = useState(false)
-  const [exerciseSearchQ, setExerciseSearchQ] = useState('')
-  const [exerciseSearchResults, setExerciseSearchResults] = useState<any[]>([])
-  // Feature: save choice popup
-  const [showSaveChoice, setShowSaveChoice] = useState(false)
+  const activeCustomProgram = activeTrainingProgram.source === 'personal'
+    ? activeTrainingProgram.program as PersonalProgram
+    : null
+  const coachProgram = activeTrainingProgram.source === 'coach'
+    ? activeTrainingProgram.program as CoachProgram
+    : null
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
   const [loadingDetail, setLoadingDetail] = useState(false)
-  // Program edit mode
-  const [editMode, setEditMode] = useState(false)
-  const [editedDays, setEditedDays] = useState<any[] | null>(null)
-  const [variantPopup, setVariantPopup] = useState<{dayIdx: number, exIdx: number, variants: any[]} | null>(null)
-  const [techniqueTooltip, setTechniqueTooltip] = useState<string | null>(null)
-  const [importPreview, setImportPreview] = useState<ImportResult['program'] | null>(null)
-  const [importSkipped, setImportSkipped] = useState<string[]>([])
-  const [importName, setImportName] = useState('')
-  const importFileRef = useRef<HTMLInputElement>(null)
-  // Start program modal: holds the program to activate/schedule + optional import data
-  const [startModalProgram, setStartModalProgram] = useState<any>(null)
-  const [startModalImportData, setStartModalImportData] = useState<any>(null)
-  const [scheduledBannerDismissed, setScheduledBannerDismissed] = useState(false)
-  const [showSessionModal, setShowSessionModal] = useState(false)
-  const restIntervalRef  = useRef<any>(null)
-  const elapsedIntervalRef = useRef<any>(null)
-  const exSearchRef      = useRef<any>(null)
 
   // Use local date (not UTC) to avoid timezone issues
   const _now = new Date()
   const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`
   const trainingIsToday  = trainingDay === todayKey
 
-  // Keep screen awake during workout + rest timer
-  useWakeLock(!!workoutStarted || restRunning)
-  // Priorité : programme custom actif > programme coach — using shared utility
+  // Program choice is owned by ActiveTrainingProgramContext. This component
+  // only renders the already-resolved personal OR coach authority.
   const customDayData = (() => {
     if (!activeCustomProgram?.days?.length) return null
     const dayIndex = frDayToIndex(trainingDay)
@@ -181,24 +108,9 @@ export default function TrainingTab({
     }
   })
 
-  const trainingExercises: any[] = [...resolvedExercises, ...addedExercises].map((ex: any) => {
-    const dbMatch = findExerciseMatch(exercisesCache, ex.name)
-    if (!dbMatch) return ex
-    return {
-      ...ex,
-      gif_url: dbMatch.gif_url ?? ex.gif_url,
-      video_url: dbMatch.video_url ?? ex.video_url,
-    }
-  })
+  const trainingExercises: any[] = resolvedExercises
 
-  const trainingTotalSets = trainingExercises.reduce((s: number, ex: any) => {
-    const key = `moovx-sets-${todayStr}-${ex.name}`
-    return s + (completedSets[key]?.length || Number(ex.sets) || 0)
-  }, 0)
-  const trainingDoneSets = trainingExercises.reduce((s: number, ex: any) => {
-    const key = `moovx-sets-${todayStr}-${ex.name}`
-    return s + (completedSets[key] || []).filter(Boolean).length
-  }, 0)
+  const trainingTotalSets = trainingExercises.reduce((sum: number, exercise: any) => sum + (Number(exercise.sets) || 0), 0)
 
   // Dates with a completed workout (used by calendar + HeroSessionCard)
   const doneDates = new Set(
@@ -240,489 +152,6 @@ export default function TrainingTab({
     })
   })()
 
-  // ── Rest timer: pure decrement only (no side-effects inside updater) ──
-  useEffect(() => {
-    if (!restRunning || restTimer <= 0) return
-    restIntervalRef.current = setInterval(() => {
-      setRestTimer(prev => Math.max(0, prev - 1))
-    }, 1000)
-    return () => clearInterval(restIntervalRef.current)
-  }, [restRunning])
-
-  // ── Rest timer expiry + warning tick ──
-  useEffect(() => {
-    if (restRunning && restTimer === 5) playWarningTick()
-    if (restRunning && restTimer === 0) {
-      clearInterval(restIntervalRef.current)
-      setRestRunning(false)
-      setRestingSet(null)
-      setActiveRestExName(null)
-      playBeep()
-      vibrateDevice()
-      setMotivationalMsg(getRandomMessage())
-      setShowTimerAlert(true)
-      setTimeout(() => setShowTimerAlert(false), 3000)
-    }
-  }, [restTimer, restRunning])
-
-  // ── Elapsed workout timer ──
-  useEffect(() => {
-    if (workoutStarted) {
-      elapsedIntervalRef.current = setInterval(() => {
-        setElapsedSecs(Math.round((Date.now() - workoutStarted) / 1000))
-      }, 1000)
-    } else {
-      clearInterval(elapsedIntervalRef.current)
-      setElapsedSecs(0)
-    }
-    return () => clearInterval(elapsedIntervalRef.current)
-  }, [workoutStarted])
-
-  // ── Load sets + inputs from localStorage ──
-  useEffect(() => {
-    if (!coachProgram || !trainingDay) return
-    const dayData = coachProgram[trainingDay]
-    if (!dayData?.exercises) { setCompletedSets({}); setSetInputs({}); return }
-    const loadedSets: Record<string, boolean[]> = {}
-    const loadedInputs: Record<string, { kg: string; reps: string }[]> = {}
-    ;(dayData.exercises as any[]).forEach((ex: any) => {
-      const key       = `moovx-sets-${todayStr}-${ex.name}`
-      const inputKey  = `moovx-inputs-${todayStr}-${ex.name}`
-      const stored       = typeof window !== 'undefined' ? localStorage.getItem(key) : null
-      const storedInputs = typeof window !== 'undefined' ? localStorage.getItem(inputKey) : null
-      const n = Number(ex.sets) || 3
-      loadedSets[key]       = stored ? JSON.parse(stored) : Array.from({ length: n }, () => false)
-      loadedInputs[ex.name] = storedInputs
-        ? JSON.parse(storedInputs)
-        : Array.from({ length: n }, () => ({ kg: ex.weight ? String(ex.weight) : '', reps: String(ex.reps || '') }))
-    })
-    setCompletedSets(loadedSets)
-    setSetInputs(loadedInputs)
-  }, [trainingDay, coachProgram])
-
-  // ── Load custom programs + auto-activate scheduled ──
-  useEffect(() => {
-    if (!session?.user?.id) return
-    supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
-      .then(async ({ data }: any) => {
-        const programs = data || []
-        // Auto-activate scheduled programs that are due
-        const today = toDateStr(new Date())
-        const dueToStart = programs.filter((p: any) => p.scheduled && p.start_date && p.start_date <= today)
-        if (dueToStart.length > 0) {
-          await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).eq('is_active', true)
-          await supabase.from('custom_programs').update({ is_active: true, scheduled: false }).eq('id', dueToStart[0].id)
-          dueToStart[0].is_active = true
-          dueToStart[0].scheduled = false
-          programs.forEach((p: any) => { if (p.id !== dueToStart[0].id) p.is_active = false })
-          toast.success(t('programs.newProgramToast'))
-        }
-        setCustomPrograms(programs)
-        const active = programs.find((p: any) => p.is_active)
-        if (active) setActiveCustomProgram(active)
-      })
-  }, [session?.user?.id])
-
-  // ── Load workout history (refetch when todaySessionDone changes = session just completed) ──
-  useEffect(() => {
-    if (!session?.user?.id) return
-    supabase.from('workout_sessions').select('id, name, completed, date, duration_minutes, notes, created_at, muscles_worked')
-      .eq('user_id', session.user.id).eq('completed', true).order('created_at', { ascending: false }).limit(50)
-      .then(({ data }: any) => setWorkoutHistory(data || []))
-  }, [session?.user?.id, todaySessionDone])
-
-  // ── Load exercises_db cache ──
-  useEffect(() => {
-    if (exercisesCacheLoaded.current) return
-    exercisesCacheLoaded.current = true
-    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }: any) => {
-      setExercisesCache(data || [])
-    })
-  }, [])
-
-  // Open start modal instead of activating directly
-  function activateProgram(programId: string) {
-    const prog = customPrograms.find(p => p.id === programId)
-    if (prog) setStartModalProgram(prog)
-  }
-
-  async function doActivateProgram(programId: string) {
-    await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).neq('id', programId)
-    const progToActivate = customPrograms.find(p => p.id === programId)
-    const startDate = progToActivate?.start_date || toDateStr(new Date())
-    const { error } = await supabase.from('custom_programs').update({ is_active: true, scheduled: false, start_date: startDate }).eq('id', programId).eq('user_id', session.user.id)
-    if (error) { toast.error(t('calendar.toasts.error') + ': ' + error.message); return }
-    const updated = customPrograms.map(p => ({ ...p, is_active: p.id === programId, scheduled: p.id === programId ? false : p.scheduled }))
-    setCustomPrograms(updated)
-    const activeProg = updated.find(p => p.id === programId) || null
-    setActiveCustomProgram(activeProg)
-
-    if (activeProg?.days) {
-      try {
-        const today = new Date()
-        const dow = today.getDay()
-        const monday = new Date(today)
-        monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-        monday.setHours(0, 0, 0, 0)
-        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
-        const mondayStr = toDateStr(monday)
-        const sundayStr = toDateStr(sunday)
-        await supabase.from('scheduled_sessions').delete().eq('user_id', session.user.id).gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr).eq('completed', false)
-        const { data: remaining } = await supabase.from('scheduled_sessions')
-          .select('scheduled_date, session_type').eq('user_id', session.user.id)
-          .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
-        const remainingKeys = new Set((remaining || []).map((s: any) => `${s.scheduled_date}|${s.session_type}`))
-        const newSessions = buildWeekSessions(session.user.id, monday, profile || {}, activeProg)
-          .filter(s => !remainingKeys.has(`${s.scheduled_date}|${s.session_type}`))
-        if (newSessions.length > 0) await supabase.from('scheduled_sessions').insert(newSessions)
-      } catch (e) { console.error('[activateProgram] sync error:', e) }
-    }
-    toast.success(t('calendar.toasts.activated'))
-  }
-
-  async function scheduleProgram(programId: string, startDate: string) {
-    await supabase.from('custom_programs').update({ scheduled: true, start_date: startDate, current_week: 1 }).eq('id', programId)
-    const updated = customPrograms.map(p => p.id === programId ? { ...p, scheduled: true, start_date: startDate } : p)
-    setCustomPrograms(updated)
-    toast.success(t('calendar.toasts.scheduled', { date: new Date(startDate + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }) }))
-  }
-
-  async function handleStartProgram(option: 'now' | 'monday' | 'custom', date?: string) {
-    const prog = startModalProgram
-    const importData = startModalImportData
-    setStartModalProgram(null)
-    setStartModalImportData(null)
-
-    if (importData) {
-      // Import flow: insert program first
-      const insertData: any = { ...importData, user_id: session.user.id, is_active: false }
-      if (option === 'now') { insertData.is_active = true; insertData.scheduled = false }
-      else { insertData.scheduled = true; insertData.start_date = date; insertData.is_active = false }
-
-      // Deactivate others if starting now
-      if (option === 'now') {
-        await supabase.from('custom_programs').update({ is_active: false }).eq('user_id', session.user.id).eq('is_active', true)
-      }
-
-      const { error } = await supabase.from('custom_programs').insert(insertData)
-      if (error) { toast.error(t('calendar.toasts.error') + ': ' + error.message); return }
-      if (option === 'now') toast.success(t('calendar.toasts.importedActive'))
-      else toast.success(t('calendar.toasts.importedScheduled', { date: new Date(date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long' }) }))
-      refreshPrograms()
-      return
-    }
-
-    if (!prog?.id) return
-    if (option === 'now') {
-      await doActivateProgram(prog.id)
-    } else {
-      await scheduleProgram(prog.id, date!)
-    }
-  }
-
-  async function deactivateProgram(programId: string) {
-    await supabase.from('custom_programs').update({ is_active: false }).eq('id', programId).eq('user_id', session.user.id)
-    const updated = customPrograms.map(p => p.id === programId ? { ...p, is_active: false } : p)
-    setCustomPrograms(updated)
-    setActiveCustomProgram(null)
-    toast.success(t('calendar.toasts.deactivated'))
-  }
-
-
-
-  async function deleteProgram(programId: string) {
-    await supabase.from('custom_programs').delete().eq('id', programId).eq('user_id', session.user.id)
-    setCustomPrograms(prev => prev.filter(p => p.id !== programId))
-    if (activeCustomProgram?.id === programId) setActiveCustomProgram(null)
-    toast.success(t('calendar.toasts.deleted'))
-  }
-
-  function refreshPrograms() {
-    supabase.from('custom_programs').select('*').eq('user_id', session.user.id).order('updated_at', { ascending: false })
-      .then(({ data }: any) => {
-        setCustomPrograms(data || [])
-        const active = (data || []).find((p: any) => p.is_active)
-        setActiveCustomProgram(active || null)
-      })
-  }
-
-  // ── Helpers ──
-  function fmtElapsed(s: number) {
-    const h   = Math.floor(s / 3600)
-    const m   = Math.floor((s % 3600) / 60)
-    const sec = s % 60
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-  }
-
-  function fmtRest(s: number) {
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-  }
-
-  function updateInput(exName: string, setIdx: number, field: 'kg' | 'reps', value: string) {
-    const inputKey = `moovx-inputs-${todayStr}-${exName}`
-    setSetInputs(prev => {
-      const arr = prev[exName] ? [...prev[exName]] : []
-      arr[setIdx] = { ...(arr[setIdx] || { kg: '', reps: '' }), [field]: value }
-      if (typeof window !== 'undefined') localStorage.setItem(inputKey, JSON.stringify(arr))
-      return { ...prev, [exName]: arr }
-    })
-  }
-
-  function addSet(exName: string) {
-    const key      = `moovx-sets-${todayStr}-${exName}`
-    const inputKey = `moovx-inputs-${todayStr}-${exName}`
-    setCompletedSets(p => {
-      const prev = p[key] || []
-      const next = [...prev, false]
-      localStorage.setItem(key, JSON.stringify(next))
-      return { ...p, [key]: next }
-    })
-    setSetInputs(p => {
-      const arr  = p[exName] ? [...p[exName]] : []
-      const last = arr.length > 0 ? { ...arr[arr.length - 1] } : { kg: '', reps: '' }
-      const next = [...arr, last]
-      localStorage.setItem(inputKey, JSON.stringify(next))
-      return { ...p, [exName]: next }
-    })
-  }
-
-  function toggleSet(exName: string, setIdx: number, totalSetsCount: number, restSecs: number) {
-    initAudio() // Unlock audio on iOS at user interaction
-    const key  = `moovx-sets-${todayStr}-${exName}`
-    const prev = completedSets[key] || Array.from({ length: totalSetsCount }, () => false)
-    const next = [...prev]
-    next[setIdx] = !next[setIdx]
-    localStorage.setItem(key, JSON.stringify(next))
-    setCompletedSets(p => ({ ...p, [key]: next }))
-    if (!workoutStarted && next[setIdx]) setWorkoutStarted(Date.now())
-    if (next[setIdx]) {
-      const allDone = next.every(Boolean)
-      if (!allDone && restSecs > 0) {
-        setRestingSet({ exName, setIdx })
-        setActiveRestExName(exName)
-        setRestMax(restSecs)
-        setRestTimer(restSecs)
-        setRestRunning(true)
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50)
-      }
-    } else {
-      if (activeRestExName === exName) {
-        setRestRunning(false)
-        setRestTimer(0)
-        setActiveRestExName(null)
-        setRestingSet(null)
-      }
-    }
-  }
-
-  function cancelRest() {
-    setRestRunning(false)
-    setRestTimer(0)
-    setRestingSet(null)
-    setActiveRestExName(null)
-  }
-
-  // ── Search exercises for add-to-session popup ──
-  useEffect(() => {
-    if (!showAddExercise) return
-    if (exerciseSearchQ.length < 1) {
-      supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(50)
-        .then(({ data }: any) => setExerciseSearchResults(data || []))
-      return
-    }
-    const t = setTimeout(async () => {
-      const { data } = await supabase.from('exercises_db').select('id, name, muscle_group').ilike('name', `%${exerciseSearchQ}%`).limit(30)
-      setExerciseSearchResults(data || [])
-    }, 200)
-    return () => clearTimeout(t)
-  }, [showAddExercise, exerciseSearchQ])
-
-  // ── Program edit functions ──
-  function startEditMode() {
-    if (!activeCustomProgram?.days) return
-    setEditedDays(JSON.parse(JSON.stringify(activeCustomProgram.days)))
-    setEditMode(true)
-  }
-  function editExField(dayIdx: number, exIdx: number, field: string, val: any) {
-    if (!editedDays) return
-    const d = [...editedDays]
-    d[dayIdx].exercises[exIdx][field] = val
-    setEditedDays(d)
-  }
-  function editRemoveEx(dayIdx: number, exIdx: number) {
-    if (!editedDays) return
-    const d = [...editedDays]
-    d[dayIdx].exercises.splice(exIdx, 1)
-    setEditedDays([...d])
-  }
-  function editMoveEx(dayIdx: number, exIdx: number, dir: -1 | 1) {
-    if (!editedDays) return
-    const d = [...editedDays]
-    const exs = d[dayIdx].exercises
-    const ni = exIdx + dir
-    if (ni < 0 || ni >= exs.length) return
-    ;[exs[exIdx], exs[ni]] = [exs[ni], exs[exIdx]]
-    setEditedDays([...d])
-  }
-  function editAddEx(dayIdx: number, ex: any) {
-    if (!editedDays) return
-    const d = [...editedDays]
-    d[dayIdx].exercises.push({ exercise_name: ex.name, custom_name: ex.name, name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '' })
-    setEditedDays([...d])
-  }
-  async function loadEditVariants(exerciseName: string, dayIdx: number, exIdx: number) {
-    const { data: current } = await supabase
-      .from('exercises_db').select('variant_group')
-      .ilike('name', exerciseName).limit(1).maybeSingle()
-    if (current?.variant_group) {
-      const { data } = await supabase
-        .from('exercises_db').select('name, equipment, muscle_group')
-        .eq('variant_group', current.variant_group)
-        .neq('name', exerciseName).order('equipment').limit(10)
-      setVariantPopup({ dayIdx, exIdx, variants: data || [] })
-    } else {
-      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
-      const { data } = await supabase
-        .from('exercises_db').select('name, equipment, muscle_group')
-        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
-      setVariantPopup({ dayIdx, exIdx, variants: data || [] })
-    }
-  }
-  function selectEditVariant(v: any) {
-    if (!variantPopup || !editedDays) return
-    const d = [...editedDays]
-    const ex = d[variantPopup.dayIdx].exercises[variantPopup.exIdx]
-    ex.exercise_name = v.name
-    ex.custom_name = v.name
-    ex.name = v.name
-    setEditedDays([...d])
-    setVariantPopup(null)
-  }
-  async function saveEditedProgram() {
-    if (!editedDays || !activeCustomProgram?.id) return
-    await supabase.from('custom_programs').update({ days: editedDays, updated_at: new Date().toISOString() }).eq('id', activeCustomProgram.id)
-    setActiveCustomProgram({ ...activeCustomProgram, days: editedDays })
-    setEditMode(false)
-    setEditedDays(null)
-    toast.success(t('calendar.toasts.updated'))
-  }
-
-  function addExerciseToSession(ex: any) {
-    const newEx = { name: ex.name, sets: 3, reps: 12, rest_seconds: 90, muscle_group: ex.muscle_group || '', isAdded: true }
-    setAddedExercises(prev => [...prev, newEx])
-    // Init localStorage for the new exercise
-    const key = `moovx-sets-${todayStr}-${newEx.name}`
-    const inputKey = `moovx-inputs-${todayStr}-${newEx.name}`
-    const setsArr = Array.from({ length: 3 }, () => false)
-    const inputsArr = Array.from({ length: 3 }, () => ({ kg: '', reps: '12' }))
-    setCompletedSets(prev => ({ ...prev, [key]: setsArr }))
-    setSetInputs(prev => ({ ...prev, [newEx.name]: inputsArr }))
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(setsArr))
-      localStorage.setItem(inputKey, JSON.stringify(inputsArr))
-    }
-  }
-
-  function handleFinishWithCheck() {
-    if (addedExercises.length > 0) {
-      setShowSaveChoice(true)
-    } else {
-      finishTrainingWorkout()
-    }
-  }
-
-  async function saveWithModifications() {
-    // Save session + update the custom program with new exercises
-    await finishTrainingWorkout()
-    if (activeCustomProgram?.id) {
-      const dayIndex = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-      const updatedDays = [...(activeCustomProgram.days || [])]
-      if (updatedDays[dayIndex]) {
-        const existingExs = updatedDays[dayIndex].exercises || []
-        const newExs = addedExercises.map(ex => ({ exercise_name: ex.name, custom_name: ex.name, sets: ex.sets, reps: ex.reps, rest_seconds: ex.rest_seconds, muscle_group: ex.muscle_group }))
-        updatedDays[dayIndex] = { ...updatedDays[dayIndex], exercises: [...existingExs, ...newExs] }
-        await supabase.from('custom_programs').update({ days: updatedDays }).eq('id', activeCustomProgram.id)
-      }
-    }
-    setAddedExercises([])
-  }
-
-  async function saveOriginal() {
-    await finishTrainingWorkout()
-    setAddedExercises([])
-  }
-
-  async function finishTrainingWorkout() {
-    const duration = workoutStarted ? Math.round((Date.now() - workoutStarted) / 60000) : 1
-    const exs: any[] = (coachProgram?.[trainingDay]?.exercises as any[]) || []
-    const totalSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `moovx-sets-${todayStr}-${ex.name}`
-      return s + (completedSets[key]?.length || Number(ex.sets) || 0)
-    }, 0)
-    const doneSetsCount = exs.reduce((s: number, ex: any) => {
-      const key = `moovx-sets-${todayStr}-${ex.name}`
-      return s + (completedSets[key] || []).filter(Boolean).length
-    }, 0)
-    // Get the session title from custom program or scheduled session
-    const sessionTitle = (() => {
-      if (activeCustomProgram?.days?.length) {
-        const idx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-        const paddedDays = padTo7Days(activeCustomProgram.days)
-        const day = paddedDays[idx]
-        if (day?.name && day.name !== 'Repos') return day.name
-      }
-      const todaySession = weekSessions.find((s: any) => s.scheduled_date === todayStr && s.session_type !== 'rest')
-      if (todaySession?.title) return todaySession.title
-      return trainingDay
-    })()
-    await supabase.from('workout_sessions').insert({
-      user_id: session.user.id,
-      name: sessionTitle,
-      completed: true,
-      duration_minutes: Math.max(duration, 1),
-      notes: `${doneSetsCount}/${totalSetsCount} séries · ${exs.length} exercices`,
-    })
-
-    // Gamification: +100 XP for completing a workout
-    try { await addXP(session.user.id, 100, supabase); await updateStreak(session.user.id, supabase) } catch {}
-
-    for (const ex of exs) {
-      const inputs = setInputs[ex.name] || []
-      for (const input of inputs) {
-        const weight = parseFloat(input.kg.replace(',', '.'))
-        const reps = parseInt(input.reps)
-        if (weight > 0 && reps > 0) {
-          const result = await checkForPR(ex.name, weight, reps)
-          if (result.newPR) {
-            toast.success(t('calendar.toasts.newPR', { exercise: result.exercise || '', value: result.value?.toLocaleString(locale) || '' }), { duration: 5000 })
-          }
-        }
-      }
-    }
-
-    exs.forEach((ex: any) => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(`moovx-sets-${todayStr}-${ex.name}`)
-        localStorage.removeItem(`moovx-inputs-${todayStr}-${ex.name}`)
-      }
-    })
-    setCompletedSets({})
-    setSetInputs({})
-    setWorkoutStarted(null)
-    setRestRunning(false)
-    setRestTimer(0)
-    setActiveRestExName(null)
-    setRestingSet(null)
-    setWorkoutFinished(true)
-    setTimeout(() => setWorkoutFinished(false), 4000)
-    fetchAll()
-  }
-
-  function handleExerciseInfo(ex: any) {
-    loadExerciseInfo(ex.name)
-  }
-
   async function openWorkoutDetail(workout: any) {
     setSelectedWorkout(workout)
     setLoadingDetail(true)
@@ -741,8 +170,73 @@ export default function TrainingTab({
     setLoadingDetail(false)
   }
 
+  const v2SessionName = (() => {
+    if (activeCustomProgram?.days?.length) {
+      const index = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(trainingDay)
+      const day = padTo7Days(activeCustomProgram.days)[index]
+      if (day?.name && day.name !== 'Repos') return day.name
+    }
+    const scheduled = weekSessions.find(item => item.scheduled_date === todayStr && item.session_type !== 'rest')
+    return scheduled?.title || trainingDay
+  })()
+  const v2ProgramName = activeTrainingProgram.source === 'coach'
+    ? v2SessionName
+    : activeCustomProgram?.name || ''
+  const v2Muscles = Array.from(new Set(trainingExercises
+    .map(exercise => exercise.muscle_group || exercise.muscle)
+    .filter(Boolean))) as string[]
+  const v2EstimatedMinutes = trainingExercises.length > 0
+    ? Math.round(trainingExercises.reduce((sum: number, exercise) => (
+      sum + (Number(exercise.sets) || 3) * 2.5
+    ), 8))
+    : 0
+  const v2CanStart = ['ready', 'partial'].includes(activeTrainingProgram.state)
+    && trainingExercises.length > 0
+    && !(todaySessionDone && trainingIsToday)
+  const todayTrainingState = deriveTodayTrainingState({
+    activeDraft: hasActiveDraft,
+    plannedSession: {
+      exerciseCount: trainingExercises.length,
+      isRest: Boolean(trainingDayData?.repos),
+    },
+    programSource: activeTrainingProgram.source,
+    programState: activeTrainingProgram.state,
+    scheduledCompleted: todaySessionDone,
+    workoutSessions: workoutHistory,
+  })
+  const v2NextSession = (() => {
+    const dayKeys = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+    const currentIndex = Math.max(0, dayKeys.indexOf(trainingDay))
+    for (let offset = 1; offset <= 7; offset += 1) {
+      const dayIndex = (currentIndex + offset) % 7
+      const dayKey = dayKeys[dayIndex]
+      const exercises = activeCustomProgram?.days?.length
+        ? getSessionForDay(activeCustomProgram.days, dayIndex).exercises
+        : coachProgram?.[dayKey]?.exercises || []
+      if (exercises.length > 0) {
+        return { dayKey, dayIndex, weekOffset: currentIndex + offset > 6 ? 1 : 0 }
+      }
+    }
+    return null
+  })()
+
+  function showNextPlannedSession() {
+    if (!v2NextSession) return
+    const now = new Date()
+    const monday = new Date(now)
+    const dow = now.getDay()
+    monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
+    monday.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(monday)
+    selectedDate.setDate(monday.getDate() + v2NextSession.dayIndex + v2NextSession.weekOffset * 7)
+    setTrainingDay(v2NextSession.dayKey)
+    setCalendarSelectedDate(selectedDate)
+    setWeekOffset(v2NextSession.weekOffset)
+  }
+
   // ══════════════════════════════════════════
   return (
+    <TrainingV2>
     <div style={{ minHeight: '100vh', background: colors.background, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
       <style>{`
         .set-input { -webkit-appearance: none; appearance: none; }
@@ -759,65 +253,28 @@ export default function TrainingTab({
         }
       `}</style>
 
-      {/* ── TIMER COMPLETE POPUP ── */}
-      {showTimerAlert && (<RailOverlay>
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 24,
-        }}>
-          <div style={{
-            background: colors.surface2, border: `2px solid ${colors.gold}`,
-            borderRadius: 16, padding: '40px 32px', textAlign: 'center', maxWidth: 340, width: '100%',
-            animation: 'ttPopIn 0.3s ease-out', boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
-          }}>
-            <div style={{
-              width: 64, height: 64, border: `2px solid ${colors.gold}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill={colors.gold}>
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
-              </svg>
-            </div>
-            <h2 style={{ ...statStyle, fontSize: 36, color: colors.gold, letterSpacing: 3, margin: '0 0 8px' }}>
-              {t('session.restDone')}
-            </h2>
-            <p style={{ ...subtitleStyle, fontWeight: 800, fontSize: 20, color: colors.text, letterSpacing: 2, margin: '0 0 24px' }}>
-              {motivationalMsg}
-            </p>
-            <button onClick={() => setShowTimerAlert(false)} style={{
-              background: colors.gold, color: colors.onGold, border: 'none',
-              fontFamily: fonts.body, fontWeight: 800, fontSize: 16, letterSpacing: 2,
-              padding: '14px 48px', textTransform: 'uppercase', cursor: 'pointer',
-
-            }}>
-              C&apos;EST PARTI !
-            </button>
-          </div>
-        </div>
-      </RailOverlay>)}
-
-      {/* ── WORKOUT FINISHED CELEBRATION ── */}
-      <WorkoutCelebration visible={workoutFinished} />
-
-      {/* ═══ SECTION 1 — HEADER ═══ */}
-      <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div>
-          <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-            {t('header.title')}
-          </div>
-          <div style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>
-            {activeCustomProgram
-              ? `${activeCustomProgram.name}${activeCustomProgram.total_weeks ? ` • SEMAINE ${getEffectiveWeek(activeCustomProgram)}/${activeCustomProgram.total_weeks}` : ''}`
-              : t('header.noActiveProgram')}
-          </div>
-        </div>
-        <button onClick={() => setShowProgramManager(true)} aria-label={t('header.managePrograms')}
-          style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-          <BookOpen size={18} color={colors.gold} />
-        </button>
-      </div>
+      <NoActiveSession
+        programState={activeTrainingProgram.state}
+        programSource={activeTrainingProgram.source}
+        programName={v2ProgramName}
+        sessionName={v2SessionName}
+        exerciseCount={trainingExercises.length}
+        totalSets={trainingTotalSets}
+        estimatedMinutes={v2EstimatedMinutes}
+        muscles={v2Muscles}
+        isToday={trainingIsToday}
+        todayState={trainingIsToday ? todayTrainingState.kind : null}
+        completedSessionName={todayTrainingState.completedSession?.name || null}
+        canStart={v2CanStart}
+        canViewNext={v2NextSession != null}
+        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName }, trainingExercises, trainingDay)}
+        onViewNext={showNextPlannedSession}
+        onViewCompleted={todayTrainingState.completedSession
+          ? () => openWorkoutDetail(todayTrainingState.completedSession)
+          : undefined}
+        onOpenProgramSettings={onOpenProgramSettings}
+        onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
+      />
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
       {(() => {
@@ -840,7 +297,7 @@ export default function TrainingTab({
         const monthLabel = displayDays[3].date.toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()
 
         const glassBtn: React.CSSProperties = {
-          width: 32, height: 32, borderRadius: 10,
+          width: 44, height: 44, borderRadius: 9,
           background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
           border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -850,7 +307,8 @@ export default function TrainingTab({
         return (
           <div
             data-no-tab-swipe="true"
-            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 20, marginBottom: 24 }}
+            data-training-calendar="compact"
+            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 12, marginBottom: 16 }}
             onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
@@ -861,7 +319,7 @@ export default function TrainingTab({
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 {weekOffset !== 0 && (
@@ -887,7 +345,7 @@ export default function TrainingTab({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -weekDir * 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32, mass: 0.7 }}
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}
             >
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
@@ -897,10 +355,18 @@ export default function TrainingTab({
                 const isDone = (ws?.completed || doneDates.has(dateStr)) && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
                 const dotColor = isRest ? 'rgba(255,255,255,0.2)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
+                const statusLabel = isRest
+                  ? t('calendar.legendRest')
+                  : isDone
+                    ? t('calendar.legendDone')
+                    : isMissed
+                      ? t('calendar.legendMissed')
+                      : ws?.title || t('calendar.session', { num: i + 1 })
 
                 return (
                   <button
                     key={i}
+                    aria-label={`${dayName} ${dayNum} · ${statusLabel}`}
                     onClick={() => {
                       const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
                       setTrainingDay(dayKey)
@@ -909,14 +375,14 @@ export default function TrainingTab({
                     style={{
                       background: isToday ? `${colors.gold}12` : 'transparent',
                       border: isToday ? `2px solid ${colors.gold}` : `1px solid ${colors.divider}`,
-                      borderRadius: 12, padding: '10px 6px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 6,
+                      borderRadius: 9, padding: '7px 2px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
                       transition: 'all 0.15s ease',
                     }}
                   >
                     <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const }}>{dayName}</span>
-                    <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, marginTop: 2 }} />
+                    <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
+                    <div aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
                   </button>
                 )
               })}
@@ -924,7 +390,7 @@ export default function TrainingTab({
             </AnimatePresence>
 
             {/* Legend compact */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 9 }}>
               {[
                 { color: colors.success, label: t('calendar.legendDone') },
                 { color: colors.error, label: t('calendar.legendMissed') },
@@ -940,768 +406,19 @@ export default function TrainingTab({
         )
       })()}
 
-      {/* Scheduled program banner */}
-      {!scheduledBannerDismissed && (() => {
-        const scheduled = customPrograms.find((p: any) => p.scheduled && p.start_date)
-        if (!scheduled) return null
-        const startDate = new Date(scheduled.start_date + 'T00:00:00')
-        const now = new Date(); now.setHours(0, 0, 0, 0)
-        const diffDays = Math.ceil((startDate.getTime() - now.getTime()) / 86400000)
-        if (diffDays < 1) return null
-        return (
-          <div style={{ margin: '0 24px 8px', padding: '10px 14px', background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontFamily: fonts.body, fontSize: 12, color: colors.gold }}>
-              Prochain : <span style={{ fontWeight: 700 }}>{scheduled.name}</span> — dans {diffDays} jour{diffDays > 1 ? 's' : ''}
-            </div>
-            <button onClick={() => setScheduledBannerDismissed(true)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 14, padding: 4 }}>✕</button>
-          </div>
-        )
-      })()}
-
-      {/* ═══ SECTION 2.5 — MES PROGRAMMES (always visible for AUTO clients) ═══ */}
-      {aiAllowed && (
-        <div style={{ margin: '0 24px' }}>
-          <SectionTitle noPadding title={t('programs.title')} trailing={String(customPrograms.length)} />
-          <button onClick={() => setShowProgramManager(true)} style={{ width: '100%', padding: '12px 16px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Dumbbell size={16} color={colors.gold} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>
-                  {activeCustomProgram ? activeCustomProgram.name : customPrograms.length > 0 ? `${customPrograms.length} programme${customPrograms.length > 1 ? 's' : ''}` : t('programs.createProgram')}
-                </div>
-                {activeCustomProgram && <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, marginTop: 1 }}>{t('calendar.activeProgram')}</div>}
-              </div>
-            </div>
-            <ChevronRight size={16} color={colors.textMuted} />
-          </button>
-        </div>
-      )}
-
-      {/* ═══ SECTION 2.7 — LISTE SEANCES COACH (invited clients only) ═══ */}
-      {!aiAllowed && coachProgram && (
-        <div style={{ margin: '16px 24px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={T}>{t('programs.coachProgram')}</span>
-            <div style={titleLineStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {Object.entries(coachProgram).map(([weekday, day]: [string, any]) => {
-              if (!day || day.is_rest || day.repos) return null
-              const exercises = day.exercises || []
-              if (exercises.length === 0) return null
-              const isToday = weekday === todayKey
-              const sessionIndex = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(weekday)
-              const lastDone = lastCompletedByIndex?.get(sessionIndex)
-              return (
-                <div key={weekday} style={{ ...cardStyle, padding: 16, border: isToday ? `1.5px solid ${colors.gold}` : undefined }}>
-                  {isToday && (
-                    <div style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, color: colors.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
-                      {"SUGGERE AUJOURD'HUI"}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <div>
-                      <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: isToday ? colors.gold : colors.text, letterSpacing: 1 }}>
-                        {(day.name || weekday).toUpperCase()}
-                      </div>
-                      <div style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
-                        {exercises.length} exercice{exercises.length > 1 ? 's' : ''}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setTrainingDay(weekday)
-                        startProgramWorkout(day, exercises, weekday)
-                      }}
-                      style={{ ...btnPrimary, padding: '10px 20px', borderRadius: 12, fontSize: 12 }}
-                    >
-                      COMMENCER
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {exercises.slice(0, 4).map((ex: any, i: number) => (
-                      <span key={i} style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted, background: colors.goldDim, padding: '2px 8px', borderRadius: 6 }}>
-                        {getExerciseName(ex, locale) || t('calendar.exercise')}
-                      </span>
-                    ))}
-                    {exercises.length > 4 && (
-                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.gold, padding: '2px 8px' }}>
-                        +{exercises.length - 4}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 8 }}>
-                    Derniere fois : {formatRelativeTime(lastDone)}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ═══ SECTION 3 — SÉANCE DU JOUR (HeroSessionCard compact) ═══ */}
-      {(() => {
-        const dayStatus = (() => {
-          if (trainingIsToday) return 'today' as const
-          const target = calendarSelectedDate ? new Date(calendarSelectedDate) : new Date()
-          target.setHours(0, 0, 0, 0)
-          const now = new Date(); now.setHours(0, 0, 0, 0)
-          if (target > now) return 'future' as const
-          const dateStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`
-          const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
-          return (ws?.completed || doneDates.has(dateStr)) ? 'done' as const : 'missed' as const
-        })()
-
-        const heroState: HeroState = (() => {
-          if (!activeCustomProgram && !coachProgram) return 'no-program'
-          if (trainingDayData?.repos) return 'rest'
-          if (trainingExercises.length === 0) return 'no-exercises'
-          if (todaySessionDone && trainingIsToday) return 'done'
-          if (dayStatus === 'done') return 'done'
-          return 'active'
-        })()
-
-        const sessionName = (() => {
-          if (activeCustomProgram?.days?.length) {
-            const idx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-            const paddedDays = padTo7Days(activeCustomProgram.days)
-            const day = paddedDays[idx]
-            if (day?.name && day.name !== 'Repos') return day.name
-          }
-          const ws = weekSessions.find((s: any) => s.scheduled_date === todayStr && s.session_type !== 'rest')
-          if (ws?.title) return ws.title
-          return trainingDay
-        })()
-
-        const dayLabel = trainingIsToday ? undefined : `SEANCE — ${trainingDay.toUpperCase()}`
-        const dayBadge = dayStatus === 'today' ? null
-          : dayStatus === 'future' ? { text: 'A VENIR', color: colors.textDim }
-          : dayStatus === 'done' ? { text: 'TERMINEE', color: colors.success }
-          : { text: 'MANQUEE', color: colors.error }
-
-        return (
-          <>
-            <HeroSessionCard
-              state={heroState}
-              sessionTitle={sessionName}
-              todayExercises={trainingExercises}
-              todaySession={todaySessionDone && trainingIsToday ? { id: 'today', created_at: new Date().toISOString() } : null}
-              onStart={() => startProgramWorkout(trainingDayData, trainingExercises)}
-              onCalendar={() => {}}
-              onClick={() => setShowSessionModal(true)}
-              onViewDetail={() => setShowSessionModal(true)}
-              dayLabel={dayLabel}
-              dayBadge={dayBadge}
-              hideCalendarButton
-              hideStartButton={!trainingIsToday || todaySessionDone}
-            />
-            <div style={{ margin: '0 20px' }}>
-              <button
-                onClick={() => startProgramWorkout({ day_name: 'Séance libre' }, [])}
-                style={{ ...btnSecondary, width: '100%', padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              >
-                {t('session.freeSession')}
-              </button>
-            </div>
-            {todaySessionDone && trainingIsToday ? (
-              <SessionDoneModal
-                isOpen={showSessionModal}
-                onClose={() => setShowSessionModal(false)}
-                sessionId={workoutHistory[0]?.id ?? null}
-                sessionTitle={sessionName}
-                todayKey={todayKey}
-                coachProgram={coachProgram}
-                supabase={supabase}
-                userId={session?.user?.id ?? ''}
-              />
-            ) : (
-            <SessionDetailModal
-              isOpen={showSessionModal}
-              onClose={() => setShowSessionModal(false)}
-              sessionTitle={sessionName}
-              dayStatus={dayStatus}
-              dayBadge={dayBadge}
-            >
-              {/* ── Modal content: read-only exercise detail ── */}
-              {(() => {
-                if (trainingDayData?.repos) return <TrainingRestDay />
-                if (!activeCustomProgram && !coachProgram) return (
-                  <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim }}>
-                    <Dumbbell size={48} color={colors.textDim} style={{ marginBottom: 16 }} />
-                    <p style={{ fontFamily: fonts.body, fontSize: 14, margin: 0 }}>{t('session.noActiveProgram')}</p>
-                  </div>
-                )
-                if (trainingExercises.length === 0) return (
-                  <p style={{ textAlign: 'center', padding: 40, color: colors.textDim, fontFamily: fonts.body }}>{t('session.noExercisesForDay', { day: trainingDay })}</p>
-                )
-
-                const totalSets = trainingExercises.reduce((s: number, e: any) => s + (Number(e.sets) || 3), 0)
-                const totalRest = Math.round(trainingExercises.reduce((s: number, e: any) => s + getRestSeconds(e), 0) / 60)
-
-                return (
-                  <>
-                    {activeCustomProgram?.phases && activeCustomProgram?.total_weeks && trainingIsToday && (
-                      <div style={{ marginBottom: 20 }}>
-                        <PhaseProgressBanner program={activeCustomProgram} />
-                      </div>
-                    )}
-
-                    {/* Mini-stats grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
-                      {[
-                        { label: 'SETS', value: totalSets },
-                        { label: t('session.exercises'), value: trainingExercises.length },
-                        { label: t('session.rest'), value: `${totalRest}min` },
-                      ].map(stat => (
-                        <div key={stat.label} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 14, textAlign: 'center' }}>
-                          <div style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 400, color: colors.gold, lineHeight: 1 }}>{stat.value}</div>
-                          <div style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim, textTransform: 'uppercase', marginTop: 4 }}>{stat.label}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* MODIFIER button (today, not editing, not in workout) */}
-                    {trainingIsToday && activeCustomProgram && !editMode && !workoutStarted && (
-                      <div style={{ marginBottom: 16 }}>
-                        <button onClick={startEditMode} style={{ ...btnSecondary, padding: '14px 20px', borderRadius: 14, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em' }}>
-                          MODIFIER
-                        </button>
-                      </div>
-                    )}
-
-                    {/* EDIT MODE or EXERCISE CARDS */}
-                    {editMode && editedDays ? (() => {
-                      const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-                      const day = editedDays[dayIdx]
-                      if (!day?.exercises) return null
-                      return (
-                        <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, marginBottom: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-                          <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>{t('calendar.buttons.editMode')}</div>
-                          {day.exercises.map((ex: any, i: number) => (
-                            <div key={i} style={{ padding: '12px 0', borderBottom: i < day.exercises.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 1, flexShrink: 0 }}>
-                                  <button onClick={() => editMoveEx(dayIdx, i, -1)} disabled={i === 0} style={{ background: 'none', border: 'none', color: i === 0 ? colors.textDim : colors.gold, fontSize: 11, cursor: 'pointer', padding: '1px 3px', lineHeight: 1 }}>▲</button>
-                                  <button onClick={() => editMoveEx(dayIdx, i, 1)} disabled={i === day.exercises.length - 1} style={{ background: 'none', border: 'none', color: i === day.exercises.length - 1 ? colors.textDim : colors.gold, fontSize: 11, cursor: 'pointer', padding: '1px 3px', lineHeight: 1 }}>▼</button>
-                                </div>
-                                <div style={{ flex: 1, ...bodyStyle, color: colors.text, fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.exercise_name || ex.custom_name || ex.name}</div>
-                                <button onClick={() => loadExerciseInfo(ex.exercise_name || ex.custom_name || ex.name)} style={{ background: 'rgba(230,195,100,0.06)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                                </button>
-                                <button onClick={() => loadEditVariants(ex.exercise_name || ex.custom_name || ex.name, dayIdx, i)} style={{ background: 'rgba(230,195,100,0.06)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M8 3H3v5M21 3l-7 7M3 21l7-7M21 21h-5v-5M3 21V16h5"/></svg>
-                                </button>
-                                <button onClick={() => editRemoveEx(dayIdx, i)} style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.error, fontSize: 12, cursor: 'pointer', flexShrink: 0 }}>✕</button>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 26 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.sets')}</span>
-                                  <input type="number" min={1} max={10} value={ex.sets ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'sets','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'sets',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                                </div>
-                                <span style={{ color: colors.textDim, fontSize: 10 }}>×</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.reps')}</span>
-                                  <input type="number" min={1} max={50} value={ex.reps ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'reps','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'reps',n) }} style={{ width: 36, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                                </div>
-                                <span style={{ color: colors.textDim, fontSize: 10 }}>·</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.restLabel')}</span>
-                                  <input type="number" min={0} max={300} step={15} value={ex.rest_seconds ?? ''} onChange={e => { const v=e.target.value; if(v===''){editExField(dayIdx,i,'rest_seconds','');return} const n=parseInt(v); if(!isNaN(n))editExField(dayIdx,i,'rest_seconds',n) }} style={{ width: 44, padding: '4px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 14, outline: 'none' }} />
-                                  <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted }}>s</span>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 6, marginLeft: 26 }}>
-                                <span style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{t('calendar.tempoLabel')}</span>
-                                {[0, 1, 2].map(idx => {
-                                  const parts = (ex.tempo || '2-0-2').split('-')
-                                  return (
-                                    <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                      <input type="number" min={0} max={9} value={parts[idx] || (idx === 1 ? '0' : '2')} onChange={e => { const p = [...parts]; p[idx] = e.target.value; editExField(dayIdx, i, 'tempo', p.join('-')) }} style={{ width: 28, padding: '3px 2px', textAlign: 'center' as const, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 6, color: colors.gold, fontFamily: fonts.headline, fontSize: 12, outline: 'none' }} />
-                                      {idx < 2 && <span style={{ color: colors.textDim, fontSize: 10 }}>-</span>}
-                                    </span>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                          <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 10, marginTop: 8, background: 'transparent', border: `1.5px dashed ${colors.goldRule}`, borderRadius: 16, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>{t('session.addExercise')}</button>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                            <button onClick={saveEditedProgram} style={{ ...btnPrimary, flex: 1, padding: 12, borderRadius: 12 }}>{t('calendar.buttons.save')}</button>
-                            <button onClick={() => { setEditMode(false); setEditedDays(null) }} style={{ ...btnSecondary, flex: 1, padding: 12, borderRadius: 12 }}>{t('calendar.buttons.cancel')}</button>
-                          </div>
-                        </div>
-                      )
-                    })() : (
-                      <>
-                        {/* Exercise cards */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                          {trainingExercises.map((ex: any, exIdx: number) => {
-                            const storageKey = `moovx-sets-${todayStr}-${ex.name}`
-                            const n = Number(ex.sets) || 3
-                            const stored = completedSets[storageKey]
-                            const setsArr: boolean[] = stored ? stored.slice(0, n).concat(Array.from({ length: Math.max(0, n - stored.length) }, () => false)) : Array.from({ length: n }, () => false)
-                            const numSets = n
-                            const inputs = setInputs[ex.name] || Array.from({ length: numSets }, () => ({ kg: '', reps: String(ex.reps || '') }))
-                            const nextEx = trainingExercises[exIdx + 1]
-                            const isSupersetStart = ex.technique === 'superset' && ex.technique_details && nextEx
-                            const prevEx = exIdx > 0 ? trainingExercises[exIdx - 1] : null
-                            const isSupersetEnd = prevEx?.technique === 'superset' && prevEx?.technique_details?.toLowerCase() === ex.name?.toLowerCase()
-
-                            return (
-                              <div key={ex.name}>
-                                {isSupersetStart && (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
-                                    <div style={{ width: 3, height: 20, background: colors.gold, borderRadius: 2 }} />
-                                    <span style={{ fontFamily: fonts.headline, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: colors.gold }}>SUPERSET</span>
-                                    <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
-                                  </div>
-                                )}
-                                <div style={isSupersetStart || isSupersetEnd ? { borderLeft: `3px solid ${colors.gold}`, paddingLeft: 8 } : {}}>
-                                  <TrainingExerciseCard
-                                    ex={ex}
-                                    exIdx={exIdx}
-                                    setsArr={setsArr}
-                                    inputs={inputs}
-                                    trainingIsToday={trainingIsToday}
-                                    restRunning={restRunning}
-                                    restingSet={restingSet}
-                                    restTimer={restTimer}
-                                    onToggleSet={toggleSet}
-                                    onAddSet={addSet}
-                                    onUpdateInput={updateInput}
-                                    onExerciseInfo={handleExerciseInfo}
-                                    fmtRest={fmtRest}
-                                    onCancelRest={cancelRest}
-                                    onVideoFeedback={(name: string) => setVideoExercise(name)}
-                                    onTechniqueInfo={(t: string) => setTechniqueTooltip(t)}
-                                    supabase={supabase}
-                                    userId={session?.user?.id}
-                                  />
-                                </div>
-                                {isSupersetEnd && (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
-                                    <div style={{ width: 3, height: 10, background: colors.gold, borderRadius: 2 }} />
-                                    <div style={{ flex: 1, height: 1, background: `${colors.gold}30` }} />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        {/* Add exercise to session (active workout) */}
-                        {trainingIsToday && (workoutStarted || trainingDoneSets > 0) && (
-                          <button onClick={() => { setShowAddExercise(true); setExerciseSearchQ('') }} style={{ width: '100%', padding: 14, marginTop: 12, background: 'transparent', border: `1.5px dashed rgba(212,168,67,0.4)`, borderRadius: 16, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            {t('session.addExercise')}
-                          </button>
-                        )}
-
-                        {/* Browse exercise DB */}
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => setShowExDbModal(true)}
-                          style={{ width: '100%', marginTop: 12, background: colors.surface2, border: `2px dashed ${colors.goldBorder}`, borderRadius: 16, padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}
-                        >
-                          <Search size={16} color={colors.gold} />
-                          <span style={{ ...labelStyle, fontSize: 13, fontWeight: 800, letterSpacing: '2px' }}>{t('session.discoverExercises')}</span>
-                        </motion.button>
-
-                        {/* Start workout button (today, not started, not done) */}
-                        {trainingIsToday && !todaySessionDone && !workoutStarted && (
-                          <motion.button
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => startProgramWorkout(trainingDayData, trainingExercises)}
-                            style={{ width: '100%', marginTop: 12, background: colors.gold, color: colors.onGold, fontWeight: 400, padding: '18px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.headline, fontSize: 20, letterSpacing: '0.15em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-                          >
-                            DEMARRER LA SEANCE
-                          </motion.button>
-                        )}
-
-                        {/* Finish button (today, sets done, not started via WorkoutSession) */}
-                        {trainingIsToday && !workoutStarted && trainingDoneSets > 0 && (
-                          <motion.button
-                            whileTap={{ scale: 0.97 }}
-                            onClick={handleFinishWithCheck}
-                            style={{ width: '100%', marginTop: 12, background: colors.success, color: colors.onGold, fontWeight: 700, padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 13, letterSpacing: '2px', textTransform: 'uppercase' as const, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-                          >
-                            <Award size={18} color={colors.onGold} />
-                            {t('session.finishSession')}
-                          </motion.button>
-                        )}
-                      </>
-                    )}
-                  </>
-                )
-              })()}
-            </SessionDetailModal>
-            )}
-          </>
-        )
-      })()}
-
-      {/* ═══ SECTION 4 — ACTIVE SESSION BAR ═══ */}
-      <TrainingActiveBar
-        workoutStarted={workoutStarted}
-        elapsedSecs={elapsedSecs}
-        trainingDoneSets={trainingDoneSets}
-        trainingTotalSets={trainingTotalSets}
-        onFinish={handleFinishWithCheck}
-        fmtElapsed={fmtElapsed}
-      />
-
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
-      <RecentSessionsList workoutHistory={workoutHistory} onOpenDetail={openWorkoutDetail} />
-      {/* ═══ SECTION — BIBLIOTHÈQUE + ALTERNATIVES (extracted) ═══ */}
-      <ExerciseLibrarySection exercisesCache={exercisesCache} activeCustomProgram={activeCustomProgram} supabase={supabase} onProgramUpdate={(updated: any) => { setActiveCustomProgram(updated) }} onStartWorkout={startProgramWorkout} />
-
+      <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} />
       {/* ═══ SECTION 6 — CARDIO ═══ */}
       <div style={{ padding: '0 24px 16px' }}>
         <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />
       </div>
 
-      {/* ═══ SECTION 7 — PROGRAM MANAGER MODAL (fullscreen) ═══ */}
-      {showProgramManager && (
-        <RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <ModalHeader title={t('programs.title')} onClose={() => { setShowProgramManager(false); setExpandedProgram(null); setConfirmDelete(null) }} />
-
-          {/* Hidden file input for import */}
-          <input ref={importFileRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={async (e) => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            const result = await parseProgramFromXlsx(file)
-            if (!result.success) { toast.error(result.error || t('calendar.toasts.error')); return }
-            if (result.program) {
-              setImportPreview(result.program)
-              setImportName(result.program.name)
-              setImportSkipped(result.skippedSheets || [])
-            }
-            e.target.value = ''
-          }} />
-
-          {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 100px' }}>
-            <AiQuotaBadge />
-            {/* Create + Import buttons */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-              <button onClick={() => { setEditingProgram(null); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ ...btnPrimary, flex: 1, padding: 16 }}>
-                + CRÉER
-              </button>
-              <button onClick={() => importFileRef.current?.click()} style={{ ...btnSecondary, flex: 1, padding: 16 }}>
-                {t('calendar.buttons.importXlsx')}
-              </button>
-            </div>
-
-            {/* Program list */}
-            {customPrograms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <Dumbbell size={48} color={colors.textDim} strokeWidth={1.5} />
-                <p style={{ ...bodyStyle, marginTop: 12 }}>{t('programs.noPrograms')}</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {customPrograms.map((prog: any) => {
-                  const isExpanded = expandedProgram === prog.id
-                  const days = prog.days || []
-
-                  return (
-                    <div key={prog.id} style={{ ...cardStyle, padding: 0, overflow: 'hidden', opacity: prog.is_active ? 1 : 0.7 }}>
-                      {/* Program header — always visible */}
-                      <button
-                        onClick={() => setExpandedProgram(isExpanded ? null : prog.id)}
-                        style={{ width: '100%', padding: 20, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-                      >
-                        <div>
-                          <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 700, color: prog.is_active ? colors.gold : colors.text, letterSpacing: '0.05em' }}>{prog.name}</div>
-                          <div style={{ ...mutedStyle, marginTop: 4 }}>
-                            {t('calendar.import.days', { count: days.length })} · {prog.source === 'ai' ? t('calendar.import.ai') : prog.source === 'import' ? t('calendar.import.importSource') : t('calendar.import.manual')}
-                            {prog.total_weeks && ` · ${prog.total_weeks} sem.`}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          {prog.total_weeks && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 8px', borderRadius: 999 }}>
-                              {prog.total_weeks} SEM
-                            </span>
-                          )}
-                          {prog.is_active ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.success, background: 'rgba(74,222,128,0.1)', padding: '3px 10px', borderRadius: 999 }}>● Actif</span>
-                          ) : prog.scheduled ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '3px 10px', borderRadius: 999 }}>📅 {new Date(prog.start_date + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' }).toUpperCase()}</span>
-                          ) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: colors.textMuted, background: colors.divider, padding: '3px 10px', borderRadius: 999 }}>○ Inactif</span>
-                          )}
-                          <span style={{ color: colors.textMuted, fontSize: 14, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
-                        </div>
-                      </button>
-
-                      {/* Expanded content — accordion */}
-                      {isExpanded && (
-                        <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${colors.goldBorder}` }}>
-                          {/* Action buttons */}
-                          <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 16 }}>
-                            {prog.is_active ? (
-                              <button onClick={() => deactivateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: 'rgba(74,222,128,0.08)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 12, color: colors.success, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.deactivate')}</button>
-                            ) : (
-                              <button onClick={() => activateProgram(prog.id)} style={{ flex: 1, padding: '10px 0', background: colors.goldDim, border: `1px solid ${colors.gold}`, borderRadius: 12, color: colors.gold, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('calendar.buttons.activate')}</button>
-                            )}
-                            <button onClick={() => { setEditingProgram(prog); setShowProgramBuilder(true); setShowProgramManager(false) }} style={{ flex: 1, padding: '10px 0', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✏️ ÉDITER</button>
-                            <button onClick={() => exportProgramToXlsx(prog)} style={{ padding: '10px 14px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>⬇️</button>
-                          </div>
-
-                          {/* Days list */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {padTo7Days(days).map((day: any, di: number) => {
-                              const exList = day.exercises || []
-                              return (
-                                <div key={di} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 16 }}>
-                                  {/* Day header */}
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: day.is_rest ? 0 : 8 }}>
-                                    <div style={{ ...titleStyle, fontSize: 12 }}>
-                                      {t('calendar.day', { num: di + 1 })} : {day.is_rest ? t('calendar.rest') : (day.name || day.weekday || t('calendar.session', { num: di + 1 }))}
-                                      {!day.is_rest && day.focus && <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: 6 }}>({day.focus})</span>}
-                                    </div>
-                                    {day.is_rest ? (
-                                      <Moon size={14} color={colors.textDim} />
-                                    ) : (
-                                      <span style={{ ...mutedStyle, fontSize: 10 }}>{exList.length} ex.</span>
-                                    )}
-                                  </div>
-
-                                  {/* Exercise list (if not rest) */}
-                                  {!day.is_rest && exList.length > 0 && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                      {exList.map((ex: any, ei: number) => {
-                                        const exName = ex.exercise_name || ex.custom_name || ex.name || ex.exerciseName || t('calendar.exerciseNum', { num: ei + 1 })
-                                        return (
-                                          <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ color: colors.gold, fontSize: 10 }}>•</span>
-                                            <span style={{ ...bodyStyle, fontSize: 13, flex: 1, minWidth: 0 }}>{exName}</span>
-                                            <span style={{ ...mutedStyle, fontSize: 11, flexShrink: 0 }}>{ex.sets || 3}×{ex.reps || 10}</span>
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  )}
-                                  {!day.is_rest && exList.length === 0 && (
-                                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('programs.noExercises')}</span>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-
-                          {/* Delete button with confirmation */}
-                          <div style={{ marginTop: 16, borderTop: `1px solid ${colors.goldBorder}`, paddingTop: 16 }}>
-                            {confirmDelete === prog.id ? (
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => { deleteProgram(prog.id); setConfirmDelete(null); setExpandedProgram(null) }} style={{ flex: 1, padding: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{t('calendar.buttons.confirmDelete')}</button>
-                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 20px', background: 'transparent', border: `1px solid ${colors.goldBorder}`, borderRadius: 12, color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{t('calendar.buttons.cancel')}</button>
-                              </div>
-                            ) : (
-                              <button onClick={() => setConfirmDelete(prog.id)} style={{ width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('programs.deleteProgram')}</button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Blank template link */}
-            <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <button onClick={downloadBlankTemplate} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textDecoration: 'underline', padding: 8 }}>
-                Télécharger le modèle vierge (.xlsx)
-              </button>
-            </div>
-          </div>
-        </div>
-        </RailOverlay>
-      )}
-
-      {/* ═══ IMPORT PREVIEW MODAL ═══ */}
-      {importPreview && (<RailOverlay>
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setImportPreview(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, width: '100%', maxWidth: 420, maxHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <ModalHeader title="APERÇU IMPORT" badge={importPreview.total_weeks ? `${importPreview.total_weeks} SEM` : undefined} onClose={() => setImportPreview(null)} />
-            {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ ...labelStyle, marginBottom: 4 }}>{t('programs.programName')}</div>
-                <input value={importName} onChange={e => setImportName(e.target.value)} style={{ width: '100%', padding: 12, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, color: colors.text, fontFamily: fonts.body, fontSize: 14, outline: 'none' }} />
-              </div>
-
-              {/* Phase summary for periodized programs */}
-              {importPreview.phases && (
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {importPreview.phases.map((phase, i) => (
-                    <div key={i} style={{ padding: '6px 10px', background: colors.goldDim, borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: fonts.headline, fontSize: 11, color: colors.gold }}>{phase.name}</span>
-                      <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>{t('calendar.weekLabel', { start: phase.weeks[0], end: phase.weeks[1] })}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 16 }}>
-                {importPreview.days.map((day, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid ${colors.goldBorder}` }}>
-                    <span style={{ ...bodyStyle, fontSize: 13 }}>
-                      {day.is_rest ? `Jour ${i + 1} — Repos` : `Jour ${i + 1} — ${day.name}`}
-                    </span>
-                    <span style={{ ...mutedStyle, fontSize: 12 }}>
-                      {day.is_rest ? '🌙' : `${(day.exercises || []).length} ex. ✓`}
-                    </span>
-                  </div>
-                ))}
-                {importSkipped.map((name, i) => (
-                  <div key={`skip-${i}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: colors.background, borderRadius: 8, border: `1px solid rgba(239,68,68,0.2)`, opacity: 0.6 }}>
-                    <span style={{ ...bodyStyle, fontSize: 13 }}>{name}</span>
-                    <span style={{ ...mutedStyle, fontSize: 12 }}>{t('calendar.import.skipped')}</span>
-                  </div>
-                ))}
-                {importSkipped.length > 0 && (
-                  <div style={{ ...mutedStyle, fontSize: 11, marginTop: 4 }}>
-                    {t('calendar.import.result', { imported: importPreview.days.length, total: importPreview.days.length + importSkipped.length, skipped: importSkipped.length })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer FIXE — toujours visible */}
-            <div style={{ flexShrink: 0, padding: '16px 20px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `0.5px solid ${colors.goldBorder}`, background: colors.background, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={() => {
-                const insertData: any = {
-                  name: importName.trim() || 'Programme importé',
-                  description: importPreview.description || '',
-                  days: importPreview.days,
-                  source: 'import',
-                }
-                if (importPreview.total_weeks) {
-                  insertData.total_weeks = importPreview.total_weeks
-                  insertData.current_week = importPreview.current_week || 1
-                  insertData.phases = importPreview.phases || null
-                }
-                setStartModalImportData(insertData)
-                setStartModalProgram({ name: importName.trim() || 'Programme importé' })
-                setImportPreview(null)
-              }} style={{ ...btnPrimary, padding: 14 }}>{t('calendar.buttons.import')}</button>
-              <button onClick={() => setImportPreview(null)} style={{ ...btnSecondary, padding: 14 }}>{t('calendar.buttons.cancel')}</button>
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
-
       {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}
-
-      {/* Exercise DB Modal */}
-      {showExDbModal && (
-        <ExerciseSearchModal
-          supabase={supabase}
-          onClose={() => setShowExDbModal(false)}
-          onAdd={(ex) => addExerciseToSession(ex)}
-        />
-      )}
-
-      {/* Exercise Detail Modal */}
-      {exerciseDetail && (
-        <ExerciseDetailModal
-          exercise={exerciseDetail}
-          sets={exerciseDetail._sets}
-          reps={exerciseDetail._reps}
-          rest={exerciseDetail._rest}
-          onClose={() => setExerciseDetail(null)}
-          onAdd={(ex) => { addExerciseToSession(ex); setExerciseDetail(null) }}
-        />
-      )}
-
-      {/* Video Feedback Modal */}
-      {videoExercise && session?.user?.id && (
-        <VideoFeedbackModal
-          exerciseName={videoExercise}
-          userId={session.user.id}
-          onClose={() => setVideoExercise(null)}
-        />
-      )}
 
       {/* Video Feedback History */}
       {session?.user?.id && (
         <VideoFeedbackHistory userId={session.user.id} />
       )}
-
-      {showProgramBuilder && (
-        <ProgramBuilder
-          supabase={supabase}
-          session={session}
-          aiAllowed={aiAllowed}
-          onClose={() => { setShowProgramBuilder(false); setEditingProgram(null) }}
-          onSave={refreshPrograms}
-          editProgram={editingProgram}
-        />
-      )}
-
-      {showAddExercise && (
-        <AddExercisePopup searchQ={exerciseSearchQ} onSearchChange={setExerciseSearchQ} results={exerciseSearchResults} onSelect={(ex) => {
-          if (editMode && editedDays) {
-            const dayIdx = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'].indexOf(trainingDay)
-            editAddEx(dayIdx, ex)
-          } else {
-            addExerciseToSession(ex)
-          }
-          setShowAddExercise(false)
-        }} onClose={() => setShowAddExercise(false)} />
-      )}
-      {showSaveChoice && (
-        <SaveChoicePopup onSaveModified={async () => { await saveWithModifications(); setShowSaveChoice(false) }} onSaveOriginal={async () => { await saveOriginal(); setShowSaveChoice(false) }} onClose={() => setShowSaveChoice(false)} />
-      )}
-
-      {/* Exercise info popup */}
-      {exerciseInfo && <ExerciseInfoPopup info={exerciseInfo} onClose={() => setExerciseInfo(null)} />}
-
-      {/* Technique tooltip */}
-      {techniqueTooltip && <TechniqueTooltip technique={techniqueTooltip} onClose={() => setTechniqueTooltip(null)} />}
-
-      {/* Start program modal */}
-      {startModalProgram && (
-        <StartProgramModal
-          programName={startModalProgram.name}
-          onStart={handleStartProgram}
-          onClose={() => { setStartModalProgram(null); setStartModalImportData(null) }}
-        />
-      )}
-
-      {/* Variant popup */}
-      {variantPopup && (<RailOverlay>
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(8px)',zIndex:200,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={()=>setVariantPopup(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:colors.surface,border:`1px solid ${colors.goldRule}`,borderRadius:'16px 16px 0 0',width:'100%',maxWidth:480,maxHeight:'60vh',overflow:'hidden'}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${colors.goldBorder}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontFamily:fonts.headline,fontSize:20,letterSpacing:2,color:colors.text}}>VARIANTES</span>
-              <button aria-label={t('calendar.closeVariants')} onClick={()=>setVariantPopup(null)} style={{background:'none',border:'none',color:colors.textMuted,fontSize:20,cursor:'pointer'}}>✕</button>
-            </div>
-            <div style={{overflowY:'auto',maxHeight:'calc(60vh - 60px)',padding:'8px 12px 30px'}}>
-              {variantPopup.variants.length===0?(
-                <div style={{textAlign:'center',padding:32,color:colors.textMuted,fontSize:14,fontFamily:fonts.body}}>{t('programs.noVariants')}</div>
-              ):variantPopup.variants.map((v: any,i: number)=>(
-                <button key={i} onClick={()=>selectEditVariant(v)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 16px',marginBottom:4,borderRadius: 16,background:colors.background,border:`1px solid ${colors.goldBorder}`,cursor:'pointer',textAlign:'left'}}>
-                  <div style={{width:40,height:40,borderRadius:10,background:colors.goldDim,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                    {v.equipment==='Barre'?'🏋️':v.equipment==='Haltères'?'💪':v.equipment==='Machine'?'⚙️':v.equipment==='Poulie'?'🔗':'🤸'}
-                  </div>
-                  <div>
-                    <div style={{fontFamily:fonts.body,fontSize:14,color:colors.text,fontWeight:500}}>{v.name}</div>
-                    <div style={{fontFamily:fonts.body,fontSize:10,color:colors.gold,fontWeight:700,letterSpacing:1,marginTop:2}}>{v.equipment||''}{v.muscle_group?` · ${v.muscle_group}`:''}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </RailOverlay>)}
 
       {/* Workout detail popup */}
       {selectedWorkout && (<RailOverlay>
@@ -1717,5 +434,6 @@ export default function TrainingTab({
         </div>
       </RailOverlay>)}
     </div>
+    </TrainingV2>
   )
 }

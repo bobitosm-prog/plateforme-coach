@@ -2,12 +2,16 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
+import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
 
 const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
+const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }
 
 const GoogleIcon = () => <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
 const AppleIcon = () => <svg width="16" height="19" viewBox="0 0 16 19" fill="white"><path d="M15.462 6.498c-.098.063-1.828 1.05-1.828 3.218 0 2.508 2.202 3.396 2.268 3.418-.011.042-.351 1.207-1.163 2.384-.713 1.035-1.456 2.068-2.585 2.068s-1.422-.657-2.727-.657c-1.273 0-1.724.679-2.761.679s-1.741-.955-2.585-2.116C3.06 14.052 2.17 11.839 2.17 9.748c0-3.374 2.191-5.163 4.35-5.163 1.147 0 2.103.753 2.826.753.69 0 1.767-.8 3.078-.8.497 0 2.283.044 3.038 1.96zM10.737.94C11.286.294 11.676-.352 11.676-.352s-.03 0-.03.002c.003.003-.617.258-1.166.912-.504.598-.946 1.258-.946 1.929 0 .085.008.171.024.252.016.082.038.152.038.152s.035.002.035.002c.003 0 .654-.22 1.106-.957z"/></svg>
@@ -32,12 +36,15 @@ const CoachIcon = () => (
 function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const t = useTranslations('auth.register')
   const tLogin = useTranslations('auth.login')
+  const locale = useLocale()
   const T = titleStyle
   const router = useRouter()
   const searchParams = useSearchParams()
+  const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
   const [checking, setChecking] = useState(true)
-  const [step, setStep] = useState<'choose' | 'client' | 'coach'>('choose')
-  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>('client')
+  const initialRole = searchParams.get('role') === 'coach' ? 'coach' : 'client'
+  const [step, setStep] = useState<'choose' | 'client' | 'coach'>(initialRole === 'coach' ? 'coach' : 'choose')
+  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>(initialRole)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -48,6 +55,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const [fullName, setFullName] = useState('')
   const [speciality, setSpeciality] = useState('')
   const [experience, setExperience] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const SPECIALITIES = [
     t('coach.specialities.musculation'),
@@ -65,35 +73,46 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   ]
 
   useEffect(() => {
-    const roleParam = searchParams.get('role')
-    if (roleParam === 'coach') {
-      setSelectedRole('coach')
-      setStep('coach')
-    }
-  }, [searchParams])
-
-  useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        const { data: prof } = await supabase.from('profiles').select('role, coach_onboarding_complete').eq('id', session.user.id).maybeSingle()
-        router.replace(prof?.role === 'coach' && !prof?.coach_onboarding_complete ? '/onboarding-coach' : '/')
+        const result = await resolveClientPostAuth({ supabase, user: session.user, joinIntent: Boolean(nextTarget) })
+        if (result.decision.route) router.replace(result.decision.route)
+        else { setError(t('errors.profileUnavailable')); setChecking(false) }
         return
       }
       setChecking(false)
     })
-  }, [])
+  }, [nextTarget, router, t])
 
   // Route via /auth/callback pour exchange PKCE + signOut + banner sur /login
   // Le flag type=signup signale à la callback de forcer un re-login (vs auto-login)
+  const redirectQuery = nextTarget ? '?type=signup&next=%2Fjoin' : '?type=signup'
   const redirectUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/auth/callback?type=signup`
-    : '/auth/callback?type=signup'
+    ? `${window.location.origin}/auth/callback${redirectQuery}`
+    : `/auth/callback${redirectQuery}`
+
+  async function handleOAuth(provider: 'google' | 'apple') {
+    setError('')
+    if (!acceptedTerms) { setError(t('errors.termsRequired')); return }
+    const intent = await fetch('/auth/oauth-role-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: selectedRole }),
+    }).catch(() => null)
+    if (!intent?.ok) {
+      setError(t('errors.oauthRole'))
+      return
+    }
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: redirectUrl } })
+    if (oauthError) setError(t('errors.oauthRole'))
+  }
 
   function validate(): string | null {
     if (!email.trim()) return t('errors.emailRequired')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return t('errors.emailInvalid')
     if (password.length < 8) return t('errors.passwordTooShort')
     if (password !== confirmPassword) return t('errors.passwordMismatch')
+    if (!acceptedTerms) return t('errors.termsRequired')
     if (step === 'coach') {
       if (!fullName.trim()) return t('errors.fullNameRequired')
       if (!speciality) return t('errors.specialityRequired')
@@ -106,35 +125,23 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     const err = validate()
     if (err) { setError(err); return }
     setError(''); setSubmitting(true)
-    const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl, data: { role: selectedRole } } })
+    const metadata = selectedRole === 'coach'
+      ? {
+          role: selectedRole,
+          full_name: capitalizeFullName(fullName),
+          coach_speciality: speciality,
+          coach_experience_years: experience,
+        }
+      : { role: selectedRole }
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: redirectUrl, data: metadata },
+    })
     if (signUpError) {
       setSubmitting(false)
       setError(signUpError.message.includes('already registered') ? t('errors.emailAlreadyUsed') : signUpError.message)
       return
-    }
-    if (data?.user) {
-      const uid = data.user.id
-      const profileData: Record<string, string> = {
-        email: email.trim(),
-      }
-      if (selectedRole === 'coach') {
-        profileData.full_name = capitalizeFullName(fullName)
-        profileData.coach_speciality = speciality
-        profileData.coach_experience_years = experience
-      }
-      await new Promise(r => setTimeout(r, 1000))
-      const { error: updateErr } = await supabase.from('profiles').update(profileData).eq('id', uid)
-      if (updateErr) {
-        await new Promise(r => setTimeout(r, 1000))
-        await supabase.from('profiles').upsert({ id: uid, ...profileData })
-      }
-      if (selectedRole === 'client') {
-        await fetch('/api/assign-coach', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: uid, autoAssign: true }),
-        })
-      }
     }
     setSubmitting(false)
     setEmailSent(true)
@@ -169,9 +176,26 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     </div>
   )
 
+  const termsConsent = (
+    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: TEXT_MUTED, fontSize: 12, lineHeight: 1.5 }}>
+      <input
+        type="checkbox"
+        checked={acceptedTerms}
+        onChange={event => { setAcceptedTerms(event.target.checked); setError('') }}
+        style={{ marginTop: 2 }}
+      />
+      <span>
+        {t('shared.termsPrefix')}{' '}
+        <Link href={`/${locale}/cgu`} target="_blank" style={{ color: GOLD }}>{t('shared.termsLink')}</Link>{' '}
+        {t('shared.termsAnd')}{' '}
+        <Link href={`/${locale}/privacy`} target="_blank" style={{ color: GOLD }}>{t('shared.privacyLink')}</Link>.
+      </span>
+    </label>
+  )
+
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
-      <img src="/images/hero-gym.webp" alt={t('shared.heroAlt')} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
+      <Image src="/images/hero-gym.webp" alt={t('shared.heroAlt')} fill priority sizes="100vw" style={{ position: 'fixed', objectFit: 'cover', zIndex: 0 }} />
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -203,13 +227,13 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
         {/* Mobile logo + back link */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
-            <img src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
+          <Link href={`/${locale}/landing`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+            <Image src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
             <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
-          </a>
-          <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+          </Link>
+          <Link href={`/${locale}/landing`} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
             {t('shared.backToHome')}
-          </a>
+          </Link>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 
@@ -221,9 +245,9 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
               <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: 0 }}>{t('choose.subtitle')}</p>
             </div>
 
-            <div className="role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div role="radiogroup" aria-label={t('choose.subtitle')} className="role-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               {/* Card CLIENT */}
-              <div className="role-card" onClick={() => { setSelectedRole('client'); setStep('client') }}>
+              <button type="button" role="radio" aria-checked={selectedRole === 'client'} className="role-card" onClick={() => { setSelectedRole('client'); setStep('client') }} style={{ width: '100%', color: TEXT_PRIMARY, fontFamily: fonts.body }}>
                 <ClientIcon />
                 <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>{t('client.roleTitle')}</h2>
                 <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>{t('client.roleDesc')}</p>
@@ -234,13 +258,13 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
                     </span>
                   ))}
                 </div>
-                <button className="gold-btn" style={{ marginTop: 8 }} onClick={e => { e.stopPropagation(); setSelectedRole('client'); setStep('client') }}>
+                <span className="gold-btn" style={{ marginTop: 8, boxSizing: 'border-box' }}>
                   {t('client.cta', { days: trialDays })}
-                </button>
-              </div>
+                </span>
+              </button>
 
               {/* Card COACH */}
-              <div className="role-card" onClick={() => { setSelectedRole('coach'); setStep('coach') }}>
+              <button type="button" role="radio" aria-checked={selectedRole === 'coach'} className="role-card" onClick={() => { setSelectedRole('coach'); setStep('coach') }} style={{ width: '100%', color: TEXT_PRIMARY, fontFamily: fonts.body }}>
                 <CoachIcon />
                 <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>{t('coach.roleTitle')}</h2>
                 <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>{t('coach.roleDesc')}</p>
@@ -252,15 +276,15 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
                   ))}
                 </div>
                 <span style={{ ...labelStyle, fontSize: 12, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '4px 12px', fontWeight: 600 }}>{t('coach.price')}</span>
-                <button className="ghost-btn" style={{ marginTop: 4 }} onClick={e => { e.stopPropagation(); setSelectedRole('coach'); setStep('coach') }}>
+                <span className="ghost-btn" style={{ marginTop: 4, boxSizing: 'border-box' }}>
                   {t('coach.cta')}
-                </button>
-              </div>
+                </span>
+              </button>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 32 }}>
               <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('choose.hasAccount')}{' '}</span>
-              <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
+              <button onClick={() => router.push(nextTarget ? '/login?next=%2Fjoin' : '/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                 {t('choose.loginLink')}
               </button>
@@ -279,11 +303,11 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } })}
+              <button className="oauth-btn" onClick={() => void handleOAuth('google')}
                 style={{ background: '#fff', border: 'none', color: '#000', animation: 'fadeUp 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <GoogleIcon /> {t('shared.continueGoogle')}
               </button>
-              <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: redirectUrl } })}
+              <button className="oauth-btn" onClick={() => void handleOAuth('apple')}
                 style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <AppleIcon /> {t('shared.continueApple')}
               </button>
@@ -296,24 +320,29 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
               <div style={{ position: 'relative', animation: 'fadeUp 0.7s 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <Mail size={16} color={TEXT_DIM} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input type="email" className="auth-input" value={email} onChange={e => { setEmail(e.target.value); setError('') }} placeholder={t('shared.emailPlaceholder')} />
+                <label htmlFor="register-client-email" style={SR_ONLY}>{t('shared.emailPlaceholder')}</label>
+                <input id="register-client-email" type="email" autoComplete="email" className="auth-input" value={email} onChange={e => { setEmail(e.target.value); setError('') }} placeholder={t('shared.emailPlaceholder')} />
               </div>
 
               <div style={{ position: 'relative', animation: 'fadeUp 0.7s 0.3s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <Lock size={16} color={TEXT_DIM} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input type={showPassword ? 'text' : 'password'} className="auth-input" style={{ paddingRight: 44 }} value={password} onChange={e => { setPassword(e.target.value); setError('') }} placeholder={t('shared.passwordPlaceholder')} />
-                <button onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <label htmlFor="register-client-password" style={SR_ONLY}>{t('shared.passwordPlaceholder')}</label>
+                <input id="register-client-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="auth-input" style={{ paddingRight: 52 }} value={password} onChange={e => { setPassword(e.target.value); setError('') }} placeholder={t('shared.passwordPlaceholder')} />
+                <button type="button" aria-label={tLogin(showPassword ? 'hidePassword' : 'showPassword')} onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 4, top: '50%', width: 44, height: 44, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                   {showPassword ? <EyeOff size={16} color={TEXT_DIM} /> : <Eye size={16} color={TEXT_DIM} />}
                 </button>
               </div>
 
               <div style={{ position: 'relative', animation: 'fadeUp 0.7s 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <Lock size={16} color={TEXT_DIM} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input type={showPassword ? 'text' : 'password'} className="auth-input" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError('') }} placeholder={t('shared.confirmPasswordPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') handleEmailSignUp() }} />
+                <label htmlFor="register-client-confirmation" style={SR_ONLY}>{t('shared.confirmPasswordPlaceholder')}</label>
+                <input id="register-client-confirmation" type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="auth-input" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError('') }} placeholder={t('shared.confirmPasswordPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') handleEmailSignUp() }} />
               </div>
 
+              {termsConsent}
+
               {error && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: RADIUS_CARD }}>
+                <div role="alert" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: RADIUS_CARD }}>
                   <AlertCircle size={14} color={RED} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: '0.78rem', color: RED }}>{error}</span>
                 </div>
@@ -327,7 +356,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
               <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.45s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('shared.hasAccount')}{' '}</span>
-                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
+                <button onClick={() => router.push(nextTarget ? '/login?next=%2Fjoin' : '/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                   {t('shared.loginLink')}
                 </button>
@@ -347,11 +376,11 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } })}
+              <button className="oauth-btn" onClick={() => void handleOAuth('google')}
                 style={{ background: '#fff', border: 'none', color: '#000', animation: 'fadeUp 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <GoogleIcon /> {t('shared.continueGoogle')}
               </button>
-              <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: redirectUrl } })}
+              <button className="oauth-btn" onClick={() => void handleOAuth('apple')}
                 style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <AppleIcon /> {t('shared.continueApple')}
               </button>
@@ -403,6 +432,8 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
                 </select>
               </div>
 
+              {termsConsent}
+
               {error && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)', borderRadius: RADIUS_CARD }}>
                   <AlertCircle size={14} color={RED} style={{ flexShrink: 0 }} />
@@ -418,7 +449,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
               <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.6s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('shared.hasAccount')}{' '}</span>
-                <button onClick={() => router.push('/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
+                <button onClick={() => router.push(nextTarget ? '/login?next=%2Fjoin' : '/login')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                   {t('shared.loginLink')}
                 </button>
@@ -452,7 +483,7 @@ function LeftPanel({ tLogin }: { tLogin: ReturnType<typeof useTranslations<'auth
       <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: 500, height: 500, background: 'radial-gradient(circle,${colors.goldDim},transparent 60%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 40px' }}>
-        <img src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
+        <Image src="/logo-moovx.png" alt="MoovX Logo" width={72} height={72} style={{ borderRadius: RADIUS_CARD, margin: '0 auto 20px', display: 'block', boxShadow: '0 16px 48px ${colors.goldRule}' }} />
         <div style={{ fontFamily: fonts.headline, fontSize: 32, letterSpacing: 3, color: GOLD, marginBottom: 8 }}>MOOVX</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
           <span style={{ fontSize: 14 }}>🇨🇭</span>

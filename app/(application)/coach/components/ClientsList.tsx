@@ -16,11 +16,6 @@ interface ClientsListProps {
   loading: boolean
   search: string
   setSearch: (s: string) => void
-  showInvite: boolean
-  setShowInvite: (v: boolean | ((prev: boolean) => boolean)) => void
-  inviteLink: string
-  copied: boolean
-  copyInviteLink: () => void
   unreadCounts: Record<string, number>
   setSection: (s: 'accueil' | 'dashboard' | 'messages' | 'calendar' | 'aliments' | 'profil') => void
   openChat: (c: ClientRow) => void
@@ -36,7 +31,6 @@ interface ClientsListProps {
 
 export default function ClientsList({
   filtered, loading, search, setSearch,
-  showInvite, setShowInvite, inviteLink, copied, copyInviteLink,
   unreadCounts, setSection, openChat, setShowNewSession,
   coachInitials,
   scheduledSessions, clients, SESSION_COLORS,
@@ -91,7 +85,7 @@ export default function ClientsList({
                   statusLabel={statusLabel}
                   sinceLabel={`· Depuis ${daysSince}j`}
                   unread={unread}
-                  invited={!!c.invited_by_coach}
+                  showInvitationOrigin={c.invited_by_coach === true}
                   onOpen={() => { window.location.href = `/client/${c.client_id}` }}
                   onMessage={() => { setSection('messages'); openChat(c) }}
                 />
