@@ -1,0 +1,86 @@
+name: Phase 9 Observation Scheduler
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  resolve-target:
+    name: Resolve Statistical Observation Target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: phase-9-observation-scheduler-v2
+      cancel-in-progress: false
+    outputs:
+      should_run: ${{ steps.guard.outputs.should_run }}
+      observed_sha: ${{ steps.target.outputs.observed_sha }}
+      base_sha: ${{ steps.target.outputs.base_sha }}
+    steps:
+      - name: Skip while another observation is active
+        id: guard
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
+          runs="$(curl --fail --silent --show-error --location \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "$api/actions/workflows/phase-9-observation-scheduler.yml/runs?per_page=100")"
+          active_count="$(jq --arg current "$GITHUB_RUN_ID" '[
+            .workflow_runs[]
+            | select((.id | tostring) != $current)
+            | select(.status == "queued" or .status == "in_progress"
+              or .status == "pending" or .status == "waiting" or .status == "requested")
+          ] | length' <<<"$runs")"
+          if (( active_count > 0 )); then
+            echo "An observation is already active; skipping this hourly tick"
+            echo 'should_run=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'should_run=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve canonical staging HEAD and direct parent
+        if: steps.guard.outputs.should_run == 'true'
+        id: target
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
+          ref="$(curl --fail --silent --show-error --location \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "$api/git/ref/heads/phase-6-staging")"
+          observed_sha="$(jq --exit-status --raw-output \
+            '.object.sha | select(test("^[0-9a-f]{40}$"))' <<<"$ref")"
+          commit="$(curl --fail --silent --show-error --location \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "$api/commits/$observed_sha")"
+          base_sha="$(jq --exit-status --raw-output \
+            '.parents[0].sha | select(test("^[0-9a-f]{40}$"))' <<<"$commit")"
+          echo "observed_sha=$observed_sha" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
+
+  observe:
+    name: Run Statistical Observation
+    needs: resolve-target
+    if: needs.resolve-target.outputs.should_run == 'true'
+    permissions:
+      actions: read
+      contents: read
+    uses: bobitosm-prog/plateforme-coach/.github/workflows/ci-stability-observation.yml@phase-6-staging
+    with:
+      observed_sha: ${{ needs.resolve-target.outputs.observed_sha }}
+      base_sha: ${{ needs.resolve-target.outputs.base_sha }}
