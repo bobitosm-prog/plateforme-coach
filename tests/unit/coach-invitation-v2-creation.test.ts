@@ -125,6 +125,18 @@ describe('POST /api/coach/invitations', () => {
     expect(JSON.stringify(payload)).not.toMatch(/token|hash/i)
   })
 
+  it('uses the configured RC alias for the invitation URL', async () => {
+    const rcAlias = 'https://plateforme-coach-git-release-rc1-72203e-bobitosm-3757s-projects.vercel.app'
+    process.env.NEXT_PUBLIC_APP_URL = rcAlias
+
+    await createInvitation(request({ recipientEmail: 'client@example.test' }))
+
+    const email = mocks.sendEmail.mock.calls[0][0]
+    expect(email.html).toContain(`${rcAlias}/join?token=`)
+    expect(email.html).toMatch(/\/join\?token=[A-Za-z0-9_-]{43}/)
+    expect(email.html).not.toContain('app.moovx.ch')
+  })
+
   it('enforces coach and IP limits', async () => {
     mocks.checkRateLimit
       .mockReturnValueOnce({ allowed: true, remaining: 9 })

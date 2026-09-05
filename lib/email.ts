@@ -34,19 +34,26 @@ function resolveEmailErrorCode(error: unknown): string {
 export async function sendEmail({
   to, subject, html, replyTo, fromName = 'MoovX',
 }: SendEmailOptions): Promise<SendResult> {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  const host = process.env.SMTP_HOST?.trim()
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+  if (!host || !user || !pass) {
     console.warn('[email] SMTP non configure, envoi skipped')
     return { success: true, method: 'skipped' }
   }
 
   try {
+    const configuredPort = Number(process.env.SMTP_PORT)
+    const port = Number.isInteger(configuredPort) && configuredPort > 0
+      ? configuredPort
+      : 465
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'mail.infomaniak.com',
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: true,
+      host,
+      port,
+      secure: port === 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user,
+        pass,
       },
     })
 
