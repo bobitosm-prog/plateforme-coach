@@ -889,7 +889,7 @@
     "join": {
       "title": "JOIN MOOVX",
       "coachInvitation": "Invitation from coach {coachName}",
-      "subtitle": "Create your account to accept your coach invitation.",
+      "subtitle": "Sign in or create your account to accept your coach invitation.",
       "invitedEmail": "Invitation intended for {email}",
       "continueGoogle": "Continue with Google",
       "or": "OR",
@@ -902,6 +902,7 @@
       "loadingButton": "Creating account...",
       "hasAccount": "Already have an account?",
       "loginLink": "Sign in",
+      "switchAccount": "Sign in with another account",
       "features": "✓ Free access · ✓ Coached by your trainer · ✓ All features",
       "invalidLink": "Invalid invitation link.",
       "states": {

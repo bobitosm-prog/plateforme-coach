@@ -986,7 +986,7 @@
     "join": {
       "title": "REJOINS MOOVX",
       "coachInvitation": "Invitation de coach {coachName}",
-      "subtitle": "Crée ton compte pour accepter l'invitation de ton coach.",
+      "subtitle": "Connecte-toi ou crée ton compte pour accepter l'invitation de ton coach.",
       "invitedEmail": "Invitation destinée à {email}",
       "continueGoogle": "Continuer avec Google",
       "or": "OU",
@@ -997,8 +997,9 @@
       "hidePassword": "Masquer le mot de passe",
       "submitButton": "Créer mon compte",
       "loadingButton": "Creation du compte...",
-      "hasAccount": "Deja un compte ?",
+      "hasAccount": "Déjà un compte ?",
       "loginLink": "Se connecter",
+      "switchAccount": "Se connecter avec un autre compte",
       "features": "✓ Acces gratuit · ✓ Suivi par ton coach · ✓ Toutes les fonctionnalites",
       "invalidLink": "Lien d'invitation invalide.",
       "states": {

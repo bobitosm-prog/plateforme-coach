@@ -20,3 +20,7 @@ export function invitationTerminalState(code?: string): InvitationTerminalState 
   }
   return 'invalid'
 }
+
+export function shouldClearInvitationIntent(state: InvitationTerminalState): boolean {
+  return state !== 'temporary' && state !== 'email-mismatch'
+}

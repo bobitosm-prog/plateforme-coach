@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
-import { invitationTerminalState } from './invitation-state'
+import { invitationTerminalState, shouldClearInvitationIntent } from './invitation-state'
 import {
   BG_BASE, BG_CARD, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GREEN,
   RED, RADIUS_CARD, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY,
@@ -54,6 +54,7 @@ function JoinContent() {
   const [emailSent, setEmailSent] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [maskedEmail, setMaskedEmail] = useState('')
+  const [switchingAccount, setSwitchingAccount] = useState(false)
 
   function clearToken() {
     tokenRef.current = null
@@ -90,11 +91,22 @@ function JoinContent() {
         return
       }
       const nextState = invitationTerminalState(payload.error?.code)
-      if (nextState !== 'temporary') clearToken()
+      if (shouldClearInvitationIntent(nextState)) clearToken()
       setState(nextState)
     } catch {
       setState('temporary')
     }
+  }
+
+  async function handleSwitchAccount() {
+    setSwitchingAccount(true)
+    const { error: signOutError } = await supabase.auth.signOut()
+    if (signOutError) {
+      setSwitchingAccount(false)
+      setState('temporary')
+      return
+    }
+    router.replace('/login?next=/join')
   }
 
   useEffect(() => {
@@ -212,19 +224,33 @@ function JoinContent() {
     return <StatusScreen message={t(state === 'checking' ? 'states.validating' : 'states.consuming')} loading />
   }
   if (state !== 'ready') {
-    return <StatusScreen message={statusMessage[state] || t('states.invalid')} success={state === 'success'} />
+    return (
+      <StatusScreen
+        message={statusMessage[state] || t('states.invalid')}
+        success={state === 'success'}
+        actionLabel={state === 'email-mismatch' ? t('switchAccount') : undefined}
+        actionDisabled={switchingAccount}
+        onAction={state === 'email-mismatch' ? () => void handleSwitchAccount() : undefined}
+      />
+    )
   }
   if (emailSent) return <StatusScreen message={t('emailSent.messageWithEmail', { email })} success />
 
   return (
-    <main style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;min-height:48px;background:${BG_BASE};border:1px solid ${BORDER};border-radius:12px;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}@media(max-width:480px){.join-card{padding:24px!important}}`}</style>
+    <main className="join-page" style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;min-height:48px;background:${BG_BASE};border:1px solid ${BORDER};border-radius:12px;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}@media(max-width:480px){.join-page{align-items:flex-start!important;padding:16px!important}.join-card{padding:24px!important}}`}</style>
       <section className="join-card" style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Image src="/logo-moovx-96.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
           <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>{t('title')}</h1>
           <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0 }}>{t('subtitle')}</p>
           {maskedEmail && <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD, margin: '12px 0 0' }}>{t('invitedEmail', { email: maskedEmail })}</p>}
+        </div>
+        <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'center' }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, margin: '0 0 12px' }}>{t('hasAccount')}</p>
+          <Link href="/login?next=/join" style={{ minHeight: 48, border: `1px solid ${GOLD}`, borderRadius: 12, color: GOLD, fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {t('loginLink')}
+          </Link>
         </div>
         <button onClick={handleGoogleSignUp} style={{ width: '100%', background: '#fff', border: 'none', borderRadius: 12, padding: '12px 16px', color: '#000', fontSize: 14, fontWeight: 600, fontFamily: FONT_BODY, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24 }}>
           <GoogleIcon /> {t('continueGoogle')}
@@ -243,18 +269,36 @@ function JoinContent() {
         </label>
         {error && <p role="alert" aria-live="polite" style={{ color: RED, fontSize: 13, fontFamily: FONT_BODY }}>{error}</p>}
         <button onClick={() => void handleSignUp()} disabled={loading} style={{ width: '100%', background: loading ? BORDER : GOLD, color: BG_BASE, border: 'none', borderRadius: 12, padding: 14, fontWeight: 800, fontFamily: FONT_ALT }}>{loading ? t('loadingButton') : t('submitButton')}</button>
-        <p style={{ textAlign: 'center', marginTop: 16, fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED }}>{t('hasAccount')} <Link href="/login?next=/join" style={{ color: GOLD }}>{t('loginLink')}</Link></p>
       </section>
     </main>
   )
 }
 
-function StatusScreen({ message, loading = false, success = false }: { message: string; loading?: boolean; success?: boolean }) {
+function StatusScreen({
+  message,
+  loading = false,
+  success = false,
+  actionLabel,
+  actionDisabled = false,
+  onAction,
+}: {
+  message: string
+  loading?: boolean
+  success?: boolean
+  actionLabel?: string
+  actionDisabled?: boolean
+  onAction?: () => void
+}) {
   return (
     <div style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         {loading && <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 18px' }} />}
         <p style={{ color: success ? GREEN : TEXT_PRIMARY, fontFamily: FONT_BODY, lineHeight: 1.6 }}>{message}</p>
+        {actionLabel && onAction && (
+          <button type="button" disabled={actionDisabled} onClick={onAction} style={{ minHeight: 48, marginTop: 16, padding: '12px 20px', background: GOLD, border: 'none', borderRadius: 12, color: BG_BASE, fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, cursor: actionDisabled ? 'wait' : 'pointer', opacity: actionDisabled ? 0.7 : 1 }}>
+            {actionLabel}
+          </button>
+        )}
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>

@@ -889,7 +889,7 @@
     "join": {
       "title": "TRITT MOOVX BEI",
       "coachInvitation": "Einladung von Coach {coachName}",
-      "subtitle": "Erstelle dein Konto, um die Einladung deines Coaches anzunehmen.",
+      "subtitle": "Melde dich an oder erstelle dein Konto, um die Einladung deines Coaches anzunehmen.",
       "invitedEmail": "Einladung bestimmt für {email}",
       "continueGoogle": "Weiter mit Google",
       "or": "ODER",
@@ -902,6 +902,7 @@
       "loadingButton": "Konto wird erstellt...",
       "hasAccount": "Schon ein Konto?",
       "loginLink": "Anmelden",
+      "switchAccount": "Mit einem anderen Konto anmelden",
       "features": "✓ Kostenloser Zugang · ✓ Von deinem Coach betreut · ✓ Alle Funktionen",
       "invalidLink": "Ungültiger Einladungslink.",
       "states": {

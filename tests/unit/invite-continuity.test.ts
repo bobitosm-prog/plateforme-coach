@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { invitationTerminalState } from '@/app/(application)/join/invitation-state'
+import {
+  invitationTerminalState,
+  shouldClearInvitationIntent,
+} from '@/app/(application)/join/invitation-state'
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8')
 
@@ -21,8 +24,36 @@ describe('Wave 6F invitation continuity', () => {
 
   it('resumes the join contract after email confirmation and manual login', () => {
     expect(join).toContain('/auth/callback?next=/join')
+    expect(join).toContain('href="/login?next=/join"')
     expect(callback).toContain("next === '/join'")
     expect(callback).toContain('&next=%2Fjoin')
+  })
+
+  it('presents the existing-account path before the signup actions without clearing intent', () => {
+    const loginAction = join.indexOf('href="/login?next=/join"')
+    const googleSignup = join.indexOf('onClick={handleGoogleSignUp}')
+    expect(loginAction).toBeGreaterThan(-1)
+    expect(loginAction).toBeLessThan(googleSignup)
+    expect(join.slice(loginAction, googleSignup)).not.toContain('clearToken')
+    expect(join).toContain("t('hasAccount')")
+    expect(join).toContain("t('loginLink')")
+    expect(join).not.toMatch(/href=[^\n]*token=/)
+  })
+
+  it('keeps new-account signup and avoids consume until a session exists', () => {
+    expect(join).toContain('handleSignUp')
+    expect(join).toContain("t('submitButton')")
+    expect(join.indexOf('supabase.auth.getSession()')).toBeLessThan(join.indexOf('await consumeInvitation(token)'))
+  })
+
+  it('preserves invitation intent while switching away from a mismatched account', () => {
+    expect(shouldClearInvitationIntent('email-mismatch')).toBe(false)
+    expect(shouldClearInvitationIntent('temporary')).toBe(false)
+    expect(shouldClearInvitationIntent('invalid')).toBe(true)
+    expect(join).toContain('shouldClearInvitationIntent(nextState)')
+    expect(join).toContain('await supabase.auth.signOut()')
+    expect(join).toContain("router.replace('/login?next=/join')")
+    expect(join).toContain("state === 'email-mismatch' ? t('switchAccount')")
   })
 
   it('exposes only a masked invitation target and preserves terminal states', () => {
