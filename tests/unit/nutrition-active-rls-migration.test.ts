@@ -6,6 +6,19 @@ const migration = readFileSync(
   'utf8',
 )
 
+const authoritativeMigration = readFileSync(
+  'supabase/migrations/20260903210000_harden_authoritative_coach_relation_rls.sql',
+  'utf8',
+)
+
+const runtimeTest = readFileSync(
+  'tests/integration/nutrition-active-rls-migration.sql',
+  'utf8',
+)
+
+const directCoachAuthorityPattern =
+  /(auth\.uid\(\).{0,120}(coach_id|created_by)|(coach_id|created_by).{0,120}auth\.uid\(\))/i
+
 const readPolicies = [
   ['daily_food_logs', 'daily_food_logs_coach_read', 'user_id'],
   ['meal_logs', 'meal_logs_coach_read', 'user_id'],
@@ -74,8 +87,14 @@ describe('nutrition active coach RLS migration', () => {
   })
 
   it('replaces duplicate client meal plan ALL policies with active-bound operation policies', () => {
-    expect(migration).toContain('DROP POLICY IF EXISTS "client_meal_plans_coach_all"')
-    expect(migration).toContain('DROP POLICY IF EXISTS "client_meal_plans_coach_write"')
+    for (const legacyPolicy of [
+      'client_meal_plans_coach_all',
+      'client_meal_plans_coach_write',
+      'coaches manage meal plans',
+    ]) {
+      expect(migration).toContain(`DROP POLICY IF EXISTS "${legacyPolicy}"`)
+      expect(migration).not.toContain(`CREATE POLICY "${legacyPolicy}"`)
+    }
 
     for (const command of ['select', 'insert', 'update', 'delete']) {
       expect(migration).toContain(
@@ -96,9 +115,70 @@ describe('nutrition active coach RLS migration', () => {
     expect(createPolicies).not.toMatch(/FROM\s+(?:public\.)?coach_clients/i)
     expect(migration).toContain('NUTRITION_ACTIVE_COACH_POLICIES_INCOMPLETE')
     expect(migration).toContain('NUTRITION_LEGACY_COACH_BYPASS_REMAINS')
+    expect(migration).toContain("'coaches manage meal plans'")
     expect(migration).toContain("coalesce(qual, '') LIKE '%coach_clients%'")
     expect(migration).toMatch(/coach_id\|created_by/)
     expect(migration).not.toMatch(/invited_by_coach|subscription_(?:type|status)/)
+  })
+
+  it.each([
+    'auth.uid() = coach_id',
+    'coach_id = auth.uid()',
+    'auth.uid() = created_by',
+    'created_by = auth.uid()',
+  ])('detects direct coach authority written as %s', (expression) => {
+    expect(directCoachAuthorityPattern.test(expression)).toBe(true)
+  })
+
+  it('verifies exact policy structure and helper dependencies in PostgreSQL catalogs', () => {
+    for (const catalog of [
+      'pg_catalog.pg_namespace',
+      'pg_catalog.pg_class',
+      'pg_catalog.pg_policy',
+      'pg_catalog.pg_depend',
+    ]) {
+      expect(migration).toContain(catalog)
+    }
+    expect(migration).toContain('pg_catalog.pg_get_expr')
+    expect(migration).toContain("'public.is_active_coach_client_relation(uuid,uuid)'::regprocedure")
+    expect(migration).toContain('policy.polpermissive')
+    expect(migration).toContain('policy.polroles = ARRAY[')
+    expect(migration).toContain('required_policy_count <> 11')
+    expect(migration).toContain('nutrition_policy_count <> 21')
+    expect(migration).toContain('NUTRITION_POLICY_SET_INVALID')
+    expect(migration).toContain('NUTRITION_UNRESTRICTED_POLICY_REMAINS')
+  })
+
+  it('remains idempotently compatible with the later authoritative cleanup', () => {
+    const legacyDrop =
+      'DROP POLICY IF EXISTS "coaches manage meal plans" ON public.client_meal_plans;'
+
+    expect(migration.replace(/\s+/g, ' ')).toContain(legacyDrop)
+    expect(authoritativeMigration.replace(/\s+/g, ' ')).toContain(legacyDrop)
+    expect(authoritativeMigration).not.toContain(
+      'CREATE POLICY "coaches manage meal plans"',
+    )
+  })
+
+  it('ships a rollback-only runtime matrix for active, ended, unrelated, own, and anonymous access', () => {
+    expect(runtimeTest.trimStart()).toMatch(/^\\set ON_ERROR_STOP on\s+BEGIN;/)
+    expect(runtimeTest.trimEnd()).toMatch(/ROLLBACK;$/)
+    for (const assertion of [
+      'ACTIVE_COACH_SELECT_DENIED',
+      'ACTIVE_COACH_INSERT_DENIED',
+      'ACTIVE_COACH_UPDATE_DENIED',
+      'ACTIVE_COACH_DELETE_DENIED',
+      'ENDED_COACH_SELECT_ALLOWED',
+      'ENDED_COACH_INSERT_ALLOWED',
+      'ENDED_COACH_UPDATE_ALLOWED',
+      'ENDED_COACH_DELETE_ALLOWED',
+      'UNRELATED_COACH_SELECT_ALLOWED',
+      'CLIENT_OWN_SELECT_DENIED',
+      'ANONYMOUS_SELECT_ALLOWED',
+      'NUTRITION_LEGACY_POLICY_REMAINS',
+    ]) {
+      expect(runtimeTest).toContain(assertion)
+    }
   })
 
   it('does not invent meal log owner access or alter existing owner policies', () => {
