@@ -1,17 +1,23 @@
 import 'server-only'
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY manquante dans .env')
-}
+let stripeAdminClient: Stripe | null = null
 
 /**
- * Client Stripe singleton server-side.
- * ⚠️ En local, sk_live_ → tape la VRAIE prod Stripe.
+ * Retourne le client Stripe admin uniquement lorsqu'une opération Stripe
+ * en a réellement besoin. Le mode sans Stripe reste ainsi compatible avec
+ * les imports de modules et les builds Next.js.
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  typescript: true,
-})
+export function getStripeAdminClient(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) throw new Error('Stripe is not configured')
+
+  if (!stripeAdminClient) {
+    stripeAdminClient = new Stripe(key, { typescript: true })
+  }
+
+  return stripeAdminClient
+}
 
 /**
  * Calcule le MRR (en centimes, devise principale) à partir d'une liste
@@ -72,6 +78,7 @@ export function computeMrrFromSubscriptions(
  * Hard cap à 1000 pour éviter abus.
  */
 export async function listAllActiveSubscriptions(): Promise<Stripe.Subscription[]> {
+  const stripe = getStripeAdminClient()
   const all: Stripe.Subscription[] = []
   let starting_after: string | undefined
   let safety = 0
@@ -116,6 +123,7 @@ export interface BalanceAggregate {
  * agrege par mois + 30j + total. Tous les montants en centimes.
  */
 export async function aggregateBalanceTransactions(months = 12): Promise<BalanceAggregate> {
+  const stripe = getStripeAdminClient()
   const since = new Date()
   since.setMonth(since.getMonth() - months)
   const sinceTs = Math.floor(since.getTime() / 1000)
