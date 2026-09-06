@@ -5,6 +5,10 @@ const migration = readFileSync(
   'supabase/migrations/20260822123000_harden_training_active_coach_rls.sql',
   'utf8',
 )
+const integration = readFileSync(
+  'tests/integration/training-active-rls-migration.sql',
+  'utf8',
+)
 
 describe('training active coach RLS migration', () => {
   it('fails fast when the shared helper or a target table is missing', () => {
@@ -23,6 +27,20 @@ describe('training active coach RLS migration', () => {
       expect(migration).toContain(`'${table}'`)
     }
     expect(migration).toContain('TRAINING_RLS_REQUIRES_TABLE')
+    for (const [table, column] of [
+      ['workout_sessions', 'user_id'],
+      ['workout_sets', 'user_id'],
+      ['custom_programs', 'user_id'],
+      ['client_programs', 'client_id'],
+      ['client_programs', 'coach_id'],
+      ['completed_sessions', 'client_id'],
+      ['exercise_feedback', 'client_id'],
+      ['exercise_feedback', 'coach_id'],
+      ['scheduled_sessions', 'user_id'],
+    ]) {
+      expect(migration).toContain(`('${table}', '${column}')`)
+    }
+    expect(migration).toContain('TRAINING_RLS_REQUIRES_COLUMN')
   })
 
   it.each([
@@ -78,8 +96,14 @@ describe('training active coach RLS migration', () => {
     for (const command of ['select', 'insert', 'update', 'delete']) {
       expect(migration).toContain(`CREATE POLICY "scheduled_sessions_coach_${command}_active"`)
     }
-    expect(migration).toMatch(
-      /CREATE POLICY "scheduled_sessions_coach_update_active"[\s\S]*FOR UPDATE[\s\S]*USING[\s\S]*coach_id[\s\S]*is_active_coach_client_relation[\s\S]*WITH CHECK[\s\S]*coach_id[\s\S]*is_active_coach_client_relation/,
+    const scheduledBlock = migration.slice(
+      migration.indexOf('-- scheduled_sessions stores client program calendar rows.'),
+      migration.indexOf('DO $postflight$'),
+    )
+    expect(scheduledBlock.match(/is_active_coach_client_relation\([\s\S]*?scheduled_sessions\.user_id[\s\S]*?\)/g)).toHaveLength(5)
+    expect(scheduledBlock).not.toMatch(/scheduled_sessions\.(?:client_id|coach_id)/)
+    expect(scheduledBlock).toMatch(
+      /CREATE POLICY "scheduled_sessions_coach_update_active"[\s\S]*FOR UPDATE[\s\S]*USING[\s\S]*scheduled_sessions\.user_id[\s\S]*WITH CHECK[\s\S]*scheduled_sessions\.user_id/,
     )
   })
 
@@ -88,6 +112,12 @@ describe('training active coach RLS migration', () => {
     expect(createPolicies).not.toMatch(/FROM\s+(?:public\.)?coach_clients/i)
     expect(migration).toContain('TRAINING_ACTIVE_COACH_POLICIES_INCOMPLETE')
     expect(migration).toContain('TRAINING_LEGACY_COACH_BYPASS_REMAINS')
+    expect(migration).toContain('TRAINING_ACTIVE_COACH_HELPER_DEPENDENCIES_INVALID')
+    expect(migration).toContain('TRAINING_ACTIVE_COACH_POLICY_SET_INVALID')
+    expect(migration).toContain('SCHEDULED_SESSIONS_CLIENT_AUTHORITY_INVALID')
+    expect(migration).toContain('TRAINING_UNRESTRICTED_POLICY_REMAINS')
+    expect(migration).toContain('TRAINING_NAMED_LEGACY_POLICY_REMAINS')
+    expect(migration).toContain("dependency.classid = 'pg_policy'::regclass")
     expect(migration).toContain("coalesce(qual, '') LIKE '%coach_clients%'")
     expect(migration).toMatch(/coach_id\|created_by/)
     expect(migration).toContain(
@@ -109,5 +139,28 @@ describe('training active coach RLS migration', () => {
       /ON public\.(?:profiles|progress_photos|body_measurements|weight_logs|daily_checkins|personal_records|daily_food_logs|meal_logs|meal_tracking|meal_plans|client_meal_plans|messages|payments|coach_notes|coach_appointments|activity_feed)/,
     )
     expect(migration).not.toMatch(/\b(?:GRANT|REVOKE)\b/)
+  })
+
+  it('covers scheduled session owner and active-relation CRUD at runtime', () => {
+    for (const assertion of [
+      'CLIENT_OWN_SELECT_DENIED',
+      'OTHER_CLIENT_SELECT_ALLOWED',
+      'OTHER_CLIENT_INSERT_ALLOWED',
+      'OTHER_CLIENT_UPDATE_ALLOWED',
+      'OTHER_CLIENT_DELETE_ALLOWED',
+      'ACTIVE_COACH_SELECT_DENIED',
+      'ACTIVE_COACH_UPDATE_DENIED',
+      'ACTIVE_COACH_DELETE_DENIED',
+      'ENDED_COACH_SELECT_ALLOWED',
+      'ENDED_COACH_INSERT_ALLOWED',
+      'ENDED_COACH_UPDATE_ALLOWED',
+      'ENDED_COACH_DELETE_ALLOWED',
+      'UNRELATED_COACH_SELECT_ALLOWED',
+      'ANONYMOUS_SELECT_ALLOWED',
+    ]) {
+      expect(integration).toContain(assertion)
+    }
+    expect(integration.trimStart()).toMatch(/^\\set ON_ERROR_STOP on\s+BEGIN;/)
+    expect(integration.trimEnd()).toMatch(/ROLLBACK;$/)
   })
 })

@@ -3,6 +3,7 @@ BEGIN;
 DO $preflight$
 DECLARE
   target_table text;
+  required_column record;
 BEGIN
   IF to_regprocedure(
     'public.is_active_coach_client_relation(uuid,uuid)'
@@ -22,6 +23,37 @@ BEGIN
   LOOP
     IF to_regclass(format('public.%I', target_table)) IS NULL THEN
       RAISE EXCEPTION 'TRAINING_RLS_REQUIRES_TABLE: %', target_table;
+    END IF;
+  END LOOP;
+
+  FOR required_column IN
+    SELECT *
+    FROM (VALUES
+      ('workout_sessions', 'user_id'),
+      ('workout_sets', 'user_id'),
+      ('custom_programs', 'user_id'),
+      ('client_programs', 'client_id'),
+      ('client_programs', 'coach_id'),
+      ('completed_sessions', 'client_id'),
+      ('exercise_feedback', 'client_id'),
+      ('exercise_feedback', 'coach_id'),
+      ('scheduled_sessions', 'user_id')
+    ) AS required(table_name, column_name)
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_catalog.pg_attribute
+      WHERE attrelid = format(
+        'public.%I',
+        required_column.table_name
+      )::regclass
+        AND attname = required_column.column_name
+        AND attnum > 0
+        AND NOT attisdropped
+    ) THEN
+      RAISE EXCEPTION 'TRAINING_RLS_REQUIRES_COLUMN: %.%',
+        required_column.table_name,
+        required_column.column_name;
     END IF;
   END LOOP;
 END
@@ -211,8 +243,10 @@ WITH CHECK (
   )
 );
 
--- client_id is authoritative for coach-managed scheduled rows. user_id remains
--- the authority for client-created rows through the existing owner policies.
+-- scheduled_sessions stores client program calendar rows. user_id is its sole
+-- client authority; coach appointments use the distinct coach_appointments
+-- table. Active related coaches may manage a client's calendar without adding
+-- legacy coach_id/client_id columns to this table.
 DROP POLICY IF EXISTS "coaches manage scheduled sessions"
   ON public.scheduled_sessions;
 
@@ -223,7 +257,7 @@ ON public.scheduled_sessions
 FOR SELECT
 TO authenticated
 USING (
-  public.is_active_coach_client_relation(auth.uid(), scheduled_sessions.client_id)
+  public.is_active_coach_client_relation(auth.uid(), scheduled_sessions.user_id)
 );
 
 DROP POLICY IF EXISTS "scheduled_sessions_coach_insert_active"
@@ -233,10 +267,9 @@ ON public.scheduled_sessions
 FOR INSERT
 TO authenticated
 WITH CHECK (
-  auth.uid() = scheduled_sessions.coach_id
-  AND public.is_active_coach_client_relation(
+  public.is_active_coach_client_relation(
     auth.uid(),
-    scheduled_sessions.client_id
+    scheduled_sessions.user_id
   )
 );
 
@@ -247,17 +280,15 @@ ON public.scheduled_sessions
 FOR UPDATE
 TO authenticated
 USING (
-  auth.uid() = scheduled_sessions.coach_id
-  AND public.is_active_coach_client_relation(
+  public.is_active_coach_client_relation(
     auth.uid(),
-    scheduled_sessions.client_id
+    scheduled_sessions.user_id
   )
 )
 WITH CHECK (
-  auth.uid() = scheduled_sessions.coach_id
-  AND public.is_active_coach_client_relation(
+  public.is_active_coach_client_relation(
     auth.uid(),
-    scheduled_sessions.client_id
+    scheduled_sessions.user_id
   )
 );
 
@@ -268,16 +299,18 @@ ON public.scheduled_sessions
 FOR DELETE
 TO authenticated
 USING (
-  auth.uid() = scheduled_sessions.coach_id
-  AND public.is_active_coach_client_relation(
+  public.is_active_coach_client_relation(
     auth.uid(),
-    scheduled_sessions.client_id
+    scheduled_sessions.user_id
   )
 );
 
 DO $postflight$
 DECLARE
   required_policy_count integer;
+  helper_policy_dependency_count integer;
+  scope_helper_policy_dependency_count integer;
+  scheduled_user_policy_dependency_count integer;
 BEGIN
   SELECT count(*)
   INTO required_policy_count
@@ -310,6 +343,132 @@ BEGIN
 
   IF required_policy_count <> 17 THEN
     RAISE EXCEPTION 'TRAINING_ACTIVE_COACH_POLICIES_INCOMPLETE';
+  END IF;
+
+  SELECT count(DISTINCT policy.oid)
+  INTO helper_policy_dependency_count
+  FROM pg_catalog.pg_policy AS policy
+  JOIN pg_catalog.pg_class AS target
+    ON target.oid = policy.polrelid
+  JOIN pg_catalog.pg_namespace AS target_schema
+    ON target_schema.oid = target.relnamespace
+  JOIN pg_catalog.pg_depend AS dependency
+    ON dependency.classid = 'pg_policy'::regclass
+    AND dependency.objid = policy.oid
+  WHERE target_schema.nspname = 'public'
+    AND (target.relname, policy.polname) IN (
+      ('workout_sessions', 'workout_sessions_coach_read'),
+      ('workout_sets', 'workout_sets_coach_read'),
+      ('custom_programs', 'custom_programs_coach_read'),
+      ('custom_programs', 'custom_programs_coach_insert'),
+      ('custom_programs', 'custom_programs_coach_update'),
+      ('custom_programs', 'custom_programs_coach_delete'),
+      ('client_programs', 'client_programs_coach_select_active'),
+      ('client_programs', 'client_programs_coach_insert_active'),
+      ('client_programs', 'client_programs_coach_update_active'),
+      ('client_programs', 'client_programs_coach_delete_active'),
+      ('completed_sessions', 'completed_sessions_coach_read'),
+      ('exercise_feedback', 'exercise_feedback_coach_select_active'),
+      ('exercise_feedback', 'exercise_feedback_coach_update_active'),
+      ('scheduled_sessions', 'scheduled_sessions_coach_select_active'),
+      ('scheduled_sessions', 'scheduled_sessions_coach_insert_active'),
+      ('scheduled_sessions', 'scheduled_sessions_coach_update_active'),
+      ('scheduled_sessions', 'scheduled_sessions_coach_delete_active')
+    )
+    AND dependency.refclassid = 'pg_proc'::regclass
+    AND dependency.refobjid =
+      'public.is_active_coach_client_relation(uuid,uuid)'::regprocedure;
+
+  IF helper_policy_dependency_count <> 17 THEN
+    RAISE EXCEPTION 'TRAINING_ACTIVE_COACH_HELPER_DEPENDENCIES_INVALID';
+  END IF;
+
+  SELECT count(DISTINCT policy.oid)
+  INTO scope_helper_policy_dependency_count
+  FROM pg_catalog.pg_policy AS policy
+  JOIN pg_catalog.pg_class AS target
+    ON target.oid = policy.polrelid
+  JOIN pg_catalog.pg_namespace AS target_schema
+    ON target_schema.oid = target.relnamespace
+  JOIN pg_catalog.pg_depend AS dependency
+    ON dependency.classid = 'pg_policy'::regclass
+    AND dependency.objid = policy.oid
+  WHERE target_schema.nspname = 'public'
+    AND target.relname IN (
+      'workout_sessions',
+      'workout_sets',
+      'custom_programs',
+      'client_programs',
+      'completed_sessions',
+      'exercise_feedback',
+      'scheduled_sessions'
+    )
+    AND dependency.refclassid = 'pg_proc'::regclass
+    AND dependency.refobjid =
+      'public.is_active_coach_client_relation(uuid,uuid)'::regprocedure;
+
+  IF scope_helper_policy_dependency_count <> 17 THEN
+    RAISE EXCEPTION 'TRAINING_ACTIVE_COACH_POLICY_SET_INVALID';
+  END IF;
+
+  SELECT count(DISTINCT policy.oid)
+  INTO scheduled_user_policy_dependency_count
+  FROM pg_catalog.pg_policy AS policy
+  JOIN pg_catalog.pg_depend AS dependency
+    ON dependency.classid = 'pg_policy'::regclass
+    AND dependency.objid = policy.oid
+  JOIN pg_catalog.pg_attribute AS attribute
+    ON attribute.attrelid = dependency.refobjid
+    AND attribute.attnum = dependency.refobjsubid
+  WHERE policy.polrelid = 'public.scheduled_sessions'::regclass
+    AND policy.polname IN (
+      'scheduled_sessions_coach_select_active',
+      'scheduled_sessions_coach_insert_active',
+      'scheduled_sessions_coach_update_active',
+      'scheduled_sessions_coach_delete_active'
+    )
+    AND dependency.refclassid = 'pg_class'::regclass
+    AND dependency.refobjid = 'public.scheduled_sessions'::regclass
+    AND attribute.attname = 'user_id';
+
+  IF scheduled_user_policy_dependency_count <> 4 THEN
+    RAISE EXCEPTION 'SCHEDULED_SESSIONS_CLIENT_AUTHORITY_INVALID';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policies
+    WHERE schemaname = 'public'
+      AND tablename IN (
+        'workout_sessions',
+        'workout_sets',
+        'custom_programs',
+        'client_programs',
+        'completed_sessions',
+        'exercise_feedback',
+        'scheduled_sessions'
+      )
+      AND (
+        lower(btrim(coalesce(qual, ''))) IN ('true', '(true)')
+        OR lower(btrim(coalesce(with_check, ''))) IN ('true', '(true)')
+      )
+  ) THEN
+    RAISE EXCEPTION 'TRAINING_UNRESTRICTED_POLICY_REMAINS';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policies
+    WHERE schemaname = 'public'
+      AND (tablename, policyname) IN (
+        ('client_programs', 'client_programs_coach_all'),
+        ('client_programs', 'client_programs_coach_write'),
+        ('client_programs', 'coaches manage programs'),
+        ('exercise_feedback', 'Coaches manage client feedback'),
+        ('exercise_feedback', 'exercise_feedback_coach')
+      )
+  ) THEN
+    RAISE EXCEPTION 'TRAINING_NAMED_LEGACY_POLICY_REMAINS';
   END IF;
 
   IF EXISTS (
