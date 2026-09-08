@@ -65,6 +65,8 @@ END
 $preflight$;
 
 DROP POLICY IF EXISTS "payments_client_read" ON public.payments;
+DROP POLICY IF EXISTS "Clients can view their payments" ON public.payments;
+DROP POLICY IF EXISTS "client see own payments" ON public.payments;
 DROP POLICY IF EXISTS "payments_client_select_own" ON public.payments;
 CREATE POLICY "payments_client_select_own"
 ON public.payments
@@ -184,27 +186,102 @@ DECLARE
   dml_privilege text;
   server_only_privilege text;
   payment_policy_count integer;
+  authenticated_role_oid oid;
 BEGIN
+  SELECT oid
+  INTO authenticated_role_oid
+  FROM pg_catalog.pg_roles
+  WHERE rolname = 'authenticated';
+
+  IF authenticated_role_oid IS NULL THEN
+    RAISE EXCEPTION 'PAYMENTS_AUTHENTICATED_ROLE_MISSING';
+  END IF;
+
   SELECT count(*)
   INTO payment_policy_count
-  FROM pg_catalog.pg_policies
-  WHERE schemaname = 'public'
-    AND tablename = 'payments'
-    AND (policyname, cmd, roles) IN (
-      (
-        'payments_client_select_own',
-        'SELECT',
-        ARRAY['authenticated']::name[]
-      ),
-      (
-        'payments_coach_select_active_clients',
-        'SELECT',
-        ARRAY['authenticated']::name[]
-      )
-    );
+  FROM pg_catalog.pg_policy AS policy
+  JOIN pg_catalog.pg_class AS relation
+    ON relation.oid = policy.polrelid
+  JOIN pg_catalog.pg_namespace AS namespace
+    ON namespace.oid = relation.relnamespace
+  WHERE namespace.nspname = 'public'
+    AND relation.relname = 'payments';
 
   IF payment_policy_count <> 2 THEN
-    RAISE EXCEPTION 'PAYMENTS_SELECT_POLICIES_INCOMPLETE';
+    RAISE EXCEPTION 'PAYMENTS_POLICY_SET_INVALID: %', payment_policy_count;
+  END IF;
+
+  IF (
+    SELECT array_agg(policy.polname::text ORDER BY policy.polname)
+    FROM pg_catalog.pg_policy AS policy
+    JOIN pg_catalog.pg_class AS relation
+      ON relation.oid = policy.polrelid
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = relation.relnamespace
+    WHERE namespace.nspname = 'public'
+      AND relation.relname = 'payments'
+  ) <> ARRAY[
+    'payments_client_select_own',
+    'payments_coach_select_active_clients'
+  ]::text[] THEN
+    RAISE EXCEPTION 'PAYMENTS_POLICY_NAMES_INVALID';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policy AS policy
+    JOIN pg_catalog.pg_class AS relation
+      ON relation.oid = policy.polrelid
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = relation.relnamespace
+    WHERE namespace.nspname = 'public'
+      AND relation.relname = 'payments'
+      AND (
+        policy.polcmd <> 'r'
+        OR NOT policy.polpermissive
+        OR policy.polroles <> ARRAY[authenticated_role_oid]::oid[]
+        OR policy.polwithcheck IS NOT NULL
+      )
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_POLICY_SHAPE_INVALID';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policy AS policy
+    JOIN pg_catalog.pg_class AS relation
+      ON relation.oid = policy.polrelid
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = relation.relnamespace
+    WHERE namespace.nspname = 'public'
+      AND relation.relname = 'payments'
+      AND policy.polname = 'payments_client_select_own'
+      AND pg_catalog.pg_get_expr(policy.polqual, policy.polrelid)
+        = '(client_id = auth.uid())'
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_CLIENT_SELECT_POLICY_INVALID';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policy AS policy
+    JOIN pg_catalog.pg_class AS relation
+      ON relation.oid = policy.polrelid
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = relation.relnamespace
+    JOIN pg_catalog.pg_depend AS dependency
+      ON dependency.classid = 'pg_policy'::regclass
+      AND dependency.objid = policy.oid
+      AND dependency.refclassid = 'pg_proc'::regclass
+      AND dependency.refobjid =
+        'public.is_active_coach_client_relation(uuid,uuid)'::regprocedure
+    WHERE namespace.nspname = 'public'
+      AND relation.relname = 'payments'
+      AND policy.polname = 'payments_coach_select_active_clients'
+      AND pg_catalog.pg_get_expr(policy.polqual, policy.polrelid)
+        LIKE '%coach_id = auth.uid()%'
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_COACH_SELECT_POLICY_INVALID';
   END IF;
 
   IF EXISTS (
@@ -216,7 +293,10 @@ BEGIN
         policyname IN (
           'payments_coach_all',
           'coach see own payments',
-          'Coaches can view their payments'
+          'Coaches can view their payments',
+          'payments_client_read',
+          'Clients can view their payments',
+          'client see own payments'
         )
         OR (
           policyname LIKE '%coach%'
@@ -224,7 +304,21 @@ BEGIN
         )
       )
   ) THEN
-    RAISE EXCEPTION 'PAYMENTS_COACH_WRITE_POLICY_REMAINS';
+    RAISE EXCEPTION 'PAYMENTS_LEGACY_POLICY_REMAINS';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policy AS policy
+    JOIN pg_catalog.pg_class AS relation
+      ON relation.oid = policy.polrelid
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = relation.relnamespace
+    WHERE namespace.nspname = 'public'
+      AND relation.relname = 'payments'
+      AND policy.polcmd IN ('*', 'a', 'w', 'd')
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_BROWSER_WRITE_POLICY_REMAINS';
   END IF;
 
   FOREACH target_table IN ARRAY ARRAY[
@@ -279,6 +373,17 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.role_table_grants
+    WHERE table_schema = 'public'
+      AND table_name = 'payments'
+      AND grantee IN ('anon', 'authenticated')
+      AND privilege_type IN ('INSERT', 'UPDATE', 'DELETE')
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_BROWSER_WRITE_GRANT_CATALOG_REMAINS';
+  END IF;
+
   FOREACH browser_role IN ARRAY ARRAY['anon', 'authenticated']
   LOOP
     FOREACH server_only_privilege IN ARRAY ARRAY[
@@ -296,6 +401,16 @@ BEGIN
       END IF;
     END LOOP;
   END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.role_table_grants
+    WHERE table_schema = 'public'
+      AND table_name = 'stripe_webhook_events'
+      AND grantee IN ('anon', 'authenticated')
+  ) THEN
+    RAISE EXCEPTION 'STRIPE_WEBHOOK_BROWSER_GRANT_CATALOG_REMAINS';
+  END IF;
 
   IF NOT has_column_privilege(
     'authenticated',
@@ -332,6 +447,77 @@ BEGIN
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'ANON_SECURITY_DEFINER_EXECUTE_REMAINS';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_proc AS routine
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = routine.pronamespace
+    CROSS JOIN LATERAL pg_catalog.aclexplode(
+      coalesce(routine.proacl, pg_catalog.acldefault('f', routine.proowner))
+    ) AS privilege
+    WHERE namespace.nspname = 'public'
+      AND routine.oid IN (
+        'public.is_active_coach_client_relation(uuid,uuid)'::regprocedure,
+        'public.is_active_messaging_pair(uuid,uuid)'::regprocedure,
+        'public.get_workout_session_summary(uuid,uuid)'::regprocedure,
+        'public.delete_user_account(uuid)'::regprocedure,
+        'public.set_role(text)'::regprocedure
+      )
+      AND privilege.grantee = 0
+      AND privilege.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'PUBLIC_SECURITY_DEFINER_EXECUTE_REMAINS';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.routine_privileges
+    WHERE specific_schema = 'public'
+      AND routine_name IN (
+        'is_active_coach_client_relation',
+        'is_active_messaging_pair',
+        'get_workout_session_summary',
+        'delete_user_account',
+        'set_role'
+      )
+      AND grantee IN ('PUBLIC', 'anon')
+      AND privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'BROWSER_SECURITY_DEFINER_EXECUTE_CATALOG_REMAINS';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_class AS sequence
+    JOIN pg_catalog.pg_namespace AS namespace
+      ON namespace.oid = sequence.relnamespace
+    JOIN pg_catalog.pg_depend AS dependency
+      ON dependency.classid = 'pg_class'::regclass
+      AND dependency.objid = sequence.oid
+      AND dependency.refclassid = 'pg_class'::regclass
+      AND dependency.refobjid IN (
+        'public.payments'::regclass,
+        'public.stripe_webhook_events'::regclass
+      )
+      AND dependency.deptype IN ('a', 'i')
+    WHERE namespace.nspname = 'public'
+      AND sequence.relkind = 'S'
+      AND (
+        has_sequence_privilege('anon', sequence.oid, 'USAGE')
+        OR has_sequence_privilege('anon', sequence.oid, 'SELECT')
+        OR has_sequence_privilege('anon', sequence.oid, 'UPDATE')
+        OR has_sequence_privilege('authenticated', sequence.oid, 'USAGE')
+        OR has_sequence_privilege('authenticated', sequence.oid, 'SELECT')
+        OR has_sequence_privilege('authenticated', sequence.oid, 'UPDATE')
+      )
+  ) THEN
+    RAISE EXCEPTION 'PAYMENTS_BROWSER_SEQUENCE_GRANT_REMAINS';
+  END IF;
+
+  IF NOT has_table_privilege('authenticated', 'public.payments', 'SELECT') THEN
+    RAISE EXCEPTION 'PAYMENTS_AUTHENTICATED_SELECT_GRANT_MISSING';
   END IF;
 
   IF NOT has_table_privilege('service_role', 'public.payments', 'SELECT')

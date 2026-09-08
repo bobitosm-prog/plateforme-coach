@@ -5,6 +5,10 @@ const migration = readFileSync(
   'supabase/migrations/20260822125000_harden_payments_and_application_grants.sql',
   'utf8',
 )
+const integration = readFileSync(
+  'tests/integration/payments-grants-rls-migration.sql',
+  'utf8',
+)
 
 const targetTables = [
   'coach_clients',
@@ -59,6 +63,19 @@ describe('payments and application grants migration', () => {
     )
   })
 
+  it('retires every proven duplicate client payment policy', () => {
+    for (const policy of [
+      'payments_client_read',
+      'Clients can view their payments',
+      'client see own payments',
+    ]) {
+      expect(migration).toContain(
+        `DROP POLICY IF EXISTS "${policy}" ON public.payments`,
+      )
+    }
+    expect(migration.match(/CREATE POLICY "payments_client_select_own"/g)).toHaveLength(1)
+  })
+
   it('removes legacy and all coach payment write policies', () => {
     expect(migration).toContain('DROP POLICY IF EXISTS "payments_coach_all"')
     expect(migration).toContain(
@@ -71,7 +88,22 @@ describe('payments and application grants migration', () => {
     expect(migration).not.toMatch(
       /CREATE POLICY "[^"]*payments[^"]*coach[^"]*"[\s\S]*FOR (?:ALL|INSERT|UPDATE|DELETE)/,
     )
-    expect(migration).toContain('PAYMENTS_COACH_WRITE_POLICY_REMAINS')
+    expect(migration).toContain('PAYMENTS_LEGACY_POLICY_REMAINS')
+    expect(migration).toContain('PAYMENTS_BROWSER_WRITE_POLICY_REMAINS')
+  })
+
+  it('requires the exact two-policy set through PostgreSQL catalogs', () => {
+    expect(migration).toContain('FROM pg_catalog.pg_policy AS policy')
+    expect(migration).toContain('JOIN pg_catalog.pg_class AS relation')
+    expect(migration).toContain('JOIN pg_catalog.pg_namespace AS namespace')
+    expect(migration).toContain('PAYMENTS_POLICY_SET_INVALID')
+    expect(migration).toContain('PAYMENTS_POLICY_NAMES_INVALID')
+    expect(migration).toContain('PAYMENTS_POLICY_SHAPE_INVALID')
+    expect(migration).toContain('PAYMENTS_CLIENT_SELECT_POLICY_INVALID')
+    expect(migration).toContain('PAYMENTS_COACH_SELECT_POLICY_INVALID')
+    expect(migration).toMatch(
+      /array_agg\(policy\.polname::text ORDER BY policy\.polname\)[\s\S]*payments_client_select_own[\s\S]*payments_coach_select_active_clients/,
+    )
   })
 
   it('removes payment mutations from browser roles without touching service_role', () => {
@@ -80,6 +112,10 @@ describe('payments and application grants migration', () => {
     )
     expect(migration).toContain('PAYMENTS_SERVICE_ROLE_WRITER_GRANT_MISSING')
     expect(migration).not.toMatch(/REVOKE[^;]*FROM service_role/)
+    expect(migration).toContain('FROM information_schema.role_table_grants')
+    expect(migration).toContain(
+      'PAYMENTS_BROWSER_WRITE_GRANT_CATALOG_REMAINS',
+    )
   })
 
   it('keeps Stripe webhook event access server-only', () => {
@@ -135,6 +171,22 @@ describe('payments and application grants migration', () => {
     expect(migration).toContain('FROM PUBLIC, anon')
     expect(migration).toContain('TO authenticated, service_role')
     expect(migration).toContain('ANON_SECURITY_DEFINER_EXECUTE_REMAINS')
+    expect(migration).toContain('PUBLIC_SECURITY_DEFINER_EXECUTE_REMAINS')
+    expect(migration).toContain(
+      'FROM information_schema.routine_privileges',
+    )
+    expect(migration).toContain(
+      'BROWSER_SECURITY_DEFINER_EXECUTE_CATALOG_REMAINS',
+    )
+    expect(migration).toContain('pg_catalog.aclexplode')
+  })
+
+  it('rejects browser privileges on any payment-owned sequence', () => {
+    expect(migration).toContain('PAYMENTS_BROWSER_SEQUENCE_GRANT_REMAINS')
+    expect(migration).toContain("dependency.deptype IN ('a', 'i')")
+    expect(migration).toContain(
+      "'public.stripe_webhook_events'::regclass",
+    )
   })
 
   it('preserves active relation helper contracts without changing their logic', () => {
@@ -152,5 +204,27 @@ describe('payments and application grants migration', () => {
     expect(migration).not.toMatch(
       /(?:CREATE|DROP) POLICY[\s\S]*ON public\.(?:profiles|progress_photos|body_measurements|weight_logs|daily_checkins|personal_records|daily_food_logs|meal_logs|meal_tracking|meal_plans|client_meal_plans|workout_sessions|workout_sets|custom_programs|training_programs|client_programs|completed_sessions|exercise_feedback|scheduled_sessions|messages|coach_notes|coach_appointments|activity_feed)/,
     )
+  })
+
+  it('covers the complete payment and webhook access matrix transactionally', () => {
+    for (const assertion of [
+      'ANON_PAYMENT_SELECT_ALLOWED',
+      'ANON_PAYMENT_INSERT_ALLOWED',
+      'ANON_WEBHOOK_SELECT_ALLOWED',
+      'OWNER_PAYMENT_SELECT_DENIED',
+      'AUTH_PAYMENT_INSERT_ALLOWED',
+      'AUTH_PAYMENT_UPDATE_ALLOWED',
+      'AUTH_PAYMENT_DELETE_ALLOWED',
+      'AUTH_WEBHOOK_SELECT_ALLOWED',
+      'UNRELATED_PAYMENT_SELECT_ALLOWED',
+      'ACTIVE_COACH_PAYMENT_SELECT_DENIED',
+      'SERVICE_PAYMENT_SELECT_DENIED',
+      'SERVICE_WEBHOOK_SELECT_DENIED',
+    ]) {
+      expect(integration).toContain(assertion)
+    }
+    expect(integration.trimStart()).toMatch(/^\\set ON_ERROR_STOP on\s+BEGIN;/)
+    expect(integration.trimEnd()).toMatch(/ROLLBACK;$/)
+    expect(integration).not.toMatch(/https?:\/\/|stripe\.com/i)
   })
 })
