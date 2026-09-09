@@ -82,6 +82,9 @@ DECLARE
   inserted_relation public.coach_clients%ROWTYPE;
   ended_relation public.coach_clients%ROWTYPE;
   transition_time timestamptz;
+  coach_role text;
+  client_role text;
+  actor_role text;
 BEGIN
   IF p_client_id IS NULL OR p_coach_id IS NULL OR p_actor_id IS NULL THEN
     RETURN jsonb_build_object(
@@ -173,6 +176,82 @@ BEGIN
       'success', false,
       'outcome', 'error',
       'code', 'RELATION_ACTOR_NOT_FOUND'
+    );
+  END IF;
+
+  IF p_coach_id = p_client_id THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'outcome', 'error',
+      'code', 'RELATION_PARTIES_MUST_DIFFER'
+    );
+  END IF;
+
+  SELECT profile.role
+  INTO coach_role
+  FROM public.profiles AS profile
+  WHERE profile.id = p_coach_id;
+
+  IF coach_role IS DISTINCT FROM 'coach' THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'outcome', 'error',
+      'code', 'RELATION_COACH_ROLE_INVALID'
+    );
+  END IF;
+
+  SELECT profile.role
+  INTO client_role
+  FROM public.profiles AS profile
+  WHERE profile.id = p_client_id;
+
+  IF client_role IS DISTINCT FROM 'client' THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'outcome', 'error',
+      'code', 'RELATION_CLIENT_ROLE_INVALID'
+    );
+  END IF;
+
+  SELECT profile.role
+  INTO actor_role
+  FROM public.profiles AS profile
+  WHERE profile.id = p_actor_id;
+
+  IF actor_role IS NULL THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'outcome', 'error',
+      'code', 'RELATION_ACTOR_PROFILE_INVALID'
+    );
+  END IF;
+
+  IF NOT (
+    (
+      p_operation = 'create'
+      AND (
+        (p_source = 'invitation' AND p_actor_id = p_client_id AND actor_role = 'client')
+        OR (p_source = 'admin' AND actor_role = 'admin')
+      )
+    )
+    OR (
+      p_operation = 'end'
+      AND (
+        (p_end_reason = 'client_request' AND p_actor_id = p_client_id AND actor_role = 'client')
+        OR (p_end_reason = 'coach_request' AND p_actor_id = p_coach_id AND actor_role = 'coach')
+        OR (p_end_reason IN ('admin_action', 'legacy_reconciliation') AND actor_role = 'admin')
+      )
+    )
+    OR (
+      p_operation = 'replace'
+      AND p_source = 'admin'
+      AND actor_role = 'admin'
+    )
+  ) THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'outcome', 'error',
+      'code', 'RELATION_ACTOR_UNAUTHORIZED'
     );
   END IF;
 
@@ -390,7 +469,45 @@ COMMENT ON FUNCTION public.transition_coach_client_relation(
   'Canonical server-only writer for atomic coach/client relation create, end and replace transitions.';
 
 DO $postflight$
+DECLARE
+  writer_oid oid;
+  writer_source text;
 BEGIN
+  SELECT procedure.oid, procedure.prosrc
+  INTO writer_oid, writer_source
+  FROM pg_proc AS procedure
+  JOIN pg_namespace AS namespace ON namespace.oid = procedure.pronamespace
+  WHERE namespace.nspname = 'public'
+    AND procedure.proname = 'transition_coach_client_relation'
+    AND pg_get_function_identity_arguments(procedure.oid) =
+      'p_client_id uuid, p_coach_id uuid, p_operation text, p_source text, p_actor_id uuid, p_end_reason text';
+
+  IF writer_oid IS NULL
+    OR (SELECT count(*) FROM pg_proc AS procedure
+        JOIN pg_namespace AS namespace ON namespace.oid = procedure.pronamespace
+        WHERE namespace.nspname = 'public'
+          AND procedure.proname = 'transition_coach_client_relation') <> 1
+    OR NOT (SELECT procedure.prosecdef FROM pg_proc AS procedure WHERE procedure.oid = writer_oid)
+    OR (SELECT owner.rolname FROM pg_proc AS procedure
+        JOIN pg_roles AS owner ON owner.oid = procedure.proowner
+        WHERE procedure.oid = writer_oid) <> 'postgres'
+    OR (SELECT procedure.provolatile FROM pg_proc AS procedure WHERE procedure.oid = writer_oid) <> 'v'
+    OR (SELECT procedure.prorettype FROM pg_proc AS procedure WHERE procedure.oid = writer_oid) <> 'jsonb'::regtype
+    OR (SELECT procedure.proconfig FROM pg_proc AS procedure WHERE procedure.oid = writer_oid)
+      IS DISTINCT FROM ARRAY['search_path=""']::text[]
+  THEN
+    RAISE EXCEPTION 'COACH_RELATION_WRITER_STRUCTURE_INVALID';
+  END IF;
+
+  IF writer_source NOT LIKE '%coach_role IS DISTINCT FROM ''coach''%'
+    OR writer_source NOT LIKE '%client_role IS DISTINCT FROM ''client''%'
+    OR writer_source NOT LIKE '%RELATION_PARTIES_MUST_DIFFER%'
+    OR writer_source NOT LIKE '%RELATION_ACTOR_UNAUTHORIZED%'
+    OR writer_source LIKE '%EXECUTE %'
+  THEN
+    RAISE EXCEPTION 'COACH_RELATION_WRITER_AUTHORIZATION_CONTRACT_INVALID';
+  END IF;
+
   IF has_function_privilege(
     'anon',
     'public.transition_coach_client_relation(uuid,uuid,text,text,uuid,text)',

@@ -39,6 +39,14 @@ describe('Invitation V2 migration contract', () => {
     expect(consume).not.toContain("'replace'")
   })
 
+  it('establishes the client role before M9 and restores null on a business rejection', () => {
+    const rolePromotion = consume.indexOf("SET role = 'client'")
+    const writerCall = consume.indexOf('public.transition_coach_client_relation(')
+    expect(rolePromotion).toBeGreaterThan(-1)
+    expect(rolePromotion).toBeLessThan(writerCall)
+    expect(consume.match(/UPDATE public\.profiles SET role = NULL/g)).toHaveLength(2)
+  })
+
   it('supports idempotent same-coach consumption, conflict preservation and same-pair history', () => {
     expect(consume).toContain("relation_result->>'outcome' = 'conflict'")
     expect(consume).toContain("('created', 'already_active_same_coach')")

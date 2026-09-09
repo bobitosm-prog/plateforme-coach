@@ -56,6 +56,25 @@ describe('canonical coach relation lifecycle writer', () => {
     }
   })
 
+  it('requires canonical party roles and rejects self-relations', () => {
+    expect(functionBody).toContain("coach_role IS DISTINCT FROM 'coach'")
+    expect(functionBody).toContain("client_role IS DISTINCT FROM 'client'")
+    expect(functionBody).toContain('p_coach_id = p_client_id')
+    expect(functionBody).toContain('RELATION_PARTIES_MUST_DIFFER')
+    expect(functionBody).toContain('RELATION_COACH_ROLE_INVALID')
+    expect(functionBody).toContain('RELATION_CLIENT_ROLE_INVALID')
+  })
+
+  it('binds every supported source and operation to an authorized actor', () => {
+    expect(functionBody).toContain("p_source = 'invitation' AND p_actor_id = p_client_id")
+    expect(functionBody).toContain("p_source = 'admin' AND actor_role = 'admin'")
+    expect(functionBody).toContain("p_end_reason = 'client_request' AND p_actor_id = p_client_id")
+    expect(functionBody).toContain("p_end_reason = 'coach_request' AND p_actor_id = p_coach_id")
+    expect(functionBody).toContain("p_end_reason IN ('admin_action', 'legacy_reconciliation')")
+    expect(functionBody).toContain('RELATION_ACTOR_PROFILE_INVALID')
+    expect(functionBody).toContain('RELATION_ACTOR_UNAUTHORIZED')
+  })
+
   it('serializes every transition by client before reading the active row', () => {
     const lock = functionBody.indexOf('pg_catalog.pg_advisory_xact_lock')
     const activeRead = functionBody.indexOf('SELECT count(*)')
@@ -129,5 +148,13 @@ describe('canonical coach relation lifecycle writer', () => {
     expect(migration.trimEnd()).toMatch(/COMMIT;$/)
     expect(migration).toContain('CREATE OR REPLACE FUNCTION public.transition_coach_client_relation')
     expect(migration).not.toMatch(/(?:CREATE|DROP) POLICY/i)
+  })
+
+  it('postflights catalog structure, role guards and exact execute grants', () => {
+    expect(migration).toContain('COACH_RELATION_WRITER_STRUCTURE_INVALID')
+    expect(migration).toContain('COACH_RELATION_WRITER_AUTHORIZATION_CONTRACT_INVALID')
+    expect(migration).toContain("procedure.prorettype")
+    expect(migration).toContain("ARRAY['search_path=\"\"']::text[]")
+    expect(migration).toContain('COACH_RELATION_WRITER_EXECUTE_GRANTS_INVALID')
   })
 })

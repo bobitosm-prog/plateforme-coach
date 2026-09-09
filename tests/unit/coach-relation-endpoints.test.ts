@@ -243,7 +243,7 @@ describe('coach relation end endpoints', () => {
     expect(migration).not.toContain('UPDATE public.coach_clients\n    SET coach_id')
 
     const endOperation = migration.slice(
-      migration.indexOf("IF p_operation = 'end'"),
+      migration.indexOf("IF p_operation = 'end' THEN"),
       migration.indexOf('IF active_relation.coach_id = p_coach_id'),
     )
     expect(endOperation).not.toContain('started_at =')

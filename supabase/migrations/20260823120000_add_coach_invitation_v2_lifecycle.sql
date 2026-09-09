@@ -241,6 +241,13 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'code', 'INVITATION_RECIPIENT_INELIGIBLE');
   END IF;
 
+  IF client_role IS NULL THEN
+    UPDATE public.profiles
+    SET role = 'client'
+    WHERE id = user_id
+      AND role IS NULL;
+  END IF;
+
   SELECT public.transition_coach_client_relation(
     user_id,
     invitation.coach_id,
@@ -251,16 +258,18 @@ BEGIN
   ) INTO relation_result;
 
   IF relation_result->>'outcome' = 'conflict' THEN
+    IF client_role IS NULL THEN
+      UPDATE public.profiles SET role = NULL WHERE id = user_id AND role = 'client';
+    END IF;
     RETURN jsonb_build_object('success', false, 'code', 'INVITATION_ACTIVE_COACH_CONFLICT');
   END IF;
   IF relation_result->>'success' IS DISTINCT FROM 'true'
     OR relation_result->>'outcome' NOT IN ('created', 'already_active_same_coach')
   THEN
+    IF client_role IS NULL THEN
+      UPDATE public.profiles SET role = NULL WHERE id = user_id AND role = 'client';
+    END IF;
     RETURN jsonb_build_object('success', false, 'code', 'INVITATION_CONSUMPTION_FAILED');
-  END IF;
-
-  IF client_role IS NULL THEN
-    UPDATE public.profiles SET role = 'client' WHERE id = user_id AND role IS NULL;
   END IF;
 
   UPDATE public.coach_invitations
