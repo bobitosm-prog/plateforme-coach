@@ -2,6 +2,47 @@
 
 BEGIN;
 
+-- Exercise the permanent privilege boundary, not the temporary emergency
+-- trigger. Both objects are restored automatically by the final ROLLBACK.
+DO $test$
+BEGIN
+  IF to_regprocedure('public.rc1_guard_coach_clients_direct_write()') IS NULL
+    OR NOT EXISTS (
+      SELECT 1
+      FROM pg_catalog.pg_trigger
+      WHERE tgrelid = 'public.coach_clients'::regclass
+        AND tgname = 'rc1_guard_coach_clients_direct_write'
+        AND tgenabled = 'O'
+        AND NOT tgisinternal
+    )
+  THEN
+    RAISE EXCEPTION 'TEMPORARY_WRITER_LOCK_BASELINE_MISSING';
+  END IF;
+
+  IF pg_catalog.has_table_privilege(
+    'authenticated', 'public.coach_clients', 'INSERT'
+  ) OR pg_catalog.has_table_privilege(
+    'authenticated', 'public.coach_clients', 'UPDATE'
+  ) OR pg_catalog.has_table_privilege(
+    'authenticated', 'public.coach_clients', 'DELETE'
+  ) OR pg_catalog.has_table_privilege(
+    'service_role', 'public.coach_clients', 'INSERT'
+  ) OR pg_catalog.has_table_privilege(
+    'service_role', 'public.coach_clients', 'UPDATE'
+  ) OR pg_catalog.has_table_privilege(
+    'service_role', 'public.coach_clients', 'DELETE'
+  ) OR pg_catalog.has_table_privilege(
+    'service_role', 'public.coach_clients', 'TRUNCATE'
+  ) THEN
+    RAISE EXCEPTION 'PERMANENT_COACH_CLIENTS_ACL_NOT_APPLIED';
+  END IF;
+END
+$test$;
+
+DROP TRIGGER rc1_guard_coach_clients_direct_write
+  ON public.coach_clients;
+DROP FUNCTION public.rc1_guard_coach_clients_direct_write();
+
 INSERT INTO auth.users (id, email)
 VALUES
   ('50000000-0000-0000-0000-000000000001', 'writer-coach@test.invalid'),
@@ -24,7 +65,8 @@ ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role;
 DELETE FROM public.profiles
 WHERE id = '50000000-0000-0000-0000-000000000006';
 
--- The temporary lock still rejects every direct application-role mutation.
+-- The permanent table ACL rejects every direct application-role mutation even
+-- while the temporary writer lock is absent.
 SET LOCAL ROLE anon;
 DO $test$
 BEGIN
@@ -32,6 +74,18 @@ BEGIN
     INSERT INTO public.coach_clients (coach_id, client_id, status, source, started_at)
     VALUES ('50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', 'active', 'invitation', now());
     RAISE EXCEPTION 'ANON_DIRECT_RELATION_WRITE_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    UPDATE public.coach_clients SET started_at = started_at WHERE false;
+    RAISE EXCEPTION 'ANON_DIRECT_RELATION_UPDATE_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    DELETE FROM public.coach_clients WHERE false;
+    RAISE EXCEPTION 'ANON_DIRECT_RELATION_DELETE_ALLOWED';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 END
@@ -42,8 +96,21 @@ SET LOCAL ROLE authenticated;
 DO $test$
 BEGIN
   BEGIN
+    INSERT INTO public.coach_clients (coach_id, client_id, status, source, started_at)
+    VALUES ('50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', 'active', 'invitation', now());
+    RAISE EXCEPTION 'AUTHENTICATED_DIRECT_RELATION_INSERT_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
     UPDATE public.coach_clients SET started_at = started_at WHERE false;
     RAISE EXCEPTION 'AUTHENTICATED_DIRECT_RELATION_WRITE_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    DELETE FROM public.coach_clients WHERE false;
+    RAISE EXCEPTION 'AUTHENTICATED_DIRECT_RELATION_DELETE_ALLOWED';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 END
@@ -56,8 +123,27 @@ DECLARE
   result jsonb;
 BEGIN
   BEGIN
+    INSERT INTO public.coach_clients (coach_id, client_id, status, source, started_at)
+    VALUES ('50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', 'active', 'invitation', now());
+    RAISE EXCEPTION 'SERVICE_ROLE_DIRECT_RELATION_INSERT_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    UPDATE public.coach_clients SET started_at = started_at WHERE false;
+    RAISE EXCEPTION 'SERVICE_ROLE_DIRECT_RELATION_UPDATE_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
     DELETE FROM public.coach_clients WHERE false;
     RAISE EXCEPTION 'SERVICE_ROLE_DIRECT_RELATION_WRITE_ALLOWED';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    EXECUTE 'TRUNCATE TABLE public.coach_clients';
+    RAISE EXCEPTION 'SERVICE_ROLE_DIRECT_RELATION_TRUNCATE_ALLOWED';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 
