@@ -91,7 +91,7 @@ export default function useNutritionDashboardModel({
         .limit(1000),
       supabase
         .from('meal_tracking')
-        .select('date,meal_type,completed')
+        .select('date,meal_type,completed:is_completed')
         .eq('user_id', userId)
         .gte('date', historyStart)
         .lte('date', day.localDateKey)

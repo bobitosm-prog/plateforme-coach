@@ -15,6 +15,7 @@ import {
   getHomeDayWindow,
   getHomeNutritionDayKey,
 } from '../../lib/home/home-date'
+import { normalizeNutritionMealType } from '../../lib/nutrition/nutrition-dashboard-model'
 
 interface HomeSupplementalData {
   xp: number | null
@@ -29,6 +30,7 @@ interface HomeSupplementalData {
     carbs: number
     fat: number
   }
+  nutritionHasData: boolean
   hasPersonalMealPlan: boolean
   coachDisplayName: string | null
   coachAvatar: string | null
@@ -54,6 +56,7 @@ const emptySupplementalData: HomeSupplementalData = {
   xp: null,
   checkIn: null,
   trackedPlanNutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  nutritionHasData: false,
   hasPersonalMealPlan: false,
   coachDisplayName: null,
   coachAvatar: null,
@@ -64,17 +67,24 @@ function nutritionFromTrackedMeals(
   planData: unknown,
   mealTypes: readonly string[],
   dayKey: string,
-): HomeSupplementalData['trackedPlanNutrition'] {
+  loggedMealTypes: ReadonlySet<string>,
+): { values: HomeSupplementalData['trackedPlanNutrition']; matchedMeals: number } {
   const total = { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  if (!planData || typeof planData !== 'object') return total
+  if (!planData || typeof planData !== 'object') return { values: total, matchedMeals: 0 }
   const day = Reflect.get(planData, dayKey)
-  if (!day || typeof day !== 'object') return total
+  if (!day || typeof day !== 'object') return { values: total, matchedMeals: 0 }
   const meals = Reflect.get(day, 'repas')
-  if (!meals || typeof meals !== 'object') return total
-  const completed = new Set(mealTypes)
+  if (!meals || typeof meals !== 'object') return { values: total, matchedMeals: 0 }
+  const completed = new Set(mealTypes.flatMap(mealType => {
+    const normalized = normalizeNutritionMealType(mealType)
+    return normalized ? [normalized] : []
+  }))
+  let matchedMeals = 0
 
   for (const [mealType, foods] of Object.entries(meals)) {
-    if (!completed.has(mealType) || !Array.isArray(foods)) continue
+    const normalized = normalizeNutritionMealType(mealType)
+    if (!normalized || !completed.has(normalized) || loggedMealTypes.has(normalized) || !Array.isArray(foods)) continue
+    matchedMeals += 1
     for (const food of foods) {
       if (!food || typeof food !== 'object') continue
       total.calories += Number(Reflect.get(food, 'kcal')) || 0
@@ -84,7 +94,7 @@ function nutritionFromTrackedMeals(
     }
   }
 
-  return total
+  return { values: total, matchedMeals }
 }
 
 function nutritionFromFoodLogs(rows: readonly Record<string, unknown>[]): HomeSupplementalData['trackedPlanNutrition'] {
@@ -94,6 +104,73 @@ function nutritionFromFoodLogs(rows: readonly Record<string, unknown>[]): HomeSu
     carbs: total.carbs + (Number(row.carbs) || 0),
     fat: total.fat + (Number(row.fat) || 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 })
+}
+
+interface HomeNutritionReadResult<T> {
+  data: T | null
+  error: unknown | null
+}
+
+export function resolveHomeNutritionRead({
+  tracking,
+  plan,
+  foodLogs,
+  dayKey,
+}: {
+  tracking: HomeNutritionReadResult<readonly { meal_type?: unknown }[]>
+  plan: HomeNutritionReadResult<{ plan?: unknown }>
+  foodLogs: HomeNutritionReadResult<readonly Record<string, unknown>[]>
+  dayKey: string
+}): {
+  state: 'ready' | 'empty' | 'error'
+  values: HomeSupplementalData['trackedPlanNutrition']
+  hasPersonalMealPlan: boolean
+  errorCode?: 'HOME_NUTRITION_READ_FAILED'
+} {
+  if (foodLogs.error) {
+    return {
+      state: 'error',
+      values: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      hasPersonalMealPlan: false,
+      errorCode: 'HOME_NUTRITION_READ_FAILED',
+    }
+  }
+
+  const logRows = foodLogs.data ?? []
+  const logged = nutritionFromFoodLogs(logRows)
+  const hasCanonicalLogs = logRows.length > 0
+  const auxiliaryReadFailed = Boolean(tracking.error || plan.error)
+
+  if (auxiliaryReadFailed) {
+    return hasCanonicalLogs
+      ? { state: 'ready', values: logged, hasPersonalMealPlan: Boolean(plan.data?.plan) }
+      : {
+          state: 'error',
+          values: logged,
+          hasPersonalMealPlan: Boolean(plan.data?.plan),
+          errorCode: 'HOME_NUTRITION_READ_FAILED',
+        }
+  }
+
+  const mealTypes = (tracking.data ?? [])
+    .map(row => row.meal_type)
+    .filter((value): value is string => typeof value === 'string')
+  const loggedMealTypes = new Set(logRows.flatMap(row => {
+    const normalized = normalizeNutritionMealType(row.meal_type)
+    return normalized ? [normalized] : []
+  }))
+  const tracked = nutritionFromTrackedMeals(plan.data?.plan ?? null, mealTypes, dayKey, loggedMealTypes)
+
+  return {
+    state: hasCanonicalLogs || tracked.matchedMeals > 0 ? 'ready' : 'empty',
+    values: {
+      calories: tracked.values.calories + logged.calories,
+      protein: tracked.values.protein + logged.protein,
+      carbs: tracked.values.carbs + logged.carbs,
+      fat: tracked.values.fat + logged.fat,
+    },
+    hasPersonalMealPlan: Boolean(plan.data?.plan),
+  }
 }
 
 /**
@@ -163,7 +240,7 @@ export default function useHomeDashboardModel({
         .select('meal_type')
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
-        .eq('completed', true)
+        .eq('is_completed', true)
         .limit(20),
       supabase.from('meal_plans')
         .select('plan')
@@ -184,19 +261,14 @@ export default function useHomeDashboardModel({
       const errors: Partial<Record<HomeDomain, string>> = {}
       if (xp.error) errors.identity = 'HOME_IDENTITY_READ_FAILED'
       if (checkIn.error) errors.checkIn = 'HOME_CHECKIN_READ_FAILED'
-      if (tracking.error || plan.error || foodLogs.error) errors.nutrition = 'HOME_NUTRITION_READ_FAILED'
+      const nutrition = resolveHomeNutritionRead({
+        tracking,
+        plan,
+        foodLogs,
+        dayKey: getHomeNutritionDayKey(today),
+      })
+      if (nutrition.errorCode) errors.nutrition = nutrition.errorCode
       if (coachProfile.error || appointment.error) errors.coach = 'HOME_COACH_READ_FAILED'
-
-      const mealTypes = (tracking.data ?? [])
-        .map((row: { meal_type?: unknown }) => row.meal_type)
-        .filter((value: unknown): value is string => typeof value === 'string')
-      const planData = plan.data?.plan ?? null
-      const planned = nutritionFromTrackedMeals(
-        planData,
-        mealTypes,
-        getHomeNutritionDayKey(today),
-      )
-      const logged = nutritionFromFoodLogs(foodLogs.data ?? [])
       setSupplemental({
         requestKey,
         errors,
@@ -209,13 +281,9 @@ export default function useHomeDashboardModel({
               note: checkIn.data.note ?? null,
             }
             : null,
-          trackedPlanNutrition: {
-            calories: planned.calories + logged.calories,
-            protein: planned.protein + logged.protein,
-            carbs: planned.carbs + logged.carbs,
-            fat: planned.fat + logged.fat,
-          },
-          hasPersonalMealPlan: Boolean(planData),
+          trackedPlanNutrition: nutrition.values,
+          nutritionHasData: nutrition.state === 'ready',
+          hasPersonalMealPlan: nutrition.hasPersonalMealPlan,
           coachDisplayName: coachProfile.data?.full_name ?? null,
           coachAvatar: coachProfile.data?.avatar_url ?? null,
           nextAppointment: appointment.data ?? null,
@@ -272,7 +340,11 @@ export default function useHomeDashboardModel({
       },
       nutrition: {
         ...base.nutrition,
-        state: nutritionLoading ? 'loading' : base.nutrition.state,
+        state: nutritionLoading
+          ? 'loading'
+          : currentSupplemental.errors.nutrition
+            ? 'error'
+            : currentSupplemental.data.nutritionHasData ? 'ready' : 'empty',
         caloriesConsumed: baseConsumed == null
           ? (hasTrackedNutrition ? tracked.calories : null)
           : baseConsumed + tracked.calories,
