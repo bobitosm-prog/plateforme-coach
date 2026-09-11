@@ -599,7 +599,7 @@
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  grid-template-columns: repeat(5, minmax(44px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-top: 7px;
 }
@@ -1230,6 +1230,10 @@
     padding-bottom: 0;
     scroll-snap-type: none;
   }
+
+  .rirOptions {
+    grid-template-columns: repeat(5, minmax(44px, 1fr));
+  }
 }
 
 @media (min-width: 1100px) {
@@ -1300,10 +1304,6 @@
 
   .setEditorControls {
     grid-template-columns: 1fr;
-  }
-
-  .rirOptions {
-    grid-template-columns: repeat(3, minmax(44px, 1fr));
   }
 
   .completionShell {
