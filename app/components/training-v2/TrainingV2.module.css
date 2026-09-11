@@ -319,7 +319,8 @@
 
 .sessionGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   width: min(100%, 1180px);
   margin: 12px auto 0;
@@ -405,6 +406,8 @@
 
 .focus {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
   padding: 18px;
   border: 1px solid var(--training-border);
   border-radius: 22px;
@@ -413,12 +416,15 @@
 }
 
 .focusHeading {
+  min-width: 0;
+  max-width: 100%;
   margin: 8px 0 10px;
   font-family: var(--font-headline, sans-serif);
   font-size: clamp(28px, 8vw, 44px);
   font-weight: 500;
   line-height: 0.98;
   text-transform: uppercase;
+  overflow-wrap: break-word;
 }
 
 .focusMeta {
@@ -446,6 +452,8 @@
 
 .focusBody {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .focusTools {
@@ -475,6 +483,9 @@
 
 .setEditor {
   display: grid;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--training-border);
@@ -500,6 +511,9 @@
 
 .setEditorControls {
   display: grid;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
@@ -517,6 +531,9 @@
 
 .stepper {
   display: grid;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   margin-top: 7px;
@@ -570,6 +587,8 @@
 
 .rirFieldset {
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -577,6 +596,9 @@
 
 .rirOptions {
   display: grid;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: repeat(5, minmax(44px, 1fr));
   gap: 6px;
   margin-top: 7px;
@@ -608,6 +630,7 @@
 .suggestionRow > div,
 .compactRest > div {
   display: grid;
+  min-width: 0;
   flex: 1;
   gap: 3px;
 }
@@ -615,6 +638,7 @@
 .suggestionRow strong,
 .compactRest strong {
   font-size: 14px;
+  overflow-wrap: break-word;
 }
 
 .suggestionRow button,
@@ -674,12 +698,16 @@
 
 .contextRail {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 10px;
 }
 
 .focusExecutionLayout {
   display: grid;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   gap: 12px;
 }
 
@@ -1272,6 +1300,10 @@
 
   .setEditorControls {
     grid-template-columns: 1fr;
+  }
+
+  .rirOptions {
+    grid-template-columns: repeat(3, minmax(44px, 1fr));
   }
 
   .completionShell {
