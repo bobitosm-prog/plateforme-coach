@@ -98,9 +98,9 @@ export default function useNutritionDashboardModel({
         .limit(200),
       supabase
         .from('meal_plans')
-        .select('id,user_id,plan,active,created_at')
+        .select('id,user_id,plan:plan_data,active:is_active,created_at')
         .eq('user_id', userId)
-        .eq('active', true)
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),

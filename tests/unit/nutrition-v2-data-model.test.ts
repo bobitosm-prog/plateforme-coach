@@ -54,9 +54,10 @@ function input(overrides: Partial<NutritionViewModelInput> = {}): NutritionViewM
 describe('Nutrition V2 canonical schema', () => {
   it('uses deployed canonical columns and removes obsolete aliases', () => {
     expect(hook).toContain(".select('date,meal_type,completed:is_completed')")
-    expect(hook).toContain(".select('id,user_id,plan,active,created_at')")
-    expect(hook).toContain(".eq('active', true)")
-    expect(`${hook}\n${tab}`).not.toMatch(/\bplan_data\b|\bis_active\b/)
+    expect(hook).toContain(".select('id,user_id,plan:plan_data,active:is_active,created_at')")
+    expect(hook).toContain(".eq('is_active', true)")
+    expect(hook).not.toContain(".select('id,user_id,plan,active,created_at')")
+    expect(hook).not.toContain(".eq('active', true)")
     expect(tab).not.toMatch(/total_proteins|total_fats|use_count/)
   })
 

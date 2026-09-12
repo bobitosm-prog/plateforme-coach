@@ -126,6 +126,7 @@ export function resolveHomeNutritionRead({
   values: HomeSupplementalData['trackedPlanNutrition']
   hasPersonalMealPlan: boolean
   errorCode?: 'HOME_NUTRITION_READ_FAILED'
+  diagnosticCode?: 'HOME_NUTRITION_PLAN_READ_DEGRADED'
 } {
   if (foodLogs.error) {
     return {
@@ -139,9 +140,7 @@ export function resolveHomeNutritionRead({
   const logRows = foodLogs.data ?? []
   const logged = nutritionFromFoodLogs(logRows)
   const hasCanonicalLogs = logRows.length > 0
-  const auxiliaryReadFailed = Boolean(tracking.error || plan.error)
-
-  if (auxiliaryReadFailed) {
+  if (tracking.error) {
     return hasCanonicalLogs
       ? { state: 'ready', values: logged, hasPersonalMealPlan: Boolean(plan.data?.plan) }
       : {
@@ -159,6 +158,33 @@ export function resolveHomeNutritionRead({
     const normalized = normalizeNutritionMealType(row.meal_type)
     return normalized ? [normalized] : []
   }))
+
+  if (mealTypes.length === 0) {
+    return {
+      state: hasCanonicalLogs ? 'ready' : 'empty',
+      values: logged,
+      hasPersonalMealPlan: Boolean(plan.data?.plan),
+      ...(plan.error ? { diagnosticCode: 'HOME_NUTRITION_PLAN_READ_DEGRADED' as const } : {}),
+    }
+  }
+
+  if (plan.error) {
+    return hasCanonicalLogs
+      ? {
+          state: 'ready',
+          values: logged,
+          hasPersonalMealPlan: false,
+          diagnosticCode: 'HOME_NUTRITION_PLAN_READ_DEGRADED',
+        }
+      : {
+          state: 'error',
+          values: logged,
+          hasPersonalMealPlan: false,
+          errorCode: 'HOME_NUTRITION_READ_FAILED',
+          diagnosticCode: 'HOME_NUTRITION_PLAN_READ_DEGRADED',
+        }
+  }
+
   const tracked = nutritionFromTrackedMeals(plan.data?.plan ?? null, mealTypes, dayKey, loggedMealTypes)
 
   return {
@@ -243,9 +269,9 @@ export default function useHomeDashboardModel({
         .eq('is_completed', true)
         .limit(20),
       supabase.from('meal_plans')
-        .select('plan')
+        .select('plan:plan_data')
         .eq('user_id', userId)
-        .eq('active', true)
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -268,6 +294,7 @@ export default function useHomeDashboardModel({
         dayKey: getHomeNutritionDayKey(today),
       })
       if (nutrition.errorCode) errors.nutrition = nutrition.errorCode
+      if (nutrition.diagnosticCode) console.warn(nutrition.diagnosticCode)
       if (coachProfile.error || appointment.error) errors.coach = 'HOME_COACH_READ_FAILED'
       setSupplemental({
         requestKey,

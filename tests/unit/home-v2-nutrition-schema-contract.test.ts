@@ -15,11 +15,11 @@ describe('Home V2 nutrition schema contract', () => {
     expect(hook).not.toContain(".eq('completed', true)")
 
     expect(hook).toContain(".from('meal_plans')")
-    expect(hook).toContain(".select('plan')")
-    expect(hook).toContain(".eq('active', true)")
+    expect(hook).toContain(".select('plan:plan_data')")
+    expect(hook).toContain(".eq('is_active', true)")
     expect(hook).toContain('plan.data?.plan')
-    expect(hook).not.toContain(".select('plan_data')")
-    expect(hook).not.toContain(".eq('is_active', true)")
+    expect(hook).not.toContain(".select('plan')")
+    expect(hook).not.toContain(".eq('active', true)")
     expect(hook).not.toContain('plan.data?.plan_data')
   })
 
@@ -66,6 +66,34 @@ describe('Home V2 nutrition schema contract', () => {
     expect(empty.errorCode).toBeUndefined()
     expect(failed.state).toBe('error')
     expect(failed.errorCode).toBe('HOME_NUTRITION_READ_FAILED')
+  })
+
+  it('keeps a known empty day empty when the auxiliary plan read fails', () => {
+    const result = resolveHomeNutritionRead({
+      tracking: { data: [], error: null },
+      plan: { data: null, error: { code: '42703' } },
+      foodLogs: { data: [], error: null },
+      dayKey: 'lundi',
+    })
+
+    expect(result).toMatchObject({
+      state: 'empty',
+      values: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      diagnosticCode: 'HOME_NUTRITION_PLAN_READ_DEGRADED',
+    })
+    expect(result.errorCode).toBeUndefined()
+  })
+
+  it('surfaces an unknown consumption state when tracking fails without food logs', () => {
+    const result = resolveHomeNutritionRead({
+      tracking: { data: null, error: { code: 'READ_FAILED' } },
+      plan: { data: null, error: null },
+      foodLogs: { data: [], error: null },
+      dayKey: 'lundi',
+    })
+
+    expect(result.state).toBe('error')
+    expect(result.errorCode).toBe('HOME_NUTRITION_READ_FAILED')
   })
 
   it('adds distinct tracked and logged meals without double-counting the same meal type', () => {
