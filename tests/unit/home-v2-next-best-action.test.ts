@@ -19,7 +19,7 @@ function makeModel(overrides: Partial<HomeViewModelInput> = {}): HomeViewModel {
     identity: { firstName: 'Marco' },
     training: { session, source: 'custom_program', isCompleted: true, hasProgram: true },
     nutrition: { state: 'ready', caloriesConsumed: 2_000, caloriesTarget: 2_000, hasPlan: true },
-    recovery: { state: 'ready', status: 'ready', sourceDataAvailable: true },
+    recovery: { state: 'ready', model: { status: 'probably_ready', zones: [], generatedAt: '2026-08-24T12:00:00.000Z' }, sourceDataAvailable: true },
     checkIn: { state: 'ready', mood: 'bien' },
     diagnostic: { state: 'error', canGenerate: false },
     coach: { relationStatus: 'not_found' },
@@ -60,7 +60,7 @@ describe('Home V2 Daily Status', () => {
   })
 
   it('distinguishes ready recovery from an error', () => {
-    expect(resolveDailyRecoveryStatus(makeModel().recovery)).toBe('ready')
+    expect(resolveDailyRecoveryStatus(makeModel().recovery)).toBe('probably_ready')
     expect(resolveDailyRecoveryStatus(makeModel({ recovery: { state: 'error' } }).recovery)).toBe('error')
   })
 })

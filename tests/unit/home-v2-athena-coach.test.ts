@@ -34,7 +34,7 @@ describe('Athena Home insight resolver', () => {
   it('uses scheduled training and reliable recovery data first', () => {
     const model = makeModel({
       training: { session, source: 'custom_program', hasProgram: true },
-      recovery: { state: 'ready', status: 'ready', sourceDataAvailable: true },
+      recovery: { state: 'ready', model: { status: 'probably_ready', zones: [], generatedAt: '2026-08-24T12:00:00.000Z' }, sourceDataAvailable: true },
     })
     expect(resolveAthenaHomeInsight(model)).toMatchObject({ reason: 'training_recovery_ready', priority: 1 })
   })
@@ -42,7 +42,7 @@ describe('Athena Home insight resolver', () => {
   it('returns a cautious warning for watch or recover states', () => {
     const model = makeModel({
       training: { session, source: 'custom_program', hasProgram: true },
-      recovery: { state: 'ready', status: 'watch', sourceDataAvailable: true },
+      recovery: { state: 'ready', model: { status: 'recovering', zones: [], generatedAt: '2026-08-24T12:00:00.000Z' }, sourceDataAvailable: true },
     })
     expect(resolveAthenaHomeInsight(model).reason).toBe('training_recovery_warning')
   })

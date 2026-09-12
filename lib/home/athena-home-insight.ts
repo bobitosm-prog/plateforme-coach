@@ -47,14 +47,14 @@ export function resolveAthenaHomeInsight(model: HomeViewModel): AthenaHomeInsigh
 
   const scheduled = model.training.state === 'ready'
     && model.training.dayStatus === 'scheduled'
-  if (scheduled && model.recovery.state === 'ready' && model.recovery.status === 'ready') {
+  if (scheduled && model.recovery.state === 'ready' && model.recovery.status === 'probably_ready') {
     return insight('training_recovery_ready', 1)
   }
 
   if (
     scheduled
     && model.recovery.state === 'ready'
-    && (model.recovery.status === 'watch' || model.recovery.status === 'recover')
+    && (model.recovery.status === 'recovering' || model.recovery.status === 'leave_alone')
   ) {
     return insight('training_recovery_warning', 2)
   }

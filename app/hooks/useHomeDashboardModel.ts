@@ -16,6 +16,11 @@ import {
   getHomeNutritionDayKey,
 } from '../../lib/home/home-date'
 import { normalizeNutritionMealType } from '../../lib/nutrition/nutrition-dashboard-model'
+import {
+  buildRecoveryModel,
+  type RecoveryExerciseMetadata,
+  type RecoveryWorkoutSession,
+} from '../../lib/home/recovery-model'
 
 interface HomeSupplementalData {
   xp: number | null
@@ -49,7 +54,22 @@ export interface UseHomeDashboardModelInput {
   userId: string | null | undefined
   base: Omit<HomeViewModelInput, 'today'>
   trainingSource?: Omit<HomeDashboardTrainingSource, 'day'>
+  recoverySource?: readonly RecoveryWorkoutSession[]
   now?: Date
+}
+
+interface HomeRecoveryMetadataState {
+  requestKey: string | null
+  exercises: readonly RecoveryExerciseMetadata[]
+  error: boolean
+}
+
+export function collectRecoveryExerciseIds(sessions: readonly RecoveryWorkoutSession[]): string[] {
+  return [...new Set(sessions.flatMap(session => session.completed === true
+    ? (session.workout_sets ?? []).flatMap(set => (
+        set.completed === true && set.exercise_id ? [set.exercise_id] : []
+      ))
+    : []))].sort()
 }
 
 const emptySupplementalData: HomeSupplementalData = {
@@ -62,6 +82,7 @@ const emptySupplementalData: HomeSupplementalData = {
   coachAvatar: null,
   nextAppointment: null,
 }
+const EMPTY_RECOVERY_SESSIONS: readonly RecoveryWorkoutSession[] = []
 
 function nutritionFromTrackedMeals(
   planData: unknown,
@@ -210,6 +231,7 @@ export default function useHomeDashboardModel({
   userId,
   base,
   trainingSource,
+  recoverySource,
   now,
 }: UseHomeDashboardModelInput): HomeViewModel {
   const [clock, setClock] = useState(() => now ?? new Date())
@@ -220,6 +242,24 @@ export default function useHomeDashboardModel({
     data: emptySupplementalData,
     errors: {},
   })
+  const recoverySessions = useMemo(
+    () => recoverySource ?? trainingSource?.workoutSessions ?? EMPTY_RECOVERY_SESSIONS,
+    [recoverySource, trainingSource?.workoutSessions],
+  )
+  const recoveryExerciseIds = useMemo(
+    () => collectRecoveryExerciseIds(recoverySessions),
+    [recoverySessions],
+  )
+  const recoveryRequestKey = enabled && userId && recoveryExerciseIds.length > 0
+    ? `${userId}:${recoveryExerciseIds.join(',')}`
+    : null
+  const [recoveryMetadata, setRecoveryMetadata] = useState<HomeRecoveryMetadataState>({
+    requestKey: null,
+    exercises: [],
+    error: false,
+  })
+  const recoveryLoading = recoveryRequestKey !== null
+    && recoveryMetadata.requestKey !== recoveryRequestKey
   const requestKey = enabled && userId
     ? `${userId}:${today.localDateKey}:${base.coach.relationStatus}:${base.coach.coachId ?? ''}`
     : null
@@ -232,6 +272,28 @@ export default function useHomeDashboardModel({
     const timer = window.setTimeout(() => setClock(new Date()), delay)
     return () => window.clearTimeout(timer)
   }, [now, today.todayEnd])
+
+  useEffect(() => {
+    if (!enabled || !userId || !recoveryRequestKey || recoveryExerciseIds.length === 0) return
+    let active = true
+
+    supabase.from('exercises_db')
+      .select('id,muscle_group')
+      .in('id', recoveryExerciseIds)
+      .then(({ data, error }) => {
+        if (!active) return
+        setRecoveryMetadata({
+          requestKey: recoveryRequestKey,
+          exercises: error ? [] : (data ?? []),
+          error: Boolean(error),
+        })
+      }, () => {
+        if (!active) return
+        setRecoveryMetadata({ requestKey: recoveryRequestKey, exercises: [], error: true })
+      })
+
+    return () => { active = false }
+  }, [enabled, recoveryExerciseIds, recoveryRequestKey, supabase, userId])
 
   useEffect(() => {
     if (!enabled || !userId || !requestKey) return
@@ -353,6 +415,19 @@ export default function useHomeDashboardModel({
       && base.nutrition.state !== 'error'
     const checkInLoading = supplementalLoading
       && !currentSupplemental.data.checkIn
+    const currentRecoveryMetadata = recoveryRequestKey === null
+      ? { requestKey: null, exercises: [], error: false }
+      : recoveryMetadata
+    const recoveryModel = buildRecoveryModel({
+      sessions: recoverySessions,
+      exercises: currentRecoveryMetadata.exercises,
+      now: effectiveNow,
+    })
+    const recoveryState = recoveryLoading
+      ? 'loading'
+      : currentRecoveryMetadata.error
+        ? 'error'
+        : recoveryModel.zones.length > 0 ? 'ready' : 'empty'
 
     return buildHomeViewModel({
       ...base,
@@ -382,6 +457,10 @@ export default function useHomeDashboardModel({
         },
         hasPlan: base.nutrition.hasPlan || supplemental.data.hasPersonalMealPlan,
       },
+      recovery: {
+        state: recoveryState,
+        model: recoveryState === 'loading' || recoveryState === 'error' ? null : recoveryModel,
+      },
       checkIn: {
         state: checkInLoading
           ? 'loading'
@@ -402,5 +481,17 @@ export default function useHomeDashboardModel({
       },
       errors: { ...base.errors, ...currentSupplemental.errors },
     })
-  }, [base, requestKey, supplemental, supplementalLoading, today, trainingSource])
+  }, [
+    base,
+    effectiveNow,
+    recoveryLoading,
+    recoveryMetadata,
+    recoveryRequestKey,
+    recoverySessions,
+    requestKey,
+    supplemental,
+    supplementalLoading,
+    today,
+    trainingSource,
+  ])
 }

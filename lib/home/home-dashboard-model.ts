@@ -1,4 +1,10 @@
 import type { UserCapabilities } from '../entitlements/capabilities'
+import type {
+  MuscleRecovery,
+  RecoveryModel,
+  RecoveryStatus,
+  RecoveryWorkoutSession,
+} from './recovery-model'
 import { deriveTodayTrainingState } from '../training/today-training-state'
 import { isInHomeDay, type HomeDayWindow } from './home-date'
 
@@ -83,8 +89,8 @@ export interface HomeViewModel {
   }
   recovery: {
     state: HomeDomainState
-    status: 'ready' | 'watch' | 'recover' | null
-    score: number | null
+    status: RecoveryStatus
+    zones: readonly MuscleRecovery[]
     sourceDataAvailable: boolean
   }
   checkIn: {
@@ -162,8 +168,7 @@ export interface HomeViewModelInput {
   }
   recovery?: {
     state?: HomeDomainState
-    status?: HomeViewModel['recovery']['status']
-    score?: number | null
+    model?: RecoveryModel | null
     sourceDataAvailable?: boolean
   }
   checkIn?: {
@@ -220,11 +225,10 @@ export interface HomeDashboardTrainingSource {
     isRest?: boolean
     source: 'custom_program' | 'coach_program'
   } | null
-  workoutSessions: ReadonlyArray<{
+  workoutSessions: ReadonlyArray<RecoveryWorkoutSession & {
     id?: string | null
     name?: string | null
     created_at: string
-    completed?: boolean | null
   }>
   nextSession?: unknown | null
   weeklyPlanned?: number
@@ -404,7 +408,7 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
     nutrition: nutritionState,
     recovery: errorDomains.has('recovery')
       ? 'error'
-      : stateOrEmpty(input.recovery?.state, input.recovery?.sourceDataAvailable === true),
+      : stateOrEmpty(input.recovery?.state, Boolean(input.recovery?.model?.zones.length)),
     checkIn: errorDomains.has('checkIn')
       ? 'error'
       : stateOrEmpty(input.checkIn?.state, Boolean(input.checkIn?.mood)),
@@ -468,9 +472,10 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
     },
     recovery: {
       state: states.recovery,
-      status: input.recovery?.status ?? null,
-      score: input.recovery?.score ?? null,
-      sourceDataAvailable: input.recovery?.sourceDataAvailable ?? false,
+      status: input.recovery?.model?.status ?? 'unknown',
+      zones: input.recovery?.model?.zones ?? [],
+      sourceDataAvailable: input.recovery?.sourceDataAvailable
+        ?? Boolean(input.recovery?.model?.zones.length),
     },
     checkIn: {
       state: states.checkIn,

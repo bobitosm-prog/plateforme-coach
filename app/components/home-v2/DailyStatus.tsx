@@ -3,11 +3,12 @@
 import { Apple, Dumbbell, HeartPulse } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { HomeDomainState, HomeViewModel } from '../../../lib/home/home-dashboard-model'
+import type { RecoveryStatus } from '../../../lib/home/recovery-model'
 import styles from './HomeV2.module.css'
 
 export type DailyTrainingStatus = 'scheduled' | 'completed' | 'rest' | 'empty' | 'loading' | 'error'
 export type DailyNutritionStatus = HomeDomainState
-export type DailyRecoveryStatus = 'ready' | 'watch' | 'recover' | 'unavailable' | 'loading' | 'error'
+export type DailyRecoveryStatus = RecoveryStatus | 'unavailable' | 'loading' | 'error'
 
 export function resolveDailyTrainingStatus(training: HomeViewModel['training']): DailyTrainingStatus {
   if (training.state === 'loading') return 'loading'
