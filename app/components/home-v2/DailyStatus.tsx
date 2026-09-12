@@ -1,7 +1,7 @@
 'use client'
 
 import { Apple, Dumbbell, HeartPulse } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { HomeDomainState, HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
 
@@ -24,6 +24,14 @@ export function resolveDailyRecoveryStatus(recovery: HomeViewModel['recovery']):
   return recovery.status ?? 'unavailable'
 }
 
+export function createHomeNutritionNumberFormatter(locale: string, maximumFractionDigits: 0 | 1) {
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+    useGrouping: false,
+  })
+}
+
 function StatusCard({ icon, label, status, state, children }: { icon: React.ReactNode; label: string; status: string; state: HomeDomainState; children?: React.ReactNode }) {
   return <article className={styles.statusCard} aria-busy={state === 'loading'} role={state === 'error' ? 'status' : undefined}>
     <div className={styles.statusTop}><span className={styles.statusIcon}>{icon}</span><span className={styles.statusLabel}>{label}</span></div>
@@ -34,6 +42,9 @@ function StatusCard({ icon, label, status, state, children }: { icon: React.Reac
 
 export default function DailyStatus({ training, nutrition, recovery }: Pick<HomeViewModel, 'training' | 'nutrition' | 'recovery'>) {
   const t = useTranslations('home.v2.dailyStatus')
+  const locale = useLocale()
+  const calorieNumber = createHomeNutritionNumberFormatter(locale, 0)
+  const macroNumber = createHomeNutritionNumberFormatter(locale, 1)
   const trainingStatus = resolveDailyTrainingStatus(training)
   const recoveryStatus = resolveDailyRecoveryStatus(recovery)
   const nutritionStatus = nutrition.state
@@ -51,9 +62,9 @@ export default function DailyStatus({ training, nutrition, recovery }: Pick<Home
       </StatusCard>
       <StatusCard icon={<Apple size={18} aria-hidden="true" />} label={t('nutrition.label')} status={t(`nutrition.${nutritionStatus}`)} state={nutrition.state}>
         {nutritionStatus === 'ready' && nutrition.caloriesConsumed != null && nutrition.caloriesTarget != null && <>
-          <span className={styles.calories}>{nutrition.caloriesConsumed} / {nutrition.caloriesTarget} kcal</span>
+          <span className={styles.calories}>{calorieNumber.format(nutrition.caloriesConsumed)} / {calorieNumber.format(nutrition.caloriesTarget)} kcal</span>
           <div className={styles.macroList}>{macros.map(([key, consumed, target]) => consumed != null && target != null
-            ? <span key={key}>{t(`nutrition.${key}`)} {consumed}/{target}g</span>
+            ? <span key={key}>{t(`nutrition.${key}`)} {macroNumber.format(consumed)} / {macroNumber.format(target)} g</span>
             : null)}</div>
         </>}
       </StatusCard>
