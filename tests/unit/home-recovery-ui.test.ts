@@ -50,17 +50,29 @@ describe('Home recovery interface', () => {
     expect(modal).toContain('role="dialog"')
     expect(modal).toContain('aria-modal="true"')
     expect(modal).toContain('useFocusTrap')
-    expect(modal).toContain('role="button"')
-    expect(modal).toContain('onKeyDown={onKeyDown}')
+    expect(modal).toContain("role={zone ? 'button' : undefined}")
+    expect(modal).toContain('onKeyDown={zone ? onKeyDown : undefined}')
     expect(modal).toContain('aria-pressed={selectedZone?.zone === zone.zone}')
     expect(css).toMatch(/\.accessibleList button\s*\{[^}]*min-height:\s*48px/)
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/)
   })
 
-  it('uses the audited front and back WebP assets without a recovery percentage', () => {
+  it('uses neutral anatomical WebP assets with overlays available in every state', () => {
     const modal = read('app/components/home/modals/RecoveryModal.tsx')
+    const css = read('app/components/home/modals/RecoveryModal.module.css')
+    const frontAsset = readFileSync('public/images/recovery/body-front-anatomical.webp')
+    const backAsset = readFileSync('public/images/recovery/body-back-anatomical.webp')
 
-    expect(modal).toContain('/images/recovery/body-${side}.webp')
+    expect(modal).toContain('/images/recovery/body-${side}-anatomical.webp')
+    expect(modal).toContain('viewBox="0 0 611 1286"')
+    expect(modal).toContain("data-status={zone?.status ?? 'unknown'}")
+    expect(modal.indexOf('<div className={styles.content}>')).toBeLessThan(modal.indexOf("t('loadingCopy')"))
+    expect(css).toMatch(/\.zone\[data-status='unknown'\][^{]*\{[^}]*pointer-events:\s*none/)
+    expect(css).toMatch(/\.zone\[data-status='unknown'\] path\s*\{[^}]*fill:\s*#9ca3af/)
+    expect(frontAsset.subarray(0, 4).toString()).toBe('RIFF')
+    expect(backAsset.subarray(0, 4).toString()).toBe('RIFF')
+    expect(frontAsset.byteLength).toBeGreaterThan(0)
+    expect(backAsset.byteLength).toBeGreaterThan(0)
     expect(modal).not.toMatch(/score|percent|%/i)
   })
 
