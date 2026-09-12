@@ -16,20 +16,15 @@
 .content { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(260px,.85fr); gap: 18px; margin-top: 18px; }
 .maps { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
 .bodyFigure { min-width: 0; margin: 0; }
-.bodyVisual { position: relative; overflow: hidden; width: 100%; aspect-ratio: 611 / 1286; border: 1px solid rgba(255,255,255,.065); border-radius: 16px; background: #000; }
+.bodyVisual { position: relative; overflow: hidden; width: 100%; aspect-ratio: 611 / 1286; border: 1px solid rgba(255,255,255,.065); border-radius: 16px; background: #000; -webkit-tap-highlight-color: transparent; }
+.bodyVisual[data-interactive='true'] { cursor: pointer; }
 .bodyImage { object-fit: fill; }
 .maskLayers, .maskLayer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .maskLayer { display: block; mask-image: var(--recovery-mask-image); -webkit-mask-image: var(--recovery-mask-image); mask-size: 100% 100%; -webkit-mask-size: 100% 100%; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-position: 0 0; -webkit-mask-position: 0 0; }
 .maskLayer[data-status='leave_alone'] { background: rgba(239,68,68,.64); }
 .maskLayer[data-status='recovering'] { background: rgba(249,115,22,.58); }
 .maskLayer[data-status='probably_ready'] { background: rgba(34,197,94,.5); }
-.bodyOverlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .bodyFigure figcaption { margin-top: 6px; color: #827b70; font-size: .68rem; font-weight: 750; letter-spacing: .12em; text-align: center; text-transform: uppercase; }
-.zone { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
-.hitArea { fill: transparent; fill-opacity: 0; stroke: transparent; stroke-opacity: 0; stroke-width: 52; opacity: 0; pointer-events: all; }
-.zone[data-status='unknown'] { cursor: default; pointer-events: none; }
-.zone:focus .hitArea, .zone:focus-visible .hitArea, .zone:active .hitArea { fill-opacity: 0; stroke-opacity: 0; opacity: 0; }
-.bodyOverlay .zone:focus-visible { outline: none; }
 .details { min-width: 0; padding: 18px; border: 1px solid rgba(201,168,76,.16); border-radius: 16px; background: rgba(201,168,76,.035); }
 .detailsHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .detailsHeading h3 { margin: 0; font-size: 1.18rem; }
