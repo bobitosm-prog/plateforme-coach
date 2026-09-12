@@ -11,7 +11,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "i18n:check": "node scripts/check-i18n.mjs"
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "recovery:masks:generate": "node --experimental-strip-types scripts/generate-recovery-mask-atlas.ts",
+    "recovery:masks:validate": "node --experimental-strip-types scripts/validate-recovery-mask-assets.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.87.0",
