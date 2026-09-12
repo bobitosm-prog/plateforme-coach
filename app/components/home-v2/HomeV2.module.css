@@ -84,6 +84,9 @@
 .statusSection { margin-top: 24px; }
 .statusGrid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .statusCard { min-width: 0; padding: 17px; border: 1px solid rgba(201,168,76,.14); border-radius: 17px; background: #12110f; }
+.statusCardButton { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color 150ms ease, background 150ms ease; }
+.statusCardButton:hover { border-color: rgba(230,195,100,.35); background: #17150f; }
+.statusCardButton:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: 3px; }
 .statusTop { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .statusIcon { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 9px; color: #d9b85d; background: rgba(201,168,76,.09); }
 .statusLabel { color: #968e80; font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -136,7 +139,7 @@
 .coachDetail strong { color: #d8d0c3; font-weight: 650; }
 .coachDetail small { display: block; max-width: 360px; margin-top: 2px; overflow: hidden; color: #827b70; font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner { animation: none; } .button, .hydrationTrack span { transition: none; } .button:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner { animation: none; } .button, .hydrationTrack span, .statusCardButton { transition: none; } .button:hover { transform: none; } }
 @media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
 @media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }

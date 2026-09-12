@@ -33,7 +33,12 @@ export function createHomeNutritionNumberFormatter(locale: string, maximumFracti
   })
 }
 
-function StatusCard({ icon, label, status, state, children }: { icon: React.ReactNode; label: string; status: string; state: HomeDomainState; children?: React.ReactNode }) {
+function StatusCard({ icon, label, status, state, children, onClick }: { icon: React.ReactNode; label: string; status: string; state: HomeDomainState; children?: React.ReactNode; onClick?: () => void }) {
+  if (onClick) return <button type="button" className={`${styles.statusCard} ${styles.statusCardButton}`} aria-busy={state === 'loading'} aria-haspopup="dialog" onClick={onClick}>
+    <div className={styles.statusTop}><span className={styles.statusIcon}>{icon}</span><span className={styles.statusLabel}>{label}</span></div>
+    <strong className={styles.statusValue}>{status}</strong>
+    {children && <div className={styles.statusDetails}>{children}</div>}
+  </button>
   return <article className={styles.statusCard} aria-busy={state === 'loading'} role={state === 'error' ? 'status' : undefined}>
     <div className={styles.statusTop}><span className={styles.statusIcon}>{icon}</span><span className={styles.statusLabel}>{label}</span></div>
     <strong className={styles.statusValue}>{status}</strong>
@@ -41,7 +46,7 @@ function StatusCard({ icon, label, status, state, children }: { icon: React.Reac
   </article>
 }
 
-export default function DailyStatus({ training, nutrition, recovery }: Pick<HomeViewModel, 'training' | 'nutrition' | 'recovery'>) {
+export default function DailyStatus({ training, nutrition, recovery, onOpenRecovery }: Pick<HomeViewModel, 'training' | 'nutrition' | 'recovery'> & { onOpenRecovery: () => void }) {
   const t = useTranslations('home.v2.dailyStatus')
   const locale = useLocale()
   const calorieNumber = createHomeNutritionNumberFormatter(locale, 0)
@@ -69,7 +74,9 @@ export default function DailyStatus({ training, nutrition, recovery }: Pick<Home
             : null)}</div>
         </>}
       </StatusCard>
-      <StatusCard icon={<HeartPulse size={18} aria-hidden="true" />} label={t('recovery.label')} status={t(`recovery.${recoveryStatus}`)} state={recovery.state} />
+      <StatusCard icon={<HeartPulse size={18} aria-hidden="true" />} label={t('recovery.label')} status={t(`recovery.${recoveryStatus}`)} state={recovery.state} onClick={onOpenRecovery}>
+        <span>{t('recovery.open')}</span>
+      </StatusCard>
     </div>
   </section>
 }

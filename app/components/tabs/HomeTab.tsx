@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-explicit-any -- Legacy HomeTab contract; recovery changes preserve it without an out-of-scope refactor. */
 import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -6,7 +7,6 @@ import { getTodaySession } from '../../../lib/get-today-session'
 import { toast } from 'sonner'
 import SessionDoneModal from '../training/SessionDoneModal'
 import { colors } from '../../../lib/design-tokens'
-import { calculateMuscleStatus } from '../ui/MuscleHeatMap'
 import { addXP } from '../../../lib/gamification'
 import HomeV2 from '../home-v2/HomeV2'
 import HomeV2LowerSections, { type HomeV2LowerSectionsHandle } from '../home-v2/HomeV2LowerSections'
@@ -59,7 +59,6 @@ export default function HomeTab({
   const [todaySession, setTodaySession] = useState<{ id: string; created_at: string } | null>(null)
   const [waterToday, setWaterToday] = useState(0)
 
-  const [muscleStatus, setMuscleStatus] = useState<Record<string, number>>({})
   const [generatingDiag, setGeneratingDiag] = useState(false)
   const [diagnosticGenerationError, setDiagnosticGenerationError] = useState(false)
 
@@ -126,7 +125,7 @@ export default function HomeTab({
       .then(({ data }: { data: any[] | null }) => {
         setTodaySession(data?.[0] ?? null)
       })
-  }, [session?.user?.id])
+  }, [session?.user?.id, supabase])
 
   // Fetch mini analytics
   useEffect(() => {
@@ -156,25 +155,6 @@ export default function HomeTab({
       .eq('user_id', userId).eq('scheduled_date', todayDateStr)
       .neq('session_type', 'rest').limit(1).maybeSingle()
       .then(({ data }: any) => { if (data) setTodayScheduledSession(data) })
-
-    // Fetch muscle status from recent workout sets + sessions
-    const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString()
-    Promise.all([
-      supabase.from('workout_sets').select('exercise_name, created_at').eq('user_id', userId).gte('created_at', threeDaysAgo).limit(200),
-      supabase.from('workout_sessions').select('muscles_worked, created_at').eq('user_id', userId).eq('completed', true).gte('created_at', threeDaysAgo),
-    ]).then(([setsRes, sessRes]: any) => {
-      const sets = setsRes.data || []
-      // Supplement: for sessions with muscles_worked, add synthetic entries so the body map picks them up via MUSCLE_GROUP_MAP
-      const sessData = sessRes.data || []
-      sessData.forEach((s: any) => {
-        if (s.muscles_worked?.length) {
-          s.muscles_worked.forEach((mg: string) => {
-            sets.push({ exercise_name: '', muscle_group: mg, created_at: s.created_at })
-          })
-        }
-      })
-      setMuscleStatus(calculateMuscleStatus(sets))
-    })
 
   }, [ht, session?.user?.id, supabase])
 
@@ -255,6 +235,7 @@ export default function HomeTab({
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
           onNextBestAction: handleNextBestAction,
           onOpenProgression: () => setActiveTab('progress'),
+          onOpenRecovery: () => setShowRecoveryModal(true),
           onOpenAthena: () => setActiveTab('coachIA'),
           onOpenMessages: () => setActiveTab('messages'),
         }}
@@ -282,7 +263,7 @@ export default function HomeTab({
       {/* ═══ RECOVERY MODAL ═══ */}
       {showRecoveryModal && (
         <RecoveryModal
-          muscleStatus={muscleStatus}
+          recovery={homeModel.recovery}
           onClose={() => setShowRecoveryModal(false)}
         />
       )}
