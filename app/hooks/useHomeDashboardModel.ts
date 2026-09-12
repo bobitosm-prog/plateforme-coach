@@ -18,6 +18,7 @@ import {
 import { normalizeNutritionMealType } from '../../lib/nutrition/nutrition-dashboard-model'
 import {
   buildRecoveryModel,
+  collectRecoveryExerciseIds,
   type RecoveryExerciseMetadata,
   type RecoveryWorkoutSession,
 } from '../../lib/home/recovery-model'
@@ -62,14 +63,6 @@ interface HomeRecoveryMetadataState {
   requestKey: string | null
   exercises: readonly RecoveryExerciseMetadata[]
   error: boolean
-}
-
-export function collectRecoveryExerciseIds(sessions: readonly RecoveryWorkoutSession[]): string[] {
-  return [...new Set(sessions.flatMap(session => session.completed === true
-    ? (session.workout_sets ?? []).flatMap(set => (
-        set.completed === true && set.exercise_id ? [set.exercise_id] : []
-      ))
-    : []))].sort()
 }
 
 const emptySupplementalData: HomeSupplementalData = {
@@ -247,8 +240,8 @@ export default function useHomeDashboardModel({
     [recoverySource, trainingSource?.workoutSessions],
   )
   const recoveryExerciseIds = useMemo(
-    () => collectRecoveryExerciseIds(recoverySessions),
-    [recoverySessions],
+    () => collectRecoveryExerciseIds(recoverySessions, effectiveNow),
+    [effectiveNow, recoverySessions],
   )
   const recoveryRequestKey = enabled && userId && recoveryExerciseIds.length > 0
     ? `${userId}:${recoveryExerciseIds.join(',')}`

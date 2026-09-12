@@ -81,6 +81,29 @@ describe('Home recovery model', () => {
     expect(model.zones[0].status).toBe('recovering')
   })
 
+  it('keeps RIR 2 in recovering between the window bounds', () => {
+    const model = buildRecoveryModel({
+      sessions: [session({ created_at: '2026-09-11T06:00:00.000Z', workout_sets: sets(2, { rir: 2 }) })],
+      exercises,
+      now,
+    })
+
+    expect(model.zones[0]).toMatchObject({ status: 'recovering', window: { minHours: 24, maxHours: 36 } })
+  })
+
+  it.each([
+    ['2026-09-11T12:00:00.000Z', 'recovering'],
+    ['2026-09-11T00:00:00.000Z', 'probably_ready'],
+  ] as const)('applies the inclusive boundary contract at %s', (createdAt, expectedStatus) => {
+    const model = buildRecoveryModel({
+      sessions: [session({ created_at: createdAt, workout_sets: sets(2, { rir: 2 }) })],
+      exercises,
+      now,
+    })
+
+    expect(model.zones[0].status).toBe(expectedStatus)
+  })
+
   it('reduces confidence when RIR is absent', () => {
     const model = buildRecoveryModel({
       sessions: [session({ created_at: '2026-09-11T06:00:00.000Z', workout_sets: sets(2, { rir: null }) })],
@@ -136,6 +159,24 @@ describe('Home recovery model', () => {
     })
   })
 
+  it('completes resolved metadata zones with uncovered muscles_worked zones', () => {
+    const model = buildRecoveryModel({
+      sessions: [session({
+        muscles_worked: ['Pectoraux', 'Dos'],
+        workout_sets: [
+          { completed: true, exercise_id: 'bench', exercise_name: 'Bench press', rir: 2 },
+          { completed: true, exercise_id: 'unknown', exercise_name: 'Unknown row', rir: 2 },
+        ],
+      })],
+      exercises,
+      now,
+    })
+
+    expect(model.zones.map(zone => zone.zone)).toEqual(['chest', 'back'])
+    expect(model.zones.find(zone => zone.zone === 'chest')).toMatchObject({ source: 'exercise_metadata', confidence: 'high' })
+    expect(model.zones.find(zone => zone.zone === 'back')).toMatchObject({ source: 'session_fallback', confidence: 'reduced' })
+  })
+
   it('clamps a future timestamp and reduces confidence', () => {
     const model = buildRecoveryModel({
       sessions: [session({ created_at: '2026-09-13T12:00:00.000Z' })],
@@ -144,6 +185,19 @@ describe('Home recovery model', () => {
     })
 
     expect(model.zones[0]).toMatchObject({ elapsedHours: 0, confidence: 'reduced', status: 'leave_alone' })
+  })
+
+  it('ignores sessions older than seven days and invalid session timestamps', () => {
+    const model = buildRecoveryModel({
+      sessions: [
+        session({ created_at: '2026-09-05T11:59:59.000Z' }),
+        session({ created_at: 'invalid' }),
+      ],
+      exercises,
+      now,
+    })
+
+    expect(model).toMatchObject({ status: 'unknown', zones: [] })
   })
 
   it('returns unknown without usable data', () => {
@@ -163,5 +217,22 @@ describe('Home recovery model', () => {
     expect(model.zones.find(zone => zone.zone === 'chest')?.status).toBe('probably_ready')
     expect(model.zones.find(zone => zone.zone === 'back')?.status).toBe('leave_alone')
     expect(model.status).toBe('leave_alone')
+  })
+
+  it('keeps a restrictive heavy session over a newer light session on the same muscle', () => {
+    const model = buildRecoveryModel({
+      sessions: [
+        session({ created_at: '2026-09-10T10:00:00.000Z', workout_sets: sets(9) }),
+        session({ created_at: '2026-09-10T23:00:00.000Z', workout_sets: sets(2) }),
+      ],
+      exercises,
+      now,
+    })
+
+    expect(model.zones[0]).toMatchObject({
+      status: 'recovering',
+      setCount: 9,
+      lastWorkedAt: '2026-09-10T10:00:00.000Z',
+    })
   })
 })
