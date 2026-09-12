@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import { selectInitialRecoveryZone } from '@/app/components/home/modals/RecoveryModal'
+import { resolveRecoverySelection, selectInitialRecoveryZone } from '@/app/components/home/modals/RecoveryModal'
 import { RECOVERY_BODY_ASSETS, RECOVERY_MASK_ASSETS } from '@/lib/home/recovery-mask-assets'
-import type { MuscleRecovery } from '@/lib/home/recovery-model'
+import { RECOVERY_ZONES, type MuscleRecovery } from '@/lib/home/recovery-model'
 
 const read = (path: string) => readFileSync(path, 'utf8')
 
@@ -44,6 +44,15 @@ describe('Home recovery interface', () => {
     ])).toBe('quadriceps')
   })
 
+  it('keeps atlas selections even when only the initially selected chest has an estimate', () => {
+    const chest = zone({ zone: 'chest', status: 'recovering' })
+
+    expect(resolveRecoverySelection(null, [chest])).toEqual({ zone: 'chest', recovery: chest })
+    expect(resolveRecoverySelection('quadriceps', [chest])).toEqual({ zone: 'quadriceps', recovery: null })
+    expect(resolveRecoverySelection('back', [chest])).toEqual({ zone: 'back', recovery: null })
+    expect(resolveRecoverySelection('chest', [chest])).toEqual({ zone: 'chest', recovery: chest })
+  })
+
   it('keeps the dialog and official keyboard list accessible', () => {
     const modal = read('app/components/home/modals/RecoveryModal.tsx')
     const css = read('app/components/home/modals/RecoveryModal.module.css')
@@ -52,7 +61,10 @@ describe('Home recovery interface', () => {
     expect(modal).toContain('aria-modal="true"')
     expect(modal).toContain('useFocusTrap')
     expect(modal).toContain('<button')
-    expect(modal).toContain('aria-pressed={selectedZone?.zone === zone.zone}')
+    expect(modal).toContain('SELECTABLE_RECOVERY_ZONES.map(zone =>')
+    expect(modal).toContain('aria-pressed={selectedZoneId === zone}')
+    expect(RECOVERY_ZONES).toHaveLength(10)
+    expect(new Set(RECOVERY_MASK_ASSETS.map(asset => asset.zone))).toEqual(new Set(RECOVERY_ZONES))
     expect(modal).not.toContain('role={zone')
     expect(css).toMatch(/\.accessibleList button\s*\{[^}]*min-height:\s*48px/)
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/)
@@ -80,7 +92,15 @@ describe('Home recovery interface', () => {
     expect(css).not.toMatch(/\.hitArea|\.zoneShape|\.bodyOverlay/)
     expect(modal).not.toContain('zoneShape')
     expect(modal).not.toContain('data-visual-shape')
-    expect(modal).toContain("if (status === 'unknown') return null")
+    expect(modal).toContain("if (status === 'unknown' && !isSelected) return null")
+    expect(modal).toContain("data-status={selectedZone?.status ?? 'unknown'}")
+    expect(modal).toContain("t('unevaluatedCopy')")
+    expect(modal).toContain('if (zone) onSelect(zone)')
+    expect(modal).not.toContain('zones.has(zone)')
+    expect(modal).toContain("type RecoveryAtlasState = 'loading' | 'ready' | 'error'")
+    expect(modal).toContain('data-atlas-state={atlasState}')
+    expect(modal).toContain("atlas.addEventListener('load', createReader")
+    expect(modal).toContain("atlas.addEventListener('error', fail")
     expect(modal.indexOf('<div className={styles.content}>')).toBeLessThan(modal.indexOf("t('loadingCopy')"))
     expect(css).toMatch(/\.maskLayer\s*\{[^}]*mask-image:\s*var\(--recovery-mask-image\)/)
     expect(css).toMatch(/\.maskLayer\s*\{[^}]*-webkit-mask-image:\s*var\(--recovery-mask-image\)/)
@@ -94,6 +114,7 @@ describe('Home recovery interface', () => {
     expect(css).toMatch(/\.maskLayer\[data-status='leave_alone'\]\s*\{[^}]*background:\s*rgba\(239,68,68/)
     expect(css).toMatch(/\.maskLayer\[data-status='recovering'\]\s*\{[^}]*background:\s*rgba\(249,115,22/)
     expect(css).toMatch(/\.maskLayer\[data-status='probably_ready'\]\s*\{[^}]*background:\s*rgba\(34,197,94/)
+    expect(css).toMatch(/\.maskLayer\[data-status='unknown'\]\[data-selected='true'\]\s*\{[^}]*background:\s*rgba\(201,168,76/)
     expect(frontAsset.subarray(0, 4).toString()).toBe('RIFF')
     expect(backAsset.subarray(0, 4).toString()).toBe('RIFF')
     expect(frontAsset.byteLength).toBeGreaterThan(0)

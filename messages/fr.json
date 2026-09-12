@@ -2984,6 +2984,7 @@
         "loadingCopy": "Analyse de tes dernières séances terminées…",
         "errorCopy": "Les données de récupération sont momentanément indisponibles.",
         "emptyCopy": "Termine une séance avec des séries enregistrées pour afficher ta carte musculaire.",
+        "unevaluatedCopy": "Aucune sollicitation récente enregistrée ne permet d’estimer cette zone.",
         "status": { "leave_alone": "À laisser récupérer", "recovering": "En récupération", "probably_ready": "Probablement prêt", "unknown": "À évaluer" },
         "muscles": { "chest": "Pectoraux", "back": "Dos", "shoulders": "Épaules", "biceps": "Biceps", "triceps": "Triceps", "quadriceps": "Quadriceps", "hamstrings": "Ischio-jambiers", "glutes": "Fessiers", "calves": "Mollets", "core": "Abdominaux" },
         "side": { "front": "Face", "back": "Dos" },

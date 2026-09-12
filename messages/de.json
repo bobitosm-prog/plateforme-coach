@@ -2984,6 +2984,7 @@
         "loadingCopy": "Deine letzten abgeschlossenen Trainings werden ausgewertet…",
         "errorCopy": "Die Regenerationsdaten sind vorübergehend nicht verfügbar.",
         "emptyCopy": "Schliesse ein Training mit erfassten Sätzen ab, um deine Muskelkarte anzuzeigen.",
+        "unevaluatedCopy": "Für diese Zone liegt keine kürzlich erfasste Beanspruchung vor, die eine Einschätzung erlaubt.",
         "status": { "leave_alone": "Erholen lassen", "recovering": "In Erholung", "probably_ready": "Wahrscheinlich bereit", "unknown": "Zu bewerten" },
         "muscles": { "chest": "Brust", "back": "Rücken", "shoulders": "Schultern", "biceps": "Bizeps", "triceps": "Trizeps", "quadriceps": "Quadrizeps", "hamstrings": "Beinbeuger", "glutes": "Gesäss", "calves": "Waden", "core": "Rumpf" },
         "side": { "front": "Vorne", "back": "Hinten" },

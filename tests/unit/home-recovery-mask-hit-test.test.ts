@@ -29,6 +29,8 @@ describe('Recovery mask atlas hit testing', () => {
   })
 
   it('maps every declared front and back atlas identifier to its business zone', () => {
+    expect(RECOVERY_MASK_ASSETS).toHaveLength(11)
+    expect(new Set(RECOVERY_MASK_ASSETS.map(asset => asset.atlasId))).toHaveLength(11)
     for (const asset of RECOVERY_MASK_ASSETS) {
       expect(recoveryZoneFromAtlasPixel(asset.view, [asset.atlasId, 0, 0, 255])).toBe(asset.zone)
     }

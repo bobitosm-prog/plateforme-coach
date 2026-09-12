@@ -2984,6 +2984,7 @@
         "loadingCopy": "Reviewing your latest completed workouts…",
         "errorCopy": "Recovery data is temporarily unavailable.",
         "emptyCopy": "Complete a workout with logged sets to display your muscle map.",
+        "unevaluatedCopy": "No recently recorded activity is available to estimate this area.",
         "status": { "leave_alone": "Leave to recover", "recovering": "Recovering", "probably_ready": "Probably ready", "unknown": "To assess" },
         "muscles": { "chest": "Chest", "back": "Back", "shoulders": "Shoulders", "biceps": "Biceps", "triceps": "Triceps", "quadriceps": "Quadriceps", "hamstrings": "Hamstrings", "glutes": "Glutes", "calves": "Calves", "core": "Core" },
         "side": { "front": "Front", "back": "Back" },

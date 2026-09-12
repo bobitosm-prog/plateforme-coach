@@ -21,6 +21,8 @@ import { RailOverlay } from '../../ui/RailOverlay'
 import styles from './RecoveryModal.module.css'
 
 const atlasReaderCache = new Map<RecoveryMaskView, Promise<RecoveryAtlasPixelReader | null>>()
+type RecoveryAtlasState = 'loading' | 'ready' | 'error'
+const SELECTABLE_RECOVERY_ZONES = [...new Set(RECOVERY_MASK_ASSETS.map(asset => asset.zone))]
 
 function loadRecoveryAtlas(view: RecoveryMaskView): Promise<RecoveryAtlasPixelReader | null> {
   const cached = atlasReaderCache.get(view)
@@ -29,20 +31,44 @@ function loadRecoveryAtlas(view: RecoveryMaskView): Promise<RecoveryAtlasPixelRe
   const pending = new Promise<RecoveryAtlasPixelReader | null>((resolve) => {
     const atlas = new window.Image()
     atlas.decoding = 'async'
-    atlas.src = RECOVERY_ATLAS_ASSETS[view]
-    void atlas.decode().then(() => {
-      const canvas = document.createElement('canvas')
-      canvas.width = RECOVERY_MASK_WIDTH
-      canvas.height = RECOVERY_MASK_HEIGHT
-      const context = canvas.getContext('2d', { willReadFrequently: true })
-      if (!context) {
-        resolve(null)
-        return
+    let settled = false
+
+    const fail = () => {
+      if (settled) return
+      settled = true
+      resolve(null)
+    }
+    const createReader = () => {
+      if (settled || !atlas.complete || atlas.naturalWidth === 0) return
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = RECOVERY_MASK_WIDTH
+        canvas.height = RECOVERY_MASK_HEIGHT
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        if (!context) {
+          fail()
+          return
+        }
+        context.imageSmoothingEnabled = false
+        context.drawImage(atlas, 0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT)
+        settled = true
+        resolve((x, y) => context.getImageData(x, y, 1, 1).data)
+      } catch {
+        fail()
       }
-      context.imageSmoothingEnabled = false
-      context.drawImage(atlas, 0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT)
-      resolve((x, y) => context.getImageData(x, y, 1, 1).data)
-    }).catch(() => resolve(null))
+    }
+
+    atlas.addEventListener('load', createReader, { once: true })
+    atlas.addEventListener('error', fail, { once: true })
+    atlas.src = RECOVERY_ATLAS_ASSETS[view]
+
+    if (typeof atlas.decode === 'function') {
+      void atlas.decode().then(createReader).catch(() => {
+        // Safari can reject decode() even though the resource subsequently loads.
+        // Keep the load/error listeners authoritative, and accept an already loaded image.
+        if (atlas.complete && atlas.naturalWidth > 0) createReader()
+      })
+    }
   })
   atlasReaderCache.set(view, pending)
   void pending.then(reader => {
@@ -63,18 +89,31 @@ export function selectInitialRecoveryZone(zones: readonly MuscleRecovery[]): Rec
   ), null)?.zone ?? null
 }
 
-function BodyMap({ side, zones, onSelect }: {
+export function resolveRecoverySelection(
+  selected: RecoveryZone | null,
+  zones: readonly MuscleRecovery[],
+): { zone: RecoveryZone; recovery: MuscleRecovery | null } | null {
+  const zone = selected ?? selectInitialRecoveryZone(zones)
+  if (!zone) return null
+  return { zone, recovery: zones.find(candidate => candidate.zone === zone) ?? null }
+}
+
+function BodyMap({ side, zones, selected, onSelect }: {
   side: RecoveryMaskView
   zones: ReadonlyMap<RecoveryZone, MuscleRecovery>
+  selected: RecoveryZone | null
   onSelect: (zone: RecoveryZone) => void
 }) {
   const t = useTranslations('home.v2.recoveryModal')
   const atlasReader = useRef<RecoveryAtlasPixelReader | null>(null)
+  const [atlasState, setAtlasState] = useState<RecoveryAtlasState>('loading')
   useEffect(() => {
     let active = true
     atlasReader.current = null
     void loadRecoveryAtlas(side).then(reader => {
-      if (active) atlasReader.current = reader
+      if (!active) return
+      atlasReader.current = reader
+      setAtlasState(reader ? 'ready' : 'error')
     })
     return () => {
       active = false
@@ -90,11 +129,17 @@ function BodyMap({ side, zones, onSelect }: {
       event.currentTarget.getBoundingClientRect(),
       atlasReader.current,
     )
-    if (zone && zones.has(zone)) onSelect(zone)
+    if (zone) onSelect(zone)
   }
 
   return <figure className={styles.bodyFigure}>
-    <div className={styles.bodyVisual} onPointerUp={handlePointerUp} data-recovery-view={side} data-interactive={zones.size > 0}>
+    <div
+      className={styles.bodyVisual}
+      onPointerUp={handlePointerUp}
+      data-recovery-view={side}
+      data-atlas-state={atlasState}
+      data-interactive={atlasState === 'ready'}
+    >
       <Image
         src={RECOVERY_BODY_ASSETS[side]}
         alt={t(`imageAlt.${side}`)}
@@ -107,13 +152,15 @@ function BodyMap({ side, zones, onSelect }: {
       <div className={styles.maskLayers} aria-hidden="true">
         {RECOVERY_MASK_ASSETS.filter(asset => asset.view === side).map(asset => {
           const status = zones.get(asset.zone)?.status ?? 'unknown'
-          if (status === 'unknown') return null
+          const isSelected = selected === asset.zone
+          if (status === 'unknown' && !isSelected) return null
 
           return <span
             key={`${side}-${asset.zone}-mask`}
             className={styles.maskLayer}
             data-mask-zone={asset.zone}
             data-status={status}
+            data-selected={isSelected}
             style={{ '--recovery-mask-image': `url("${asset.maskPath}")` } as CSSProperties}
           />
         })}
@@ -140,7 +187,16 @@ export default function RecoveryModal({ recovery, onClose }: {
   }, [])
 
   const zones = useMemo(() => new Map(recovery.zones.map(zone => [zone.zone, zone])), [recovery.zones])
-  const selectedZone = (selected && zones.get(selected)) ?? recovery.zones[0] ?? null
+  const selection = resolveRecoverySelection(selected, recovery.zones)
+  const selectedZoneId = selection?.zone ?? null
+  const selectedZone = selection?.recovery ?? null
+  const visibleZones = useMemo(
+    () => recovery.state === 'loading' || recovery.state === 'error'
+      ? new Map<RecoveryZone, MuscleRecovery>()
+      : zones,
+    [recovery.state, zones],
+  )
+  const visibleSelection = recovery.state === 'loading' || recovery.state === 'error' ? null : selectedZoneId
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -175,19 +231,18 @@ export default function RecoveryModal({ recovery, onClose }: {
 
         <div className={styles.content}>
           <div className={styles.maps}>
-            <BodyMap side="front" zones={zones} onSelect={setSelected} />
-            <BodyMap side="back" zones={zones} onSelect={setSelected} />
+            <BodyMap side="front" zones={visibleZones} selected={visibleSelection} onSelect={setSelected} />
+            <BodyMap side="back" zones={visibleZones} selected={visibleSelection} onSelect={setSelected} />
           </div>
 
           {recovery.state === 'loading' ? <div className={styles.statePanel} role="status">{t('loadingCopy')}</div>
             : recovery.state === 'error' ? <div className={styles.statePanel} role="status">{t('errorCopy')}</div>
-              : recovery.zones.length === 0 ? <div className={styles.statePanel}>{t('emptyCopy')}</div>
-                : <section className={styles.details} aria-live="polite" aria-labelledby="recovery-zone-title">
-                  {selectedZone && <>
-                    <div className={styles.detailsHeading}>
-                      <h3 id="recovery-zone-title">{muscleLabel(selectedZone.zone)}</h3>
-                      <span data-status={selectedZone.status}>{t(`status.${selectedZone.status}`)}</span>
-                    </div>
+              : selectedZoneId ? <section className={styles.details} aria-live="polite" aria-labelledby="recovery-zone-title">
+                  <div className={styles.detailsHeading}>
+                    <h3 id="recovery-zone-title">{muscleLabel(selectedZoneId)}</h3>
+                    <span data-status={selectedZone?.status ?? 'unknown'}>{t(`status.${selectedZone?.status ?? 'unknown'}`)}</span>
+                  </div>
+                  {selectedZone ? <>
                     <dl>
                       <div><dt>{t('lastWorked')}</dt><dd>{dateFormatter.format(new Date(selectedZone.lastWorkedAt))}</dd></div>
                       <div><dt>{t('elapsed')}</dt><dd>{t('hoursElapsed', { hours: Math.floor(selectedZone.elapsedHours) })}</dd></div>
@@ -201,24 +256,29 @@ export default function RecoveryModal({ recovery, onClose }: {
                         ? <ul>{selectedZone.exercises.map(exercise => <li key={exercise}>{exercise}</li>)}</ul>
                         : <p>{t('exercisesUnknown')}</p>}
                     </div>
-                  </>}
-                </section>}
+                  </> : <p className={styles.unevaluatedCopy}>{t('unevaluatedCopy')}</p>}
+                </section>
+                : <div className={styles.statePanel}>{t('emptyCopy')}</div>}
 
-          {recovery.zones.length > 0 &&
-                <section className={styles.accessibleList} aria-labelledby="recovery-zone-list-title">
-                  <h3 id="recovery-zone-list-title">{t('zoneList')}</h3>
-                  <div>
-                    {recovery.zones.map(zone => <button
-                      key={zone.zone}
-                      type="button"
-                      aria-pressed={selectedZone?.zone === zone.zone}
-                      onClick={() => setSelected(zone.zone)}
-                    >
-                      <span>{muscleLabel(zone.zone)}</span>
-                      <small>{t(`status.${zone.status}`)}</small>
-                    </button>)}
-                  </div>
-                </section>}
+          <section className={styles.accessibleList} aria-labelledby="recovery-zone-list-title">
+            <h3 id="recovery-zone-list-title">{t('zoneList')}</h3>
+            <div>
+              {SELECTABLE_RECOVERY_ZONES.map(zone => {
+                const recoveryZone = zones.get(zone)
+                return (
+                  <button
+                    key={zone}
+                    type="button"
+                    aria-pressed={selectedZoneId === zone}
+                    onClick={() => setSelected(zone)}
+                  >
+                    <span>{muscleLabel(zone)}</span>
+                    <small>{t(`status.${recoveryZone?.status ?? 'unknown'}`)}</small>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
         </div>
 
         <p className={styles.disclaimer}>{t('disclaimer')}</p>
