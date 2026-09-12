@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { selectInitialRecoveryZone } from '@/app/components/home/modals/RecoveryModal'
+import { RECOVERY_BODY_ASSETS, RECOVERY_MASK_ASSETS } from '@/lib/home/recovery-mask-assets'
 import type { MuscleRecovery } from '@/lib/home/recovery-model'
 
 const read = (path: string) => readFileSync(path, 'utf8')
@@ -57,31 +58,42 @@ describe('Home recovery interface', () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/)
   })
 
-  it('uses neutral anatomical WebP assets with overlays available in every state', () => {
+  it('renders the v2 neutral bodies and all pixel-aligned mask assets', () => {
     const modal = read('app/components/home/modals/RecoveryModal.tsx')
     const css = read('app/components/home/modals/RecoveryModal.module.css')
-    const frontAsset = readFileSync('public/images/recovery/body-front-anatomical.webp')
-    const backAsset = readFileSync('public/images/recovery/body-back-anatomical.webp')
+    const frontAsset = readFileSync(`public${RECOVERY_BODY_ASSETS.front}`)
+    const backAsset = readFileSync(`public${RECOVERY_BODY_ASSETS.back}`)
 
-    expect(modal).toContain('/images/recovery/body-${side}-anatomical.webp')
+    expect(modal).toContain('src={RECOVERY_BODY_ASSETS[side]}')
+    expect(modal).toContain('RECOVERY_MASK_ASSETS.filter(asset => asset.view === side)')
+    expect(RECOVERY_MASK_ASSETS).toHaveLength(11)
+    expect(new Set(RECOVERY_MASK_ASSETS.map(asset => `${asset.view}:${asset.zone}`))).toHaveLength(11)
     expect(modal).toContain('viewBox="0 0 611 1286"')
     expect(modal).toContain("data-status={zone?.status ?? 'unknown'}")
     expect(modal).toContain('className={styles.hitArea}')
-    expect(modal).toContain('className={styles.zoneShape}')
     expect(modal).toContain('data-hit-area="true"')
-    expect(modal).toContain('data-visual-shape="true"')
     expect(modal).toContain('data-region={shape.regions?.[index]}')
-    expect(modal).not.toContain("d={shape.paths.join(' ')}")
+    expect(modal).not.toContain('zoneShape')
+    expect(modal).not.toContain('data-visual-shape')
+    expect(modal).toContain("if (status === 'unknown') return null")
     expect(modal).toContain('focusable="false"')
     expect(modal.indexOf('<div className={styles.content}>')).toBeLessThan(modal.indexOf("t('loadingCopy')"))
     expect(css).toMatch(/\.zone\[data-status='unknown'\][^{]*\{[^}]*pointer-events:\s*none/)
     expect(css).toMatch(/\.hitArea\s*\{[^}]*fill:\s*transparent[^}]*stroke:\s*transparent/)
     expect(css).toMatch(/\.hitArea\s*\{[^}]*stroke-opacity:\s*0[^}]*opacity:\s*0[^}]*pointer-events:\s*all/)
-    expect(css).toMatch(/\.zone\[data-status='unknown'\] \.zoneShape\s*\{[^}]*fill:\s*transparent[^}]*stroke:\s*transparent/)
-    expect(css).not.toMatch(/\.zone\[data-status='unknown'\][^{]*\{[^}]*#[0-9a-f]{3,8}/i)
-    expect(css).toMatch(/@media \(hover: hover\) and \(pointer: fine\)\s*\{[^}]*\.zone:hover \.zoneShape/)
-    expect(css).toMatch(/\.zone\[data-selected='true'\] \.zoneShape\s*\{[^}]*fill-opacity:[^}]*\}/)
-    expect(css).not.toMatch(/\.zone\[data-selected='true'\] \.zoneShape\s*\{[^}]*stroke:/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*mask-image:\s*var\(--recovery-mask-image\)/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*-webkit-mask-image:\s*var\(--recovery-mask-image\)/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*mask-size:\s*100% 100%/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*-webkit-mask-size:\s*100% 100%/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*mask-repeat:\s*no-repeat/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*-webkit-mask-repeat:\s*no-repeat/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*mask-position:\s*0 0/)
+    expect(css).toMatch(/\.maskLayer\s*\{[^}]*-webkit-mask-position:\s*0 0/)
+    expect(css).not.toMatch(/\.bodyImage\s*\{[^}]*object-position:/)
+    expect(css).toMatch(/\.maskLayer\[data-status='leave_alone'\]\s*\{[^}]*background:\s*rgba\(239,68,68/)
+    expect(css).toMatch(/\.maskLayer\[data-status='recovering'\]\s*\{[^}]*background:\s*rgba\(249,115,22/)
+    expect(css).toMatch(/\.maskLayer\[data-status='probably_ready'\]\s*\{[^}]*background:\s*rgba\(34,197,94/)
+    expect(css).not.toMatch(/\.zone(?::|\[)[^{]*\{[^}]*(?:fill|stroke):\s*(?!transparent)/)
     expect(css).toMatch(/\.bodyOverlay \.zone:focus-visible\s*\{[^}]*outline:\s*none/)
     expect(frontAsset.subarray(0, 4).toString()).toBe('RIFF')
     expect(backAsset.subarray(0, 4).toString()).toBe('RIFF')

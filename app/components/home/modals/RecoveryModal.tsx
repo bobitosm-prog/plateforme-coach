@@ -2,25 +2,24 @@
 
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
 
 import type { HomeViewModel } from '../../../../lib/home/home-dashboard-model'
+import { RECOVERY_BODY_ASSETS, RECOVERY_MASK_ASSETS, type RecoveryMaskView } from '../../../../lib/home/recovery-mask-assets'
 import type { MuscleRecovery, RecoveryStatus, RecoveryZone } from '../../../../lib/home/recovery-model'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import { RailOverlay } from '../../ui/RailOverlay'
 import styles from './RecoveryModal.module.css'
 
-type BodySide = 'front' | 'back'
-
-interface ZoneShape {
+interface HitAreaShape {
   zone: RecoveryZone
-  side: BodySide
+  side: RecoveryMaskView
   paths: readonly string[]
   regions?: readonly string[]
 }
 
-const ZONE_SHAPES: readonly ZoneShape[] = [
+const HIT_AREA_SHAPES: readonly HitAreaShape[] = [
   { zone: 'chest', side: 'front', paths: ['M200 260 C224 242 270 238 300 249 C314 258 319 282 317 311 C315 335 293 349 261 352 C229 354 203 342 189 320 C180 302 185 278 200 260 Z', 'M338 249 C368 238 414 242 438 260 C453 278 458 302 449 320 C435 342 409 354 377 352 C345 349 323 335 321 311 C319 282 324 258 338 249 Z'] },
   { zone: 'shoulders', side: 'front', paths: ['M151 243 C168 230 195 222 218 230 C227 248 217 285 199 313 C186 333 164 341 147 327 C134 310 133 277 141 257 Z', 'M420 230 C443 222 470 230 487 243 L497 257 C505 277 504 310 491 327 C474 341 452 333 439 313 C421 285 411 248 420 230 Z'] },
   { zone: 'biceps', side: 'front', paths: ['M151 333 C170 322 192 328 201 347 C202 371 194 406 179 424 C163 436 145 425 139 405 C135 378 138 348 151 333 Z', 'M487 333 C500 348 503 378 499 405 C493 425 475 436 459 424 C444 406 436 371 437 347 C446 328 468 322 487 333 Z'] },
@@ -47,7 +46,7 @@ export function selectInitialRecoveryZone(zones: readonly MuscleRecovery[]): Rec
 }
 
 function BodyMap({ side, zones, selected, onSelect, label }: {
-  side: BodySide
+  side: RecoveryMaskView
   zones: ReadonlyMap<RecoveryZone, MuscleRecovery>
   selected: RecoveryZone | null
   onSelect: (zone: RecoveryZone) => void
@@ -57,7 +56,7 @@ function BodyMap({ side, zones, selected, onSelect, label }: {
   return <figure className={styles.bodyFigure}>
     <div className={styles.bodyVisual}>
       <Image
-        src={`/images/recovery/body-${side}-anatomical.webp`}
+        src={RECOVERY_BODY_ASSETS[side]}
         alt={t(`imageAlt.${side}`)}
         fill
         sizes="(max-width: 699px) 44vw, 260px"
@@ -65,8 +64,22 @@ function BodyMap({ side, zones, selected, onSelect, label }: {
         loading="eager"
         draggable={false}
       />
+      <div className={styles.maskLayers} aria-hidden="true">
+        {RECOVERY_MASK_ASSETS.filter(asset => asset.view === side).map(asset => {
+          const status = zones.get(asset.zone)?.status ?? 'unknown'
+          if (status === 'unknown') return null
+
+          return <span
+            key={`${side}-${asset.zone}-mask`}
+            className={styles.maskLayer}
+            data-mask-zone={asset.zone}
+            data-status={status}
+            style={{ '--recovery-mask-image': `url("${asset.maskPath}")` } as CSSProperties}
+          />
+        })}
+      </div>
       <svg className={styles.bodyOverlay} viewBox="0 0 611 1286" aria-label={t('mapLabel', { side: t(`side.${side}`) })}>
-        {ZONE_SHAPES.filter(shape => shape.side === side).map(shape => {
+        {HIT_AREA_SHAPES.filter(shape => shape.side === side).map(shape => {
           const zone = zones.get(shape.zone)
           const activate = () => onSelect(shape.zone)
           const onKeyDown = (event: KeyboardEvent<SVGGElement>) => {
@@ -90,7 +103,6 @@ function BodyMap({ side, zones, selected, onSelect, label }: {
           >
             <title>{label(shape.zone)}</title>
             {shape.paths.map((path, index) => <path key={`hit-${path}`} className={styles.hitArea} d={path} data-hit-area="true" data-region={shape.regions?.[index]} aria-hidden="true" focusable="false" />)}
-            {shape.paths.map((path, index) => <path key={`shape-${path}`} className={styles.zoneShape} d={path} data-visual-shape="true" data-region={shape.regions?.[index]} aria-hidden="true" focusable="false" />)}
           </g>
         })}
       </svg>
