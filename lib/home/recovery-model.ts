@@ -164,9 +164,14 @@ function median(values: readonly number[]): number | null {
     : sorted[middle]
 }
 
-function recoveryWindow(setCount: number): MuscleRecovery['window'] {
-  if (setCount <= 4) return { minHours: 24, maxHours: 36 }
-  if (setCount <= 8) return { minHours: 36, maxHours: 48 }
+function recoveryWindow(setCount: number, medianRir: number | null): MuscleRecovery['window'] {
+  const nearFailure = medianRir != null && medianRir <= 1
+  if (setCount <= 4) {
+    return nearFailure
+      ? { minHours: 36, maxHours: 48 }
+      : { minHours: 24, maxHours: 36 }
+  }
+  if (setCount <= 8 && !nearFailure) return { minHours: 36, maxHours: 48 }
   return { minHours: 48, maxHours: 72 }
 }
 
@@ -247,7 +252,7 @@ function resolveCandidate(candidate: ZoneCandidate, nowMs: number): MuscleRecove
   const medianRir = median(numericRirs)
   const window = candidate.source === 'session_fallback'
     ? { minHours: 36 as const, maxHours: 48 as const }
-    : recoveryWindow(candidate.setCount)
+    : recoveryWindow(candidate.setCount, medianRir)
   const confidence = candidate.timestampMs > nowMs ? 'reduced' : candidate.confidence
   return {
     zone: candidate.zone,

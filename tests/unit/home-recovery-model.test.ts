@@ -64,24 +64,29 @@ describe('Home recovery model', () => {
     expect(model.zones[0].window).toEqual({ minHours, maxHours })
   })
 
-  it('keeps RIR zero in the median and treats median RIR <= 1 prudently', () => {
+  it.each([
+    [4, 0, 36, 48],
+    [4, 1, 36, 48],
+    [5, 1, 48, 72],
+    [9, 1, 48, 72],
+  ])('moves the recovery window up for %i sets at median RIR %i', (count, rir, minHours, maxHours) => {
     const model = buildRecoveryModel({
       sessions: [session({
         created_at: '2026-09-11T06:00:00.000Z',
-        workout_sets: [
-          ...sets(2, { rir: 0 }),
-          ...sets(2, { rir: 1 }),
-        ],
+        workout_sets: sets(count, { rir }),
       })],
       exercises,
       now,
     })
 
-    expect(model.zones[0].medianRir).toBe(0.5)
-    expect(model.zones[0].status).toBe('recovering')
+    expect(model.zones[0]).toMatchObject({
+      medianRir: rir,
+      status: 'leave_alone',
+      window: { minHours, maxHours },
+    })
   })
 
-  it('keeps RIR 2 in recovering between the window bounds', () => {
+  it('keeps the series-based window for median RIR > 1', () => {
     const model = buildRecoveryModel({
       sessions: [session({ created_at: '2026-09-11T06:00:00.000Z', workout_sets: sets(2, { rir: 2 }) })],
       exercises,
@@ -104,15 +109,19 @@ describe('Home recovery model', () => {
     expect(model.zones[0].status).toBe(expectedStatus)
   })
 
-  it('reduces confidence when RIR is absent', () => {
+  it('keeps the normal window with reduced confidence when RIR is absent', () => {
     const model = buildRecoveryModel({
       sessions: [session({ created_at: '2026-09-11T06:00:00.000Z', workout_sets: sets(2, { rir: null }) })],
       exercises,
       now,
     })
 
-    expect(model.zones[0].confidence).toBe('reduced')
-    expect(model.zones[0].status).toBe('recovering')
+    expect(model.zones[0]).toMatchObject({
+      confidence: 'reduced',
+      medianRir: null,
+      status: 'recovering',
+      window: { minHours: 24, maxHours: 36 },
+    })
   })
 
   it('uses the most recent solicitation when several sessions target one zone', () => {
