@@ -4,8 +4,17 @@ import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
 import { generateProgram } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
+import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
+import { z } from 'zod'
 
 export const maxDuration = 300
+
+const schema = z.object({
+  objective: z.string().trim().min(1).max(200), level: z.string().trim().min(1).max(50),
+  daysPerWeek: z.number().int().min(2).max(6), duration: z.number().int().min(20).max(120),
+  equipment: z.string().trim().max(500), priorities: z.array(z.string().trim().max(120)).max(12).default([]),
+  notes: z.string().trim().max(500).default(''), gender: z.string().trim().max(30).default(''),
+}).strict()
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -29,26 +38,22 @@ export async function POST(req: NextRequest) {
   if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
   const aiQ = await checkAiQuota(supabaseAuth, user.id)
   if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
-
   try {
-    const body = await req.json()
-    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = body
+    const parsed = schema.safeParse(await req.json().catch(() => null))
+    if (!parsed.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = parsed.data
     const userId = user.id
 
     // Coach-managed capabilities do not include AI program generation.
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { guardCoachManagedCapabilities } = await import('../../../lib/api-guard')
-      const blocked = await guardCoachManagedCapabilities(userId)
-      if (blocked) return blocked
-    }
+    const blocked = await guardCoachManagedCapabilities(userId)
+    if (blocked) return blocked
 
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
-      return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
+      return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
     }
 
-    const days = parseInt(daysPerWeek) || 4
+    const days = daysPerWeek
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -66,13 +71,14 @@ export async function POST(req: NextRequest) {
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
           }, apiKey, catalog)
+          await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
           clearInterval(heartbeat)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', program })}\n\n`))
           controller.close()
-        } catch (e: any) {
+        } catch {
           clearInterval(heartbeat)
-          console.error('[generate-custom-program] ERROR:', e.message)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`))
+          console.error('[generate-custom-program] validated generation failed')
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Génération temporairement indisponible' })}\n\n`))
           controller.close()
         }
       },
@@ -81,8 +87,8 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     })
 
-  } catch (e: any) {
-    console.error('[generate-custom-program] ERROR:', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch {
+    console.error('[generate-custom-program] unexpected failure')
+    return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
   }
 }
