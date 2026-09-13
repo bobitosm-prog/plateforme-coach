@@ -7,6 +7,7 @@ import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
 import { loadEffectiveEntitlementContext } from '../../../lib/entitlements/server-context'
 import { writeTrustedAthenaAssistantMessage } from '../../../lib/supabase/trusted-ai-writer'
 import { buildAthenaClientContext, formatAthenaClientContextForPrompt } from '../../../lib/athena/client-context'
+import { formatAthenaObservedContextForPrompt, loadAthenaObservedContext } from '../../../lib/athena/observed-context'
 
 const chatRequestSchema = z.object({
   message: z.string().trim().min(1),
@@ -60,12 +61,15 @@ export async function POST(req: NextRequest) {
 
     const p = profile || {}
     const clientContext = buildAthenaClientContext(p)
+    const observedContext = await loadAthenaObservedContext(supabase, user.id)
     const systemPrompt = `${COACH_SYSTEM_PROMPT}
 
 ${formatAthenaClientContextForPrompt(clientContext)}
 
+${formatAthenaObservedContextForPrompt(observedContext)}
+
 REGLES : personnalise seulement avec les données disponibles, sois concis (max 200 mots), 1-2 emojis max, ne mentionne JAMAIS l'IA. Signe 'Ton coach MoovX'.
-12. Distingue toujours les souhaits déclarés des comportements réellement observés. Le contexte actuel ne contient pas encore l'historique des séances ou repas.
+12. Distingue toujours les souhaits déclarés des comportements enregistrés. Ne présente jamais une corrélation observée comme une causalité.
 13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
 14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
 15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement

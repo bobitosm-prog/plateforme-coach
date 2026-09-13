@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   logAiUsage: vi.fn(),
   writeAssistant: vi.fn(),
   getActiveLegacyEntitlement: vi.fn(),
+  loadObservedContext: vi.fn(),
+  formatObservedContext: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
@@ -32,6 +34,10 @@ vi.mock('@/lib/supabase/trusted-ai-writer', () => ({
 }))
 vi.mock('@/lib/entitlements/legacy-entitlement-repository', () => ({
   getActiveLegacyEntitlement: mocks.getActiveLegacyEntitlement,
+}))
+vi.mock('@/lib/athena/observed-context', () => ({
+  loadAthenaObservedContext: mocks.loadObservedContext,
+  formatAthenaObservedContextForPrompt: mocks.formatObservedContext,
 }))
 
 import { POST } from '@/app/api/chat-ai/route'
@@ -96,6 +102,8 @@ describe('Athena history role integrity', () => {
     mocks.logAiUsage.mockResolvedValue(undefined)
     mocks.writeAssistant.mockResolvedValue(undefined)
     mocks.getActiveLegacyEntitlement.mockResolvedValue(null)
+    mocks.loadObservedContext.mockResolvedValue({ version: 1 })
+    mocks.formatObservedContext.mockReturnValue('<athena_observed_context>recorded</athena_observed_context>')
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
       content: [{ text: 'Réponse Athena' }],
     }), { status: 200 })))
@@ -156,6 +164,8 @@ describe('Athena history role integrity', () => {
     expect(body.system).toContain('"primary":"improve_condition"')
     expect(body.system).toContain('"experience":"intermediate"')
     expect(body.system).toContain('"habit":"macro_tracking"')
+    expect(body.system).toContain('<athena_observed_context>recorded</athena_observed_context>')
+    expect(mocks.loadObservedContext).toHaveBeenCalledWith(session.client, 'user-a')
     expect(body.system).not.toContain('Experience : non renseigne')
   })
 
