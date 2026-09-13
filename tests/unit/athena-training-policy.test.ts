@@ -90,6 +90,7 @@ describe('Athena training policy', () => {
     expect(sources).not.toContain('PRIORITES FEMININES')
     expect(sources).not.toContain('Volume : 15-20 sets')
     expect(core).toContain('buildAthenaTrainingPolicyPrompt')
-    expect(legacyRoute).toContain('buildAthenaTrainingPolicyPrompt')
+    expect(legacyRoute).toContain('generateProgram')
+    expect(legacyRoute).toContain('loadExerciseCatalog')
   })
 })

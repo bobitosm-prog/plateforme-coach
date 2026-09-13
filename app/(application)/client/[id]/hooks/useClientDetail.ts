@@ -235,7 +235,7 @@ export default function useClientDetail() {
         mapped[d] = {
           repos: aiDay?.isRest ?? true,
           exercises: (aiDay?.exercises ?? []).map((ex: any) => ({
-            name: ex.name ?? '', sets: ex.sets ?? 3, reps: ex.reps ?? 10, rest: ex.rest ?? '60s', notes: ex.notes ?? '',
+            name: ex.name ?? '', sets: ex.sets ?? 3, reps: ex.reps ?? 10, rest: `${ex.rest_seconds ?? 60}s`, notes: ex.notes ?? '',
           })),
         }
       })
