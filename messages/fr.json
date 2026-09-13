@@ -1711,6 +1711,7 @@
       "increaseReps": "Ajouter une répétition",
       "suggestion": "Suggestion locale",
       "suggestionIncrease": "+{step} kg · cible {weight} kg",
+      "suggestionIncreaseReps": "Viser {reps} reps à {weight} kg",
       "suggestionKeep": "Conserver {weight} kg",
       "suggestionReduce": "Réduire à {weight} kg",
       "useSuggestion": "Utiliser",

@@ -351,8 +351,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     for (const exo of exos) {
       const progression = computeProgression(
         previousPerformance[exo.id]?.sessions ?? [],
-        parseRepsTarget(exo.targetReps),
-        exo.name,
+        exo.targetReps,
       )
       map[exo.id] = progression
       map[exo.name] = progression
@@ -387,9 +386,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       }
       const { data, error } = await supabase
         .from('workout_sets')
-        .select('exercise_id, exercise_name, weight, reps, set_number, session_id, completed, created_at, rir')
+        .select('exercise_id, exercise_name, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
         .eq('user_id', userId)
         .eq('completed', true)
+        .eq('workout_sessions.completed', true)
         .order('created_at', { ascending: false })
         .limit(getPreviousPerformanceLimit(previousReferences.length))
       setPreviousPerformance(buildPreviousPerformanceMap(previousReferences, data || [], Boolean(error)))
@@ -914,14 +914,14 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             : null
           const progression = progressionByExo[exo.id]
           const targetLabel = progression
-            ? `${fmtStep(progression.weight)} kg × ${parseRepsTarget(exo.targetReps) ?? exo.targetReps}`
+            ? `${fmtStep(progression.weight)} kg × ${progression.reps}`
             : `${exo.targetReps} reps`
           const suggestion = progression && !activeSet?.done
             ? {
-                label: progression.status === 'progress'
-                  ? tv2('suggestionIncrease', { step: fmtStep(progression.step), weight: fmtStep(progression.weight) })
-                  : progression.status === 'deload'
-                    ? tv2('suggestionReduce', { weight: fmtStep(progression.weight) })
+                label: progression.action === 'increase_reps'
+                  ? tv2('suggestionIncreaseReps', { reps: progression.reps, weight: fmtStep(progression.weight) })
+                  : progression.action === 'increase_load'
+                    ? tv2('suggestionIncrease', { step: fmtStep(progression.step), weight: fmtStep(progression.weight) })
                     : tv2('suggestionKeep', { weight: fmtStep(progression.weight) }),
                 weight: progression.weight,
               }

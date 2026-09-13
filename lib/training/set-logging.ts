@@ -81,7 +81,7 @@ export function buildPreviousPerformanceMap(
       grouped.get(sessionKey)!.push(row)
     }
 
-    const sessions = sessionOrder.slice(0, 2).map(sessionKey => (
+    const sessions = sessionOrder.slice(0, 3).map(sessionKey => (
       grouped.get(sessionKey)!
         .sort((a, b) => (a.set_number ?? 0) - (b.set_number ?? 0))
         .map(row => ({

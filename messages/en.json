@@ -1711,6 +1711,7 @@
       "increaseReps": "Add one repetition",
       "suggestion": "Local suggestion",
       "suggestionIncrease": "+{step} kg · target {weight} kg",
+      "suggestionIncreaseReps": "Aim for {reps} reps at {weight} kg",
       "suggestionKeep": "Keep {weight} kg",
       "suggestionReduce": "Reduce to {weight} kg",
       "useSuggestion": "Use",

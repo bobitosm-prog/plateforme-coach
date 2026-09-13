@@ -1711,6 +1711,7 @@
       "increaseReps": "Eine Wiederholung hinzufügen",
       "suggestion": "Lokaler Vorschlag",
       "suggestionIncrease": "+{step} kg · Ziel {weight} kg",
+      "suggestionIncreaseReps": "{reps} Wdh. mit {weight} kg anstreben",
       "suggestionKeep": "{weight} kg beibehalten",
       "suggestionReduce": "Auf {weight} kg reduzieren",
       "useSuggestion": "Übernehmen",
