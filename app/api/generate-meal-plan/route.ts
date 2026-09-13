@@ -8,6 +8,7 @@ import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-
 import { validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
+import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
 
 export const maxDuration = 300
 
@@ -103,6 +104,8 @@ VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 - Sur 7 jours : minimum 3 repas poisson, 2 viande blanche, 2 viande rouge` : ''
 
   return `${NUTRITION_GENERATION_PROMPT}
+
+${buildAthenaScientificPolicyPrompt()}
 
 Tu generes UN jour de plan alimentaire en JSON.
 
