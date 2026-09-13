@@ -72,7 +72,7 @@ REGLES : personnalise seulement avec les données disponibles, sois concis (max 
 12. Distingue toujours les souhaits déclarés des comportements enregistrés. Ne présente jamais une corrélation observée comme une causalité.
 13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
 14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
-15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement
+15. Ne prétends jamais qu'un bouton ou une action existe dans l'interface sans contexte explicite. Tu peux expliquer comment simplifier ponctuellement une séance, mais tu ne prétends pas avoir modifié le programme actif.
 16. Termine chaque réponse par une question de suivi pour maintenir l'engagement`
 
     // Fetch last 10 messages from DB for Anthropic context

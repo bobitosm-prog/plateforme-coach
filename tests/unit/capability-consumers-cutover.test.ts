@@ -64,6 +64,7 @@ describe('capability consumers cutover', () => {
       'app/api/generate-meal-plan/route.ts',
       'app/api/suggest-exercise/route.ts',
       'app/api/suggest-overload/route.ts',
+      'app/api/adapt-workout/route.ts',
     ])
 
     for (const { path, source } of consumers) {

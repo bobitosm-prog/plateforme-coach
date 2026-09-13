@@ -1,62 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
-import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
+import {
+  aiRateLimitResponse,
+  checkAiRateLimit,
+  checkRateLimit,
+  logAiUsage,
+} from '../../../lib/rate-limit'
+import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
+import {
+  generateSessionAdaptation,
+  sessionAdaptationRequestSchema,
+  SessionAdaptationError,
+} from '../../../lib/athena/session-adaptation'
 
 export async function POST(req: NextRequest) {
-  // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+    { cookies: { getAll: () => cookieStore.getAll() } },
   )
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`adapt:${ip}`, 5, 60000)
-  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
+  const rateLimit = checkRateLimit(`adapt:${ip}`, 5, 60_000)
+  if (!rateLimit.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+
+  const parsedRequest = sessionAdaptationRequestSchema.safeParse(await req.json().catch(() => null))
+  if (!parsedRequest.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+
+  const blocked = await guardCoachManagedCapabilities(user.id)
+  if (blocked) return blocked
+  const aiRateLimit = await checkAiRateLimit(supabase, user.id, 'adapt-workout')
+  if (!aiRateLimit.allowed) return aiRateLimitResponse(aiRateLimit.limit, aiRateLimit.resetIn)
+
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+  if (!apiKey) return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 500 })
 
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
-
-    const { exercises, availableMinutes, sessionType } = await req.json()
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 800,
-        system: PROGRAM_GENERATION_PROMPT,
-        messages: [{
-          role: 'user',
-          content: `Le client a seulement ${availableMinutes} minutes pour sa seance de ${sessionType || 'musculation'}.
-Programme complet prévu : ${JSON.stringify(exercises.map((e: any) => ({ name: e.name || e.exercise_name, sets: e.sets, reps: e.reps })))}
-
-Adapte le programme pour ${availableMinutes} minutes :
-- Garde les exercices composés en priorité
-- Réduis le nombre de séries si nécessaire
-- Supprime les exercices d'isolation moins importants
-
-Réponds UNIQUEMENT en JSON valide :
-[{"name": "...", "sets": N, "reps": "...", "rest_seconds": N, "priority": "haute/moyenne", "kept": true/false}]`
-        }]
-      })
-    })
-
-    const data = await res.json()
-    const text = data.content?.[0]?.text || ''
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Format invalide' }, { status: 500 })
-    const adapted = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ exercises: adapted })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    const exercises = await generateSessionAdaptation(parsedRequest.data, apiKey)
+    await logAiUsage(supabase, user.id, 'adapt-workout')
+    return NextResponse.json({ exercises })
+  } catch (error: unknown) {
+    if (error instanceof SessionAdaptationError && error.code === 'invalid_model_output') {
+      return NextResponse.json({ error: 'Adaptation invalide' }, { status: 502 })
+    }
+    console.error('[adapt-workout] generation failed')
+    return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 502 })
   }
 }

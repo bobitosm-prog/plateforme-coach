@@ -212,4 +212,11 @@ describe('Athena history role integrity', () => {
     expect(hookSource).toMatch(/\.order\('created_at', \{ ascending: true \}\)\s*\.limit\(100\)/)
     expect(hookSource).toMatch(/\.from\('chat_ai_messages'\)\s*\.delete\(\)\s*\.eq\('user_id', user\.id\)/)
   })
+
+  it('does not direct clients to a non-existent workout adaptation button', () => {
+    const route = readFileSync('app/api/chat-ai/route.ts', 'utf8')
+
+    expect(route).not.toContain('bouton "Adapter la séance"')
+    expect(route).toContain("Ne prétends jamais qu'un bouton ou une action existe")
+  })
 })

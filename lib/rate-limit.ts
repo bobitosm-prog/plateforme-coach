@@ -31,6 +31,7 @@ export const AI_RATE_LIMITS: Record<string, number> = {
   'suggest-exercise': 20,
   'analyze-meal-photo': 15,
   'chat-ai': 20,
+  'adapt-workout': 10,
 }
 
 const WINDOW_SECONDS = 3600
