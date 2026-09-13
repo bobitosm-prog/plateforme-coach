@@ -40,6 +40,7 @@ describe('Home V2 architecture guards', () => {
   const hero = readFileSync('app/components/home-v2/TodayHero.tsx', 'utf8')
   const header = readFileSync('app/components/home-v2/HomeV2Header.tsx', 'utf8')
   const home = readFileSync('app/components/home-v2/HomeV2.tsx', 'utf8')
+  const homeTab = readFileSync('app/components/tabs/HomeTab.tsx', 'utf8')
   const page = readFileSync('app/(application)/page.tsx', 'utf8')
 
   it('keeps the visual component independent from repositories and Supabase', () => {
@@ -55,6 +56,18 @@ describe('Home V2 architecture guards', () => {
   it('sources the displayed date from HomeViewModel.today', () => {
     expect(header).toContain("Pick<HomeViewModel, 'identity' | 'today'>")
     expect(header).toContain('today.localDateKey')
+  })
+
+  it('connects the header date, progress metrics and brand to real Home actions', () => {
+    expect(header).toContain('onOpenTraining')
+    expect(header).toContain('onOpenProgression')
+    expect(header).toContain('onOpenAccount')
+    expect(header).toContain('data-interactive-header')
+    expect(home).toContain('onOpenTraining={actions.onOpenTraining}')
+    expect(home).toContain('onOpenProgression={actions.onOpenProgression}')
+    expect(home).toContain('onOpenAccount={actions.onOpenAccount}')
+    expect(homeTab).toContain("onOpenAccount: () => setActiveTab('compte')")
+    expect(homeTab).toContain("onOpenTraining: () => setActiveTab('training')")
   })
 
   it('uses one shared Home V2 entry and no competing desktop dashboard', () => {

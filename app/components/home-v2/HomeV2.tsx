@@ -24,13 +24,21 @@ export interface HomeV2Actions {
   onOpenRecovery?: () => void
   onOpenAthena?: () => void
   onOpenMessages?: () => void
+  onOpenAccount?: () => void
+  onOpenTraining?: () => void
 }
 
 export default function HomeV2({ model, actions, children }: { model: HomeViewModel; actions: HomeV2Actions; children?: ReactNode }) {
   const recommendation = resolveNextBestAction(model)
   const athenaInsight = resolveAthenaHomeInsight(model)
   return <div className={styles.shell} data-home-v2>
-    <HomeV2Header identity={model.identity} today={model.today} />
+    <HomeV2Header
+      identity={model.identity}
+      today={model.today}
+      onOpenTraining={actions.onOpenTraining}
+      onOpenProgression={actions.onOpenProgression}
+      onOpenAccount={actions.onOpenAccount}
+    />
     <TodayHero training={model.training} {...actions} />
     <DailyStatus
       training={model.training}

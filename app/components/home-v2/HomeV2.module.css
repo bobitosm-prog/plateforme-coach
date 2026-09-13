@@ -1,14 +1,22 @@
 .shell { width: 100%; min-width: 0; max-width: 1180px; margin: 0 auto; padding: 24px 16px 10px; box-sizing: border-box; }
-.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-.header > :first-child { min-width: 0; }
-.eyebrow { margin: 0 0 5px; color: #9b927f; font-size: .82rem; }
+.header { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 16px; min-height: 132px; margin-bottom: 18px; padding: 20px; overflow: hidden; border: 1px solid rgba(230,195,100,.18); border-radius: 24px; background: radial-gradient(circle at 88% 18%,rgba(230,195,100,.13),transparent 32%),linear-gradient(145deg,#15130f,#0d0c0a 72%); box-shadow: 0 18px 48px rgba(0,0,0,.22); box-sizing: border-box; }
+.headerGlow { position: absolute; z-index: -1; top: -70px; right: -55px; width: 180px; height: 180px; border-radius: 50%; background: rgba(230,195,100,.08); filter: blur(12px); pointer-events: none; animation: header-breathe 4.8s ease-in-out infinite; }
+.headerCopy { min-width: 0; }
+.eyebrow { margin: 0 0 5px; color: #a59b89; font-size: .82rem; }
 .title { margin: 0; overflow-wrap: anywhere; color: #f7f4ed; font-size: clamp(1.55rem, 4vw, 2.25rem); line-height: 1.05; letter-spacing: -.02em; }
-.date { margin: 7px 0 0; color: #b9b1a2; font-size: .9rem; text-transform: capitalize; }
-.identity { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.metrics { display: flex; gap: 6px; color: #c9a84c; font-size: .75rem; }
-.metric { padding: 5px 8px; border: 1px solid rgba(201,168,76,.18); border-radius: 999px; background: rgba(201,168,76,.06); }
-.avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,.35); background: #24211b; }
-.avatarFallback { display: grid; place-items: center; color: #e6c364; font-weight: 700; }
+.dateButton { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin: 3px 0 -8px -10px; padding: 8px 10px; border: 0; border-radius: 12px; color: #b9b1a2; background: transparent; font: inherit; font-size: .9rem; text-align: left; text-transform: capitalize; cursor: pointer; transition: color 150ms ease, background 150ms ease, transform 150ms ease; }
+.identity { display: flex; min-width: 74px; flex-direction: column-reverse; align-items: flex-end; gap: 9px; flex-shrink: 0; }
+.metrics { display: flex; max-width: 150px; flex-wrap: wrap; justify-content: flex-end; gap: 6px; color: #c9a84c; font-size: .72rem; }
+.metric { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 5px 8px; border: 1px solid rgba(201,168,76,.2); border-radius: 999px; color: #d9b85d; background: rgba(201,168,76,.07); font: inherit; font-size: inherit; font-weight: 700; cursor: pointer; transition: border-color 150ms ease, background 150ms ease, transform 150ms ease; }
+.brandButton { position: relative; display: grid; place-items: center; width: 62px; height: 62px; padding: 0; border: 1px solid rgba(230,195,100,.3); border-radius: 19px; background: rgba(13,11,8,.72); box-shadow: 0 10px 30px rgba(0,0,0,.3),0 0 0 5px rgba(230,195,100,.035); cursor: pointer; transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+.brandMark { width: 58px; height: 58px; border-radius: 17px; object-fit: cover; }
+.avatarBadge, .avatarBadgeFallback { position: absolute; right: -6px; bottom: -6px; width: 25px; height: 25px; border: 2px solid #11100d; border-radius: 50%; background: #24211b; box-sizing: border-box; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+.avatarBadge { object-fit: cover; }
+.avatarBadgeFallback { display: grid; place-items: center; color: #e6c364; font-size: .68rem; font-weight: 800; }
+.dateButton:focus-visible, .metric:focus-visible, .brandButton:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .dateButton:hover { color: #e6c364; background: rgba(230,195,100,.07); transform: translateX(2px); } .metric:hover { border-color: rgba(230,195,100,.42); background: rgba(201,168,76,.13); transform: translateY(-1px); } .brandButton:hover { border-color: rgba(230,195,100,.62); box-shadow: 0 12px 34px rgba(0,0,0,.34),0 0 24px rgba(230,195,100,.13); transform: translateY(-2px) rotate(-1deg); } }
+@keyframes header-breathe { 0%,100% { opacity: .65; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .headerGlow { animation: none; } .dateButton, .metric, .brandButton { transition: none; } }
 .hero { position: relative; overflow: hidden; min-height: 260px; padding: clamp(22px, 4vw, 42px); border: 1px solid rgba(230,195,100,.24); border-radius: 24px; background: radial-gradient(circle at 85% 15%, rgba(230,195,100,.17), transparent 34%), linear-gradient(145deg,#17140f,#0d0c0a 70%); box-shadow: 0 22px 55px rgba(0,0,0,.28); box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
 .heroLabel { margin: 0 0 12px; color: #e6c364; font-size: .76rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
 .heroTitle { margin: 0; max-width: 720px; overflow-wrap: anywhere; color: #fffdf8; font-size: clamp(1.75rem, 5vw, 3.2rem); line-height: 1.03; letter-spacing: -.025em; }

@@ -2946,6 +2946,9 @@
       "today": "Today",
       "secondaryMetrics": "Secondary progress metrics",
       "avatarAlt": "Profile picture",
+      "openAccount": "Open my account",
+      "openStreak": "View my {count}-day streak",
+      "openXp": "View my {count} XP",
       "hero": {
         "label": "Up next",
         "loading": "Loading today’s workout",

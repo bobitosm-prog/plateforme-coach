@@ -2946,6 +2946,9 @@
       "today": "Heute",
       "secondaryMetrics": "Weitere Fortschrittswerte",
       "avatarAlt": "Profilbild",
+      "openAccount": "Mein Konto öffnen",
+      "openStreak": "Meine Serie von {count} Tagen ansehen",
+      "openXp": "Meine {count} XP ansehen",
       "hero": {
         "label": "Als Nächstes",
         "loading": "Heutiges Training wird geladen",

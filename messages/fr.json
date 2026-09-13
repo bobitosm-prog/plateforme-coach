@@ -2946,6 +2946,9 @@
       "today": "Aujourd’hui",
       "secondaryMetrics": "Progression secondaire",
       "avatarAlt": "Photo de profil",
+      "openAccount": "Ouvrir mon compte",
+      "openStreak": "Voir ma série de {count} jours",
+      "openXp": "Voir mes {count} points XP",
       "hero": {
         "label": "À faire maintenant",
         "loading": "Chargement de la séance du jour",

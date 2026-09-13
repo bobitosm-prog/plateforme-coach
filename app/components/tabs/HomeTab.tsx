@@ -239,6 +239,8 @@ export default function HomeTab({
           onOpenRecovery: () => setShowRecoveryModal(true),
           onOpenAthena: () => setActiveTab('coachIA'),
           onOpenMessages: () => setActiveTab('messages'),
+          onOpenAccount: () => setActiveTab('compte'),
+          onOpenTraining: () => setActiveTab('training'),
         }}
       >
         <HomeV2LowerSections
