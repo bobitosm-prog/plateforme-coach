@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
-import { getPrefatigueInstructions } from '../../../lib/prefatigue-mapping'
 import { PROGRAM_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
+import { buildAthenaTrainingPolicyPrompt } from '../../../lib/athena/training-policy'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -66,23 +66,26 @@ export async function POST(req: NextRequest) {
     const { objective, weight, targetWeight, level, equipment, trainingDays } = await req.json()
     const days = Math.min(Math.max(trainingDays || 4, 3), 6)
     const splitGuide = SPLIT_GUIDE[days] || SPLIT_GUIDE[4]
+    const equipmentText = Array.isArray(equipment) ? equipment.join(',') : String(equipment || 'poids du corps')
 
     const prompt = `${PROGRAM_GENERATION_PROMPT}
 
-${getPrefatigueInstructions()}
+${buildAthenaTrainingPolicyPrompt({
+    objective,
+    level,
+    daysPerWeek: days,
+    durationMinutes: 60,
+    equipment: equipmentText,
+    priorities: [],
+    notes: '',
+  })}
 
-Client: objectif=${objective}, poids=${weight}kg, cible=${targetWeight}kg, niveau=${level}, equipement=${equipment.join(',')}, ${days} jours/semaine
+Contexte déclaré : ${JSON.stringify({ objective, weight, targetWeight, level, equipment: equipmentText })}
 
 SPLIT RECOMMANDE :
 ${splitGuide}
 
-RÈGLES HYPERTROPHIE :
-- Rep range : 8-12 reps exercices composés, 10-15 reps isolation
-- Sets : 3-4 par exercice
-- Temps de repos : 60-90s isolation, 90-120s composés
-- 4-6 exercices par séance
-- Volume : 15-20 sets par groupe musculaire par semaine
-- Adapte les exercices au niveau du client et à son équipement
+Le guide de split est une structure pratique, pas une méthode universellement supérieure. Adapte les exercices au niveau et au matériel déclarés, conformément au contrat Athena.
 
 Réponds avec SEULEMENT ce JSON (pas de texte avant ou après):
 {
