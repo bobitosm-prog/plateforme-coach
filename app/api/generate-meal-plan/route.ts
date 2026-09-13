@@ -5,6 +5,9 @@ import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimit
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
+import { validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
+import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
+import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
 
 export const maxDuration = 300
 
@@ -165,14 +168,7 @@ VÉRIFICATION OBLIGATOIRE avant de retourner le JSON :
 - Additionne les glucides : si < ${Math.round(carbs * 0.9)}g, AUGMENTE les féculents/fruits. Si > ${Math.round(carbs * 1.1)}g, réduis-les.
 - Additionne les lipides : si > ${Math.round(fat * 1.1)}g, réduis huiles/fromages/oléagineux.
 
-${params.ai_photo_analysis ? `
-ANALYSE VISUELLE DU CLIENT :
-${params.ai_photo_analysis}
-
-Tiens compte de cette analyse pour affiner le plan alimentaire.
-Si l'analyse détecte un taux de graisse élevé → favorise un déficit modéré.
-Si l'analyse détecte une morphologie athlétique → maintiens les apports protéiques élevés.
-` : ''}FORMAT JSON UNIQUE (pas de texte) :
+FORMAT JSON UNIQUE (pas de texte) :
 {
   "total_kcal": ${kcal},
   "total_protein": ${prot},
@@ -446,7 +442,7 @@ ${foodListStr || 'Utilise des aliments fitness classiques.'}
 ${proteinHint}
 
 VARIÉTÉ : ce jour doit être DIFFÉRENT des précédents. 7 petits-déj différents, 7 déjeuners différents, 7 dîners différents.
-Déjeuner et dîner : protéine animale/principale OBLIGATOIRE (quantité ajustée aux macros cibles du repas).
+Déjeuner et dîner : inclure une source protéique compatible avec le régime déclaré.
 ${params.scanned_foods?.length ? `\nAliments prioritaires du client : ${params.scanned_foods.slice(0, 10).map((f: any) => f.name).join(', ')}` : ''}
 Aliments féculents (riz, pâtes, légumineuses) : TOUJOURS pesés et calculés CUITS (~130 kcal/100g pour riz/pâtes), jamais crus.
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
@@ -477,7 +473,14 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error(`No JSON for ${day}`)
   const parsed = JSON.parse(jsonMatch[0])
-  return verifyDayPlan(parsed, params)
+  const verified = verifyDayPlan(parsed, params)
+  return validateAthenaNutritionDay(verified, {
+    calorieGoal: params.calorie_goal,
+    proteinGoal: params.protein_goal,
+    carbsGoal: params.carbs_goal,
+    fatGoal: params.fat_goal,
+    allergies: Array.isArray(params.allergies) ? params.allergies : [],
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -503,25 +506,23 @@ export async function POST(req: NextRequest) {
   // Monthly quota (cadrage coût vague beta)
   const aiQ = await checkAiQuota(supabaseAuth, user.id)
   if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
-
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key manquante' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ error: 'Service temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
     }
 
-    const params = await req.json()
+    const parsedRequest = athenaNutritionRequestSchema.safeParse(await req.json().catch(() => null))
+    if (!parsedRequest.success) {
+      return new Response(JSON.stringify({ error: 'Requête invalide' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    }
+    const params = parsedRequest.data
 
     // Coach-managed capabilities do not include AI meal-plan generation.
     const userId = user.id
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { guardCoachManagedCapabilities } = await import('../../../lib/api-guard')
-      const blocked = await guardCoachManagedCapabilities(userId)
-      if (blocked) return blocked
-    }
+    const blocked = await guardCoachManagedCapabilities(userId)
+    if (blocked) return blocked
     const encoder = new TextEncoder()
-    const startTime = Date.now()
     const stream = new ReadableStream({
       async start(controller) {
         const plan: Record<string, any> = {}
@@ -537,12 +538,15 @@ export async function POST(req: NextRequest) {
             proteinsUsed.push(...extractProteins(legacyDay))
             // Convert to canonical for storage + streaming to client
             plan[day] = convertLegacyDayToCanonical(legacyDay)
-          } catch (e) {
-            console.error(`[meal-plan] Error generating ${day}:`, e)
-            plan[day] = { meals: [], totals: { kcal: 0, prot: 0, carb: 0, fat: 0 } }
+          } catch {
+            console.error(`[meal-plan] validated generation failed for ${day}`)
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Plan temporairement indisponible' })}\n\n`))
+            controller.close()
+            return
           }
         }
 
+        await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', plan })}\n\n`))
         controller.close()
       },
@@ -552,8 +556,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     })
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e)
-    console.error('[generate-meal-plan] Error:', message)
-    return new Response(JSON.stringify({ error: 'Erreur inattendue', detail: message }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    console.error('[generate-meal-plan] unexpected failure')
+    return new Response(JSON.stringify({ error: 'Service temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
   }
 }

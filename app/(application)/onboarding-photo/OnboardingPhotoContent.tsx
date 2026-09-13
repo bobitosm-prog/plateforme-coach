@@ -89,10 +89,10 @@ export default function OnboardingPhotoContent() {
   const handleSkip = async () => {
     if (!userId) return
     setGenerating(true)
-    await generateMealPlan(null)
+    await generateMealPlan()
   }
 
-  const generateMealPlan = async (analysisForPlan: string | null) => {
+  const generateMealPlan = async () => {
     if (!userId || !profileData) return
     setGenerating(true)
     setGenProgress(0)
@@ -109,7 +109,6 @@ export default function OnboardingPhotoContent() {
       tdee: profileData.tdee,
       activity_level: profileData.activity_level,
     }
-    if (analysisForPlan) params.ai_photo_analysis = analysisForPlan
     try {
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
@@ -284,7 +283,7 @@ export default function OnboardingPhotoContent() {
               {t('results.skip')}
             </button>
           )}
-          <button onClick={() => generateMealPlan(analysisText)} disabled={generating}
+          <button onClick={() => generateMealPlan()} disabled={generating}
             style={{ ...btnPrimary, width: '100%', padding: 16, fontSize: 16, letterSpacing: '0.1em', opacity: generating ? 0.6 : 1, cursor: generating ? 'wait' : 'pointer', transition: 'all 0.2s' }}>
             {generating ? t('results.continueGenerating') : t('results.continue')}
           </button>

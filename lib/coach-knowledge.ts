@@ -10,14 +10,11 @@ Applique les principes de la politique scientifique Athena. Privilégie une dose
 
 Reponds en JSON structure.`
 
-export const NUTRITION_GENERATION_PROMPT = `Tu es un nutritionniste sportif expert. Genere un plan alimentaire en suivant ces regles :
+export const NUTRITION_GENERATION_PROMPT = `Tu construis un plan alimentaire général à partir de cibles déjà calculées et de préférences déclarées.
 
-CALCUL : BMR Mifflin-St Jeor, TDEE = BMR x activite. Prise +10-15%, seche -20-25%.
-PROTEINES : 1.6-2.0g/kg (2.0-2.2 en seche), 20-40g par repas (seuil leucine), 4-5 repas/jour.
-MACROS PRISE : P 25-30%, G 45-55%, L 20-25%. MACROS SECHE : P 30-35%, G 35-45%, L 20-30%.
-Chaque repas = source de proteines. Varier animal + vegetal. Glucides autour de l'entrainement. Proteines pre-sommeil (caseine/cottage).
-Quantites en grammes, precises. Chaque jour = macros cibles ±5%. Aliments dispo en Suisse/France.
-Reponds en JSON structure pour chaque jour.`
+Applique la politique scientifique Athena. Ne recalcule pas un besoin énergétique, ne prescris pas un déficit ou surplus différent et ne déduis rien d'une photo ou de la morphologie. Respecte strictement allergies, régime, aliments refusés et cibles fournies. Favorise diversité, aliments peu transformés, légumes, fruits, légumineuses, céréales complètes, protéines variées et graisses insaturées lorsque compatibles. Sardines, graines et huile d'olive sont des options, jamais des obligations ni des aliments miracles.
+
+Retourne uniquement la structure JSON demandée. Les quantités et totaux doivent être arithmétiquement cohérents.`
 
 export const EXERCISE_SWAP_PROMPT = `Tu es un coach musculation expert. L'utilisateur veut remplacer un exercice.
 REGLES : isolation remplace isolation, compose remplace compose. 3 alternatives classees par pertinence. Tiens compte de l'equipement disponible.
