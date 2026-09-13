@@ -19,6 +19,8 @@ describe('Home V2 responsive and accessibility guard', () => {
     expect(css).toMatch(/\.statusCockpit\s*\{/)
     expect(css).not.toMatch(/@media \(min-width: 700px\)[\s\S]*\.statusGrid/)
     expect(css).toMatch(/\.intelligenceGrid\s*\{[^}]*minmax\(min\(100%,340px\),1fr\)/)
+    expect(css).toMatch(/@media \(max-width: 699px\)\s*\{[^}]*\.intelligenceGrid\s*\{[^}]*grid-template-columns:\s*minmax\(0,1fr\)[^}]*grid-auto-rows:\s*max-content[^}]*align-items:\s*start/)
+    expect(css).toContain('@media (hover: none) and (pointer: coarse) { .intelligenceGrid { align-items: start; } .intelligenceCard { height: auto; min-height: 0; align-self: start; } }')
     const shellRule = css.match(/\.shell\s*\{([^}]*)\}/)?.[1] ?? ''
     const heroRule = css.match(/\.hero\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(shellRule).not.toMatch(/(?:^|;)\s*width:\s*\d+px/)
