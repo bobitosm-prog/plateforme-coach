@@ -45,6 +45,7 @@ import TrainingProgramSection from '../components/tabs/profile/TrainingProgramSe
 import AccountTab from '../components/tabs/AccountTab'
 import { getSessionForDay } from '../../lib/get-today-session'
 import { getHomeDayWindow } from '../../lib/home/home-date'
+import { buildHomeWeeklyProgress } from '../../lib/home/home-weekly-progress'
 
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
@@ -365,6 +366,11 @@ function CoachAppContent() {
     return null
   }, [h.planningDays, h.todayCoachDay])
 
+  const homeWeeklyProgress = React.useMemo(() => buildHomeWeeklyProgress({
+    workoutSessions: h.wSessions ?? [],
+    scheduledSessions: h.scheduledSessions ?? [],
+  }), [h.scheduledSessions, h.wSessions])
+
   const homeBase = React.useMemo(() => ({
     identity: {
       firstName: h.firstName || '', avatar: h.displayAvatar ?? null,
@@ -383,10 +389,8 @@ function CoachAppContent() {
       previousWeight: h.weightHistory30?.length > 1
         ? h.weightHistory30[h.weightHistory30.length - 2].poids
         : null,
-      sessionsThisWeek: h.completedThisWeek?.size ?? null,
-      adherence: (h.scheduledSessions?.filter((session: { session_type?: string }) => !['rest', 'repos'].includes(session.session_type ?? '')).length ?? 0) > 0
-        ? Math.min(1, (h.completedThisWeek?.size ?? 0) / h.scheduledSessions.filter((session: { session_type?: string }) => !['rest', 'repos'].includes(session.session_type ?? '')).length)
-        : null,
+      sessionsThisWeek: h.workoutHistoryState === 'error' ? null : homeWeeklyProgress.completed,
+      adherence: homeWeeklyProgress.adherence,
       latestPR: h.personalRecords?.[0] ?? null,
     },
     diagnostic: { latest: h.latestDiagnostic ?? null, canGenerate: true },
@@ -397,18 +401,18 @@ function CoachAppContent() {
     },
     capabilities: h.capabilities,
     freshness: 'mixed' as const,
-  }), [h])
+  }), [h, homeWeeklyProgress])
 
   const homeTrainingSource = React.useMemo(() => ({
     scheduledSessions: h.scheduledSessions ?? [],
     programSession: homeProgramSession,
     workoutSessions: h.wSessions ?? [],
     nextSession: h.nextSession ?? null,
-    weeklyCompleted: h.completedThisWeek?.size ?? 0,
-    weeklyPlanned: h.scheduledSessions?.length ?? 0,
+    weeklyCompleted: homeWeeklyProgress.completed,
+    weeklyPlanned: homeWeeklyProgress.planned,
     hasProgram: Boolean(h.planningDays?.length || h.coachProgram),
     state: h.loading ? 'loading' as const : 'ready' as const,
-  }), [h.coachProgram, h.completedThisWeek, h.loading, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession])
+  }), [h.coachProgram, h.loading, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession, homeWeeklyProgress])
 
   const homeModel = useHomeDashboardModel({
     enabled: h.userRole === 'client' && Boolean(h.session?.user?.id),
