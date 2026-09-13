@@ -233,6 +233,7 @@ export default function HomeTab({
           onOpenSession: () => setShowSessionModal(true),
           onOpenProgram: () => setActiveTab('training'),
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
+          onOpenNutrition: () => setActiveTab('nutrition'),
           onNextBestAction: handleNextBestAction,
           onOpenProgression: () => setActiveTab('progress'),
           onOpenRecovery: () => setShowRecoveryModal(true),

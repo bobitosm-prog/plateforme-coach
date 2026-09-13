@@ -18,6 +18,7 @@ export interface HomeV2Actions {
   onOpenSession?: (session: HomeTrainingSession) => void
   onOpenProgram?: () => void
   onStartFreeSession?: () => void
+  onOpenNutrition?: () => void
   onNextBestAction?: (action: NextBestAction) => void
   onOpenProgression?: () => void
   onOpenRecovery?: () => void
@@ -31,7 +32,17 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
   return <div className={styles.shell} data-home-v2>
     <HomeV2Header identity={model.identity} today={model.today} />
     <TodayHero training={model.training} {...actions} />
-    <DailyStatus training={model.training} nutrition={model.nutrition} recovery={model.recovery} onOpenRecovery={() => actions.onOpenRecovery?.()} />
+    <DailyStatus
+      training={model.training}
+      nutrition={model.nutrition}
+      recovery={model.recovery}
+      onStartSession={actions.onStartSession}
+      onOpenSession={actions.onOpenSession}
+      onOpenProgram={actions.onOpenProgram}
+      onStartFreeSession={actions.onStartFreeSession}
+      onOpenNutrition={actions.onOpenNutrition}
+      onOpenRecovery={() => actions.onOpenRecovery?.()}
+    />
     <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />
     <ProgressionSnapshot progression={model.progression} onOpenProgression={actions.onOpenProgression} />
     <div className={styles.intelligenceGrid}>
