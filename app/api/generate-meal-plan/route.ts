@@ -558,7 +558,7 @@ export async function POST(req: NextRequest) {
     return new Response(stream, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
     })
-  } catch (e: unknown) {
+  } catch {
     console.error('[generate-meal-plan] unexpected failure')
     return new Response(JSON.stringify({ error: 'Service temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
   }
