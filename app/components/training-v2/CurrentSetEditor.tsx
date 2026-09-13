@@ -13,6 +13,7 @@ interface CurrentSetEditorProps {
   suggestion: { label: string; weight: number } | null
   statusMessage: string
   onWeightChange: (value: string) => void
+  onWeightFocus: () => void
   onWeightBlur: () => void
   onAdjustWeight: (direction: -1 | 1) => void
   onRepsChange: (value: string) => void
@@ -34,6 +35,7 @@ export default function CurrentSetEditor({
   suggestion,
   statusMessage,
   onWeightChange,
+  onWeightFocus,
   onWeightBlur,
   onAdjustWeight,
   onRepsChange,
@@ -60,6 +62,7 @@ export default function CurrentSetEditor({
                 inputMode="decimal"
                 pattern="[0-9]*[.,]?[0-9]*"
                 value={weight}
+                onFocus={onWeightFocus}
                 onChange={event => onWeightChange(event.target.value)}
                 onBlur={onWeightBlur}
               />

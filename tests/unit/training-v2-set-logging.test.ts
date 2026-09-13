@@ -4,6 +4,7 @@ import {
   PREVIOUS_PERFORMANCE_MAX_ROWS,
   adjustRepsValue,
   adjustWeightValue,
+  beginWeightEntry,
   buildPreviousPerformanceMap,
   getPreviousPerformanceLimit,
   resolveCurrentSetPrefill,
@@ -79,6 +80,31 @@ describe('Training V2 set logging', () => {
     expect(currentSetEditor).toContain('aria-pressed={rir === value}')
     expect(currentSetEditor).toContain("inputMode=\"decimal\"")
     expect(currentSetEditor).toContain("inputMode=\"numeric\"")
+  })
+
+  it('clears an automatic weight suggestion on first focus without clearing entered weight', () => {
+    expect(beginWeightEntry({
+      weight: 40,
+      weightRaw: '40',
+      weightInputSource: 'suggested',
+    })).toEqual({
+      weight: '',
+      weightRaw: '',
+      weightInputSource: 'entered',
+    })
+
+    expect(beginWeightEntry({
+      weight: 60,
+      weightRaw: '60',
+      weightInputSource: 'entered',
+    })).toEqual({
+      weight: 60,
+      weightRaw: '60',
+      weightInputSource: 'entered',
+    })
+
+    expect(currentSetEditor).toContain('onFocus={onWeightFocus}')
+    expect(workoutSession).toContain('onWeightFocus={() => beginWeightInput(exo.id, activeSet.id)}')
   })
 
   it('keeps progression suggestions explicit and advances the persisted draft position', () => {

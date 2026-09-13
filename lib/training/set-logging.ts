@@ -124,6 +124,23 @@ export interface SetPrefillResult {
   repsSource: 'draft' | 'prescription' | 'previous' | 'empty'
 }
 
+export interface WeightEntryState {
+  weight: number | ''
+  weightRaw: string
+  weightInputSource?: 'suggested' | 'entered'
+}
+
+/** A suggested load is guidance, not user input. The first entry focus replaces it. */
+export function beginWeightEntry<T extends WeightEntryState>(set: T): T {
+  if (set.weightInputSource !== 'suggested') return set
+  return {
+    ...set,
+    weight: '',
+    weightRaw: '',
+    weightInputSource: 'entered',
+  }
+}
+
 function displayWeight(value: number): string {
   return String(Math.round(value * 100) / 100).replace('.', ',')
 }

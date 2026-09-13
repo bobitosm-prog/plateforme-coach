@@ -69,6 +69,25 @@ describe('Training V2 active workout draft', () => {
     })
   })
 
+  it('preserves whether a displayed weight is still an automatic suggestion', () => {
+    const storage = new MemoryStorage()
+    const created = draft()
+    created.exercises[0].sets[0] = {
+      ...created.exercises[0].sets[0],
+      weight: 40,
+      weightRaw: '40',
+      weightInputSource: 'suggested',
+    }
+    writeActiveWorkoutDraft(storage, created)
+
+    expect(readActiveWorkoutDraft(storage, 'user-1', new Date('2026-08-28T10:05:00.000Z'))
+      ?.exercises[0].sets[0]).toMatchObject({
+      weight: 40,
+      weightRaw: '40',
+      weightInputSource: 'suggested',
+    })
+  })
+
   it('computes the next incomplete set from locally secured exercise state', () => {
     const created = draft()
     created.exercises[0].sets[0].done = true

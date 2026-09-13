@@ -33,6 +33,7 @@ import trainingV2Styles from './training-v2/TrainingV2.module.css'
 import {
   adjustRepsValue,
   adjustWeightValue,
+  beginWeightEntry,
   buildPreviousPerformanceMap,
   getPreviousPerformanceLimit,
   resolveCurrentSetPrefill,
@@ -44,7 +45,7 @@ import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/re
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; reps: number | ''; done: boolean; rir: number | null }
+interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; done: boolean; rir: number | null }
 interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
@@ -65,7 +66,7 @@ interface WorkoutSessionProps {
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
 const uid = () => Math.random().toString(36).slice(2)
-const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', weightRaw: '', reps: '', done: false, rir: null }))
+const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null }))
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
@@ -417,7 +418,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           })
           if (prefill.weight === set.weight && prefill.weightRaw === set.weightRaw && prefill.reps === set.reps) return set
           changed = true
-          return { ...set, weight: prefill.weight, weightRaw: prefill.weightRaw, reps: prefill.reps }
+          return {
+            ...set,
+            weight: prefill.weight,
+            weightRaw: prefill.weightRaw,
+            weightInputSource: prefill.weightSource === 'previous' || prefill.weightSource === 'prescription' ? 'suggested' as const : 'entered' as const,
+            reps: prefill.reps,
+          }
         })
         return sets === exercise.sets ? exercise : { ...exercise, sets }
       })
@@ -538,10 +545,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const dismissRestDone = () => { setRestDone(false) }
   const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
     if (f === 'weight') {
-      setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, weightRaw: v }) }))
+      setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, weightRaw: v, weightInputSource: 'entered' }) }))
     } else {
       setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, [f]: v === '' ? '' : Number(v) }) }))
     }
+  }
+  const beginWeightInput = (eid: string, sid: string) => {
+    setExos(p => p.map(e => e.id !== eid ? e : {
+      ...e,
+      sets: e.sets.map(s => s.id !== sid ? s : beginWeightEntry(s)),
+    }))
   }
   const commitWeight = (eid: string, sid: string) => {
     setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => {
@@ -947,6 +960,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       suggestion={suggestion}
                       statusMessage={setStatusMessage}
                       onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}
+                      onWeightFocus={() => beginWeightInput(exo.id, activeSet.id)}
                       onWeightBlur={() => commitWeight(exo.id, activeSet.id)}
                       onAdjustWeight={direction => {
                         setSetStatusMessage('')

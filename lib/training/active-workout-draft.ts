@@ -13,6 +13,7 @@ export interface WorkoutDraftSet {
   num: number
   weight: number | ''
   weightRaw: string
+  weightInputSource?: 'suggested' | 'entered'
   reps: number | ''
   done: boolean
   rir: number | null
@@ -111,6 +112,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
             num: positiveInteger(set.num, index + 1),
             weight,
             weightRaw: typeof set.weightRaw === 'string' ? set.weightRaw : weight === '' ? '' : String(weight).replace('.', ','),
+            weightInputSource: set.weightInputSource === 'suggested' ? 'suggested' as const : 'entered' as const,
             reps,
             done: set.done === true,
             rir: typeof set.rir === 'number' && Number.isFinite(set.rir) ? set.rir : null,
@@ -121,6 +123,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           num: index + 1,
           weight: '' as const,
           weightRaw: '',
+          weightInputSource: 'entered' as const,
           reps: '' as const,
           done: false,
           rir: null,
