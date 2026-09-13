@@ -1,5 +1,4 @@
 import {
-  RECOVERY_MASK_ASSETS,
   RECOVERY_MASK_HEIGHT,
   RECOVERY_MASK_WIDTH,
   type RecoveryMaskView,
@@ -13,18 +12,22 @@ export interface RecoveryPointerRect {
   readonly height: number
 }
 
-export interface RecoveryAtlasPoint {
+export interface RecoveryMaskPoint {
   readonly x: number
   readonly y: number
 }
 
-export type RecoveryAtlasPixelReader = (x: number, y: number) => ArrayLike<number>
+export interface RecoveryMaskAlphaReader {
+  readonly view: RecoveryMaskView
+  readonly zone: RecoveryZone
+  readonly readAlpha: (x: number, y: number) => number
+}
 
-export function recoveryPointerToAtlasPoint(
+export function recoveryPointerToMaskPoint(
   clientX: number,
   clientY: number,
   rect: RecoveryPointerRect,
-): RecoveryAtlasPoint | null {
+): RecoveryMaskPoint | null {
   if (![clientX, clientY, rect.left, rect.top, rect.width, rect.height].every(Number.isFinite)) return null
   if (rect.width <= 0 || rect.height <= 0) return null
 
@@ -38,26 +41,31 @@ export function recoveryPointerToAtlasPoint(
   }
 }
 
-export function recoveryZoneFromAtlasPixel(
+export function recoveryZoneFromMaskAlpha(
   view: RecoveryMaskView,
-  pixel: ArrayLike<number>,
+  x: number,
+  y: number,
+  readers: readonly RecoveryMaskAlphaReader[],
 ): RecoveryZone | null {
-  if (pixel.length < 4 || pixel[3] === 0 || pixel[0] === 0) return null
-  return RECOVERY_MASK_ASSETS.find(asset => asset.view === view && asset.atlasId === pixel[0])?.zone ?? null
+  for (const reader of readers) {
+    if (reader.view !== view) continue
+    if (reader.readAlpha(x, y) > 0) return reader.zone
+  }
+  return null
 }
 
-export function resolveRecoveryPointerZone(
+export function resolveRecoveryPointerZoneFromMasks(
   view: RecoveryMaskView,
   clientX: number,
   clientY: number,
   rect: RecoveryPointerRect,
-  readPixel?: RecoveryAtlasPixelReader | null,
+  readers?: readonly RecoveryMaskAlphaReader[] | null,
 ): RecoveryZone | null {
-  const point = recoveryPointerToAtlasPoint(clientX, clientY, rect)
-  if (!point || !readPixel) return null
+  const point = recoveryPointerToMaskPoint(clientX, clientY, rect)
+  if (!point || !readers) return null
 
   try {
-    return recoveryZoneFromAtlasPixel(view, readPixel(point.x, point.y))
+    return recoveryZoneFromMaskAlpha(view, point.x, point.y, readers)
   } catch {
     return null
   }

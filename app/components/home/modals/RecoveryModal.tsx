@@ -7,39 +7,41 @@ import { X } from 'lucide-react'
 
 import type { HomeViewModel } from '../../../../lib/home/home-dashboard-model'
 import {
-  RECOVERY_ATLAS_ASSETS,
   RECOVERY_BODY_ASSETS,
   RECOVERY_MASK_ASSETS,
   RECOVERY_MASK_HEIGHT,
   RECOVERY_MASK_WIDTH,
   type RecoveryMaskView,
 } from '../../../../lib/home/recovery-mask-assets'
-import { resolveRecoveryPointerZone, type RecoveryAtlasPixelReader } from '../../../../lib/home/recovery-mask-hit-test'
+import {
+  resolveRecoveryPointerZoneFromMasks,
+  type RecoveryMaskAlphaReader,
+} from '../../../../lib/home/recovery-mask-hit-test'
 import type { MuscleRecovery, RecoveryStatus, RecoveryZone } from '../../../../lib/home/recovery-model'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import { RailOverlay } from '../../ui/RailOverlay'
 import styles from './RecoveryModal.module.css'
 
-const atlasReaderCache = new Map<RecoveryMaskView, Promise<RecoveryAtlasPixelReader | null>>()
-type RecoveryAtlasState = 'loading' | 'ready' | 'error'
+const maskReaderCache = new Map<RecoveryMaskView, Promise<readonly RecoveryMaskAlphaReader[] | null>>()
+type RecoveryMaskHitState = 'loading' | 'ready' | 'error'
 const SELECTABLE_RECOVERY_ZONES = [...new Set(RECOVERY_MASK_ASSETS.map(asset => asset.zone))]
 
-function loadRecoveryAtlas(view: RecoveryMaskView): Promise<RecoveryAtlasPixelReader | null> {
-  const cached = atlasReaderCache.get(view)
+function loadRecoveryMaskReaders(view: RecoveryMaskView): Promise<readonly RecoveryMaskAlphaReader[] | null> {
+  const cached = maskReaderCache.get(view)
   if (cached) return cached
 
-  const pending = new Promise<RecoveryAtlasPixelReader | null>((resolve) => {
-    const atlas = new window.Image()
-    atlas.decoding = 'async'
+  const loadMask = (asset: (typeof RECOVERY_MASK_ASSETS)[number]) => new Promise<RecoveryMaskAlphaReader>((resolve, reject) => {
+    const image = new window.Image()
+    image.decoding = 'async'
     let settled = false
 
     const fail = () => {
       if (settled) return
       settled = true
-      resolve(null)
+      reject(new Error(`Unable to load recovery mask: ${asset.maskPath}`))
     }
     const createReader = () => {
-      if (settled || !atlas.complete || atlas.naturalWidth === 0) return
+      if (settled || !image.complete || image.naturalWidth === 0) return
       try {
         const canvas = document.createElement('canvas')
         canvas.width = RECOVERY_MASK_WIDTH
@@ -50,29 +52,39 @@ function loadRecoveryAtlas(view: RecoveryMaskView): Promise<RecoveryAtlasPixelRe
           return
         }
         context.imageSmoothingEnabled = false
-        context.drawImage(atlas, 0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT)
+        context.drawImage(image, 0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT)
+        const rgba = context.getImageData(0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT).data
+        const alpha = new Uint8Array(RECOVERY_MASK_WIDTH * RECOVERY_MASK_HEIGHT)
+        for (let index = 0; index < alpha.length; index += 1) alpha[index] = rgba[index * 4 + 3]
         settled = true
-        resolve((x, y) => context.getImageData(x, y, 1, 1).data)
+        resolve({
+          view: asset.view,
+          zone: asset.zone,
+          readAlpha: (x, y) => alpha[y * RECOVERY_MASK_WIDTH + x] ?? 0,
+        })
       } catch {
         fail()
       }
     }
 
-    atlas.addEventListener('load', createReader, { once: true })
-    atlas.addEventListener('error', fail, { once: true })
-    atlas.src = RECOVERY_ATLAS_ASSETS[view]
+    image.addEventListener('load', createReader, { once: true })
+    image.addEventListener('error', fail, { once: true })
+    image.src = asset.maskPath
 
-    if (typeof atlas.decode === 'function') {
-      void atlas.decode().then(createReader).catch(() => {
+    if (typeof image.decode === 'function') {
+      void image.decode().then(createReader).catch(() => {
         // Safari can reject decode() even though the resource subsequently loads.
         // Keep the load/error listeners authoritative, and accept an already loaded image.
-        if (atlas.complete && atlas.naturalWidth > 0) createReader()
+        if (image.complete && image.naturalWidth > 0) createReader()
       })
     }
   })
-  atlasReaderCache.set(view, pending)
-  void pending.then(reader => {
-    if (!reader) atlasReaderCache.delete(view)
+
+  const pending = Promise.all(RECOVERY_MASK_ASSETS.filter(asset => asset.view === view).map(loadMask))
+    .catch(() => null)
+  maskReaderCache.set(view, pending)
+  void pending.then(readers => {
+    if (!readers) maskReaderCache.delete(view)
   })
   return pending
 }
@@ -105,29 +117,29 @@ function BodyMap({ side, zones, selected, onSelect }: {
   onSelect: (zone: RecoveryZone) => void
 }) {
   const t = useTranslations('home.v2.recoveryModal')
-  const atlasReader = useRef<RecoveryAtlasPixelReader | null>(null)
-  const [atlasState, setAtlasState] = useState<RecoveryAtlasState>('loading')
+  const maskReaders = useRef<readonly RecoveryMaskAlphaReader[] | null>(null)
+  const [maskHitState, setMaskHitState] = useState<RecoveryMaskHitState>('loading')
   useEffect(() => {
     let active = true
-    atlasReader.current = null
-    void loadRecoveryAtlas(side).then(reader => {
+    maskReaders.current = null
+    void loadRecoveryMaskReaders(side).then(readers => {
       if (!active) return
-      atlasReader.current = reader
-      setAtlasState(reader ? 'ready' : 'error')
+      maskReaders.current = readers
+      setMaskHitState(readers ? 'ready' : 'error')
     })
     return () => {
       active = false
-      atlasReader.current = null
+      maskReaders.current = null
     }
   }, [side])
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const zone = resolveRecoveryPointerZone(
+    const zone = resolveRecoveryPointerZoneFromMasks(
       side,
       event.clientX,
       event.clientY,
       event.currentTarget.getBoundingClientRect(),
-      atlasReader.current,
+      maskReaders.current,
     )
     if (zone) onSelect(zone)
   }
@@ -137,8 +149,8 @@ function BodyMap({ side, zones, selected, onSelect }: {
       className={styles.bodyVisual}
       onPointerUp={handlePointerUp}
       data-recovery-view={side}
-      data-atlas-state={atlasState}
-      data-interactive={atlasState === 'ready'}
+      data-mask-hit-state={maskHitState}
+      data-interactive={maskHitState === 'ready'}
     >
       <Image
         src={RECOVERY_BODY_ASSETS[side]}
