@@ -6,6 +6,7 @@ import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { PROGRAM_GENERATION_PROMPT } from '../coach-knowledge'
 import { findExerciseMatch } from '../exercise-matching'
 import { buildAthenaTrainingPolicyPrompt, normalizeAthenaTrainingRequest } from '../athena/training-policy'
+import { validateAthenaTrainingOutput, type ValidatedAthenaProgram } from '../athena/training-output'
 
 export interface GenerateProgramInput {
   objective: string
@@ -18,18 +19,15 @@ export interface GenerateProgramInput {
   gender: string
 }
 
-interface GeneratedExercise extends Record<string, unknown> {
-  custom_name: string
+type GeneratedExercise = ValidatedAthenaProgram['days'][number]['exercises'][number] & {
   exercise_id?: string | null
 }
 
-interface GeneratedProgramDay extends Record<string, unknown> {
+type GeneratedProgramDay = Omit<ValidatedAthenaProgram['days'][number], 'exercises'> & {
   exercises: GeneratedExercise[]
 }
 
-export interface GeneratedProgram extends Record<string, unknown> {
-  program_name: string
-  description: string
+export type GeneratedProgram = Omit<ValidatedAthenaProgram, 'days'> & {
   days: GeneratedProgramDay[]
 }
 
@@ -201,7 +199,8 @@ IMPORTANT :
     throw new Error('Format IA invalide')
   }
 
-  const program = unwrapToolInput<GeneratedProgram>(toolUseBlock.input)
+  const rawProgram = unwrapToolInput<unknown>(toolUseBlock.input)
+  const program: GeneratedProgram = validateAthenaTrainingOutput(rawProgram, request)
 
   // Post-process: resolve exercise names against catalog + set exercise_id
   if (catalog.length > 0 && program?.days) {

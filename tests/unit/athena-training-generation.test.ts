@@ -19,13 +19,23 @@ function anthropicResponse() {
       input: {
         program_name: 'Programme test',
         description: 'Test',
-        days: [{
-          day_number: 1,
-          name: 'Full body A',
+        days: Array.from({ length: 3 }, (_, dayIndex) => ({
+          day_number: dayIndex + 1,
+          name: `Full body ${dayIndex + 1}`,
           focus: 'Corps entier',
           muscle_groups: ['back'],
-          exercises: [{ custom_name: 'Rowing', sets: 3, reps: 10, rest_seconds: 120, order: 1, tempo: '2-0-2', technique: null, technique_details: '' }],
-        }],
+          exercises: ['Rowing', 'Squat', 'Développé'].map((name, exerciseIndex) => ({
+            custom_name: name,
+            muscle_primary: 'Dos',
+            sets: 3,
+            reps: 10,
+            rest_seconds: 120,
+            order: exerciseIndex + 1,
+            tempo: '2-0-2',
+            technique: null,
+            technique_details: '',
+          })),
+        })),
       },
     }],
   }), { status: 200 })
