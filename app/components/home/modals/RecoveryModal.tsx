@@ -2,92 +2,22 @@
 
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react'
 import { X } from 'lucide-react'
 
 import type { HomeViewModel } from '../../../../lib/home/home-dashboard-model'
 import {
   RECOVERY_BODY_ASSETS,
   RECOVERY_MASK_ASSETS,
-  RECOVERY_MASK_HEIGHT,
-  RECOVERY_MASK_WIDTH,
   type RecoveryMaskView,
 } from '../../../../lib/home/recovery-mask-assets'
-import {
-  resolveRecoveryPointerZoneFromMasks,
-  type RecoveryMaskAlphaReader,
-} from '../../../../lib/home/recovery-mask-hit-test'
+import { resolveRecoveryClickZone } from '../../../../lib/home/recovery-mask-hit-test'
 import type { MuscleRecovery, RecoveryStatus, RecoveryZone } from '../../../../lib/home/recovery-model'
 import { useFocusTrap } from '../../../hooks/useFocusTrap'
 import { RailOverlay } from '../../ui/RailOverlay'
 import styles from './RecoveryModal.module.css'
 
-const maskReaderCache = new Map<RecoveryMaskView, Promise<readonly RecoveryMaskAlphaReader[] | null>>()
-type RecoveryMaskHitState = 'loading' | 'ready' | 'error'
 const SELECTABLE_RECOVERY_ZONES = [...new Set(RECOVERY_MASK_ASSETS.map(asset => asset.zone))]
-
-function loadRecoveryMaskReaders(view: RecoveryMaskView): Promise<readonly RecoveryMaskAlphaReader[] | null> {
-  const cached = maskReaderCache.get(view)
-  if (cached) return cached
-
-  const loadMask = (asset: (typeof RECOVERY_MASK_ASSETS)[number]) => new Promise<RecoveryMaskAlphaReader>((resolve, reject) => {
-    const image = new window.Image()
-    image.decoding = 'async'
-    let settled = false
-
-    const fail = () => {
-      if (settled) return
-      settled = true
-      reject(new Error(`Unable to load recovery mask: ${asset.maskPath}`))
-    }
-    const createReader = () => {
-      if (settled || !image.complete || image.naturalWidth === 0) return
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = RECOVERY_MASK_WIDTH
-        canvas.height = RECOVERY_MASK_HEIGHT
-        const context = canvas.getContext('2d', { willReadFrequently: true })
-        if (!context) {
-          fail()
-          return
-        }
-        context.imageSmoothingEnabled = false
-        context.drawImage(image, 0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT)
-        const rgba = context.getImageData(0, 0, RECOVERY_MASK_WIDTH, RECOVERY_MASK_HEIGHT).data
-        const alpha = new Uint8Array(RECOVERY_MASK_WIDTH * RECOVERY_MASK_HEIGHT)
-        for (let index = 0; index < alpha.length; index += 1) alpha[index] = rgba[index * 4 + 3]
-        settled = true
-        resolve({
-          view: asset.view,
-          zone: asset.zone,
-          readAlpha: (x, y) => alpha[y * RECOVERY_MASK_WIDTH + x] ?? 0,
-        })
-      } catch {
-        fail()
-      }
-    }
-
-    image.addEventListener('load', createReader, { once: true })
-    image.addEventListener('error', fail, { once: true })
-    image.src = asset.maskPath
-
-    if (typeof image.decode === 'function') {
-      void image.decode().then(createReader).catch(() => {
-        // Safari can reject decode() even though the resource subsequently loads.
-        // Keep the load/error listeners authoritative, and accept an already loaded image.
-        if (image.complete && image.naturalWidth > 0) createReader()
-      })
-    }
-  })
-
-  const pending = Promise.all(RECOVERY_MASK_ASSETS.filter(asset => asset.view === view).map(loadMask))
-    .catch(() => null)
-  maskReaderCache.set(view, pending)
-  void pending.then(readers => {
-    if (!readers) maskReaderCache.delete(view)
-  })
-  return pending
-}
 
 const STATUS_PRIORITY: Record<Exclude<RecoveryStatus, 'unknown'>, number> = {
   leave_alone: 0,
@@ -117,29 +47,12 @@ function BodyMap({ side, zones, selected, onSelect }: {
   onSelect: (zone: RecoveryZone) => void
 }) {
   const t = useTranslations('home.v2.recoveryModal')
-  const maskReaders = useRef<readonly RecoveryMaskAlphaReader[] | null>(null)
-  const [maskHitState, setMaskHitState] = useState<RecoveryMaskHitState>('loading')
-  useEffect(() => {
-    let active = true
-    maskReaders.current = null
-    void loadRecoveryMaskReaders(side).then(readers => {
-      if (!active) return
-      maskReaders.current = readers
-      setMaskHitState(readers ? 'ready' : 'error')
-    })
-    return () => {
-      active = false
-      maskReaders.current = null
-    }
-  }, [side])
-
-  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const zone = resolveRecoveryPointerZoneFromMasks(
+  const handleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const zone = resolveRecoveryClickZone(
       side,
       event.clientX,
       event.clientY,
       event.currentTarget.getBoundingClientRect(),
-      maskReaders.current,
     )
     if (zone) onSelect(zone)
   }
@@ -147,10 +60,10 @@ function BodyMap({ side, zones, selected, onSelect }: {
   return <figure className={styles.bodyFigure}>
     <div
       className={styles.bodyVisual}
-      onPointerUp={handlePointerUp}
+      onClick={handleClick}
       data-recovery-view={side}
-      data-mask-hit-state={maskHitState}
-      data-interactive={maskHitState === 'ready'}
+      data-hit-map="static"
+      data-interactive="true"
     >
       <Image
         src={RECOVERY_BODY_ASSETS[side]}

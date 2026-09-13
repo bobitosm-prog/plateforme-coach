@@ -1,8 +1,10 @@
 import {
+  RECOVERY_MASK_ASSETS,
   RECOVERY_MASK_HEIGHT,
   RECOVERY_MASK_WIDTH,
   type RecoveryMaskView,
 } from './recovery-mask-assets'
+import { RECOVERY_HIT_MAP_ROWS } from './recovery-hit-map.generated'
 import type { RecoveryZone } from './recovery-model'
 
 export interface RecoveryPointerRect {
@@ -15,12 +17,6 @@ export interface RecoveryPointerRect {
 export interface RecoveryMaskPoint {
   readonly x: number
   readonly y: number
-}
-
-export interface RecoveryMaskAlphaReader {
-  readonly view: RecoveryMaskView
-  readonly zone: RecoveryZone
-  readonly readAlpha: (x: number, y: number) => number
 }
 
 export function recoveryPointerToMaskPoint(
@@ -41,32 +37,32 @@ export function recoveryPointerToMaskPoint(
   }
 }
 
-export function recoveryZoneFromMaskAlpha(
+export function recoveryZoneFromHitMap(
   view: RecoveryMaskView,
   x: number,
   y: number,
-  readers: readonly RecoveryMaskAlphaReader[],
 ): RecoveryZone | null {
-  for (const reader of readers) {
-    if (reader.view !== view) continue
-    if (reader.readAlpha(x, y) > 0) return reader.zone
+  if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || x >= RECOVERY_MASK_WIDTH || y < 0 || y >= RECOVERY_MASK_HEIGHT) {
+    return null
+  }
+  const row = RECOVERY_HIT_MAP_ROWS[view][y]
+  for (let index = 0; index < row.length; index += 3) {
+    const xStart = row[index]
+    if (x < xStart) return null
+    if (x <= row[index + 1]) {
+      const zoneId = row[index + 2]
+      return RECOVERY_MASK_ASSETS.find(asset => asset.view === view && asset.atlasId === zoneId)?.zone ?? null
+    }
   }
   return null
 }
 
-export function resolveRecoveryPointerZoneFromMasks(
+export function resolveRecoveryClickZone(
   view: RecoveryMaskView,
   clientX: number,
   clientY: number,
   rect: RecoveryPointerRect,
-  readers?: readonly RecoveryMaskAlphaReader[] | null,
 ): RecoveryZone | null {
   const point = recoveryPointerToMaskPoint(clientX, clientY, rect)
-  if (!point || !readers) return null
-
-  try {
-    return recoveryZoneFromMaskAlpha(view, point.x, point.y, readers)
-  } catch {
-    return null
-  }
+  return point ? recoveryZoneFromHitMap(view, point.x, point.y) : null
 }

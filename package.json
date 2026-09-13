@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "i18n:check": "node scripts/check-i18n.mjs",
     "recovery:masks:generate": "node --experimental-strip-types scripts/generate-recovery-mask-atlas.ts",
-    "recovery:masks:validate": "node --experimental-strip-types scripts/validate-recovery-mask-assets.ts"
+    "recovery:masks:validate": "node --experimental-strip-types scripts/validate-recovery-mask-assets.ts",
+    "recovery:hit-map:generate": "node --experimental-strip-types scripts/generate-recovery-hit-map.ts",
+    "recovery:hit-map:validate": "node --experimental-strip-types scripts/validate-recovery-hit-map.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.87.0",
