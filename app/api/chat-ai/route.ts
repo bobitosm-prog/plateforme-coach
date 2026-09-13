@@ -10,7 +10,7 @@ import { buildAthenaClientContext, formatAthenaClientContextForPrompt } from '..
 import { formatAthenaObservedContextForPrompt, loadAthenaObservedContext } from '../../../lib/athena/observed-context'
 
 const chatRequestSchema = z.object({
-  message: z.string().trim().min(1),
+  message: z.string().trim().min(1).max(500),
 }).strict()
 
 export async function POST(req: NextRequest) {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
 
     const requestBody = await req.json().catch(() => null)
     const parsedRequest = chatRequestSchema.safeParse(requestBody)
@@ -68,9 +68,9 @@ ${formatAthenaClientContextForPrompt(clientContext)}
 
 ${formatAthenaObservedContextForPrompt(observedContext)}
 
-REGLES : personnalise seulement avec les données disponibles, sois concis (max 200 mots), 1-2 emojis max, ne mentionne JAMAIS l'IA. Signe 'Ton coach MoovX'.
+REGLES : personnalise seulement avec les données disponibles, sois concis (max 200 mots), 1-2 emojis max. Signe 'Athena — coach numérique MoovX'.
 12. Distingue toujours les souhaits déclarés des comportements enregistrés. Ne présente jamais une corrélation observée comme une causalité.
-13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
+13. Si le client parle de douleur ou blessure → applique la politique scientifique et oriente vers un professionnel de santé adapté; ne suppose pas qu'un coach humain est disponible
 14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
 15. Ne prétends jamais qu'un bouton ou une action existe dans l'interface sans contexte explicite. Tu peux expliquer comment simplifier ponctuellement une séance, mais tu ne prétends pas avoir modifié le programme actif.
 16. Termine chaque réponse par une question de suivi pour maintenir l'engagement`

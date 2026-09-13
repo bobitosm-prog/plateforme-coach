@@ -23,7 +23,7 @@ export async function generateWeeklyDiagnostic(
   supabase: any
 ): Promise<DiagnosticResult> {
   const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-  if (!apiKey) return { error: 'API key manquante' }
+  if (!apiKey) return { error: 'Diagnostic temporairement indisponible' }
 
   try {
     // 1. WEEK BOUNDARIES — calcul en TZ Europe/Zurich (lundi 00:00 → dimanche 23:59)
@@ -183,12 +183,6 @@ Tu analyses sa semaine d'entrainement et de nutrition pour produire un diagnosti
 
 ${buildAthenaScientificPolicyPrompt()}
 
-<expertise>
-- 20 ans d'expérience en musculation, powerlifting, nutrition sportive
-- Connaissance principes scientifiques modernes (progressive overload, périodisation, distribution macros)
-- Approche pragmatique : ce qui marche en pratique, pas juste en théorie
-</expertise>
-
 <regles_absolues>
 1. Tu te bases UNIQUEMENT sur les données fournies — pas d'invention
 2. Si une donnée manque, dis-le explicitement dans raisonnement
@@ -288,7 +282,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
     if (!res.ok) {
       const err = await res.text()
       console.error('[generateWeeklyDiagnostic] Claude API error:', res.status, err.slice(0, 300))
-      return { error: `Erreur IA (${res.status})` }
+      return { error: 'Diagnostic temporairement indisponible' }
     }
 
     const aiData = await res.json()
