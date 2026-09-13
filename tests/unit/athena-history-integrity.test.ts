@@ -36,7 +36,7 @@ vi.mock('@/lib/entitlements/legacy-entitlement-repository', () => ({
 
 import { POST } from '@/app/api/chat-ai/route'
 
-type Profile = { subscription_type: string }
+type Profile = { subscription_type: string } & Record<string, unknown>
 
 function createSessionClient(
   profile: Profile = { subscription_type: 'solo' },
@@ -131,6 +131,32 @@ describe('Athena history role integrity', () => {
       content: 'Réponse Athena',
     })
     expect(session.historyLimit).toHaveBeenCalledWith(10)
+  })
+
+  it('provides Athena with the normalized onboarding contract', async () => {
+    const session = createSessionClient({
+      subscription_type: 'solo',
+      objective: 'maintain',
+      dietary_type: 'Je suis mes macros',
+      onboarding_answers: {
+        athena_contract_version: 1,
+        primary_goal_id: 'improve_condition',
+        experience_level: 'Intermediaire 6m-2ans',
+        sessions_per_week: 3,
+      },
+    })
+    mocks.createServerClient.mockReturnValue(session.client)
+
+    const response = await POST(request({ message: 'Que dois-je faire ?' }) as never)
+
+    expect(response.status).toBe(200)
+    const anthropicRequest = vi.mocked(fetch).mock.calls[0]?.[1]
+    const body = JSON.parse(String(anthropicRequest?.body))
+    expect(body.system).toContain('<athena_client_context version="1" source="server-sourced" evidence-kind="user-declared">')
+    expect(body.system).toContain('"primary":"improve_condition"')
+    expect(body.system).toContain('"experience":"intermediate"')
+    expect(body.system).toContain('"habit":"macro_tracking"')
+    expect(body.system).not.toContain('Experience : non renseigne')
   })
 
   it.each([

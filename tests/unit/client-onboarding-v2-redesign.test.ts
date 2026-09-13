@@ -18,6 +18,12 @@ describe('client onboarding v2 redesign', () => {
     }
   })
 
+  it('preserves the precise Athena goal contract instead of only its macro objective', () => {
+    expect(source).toContain('athena_contract_version:1')
+    expect(source).toContain('primary_goal_id:GOALS[goal].id')
+    expect(source).toContain("typeof a.primary_goal_id==='string'")
+  })
+
   it('keeps optional content outside the main-step count', () => {
     expect(source).toContain('advancedOpen')
     expect(source).toContain('SoloStep9PhotoBody')

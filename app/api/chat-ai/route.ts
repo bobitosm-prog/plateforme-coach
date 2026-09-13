@@ -6,15 +6,11 @@ import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } fro
 import { COACH_SYSTEM_PROMPT } from '../../../lib/coach-knowledge'
 import { loadEffectiveEntitlementContext } from '../../../lib/entitlements/server-context'
 import { writeTrustedAthenaAssistantMessage } from '../../../lib/supabase/trusted-ai-writer'
+import { buildAthenaClientContext, formatAthenaClientContextForPrompt } from '../../../lib/athena/client-context'
 
 const chatRequestSchema = z.object({
   message: z.string().trim().min(1),
 }).strict()
-
-type AthenaProfile = {
-  onboarding_answers?: Record<string, unknown> | null
-  [field: string]: unknown
-}
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -50,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Fetch profile from DB (no longer sent by client)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, current_weight, target_weight, height, gender, tdee, calorie_goal, protein_goal, carbs_goal, fat_goal, fitness_level, fitness_score, objective, activity_level, dietary_type, onboarding_answers, subscription_type')
+      .select('full_name, birth_date, current_weight, target_weight, height, gender, tdee, calorie_goal, protein_goal, carbs_goal, fat_goal, fitness_level, fitness_score, objective, activity_level, dietary_type, training_location, home_equipment, meal_preferences, onboarding_answers, onboarding_completed_at, subscription_type')
       .eq('id', user.id)
       .single()
 
@@ -62,24 +58,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cette fonctionnalité est gérée par ton coach. Contacte-le directement.' }, { status: 403 })
     }
 
-    const p = (profile || {}) as AthenaProfile
-    const onboarding = p.onboarding_answers || {}
+    const p = profile || {}
+    const clientContext = buildAthenaClientContext(p)
     const systemPrompt = `${COACH_SYSTEM_PROMPT}
 
-PROFIL DU CLIENT :
-- Nom : ${p.full_name || 'Client'}
-- Poids : ${p.current_weight || '?'}kg → Objectif : ${p.target_weight || '?'}kg
-- Taille : ${p.height || '?'}cm | Genre : ${p.gender || '?'}
-- TDEE : ${p.tdee || '?'} kcal | Objectif calorique : ${p.calorie_goal || '?'} kcal/jour
-- Macros : P${p.protein_goal || '?'}g / G${p.carbs_goal || '?'}g / L${p.fat_goal || '?'}g
-- Niveau : ${p.fitness_level || '?'} (score ${p.fitness_score || '?'}/100)
-- Objectif : ${p.objective || 'non defini'}
-- Activite : ${p.activity_level || 'non defini'}
-- Regime : ${p.dietary_type || 'omnivore'}
-- Experience : ${onboarding.experience || 'non renseigne'}
+${formatAthenaClientContextForPrompt(clientContext)}
 
-REGLES : personnalise avec le profil, sois concis (max 200 mots), 1-2 emojis max, ne mentionne JAMAIS l'IA. Signe 'Ton coach MoovX'.
-12. Tu connais le score de forme du client (0-100) — adapte l'intensité de tes conseils en conséquence
+REGLES : personnalise seulement avec les données disponibles, sois concis (max 200 mots), 1-2 emojis max, ne mentionne JAMAIS l'IA. Signe 'Ton coach MoovX'.
+12. Distingue toujours les souhaits déclarés des comportements réellement observés. Le contexte actuel ne contient pas encore l'historique des séances ou repas.
 13. Si le client parle de douleur ou blessure → recommande d'en parler au coach humain via l'onglet Messages
 14. Tu peux donner des conseils de récupération (sommeil, stress, hydratation)
 15. Si le client demande à modifier son programme → dis-lui d'utiliser le bouton "Adapter la séance" dans l'onglet Entraînement
