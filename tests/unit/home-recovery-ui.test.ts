@@ -30,8 +30,8 @@ describe('Home recovery interface', () => {
     const home = read('app/components/home-v2/HomeV2.tsx')
     const tab = read('app/components/tabs/HomeTab.tsx')
 
-    expect(dailyStatus).toContain('aria-haspopup="dialog"')
-    expect(dailyStatus).toContain('onClick={onOpenRecovery}')
+    expect(dailyStatus).toContain("selectedDomain === 'recovery'")
+    expect(dailyStatus).toContain(': onOpenRecovery')
     expect(home).toContain('onOpenRecovery={() => actions.onOpenRecovery?.()}')
     expect(tab).toContain('onOpenRecovery: () => setShowRecoveryModal(true)')
   })

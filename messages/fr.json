@@ -2969,9 +2969,56 @@
       },
       "dailyStatus": {
         "title": "Statut du jour",
-        "training": { "label": "Entraînement", "scheduled": "À faire", "completed": "Terminé", "rest": "Repos", "empty": "Rien de prévu", "loading": "Chargement…", "error": "Indisponible", "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}" },
-        "nutrition": { "label": "Nutrition", "loading": "Chargement…", "ready": "En cours", "empty": "Aucune saisie", "error": "Indisponible", "protein": "Prot.", "carbs": "Gluc.", "fat": "Lip." },
-        "recovery": { "label": "Récupération", "leave_alone": "À laisser récupérer", "recovering": "En récupération", "probably_ready": "Probablement prêt", "unknown": "À évaluer", "unavailable": "À évaluer", "loading": "Chargement…", "error": "Indisponible", "open": "Voir la carte musculaire" }
+        "detailsLabel": "Détails du statut du jour",
+        "summary": {
+          "eyebrow": "Ton équilibre aujourd’hui",
+          "indicators": "Indicateurs entraînement, nutrition et récupération",
+          "error": { "title": "Certaines données sont indisponibles", "copy": "Consulte chaque rubrique pour voir les informations disponibles." },
+          "loading": { "title": "Mise à jour de ton statut", "copy": "Tes données du jour sont en cours de chargement." },
+          "protect_recovery": { "title": "Priorité à la récupération", "copy": "Au moins une zone mérite encore du repos." },
+          "training_planned": { "title": "Ta séance du jour t’attend", "copy": "Ton entraînement planifié reste à réaliser." },
+          "nutrition_incomplete": { "title": "Ton suivi nutrition est à compléter", "copy": "Ouvre Nutrition pour renseigner ta journée." },
+          "on_track": { "title": "Ta journée est bien renseignée", "copy": "Les informations disponibles sont à jour." }
+        },
+        "actions": { "start_session": "Démarrer", "open_session": "Voir la séance", "open_program": "Voir le programme", "start_free_session": "Séance libre", "open_nutrition": "Ouvrir Nutrition", "open_recovery": "Voir la carte" },
+        "training": {
+          "label": "Entraînement", "scheduled": "À faire", "completed": "Terminé", "rest": "Repos", "empty": "Rien de prévu", "loading": "Chargement…", "error": "Indisponible", "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}",
+          "weekly": "{completed} séance(s) terminée(s) sur {planned} prévue(s) cette semaine",
+          "detail": { "scheduled": "Séance planifiée aujourd’hui", "completed": "Séance terminée aujourd’hui", "rest": "Journée de repos planifiée", "empty": "Aucune séance planifiée", "loading": "Chargement de la séance", "error": "Données d’entraînement indisponibles" },
+          "panel": {
+            "scheduled": { "title": "Séance planifiée", "copy": "Retrouve les exercices prévus pour aujourd’hui." },
+            "completed": { "title": "Séance terminée", "copy": "Ton récapitulatif du jour est disponible." },
+            "rest": { "title": "Jour de repos", "copy": "Consulte ton programme si tu veux voir la suite." },
+            "empty": { "title": "Aucune séance aujourd’hui", "copy": "Tu peux consulter ton programme ou lancer une séance libre." },
+            "loading": { "title": "Chargement de l’entraînement", "copy": "Ta séance du jour arrive." },
+            "error": { "title": "Entraînement indisponible", "copy": "Les données de séance n’ont pas pu être chargées." }
+          }
+        },
+        "nutrition": {
+          "label": "Nutrition", "loading": "Chargement…", "ready": "Renseignée", "incomplete": "À compléter", "empty": "Aucune saisie", "error": "Indisponible", "protein": "Prot.", "carbs": "Gluc.", "fat": "Lip.", "calories": "{consumed} / {target} kcal",
+          "detail": { "ready": "Calories et objectif disponibles", "incomplete": "Données nutritionnelles partielles", "empty": "Aucun repas enregistré", "loading": "Chargement du suivi nutrition", "error": "Données nutritionnelles indisponibles" },
+          "panel": {
+            "ready": { "title": "Suivi nutrition renseigné", "copy": "Consulte le détail de ta journée dans Nutrition." },
+            "incomplete": { "title": "Suivi nutrition à compléter", "copy": "Certaines informations nutritionnelles sont encore absentes." },
+            "empty": { "title": "Ton suivi nutrition est vide", "copy": "Ouvre Nutrition pour enregistrer ton premier repas." },
+            "loading": { "title": "Chargement de la nutrition", "copy": "Tes données nutritionnelles arrivent." },
+            "error": { "title": "Nutrition indisponible", "copy": "Les données nutritionnelles n’ont pas pu être chargées." }
+          }
+        },
+        "recovery": {
+          "label": "Récupération", "leave_alone": "À laisser récupérer", "recovering": "En récupération", "probably_ready": "Probablement prêt", "unknown": "À évaluer", "unavailable": "À évaluer", "loading": "Chargement…", "error": "Indisponible", "open": "Voir la carte musculaire", "priorityZones": "Zones prioritaires : {zones}",
+          "counts": { "leave_alone": "{count} à laisser", "recovering": "{count} en récupération", "probably_ready": "{count} probablement prête(s)" },
+          "detail": { "leave_alone": "Une ou plusieurs zones demandent du repos", "recovering": "Récupération musculaire en cours", "probably_ready": "Zones sollicitées probablement disponibles", "unknown": "Aucune estimation disponible", "unavailable": "Aucune estimation disponible", "loading": "Chargement de la récupération", "error": "Données de récupération indisponibles" },
+          "panel": {
+            "leave_alone": { "title": "Zones à laisser récupérer", "copy": "Consulte la carte avant de solliciter à nouveau ces muscles." },
+            "recovering": { "title": "Récupération en cours", "copy": "La carte détaille les zones encore en récupération." },
+            "probably_ready": { "title": "Zones probablement disponibles", "copy": "Consulte l’estimation détaillée sur la carte musculaire." },
+            "unknown": { "title": "Récupération à évaluer", "copy": "Aucune sollicitation récente ne permet encore une estimation." },
+            "unavailable": { "title": "Récupération à évaluer", "copy": "Aucune sollicitation récente ne permet encore une estimation." },
+            "loading": { "title": "Chargement de la récupération", "copy": "Tes estimations musculaires arrivent." },
+            "error": { "title": "Récupération indisponible", "copy": "Les données de récupération n’ont pas pu être chargées." }
+          }
+        }
       },
       "recoveryModal": {
         "eyebrow": "Statut du jour",

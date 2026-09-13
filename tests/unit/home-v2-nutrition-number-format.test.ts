@@ -34,7 +34,9 @@ describe('Home V2 nutrition number formatting', () => {
     const source = readFileSync('app/components/home-v2/DailyStatus.tsx', 'utf8')
 
     expect(source).toContain('{macroNumber.format(consumed)} / {macroNumber.format(target)} g')
-    expect(source).toContain('{calorieNumber.format(nutrition.caloriesConsumed)} / {calorieNumber.format(nutrition.caloriesTarget)} kcal')
+    expect(source).toContain("t('nutrition.calories', {")
+    expect(source).toContain('consumed: calorieNumber.format(nutrition.caloriesConsumed)')
+    expect(source).toContain('target: calorieNumber.format(nutrition.caloriesTarget)')
     expect(source).not.toContain('{consumed}/{target}g')
   })
 })

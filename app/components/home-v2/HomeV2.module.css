@@ -82,18 +82,52 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 .sectionTitle { margin: 0 0 12px; color: #eee9df; font-size: 1rem; letter-spacing: .01em; }
 .statusSection { margin-top: 24px; }
-.statusGrid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.statusCard { min-width: 0; padding: 17px; border: 1px solid rgba(201,168,76,.14); border-radius: 17px; background: #12110f; }
-.statusCardButton { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color 150ms ease, background 150ms ease; }
-.statusCardButton:hover { border-color: rgba(230,195,100,.35); background: #17150f; }
-.statusCardButton:focus-visible { outline: 3px solid rgba(230,195,100,.48); outline-offset: 3px; }
-.statusTop { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.statusIcon { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 9px; color: #d9b85d; background: rgba(201,168,76,.09); }
-.statusLabel { color: #968e80; font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.statusValue { display: block; color: #f7f4ed; font-size: 1.05rem; }
-.statusDetails { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; color: #aaa294; font-size: .78rem; line-height: 1.45; }
-.calories { color: #d7cfc1; }
-.macroList { display: flex; flex-wrap: wrap; gap: 5px 10px; color: #8f887b; font-size: .75rem; }
+.statusCockpit { --status-tone: #c9a84c; overflow: hidden; border: 1px solid rgba(230,195,100,.18); border-radius: 22px; background: #11110f; box-shadow: 0 18px 48px rgba(0,0,0,.2); }
+.statusSummary { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 14px 16px; background: radial-gradient(circle at 4% 0,rgba(230,195,100,.1),transparent 45%); }
+.statusSummaryRing { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; color: #e6c364; background: conic-gradient(#e6c364 0 28%,rgba(230,195,100,.16) 28% 36%,#c9a84c 36% 64%,rgba(230,195,100,.16) 64% 72%,#9c7c32 72% 100%); }
+.statusSummaryRing::before { position: absolute; inset: 5px; border-radius: inherit; background: #11110f; content: ''; }
+.statusSummaryRing svg { position: relative; z-index: 1; }
+.statusSummaryCopy { min-width: 0; }
+.statusSummaryCopy p { margin: 0 0 4px; color: #c9a84c; font-size: .68rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.statusSummaryCopy strong { display: block; overflow-wrap: anywhere; color: #f7f4ed; font-size: 1.03rem; line-height: 1.25; }
+.statusSummaryCopy small { display: block; margin-top: 4px; color: #948c7e; font-size: .76rem; line-height: 1.35; }
+.statusSummaryMarkers { display: flex; gap: 5px; }
+.statusSummaryMarker { width: 8px; height: 8px; border-radius: 50%; background: #777168; }
+.statusSummaryMarker[data-tone='positive'] { background: #64d98a; }
+.statusSummaryMarker[data-tone='attention'] { background: #f1a34f; }
+.statusSummaryMarker[data-tone='critical'], .statusSummaryMarker[data-tone='error'] { background: #ff7f84; }
+.statusSummaryMarker[data-tone='loading'] { background: #9d9588; opacity: .5; }
+.statusSignals { display: grid; border-top: 1px solid rgba(230,195,100,.13); }
+.statusSignal { --signal-tone: #9d9588; display: grid; grid-template-columns: 38px minmax(0,1fr) auto; gap: 11px; align-items: center; width: 100%; min-height: 64px; padding: 8px 15px; border: 0; border-bottom: 1px solid rgba(230,195,100,.11); color: #f7f4ed; background: transparent; font: inherit; text-align: left; cursor: pointer; transition: background 150ms ease; }
+.statusSignal[data-tone='positive'] { --signal-tone: #64d98a; }
+.statusSignal[data-tone='attention'] { --signal-tone: #f1a34f; }
+.statusSignal[data-tone='critical'], .statusSignal[data-tone='error'] { --signal-tone: #ff7f84; }
+.statusSignal[data-tone='loading'] { --signal-tone: #9d9588; }
+.statusSignal:hover, .statusSignal[data-active='true'] { background: rgba(255,255,255,.035); }
+.statusSignal[data-active='true'] { box-shadow: inset 3px 0 0 var(--signal-tone); }
+.statusSignal:focus-visible { position: relative; z-index: 1; outline: 3px solid rgba(230,195,100,.5); outline-offset: -3px; }
+.statusSignalIcon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; color: var(--signal-tone); background: color-mix(in srgb,var(--signal-tone) 12%,transparent); }
+.statusSignalMain { min-width: 0; }
+.statusSignalLabel { display: flex; align-items: center; gap: 7px; color: #918a7e; font-size: .68rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.statusSignalLabel i { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: var(--signal-tone); }
+.statusSignalMain strong { display: block; margin-top: 3px; overflow: hidden; color: #f7f4ed; font-size: .92rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.statusSignalMain small { display: block; margin-top: 2px; overflow: hidden; color: #948c7e; font-size: .74rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.statusChevron { flex-shrink: 0; color: #746e64; transition: color 150ms ease, transform 150ms ease; }
+.statusSignal[data-active='true'] .statusChevron { color: var(--signal-tone); transform: rotate(90deg); }
+.statusPanel { --panel-tone: #c9a84c; margin: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb,var(--panel-tone) 18%,transparent); border-radius: 14px; background: #181710; animation: status-panel-in 160ms ease-out; }
+.statusPanel[data-tone='positive'] { --panel-tone: #64d98a; }
+.statusPanel[data-tone='attention'] { --panel-tone: #f1a34f; }
+.statusPanel[data-tone='critical'], .statusPanel[data-tone='error'] { --panel-tone: #ff7f84; }
+.statusPanel[data-tone='loading'], .statusPanel[data-tone='neutral'] { --panel-tone: #9d9588; }
+.statusPanelTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.statusPanelTop > div { min-width: 0; }
+.statusPanel h3 { margin: 0; overflow-wrap: anywhere; color: #eee9df; font-size: .92rem; }
+.statusPanel p { margin: 5px 0 0; color: #9f978a; font-size: .78rem; line-height: 1.45; }
+.statusAction { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 15px; flex-shrink: 0; border: 1px solid rgba(230,195,100,.3); border-radius: 12px; color: #151108; background: linear-gradient(135deg,#f0d27c,#c9a84c); font: inherit; font-size: .78rem; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.statusAction:focus-visible { outline: 3px solid rgba(230,195,100,.52); outline-offset: 3px; }
+.statusFact { padding-top: 9px; border-top: 1px solid rgba(255,255,255,.06); }
+.statusFacts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.06); color: #b2aa9c; font-size: .74rem; }
+@keyframes status-panel-in { from { opacity: 0; transform: translateY(-3px); } }
 .nba { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin-top: 14px; padding: 22px; border: 1px solid rgba(201,168,76,.2); border-radius: 20px; background: linear-gradient(135deg,rgba(201,168,76,.09),rgba(255,255,255,.018)); }
 .nba > :first-child { min-width: 0; }
 .nbaLabel { margin: 0 0 8px; color: #c9a84c; font-size: .75rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
@@ -139,7 +173,8 @@
 .coachDetail strong { color: #d8d0c3; font-weight: 650; }
 .coachDetail small { display: block; max-width: 360px; margin-top: 2px; overflow: hidden; color: #827b70; font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner { animation: none; } .button, .hydrationTrack span, .statusCardButton { transition: none; } .button:hover { transform: none; } }
-@media (min-width: 700px) { .statusGrid { grid-template-columns: repeat(3,minmax(0,1fr)); } .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
+@media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner, .statusPanel { animation: none; } .button, .hydrationTrack span, .statusSignal, .statusChevron { transition: none; } .button:hover { transform: none; } }
+@media (min-width: 700px) { .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
-@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .statusSummaryCopy small, .statusSignalMain small, .statusPanelTop p { display: none; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }
+@media (max-width: 360px) { .statusSummary { grid-template-columns: auto minmax(0,1fr); padding-inline: 14px; } .statusSummaryMarkers { display: none; } .statusSignal { grid-template-columns: 36px minmax(0,1fr) auto; padding-inline: 11px; } .statusSignalIcon { width: 36px; height: 36px; } .statusPanelTop { display: block; } .statusAction { width: 100%; margin-top: 10px; } }

@@ -2969,9 +2969,56 @@
       },
       "dailyStatus": {
         "title": "Heutiger Status",
-        "training": { "label": "Training", "scheduled": "Offen", "completed": "Abgeschlossen", "rest": "Ruhetag", "empty": "Nichts geplant", "loading": "Wird geladen…", "error": "Nicht verfügbar", "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}" },
-        "nutrition": { "label": "Ernährung", "loading": "Wird geladen…", "ready": "In Bearbeitung", "empty": "Keine Einträge", "error": "Nicht verfügbar", "protein": "Protein", "carbs": "Kohlenh.", "fat": "Fett" },
-        "recovery": { "label": "Erholung", "leave_alone": "Erholen lassen", "recovering": "In Erholung", "probably_ready": "Wahrscheinlich bereit", "unknown": "Zu bewerten", "unavailable": "Zu bewerten", "loading": "Wird geladen…", "error": "Nicht verfügbar", "open": "Muskelkarte ansehen" }
+        "detailsLabel": "Details zum heutigen Status",
+        "summary": {
+          "eyebrow": "Deine Balance heute",
+          "indicators": "Indikatoren für Training, Ernährung und Erholung",
+          "error": { "title": "Einige Daten sind nicht verfügbar", "copy": "Öffne jeden Bereich, um die verfügbaren Angaben zu sehen." },
+          "loading": { "title": "Dein Status wird aktualisiert", "copy": "Die heutigen Daten werden geladen." },
+          "protect_recovery": { "title": "Erholung hat Priorität", "copy": "Mindestens ein Bereich braucht noch Ruhe." },
+          "training_planned": { "title": "Dein heutiges Training wartet", "copy": "Dein geplantes Training steht noch aus." },
+          "nutrition_incomplete": { "title": "Ernährung noch ergänzen", "copy": "Öffne Ernährung, um deinen Tag zu erfassen." },
+          "on_track": { "title": "Dein Tag ist gut erfasst", "copy": "Die verfügbaren Informationen sind aktuell." }
+        },
+        "actions": { "start_session": "Starten", "open_session": "Training ansehen", "open_program": "Programm ansehen", "start_free_session": "Freies Training", "open_nutrition": "Ernährung öffnen", "open_recovery": "Karte ansehen" },
+        "training": {
+          "label": "Training", "scheduled": "Offen", "completed": "Abgeschlossen", "rest": "Ruhetag", "empty": "Nichts geplant", "loading": "Wird geladen…", "error": "Nicht verfügbar", "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+          "weekly": "{completed} von {planned} geplanten Trainings diese Woche abgeschlossen",
+          "detail": { "scheduled": "Training für heute geplant", "completed": "Training heute abgeschlossen", "rest": "Geplanter Ruhetag", "empty": "Kein Training geplant", "loading": "Training wird geladen", "error": "Trainingsdaten nicht verfügbar" },
+          "panel": {
+            "scheduled": { "title": "Geplantes Training", "copy": "Sieh dir die für heute geplanten Übungen an." },
+            "completed": { "title": "Training abgeschlossen", "copy": "Deine heutige Trainingsübersicht ist verfügbar." },
+            "rest": { "title": "Ruhetag", "copy": "Öffne dein Programm, wenn du sehen möchtest, was als Nächstes kommt." },
+            "empty": { "title": "Heute kein Training", "copy": "Du kannst dein Programm öffnen oder ein freies Training starten." },
+            "loading": { "title": "Training wird geladen", "copy": "Dein heutiges Training wird vorbereitet." },
+            "error": { "title": "Training nicht verfügbar", "copy": "Die Trainingsdaten konnten nicht geladen werden." }
+          }
+        },
+        "nutrition": {
+          "label": "Ernährung", "loading": "Wird geladen…", "ready": "Erfasst", "incomplete": "Zu ergänzen", "empty": "Keine Einträge", "error": "Nicht verfügbar", "protein": "Protein", "carbs": "Kohlenh.", "fat": "Fett", "calories": "{consumed} / {target} kcal",
+          "detail": { "ready": "Kalorien und Ziel verfügbar", "incomplete": "Teilweise Ernährungsdaten", "empty": "Keine Mahlzeit erfasst", "loading": "Ernährung wird geladen", "error": "Ernährungsdaten nicht verfügbar" },
+          "panel": {
+            "ready": { "title": "Ernährung erfasst", "copy": "Sieh dir die Details deines Tages unter Ernährung an." },
+            "incomplete": { "title": "Ernährung noch ergänzen", "copy": "Einige Ernährungsangaben fehlen noch." },
+            "empty": { "title": "Dein Ernährungstagebuch ist leer", "copy": "Öffne Ernährung, um deine erste Mahlzeit zu erfassen." },
+            "loading": { "title": "Ernährung wird geladen", "copy": "Deine Ernährungsdaten werden vorbereitet." },
+            "error": { "title": "Ernährung nicht verfügbar", "copy": "Die Ernährungsdaten konnten nicht geladen werden." }
+          }
+        },
+        "recovery": {
+          "label": "Erholung", "leave_alone": "Erholen lassen", "recovering": "In Erholung", "probably_ready": "Wahrscheinlich bereit", "unknown": "Zu bewerten", "unavailable": "Zu bewerten", "loading": "Wird geladen…", "error": "Nicht verfügbar", "open": "Muskelkarte ansehen", "priorityZones": "Prioritäre Bereiche: {zones}",
+          "counts": { "leave_alone": "{count} zu schonen", "recovering": "{count} in Erholung", "probably_ready": "{count} wahrscheinlich bereit" },
+          "detail": { "leave_alone": "Ein oder mehrere Bereiche brauchen Ruhe", "recovering": "Muskelerholung läuft", "probably_ready": "Beanspruchte Bereiche wahrscheinlich verfügbar", "unknown": "Keine Einschätzung verfügbar", "unavailable": "Keine Einschätzung verfügbar", "loading": "Erholung wird geladen", "error": "Erholungsdaten nicht verfügbar" },
+          "panel": {
+            "leave_alone": { "title": "Bereiche erholen lassen", "copy": "Prüfe die Karte, bevor du diese Muskeln erneut trainierst." },
+            "recovering": { "title": "Erholung läuft", "copy": "Die Karte zeigt die Bereiche, die sich noch erholen." },
+            "probably_ready": { "title": "Bereiche wahrscheinlich verfügbar", "copy": "Sieh dir die Detailschätzung auf der Muskelkarte an." },
+            "unknown": { "title": "Erholung zu bewerten", "copy": "Keine kürzlich erfasste Belastung erlaubt bisher eine Einschätzung." },
+            "unavailable": { "title": "Erholung zu bewerten", "copy": "Keine kürzlich erfasste Belastung erlaubt bisher eine Einschätzung." },
+            "loading": { "title": "Erholung wird geladen", "copy": "Deine Muskelschätzungen werden vorbereitet." },
+            "error": { "title": "Erholung nicht verfügbar", "copy": "Die Erholungsdaten konnten nicht geladen werden." }
+          }
+        }
       },
       "recoveryModal": {
         "eyebrow": "Heutiger Status",

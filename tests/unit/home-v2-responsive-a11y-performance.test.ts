@@ -16,8 +16,8 @@ describe('Home V2 responsive and accessibility guard', () => {
   it('keeps one adaptive Home implementation without a desktop fork', () => {
     expect(home).not.toMatch(/DesktopDashboard|MobileHome|window\.innerWidth|useMediaQuery/)
     expect(css).toMatch(/\.shell\s*\{[^}]*width:\s*100%/)
-    expect(css).toMatch(/\.statusGrid\s*\{[^}]*grid-template-columns:\s*1fr/)
-    expect(css).toMatch(/@media \(min-width: 700px\)[\s\S]*\.statusGrid/)
+    expect(css).toMatch(/\.statusCockpit\s*\{/)
+    expect(css).not.toMatch(/@media \(min-width: 700px\)[\s\S]*\.statusGrid/)
     expect(css).toMatch(/\.intelligenceGrid\s*\{[^}]*minmax\(min\(100%,340px\),1fr\)/)
     const shellRule = css.match(/\.shell\s*\{([^}]*)\}/)?.[1] ?? ''
     const heroRule = css.match(/\.hero\s*\{([^}]*)\}/)?.[1] ?? ''
@@ -29,6 +29,9 @@ describe('Home V2 responsive and accessibility guard', () => {
     expect(css).toMatch(/\.button:focus-visible/)
     expect(css).toMatch(/\.progressionLink:focus-visible/)
     expect(css).toMatch(/\.intelligenceCta:focus-visible/)
+    expect(css).toMatch(/\.statusSignal:focus-visible/)
+    expect(css).toMatch(/\.statusSignal\s*\{[^}]*min-height:\s*64px/)
+    expect(css).toMatch(/\.statusAction\s*\{[^}]*min-height:\s*48px/)
     expect(css).toMatch(/\.progressionLink\s*\{[^}]*min-height:\s*44px/)
     expect(css).toMatch(/\.intelligenceCta\s*\{[^}]*min-height:\s*44px/)
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none/)
@@ -38,12 +41,12 @@ describe('Home V2 responsive and accessibility guard', () => {
   it('exposes loading and error states to assistive technology', () => {
     expect(hero).toContain('aria-busy="true"')
     expect(hero).toContain('role="status"')
-    expect(dailyStatus).toContain("aria-busy={state === 'loading'}")
-    expect(dailyStatus).toContain("role={state === 'error' ? 'status' : undefined}")
+    expect(dailyStatus).toContain('aria-busy={busy}')
+    expect(dailyStatus).toContain("role={presentation[selectedDomain].status === 'error' ? 'status' : 'region'}")
     expect(progression).toContain("aria-busy={state === 'loading'}")
     expect(athena).toContain("aria-busy={insight.type === 'loading'}")
     expect(coach).toContain('aria-busy="true"')
-    expect(dailyStatus).toContain("nutritionStatus === 'ready'")
+    expect(dailyStatus).toContain('nutrition.caloriesConsumed != null')
     expect(progression).not.toContain("progression.state === 'error' ? 0")
   })
 

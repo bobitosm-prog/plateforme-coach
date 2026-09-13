@@ -2969,9 +2969,56 @@
       },
       "dailyStatus": {
         "title": "Today’s status",
-        "training": { "label": "Training", "scheduled": "To do", "completed": "Completed", "rest": "Rest", "empty": "Nothing planned", "loading": "Loading…", "error": "Unavailable", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}" },
-        "nutrition": { "label": "Nutrition", "loading": "Loading…", "ready": "In progress", "empty": "No entries", "error": "Unavailable", "protein": "Protein", "carbs": "Carbs", "fat": "Fat" },
-        "recovery": { "label": "Recovery", "leave_alone": "Leave to recover", "recovering": "Recovering", "probably_ready": "Probably ready", "unknown": "To assess", "unavailable": "To assess", "loading": "Loading…", "error": "Unavailable", "open": "View muscle map" }
+        "detailsLabel": "Today’s status details",
+        "summary": {
+          "eyebrow": "Your balance today",
+          "indicators": "Training, nutrition and recovery indicators",
+          "error": { "title": "Some data is unavailable", "copy": "Open each section to see the information that is available." },
+          "loading": { "title": "Updating your status", "copy": "Today’s data is loading." },
+          "protect_recovery": { "title": "Make recovery your priority", "copy": "At least one area still needs rest." },
+          "training_planned": { "title": "Today’s workout is waiting", "copy": "Your planned training is still to be completed." },
+          "nutrition_incomplete": { "title": "Complete your nutrition log", "copy": "Open Nutrition to fill in your day." },
+          "on_track": { "title": "Your day is well documented", "copy": "The available information is up to date." }
+        },
+        "actions": { "start_session": "Start", "open_session": "View workout", "open_program": "View program", "start_free_session": "Free workout", "open_nutrition": "Open Nutrition", "open_recovery": "View map" },
+        "training": {
+          "label": "Training", "scheduled": "To do", "completed": "Completed", "rest": "Rest", "empty": "Nothing planned", "loading": "Loading…", "error": "Unavailable", "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+          "weekly": "{completed} workout(s) completed out of {planned} planned this week",
+          "detail": { "scheduled": "Workout planned today", "completed": "Workout completed today", "rest": "Planned rest day", "empty": "No workout planned", "loading": "Loading workout", "error": "Training data unavailable" },
+          "panel": {
+            "scheduled": { "title": "Planned workout", "copy": "See the exercises planned for today." },
+            "completed": { "title": "Workout completed", "copy": "Today’s workout recap is available." },
+            "rest": { "title": "Rest day", "copy": "Open your program if you want to see what is next." },
+            "empty": { "title": "No workout today", "copy": "You can open your program or start a free workout." },
+            "loading": { "title": "Loading training", "copy": "Today’s workout is on its way." },
+            "error": { "title": "Training unavailable", "copy": "Workout data could not be loaded." }
+          }
+        },
+        "nutrition": {
+          "label": "Nutrition", "loading": "Loading…", "ready": "Logged", "incomplete": "To complete", "empty": "No entries", "error": "Unavailable", "protein": "Protein", "carbs": "Carbs", "fat": "Fat", "calories": "{consumed} / {target} kcal",
+          "detail": { "ready": "Calories and target available", "incomplete": "Partial nutrition data", "empty": "No meals logged", "loading": "Loading nutrition log", "error": "Nutrition data unavailable" },
+          "panel": {
+            "ready": { "title": "Nutrition logged", "copy": "See the details of your day in Nutrition." },
+            "incomplete": { "title": "Nutrition log to complete", "copy": "Some nutrition information is still missing." },
+            "empty": { "title": "Your nutrition log is empty", "copy": "Open Nutrition to log your first meal." },
+            "loading": { "title": "Loading nutrition", "copy": "Your nutrition data is on its way." },
+            "error": { "title": "Nutrition unavailable", "copy": "Nutrition data could not be loaded." }
+          }
+        },
+        "recovery": {
+          "label": "Recovery", "leave_alone": "Leave to recover", "recovering": "Recovering", "probably_ready": "Probably ready", "unknown": "To assess", "unavailable": "To assess", "loading": "Loading…", "error": "Unavailable", "open": "View muscle map", "priorityZones": "Priority areas: {zones}",
+          "counts": { "leave_alone": "{count} to leave", "recovering": "{count} recovering", "probably_ready": "{count} probably ready" },
+          "detail": { "leave_alone": "One or more areas need rest", "recovering": "Muscle recovery in progress", "probably_ready": "Worked areas are probably available", "unknown": "No estimate available", "unavailable": "No estimate available", "loading": "Loading recovery", "error": "Recovery data unavailable" },
+          "panel": {
+            "leave_alone": { "title": "Areas to leave to recover", "copy": "Check the map before training these muscles again." },
+            "recovering": { "title": "Recovery in progress", "copy": "The map details the areas still recovering." },
+            "probably_ready": { "title": "Areas probably available", "copy": "See the detailed estimate on the muscle map." },
+            "unknown": { "title": "Recovery to assess", "copy": "No recent recorded effort supports an estimate yet." },
+            "unavailable": { "title": "Recovery to assess", "copy": "No recent recorded effort supports an estimate yet." },
+            "loading": { "title": "Loading recovery", "copy": "Your muscle estimates are on their way." },
+            "error": { "title": "Recovery unavailable", "copy": "Recovery data could not be loaded." }
+          }
+        }
       },
       "recoveryModal": {
         "eyebrow": "Today’s status",
