@@ -71,6 +71,17 @@ describe('Athena client context', () => {
     expect(context.nutrition.habit).toBeNull()
   })
 
+  it('reads the new nutrition habit independently from the dietary pattern', () => {
+    const context = buildAthenaClientContext({
+      dietary_type: 'pescatarian',
+      onboarding_answers: { nutrition_habit_id: 'try_well' },
+    }, now)
+
+    expect(context.nutrition.habit).toBe('balanced_intent')
+    expect(context.nutrition.dietaryPattern).toBe('pescatarian')
+    expect(context.dataQuality.warnings).not.toContain('legacy_dietary_type_contains_nutrition_habit')
+  })
+
   it('reports a conflict between the preserved wish and canonical objective', () => {
     const context = buildAthenaClientContext({
       objective: 'cut',

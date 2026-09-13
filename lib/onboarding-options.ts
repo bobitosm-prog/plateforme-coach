@@ -35,6 +35,15 @@ export const NUTRITION_OPTS: OnboardingOption[] = [
   { id: 'specific_diet', dbLabel: 'Regime specifique', pts: 4, icon: 'eco' },
 ]
 
+// Actual dietary pattern, kept separate from the client's tracking habit above.
+export const DIETARY_PATTERN_OPTS: OnboardingOption[] = [
+  { id: 'omnivore', dbLabel: 'omnivore', pts: 0, icon: 'restaurant' },
+  { id: 'flexitarian', dbLabel: 'flexitarian', pts: 0, icon: 'eco' },
+  { id: 'pescatarian', dbLabel: 'pescatarian', pts: 0, icon: 'restaurant' },
+  { id: 'vegetarian', dbLabel: 'vegetarian', pts: 0, icon: 'eco' },
+  { id: 'vegan', dbLabel: 'vegan', pts: 0, icon: 'eco' },
+]
+
 export const EXPERIENCE_OPTS: OnboardingOption[] = [
   { id: 'beginner', dbLabel: 'Debutant <6 mois', pts: 1, icon: 'school' },
   { id: 'intermediate', dbLabel: 'Intermediaire 6m-2ans', pts: 3, icon: 'trending_up' },

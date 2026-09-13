@@ -169,17 +169,26 @@ const NUTRITION_HABITS: Record<string, NutritionHabit> = {
   'régime spécifique': 'specific_diet_declared',
 }
 
-function resolveNutritionClassification(value: unknown): {
+const NUTRITION_HABIT_IDS: Record<string, NutritionHabit> = {
+  no_attention: 'not_tracking',
+  try_well: 'balanced_intent',
+  macros: 'macro_tracking',
+  specific_diet: 'specific_diet_declared',
+}
+
+function resolveNutritionClassification(value: unknown, habitIdValue: unknown): {
   habit: NutritionHabit | null
   dietaryPattern: string | null
   legacyFieldMisused: boolean
 } {
   const dietaryType = cleanString(value)
-  if (!dietaryType) return { habit: null, dietaryPattern: null, legacyFieldMisused: false }
-  const habit = NUTRITION_HABITS[dietaryType.toLowerCase()] ?? null
-  return habit
-    ? { habit, dietaryPattern: null, legacyFieldMisused: true }
-    : { habit: null, dietaryPattern: dietaryType, legacyFieldMisused: false }
+  const declaredHabit = NUTRITION_HABIT_IDS[cleanString(habitIdValue) ?? ''] ?? null
+  const legacyHabit = dietaryType ? NUTRITION_HABITS[dietaryType.toLowerCase()] ?? null : null
+  return {
+    habit: declaredHabit ?? legacyHabit,
+    dietaryPattern: legacyHabit ? null : dietaryType,
+    legacyFieldMisused: legacyHabit !== null,
+  }
 }
 
 function validIsoDate(value: unknown): string | null {
@@ -203,7 +212,10 @@ export function buildAthenaClientContext(
 ): AthenaClientContext {
   const onboarding = record(profile.onboarding_answers)
   const mealPreferences = record(profile.meal_preferences)
-  const nutritionClassification = resolveNutritionClassification(profile.dietary_type)
+  const nutritionClassification = resolveNutritionClassification(
+    profile.dietary_type,
+    onboarding.nutrition_habit_id,
+  )
   const goal = resolveGoal(profile.objective, onboarding.primary_goal_id)
   const sessions = finiteNumber(onboarding.sessions_per_week)
   const sessionsPerWeek = sessions && Number.isInteger(sessions) && sessions <= 7 ? sessions : null

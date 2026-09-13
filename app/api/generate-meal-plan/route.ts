@@ -73,11 +73,15 @@ Remplace par : lait d'amande/soja/avoine, yaourt végétal, fromages affinés (s
 - Déjeuner : TOUJOURS inclure oeufs, tofu, ou fromage comme source principale
 - Collation : whey, yaourt grec, fromage blanc, amandes
 - Dîner : TOUJOURS inclure une source DIFFÉRENTE du déjeuner`
-    : diet === 'pescetarien'
+    : diet === 'pescatarian' || diet === 'pescetarien'
     ? `- Petit-déjeuner : oeufs, yaourt grec, fromage blanc, ou whey
 - Déjeuner : TOUJOURS inclure du POISSON comme source principale (saumon, thon, cabillaud, crevettes — 150-250g)
 - Collation : whey, yaourt grec, fromage blanc, oeufs
 - Dîner : TOUJOURS inclure du POISSON DIFFÉRENT du déjeuner (saumon au déj → cabillaud au dîner)`
+    : diet === 'flexitarian'
+    ? `- Varie les protéines végétales (lentilles, pois chiches, tofu), les oeufs, le poisson et les viandes non transformées
+- Ne rends pas la viande obligatoire à chaque déjeuner ou dîner
+- Utilise des sources protéiques différentes au fil de la journée`
     : diet === 'keto'
     ? `- Petit-déjeuner : oeufs (2-3), bacon, avocat, fromage — PAS de pain ni céréales
 - Déjeuner : VIANDE ou POISSON gras (150-250g) + légumes verts sautés à l'huile + avocat/fromage
@@ -102,6 +106,7 @@ Tu generes UN jour de plan alimentaire en JSON.
 ═══ OBJECTIF CALORIQUE DU CLIENT : ${kcal} KCAL/JOUR ═══
 Protéines : ${prot}g | Glucides : ${carbs}g | Lipides : ${fat}g
 Régime : ${diet}
+Restrictions déclarées par le client : ${params.dietary_restrictions || 'aucune'}
 
 OBJECTIF DU CLIENT : ${objectiveBlock}
 ${params.activity_level ? `Niveau d'activité : ${params.activity_level}` : ''}
@@ -432,7 +437,8 @@ async function generateOneDay(
 ${objReminder}
 
 OBJECTIFS STRICTS : ${kcal} kcal (±50 MAX), Protéines ${params.protein_goal}g (max ${Math.round((params.protein_goal || 150) * 1.1)}g), Glucides ${params.carbs_goal}g (min ${Math.round((params.carbs_goal || 250) * 0.9)}g), Lipides ${params.fat_goal}g (max ${Math.round((params.fat_goal || 70) * 1.1)}g)
-Allergènes : ${(params.allergies || []).join(', ') || 'aucun'}
+Allergènes structurés : ${(params.allergies || []).join(', ') || 'aucun'}
+Restrictions déclarées : ${params.dietary_restrictions || 'aucune'}
 ${params.disliked_foods?.length ? `Aliments à ÉVITER (le client n'aime pas) : ${params.disliked_foods.join(', ')}` : ''}
 
 ${prefHint ? `PRÉFÉRENCES DU CLIENT :\n${prefHint}\nUtilise ces aliments en VARIANT chaque jour. Ne répète PAS le même petit-déjeuner 2 jours de suite.\n` : ''}ALIMENTS DISPONIBLES (valeurs /100g) :

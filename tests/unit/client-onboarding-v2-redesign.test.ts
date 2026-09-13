@@ -24,6 +24,13 @@ describe('client onboarding v2 redesign', () => {
     expect(source).toContain("typeof a.primary_goal_id==='string'")
   })
 
+  it('stores nutrition habits separately from the real dietary pattern', () => {
+    expect(source).toContain('nutrition_habit_id:NUTRITION_OPTS[nutrition].id')
+    expect(source).toContain('dietary_type:DIETARY_PATTERN_OPTS[dietaryPattern].dbLabel')
+    expect(source).toContain('dietaryPattern!==null')
+    expect(source).toContain('dietary_restrictions:')
+  })
+
   it('keeps optional content outside the main-step count', () => {
     expect(source).toContain('advancedOpen')
     expect(source).toContain('SoloStep9PhotoBody')

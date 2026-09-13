@@ -31,6 +31,7 @@ export interface MealPlanParams {
   fat_goal: number
   dietary_type: string
   allergies: string[]
+  dietary_restrictions: string
   disliked_foods: string[]
   objective_mode: ObjectiveMode
   caloric_adjustment: number
@@ -44,21 +45,35 @@ export interface MealPlanParams {
   }
 }
 
+type UnknownRecord = Record<string, unknown>
+
+function asRecord(value: unknown): UnknownRecord {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as UnknownRecord
+    : {}
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : []
+}
+
 function mapObjectiveToMode(objective: string | null | undefined): ObjectiveMode {
   if (!objective) return 'maintien'
   const o = objective.toLowerCase().trim()
   if (o === 'cut' || o.includes('perdre') || o.includes('seche') || o.includes('sèche')) return 'seche'
-  if (o === 'bulk' || o.includes('muscle') || o.includes('prendre')) return 'bulk'
+  if (o === 'mass' || o === 'bulk' || o.includes('muscle') || o.includes('prendre')) return 'bulk'
   return 'maintien'
 }
 
-function extractMealFoodNames(mealPrefs: any): MealPlanParams['meal_food_names'] {
-  const mp = mealPrefs && typeof mealPrefs === 'object' && !Array.isArray(mealPrefs) ? mealPrefs : {}
+function extractMealFoodNames(mealPrefs: unknown): MealPlanParams['meal_food_names'] {
+  const mp = asRecord(mealPrefs)
   return {
-    morning: mp.breakfast ?? mp.petit_dejeuner ?? [],
-    lunch: mp.lunch ?? mp.dejeuner ?? [],
-    snack: mp.snack ?? mp.collation ?? [],
-    dinner: mp.dinner ?? mp.diner ?? [],
+    morning: asStringArray(mp.breakfast ?? mp.petit_dejeuner),
+    lunch: asStringArray(mp.lunch ?? mp.dejeuner),
+    snack: asStringArray(mp.snack ?? mp.collation),
+    dinner: asStringArray(mp.dinner ?? mp.diner),
   }
 }
 
@@ -72,6 +87,10 @@ export function buildMealPlanParams(
   const carbs_goal = overrides?.carbs_goal ?? profile.carbs_goal ?? Math.round((calorie_goal - protein_goal * 4 - fat_goal * 9) / 4)
   const tdee = profile.tdee ?? calorie_goal
   const caloric_adjustment = calorie_goal - tdee
+  const mealPreferences = asRecord(profile.meal_preferences)
+  const dietaryRestrictions = typeof mealPreferences.dietary_restrictions === 'string'
+    ? mealPreferences.dietary_restrictions.trim().slice(0, 500)
+    : ''
 
   return {
     calorie_goal,
@@ -80,9 +99,8 @@ export function buildMealPlanParams(
     fat_goal,
     dietary_type: profile.dietary_type ?? 'omnivore',
     allergies: Array.isArray(profile.allergies) ? profile.allergies : [],
-    disliked_foods: Array.isArray((profile.meal_preferences as any)?.disliked_foods)
-      ? (profile.meal_preferences as any).disliked_foods
-      : [],
+    dietary_restrictions: dietaryRestrictions,
+    disliked_foods: asStringArray(mealPreferences.disliked_foods),
     objective_mode: mapObjectiveToMode(profile.objective),
     caloric_adjustment,
     tdee,
