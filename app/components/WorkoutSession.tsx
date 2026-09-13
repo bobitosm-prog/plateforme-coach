@@ -648,7 +648,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaving(true)
     setSaveError(false)
     try {
-      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
       setDone(true)

@@ -591,18 +591,32 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       }
     } catch (error) { console.error('[workout-secondary] badges failed', error) }
 
+    const overloadRequests: Promise<void>[] = []
     for (const exercise of data.exercises) {
       if (!exercise.sets.length || (exercise.setsTarget && exercise.sets.length < exercise.setsTarget)) continue
       const reps = Number(exercise.sets[0].reps) || 0
       const weight = Number(exercise.sets[0].weight) || 0
       if (reps <= 0 || weight <= 0) continue
       if (!exercise.sets.every(set => Number(set.reps) === reps && Number(set.weight) === weight)) continue
-      fetch('/api/suggest-overload', {
+      overloadRequests.push(fetch('/api/suggest-overload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exerciseName: exercise.name, currentWeight: weight, currentReps: reps, setsCompleted: exercise.sets.length, setsTarget: exercise.setsTarget, sessionId: critical.sessionId }),
-      }).catch(() => console.warn('[workout-secondary] overload suggestion failed'))
+        body: JSON.stringify({
+          exerciseName: exercise.name,
+          exerciseId: exercise.exerciseId ?? null,
+          currentWeight: weight,
+          currentReps: reps,
+          setsCompleted: exercise.sets.length,
+          setsTarget: exercise.setsTarget,
+          targetReps: exercise.targetReps ?? null,
+          currentRirs: exercise.sets.map(set => set.rir ?? null),
+          sessionId: critical.sessionId,
+        }),
+      }).then(response => {
+        if (!response.ok) console.warn('[workout-secondary] overload suggestion rejected')
+      }).catch(() => console.warn('[workout-secondary] overload suggestion failed')))
     }
+    await Promise.all(overloadRequests)
     // Mark today's scheduled session as completed
     try {
       await supabase.from('scheduled_sessions').update({ completed: true, completed_at: new Date().toISOString() })

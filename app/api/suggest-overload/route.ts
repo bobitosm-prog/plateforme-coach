@@ -2,203 +2,174 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
+import {
+  deriveProgressionDecision,
+  type ProgressionHistorySet,
+} from '../../../lib/athena/progression-model'
+
+const requestSchema = z.object({
+  exerciseName: z.string().trim().min(1).max(200),
+  exerciseId: z.string().uuid().nullable().optional(),
+  currentWeight: z.number().positive().max(1000),
+  currentReps: z.number().int().min(1).max(100),
+  setsCompleted: z.number().int().min(1).max(20),
+  setsTarget: z.number().int().min(1).max(20),
+  targetReps: z.string().trim().min(1).max(20).nullable(),
+  currentRirs: z.array(z.number().int().min(0).max(4).nullable()).max(20),
+  sessionId: z.string().uuid(),
+}).strict()
+
+type HistoryRow = {
+  session_id?: unknown
+  weight?: unknown
+  reps?: unknown
+  rir?: unknown
+  completed?: unknown
+  created_at?: unknown
+  workout_sessions?: unknown
+}
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY required for suggest-overload')
+  if (!key) throw new Error('SUGGEST_OVERLOAD_NOT_CONFIGURED')
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key)
 }
 
+function relatedSessionIsCompleted(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(relatedSessionIsCompleted)
+  return typeof value === 'object' && value !== null && (value as { completed?: unknown }).completed === true
+}
+
+function historySet(row: HistoryRow): ProgressionHistorySet | null {
+  const sessionId = typeof row.session_id === 'string' ? row.session_id : null
+  const weight = typeof row.weight === 'number' ? row.weight : Number(row.weight)
+  const reps = typeof row.reps === 'number' ? row.reps : Number(row.reps)
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : null
+  const rirValue = row.rir === null || row.rir === undefined
+    ? null
+    : typeof row.rir === 'number' ? row.rir : Number(row.rir)
+  if (!sessionId || !Number.isFinite(weight) || !Number.isFinite(reps) || !createdAt) return null
+  return {
+    sessionId,
+    completed: row.completed === true,
+    sessionCompleted: relatedSessionIsCompleted(row.workout_sessions),
+    weight,
+    reps,
+    rir: rirValue !== null && Number.isFinite(rirValue) && rirValue >= 0 && rirValue <= 4 ? rirValue : null,
+    createdAt,
+  }
+}
+
 export async function POST(req: NextRequest) {
-  // ── Auth check ──
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
+    { cookies: { getAll: () => cookieStore.getAll() } },
   )
   const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
-  // ── Rate limit ──
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`overload:${ip}`, 10, 60000)
-  if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  const rateLimit = checkRateLimit(`overload:${ip}`, 10, 60_000)
+  if (!rateLimit.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+
+  const parsed = requestSchema.safeParse(await req.json().catch(() => null))
+  if (!parsed.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+
+  const blocked = await guardCoachManagedCapabilities(user.id)
+  if (blocked) return blocked
 
   try {
-    const body = await req.json()
-    const { exerciseName, currentWeight, currentReps, setsCompleted, setsTarget, sessionId } = body
-    const userId = user.id
-
-    // ── Gate: coach-managed capabilities do not include AI ──
-    const blocked = await guardCoachManagedCapabilities(userId)
-    if (blocked) return blocked
-
-    const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
-
-    // ── Input validation ──
-    if (!exerciseName || typeof exerciseName !== 'string' || exerciseName.length > 200) {
-      return NextResponse.json({ error: 'exerciseName invalide' }, { status: 400 })
-    }
-    if (!currentWeight || currentWeight <= 0 || !currentReps || currentReps <= 0) {
-      return NextResponse.json({ error: 'currentWeight et currentReps doivent être > 0' }, { status: 400 })
-    }
-    if (setsCompleted < setsTarget) {
-      return NextResponse.json({ error: 'Toutes les séries doivent être réussies', skipped: true }, { status: 200 })
-    }
-
+    const input = parsed.data
     const supabase = getServiceSupabase()
+    const { data: origin, error: originError } = await supabase
+      .from('workout_sessions')
+      .select('id')
+      .eq('id', input.sessionId)
+      .eq('user_id', user.id)
+      .eq('completed', true)
+      .maybeSingle()
+    if (originError || !origin) {
+      return NextResponse.json({ skipped: true, reason: 'completed_session_not_found' })
+    }
 
-    // ── Check for existing pending suggestion ──
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('progressive_overload_suggestions')
       .select('id')
-      .eq('user_id', userId)
-      .eq('exercise_name', exerciseName)
+      .eq('user_id', user.id)
+      .eq('exercise_name', input.exerciseName)
       .eq('status', 'pending')
       .maybeSingle()
+    if (existingError) return NextResponse.json({ error: 'Lecture impossible' }, { status: 503 })
+    if (existing) return NextResponse.json({ skipped: true, reason: 'already_pending' })
 
-    if (existing) {
-      return NextResponse.json({ skipped: true, reason: 'already_pending' })
-    }
-
-    // ── Fetch last 4 sessions history for this exercise ──
-    const { data: history } = await supabase
+    let historyQuery = supabase
       .from('workout_sets')
-      .select('weight, reps, completed, set_number, session_id, created_at')
-      .eq('user_id', userId)
-      .eq('exercise_name', exerciseName)
+      .select('session_id, weight, reps, rir, completed, created_at, workout_sessions!inner(completed)')
+      .eq('user_id', user.id)
+      .eq('completed', true)
+      .eq('workout_sessions.completed', true)
       .order('created_at', { ascending: false })
-      .limit(40)
+      .limit(60)
+    historyQuery = input.exerciseId
+      ? historyQuery.eq('exercise_id', input.exerciseId)
+      : historyQuery.eq('exercise_name', input.exerciseName)
+    const { data: historyRows, error: historyError } = await historyQuery
+    if (historyError) return NextResponse.json({ error: 'Historique indisponible' }, { status: 503 })
 
-    // Format history for the prompt
-    const sessionGroups: Record<string, { date: string; sets: { weight: number; reps: number; completed: boolean }[] }> = {}
-    for (const s of (history || [])) {
-      const date = s.created_at.split('T')[0]
-      const key = s.session_id || date
-      if (!sessionGroups[key]) sessionGroups[key] = { date, sets: [] }
-      sessionGroups[key].sets.push({ weight: s.weight, reps: s.reps, completed: s.completed !== false })
-    }
-    const historyLines = Object.values(sessionGroups)
-      .slice(0, 4)
-      .map(g => {
-        const total = g.sets.length
-        const completed = g.sets.filter(s => s.completed).length
-        const weights = [...new Set(g.sets.map(s => s.weight))]
-        const reps = [...new Set(g.sets.map(s => s.reps))]
-        return `${g.date} : ${total}x${reps.join('/')}@${weights.join('/')}kg (${completed}/${total} réussies)`
-      })
-      .join('\n')
-
-    // ── Call Claude API ──
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        temperature: 0.3,
-        system: `Tu es un coach fitness expert en progressive overload.
-Tu réponds UNIQUEMENT en JSON valide, aucun texte avant ou après.
-Format strict : {"weight": number, "reps": number, "reasoning": string}`,
-        messages: [{
-          role: 'user',
-          content: `Le client vient de finir ${setsCompleted}x${currentReps}@${currentWeight}kg sur l'exercice '${exerciseName}', toutes séries réussies.
-
-Historique des dernières séances (récent → ancien) :
-${historyLines || 'Aucun historique disponible (première séance)'}
-
-Règles de progression :
-- Exos composés lourds (squat, bench press, deadlift, overhead press, row) : +2.5 à +5kg
-- Exos isolation moyens (leg curl, leg extension, lat pulldown) : +2.5kg
-- Exos petits muscles isolation (curl biceps, lateral raise, tricep extension, face pull) : +1.25 à +2.5kg
-- Si l'historique montre une stagnation (3+ séances même poids réussies) : pousser plus haut (+5kg composé, +2.5kg isolation)
-- Si la progression est récente (1 séance réussie seulement) : prudent (+2.5kg max composé, +1.25kg isolation)
-- Garder le même nombre de reps cibles
-
-Suggère la prochaine charge. Reasoning concis (max 100 chars), français, ton motivant.`,
-        }],
-      }),
+    const history = ((historyRows ?? []) as HistoryRow[]).flatMap(row => historySet(row) ?? [])
+    const decision = deriveProgressionDecision({
+      currentWeight: input.currentWeight,
+      currentReps: input.currentReps,
+      setsCompleted: input.setsCompleted,
+      setsTarget: input.setsTarget,
+      targetReps: input.targetReps,
+      currentRirs: input.currentRirs,
+      history,
     })
-
-    if (!res.ok) {
-      console.error('[suggest-overload] Claude API error:', res.status, await res.text())
-      return NextResponse.json({ error: 'Erreur IA' }, { status: 500 })
+    if (decision.action === 'hold') {
+      return NextResponse.json({ skipped: true, reason: decision.reason })
     }
 
-    const data = await res.json()
-    const text = data.content?.[0]?.text || ''
-
-    // ── Parse JSON response ──
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error('[suggest-overload] Invalid JSON from Claude:', text)
-      return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
-    }
-
-    let suggestion: { weight: number; reps: number; reasoning: string }
-    try {
-      suggestion = JSON.parse(jsonMatch[0])
-    } catch {
-      console.error('[suggest-overload] JSON parse failed:', jsonMatch[0])
-      return NextResponse.json({ error: 'JSON parse échoué' }, { status: 500 })
-    }
-
-    if (!suggestion.weight || suggestion.weight <= 0) {
-      return NextResponse.json({ error: 'Suggestion invalide' }, { status: 500 })
-    }
-
-    // ── Insert suggestion in DB ──
     const { error: insertError } = await supabase
       .from('progressive_overload_suggestions')
       .insert({
-        user_id: userId,
-        exercise_name: exerciseName,
-        current_weight: currentWeight,
-        current_reps: currentReps,
-        suggested_weight: suggestion.weight,
-        suggested_reps: suggestion.reps || currentReps,
-        reasoning: suggestion.reasoning || '',
+        user_id: user.id,
+        exercise_name: input.exerciseName,
+        current_weight: input.currentWeight,
+        current_reps: input.currentReps,
+        suggested_weight: decision.suggestedWeight,
+        suggested_reps: decision.suggestedReps,
+        reasoning: decision.reasoning,
         status: 'pending',
-        session_id_origin: sessionId || null,
+        session_id_origin: input.sessionId,
       })
-
     if (insertError) {
-      console.error('[suggest-overload] Insert error:', insertError)
       return NextResponse.json({
         skipped: true,
         reason: insertError.code === '23505' ? 'already_pending' : 'insert_failed',
-        debug: {
-          message: insertError.message,
-          code: insertError.code,
-          details: insertError.details,
-          hint: insertError.hint
-        }
       })
     }
 
     return NextResponse.json({
       ok: true,
       suggestion: {
-        exerciseName,
-        currentWeight,
-        suggestedWeight: suggestion.weight,
-        suggestedReps: suggestion.reps || currentReps,
-        reasoning: suggestion.reasoning,
+        exerciseName: input.exerciseName,
+        currentWeight: input.currentWeight,
+        suggestedWeight: decision.suggestedWeight,
+        suggestedReps: decision.suggestedReps,
+        reasoning: decision.reasoning,
+        action: decision.action,
+        confidence: decision.confidence,
+        evidenceSessions: decision.evidenceSessions,
       },
     })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    console.error('[suggest-overload] Exception:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch {
+    console.error('[suggest-overload] unexpected failure')
+    return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
   }
 }

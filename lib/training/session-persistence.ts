@@ -11,6 +11,7 @@ export interface CompletedWorkoutExercise {
   muscle: string
   exerciseId?: string | null
   setsTarget: number
+  targetReps?: string | null
   sets: CompletedWorkoutSet[]
 }
 
