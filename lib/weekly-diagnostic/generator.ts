@@ -8,6 +8,8 @@
  */
 import webpush from 'web-push'
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
+import { buildAthenaScientificPolicyPrompt } from '../athena/scientific-policy'
+import { validateAthenaWeeklyOutput } from '../athena/weekly-output'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -99,6 +101,7 @@ export async function generateWeeklyDiagnostic(
       supabase.from('workout_sessions')
         .select('id, date, completed')
         .eq('user_id', userId)
+        .eq('completed', true)
         .gte('date', weekStartStr)
         .lt('date', weekEndStr),
       supabase.from('weekly_diagnostics')
@@ -175,8 +178,10 @@ export async function generateWeeklyDiagnostic(
     }
 
     // 7. BUILD PROMPT
-    const systemPrompt = `Tu es le coach IA personnel de l'utilisateur MoovX.
+    const systemPrompt = `Tu es Athena, le coach numérique MoovX.
 Tu analyses sa semaine d'entrainement et de nutrition pour produire un diagnostic hebdomadaire actionnable.
+
+${buildAthenaScientificPolicyPrompt()}
 
 <expertise>
 - 20 ans d'expérience en musculation, powerlifting, nutrition sportive
@@ -187,9 +192,9 @@ Tu analyses sa semaine d'entrainement et de nutrition pour produire un diagnosti
 <regles_absolues>
 1. Tu te bases UNIQUEMENT sur les données fournies — pas d'invention
 2. Si une donnée manque, dis-le explicitement dans raisonnement
-3. Tes ajustements doivent être CHIFFRÉS et ACTIONNABLES (pas "mange mieux")
+3. Propose le plus petit ajustement observable. Aucun changement calorique avec moins de 5 jours nutritionnels et 3 mesures de poids.
 4. Tu compares à la semaine précédente si elle existe
-5. Score 0-100 calibré : 100 = perfection inhumaine, 80 = excellent, 60 = bien, 40 = à corriger
+5. Ne produis aucun score de santé : score_semaine est calculé par le serveur à partir de l'adhérence et de la couverture.
 6. Maximum 3 points forts + 2 alertes (focus, pas de liste à rallonge)
 7. Ajustements alignés sur l'objectif déclaré (perte/maintien/prise)
 8. Bienveillant mais direct — pas de complaisance
@@ -235,12 +240,7 @@ Objectif S-1: ${prevDiagRes.data.objectif_semaine_prochaine}
 </previous_diagnostic>` : ''}
 </weekly_data>
 
-Analyse cette semaine et produis un diagnostic complet via l'outil weekly_diagnostic_output.
-
-Pense étape par étape avant de répondre :
-1. Quel est le PATTERN dominant cette semaine ?
-2. L'utilisateur progresse-t-il vers son objectif ?
-3. Quelles sont les 2 actions prioritaires pour la semaine prochaine ?`
+Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_output. Retourne seulement un résumé factuel, les limites de couverture et au maximum deux actions observables. N'expose aucun raisonnement interne.`
 
     // 8. CALL OPUS 4.7 WITH TOOL_USE
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -275,9 +275,9 @@ Pense étape par étape avant de répondre :
                   training_volume_delta_pct: { type: 'integer', description: 'Variation volume conseillée en %' },
                 },
               },
-              exercice_a_ajouter: { type: 'string', description: 'Un exo précis avec sets x reps' },
+              exercice_a_ajouter: { type: 'string', description: 'Toujours une chaîne vide : les agrégats ne justifient aucun nouvel exercice' },
               objectif_semaine_prochaine: { type: 'string', description: '1 objectif chiffré et SMART' },
-              raisonnement: { type: 'string', description: 'Chain-of-thought IA, 100-200 mots' },
+              raisonnement: { type: 'string', description: 'Résumé factuel des données et limites, sans raisonnement interne, 60-120 mots' },
             },
           },
         }],
@@ -299,7 +299,10 @@ Pense étape par étape avant de répondre :
       return { error: 'Format IA invalide' }
     }
 
-    const aiOutput = unwrapToolInput(toolUseBlock.input)
+    const aiOutput = validateAthenaWeeklyOutput(unwrapToolInput(toolUseBlock.input), {
+      adherencePct, nutritionDays: daysLogged, weightMeasurements: weightLogs.length,
+      completedSessions: sessionsDone, plannedSessions: sessionsPlanned,
+    })
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 
     // 9. PERSIST
@@ -349,9 +352,9 @@ Pense étape par étape avant de répondre :
 
     return { diagnostic_id: saved.id, diagnostic: saved }
 
-  } catch (e: any) {
-    console.error('[generateWeeklyDiagnostic] Error:', e.message)
-    return { error: e.message || 'Erreur interne' }
+  } catch {
+    console.error('[generateWeeklyDiagnostic] unexpected failure')
+    return { error: 'Diagnostic temporairement indisponible' }
   }
 }
 
