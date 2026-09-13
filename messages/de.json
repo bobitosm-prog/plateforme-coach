@@ -1538,7 +1538,9 @@
     "summaryProtein": "Protein",
     "summaryCarbs": "Kohlenhydrate",
     "summaryFat": "Fett",
-    "disclaimer": "Dein Ernährungsplan und deine Makros werden neu berechnet. Dein Trainingsplan wird an dein neues Ziel angepasst."
+    "disclaimer": "Deine Ziele, dein Ernährungsplan und dein Trainingsprogramm werden an dieses neue Ziel angepasst.",
+    "disclaimerManaged": "Deine Ziele und Makros werden aktualisiert. Von deinem Coach verwaltete Pläne werden nicht ersetzt.",
+    "saveError": "Die Änderung konnte nicht gespeichert werden. Bitte versuche es erneut."
   },
   "badges": {
     "title": "MEINE ABZEICHEN",
@@ -2069,6 +2071,7 @@
         "objective": "Ziel",
         "objMasse": "MASSE",
         "objPerte": "FETTABBAU",
+        "objMaintain": "ERHALTUNG",
         "objForce": "KRAFT",
         "objEndurance": "AUSDAUER",
         "level": "Niveau",
@@ -2078,6 +2081,7 @@
         "daysPerWeek": "Tage / Woche",
         "duration": "Dauer (Min.)",
         "equipment": "Ausrüstung",
+        "eqProfile": "AUS MEINEM PROFIL",
         "eqSalle": "STUDIO",
         "eqHalteres": "HANTELN",
         "eqSansMateriel": "EIGENGEWICHT",

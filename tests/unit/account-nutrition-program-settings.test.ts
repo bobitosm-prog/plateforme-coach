@@ -12,6 +12,7 @@ const page = readFileSync('app/(application)/page.tsx', 'utf8')
 const tabs = readFileSync('app/hooks/useClientDashboard.ts', 'utf8')
 const generationContract = readFileSync('lib/nutrition/nutrition-plan-generation.ts', 'utf8')
 const generationRoute = readFileSync('app/api/generate-meal-plan/route.ts', 'utf8')
+const generationParams = readFileSync('lib/meal-plan/build-generation-params.ts', 'utf8')
 const messages = readFileSync('messages/fr.json', 'utf8')
 
 describe('Account nutrition program architecture', () => {
@@ -69,7 +70,8 @@ describe('Nutrition generation relocation', () => {
       'caloric_adjustment',
       'activity_level',
       'meal_food_names',
-    ]) expect(preferences).toContain(field)
+    ]) expect(generationParams).toContain(field)
+    expect(preferences).toContain('buildMealPlanParams(generationProfile)')
     expect(preferences).toContain("parsed.index}/7")
     expect(program).not.toContain('durationWeeks')
     expect(generationContract).toContain('durationWeeks: NutritionPlanDurationWeeks')

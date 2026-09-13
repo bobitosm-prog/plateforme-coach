@@ -17,6 +17,7 @@ export interface GenerateProgramInput {
   priorities: string[]
   notes: string
   gender: string
+  clientContext?: string
 }
 
 type GeneratedExercise = ValidatedAthenaProgram['days'][number]['exercises'][number] & {
@@ -65,7 +66,9 @@ ${buildAthenaTrainingPolicyPrompt({
     equipment: input.equipment,
     priorities: input.priorities,
     notes: input.notes,
-  })}
+})}
+
+${input.clientContext || ''}
 
 ${catalog.length > 0 ? `
 RÉFÉRENTIEL D'EXERCICES (${catalog.length} exercices) :

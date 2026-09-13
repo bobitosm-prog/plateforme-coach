@@ -19,6 +19,8 @@ import {
 import { TechniqueExplanationCards } from '../tabs/training/TechniquePopup'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { buildProgramParams, type Level } from '@/lib/training/build-program-params'
+import type { Profile } from '@/lib/profile-service'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -30,6 +32,7 @@ interface ProgramBuilderProps {
   onClose: () => void
   onSave: () => void
   editProgram?: any
+  profile?: Profile | null
 }
 
 const MUSCLE_OPTIONS = ['Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Fessiers', 'Abdos']
@@ -79,7 +82,7 @@ const DAY_NAMES = DAY_NAMES_FR
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
 /* ─── Component ─── */
-export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram }: ProgramBuilderProps) {
+export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram, profile }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -90,15 +93,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const AI_OBJECTIVES = [
     { key: 'masse', label: t('config.objMasse') },
     { key: 'perte', label: t('config.objPerte') },
+    { key: 'maintien', label: t('config.objMaintain') },
     { key: 'force', label: t('config.objForce') },
     { key: 'endurance', label: t('config.objEndurance') },
   ]
-  const AI_LEVELS = [
+  const AI_LEVELS: Array<{ key: Level; label: string }> = [
     { key: 'debutant', label: t('config.lvlDebutant') },
     { key: 'intermediaire', label: t('config.lvlIntermediaire') },
     { key: 'avance', label: t('config.lvlAvance') },
   ]
   const AI_EQUIPMENT = [
+    ...(profile ? [{ key: '__profile__', label: t('config.eqProfile') }] : []),
     { key: 'salle', label: t('config.eqSalle') },
     { key: 'halteres', label: t('config.eqHalteres') },
     { key: 'sans_materiel', label: t('config.eqSansMateriel') },
@@ -111,12 +116,18 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const [customExercises, setCustomExercises] = useState<any[]>([])
 
   // AI mode
-  const [aiObjective, setAiObjective] = useState('masse')
-  const [aiLevel, setAiLevel] = useState('intermediaire')
-  const [aiDays, setAiDays] = useState(4)
-  const [aiDuration, setAiDuration] = useState(60)
-  const [aiEquipment, setAiEquipment] = useState('salle')
-  const [aiPriorities, setAiPriorities] = useState<string[]>([])
+  const profileProgramParams = profile ? buildProgramParams(profile) : null
+  const [aiObjective, setAiObjective] = useState(() => {
+    if (profileProgramParams?.objective === 'prise de muscle') return 'masse'
+    if (profileProgramParams?.objective === 'sèche') return 'perte'
+    if (profileProgramParams?.objective === 'maintien') return 'maintien'
+    return 'masse'
+  })
+  const [aiLevel, setAiLevel] = useState(() => profileProgramParams?.level ?? 'intermediaire')
+  const [aiDays, setAiDays] = useState(() => profileProgramParams?.daysPerWeek ?? 4)
+  const [aiDuration, setAiDuration] = useState(() => profileProgramParams?.duration ?? 60)
+  const [aiEquipment, setAiEquipment] = useState(() => profileProgramParams ? '__profile__' : 'salle')
+  const [aiPriorities, setAiPriorities] = useState<string[]>(() => profileProgramParams?.priorities ?? [])
   const [aiNotes, setAiNotes] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiResult, setAiResult] = useState<any>(null)
@@ -194,7 +205,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           objective: aiObjective, level: aiLevel, daysPerWeek: aiDays,
-          duration: aiDuration, equipment: aiEquipment, priorities: aiPriorities,
+          duration: aiDuration,
+          equipment: aiEquipment === '__profile__' ? profileProgramParams?.equipment ?? 'salle' : aiEquipment,
+          priorities: aiPriorities,
           notes: aiNotes, gender: userGender,
         }),
       })

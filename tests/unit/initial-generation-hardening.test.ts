@@ -59,6 +59,7 @@ type RunOptions = {
   domains?: readonly InitialGenerationDomain[]
   quota?: QuotaCheckResult
   clear?: boolean
+  replaceExisting?: boolean
 }
 
 async function run({
@@ -68,6 +69,7 @@ async function run({
   domains = ['training', 'nutrition'] as const,
   quota = 'available',
   clear = true,
+  replaceExisting = false,
 }: RunOptions = {}) {
   const clearFlag = vi.fn(async () => clear)
   const checkQuota = vi.fn(async () => quota)
@@ -77,6 +79,7 @@ async function run({
     ports: { training, nutrition },
     checkQuota,
     clearFlag,
+    replaceExisting,
   })
   return { result, clearFlag, checkQuota, training, nutrition }
 }
@@ -108,6 +111,20 @@ describe('initial generation hardening', () => {
     const { result } = await run({ training, domains: ['training'] })
     expect(training.generate).not.toHaveBeenCalled()
     expect(result.training.phase).toBe('ready')
+  })
+
+  it('replaces an existing resource after an explicit objective change', async () => {
+    const training = port({ reads: [{ kind: 'ready' }, { kind: 'ready' }, { kind: 'ready' }] })
+    const { result, clearFlag } = await run({
+      training,
+      domains: ['training'],
+      snapshot: readySnapshot(),
+      replaceExisting: true,
+    })
+    expect(training.generate).toHaveBeenCalledOnce()
+    expect(training.persist).toHaveBeenCalledOnce()
+    expect(result.training.phase).toBe('ready')
+    expect(clearFlag).toHaveBeenCalledOnce()
   })
 
   it('keeps domains independent when one is ready and the other is missing', async () => {

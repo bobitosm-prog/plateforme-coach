@@ -1538,7 +1538,9 @@
     "summaryProtein": "Protein",
     "summaryCarbs": "Carbs",
     "summaryFat": "Fat",
-    "disclaimer": "Your meal plan and macros will be recalculated. Your training program will be adapted to your new goal."
+    "disclaimer": "Your targets, meal plan and training program will be adapted to this new goal.",
+    "disclaimerManaged": "Your targets and macros will be updated. Plans managed by your coach will not be replaced.",
+    "saveError": "The change could not be saved. Please try again."
   },
   "badges": {
     "title": "MY BADGES",
@@ -2069,6 +2071,7 @@
         "objective": "Goal",
         "objMasse": "MASS",
         "objPerte": "FAT LOSS",
+        "objMaintain": "MAINTENANCE",
         "objForce": "STRENGTH",
         "objEndurance": "ENDURANCE",
         "level": "Level",
@@ -2078,6 +2081,7 @@
         "daysPerWeek": "Days / week",
         "duration": "Duration (min)",
         "equipment": "Equipment",
+        "eqProfile": "FROM MY PROFILE",
         "eqSalle": "GYM",
         "eqHalteres": "DUMBBELLS",
         "eqSansMateriel": "BODYWEIGHT",

@@ -9,12 +9,13 @@ import { validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
 import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
+import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
 
 export const maxDuration = 300
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
-function buildSystemPrompt(params: any) {
+function buildSystemPrompt(params: any, clientContext: string) {
   const kcal = params.calorie_goal || 2500
   const prot = params.protein_goal || 150
   const carbs = params.carbs_goal || 250
@@ -106,6 +107,8 @@ VARIÉTÉ PROTÉINES SUR LA SEMAINE :
   return `${NUTRITION_GENERATION_PROMPT}
 
 ${buildAthenaScientificPolicyPrompt()}
+
+${clientContext}
 
 Tu generes UN jour de plan alimentaire en JSON.
 
@@ -404,6 +407,7 @@ async function generateOneDay(
   day: string,
   params: any,
   proteinsUsed: string[],
+  clientContext: string,
 ): Promise<any> {
   const kcal = params.calorie_goal || 2500
   const proteinHint = proteinsUsed.length > 0
@@ -460,7 +464,7 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
     body: JSON.stringify({
       model: 'claude-opus-4-8',
       max_tokens: 1500,
-      system: buildSystemPrompt(params),
+      system: buildSystemPrompt(params, clientContext),
       messages: [{ role: 'user', content: userPrompt }],
     }),
   })
@@ -525,6 +529,10 @@ export async function POST(req: NextRequest) {
     const userId = user.id
     const blocked = await guardCoachManagedCapabilities(userId)
     if (blocked) return blocked
+    const clientContext = await loadAthenaGenerationContext(supabaseAuth, userId)
+    if (!clientContext.ok) {
+      return new Response(JSON.stringify({ error: 'Profil temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+    }
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -536,7 +544,7 @@ export async function POST(req: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
 
           try {
-            const legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed)
+            const legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed, clientContext.prompt)
             // extractProteins reads legacy structure (repas{} + aliment), call BEFORE conversion
             proteinsUsed.push(...extractProteins(legacyDay))
             // Convert to canonical for storage + streaming to client

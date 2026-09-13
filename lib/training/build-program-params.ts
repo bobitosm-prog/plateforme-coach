@@ -47,7 +47,8 @@ function normalizeObjective(objective: string | null | undefined): string {
   if (!objective) return 'renforcement musculaire'
   const o = objective.toLowerCase().trim()
   if (o.includes('perdre') || o === 'cut' || o.includes('seche') || o.includes('sèche')) return 'sèche'
-  if (o.includes('prendre') || o === 'bulk' || o.includes('muscle')) return 'prise de muscle'
+  if (o.includes('prendre') || o === 'mass' || o === 'bulk' || o.includes('muscle')) return 'prise de muscle'
+  if (o === 'maintain' || o.includes('maintien')) return 'maintien'
   if (o.includes('améliorer') || o.includes('ameliorer') || o.includes('condition')) return 'amélioration condition'
   if (o.includes('remettre') || o.includes('forme')) return 'remise en forme'
   return objective // fallback : laisse passer la valeur brute
@@ -112,9 +113,9 @@ export function composeEquipmentString(
  *   - objective : profile.objective (FR or EN, normalized)
  *   - level : profile.onboarding_answers.experience_level (JSONB)
  *   - daysPerWeek : profile.onboarding_answers.sessions_per_week (JSONB, fallback 4)
- *   - duration : default 60 (no profile field yet)
+ *   - duration : onboarding_answers.session_duration_minutes (fallback 60)
  *   - equipment : composed from training_location + home_equipment
- *   - priorities : default [] (no profile field yet)
+ *   - priorities : onboarding_answers.training_priorities (fallback [])
  *   - notes : default '' (no profile field yet)
  *   - gender : profile.gender (normalized)
  *
@@ -128,6 +129,10 @@ export function buildProgramParams(
   const onboardingAnswers = (profile.onboarding_answers as Record<string, unknown>) || {}
   const experienceLevel = onboardingAnswers.experience_level as string | undefined
   const sessionsPerWeek = onboardingAnswers.sessions_per_week as number | undefined
+  const sessionDuration = onboardingAnswers.session_duration_minutes as number | undefined
+  const trainingPriorities = Array.isArray(onboardingAnswers.training_priorities)
+    ? onboardingAnswers.training_priorities.filter((value): value is string => typeof value === 'string')
+    : []
 
   const trainingLocation = profile.training_location as string | undefined
   const homeEquipment = profile.home_equipment as string[] | undefined
@@ -136,9 +141,9 @@ export function buildProgramParams(
     objective: normalizeObjective(profile.objective),
     level: overrides?.level ?? normalizeLevel(experienceLevel),
     daysPerWeek: overrides?.daysPerWeek ?? sessionsPerWeek ?? 4,
-    duration: overrides?.duration ?? 60,
+    duration: overrides?.duration ?? sessionDuration ?? 60,
     equipment: composeEquipmentString(trainingLocation, homeEquipment),
-    priorities: overrides?.priorities ?? [],
+    priorities: overrides?.priorities ?? trainingPriorities,
     notes: overrides?.notes ?? '',
     gender: normalizeGender(profile.gender),
   }

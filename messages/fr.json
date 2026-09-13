@@ -1538,7 +1538,9 @@
     "summaryProtein": "Protéines",
     "summaryCarbs": "Glucides",
     "summaryFat": "Lipides",
-    "disclaimer": "Ton plan nutritionnel et tes macros seront recalculés. Ton programme d'entraînement sera adapté à ton nouvel objectif."
+    "disclaimer": "Tes objectifs, ton plan nutritionnel et ton programme d'entraînement seront adaptés à ce nouvel objectif.",
+    "disclaimerManaged": "Tes objectifs et tes macros seront mis à jour. Les plans gérés par ton coach ne seront pas remplacés.",
+    "saveError": "Le changement n'a pas pu être enregistré. Réessaie."
   },
   "badges": {
     "title": "MES BADGES",
@@ -2069,6 +2071,7 @@
         "objective": "Objectif",
         "objMasse": "MASSE",
         "objPerte": "PERTE",
+        "objMaintain": "MAINTIEN",
         "objForce": "FORCE",
         "objEndurance": "ENDURANCE",
         "level": "Niveau",
@@ -2078,6 +2081,7 @@
         "daysPerWeek": "Jours / semaine",
         "duration": "Durée (min)",
         "equipment": "Équipement",
+        "eqProfile": "SELON MON PROFIL",
         "eqSalle": "SALLE",
         "eqHalteres": "HALTÈRES",
         "eqSansMateriel": "SANS MATÉRIEL",

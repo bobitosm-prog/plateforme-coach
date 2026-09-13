@@ -57,6 +57,7 @@ interface RunInitialGenerationInput {
   checkQuota: () => Promise<QuotaCheckResult>
   clearFlag: () => Promise<boolean>
   onChange?: (snapshot: InitialGenerationSnapshot) => void
+  replaceExisting?: boolean
 }
 
 export const EMPTY_INITIAL_GENERATION_SNAPSHOT: InitialGenerationSnapshot = {
@@ -102,6 +103,7 @@ export async function runInitialGenerationAttempt({
   checkQuota,
   clearFlag,
   onChange,
+  replaceExisting = false,
 }: RunInitialGenerationInput): Promise<InitialGenerationSnapshot> {
   let snapshot = cloneSnapshot(initialSnapshot)
   const emit = (
@@ -118,7 +120,7 @@ export async function runInitialGenerationAttempt({
   }
 
   for (const domain of domains) {
-    if (snapshot[domain].phase === 'ready') continue
+    if (!replaceExisting && snapshot[domain].phase === 'ready') continue
     const port = ports[domain]
     emit(domain, { phase: 'checking' }, snapshot.finalization === 'error' ? 'idle' : undefined)
 
@@ -132,7 +134,7 @@ export async function runInitialGenerationAttempt({
       emit(domain, { phase: 'error', reason: initialRead.reason ?? 'read' })
       continue
     }
-    if (initialRead.kind === 'ready') {
+    if (initialRead.kind === 'ready' && !replaceExisting) {
       emit(domain, { phase: 'ready' })
       continue
     }
@@ -162,7 +164,7 @@ export async function runInitialGenerationAttempt({
       // A second read narrows refresh/tab races before any insert.
       const raceRead = await port.read()
       if (raceRead.kind === 'error') throw new InitialGenerationFailure(raceRead.reason ?? 'read')
-      if (raceRead.kind === 'ready') {
+      if (raceRead.kind === 'ready' && !replaceExisting) {
         emit(domain, { phase: 'ready' })
         continue
       }

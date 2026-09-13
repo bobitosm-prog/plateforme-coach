@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 import type { ActiveTrainingProgramContext } from '../../../lib/training/active-program'
+import type { Profile } from '../../../lib/profile-service'
 import { resolveTrainingProgramAccess } from '../../../lib/training/training-program-access'
 import { buildWeekSessions, padTo7Days, toDateStr } from '../../../lib/schedule-utils'
 import { downloadBlankTemplate, exportProgramToXlsx, parseProgramFromXlsx, type ImportResult, type ProgramData } from '../../../lib/program-excel'
@@ -40,7 +41,7 @@ type ProgramRecord = ProgramData & {
 interface TrainingProgramManagerProps {
   supabase: SupabaseClient
   session: Session | null
-  profile?: unknown
+  profile?: Profile | null
   capabilities: UserCapabilities
   activeProgramContext: ActiveTrainingProgramContext
   onRefresh: (forceRefresh?: boolean) => Promise<void>
@@ -380,6 +381,7 @@ export default function TrainingProgramManager({
         <ProgramBuilder
           supabase={supabase}
           session={session}
+          profile={profile}
           canMutate={access.canConfigure}
           aiAllowed={canGenerate}
           onAiQuotaChange={quota.refresh}

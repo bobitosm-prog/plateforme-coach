@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { buildProgramParams } from '@/lib/training/build-program-params'
@@ -8,6 +8,7 @@ import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profi
 import { cache } from '@/lib/cache'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { reportError } from '@/lib/client-error-reporter'
+import { clearPlanRegenerationRequest, readPlanRegenerationRequest } from '@/lib/athena/objective-transition'
 import type { UserCapabilities } from '@/lib/entitlements/capabilities'
 import type { ActiveRelationLookupResult } from '@/lib/coach-relations/repository'
 import {
@@ -136,16 +137,35 @@ export default function useInitialGeneration(
   profile: Profile | null | undefined,
   supabase: SupabaseClient,
   authority: InitialGenerationAuthority,
+  onCompleted?: () => void | Promise<void>,
 ): UseInitialGenerationResult {
   const [snapshot, setSnapshot] = useState<InitialGenerationSnapshot>(EMPTY_INITIAL_GENERATION_SNAPSHOT)
   const snapshotRef = useRef(snapshot)
   const autoStartedForUserRef = useRef<string | null>(null)
   const mountedRef = useRef(true)
+  const onCompletedRef = useRef(onCompleted)
   const queuedDomainsRef = useRef(new Set<InitialGenerationDomain>())
+  const regenerationRequest = useMemo(
+    () => readPlanRegenerationRequest(profile?.onboarding_answers),
+    [profile?.onboarding_answers],
+  )
+  const generationRunKey = `${userId ?? 'anonymous'}:${regenerationRequest?.requested_at ?? 'initial'}`
+  const generationRunKeyRef = useRef(generationRunKey)
 
   useEffect(() => {
     snapshotRef.current = snapshot
   }, [snapshot])
+
+  useEffect(() => {
+    onCompletedRef.current = onCompleted
+  }, [onCompleted])
+
+  useEffect(() => {
+    if (generationRunKeyRef.current === generationRunKey) return
+    generationRunKeyRef.current = generationRunKey
+    autoStartedForUserRef.current = null
+    snapshotRef.current = EMPTY_INITIAL_GENERATION_SNAPSHOT
+  }, [generationRunKey])
 
   useEffect(() => () => { mountedRef.current = false }, [])
 
@@ -309,9 +329,26 @@ export default function useInitialGeneration(
     }
 
     const clearFlag = async () => {
+      let onboardingAnswers = profile.onboarding_answers
+      if (regenerationRequest) {
+        const latest = await supabase
+          .from('profiles')
+          .select('onboarding_answers')
+          .eq('id', userId)
+          .single()
+        const latestRequest = readPlanRegenerationRequest(latest.data?.onboarding_answers)
+        if (latest.error || latestRequest?.requested_at !== regenerationRequest.requested_at) {
+          reportError('error', '[initial-generation] regeneration marker changed before clear', { userId })
+          return false
+        }
+        onboardingAnswers = latest.data?.onboarding_answers
+      }
       const { data, error } = await updateProfile(userId, {
         needs_initial_generation: false,
         next_program_regen_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        ...(regenerationRequest ? {
+          onboarding_answers: clearPlanRegenerationRequest(onboardingAnswers),
+        } : {}),
       }, supabase)
       invalidateProfileCache()
       cache.remove(`dashboard_${userId}`)
@@ -333,12 +370,21 @@ export default function useInitialGeneration(
       return
     }
 
+    const replaceExisting = Boolean(regenerationRequest)
+    const startingSnapshot = replaceExisting
+      ? domains.reduce<InitialGenerationSnapshot>((current, domain) => ({
+        ...current,
+        [domain]: { phase: 'idle' },
+        finalization: 'idle',
+      }), snapshotRef.current)
+      : snapshotRef.current
     const run = withCrossTabLock(userId, () => runInitialGenerationAttempt({
-      snapshot: snapshotRef.current,
+      snapshot: startingSnapshot,
       domains,
       ports,
       checkQuota,
       clearFlag,
+      replaceExisting,
       onChange: next => {
         snapshotRef.current = next
         if (mountedRef.current) setSnapshot(next)
@@ -349,10 +395,11 @@ export default function useInitialGeneration(
       if (inFlightByUser.get(userId)?.promise === run) inFlightByUser.delete(userId)
       snapshotRef.current = next
       if (mountedRef.current) setSnapshot(next)
+      if (next.finalization === 'ready') void onCompletedRef.current?.()
     }, () => {
       if (inFlightByUser.get(userId)?.promise === run) inFlightByUser.delete(userId)
     })
-  }, [authority, profile, supabase, userId])
+  }, [authority, profile, regenerationRequest, supabase, userId])
 
   useEffect(() => {
     if (!userId || inFlightByUser.has(userId) || queuedDomainsRef.current.size === 0) return
@@ -365,11 +412,11 @@ export default function useInitialGeneration(
   useEffect(() => {
     mountedRef.current = true
     if (!userId || !profile?.needs_initial_generation) return
-    if (autoStartedForUserRef.current === userId) return
-    autoStartedForUserRef.current = userId
+    if (autoStartedForUserRef.current === generationRunKey) return
+    autoStartedForUserRef.current = generationRunKey
     const timer = window.setTimeout(() => execute(['training', 'nutrition']), 0)
     return () => window.clearTimeout(timer)
-  }, [execute, profile?.needs_initial_generation, userId])
+  }, [execute, generationRunKey, profile?.needs_initial_generation, userId])
 
   const retryTraining = useCallback(() => execute(['training']), [execute])
   const retryNutrition = useCallback(() => execute(['nutrition']), [execute])

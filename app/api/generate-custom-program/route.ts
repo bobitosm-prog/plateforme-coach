@@ -6,6 +6,7 @@ import { generateProgram } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { z } from 'zod'
+import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
 
 export const maxDuration = 300
 
@@ -48,6 +49,11 @@ export async function POST(req: NextRequest) {
     const blocked = await guardCoachManagedCapabilities(userId)
     if (blocked) return blocked
 
+    const clientContext = await loadAthenaGenerationContext(supabaseAuth, userId)
+    if (!clientContext.ok) {
+      return NextResponse.json({ error: 'Profil temporairement indisponible' }, { status: 503 })
+    }
+
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
       return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
@@ -70,6 +76,7 @@ export async function POST(req: NextRequest) {
           const catalog = await loadExerciseCatalog(supabaseAuth)
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
+            clientContext: clientContext.prompt,
           }, apiKey, catalog)
           await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
           clearInterval(heartbeat)

@@ -8,6 +8,7 @@ import {
   calcMifflinStJeor, ACTIVITY_LEVELS,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
+import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../../lib/athena/objective-transition'
 
 interface ObjectiveModalProps {
   profile: any
@@ -17,6 +18,7 @@ interface ObjectiveModalProps {
   session: any
   onClose: () => void
   onSaved: () => void
+  planRegenerationEnabled?: boolean
 }
 
 const OBJECTIVE_IDS = ['cut', 'mass', 'maintain'] as const
@@ -52,7 +54,7 @@ function computeMacros(objective: string, weight: number, height: number, age: n
   return { tdee, adjusted, protein, fat, carbs: Math.max(carbs, 50) }
 }
 
-export default function ObjectiveModal({ profile, currentWeight, goalWeight, supabase, session, onClose, onSaved }: ObjectiveModalProps) {
+export default function ObjectiveModal({ profile, currentWeight, goalWeight, supabase, session, onClose, onSaved, planRegenerationEnabled = false }: ObjectiveModalProps) {
   const t = useTranslations('objectiveModal')
   const [step, setStep] = useState(1)
   const [objective, setObjective] = useState<string>(profile?.objective || 'maintain')
@@ -61,6 +63,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
   const [activity, setActivity] = useState<string>(profile?.activity_level || 'moderate')
   const [saving, setSaving] = useState(false)
   const [weightError, setWeightError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   const age = profile?.birth_date ? Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / 31557600000) : 25
   const height = profile?.height || 175
@@ -91,22 +94,40 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
   }
 
   async function handleConfirm() {
+    if (!validateWeight() || !session?.user?.id) return
     setSaving(true)
-    const tw = parseFloat(targetWeight)
-    const { error } = await updateProfile(session.user.id, {
-      objective,
-      target_weight: tw,
-      activity_level: activity,
-      calorie_goal: newMacros.adjusted,
-      protein_goal: newMacros.protein,
-      carbs_goal: newMacros.carbs,
-      fat_goal: newMacros.fat,
-    }, supabase)
+    setSaveError('')
+    try {
+      const now = new Date().toISOString()
+      const { error } = await updateProfile(session.user.id, {
+        objective,
+        current_weight: parseFloat(weight),
+        target_weight: parseFloat(targetWeight),
+        activity_level: activity,
+        tdee: newMacros.tdee,
+        calorie_goal: newMacros.adjusted,
+        protein_goal: newMacros.protein,
+        carbs_goal: newMacros.carbs,
+        fat_goal: newMacros.fat,
+        onboarding_answers: buildObjectiveTransitionAnswers(
+          profile?.onboarding_answers,
+          objective as CanonicalObjective,
+          now,
+          planRegenerationEnabled,
+        ),
+        ...(planRegenerationEnabled ? { needs_initial_generation: true } : {}),
+      }, supabase)
 
-    setSaving(false)
-    if (!error) {
-      onSaved()
+      if (error) {
+        setSaveError(t('saveError'))
+        return
+      }
+      await onSaved()
       onClose()
+    } catch {
+      setSaveError(t('saveError'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -278,8 +299,12 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
 
             {/* Disclaimer */}
             <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, lineHeight: 1.5, marginBottom: 24, textAlign: 'center' }}>
-              {t('disclaimer')}
+              {t(planRegenerationEnabled ? 'disclaimer' : 'disclaimerManaged')}
             </div>
+
+            {saveError && (
+              <div role="alert" style={{ fontFamily: fonts.body, fontSize: 11, color: colors.error, marginBottom: 12, textAlign: 'center' }}>{saveError}</div>
+            )}
 
             <button
               onClick={handleConfirm}

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 
 import useClientDashboard, { type Tab } from '../hooks/useClientDashboard'
-import useInitialGeneration from '../hooks/useInitialGeneration'
+import useInitialGeneration, { resolveInitialGenerationAuthority } from '../hooks/useInitialGeneration'
 import Paywall from '../components/Paywall'
 import { STANDARD_TRIAL_DAYS } from '@/lib/constants'
 import ClientIntlProvider from '../../components/ClientIntlProvider'
@@ -148,12 +148,19 @@ function CoachAppContent() {
   const initialNavigation = React.useRef(navigation)
   const h = useClientDashboard(tabFromNavigation(initialNavigation.current))
   const setActiveTab = h.setActiveTab
-  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase, {
+  const initialGenerationAuthority = React.useMemo(() => ({
     capabilities: h.capabilities,
     coachRelationStatus: h.coachRelationStatus,
     coachId: h.coachId,
     coachRelationIsAuthoritative: h.coachRelationIsAuthoritative,
-  })
+  }), [h.capabilities, h.coachId, h.coachRelationIsAuthoritative, h.coachRelationStatus])
+  const initialGen = useInitialGeneration(h.session?.user?.id, h.profile, h.supabase, initialGenerationAuthority, () => h.fetchAll(true))
+  const generationAuthority = resolveInitialGenerationAuthority(initialGenerationAuthority)
+  const objectivePlanRegenerationEnabled = !generationAuthority.relationUncertain
+    && !generationAuthority.coachManaged
+    && h.capabilities.ai
+    && h.capabilities.training
+    && h.capabilities.nutrition
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
@@ -600,7 +607,7 @@ function CoachAppContent() {
       {h.modal === 'bmr' && <BmrModal supabase={h.supabase} session={h.session} initialValues={h.bmrForm} onClose={() => h.setModal(null)} />}
 
       {/* ── OBJECTIVE MODAL ── */}
-      {h.modal === 'objective' && <ObjectiveModal profile={h.profile} currentWeight={h.currentWeight} goalWeight={h.goalWeight} supabase={h.supabase} session={h.session} onClose={() => h.setModal(null)} onSaved={() => h.fetchAll(true)} />}
+      {h.modal === 'objective' && <ObjectiveModal profile={h.profile} currentWeight={h.currentWeight} goalWeight={h.goalWeight} supabase={h.supabase} session={h.session} planRegenerationEnabled={objectivePlanRegenerationEnabled} onClose={() => h.setModal(null)} onSaved={() => h.fetchAll(true)} />}
 
       {/* ── BARCODE SCANNER ── */}
       {h.modal === 'scan' && (

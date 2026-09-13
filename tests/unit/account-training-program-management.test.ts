@@ -39,7 +39,9 @@ describe('Account training program management', () => {
   it('keeps the generation endpoint, payload and SSE consumer unchanged', () => {
     expect(builder).toContain("fetch('/api/generate-custom-program'")
     expect(builder).toContain('objective: aiObjective, level: aiLevel, daysPerWeek: aiDays')
-    expect(builder).toContain('duration: aiDuration, equipment: aiEquipment, priorities: aiPriorities')
+    expect(builder).toContain('duration: aiDuration,')
+    expect(builder).toContain("equipment: aiEquipment === '__profile__'")
+    expect(builder).toContain('priorities: aiPriorities,')
     expect(builder).toContain('notes: aiNotes, gender: userGender')
     expect(builder).toContain('consumeProgramStream(res)')
     expect(builder).not.toMatch(/durationWeeks|mesocycle|deload/)

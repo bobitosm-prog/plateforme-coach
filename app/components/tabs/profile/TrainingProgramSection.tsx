@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { UserCapabilities } from '../../../../lib/entitlements/capabilities'
 import type { ActiveTrainingProgramContext } from '../../../../lib/training/active-program'
+import type { Profile } from '../../../../lib/profile-service'
 import {
   resolveProfileTrainingObjective,
   resolveTrainingProgramAccess,
@@ -23,7 +24,7 @@ interface TrainingProgramSectionProps {
   profileObjective: unknown
   supabase: SupabaseClient
   session: Session | null
-  profile?: unknown
+  profile?: Profile | null
   onRefresh: (forceRefresh?: boolean) => Promise<void>
   onBack: () => void
   configureOpen: boolean

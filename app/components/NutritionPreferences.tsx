@@ -6,6 +6,9 @@ import { ACTIVITY_LEVELS, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
 import { calculateAutomaticCalorieMacroTargets } from '../../lib/nutrition/calorie-macro-targets'
+import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
+import type { Profile } from '../../lib/profile-service'
+import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
 
 // ─── Constants ───
 
@@ -241,6 +244,12 @@ export default function NutritionPreferences({
       fat_goal: finalMacros.fat,
       tdee,
       objective: objMap[objective],
+      onboarding_answers: buildObjectiveTransitionAnswers(
+        profile?.onboarding_answers,
+        objMap[objective] as CanonicalObjective,
+        new Date().toISOString(),
+        false,
+      ),
       activity_level: activityLevel,
       dietary_type: dietaryType,
       allergies,
@@ -268,31 +277,25 @@ export default function NutritionPreferences({
     setRegenerating(true)
     setToastMsg('Generation en cours...')
     try {
-      const objMap: Record<ObjectiveType, string> = { cut: 'seche', maintain: 'maintien', bulk: 'bulk' }
-      const kcal = objectiveKcal || profile?.calorie_goal || 2200
+      const objectiveMap: Record<ObjectiveType, string> = { cut: 'cut', maintain: 'maintain', bulk: 'mass' }
+      const generationProfile = {
+        ...profile,
+        id: userId,
+        objective: objectiveMap[objective],
+        calorie_goal: objectiveKcal,
+        protein_goal: finalMacros.protein,
+        carbs_goal: finalMacros.carbs,
+        fat_goal: finalMacros.fat,
+        tdee,
+        activity_level: activityLevel,
+        dietary_type: dietaryType,
+        allergies,
+        meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
+      } as Profile
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          calorie_goal: objectiveKcal || profile?.calorie_goal || 2200,
-          protein_goal: finalMacros.protein || profile?.protein_goal || 150,
-          carbs_goal: finalMacros.carbs,
-          fat_goal: finalMacros.fat,
-          dietary_type: dietaryType,
-          allergies,
-          disliked_foods: dislikedFoods,
-          // disliked_foods is sent to the API but not stored as a column in profiles
-          objective_mode: objMap[objective],
-          caloric_adjustment: objective === 'maintain' ? 0 : adjustment,
-          tdee,
-          activity_level: activityLevel,
-          meal_food_names: {
-            morning: mealPrefs.breakfast || [],
-            lunch: mealPrefs.lunch || [],
-            snack: mealPrefs.snack || [],
-            dinner: mealPrefs.dinner || [],
-          },
-        }),
+        body: JSON.stringify(buildMealPlanParams(generationProfile)),
       })
       if (!res.ok) {
         const errText = await res.text()
