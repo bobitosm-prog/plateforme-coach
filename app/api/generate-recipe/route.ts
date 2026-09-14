@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit } from '../../../lib/rate-limit'
+import { z } from 'zod'
+import { checkRateLimit, logAiUsage } from '../../../lib/rate-limit'
 import { loadEffectiveEntitlementContext } from '../../../lib/entitlements/server-context'
+import { ATHENA_GENERATION_PROFILE_COLUMNS } from '../../../lib/athena/generation-context'
+import { buildAthenaClientContext, formatAthenaClientContextForPrompt } from '../../../lib/athena/client-context'
+import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
+import { validateAthenaRecipe } from '../../../lib/athena/recipe-output'
+import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
+
+const text = z.string().trim().max(120)
+const requestSchema = z.object({
+  category: z.enum(['petit-dejeuner', 'dejeuner', 'collation', 'diner', 'smoothie']).default('dejeuner'),
+  includeIngredients: z.array(text).max(8).default([]),
+  excludeIngredients: z.array(text).max(20).default([]),
+})
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -25,37 +38,46 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const { category, profile: recipeProfile, foodsList, includeIngredients, excludeIngredients } = await req.json()
+    const parsedRequest = requestSchema.safeParse(await req.json().catch(() => null))
+    if (!parsedRequest.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+    const { category, includeIngredients, excludeIngredients } = parsedRequest.data
 
-    const { data: capabilityProfile, error: capabilityError } = await supabase
+    const { data: capabilityProfileData, error: capabilityError } = await supabase
       .from('profiles')
-      .select('subscription_type')
+      .select(`subscription_type, ${ATHENA_GENERATION_PROFILE_COLUMNS}, allergies`)
       .eq('id', user.id)
       .maybeSingle()
+    const capabilityProfile = capabilityProfileData as unknown as Record<string, unknown> | null
     if (capabilityError || !capabilityProfile) {
       return NextResponse.json({ error: 'Autorisation impossible' }, { status: 403 })
     }
 
     const { capabilities } = await loadEffectiveEntitlementContext(
       user.id,
-      capabilityProfile.subscription_type,
+      typeof capabilityProfile.subscription_type === 'string' ? capabilityProfile.subscription_type : null,
     )
     if (!capabilities.nutrition) {
       return NextResponse.json({ error: 'Fonctionnalité gérée par ton coach.' }, { status: 403 })
     }
+    const clientContext = formatAthenaClientContextForPrompt(buildAthenaClientContext(capabilityProfile))
 
-    const targetCalPerMeal = Math.round((recipeProfile?.calorie_goal || 2000) / 4)
-    const targetProtPerMeal = Math.round((recipeProfile?.protein_goal || 130) / 4)
+    const targetCalPerMeal = Math.round((Number(capabilityProfile.calorie_goal) || 2000) / 4)
+    const targetProtPerMeal = Math.round((Number(capabilityProfile.protein_goal) || 130) / 4)
 
     const systemPrompt = `Tu es un chef cuisinier certifié spécialisé en nutrition sportive et fitness. Ne mentionne jamais l'intelligence artificielle dans tes réponses. Génère UNE recette.
 
 PROFIL DU CLIENT :
 - Calories par repas : ~${targetCalPerMeal} kcal
 - Protéines par repas : ~${targetProtPerMeal}g
-- Régime : ${recipeProfile?.dietary_type || 'omnivore'}
+- Régime : ${typeof capabilityProfile.dietary_type === 'string' ? capabilityProfile.dietary_type : 'omnivore'}
+- Allergies : ${Array.isArray(capabilityProfile.allergies) ? capabilityProfile.allergies.join(', ') : 'aucune'}
+
+${buildAthenaScientificPolicyPrompt()}
+
+${clientContext}
 
 RÈGLES :
-1. Utilise des aliments de cette liste fitness : ${foodsList || 'aliments fitness classiques'}
+1. Utilise exclusivement les noms exacts de cette base : ${formatFitnessFoodsForPrompt()}
 2. Recette simple : max 8 ingrédients, max 30 min de préparation
 3. Quantités en grammes
 4. Catégorie : ${category || 'dejeuner'}
@@ -105,16 +127,12 @@ Réponds UNIQUEMENT en JSON (pas de backticks, pas de texte) :
     const match = cleaned.match(/\{[\s\S]*\}/)
     if (!match) return NextResponse.json({ error: 'Pas de JSON dans la réponse' }, { status: 500 })
 
-    const recipe = JSON.parse(match[0])
-    // Round numeric values
-    recipe.calories_per_serving = Math.round(recipe.calories_per_serving || 0)
-    recipe.proteins_per_serving = Math.round((recipe.proteins_per_serving || 0) * 10) / 10
-    recipe.carbs_per_serving = Math.round((recipe.carbs_per_serving || 0) * 10) / 10
-    recipe.fat_per_serving = Math.round((recipe.fat_per_serving || 0) * 10) / 10
+    const recipe = validateAthenaRecipe(JSON.parse(match[0]))
+    await logAiUsage(supabase, user.id, 'generate-recipe')
 
     return NextResponse.json({ recipe })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Erreur inattendue'
-    return NextResponse.json({ error: message }, { status: 500 })
+  } catch {
+    console.error('[generate-recipe] validated generation failed')
+    return NextResponse.json({ error: 'Recette temporairement indisponible' }, { status: 500 })
   }
 }

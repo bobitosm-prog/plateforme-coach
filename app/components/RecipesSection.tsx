@@ -15,11 +15,10 @@ const TAG_COLORS: Record<string, string> = {
 interface RecipesSectionProps {
   supabase: any
   userId: string
-  profile: any
   aiAllowed: boolean
 }
 
-export default function RecipesSection({ supabase, userId, profile, aiAllowed }: RecipesSectionProps) {
+export default function RecipesSection({ supabase, userId, aiAllowed }: RecipesSectionProps) {
   const t = useTranslations('recipesSection')
   const [recipes, setRecipes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,13 +54,10 @@ export default function RecipesSection({ supabase, userId, profile, aiAllowed }:
   async function generateRecipe() {
     setGenerating(true)
     try {
-      const { data: foods } = await supabase.from('food_items').select('name, energy_kcal, proteins, carbohydrates, fat').eq('source', 'fitness').limit(50)
-      const foodsList = (foods || []).map((f: any) => `${f.name} (${Math.round(f.energy_kcal)}kcal P${Math.round(f.proteins)})`).join(', ')
-
       const res = await fetch('/api/generate-recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: genCategory, profile, foodsList }),
+        body: JSON.stringify({ category: genCategory }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)

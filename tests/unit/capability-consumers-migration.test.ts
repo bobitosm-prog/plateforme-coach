@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   checkRateLimit: vi.fn(),
+  logAiUsage: vi.fn(),
   getActiveLegacyEntitlement: vi.fn(),
 }))
 
@@ -16,6 +17,7 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: mocks.checkRateLimit,
+  logAiUsage: mocks.logAiUsage,
 }))
 vi.mock('@/lib/entitlements/legacy-entitlement-repository', () => ({
   getActiveLegacyEntitlement: mocks.getActiveLegacyEntitlement,
@@ -68,10 +70,10 @@ describe('capability consumers migration', () => {
       content: [{
         text: JSON.stringify({
           title: 'Recette test',
-          calories_per_serving: 500,
-          proteins_per_serving: 30,
-          carbs_per_serving: 50,
-          fat_per_serving: 15,
+          description: 'Poulet simple.', category: 'dejeuner', prep_time_min: 5,
+          cook_time_min: 15, servings: 1,
+          ingredients: [{ name: 'Blanc de poulet cuit', quantity_g: 200, calories: 330, proteins: 62, carbs: 0, fat: 7.2 }],
+          instructions: [{ step: 1, text: 'Servir.' }], tags: ['high-protein'],
         }),
       }],
     }), { status: 200 })))

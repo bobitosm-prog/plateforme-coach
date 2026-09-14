@@ -538,7 +538,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       {/* Recipes sub-tab */}
       {subTab === 'recipes' && (
         <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
-          <RecipesSection supabase={supabase} userId={userId} profile={profile} aiAllowed={capabilities.ai} />
+          <RecipesSection supabase={supabase} userId={userId} aiAllowed={capabilities.ai} />
         </div>
       )}
 

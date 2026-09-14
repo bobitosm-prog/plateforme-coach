@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
+import { validateAthenaMealPhoto } from '../../../lib/athena/meal-photo-output'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -23,8 +24,6 @@ export async function POST(req: NextRequest) {
   // DB-backed hourly rate limit
   const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-meal-photo')
   if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  await logAiUsage(supabase, user.id, 'analyze-meal-photo')
-
   try {
     const { image } = await req.json()
     if (!image || typeof image !== 'string') return NextResponse.json({ error: 'Image requise' }, { status: 400 })
@@ -32,7 +31,10 @@ export async function POST(req: NextRequest) {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
 
-    const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
+    const imageMatch = image.match(/^data:image\/(jpeg|png|webp);base64,(.+)$/)
+    if (!imageMatch) return NextResponse.json({ error: 'Format image invalide' }, { status: 400 })
+    const mediaType = `image/${imageMatch[1]}` as 'image/jpeg' | 'image/png' | 'image/webp'
+    const base64Data = imageMatch[2]
 
     // ~5 MB binaire = ~6.7M chars base64 (plafond API Anthropic)
     if (base64Data.length > 6_700_000) {
@@ -48,7 +50,7 @@ export async function POST(req: NextRequest) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } },
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
             { type: 'text', text: `Analyse cette photo de repas. Identifie chaque aliment visible avec une estimation des quantites.
 
 Reponds UNIQUEMENT en JSON valide, sans markdown :
@@ -76,9 +78,11 @@ Reponds UNIQUEMENT en JSON valide, sans markdown :
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return NextResponse.json({ error: 'Reponse IA invalide' }, { status: 500 })
 
-    return NextResponse.json(JSON.parse(jsonMatch[0]))
-  } catch (e: any) {
-    console.error('[analyze-meal-photo] Error:', e.message)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    const result = validateAthenaMealPhoto(JSON.parse(jsonMatch[0]))
+    await logAiUsage(supabase, user.id, 'analyze-meal-photo')
+    return NextResponse.json(result)
+  } catch {
+    console.error('[analyze-meal-photo] validated analysis failed')
+    return NextResponse.json({ error: 'Analyse temporairement indisponible' }, { status: 500 })
   }
 }

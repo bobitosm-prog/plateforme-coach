@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FITNESS_FOODS, type FitnessFood } from '@/lib/fitness-food-database'
+import { isReferenceAmount, nutritionForQuantity, resolveFitnessFood } from '@/lib/nutrition/food-reference'
 
 const foodSchema = z.object({
   aliment: z.string().trim().min(1).max(120), quantite_g: z.number().positive().max(2000),
@@ -27,20 +27,6 @@ function containsTerm(value: string, term: string): boolean {
   return ` ${words(fold(value))} `.includes(` ${words(term)} `)
 }
 
-const FOOD_BY_NAME = new Map(FITNESS_FOODS.map(food => [fold(food.name).trim(), food]))
-
-function resolveReferenceFood(name: string): FitnessFood | null {
-  return FOOD_BY_NAME.get(fold(name).trim()) ?? null
-}
-
-function referenceAmount(per100g: number, quantityG: number): number {
-  return per100g * quantityG / 100
-}
-
-function closeToReference(actual: number, expected: number, floor: number): boolean {
-  return Math.abs(actual - expected) <= Math.max(floor, expected * 0.05)
-}
-
 export function validateAthenaNutritionDay(value: unknown, targets: NutritionTargets) {
   const parsed = daySchema.safeParse(value)
   if (!parsed.success) throw new AthenaNutritionOutputError()
@@ -50,25 +36,20 @@ export function validateAthenaNutritionDay(value: unknown, targets: NutritionTar
   const checkedMeals = Object.fromEntries(Object.entries(parsed.data.repas).map(([meal, entries]) => [
     meal,
     entries.map(food => {
-      const reference = resolveReferenceFood(food.aliment)
+      const reference = resolveFitnessFood(food.aliment)
       if (!reference) throw new AthenaNutritionOutputError()
-      const expected = {
-        kcal: referenceAmount(reference.kcal, food.quantite_g),
-        proteines: referenceAmount(reference.prot, food.quantite_g),
-        glucides: referenceAmount(reference.carb, food.quantite_g),
-        lipides: referenceAmount(reference.fat, food.quantite_g),
-      }
-      if (!closeToReference(food.kcal, expected.kcal, 5)
-        || !closeToReference(food.proteines, expected.proteines, 2)
-        || !closeToReference(food.glucides, expected.glucides, 2)
-        || !closeToReference(food.lipides, expected.lipides, 2)) throw new AthenaNutritionOutputError()
+      const referenceNutrition = nutritionForQuantity(reference, food.quantite_g)
+      if (!isReferenceAmount(food.kcal, referenceNutrition.calories, 5)
+        || !isReferenceAmount(food.proteines, referenceNutrition.protein, 2)
+        || !isReferenceAmount(food.glucides, referenceNutrition.carbs, 2)
+        || !isReferenceAmount(food.lipides, referenceNutrition.fat, 2)) throw new AthenaNutritionOutputError()
       return {
         ...food,
         aliment: reference.name,
-        kcal: Math.round(expected.kcal),
-        proteines: Math.round(expected.proteines),
-        glucides: Math.round(expected.glucides),
-        lipides: Math.round(expected.lipides),
+        kcal: Math.round(referenceNutrition.calories),
+        proteines: Math.round(referenceNutrition.protein),
+        glucides: Math.round(referenceNutrition.carbs),
+        lipides: Math.round(referenceNutrition.fat),
       }
     }),
   ])) as typeof parsed.data.repas
