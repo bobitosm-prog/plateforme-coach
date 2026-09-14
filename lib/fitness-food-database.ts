@@ -47,6 +47,7 @@ export const FITNESS_FOODS: FitnessFood[] = [
   { name: 'Filet de porc cuit', kcal: 165, prot: 28, carb: 0, fat: 5, category: 'protein', state: 'cooked' },
   { name: 'Jambon blanc dégraissé', kcal: 110, prot: 20, carb: 1, fat: 3, category: 'protein', state: 'ready_to_eat' },
   { name: 'Saumon cuit', kcal: 208, prot: 22, carb: 0, fat: 13, category: 'protein', state: 'cooked' },
+  { name: 'Sardines en boîte au naturel', kcal: 185, prot: 25, carb: 0, fat: 10.5, category: 'protein', state: 'ready_to_eat' },
   { name: 'Thon frais cuit', kcal: 130, prot: 28, carb: 0, fat: 1, category: 'protein', state: 'cooked' },
   { name: 'Thon en boîte au naturel', kcal: 116, prot: 26, carb: 0, fat: 1, category: 'protein', state: 'ready_to_eat' },
   { name: 'Cabillaud cuit', kcal: 105, prot: 23, carb: 0, fat: 0.9, category: 'protein', state: 'cooked' },

@@ -159,7 +159,7 @@ RÈGLES :
 4. Quantités en multiples de 5g, 3-4 aliments par repas
 5. CONVENTION DE PESÉE — OBLIGATOIRE :
 Tous les aliments qui se cuisent (riz, pâtes, légumineuses, quinoa, semoule, etc.) doivent être indiqués PESÉS CUITS, avec les valeurs nutritionnelles correspondant au poids CUIT.
-- N'écris JAMAIS 'cru' dans le nom d'un aliment. Écris 'Riz basmati', pas 'Riz basmati (cru)'.
+- Recopie le nom EXACT de la base, état inclus. Aucun synonyme ni nom composé ne sera accepté.
 - Utilise les valeurs nutritionnelles du CUIT : riz/pâtes cuits ≈ 130 kcal/100g et ~28g de glucides/100g (PAS 350 kcal/100g qui correspond au cru).
 - Lentilles/légumineuses cuites ≈ 115-130 kcal/100g.
 - Les viandes, poissons, œufs : poids cuit également.
