@@ -14,8 +14,29 @@ const outputSchema = z.object({
   raisonnement: z.string().trim().min(1).max(800),
 })
 
-export interface WeeklyEvidence { adherencePct: number; nutritionDays: number; weightMeasurements: number; completedSessions: number; plannedSessions: number }
+export interface WeeklyEvidence {
+  adherencePct: number
+  nutritionDays: number
+  calorieCompliancePct: number | null
+  proteinCompliancePct: number | null
+  weightMeasurements: number
+  completedSessions: number
+  plannedSessions: number
+}
 export class AthenaWeeklyOutputError extends Error { constructor() { super('Diagnostic hebdomadaire non conforme'); this.name = 'AthenaWeeklyOutputError' } }
+
+function complianceScore(value: number | null): number {
+  if (value === null || !Number.isFinite(value)) return 0
+  return Math.max(0, 100 - Math.abs(100 - value))
+}
+
+export function calculateWeeklyExecutionScore(evidence: WeeklyEvidence): number {
+  const training = Math.max(0, Math.min(100, evidence.adherencePct))
+  const logging = Math.max(0, Math.min(100, evidence.nutritionDays / 7 * 100))
+  const calorie = complianceScore(evidence.calorieCompliancePct)
+  const protein = complianceScore(evidence.proteinCompliancePct)
+  return Math.round(training * 0.5 + logging * 0.2 + calorie * 0.15 + protein * 0.15)
+}
 
 export function validateAthenaWeeklyOutput(value: unknown, evidence: WeeklyEvidence) {
   const parsed = outputSchema.safeParse(value)
@@ -28,7 +49,6 @@ export function validateAthenaWeeklyOutput(value: unknown, evidence: WeeklyEvide
     delete adjustments.fat_goal_new
   }
   if (evidence.completedSessions < 2 || evidence.plannedSessions <= 0) delete adjustments.training_volume_delta_pct
-  const coverage = Math.min(100, evidence.nutritionDays / 7 * 100)
-  const score = Math.round(Math.max(0, Math.min(100, evidence.adherencePct * 0.7 + coverage * 0.3)))
+  const score = calculateWeeklyExecutionScore(evidence)
   return { ...parsed.data, ajustements: adjustments, score_semaine: score, exercice_a_ajouter: '' }
 }

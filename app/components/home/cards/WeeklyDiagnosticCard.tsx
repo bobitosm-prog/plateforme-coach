@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { motion } from 'framer-motion'
 import { Sparkles, ChevronRight, Loader2 } from 'lucide-react'
 import { colors, fonts, btnPrimary } from '../../../../lib/design-tokens'
@@ -59,6 +59,7 @@ export default function WeeklyDiagnosticCard({
   generationError = false,
 }: WeeklyDiagnosticCardProps) {
   const t = useTranslations('home.weekly_diagnostic')
+  const locale = useLocale()
   // ─── Empty state ───
   if (!diagnostic) {
     return (
@@ -118,6 +119,9 @@ export default function WeeklyDiagnosticCard({
       transition={{ duration: 0.3 }}
       style={{ ...localCardStyle, marginTop: 16 }}
     >
+      <p style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim, margin: '0 0 12px' }}>
+        {formatWeekRange(diagnostic.week_start, locale)}
+      </p>
       {/* Score circle + points */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         {/* Score */}

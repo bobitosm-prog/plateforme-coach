@@ -10,6 +10,7 @@ import webpush from 'web-push'
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { buildAthenaScientificPolicyPrompt } from '../athena/scientific-policy'
 import { validateAthenaWeeklyOutput } from '../athena/weekly-output'
+import { normalizeNutritionObjective } from '../nutrition/calorie-macro-targets'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -153,9 +154,12 @@ export async function generateWeeklyDiagnostic(
     const proteinAvgG = daysLogged > 0 ? totalProt / daysLogged : 0
     const calorieAvgTarget = Number(profile.calorie_goal || 0)
     const proteinGoal = Number(profile.protein_goal || 0)
+    const calorieCompliancePct = calorieAvgTarget > 0
+      ? (calorieAvgReal / calorieAvgTarget) * 100
+      : null
     const proteinCompliancePct = proteinGoal > 0
       ? (proteinAvgG / proteinGoal) * 100
-      : 0
+      : null
 
     const weightLogs = weightLogsRes.data || []
     const weightDeltaKg = weightLogs.length >= 2
@@ -170,10 +174,11 @@ export async function generateWeeklyDiagnostic(
     if (daysLogged < 3) {
       coherenceFlags.push(`Seulement ${daysLogged}/7 jours de nutrition loggés — données IA incomplètes`)
     }
-    if (profile.objective?.toLowerCase().includes('perdre') && weightDeltaKg > 0.5) {
+    const objective = normalizeNutritionObjective(profile.objective)
+    if (objective === 'cut' && weightDeltaKg > 0.5) {
       coherenceFlags.push(`Objectif perte de poids mais +${weightDeltaKg.toFixed(1)}kg cette semaine`)
     }
-    if (profile.objective?.toLowerCase().includes('muscle') && calorieAvgReal < calorieAvgTarget * 0.9) {
+    if (objective === 'mass' && daysLogged >= 3 && calorieAvgReal < calorieAvgTarget * 0.9) {
       coherenceFlags.push('Objectif prise muscle mais déficit calorique moyen')
     }
 
@@ -217,7 +222,7 @@ Volume total (tonnage): ${trainingVolumeTotal.toFixed(0)} kg
 Calories moyennes réelles: ${calorieAvgReal.toFixed(0)} kcal/jour
 Target: ${calorieAvgTarget} kcal/jour
 Écart moyen: ${(calorieAvgReal - calorieAvgTarget).toFixed(0)} kcal/jour
-Protéines moyennes: ${proteinAvgG.toFixed(0)}g (compliance: ${proteinCompliancePct.toFixed(0)}%)
+Protéines moyennes: ${proteinAvgG.toFixed(0)}g (compliance: ${proteinCompliancePct?.toFixed(0) ?? '?'}%)
 Jours loggés: ${daysLogged}/7
 </nutrition_week>
 
@@ -254,9 +259,8 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
           description: 'Structure le diagnostic hebdomadaire en JSON exploitable',
           input_schema: {
             type: 'object',
-            required: ['score_semaine', 'points_forts', 'points_alerte', 'ajustements', 'exercice_a_ajouter', 'objectif_semaine_prochaine', 'raisonnement'],
+            required: ['points_forts', 'points_alerte', 'ajustements', 'exercice_a_ajouter', 'objectif_semaine_prochaine', 'raisonnement'],
             properties: {
-              score_semaine: { type: 'integer', minimum: 0, maximum: 100, description: 'Score global de la semaine' },
               points_forts: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 3 },
               points_alerte: { type: 'array', items: { type: 'string' }, maxItems: 2 },
               ajustements: {
@@ -295,6 +299,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
 
     const aiOutput = validateAthenaWeeklyOutput(unwrapToolInput(toolUseBlock.input), {
       adherencePct, nutritionDays: daysLogged, weightMeasurements: weightLogs.length,
+      calorieCompliancePct, proteinCompliancePct,
       completedSessions: sessionsDone, plannedSessions: sessionsPlanned,
     })
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
@@ -310,7 +315,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
         calorie_avg_real: calorieAvgReal,
         calorie_avg_target: calorieAvgTarget,
         protein_avg_g: proteinAvgG,
-        protein_compliance_pct: proteinCompliancePct,
+        protein_compliance_pct: proteinCompliancePct ?? 0,
         training_volume_total: trainingVolumeTotal,
         sessions_done: sessionsDone,
         sessions_planned: sessionsPlanned,

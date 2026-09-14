@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   hasActiveCoachWeek,
+  formatDiagnosticWeek,
   isTodayCoachSession,
 } from '@/app/components/home-v2/HomeV2LowerSections'
 
@@ -52,6 +53,7 @@ describe('Home V2 lower sections', () => {
     expect(lower).toContain('model.diagnostic.canGenerate')
     expect(lower).toContain("model.diagnostic.state === 'error'")
     expect(lower).not.toMatch(/useEffect[\s\S]{0,240}onGenerateDiagnostic/)
+    expect(formatDiagnosticWeek('2026-09-07', 'fr')).toMatch(/7.*13 sept/i)
   })
 
   it('shows coach planning only with a verified active relation and coach id', () => {

@@ -2,7 +2,7 @@
 
 import { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Check, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
@@ -15,9 +15,18 @@ type CheckInDraft = {
 
 type Diagnostic = {
   id: string
+  week_start: string
   score_semaine: number
   points_forts?: string[]
 } | null
+
+export function formatDiagnosticWeek(weekStart: string, locale: string): string {
+  const start = new Date(`${weekStart}T00:00:00`)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  const resolvedLocale = locale === 'fr' ? 'fr-CH' : locale === 'de' ? 'de-CH' : 'en-GB'
+  return `${start.toLocaleDateString(resolvedLocale, { day: 'numeric', month: 'short' })} – ${end.toLocaleDateString(resolvedLocale, { day: 'numeric', month: 'short' })}`
+}
 
 type CoachSession = {
   weekday: string
@@ -92,6 +101,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   onOpenTraining,
 }, ref) {
   const t = useTranslations('home.v2.lower')
+  const locale = useLocale()
   const panelId = useId()
   const checkInCardRef = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
@@ -294,7 +304,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
               <p className={styles.quickEyebrow}>{t('diagnostic.label')}</p>
               {diagnostic ? <div className={styles.diagnosticSummary}>
                 <strong>{diagnostic.score_semaine}<small>/100</small></strong>
-                <p>{diagnostic.points_forts?.[0] ?? t('diagnostic.ready')}</p>
+                <p><time dateTime={diagnostic.week_start}>{formatDiagnosticWeek(diagnostic.week_start, locale)}</time> · {diagnostic.points_forts?.[0] ?? t('diagnostic.ready')}</p>
               </div> : <p className={styles.quickCopy} role={diagnosticUnavailable ? 'status' : undefined}>
                 {diagnosticUnavailable
                   ? t('diagnostic.unavailable')
