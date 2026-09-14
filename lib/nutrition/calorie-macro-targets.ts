@@ -8,14 +8,20 @@ export const ACTIVITY_MULTIPLIERS = {
 
 export type AutomaticNutritionObjective = 'cut' | 'maintain' | 'bulk'
 
+export const DEFAULT_CALORIE_ADJUSTMENTS = {
+  cut: -400,
+  maintain: 0,
+  mass: 300,
+} as const
+
 export interface CalorieMacroTargetInput {
   gender: string
   age: number
   heightCm: number
   weightKg: number
   activityLevel: string
-  objective: AutomaticNutritionObjective
-  calorieAdjustment: number
+  objective: AutomaticNutritionObjective | 'mass'
+  calorieAdjustment?: number
 }
 
 export interface CalorieMacroTargets {
@@ -25,6 +31,12 @@ export interface CalorieMacroTargets {
   proteinGrams: number
   carbsGrams: number
   fatGrams: number
+}
+
+export function normalizeNutritionObjective(objective: string | null | undefined): 'cut' | 'maintain' | 'mass' {
+  if (['cut', 'seche', 'perte_poids', 'weight_loss'].includes(objective ?? '')) return 'cut'
+  if (['mass', 'bulk', 'prise_masse'].includes(objective ?? '')) return 'mass'
+  return 'maintain'
 }
 
 const ZERO_TARGETS: CalorieMacroTargets = {
@@ -65,21 +77,21 @@ export function calculateAutomaticCalorieMacroTargets({
   const tdee = Math.round(bmr * activityMultiplier)
   if (!tdee) return { ...ZERO_TARGETS, bmr, tdee }
 
-  const targetCalories = objective === 'maintain' ? tdee : tdee + calorieAdjustment
+  const normalizedObjective = normalizeNutritionObjective(objective)
+  const adjustment = calorieAdjustment
+    ?? DEFAULT_CALORIE_ADJUSTMENTS[normalizedObjective]
+  const targetCalories = tdee + adjustment
   if (!targetCalories) return { ...ZERO_TARGETS, bmr, tdee, targetCalories }
 
-  let proteinMultiplier = 2.0
-  let fatPercentage = 0.3
-  if (objective === 'cut') {
-    proteinMultiplier = 2.4
-    fatPercentage = 0.25
-  } else if (objective === 'bulk') {
-    proteinMultiplier = 2.2
-    fatPercentage = 0.25
-  }
+  const proteinMultiplier = normalizedObjective === 'cut'
+    ? 2.2
+    : normalizedObjective === 'mass' ? 1.8 : 2
+  const fatPerKg = normalizedObjective === 'cut'
+    ? 0.8
+    : normalizedObjective === 'mass' ? 1 : 0.9
 
   const proteinGrams = Math.round(proteinMultiplier * weightKg)
-  const fatGrams = Math.round((targetCalories * fatPercentage) / 9)
+  const fatGrams = Math.round(fatPerKg * weightKg)
   const carbsGrams = Math.max(
     Math.round((targetCalories - proteinGrams * 4 - fatGrams * 9) / 4),
     0,

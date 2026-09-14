@@ -108,6 +108,8 @@ describe('Athena objective adaptation', () => {
     const generationHook = readFileSync('app/hooks/useInitialGeneration.ts', 'utf8')
 
     expect(modal).toContain('buildObjectiveTransitionAnswers(')
+    expect(modal).toContain('calculateAutomaticCalorieMacroTargets({')
+    expect(modal).not.toContain('tdee - 500')
     expect(modal).toContain('needs_initial_generation: true')
     expect(modal).toContain('current_weight: parseFloat(weight)')
     expect(modal).toContain('tdee: newMacros.tdee')
@@ -115,6 +117,7 @@ describe('Athena objective adaptation', () => {
     expect(builder).toContain('profileProgramParams ?')
     expect(builder).toContain("aiEquipment === '__profile__'")
     expect(nutrition).toContain('buildMealPlanParams(generationProfile)')
+    expect(nutrition).toContain('DEFAULT_CALORIE_ADJUSTMENTS')
     expect(nutrition).toContain('buildObjectiveTransitionAnswers(')
     expect(generationHook).toContain("if (next.finalization === 'ready') void onCompletedRef.current?.()")
 

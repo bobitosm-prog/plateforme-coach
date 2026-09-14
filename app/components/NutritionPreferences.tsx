@@ -5,7 +5,7 @@ import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plu
 import { ACTIVITY_LEVELS, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
-import { calculateAutomaticCalorieMacroTargets } from '../../lib/nutrition/calorie-macro-targets'
+import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } from '../../lib/nutrition/calorie-macro-targets'
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
 import type { Profile } from '../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
@@ -68,9 +68,7 @@ export default function NutritionPreferences({
   const [objective, setObjective] = useState<ObjectiveType>(normalizeObjective(profile?.objective))
   const [adjustment, setAdjustment] = useState<number>(() => {
     const obj = normalizeObjective(profile?.objective)
-    if (obj === 'cut') return -400
-    if (obj === 'bulk') return 300
-    return 0
+    return DEFAULT_CALORIE_ADJUSTMENTS[obj === 'bulk' ? 'mass' : obj]
   })
 
   // ─── Macros ───
@@ -156,9 +154,7 @@ export default function NutritionPreferences({
   // ─── Handlers ───
   function handleObjectiveChange(obj: ObjectiveType) {
     setObjective(obj)
-    if (obj === 'cut') setAdjustment(-400)
-    else if (obj === 'bulk') setAdjustment(300)
-    else setAdjustment(0)
+    setAdjustment(DEFAULT_CALORIE_ADJUSTMENTS[obj === 'bulk' ? 'mass' : obj])
   }
 
   function addDislikedFood(e: React.KeyboardEvent<HTMLInputElement>) {

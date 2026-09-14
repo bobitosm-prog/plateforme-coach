@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { ChevronLeft } from 'lucide-react'
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
-import { calcMifflinStJeor } from '@/lib/design-tokens'
+import { calculateAutomaticCalorieMacroTargets } from '@/lib/nutrition/calorie-macro-targets'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import { fetchEffectiveEntitlementSnapshot } from '@/lib/entitlements/client-snapshot'
 import { resolveActiveCoachForOnboarding } from '@/lib/coach-relations/onboarding-reader'
@@ -78,7 +78,7 @@ export default function OnboardingV2Content() {
     const max=nextFlow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS;setStep(Math.min(max,Math.max(1,typeof a.onboarding_v2_step==='number'?a.onboarding_v2_step:1)));setFlow(nextFlow);setLoading(false)
   })();return()=>{mounted=false}},[router,supabase,t])
 
-  const macros=useMemo(()=>{if(!weight||!height||!birthDate||!gender||activityLevel===null||goal===null)return null;const age=Math.floor((Date.now()-new Date(birthDate).getTime())/31557600000),w=Number(weight),h=Number(height);if(!w||!h||age<=0)return null;const tdee=Math.round(calcMifflinStJeor(w,h,age,gender)*([1.2,1.375,1.55,1.725][activityLevel]||1.55));const obj=GOAL_TO_OBJECTIVE[GOALS[goal].id],calorieGoal=tdee+(obj==='cut'?-400:obj==='mass'?300:0),protein=Math.round(w*2),fat=Math.round(calorieGoal*.25/9);return{tdee,calorieGoal,protein,fat,carbs:Math.round((calorieGoal-protein*4-fat*9)/4)}},[weight,height,birthDate,gender,activityLevel,goal])
+  const macros=useMemo(()=>{if(!weight||!height||!birthDate||!gender||activityLevel===null||goal===null)return null;const age=Math.floor((Date.now()-new Date(birthDate).getTime())/31557600000),w=Number(weight),h=Number(height);if(!w||!h||age<=0)return null;const targets=calculateAutomaticCalorieMacroTargets({gender,age,heightCm:h,weightKg:w,activityLevel:ACTIVITY_OPTS[activityLevel].dbLabel,objective:GOAL_TO_OBJECTIVE[GOALS[goal].id]});return{tdee:targets.tdee,calorieGoal:targets.targetCalories,protein:targets.proteinGrams,fat:targets.fatGrams,carbs:targets.carbsGrams}},[weight,height,birthDate,gender,activityLevel,goal])
   async function persist(fields:Record<string,unknown>,next?:number){if(!userId)return false;const a=next?{...answersRef.current,onboarding_v2_step:next}:answersRef.current;const {error:e}=await updateProfile(userId,{...fields,onboarding_answers:a},supabase);if(e)return false;answersRef.current=a;return true}
   async function save(){if(!flow||!userId)return false;const total=flow==='solo'?SOLO_TOTAL_STEPS:COACH_MANAGED_TOTAL_STEPS;const next=editingFromSummary?total:Math.min(step+1,total)
     if(flow==='coachManaged'){if(step===1)return persist({full_name:capitalizeFullName(firstName),birth_date:birthDate||null,gender:gender||null},next);if(step===2)return persist({},next);const ok=await persist({onboarding_completed:true,onboarding_completed_at:new Date().toISOString(),next_diagnostic_at:new Date(Date.now()+604800000).toISOString()});if(ok){invalidateProfileCache();cache.remove(`dashboard_${userId}`)}return ok}

@@ -18,6 +18,12 @@ describe('client onboarding v2 redesign', () => {
     }
   })
 
+  it('uses the same calorie and macro authority as later objective changes', () => {
+    expect(source).toContain('calculateAutomaticCalorieMacroTargets({')
+    expect(source).not.toMatch(/obj==='cut'\?-400/)
+    expect(source).not.toContain('protein=Math.round(w*2)')
+  })
+
   it('preserves the precise Athena goal contract instead of only its macro objective', () => {
     expect(source).toContain('athena_contract_version:1')
     expect(source).toContain('primary_goal_id:GOALS[goal].id')

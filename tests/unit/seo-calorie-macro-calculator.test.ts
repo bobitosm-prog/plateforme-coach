@@ -93,9 +93,9 @@ describe('SEO calorie and macro calculator', () => {
       bmr: 1780,
       tdee: 2759,
       targetCalories: 2359,
-      proteinGrams: 192,
-      carbsGrams: 249,
-      fatGrams: 66,
+      proteinGrams: 176,
+      carbsGrams: 270,
+      fatGrams: 64,
     })
   })
 

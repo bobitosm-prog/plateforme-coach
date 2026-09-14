@@ -5,10 +5,10 @@ import { X } from 'lucide-react'
 import {
   colors, fonts, radii, cardStyle, btnPrimary, btnSecondary, inputStyle,
   modalOverlay, modalContainer, titleStyle,
-  calcMifflinStJeor, ACTIVITY_LEVELS,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../../lib/athena/objective-transition'
+import { calculateAutomaticCalorieMacroTargets } from '../../../lib/nutrition/calorie-macro-targets'
 
 interface ObjectiveModalProps {
   profile: any
@@ -24,34 +24,22 @@ interface ObjectiveModalProps {
 const OBJECTIVE_IDS = ['cut', 'mass', 'maintain'] as const
 const OBJECTIVE_EMOJIS: Record<string, string> = { cut: '🔥', mass: '💪', maintain: '⚖️' }
 const ACTIVITY_IDS = ['sedentary', 'light', 'moderate', 'active', 'extreme'] as const
-
-function getActivityMult(id: string): number {
-  return ACTIVITY_LEVELS.find(a => a.id === id)?.mult || 1.55
-}
-
 function computeMacros(objective: string, weight: number, height: number, age: number, gender: string, activity: string) {
-  const bmr = calcMifflinStJeor(weight, height, age, gender)
-  const mult = getActivityMult(activity)
-  const tdee = Math.round(bmr * mult)
-
-  let adjusted: number
-  let protPerKg: number, fatPerKg: number
-  if (objective === 'cut') {
-    adjusted = tdee - 500
-    protPerKg = 2.2; fatPerKg = 0.8
-  } else if (objective === 'mass') {
-    adjusted = tdee + 300
-    protPerKg = 1.8; fatPerKg = 1.0
-  } else {
-    adjusted = tdee
-    protPerKg = 2.0; fatPerKg = 0.9
+  const targets = calculateAutomaticCalorieMacroTargets({
+    objective: objective === 'mass' ? 'mass' : objective === 'cut' ? 'cut' : 'maintain',
+    weightKg: weight,
+    heightCm: height,
+    age,
+    gender,
+    activityLevel: activity,
+  })
+  return {
+    tdee: targets.tdee,
+    adjusted: targets.targetCalories,
+    protein: targets.proteinGrams,
+    fat: targets.fatGrams,
+    carbs: targets.carbsGrams,
   }
-
-  const protein = Math.round(protPerKg * weight)
-  const fat = Math.round(fatPerKg * weight)
-  const carbs = Math.round((adjusted - protein * 4 - fat * 9) / 4)
-
-  return { tdee, adjusted, protein, fat, carbs: Math.max(carbs, 50) }
 }
 
 export default function ObjectiveModal({ profile, currentWeight, goalWeight, supabase, session, onClose, onSaved, planRegenerationEnabled = false }: ObjectiveModalProps) {

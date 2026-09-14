@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateAutomaticCalorieMacroTargets,
+  DEFAULT_CALORIE_ADJUSTMENTS,
+  normalizeNutritionObjective,
   type CalorieMacroTargetInput,
 } from '../../lib/nutrition/calorie-macro-targets'
 
@@ -14,64 +16,18 @@ const MALE_PROFILE: CalorieMacroTargetInput = {
   calorieAdjustment: 0,
 }
 
-function legacyProductionCalculation(input: CalorieMacroTargetInput) {
-  const { weightKg, heightCm, age, gender, activityLevel, objective, calorieAdjustment } = input
-  if (!weightKg || !heightCm || !age) {
-    return { bmr: 0, tdee: 0, targetCalories: 0, proteinGrams: 0, carbsGrams: 0, fatGrams: 0 }
-  }
-
-  const base = 10 * weightKg + 6.25 * heightCm - 5 * age
-  const bmr = Math.round(gender === 'male' ? base + 5 : base - 161)
-  const multipliers: Record<string, number> = {
-    sedentary: 1.2,
-    light: 1.375,
-    moderate: 1.55,
-    active: 1.725,
-    extreme: 1.9,
-  }
-  const tdee = Math.round(bmr * (multipliers[activityLevel] || 1.55))
-  if (!tdee) {
-    return { bmr, tdee, targetCalories: 0, proteinGrams: 0, carbsGrams: 0, fatGrams: 0 }
-  }
-
-  const targetCalories = objective === 'maintain' ? tdee : tdee + calorieAdjustment
-  if (!targetCalories) {
-    return { bmr, tdee, targetCalories, proteinGrams: 0, carbsGrams: 0, fatGrams: 0 }
-  }
-
-  const proteinMultiplier = objective === 'cut' ? 2.4 : objective === 'bulk' ? 2.2 : 2
-  const fatPercentage = objective === 'maintain' ? 0.3 : 0.25
-  const proteinGrams = Math.round(proteinMultiplier * weightKg)
-  const fatGrams = Math.round((targetCalories * fatPercentage) / 9)
-  const carbsGrams = Math.max(
-    Math.round((targetCalories - proteinGrams * 4 - fatGrams * 9) / 4),
-    0,
-  )
-
-  return { bmr, tdee, targetCalories, proteinGrams, carbsGrams, fatGrams }
-}
-
 describe('calculateAutomaticCalorieMacroTargets', () => {
-  it('matches the fixed Production matrix before and after extraction', () => {
-    const genders = ['male', 'historical-other-value']
-    const activities = ['sedentary', 'light', 'moderate', 'active', 'extreme', 'unknown']
-    const objectiveAdjustments = [
-      ['cut', -400],
-      ['maintain', 0],
-      ['bulk', 300],
-      ['cut', -550],
-    ] as const
+  it('normalizes historical objective aliases into one contract', () => {
+    expect(normalizeNutritionObjective('weight_loss')).toBe('cut')
+    expect(normalizeNutritionObjective('bulk')).toBe('mass')
+    expect(normalizeNutritionObjective('mass')).toBe('mass')
+    expect(normalizeNutritionObjective(undefined)).toBe('maintain')
+  })
 
-    for (const gender of genders) {
-      for (const activityLevel of activities) {
-        for (const [objective, calorieAdjustment] of objectiveAdjustments) {
-          const input = { ...MALE_PROFILE, gender, activityLevel, objective, calorieAdjustment }
-          expect(calculateAutomaticCalorieMacroTargets(input)).toEqual(
-            legacyProductionCalculation(input),
-          )
-        }
-      }
-    }
+  it('uses one default energy adjustment for every consumer', () => {
+    expect(DEFAULT_CALORIE_ADJUSTMENTS).toEqual({ cut: -400, maintain: 0, mass: 300 })
+    expect(calculateAutomaticCalorieMacroTargets({ ...MALE_PROFILE, objective: 'cut', calorieAdjustment: undefined }).targetCalories).toBe(2359)
+    expect(calculateAutomaticCalorieMacroTargets({ ...MALE_PROFILE, objective: 'mass', calorieAdjustment: undefined }).targetCalories).toBe(3059)
   })
 
   it('preserves the Production male and historical non-male BMR branches', () => {
@@ -116,9 +72,9 @@ describe('calculateAutomaticCalorieMacroTargets', () => {
   })
 
   it.each([
-    ['cut', -400, { targetCalories: 2359, proteinGrams: 192, carbsGrams: 249, fatGrams: 66 }],
-    ['maintain', 0, { targetCalories: 2759, proteinGrams: 160, carbsGrams: 323, fatGrams: 92 }],
-    ['bulk', 300, { targetCalories: 3059, proteinGrams: 176, carbsGrams: 398, fatGrams: 85 }],
+    ['cut', -400, { targetCalories: 2359, proteinGrams: 176, carbsGrams: 270, fatGrams: 64 }],
+    ['maintain', 0, { targetCalories: 2759, proteinGrams: 160, carbsGrams: 368, fatGrams: 72 }],
+    ['bulk', 300, { targetCalories: 3059, proteinGrams: 144, carbsGrams: 441, fatGrams: 80 }],
   ] as const)('preserves the %s automatic target', (objective, calorieAdjustment, expected) => {
     expect(calculateAutomaticCalorieMacroTargets({
       ...MALE_PROFILE,
@@ -136,9 +92,9 @@ describe('calculateAutomaticCalorieMacroTargets', () => {
       bmr: 1780,
       tdee: 2759,
       targetCalories: 2209,
-      proteinGrams: 192,
-      carbsGrams: 223,
-      fatGrams: 61,
+      proteinGrams: 176,
+      carbsGrams: 232,
+      fatGrams: 64,
     })
   })
 
