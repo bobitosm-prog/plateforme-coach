@@ -90,7 +90,7 @@ export default function useCoachAnalytics(coachId: string | null) {
       return
     }
 
-    // 2-4. Fetch en parallèle : sessions 30j, weight 7j, meal tracking 7j
+    // 2-4. Fetch en parallèle : sessions 30j, weight 7j, journal alimentaire 7j
     const [sessionsRes, weightsRes, mealsRes] = await Promise.all([
       supabase
         .from('completed_sessions')
@@ -105,8 +105,8 @@ export default function useCoachAnalytics(coachId: string | null) {
         .gte('date', fetch7d)
         .order('date', { ascending: true }),
       supabase
-        .from('meal_tracking')
-        .select('user_id, date, is_completed')
+        .from('daily_food_logs')
+        .select('user_id, date, meal_type')
         .in('user_id', clientIds)
         .gte('date', fetch7d),
     ])
@@ -127,12 +127,13 @@ export default function useCoachAnalytics(coachId: string | null) {
       weightsByClient.set(w.user_id, arr)
     }
 
-    // Agréger meal tracking par client
-    const mealsByClient = new Map<string, number>()
+    // Un repas peut contenir plusieurs aliments : compter les couples date/type,
+    // jamais les lignes alimentaires individuelles.
+    const mealsByClient = new Map<string, Set<string>>()
     for (const m of (mealsRes.data || [])) {
-      if (m.is_completed) {
-        mealsByClient.set(m.user_id, (mealsByClient.get(m.user_id) || 0) + 1)
-      }
+      const meals = mealsByClient.get(m.user_id) ?? new Set<string>()
+      meals.add(`${m.date}:${m.meal_type}`)
+      mealsByClient.set(m.user_id, meals)
     }
 
     // Calculer les métriques par client
@@ -142,7 +143,7 @@ export default function useCoachAnalytics(coachId: string | null) {
       const allSessions = sessionsByClient.get(cid) || []
       const sessions7d = allSessions.filter(d => d >= fetch7d)
       const weights = weightsByClient.get(cid) || []
-      const mealsCompleted = mealsByClient.get(cid) || 0
+      const mealsCompleted = mealsByClient.get(cid)?.size ?? 0
 
       // Dernière activité
       const lastSessionDate = allSessions.length > 0

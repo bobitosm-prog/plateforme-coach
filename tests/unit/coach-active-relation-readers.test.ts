@@ -118,6 +118,9 @@ describe('coach analytics active relation cohort', () => {
     expect(relationLookup).toBeLessThan(source.indexOf(".from('completed_sessions')"))
     expect(source).toContain(".in('client_id', clientIds)")
     expect(source).toContain(".in('user_id', clientIds)")
+    expect(source).toContain(".from('daily_food_logs')")
+    expect(source).not.toContain(".from('meal_tracking')")
+    expect(source).toContain('new Set<string>()')
     expect(source).not.toContain(".from('coach_clients')")
   })
 
