@@ -7,17 +7,15 @@ import { buildHomeViewModel } from '@/lib/home/home-dashboard-model'
 import { getHomeDayWindow } from '@/lib/home/home-date'
 
 const hook = readFileSync('app/hooks/useHomeDashboardModel.ts', 'utf8')
+const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
 
 describe('Home V2 nutrition schema contract', () => {
-  it('uses daily food logs as the canonical ledger and canonical personal plan columns', () => {
+  it('uses daily food logs and the shared personal-plan compatibility repository', () => {
     expect(hook).toContain(".from('daily_food_logs')")
     expect(hook).not.toContain(".from('meal_tracking')")
-    expect(hook).toContain(".from('meal_plans')")
-    expect(hook).toContain(".select('plan')")
-    expect(hook).toContain(".eq('active', true)")
+    expect(hook).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(personalPlanRepository).toContain('plan:plan_data,active:is_active')
     expect(hook).toContain('plan.data?.plan')
-    expect(hook).not.toContain('plan_data')
-    expect(hook).not.toContain('is_active')
     expect(hook).not.toContain('plan.data?.plan_data')
   })
 

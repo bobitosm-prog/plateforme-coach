@@ -19,6 +19,7 @@ import {
   resolveNutritionProgramAccess,
   type NutritionPlanStatus,
 } from '../../../../lib/nutrition/nutrition-program-access'
+import { readActivePersonalMealPlan } from '../../../../lib/meal-plan/personal-plan-repository'
 import styles from './NutritionProgramSection.module.css'
 
 const NutritionPreferences = dynamic(() => import('../../NutritionPreferences'), {
@@ -141,14 +142,7 @@ export default function NutritionProgramSection({
   const refreshPlans = useCallback(async () => {
     if (!userId) return
     setSnapshot(current => ({ ...current, loading: true, error: false, coachPlan: null }))
-    const personalRequest = supabase
-      .from('meal_plans')
-      .select('id,plan,active,created_at')
-      .eq('user_id', userId)
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const personalRequest = readActivePersonalMealPlan(supabase, userId)
     const coachRequest = coachRelationIsAuthoritative && coachId
       ? supabase
         .from('client_meal_plans')

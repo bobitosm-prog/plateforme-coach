@@ -6,6 +6,7 @@ const tab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 const tools = readFileSync('app/components/nutrition-v2/NutritionTools.tsx', 'utf8')
 const recipes = readFileSync('app/components/RecipesSection.tsx', 'utf8')
 const hook = readFileSync('app/hooks/useNutritionDashboardModel.ts', 'utf8')
+const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
 const styles = readFileSync('app/components/nutrition-v2/NutritionV2.module.css', 'utf8')
 const messages = readFileSync('messages/fr.json', 'utf8')
 
@@ -68,7 +69,8 @@ describe('Nutrition V2 performance and accessibility guardrails', () => {
   it('adds no duplicate permanent dashboard reads', () => {
     expect(hook.match(/\.from\('daily_food_logs'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('meal_tracking'\)/g)).toBeNull()
-    expect(hook.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
+    expect(hook).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(personalPlanRepository.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('client_meal_plans'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('water_intake'\)/g)).toHaveLength(1)
   })

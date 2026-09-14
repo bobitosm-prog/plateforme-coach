@@ -12,6 +12,7 @@ import { getNutritionDayWindow, getNutritionWeekWindow } from '@/lib/nutrition/n
 const component = readFileSync('app/components/nutrition-v2/ActiveNutritionPlan.tsx', 'utf8')
 const tab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 const hook = readFileSync('app/hooks/useNutritionDashboardModel.ts', 'utf8')
+const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
 const relationRepository = readFileSync('lib/coach-relations/repository.ts', 'utf8')
 const styles = readFileSync('app/components/nutrition-v2/NutritionV2.module.css', 'utf8')
 const messages = readFileSync('messages/fr.json', 'utf8')
@@ -167,7 +168,8 @@ describe('Nutrition V2 active plan UI contract', () => {
     expect(tab).toContain("supabase.from('daily_food_logs').insert(inserts)")
     expect(tab).not.toContain("supabase.from('meal_tracking').insert")
     expect(component).not.toContain('.from(')
-    expect(hook.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
+    expect(hook).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(personalPlanRepository.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('client_meal_plans'\)/g)).toHaveLength(1)
   })
 

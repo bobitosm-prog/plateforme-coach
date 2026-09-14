@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
+import { readActivePersonalMealPlan } from '@/lib/meal-plan/personal-plan-repository'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { replacePersonalTrainingProgram } from '@/lib/training/replace-personal-program'
 import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profile-service'
@@ -213,14 +214,7 @@ export default function useInitialGeneration(
           .maybeSingle()
         return classifyRead(result, row => isRecord(row) && isRecord(row.plan))
       }
-      const result = await supabase
-        .from('meal_plans')
-        .select('id,plan,active')
-        .eq('user_id', userId)
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      const result = await readActivePersonalMealPlan(supabase, userId)
       return classifyRead(result, row => isRecord(row) && isRecord(row.plan))
     }
 

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const account = readFileSync('app/components/tabs/AccountTab.tsx', 'utf8')
 const program = readFileSync('app/components/tabs/profile/NutritionProgramSection.tsx', 'utf8')
+const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
 const access = readFileSync('lib/nutrition/nutrition-program-access.ts', 'utf8')
 const programStyles = readFileSync('app/components/tabs/profile/NutritionProgramSection.module.css', 'utf8')
 const nutrition = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
@@ -81,7 +82,8 @@ describe('Nutrition generation relocation', () => {
 
 describe('Plan authority and safety', () => {
   it('loads only the two plan sources when the dedicated Account screen mounts', () => {
-    expect(program.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
+    expect(program).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(personalPlanRepository.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
     expect(program.match(/\.from\('client_meal_plans'\)/g)).toHaveLength(1)
     expect(program).not.toMatch(/daily_food_logs|meal_tracking|water_intake/)
     expect(account).not.toMatch(/meal_plans|client_meal_plans/)

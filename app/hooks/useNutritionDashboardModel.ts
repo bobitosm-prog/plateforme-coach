@@ -19,6 +19,7 @@ import {
   getNutritionDayWindow,
   getNutritionWeekWindow,
 } from '../../lib/nutrition/nutrition-date'
+import { readActivePersonalMealPlan } from '../../lib/meal-plan/personal-plan-repository'
 
 interface UseNutritionDashboardModelInput {
   supabase: SupabaseClient
@@ -89,14 +90,7 @@ export default function useNutritionDashboardModel({
         .lte('date', day.localDateKey)
         .order('created_at', { ascending: true })
         .limit(1000),
-      supabase
-        .from('meal_plans')
-        .select('id,user_id,plan,active,created_at')
-        .eq('user_id', userId)
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+      readActivePersonalMealPlan(supabase, userId),
       coachPlanRead,
       supabase
         .from('water_intake')

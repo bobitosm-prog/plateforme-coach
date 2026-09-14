@@ -225,7 +225,7 @@ describe('initial generation hardening', () => {
     const trainingInsert = trainingReplacementSource.indexOf(".from('custom_programs')\n    .insert")
     const trainingDeactivate = trainingReplacementSource.indexOf(".from('custom_programs')\n    .update({ is_active: false })", trainingInsert)
     const mealInsert = mealReplacementSource.indexOf(".from('meal_plans')\n    .insert")
-    const mealDeactivate = mealReplacementSource.indexOf(".from('meal_plans')\n    .update({ active: false })", mealInsert)
+    const mealDeactivate = mealReplacementSource.indexOf(".from('meal_plans')\n    .update({ [activeColumn]: false })", mealInsert)
     expect(trainingInsert).toBeGreaterThan(-1)
     expect(trainingDeactivate).toBeGreaterThan(trainingInsert)
     expect(mealInsert).toBeGreaterThan(-1)

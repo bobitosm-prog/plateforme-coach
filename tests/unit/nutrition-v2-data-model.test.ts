@@ -16,6 +16,7 @@ import {
 import type { NutritionPlanGenerationConfig } from '@/lib/nutrition/nutrition-plan-generation'
 
 const hook = readFileSync('app/hooks/useNutritionDashboardModel.ts', 'utf8')
+const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
 const tab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 const page = readFileSync('app/(application)/page.tsx', 'utf8')
 
@@ -51,13 +52,12 @@ function input(overrides: Partial<NutritionViewModelInput> = {}): NutritionViewM
   }
 }
 
-describe('Nutrition V2 canonical schema', () => {
-  it('uses deployed canonical columns and removes obsolete aliases', () => {
+describe('Nutrition V2 canonical domain', () => {
+  it('normalizes the deployed physical columns behind one repository', () => {
     expect(hook).not.toContain(".from('meal_tracking')")
-    expect(hook).toContain(".select('id,user_id,plan,active,created_at')")
-    expect(hook).toContain(".eq('active', true)")
-    expect(hook).not.toContain('plan_data')
-    expect(hook).not.toContain('is_active')
+    expect(hook).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(personalPlanRepository).toContain('plan:plan_data,active:is_active')
+    expect(personalPlanRepository).toContain("'id,user_id,plan,active,created_at'")
     expect(tab).not.toMatch(/total_proteins|total_fats|use_count/)
   })
 

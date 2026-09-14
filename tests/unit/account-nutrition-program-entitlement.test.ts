@@ -99,10 +99,11 @@ describe('nutrition plan status safety', () => {
 
   it('keeps canonical bounded reads and clears stale coach state', () => {
     const source = readFileSync('app/components/tabs/profile/NutritionProgramSection.tsx', 'utf8')
-    expect(source).toContain(".select('id,plan,active,created_at')")
-    expect(source).toContain(".eq('active', true)")
+    const repository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
+    expect(source).toContain('readActivePersonalMealPlan(supabase, userId)')
+    expect(repository).toContain('plan:plan_data,active:is_active')
+    expect(repository).toContain("legacy ? 'is_active' : 'active'")
     expect(source).toContain(".select('id,coach_id,plan,created_at,updated_at')")
     expect(source).toContain("setSnapshot(current => ({ ...current, loading: true, error: false, coachPlan: null }))")
-    expect(source).not.toMatch(/plan_data|is_active/)
   })
 })

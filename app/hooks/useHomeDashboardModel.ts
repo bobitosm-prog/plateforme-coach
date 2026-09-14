@@ -20,6 +20,7 @@ import {
   type RecoveryExerciseMetadata,
   type RecoveryWorkoutSession,
 } from '../../lib/home/recovery-model'
+import { readActivePersonalMealPlan } from '../../lib/meal-plan/personal-plan-repository'
 
 interface HomeSupplementalData {
   xp: number | null
@@ -226,13 +227,7 @@ export default function useHomeDashboardModel({
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
         .maybeSingle(),
-      supabase.from('meal_plans')
-        .select('plan')
-        .eq('user_id', userId)
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+      readActivePersonalMealPlan(supabase, userId),
       supabase.from('daily_food_logs')
         .select('calories,protein,carbs,fat')
         .eq('user_id', userId)
