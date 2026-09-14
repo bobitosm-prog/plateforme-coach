@@ -8,6 +8,7 @@ import { ArrowLeft, Check, Dumbbell, Target, ChevronDown, ChevronUp, Loader2 } f
 import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
+import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
@@ -97,6 +98,11 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
       if (adj.fat_goal_new) updates.fat_goal = adj.fat_goal_new
 
       const macrosChanged = Object.keys(updates).length > 0
+      const volumeDeltaPct = typeof adj.training_volume_delta_pct === 'number' ? adj.training_volume_delta_pct : 0
+      const volumeChanged = volumeDeltaPct !== 0
+
+      if (macrosChanged && !await regenMealPlan(updates)) throw new Error('Meal plan regeneration failed')
+      if (volumeChanged && !await regenProgram(volumeDeltaPct)) throw new Error('Training regeneration failed')
 
       if (macrosChanged) {
         const { error } = await updateProfile(userId, updates, supabase)
@@ -105,40 +111,29 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
         cache.remove(`dashboard_${userId}`)
       }
 
-      await supabase
+      const { error: appliedError } = await supabase
         .from('weekly_diagnostics')
         .update({
           applied_at: new Date().toISOString(),
           applied_changes: updates,
         })
         .eq('id', diagnostic.id)
+      if (appliedError) throw appliedError
 
       setApplied(true)
-      setApplying(false)
-
-      // F6.A.2 + F6.B.5b : auto-regen meal plan (si macros) puis programme (si volume), best-effort
-      const volumeDeltaPct = typeof adj.training_volume_delta_pct === 'number' ? adj.training_volume_delta_pct : 0
-      const volumeChanged = volumeDeltaPct !== 0
-      if (macrosChanged || volumeChanged) {
-        // Chaîne séquentielle pour éviter 2 appels IA simultanés + chevauchement des messages
-        ;(async () => {
-          if (macrosChanged) await regenMealPlan(updates)
-          if (volumeChanged) await regenProgram(volumeDeltaPct)
-        })()
-      } else {
+      if (!macrosChanged && !volumeChanged) {
         setRegenMsg(t('apply_success_no_regen'))
         setTimeout(() => setRegenMsg(''), 3000)
       }
     } catch (e) {
       console.error('Apply error:', e)
+    } finally {
       setApplying(false)
     }
   }
 
-  // F6.A.2 : régénération meal plan via SSE streaming (best-effort)
-  // Si l'user ferme la page, les macros sont déjà saved.
-  async function regenMealPlan(macrosOverrides: Record<string, number>) {
-    if (!userId) return
+  async function regenMealPlan(macrosOverrides: Record<string, number>): Promise<boolean> {
+    if (!userId) return false
     setRegenMsg(t('regen_starting'))
 
     try {
@@ -189,35 +184,24 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
       if (!planData) throw new Error('No plan received')
 
-      await supabase
-        .from('meal_plans')
-        .update({ active: false })
-        .eq('user_id', userId)
-        .eq('active', true)
-
-      const { error: insertErr } = await supabase
-        .from('meal_plans')
-        .insert({
-          user_id: userId,
-          plan: planData,
-          active: true,
-        })
-
-      if (insertErr) throw insertErr
+      const replacement = await replacePersonalMealPlan(supabase, userId, planData)
+      if (!replacement.ok) throw new Error(`Meal plan replacement failed: ${replacement.stage}`)
 
       setRegenMsg(t('regen_success'))
       setTimeout(() => setRegenMsg(''), 3000)
+      return true
     } catch (e: any) {
       console.error('Regen meal plan error:', e)
       setRegenMsg(t('regen_error'))
       setTimeout(() => setRegenMsg(''), 5000)
+      return false
     }
   }
 
   // F6.B.5b : régénération programme training via JSON (best-effort)
   // Déclenchée quand le diagnostic recommande un ajustement de volume.
-  async function regenProgram(volumeDeltaPct: number) {
-    if (!userId) return
+  async function regenProgram(volumeDeltaPct: number): Promise<boolean> {
+    if (!userId) return false
     setRegenMsg(t('regen_program_starting'))
     try {
       const { data: profile, error: profErr } = await supabase
@@ -265,10 +249,12 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
       cache.remove(`dashboard_${userId}`)
       setRegenMsg(t('regen_program_success'))
       setTimeout(() => setRegenMsg(''), 3000)
+      return true
     } catch (e: any) {
       console.error('Regen program error:', e)
       setRegenMsg(t('regen_program_error'))
       setTimeout(() => setRegenMsg(''), 5000)
+      return false
     }
   }
 

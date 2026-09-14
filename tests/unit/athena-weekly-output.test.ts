@@ -10,6 +10,7 @@ describe('Athena weekly output', () => {
   it('does not award nutrition compliance without nutrition evidence', () => expect(calculateWeeklyExecutionScore({ ...evidence, nutritionDays: 0, calorieCompliancePct: null, proteinCompliancePct: null })).toBe(25))
   it('removes nutrition changes without sufficient coverage', () => expect(validateAthenaWeeklyOutput(output, { ...evidence, nutritionDays: 2, weightMeasurements: 1 }).ajustements).not.toHaveProperty('calorie_goal_new'))
   it('removes training changes without repeated sessions', () => expect(validateAthenaWeeklyOutput(output, { ...evidence, adherencePct: 25, completedSessions: 1 }).ajustements).not.toHaveProperty('training_volume_delta_pct'))
+  it('applies only one adjustment domain at a time', () => expect(validateAthenaWeeklyOutput(output, evidence).ajustements).toEqual({ calorie_goal_new: 2100 }))
   it('never invents an exercise from aggregate evidence', () => expect(validateAthenaWeeklyOutput(output, evidence).exercice_a_ajouter).toBe(''))
   it('rejects unbounded output', () => expect(() => validateAthenaWeeklyOutput({ ...output, raisonnement: 'x'.repeat(1000) }, { ...evidence, adherencePct: 0, nutritionDays: 0, completedSessions: 0 })).toThrow(/non conforme/))
 })

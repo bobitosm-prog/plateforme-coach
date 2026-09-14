@@ -9,6 +9,7 @@ import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } fr
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
 import type { Profile } from '../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
+import { replacePersonalMealPlan } from '../../lib/meal-plan/replace-personal-plan'
 
 // ─── Constants ───
 
@@ -323,16 +324,9 @@ export default function NutritionPreferences({
         setToastMsg('Generation echouee — aucun plan recu')
         setTimeout(() => setToastMsg(''), 3000)
       } else {
-        // Deactivate old plans first
-        await supabase.from('meal_plans').update({ active: false }).eq('user_id', userId).eq('active', true)
-        // Insert new plan
-        const { error: insertErr } = await supabase.from('meal_plans').insert({
-          user_id: userId,
-          plan: planData,
-          active: true,
-        })
-        if (insertErr) {
-          console.error('Insert meal_plans error:', insertErr)
+        const replacement = await replacePersonalMealPlan(supabase, userId, planData)
+        if (!replacement.ok) {
+          console.error('Replace meal plan failed:', replacement.stage)
           setToastMsg(t('save.generationError'))
           setTimeout(() => setToastMsg(''), 3000)
         } else {

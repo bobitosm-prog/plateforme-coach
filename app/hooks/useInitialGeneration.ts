@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
+import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
@@ -260,29 +261,11 @@ export default function useInitialGeneration(
 
     const persistNutrition = async (payload: unknown): Promise<boolean> => {
       if (!isValidInitialMealPlan(payload)) return false
-      const { data: inserted, error: insertError } = await supabase
-        .from('meal_plans')
-        .insert({ user_id: userId, plan: payload, active: true })
-        .select('id,created_at')
-        .single()
-      if (insertError || !inserted?.id || !inserted.created_at) return false
-
-      const { error: deactivateError } = await supabase
-        .from('meal_plans')
-        .update({ active: false })
-        .eq('user_id', userId)
-        .eq('active', true)
-        .lt('created_at', inserted.created_at)
-        .neq('id', inserted.id)
-      if (!deactivateError) return true
-
-      const { error: rollbackError } = await supabase
-        .from('meal_plans')
-        .update({ active: false })
-        .eq('id', inserted.id)
-        .eq('user_id', userId)
-      if (rollbackError) reportError('error', '[initial-generation] nutrition rollback failed', { userId })
-      return false
+      const result = await replacePersonalMealPlan(supabase, userId, payload)
+      if (!result.ok && result.stage === 'rollback') {
+        reportError('error', '[initial-generation] nutrition rollback failed', { userId })
+      }
+      return result.ok
     }
 
     const checkQuota = async (): Promise<QuotaCheckResult> => {

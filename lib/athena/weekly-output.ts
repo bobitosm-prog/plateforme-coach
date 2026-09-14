@@ -49,6 +49,11 @@ export function validateAthenaWeeklyOutput(value: unknown, evidence: WeeklyEvide
     delete adjustments.fat_goal_new
   }
   if (evidence.completedSessions < 2 || evidence.plannedSessions <= 0) delete adjustments.training_volume_delta_pct
+  const hasNutritionAdjustment = adjustments.calorie_goal_new !== undefined
+    || adjustments.protein_goal_new !== undefined
+    || adjustments.carbs_goal_new !== undefined
+    || adjustments.fat_goal_new !== undefined
+  if (hasNutritionAdjustment) delete adjustments.training_volume_delta_pct
   const score = calculateWeeklyExecutionScore(evidence)
   return { ...parsed.data, ajustements: adjustments, score_semaine: score, exercice_a_ajouter: '' }
 }

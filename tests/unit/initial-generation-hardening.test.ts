@@ -17,6 +17,7 @@ import {
 } from '@/app/hooks/useInitialGeneration'
 
 const hookSource = readFileSync(resolve(process.cwd(), 'app/hooks/useInitialGeneration.ts'), 'utf8')
+const mealReplacementSource = readFileSync(resolve(process.cwd(), 'lib/meal-plan/replace-personal-plan.ts'), 'utf8')
 
 function readySnapshot(overrides: Partial<InitialGenerationSnapshot> = {}): InitialGenerationSnapshot {
   return {
@@ -222,13 +223,13 @@ describe('initial generation hardening', () => {
   it('documents safe write ordering, duplicate-run protection, and partial DB idempotency', () => {
     const trainingInsert = hookSource.indexOf(".from('custom_programs')\n        .insert")
     const trainingDeactivate = hookSource.indexOf(".from('custom_programs')\n        .update({ is_active: false })", trainingInsert)
-    const mealInsert = hookSource.indexOf(".from('meal_plans')\n        .insert")
-    const mealDeactivate = hookSource.indexOf(".from('meal_plans')\n        .update({ active: false })", mealInsert)
+    const mealInsert = mealReplacementSource.indexOf(".from('meal_plans')\n    .insert")
+    const mealDeactivate = mealReplacementSource.indexOf(".from('meal_plans')\n    .update({ active: false })", mealInsert)
     expect(trainingInsert).toBeGreaterThan(-1)
     expect(trainingDeactivate).toBeGreaterThan(trainingInsert)
     expect(mealInsert).toBeGreaterThan(-1)
     expect(mealDeactivate).toBeGreaterThan(mealInsert)
-    expect(hookSource).toContain(".lt('created_at', inserted.created_at)")
+    expect(mealReplacementSource).toContain(".lt('created_at', inserted.created_at)")
     expect(hookSource).toContain("'[initial-generation] training rollback failed'")
     expect(hookSource).toContain("'[initial-generation] nutrition rollback failed'")
     expect(hookSource).toContain('inFlightByUser')
