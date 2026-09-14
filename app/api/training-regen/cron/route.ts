@@ -3,11 +3,15 @@ import { createClient } from '@supabase/supabase-js'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { generateProgram } from '@/lib/training/generate-program'
 import { loadExerciseCatalog } from '@/lib/training/load-exercise-catalog'
+import { buildAthenaClientContext, formatAthenaClientContextForPrompt } from '@/lib/athena/client-context'
+import { clearPlanRegenerationRequest, readPlanRegenerationRequest } from '@/lib/athena/objective-transition'
+import { replacePersonalTrainingProgram } from '@/lib/training/replace-personal-program'
+import type { Profile } from '@/lib/profile-service'
 
 // Vercel : Hobby clamp 60s, Pro 300s. La génération programme ~50s/user.
 // Capacité réelle : ~1 user/run sur Hobby (60s), ~5-6 users/run sur Pro (300s).
-// Le filtre next_program_regen_at <= NOW limite naturellement le volume par run.
-// TODO upgrade Vercel Pro quand on atteint 10 clients payants.
+// Only explicit, versioned objective-change requests are processed. Programs
+// are not replaced on a timer merely to create novelty.
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
@@ -34,16 +38,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
   }
 
-  // 4. FETCH USERS DUE (next_program_regen_at <= NOW, role client, onboarded)
-  const nowIso = new Date().toISOString()
-  console.log(`[cron training-regen] Filtering users due (now=${nowIso})`)
-
+  // 4. FETCH EXPLICIT REGENERATION REQUESTS
   const { data: users, error: usersErr } = await supabaseAdmin
     .from('profiles')
     .select('*')
     .eq('role', 'client')
     .eq('onboarding_completed', true)
-    .lte('next_program_regen_at', nowIso)
+    .not('onboarding_answers->plan_regeneration_request', 'is', null)
 
   if (usersErr) {
     console.error('[cron training-regen] Error fetching users:', usersErr)
@@ -60,50 +61,49 @@ export async function POST(req: NextRequest) {
     total: users?.length || 0,
     success: 0,
     errors: 0,
-    details: [] as { user_id: string; status: string; error?: string }[],
+    details: [] as { user_id: string; status: string }[],
   }
   const allUsers = users || []
-  const next14j = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
   for (let i = 0; i < allUsers.length; i += CONCURRENCY) {
     const batch = allUsers.slice(i, i + CONCURRENCY)
-    await Promise.all(batch.map(async (profile: any) => {
+    await Promise.all(batch.map(async (profile: Profile) => {
       try {
+        const request = readPlanRegenerationRequest(profile.onboarding_answers)
+        if (!request) {
+          results.errors++
+          results.details.push({ user_id: profile.id, status: 'invalid_request' })
+          return
+        }
         const params = buildProgramParams(profile, {
-          notes: 'Varie les exercices et la structure par rapport au programme precedent pour eviter la stagnation, tout en respectant le meme objectif et niveau.',
+          notes: `Remplace le programme car le client a explicitement changé son objectif vers ${request.objective}. Conserve les contraintes déclarées et ne change que ce que le nouvel objectif exige.`,
         })
-        const program = await generateProgram(params, apiKey, catalog)
+        const clientContext = formatAthenaClientContextForPrompt(buildAthenaClientContext(profile))
+        const program = await generateProgram({ ...params, clientContext }, apiKey, catalog)
         if (!program) throw new Error('No program generated')
 
-        // Deactivate old + insert new
-        await supabaseAdmin
-          .from('custom_programs')
-          .update({ is_active: false })
-          .eq('user_id', profile.id)
-          .eq('is_active', true)
-        const { error: insertErr } = await supabaseAdmin
-          .from('custom_programs')
-          .insert({
-            user_id: profile.id,
-            name: program.program_name || 'Programme IA',
-            description: program.description || '',
-            days: program.days || [],
-            source: 'cron_auto',
-            is_active: true,
-          })
-        if (insertErr) throw insertErr
+        const replacement = await replacePersonalTrainingProgram(supabaseAdmin, profile.id, {
+          name: program.program_name || 'Programme IA',
+          description: program.description || '',
+          days: program.days || [],
+          source: 'objective_change',
+        })
+        if (!replacement.ok) throw new Error('Program replacement failed')
 
-        // Repousse le prochain regen +14j
-        await supabaseAdmin
+        const { error: profileUpdateError } = await supabaseAdmin
           .from('profiles')
-          .update({ next_program_regen_at: next14j() })
+          .update({
+            onboarding_answers: clearPlanRegenerationRequest(profile.onboarding_answers),
+            next_program_regen_at: null,
+          })
           .eq('id', profile.id)
+        if (profileUpdateError) throw new Error('Profile marker clear failed')
 
         results.success++
         results.details.push({ user_id: profile.id, status: 'success' })
-      } catch (e: any) {
+      } catch {
         results.errors++
-        results.details.push({ user_id: profile.id, status: 'error', error: e.message })
+        results.details.push({ user_id: profile.id, status: 'error' })
       }
     }))
   }

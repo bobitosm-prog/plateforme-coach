@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 import { buildProgramParams } from '@/lib/training/build-program-params'
+import { replacePersonalTrainingProgram } from '@/lib/training/replace-personal-program'
 import { updateProfile, invalidateProfileCache, type Profile } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
@@ -225,38 +226,14 @@ export default function useInitialGeneration(
 
     const persistTraining = async (payload: unknown): Promise<boolean> => {
       if (!isValidInitialProgram(payload)) return false
-      // There is no unique active constraint. Insert active first so an old
-      // active resource is never removed before its replacement is durable.
-      const { data: inserted, error: insertError } = await supabase
-        .from('custom_programs')
-        .insert({
-          user_id: userId,
-          name: payload.program_name || 'Programme IA',
-          description: payload.description || '',
-          days: payload.days,
-          source: 'onboarding_auto',
-          is_active: true,
-        })
-        .select('id,created_at')
-        .single()
-      if (insertError || !inserted?.id || !inserted.created_at) return false
-
-      const { error: deactivateError } = await supabase
-        .from('custom_programs')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .lt('created_at', inserted.created_at)
-        .neq('id', inserted.id)
-      if (!deactivateError) return true
-
-      const { error: rollbackError } = await supabase
-        .from('custom_programs')
-        .update({ is_active: false })
-        .eq('id', inserted.id)
-        .eq('user_id', userId)
-      if (rollbackError) reportError('error', '[initial-generation] training rollback failed', { userId })
-      return false
+      const result = await replacePersonalTrainingProgram(supabase, userId, {
+        name: payload.program_name || 'Programme IA',
+        description: payload.description || '',
+        days: payload.days,
+        source: 'onboarding_auto',
+      })
+      if (!result.ok && result.stage === 'rollback') reportError('error', '[initial-generation] training rollback failed', { userId })
+      return result.ok
     }
 
     const persistNutrition = async (payload: unknown): Promise<boolean> => {
@@ -328,7 +305,7 @@ export default function useInitialGeneration(
       }
       const { data, error } = await updateProfile(userId, {
         needs_initial_generation: false,
-        next_program_regen_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        next_program_regen_at: null,
         ...(regenerationRequest ? {
           onboarding_answers: clearPlanRegenerationRequest(onboardingAnswers),
         } : {}),

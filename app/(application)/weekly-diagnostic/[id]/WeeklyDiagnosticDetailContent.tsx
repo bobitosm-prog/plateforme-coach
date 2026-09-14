@@ -11,6 +11,7 @@ import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 import { buildProgramParams } from '@/lib/training/build-program-params'
 import { consumeProgramStream } from '@/lib/training/consume-program-stream'
+import { replacePersonalTrainingProgram } from '@/lib/training/replace-personal-program'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -224,26 +225,16 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
       const program = await consumeProgramStream(res)
       if (!program) throw new Error('No program received')
 
-      await supabase
-        .from('custom_programs')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('is_active', true)
-      const { error: insertErr } = await supabase
-        .from('custom_programs')
-        .insert({
-          user_id: userId,
-          name: program.program_name || 'Programme IA',
-          description: program.description || '',
-          days: program.days || [],
-          source: 'diagnostic_auto',
-          is_active: true,
-        })
-      if (insertErr) throw insertErr
+      const replacement = await replacePersonalTrainingProgram(supabase, userId, {
+        name: program.program_name || 'Programme IA',
+        description: program.description || '',
+        days: program.days || [],
+        source: 'diagnostic_auto',
+      })
+      if (!replacement.ok) throw new Error(`Training replacement failed: ${replacement.stage}`)
 
-      // F6.B.6 : programme regenere -> repousse le prochain regen auto de 14j (evite double regen avec le cron)
       await updateProfile(userId, {
-        next_program_regen_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        next_program_regen_at: null,
       }, supabase)
       invalidateProfileCache()
       cache.remove(`dashboard_${userId}`)

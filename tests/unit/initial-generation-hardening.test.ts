@@ -18,6 +18,7 @@ import {
 
 const hookSource = readFileSync(resolve(process.cwd(), 'app/hooks/useInitialGeneration.ts'), 'utf8')
 const mealReplacementSource = readFileSync(resolve(process.cwd(), 'lib/meal-plan/replace-personal-plan.ts'), 'utf8')
+const trainingReplacementSource = readFileSync(resolve(process.cwd(), 'lib/training/replace-personal-program.ts'), 'utf8')
 
 function readySnapshot(overrides: Partial<InitialGenerationSnapshot> = {}): InitialGenerationSnapshot {
   return {
@@ -221,8 +222,8 @@ describe('initial generation hardening', () => {
   })
 
   it('documents safe write ordering, duplicate-run protection, and partial DB idempotency', () => {
-    const trainingInsert = hookSource.indexOf(".from('custom_programs')\n        .insert")
-    const trainingDeactivate = hookSource.indexOf(".from('custom_programs')\n        .update({ is_active: false })", trainingInsert)
+    const trainingInsert = trainingReplacementSource.indexOf(".from('custom_programs')\n    .insert")
+    const trainingDeactivate = trainingReplacementSource.indexOf(".from('custom_programs')\n    .update({ is_active: false })", trainingInsert)
     const mealInsert = mealReplacementSource.indexOf(".from('meal_plans')\n    .insert")
     const mealDeactivate = mealReplacementSource.indexOf(".from('meal_plans')\n    .update({ active: false })", mealInsert)
     expect(trainingInsert).toBeGreaterThan(-1)
