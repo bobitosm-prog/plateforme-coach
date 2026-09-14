@@ -366,9 +366,8 @@ export default function useClientDetail() {
   }
 
   const acceptAiMealPlan = async () => {
-    if (!aiMealPreview || !profile) return
+    if (!aiMealPreview || !profile || !coachId) return
     const planData = aiMealPreview
-    const lundi = planData.lundi || {}
     // Round all numeric values to integers for DB integer columns
     const roundPlan = (plan: any) => {
       const rounded = { ...plan }
@@ -395,14 +394,20 @@ export default function useClientDetail() {
       return rounded
     }
     const roundedPlan = roundPlan(planData)
-    const { error } = await supabase.from('meal_plans').insert({
-      user_id: profile.id, created_by: coachId,
-      total_calories: Math.round(lundi.total_kcal || calorieTarget),
-      protein_g: Math.round(lundi.total_protein || protTarget),
-      carbs_g: Math.round(lundi.total_carbs || carbTarget),
-      fat_g: Math.round(lundi.total_fat || fatTarget),
-      objective: profile.objective, plan_data: roundedPlan, is_active: true,
-    })
+    const payload = {
+      coach_id: coachId,
+      client_id: profile.id,
+      week_start: currentMonday(),
+      calorie_target: Math.round(profile.calorie_goal || calorieTarget),
+      protein_target: Math.round(profile.protein_goal || protTarget),
+      carb_target: Math.round(profile.carbs_goal || carbTarget),
+      fat_target: Math.round(profile.fat_goal || fatTarget),
+      plan: roundedPlan,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = mealPlanId
+      ? await supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
+      : await supabase.from('client_meal_plans').insert(payload)
     if (error) { showToast(`Erreur : ${error.message}`) } else { setAiMealPreview(null); showToast('Plan alimentaire IA envoyé au client'); fetchData() }
   }
 
@@ -437,7 +442,7 @@ export default function useClientDetail() {
     }
     relationAuthorizedRef.current = true
 
-    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, activePlanRes, customProgsRes] = await Promise.all([
+    const [profileRes, sessionsRes, sessionsCountRes, weightRes, notesRes, programRes, mealPlanRes, customProgsRes] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email,current_weight,start_weight,calorie_goal,created_at,phone,birth_date,gender,height,target_weight,body_fat_pct,objective,status,dietary_type,allergies,liked_foods,meal_preferences,activity_level,tdee,protein_goal,carbs_goal,fat_goal').eq('id', id).single(),
       supabase.from('workout_sessions').select('id,created_at,name,completed,duration_minutes,notes,muscles_worked').eq('user_id', id).eq('completed', true).order('created_at', { ascending: false }).limit(100),
       supabase.from('workout_sessions').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('completed', true),
@@ -445,7 +450,6 @@ export default function useClientDetail() {
       supabase.from('coach_notes').select('content').eq('coach_id', coachId).eq('client_id', id).maybeSingle(),
       supabase.from('client_programs').select('id,program').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('client_meal_plans').select('id,calorie_target,protein_target,carb_target,fat_target,plan').eq('coach_id', coachId).eq('client_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('meal_plans').select('*').eq('user_id', id).eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('custom_programs').select('id, name, days, is_active, created_at, source').eq('user_id', id).order('created_at', { ascending: false }).limit(10),
     ])
 
@@ -511,12 +515,12 @@ export default function useClientDetail() {
 
     if (mealPlanRes.data) {
       const mp = mealPlanRes.data; setMealPlanId(mp.id)
+      setClientActivePlan(mp)
       setCalorieTarget(mp.calorie_target ?? 2000); setProtTarget(mp.protein_target ?? 150); setCarbTarget(mp.carb_target ?? 200); setFatTarget(mp.fat_target ?? 70)
       const merged = defaultMealPlan(); const saved = mp.plan as WeekMealPlan
       DAYS.forEach(d => { if (saved[d]) { merged[d] = { meals: MEAL_TYPES.map(type => { const existing = saved[d].meals?.find(m => m.type === type); return existing ?? { type, foods: [] } }) } } })
       setMealPlan(merged)
     }
-    if (activePlanRes.data) setClientActivePlan(activePlanRes.data)
     await fetchWeeklyTracking()
     setLoading(false)
   }, [coachId, id])
@@ -526,7 +530,7 @@ export default function useClientDetail() {
     const d = new Date(); const day = d.getDay()
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
     const mondayDate = d.toISOString().split('T')[0]
-    const { data: trackingData } = await supabase.from('meal_tracking').select('date,meal_type,is_completed').eq('user_id', id).gte('date', mondayDate).eq('is_completed', true).limit(200)
+    const { data: trackingData } = await supabase.from('daily_food_logs').select('date,meal_type').eq('user_id', id).gte('date', mondayDate).limit(500)
     if (trackingData) {
       const map: Record<string, Set<string>> = {}
       for (const r of trackingData) { if (!map[r.date]) map[r.date] = new Set(); map[r.date].add(r.meal_type) }

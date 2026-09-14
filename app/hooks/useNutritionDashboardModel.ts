@@ -80,7 +80,7 @@ export default function useNutritionDashboardModel({
         .maybeSingle()
       : Promise.resolve({ data: null, error: null })
 
-    const [logs, tracking, personalPlan, coachPlan, hydration] = await Promise.all([
+    const [logs, personalPlan, coachPlan, hydration] = await Promise.all([
       supabase
         .from('daily_food_logs')
         .select('id,user_id,date,meal_type,food_id,custom_name,quantity_g,calories,protein,carbs,fat,created_at')
@@ -90,17 +90,10 @@ export default function useNutritionDashboardModel({
         .order('created_at', { ascending: true })
         .limit(1000),
       supabase
-        .from('meal_tracking')
-        .select('date,meal_type,completed:is_completed')
-        .eq('user_id', userId)
-        .gte('date', historyStart)
-        .lte('date', day.localDateKey)
-        .limit(200),
-      supabase
         .from('meal_plans')
-        .select('id,user_id,plan:plan_data,active:is_active,created_at')
+        .select('id,user_id,plan,active,created_at')
         .eq('user_id', userId)
-        .eq('is_active', true)
+        .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -116,14 +109,13 @@ export default function useNutritionDashboardModel({
 
     const errors: Partial<Record<NutritionDataSource, string>> = {}
     if (logs.error) errors.dailyLogs = 'NUTRITION_DAILY_LOGS_READ_FAILED'
-    if (tracking.error) errors.tracking = 'NUTRITION_TRACKING_READ_FAILED'
     if (personalPlan.error) errors.personalPlan = 'NUTRITION_PERSONAL_PLAN_READ_FAILED'
     if (coachPlan.error) errors.coachPlan = 'NUTRITION_COACH_PLAN_READ_FAILED'
     if (hydration.error) errors.hydration = 'NUTRITION_HYDRATION_READ_FAILED'
 
     setSnapshot({
       dailyLogs: (logs.data ?? []) as NutritionLogRow[],
-      tracking: (tracking.data ?? []) as MealTrackingRow[],
+      tracking: [],
       personalPlan: (personalPlan.data ?? null) as PersonalNutritionPlan | null,
       coachPlan: (coachPlan.data ?? null) as CoachNutritionPlan | null,
       hydration: (hydration.data ?? []) as HydrationRow[],

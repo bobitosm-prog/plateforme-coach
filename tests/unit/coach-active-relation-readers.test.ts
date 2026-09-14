@@ -157,4 +157,17 @@ describe('client detail active relation guard', () => {
     expect(source).toContain('!authority.isAuthoritative')
     expect(source).toContain("coachRelationStatus !== 'active'")
   })
+
+  it('uses the coach plan authority and canonical food log ledger', () => {
+    const source = readFileSync('app/(application)/client/[id]/hooks/useClientDetail.ts', 'utf8')
+    const nutrition = readFileSync('app/(application)/client/[id]/components/ClientNutrition.tsx', 'utf8')
+
+    expect(source).toContain("supabase.from('client_meal_plans').update(payload)")
+    expect(source).toContain("supabase.from('client_meal_plans').insert(payload)")
+    expect(source).not.toContain("supabase.from('meal_plans')")
+    expect(source).toContain("supabase.from('daily_food_logs').select('date,meal_type')")
+    expect(source).not.toContain("supabase.from('meal_tracking')")
+    expect(nutrition).toContain('clientActivePlan?.plan')
+    expect(nutrition).not.toContain('plan_data')
+  })
 })

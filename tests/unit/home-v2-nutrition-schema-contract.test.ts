@@ -9,35 +9,25 @@ import { getHomeDayWindow } from '@/lib/home/home-date'
 const hook = readFileSync('app/hooks/useHomeDashboardModel.ts', 'utf8')
 
 describe('Home V2 nutrition schema contract', () => {
-  it('uses the canonical meal tracking and personal plan columns', () => {
-    expect(hook).toContain(".from('meal_tracking')")
-    expect(hook).toContain(".eq('is_completed', true)")
-    expect(hook).not.toContain(".eq('completed', true)")
-
+  it('uses daily food logs as the canonical ledger and canonical personal plan columns', () => {
+    expect(hook).toContain(".from('daily_food_logs')")
+    expect(hook).not.toContain(".from('meal_tracking')")
     expect(hook).toContain(".from('meal_plans')")
-    expect(hook).toContain(".select('plan:plan_data')")
-    expect(hook).toContain(".eq('is_active', true)")
+    expect(hook).toContain(".select('plan')")
+    expect(hook).toContain(".eq('active', true)")
     expect(hook).toContain('plan.data?.plan')
-    expect(hook).not.toContain(".select('plan')")
-    expect(hook).not.toContain(".eq('active', true)")
+    expect(hook).not.toContain('plan_data')
+    expect(hook).not.toContain('is_active')
     expect(hook).not.toContain('plan.data?.plan_data')
   })
 
-  it.each(['tracking', 'plan'] as const)(
-    'keeps canonical food logs when the auxiliary %s read is unavailable',
-    failedSource => {
+  it('keeps canonical food logs when the auxiliary plan read is unavailable', () => {
       const result = resolveHomeNutritionRead({
-        tracking: failedSource === 'tracking'
-          ? { data: null, error: { code: '42703' } }
-          : { data: [], error: null },
-        plan: failedSource === 'plan'
-          ? { data: null, error: { code: 'READ_FAILED' } }
-          : { data: { plan: {} }, error: null },
+        plan: { data: null, error: { code: 'READ_FAILED' } },
         foodLogs: {
           data: [{ meal_type: 'breakfast', calories: 420, protein: 31, carbs: 44, fat: 12 }],
           error: null,
         },
-        dayKey: 'lundi',
       })
 
       expect(result).toMatchObject({
@@ -45,21 +35,16 @@ describe('Home V2 nutrition schema contract', () => {
         values: { calories: 420, protein: 31, carbs: 44, fat: 12 },
       })
       expect(result.errorCode).toBeUndefined()
-    },
-  )
+  })
 
   it('distinguishes an empty day from a canonical food-log failure', () => {
     const empty = resolveHomeNutritionRead({
-      tracking: { data: [], error: null },
       plan: { data: null, error: null },
       foodLogs: { data: [], error: null },
-      dayKey: 'lundi',
     })
     const failed = resolveHomeNutritionRead({
-      tracking: { data: [], error: null },
       plan: { data: null, error: null },
       foodLogs: { data: null, error: { code: 'READ_FAILED' } },
-      dayKey: 'lundi',
     })
 
     expect(empty.state).toBe('empty')
@@ -70,10 +55,8 @@ describe('Home V2 nutrition schema contract', () => {
 
   it('keeps a known empty day empty when the auxiliary plan read fails', () => {
     const result = resolveHomeNutritionRead({
-      tracking: { data: [], error: null },
       plan: { data: null, error: { code: '42703' } },
       foodLogs: { data: [], error: null },
-      dayKey: 'lundi',
     })
 
     expect(result).toMatchObject({
@@ -84,35 +67,34 @@ describe('Home V2 nutrition schema contract', () => {
     expect(result.errorCode).toBeUndefined()
   })
 
-  it('surfaces an unknown consumption state when tracking fails without food logs', () => {
+  it('does not count a planned meal as consumed food', () => {
     const result = resolveHomeNutritionRead({
-      tracking: { data: null, error: { code: 'READ_FAILED' } },
-      plan: { data: null, error: null },
-      foodLogs: { data: [], error: null },
-      dayKey: 'lundi',
-    })
-
-    expect(result.state).toBe('error')
-    expect(result.errorCode).toBe('HOME_NUTRITION_READ_FAILED')
-  })
-
-  it('adds distinct tracked and logged meals without double-counting the same meal type', () => {
-    const plan = {
-      lundi: {
-        repas: {
-          petit_dejeuner: [{ kcal: 300, protein: 15, carbs: 45, fat: 7 }],
-          dejeuner: [{ kcal: 600, protein: 40, carbs: 70, fat: 18 }],
+      plan: {
+        data: {
+          plan: {
+            days: [{ meals: [{ type: 'breakfast', calories: 500, protein: 30, carbs: 50, fat: 20 }] }],
+          },
         },
-      },
-    }
-    const result = resolveHomeNutritionRead({
-      tracking: { data: [{ meal_type: 'petit_dejeuner' }, { meal_type: 'dejeuner' }], error: null },
-      plan: { data: { plan }, error: null },
-      foodLogs: {
-        data: [{ meal_type: 'breakfast', calories: 350, protein: 20, carbs: 50, fat: 9 }],
         error: null,
       },
-      dayKey: 'lundi',
+      foodLogs: { data: [], error: null },
+    })
+
+    expect(result.state).toBe('empty')
+    expect(result.values).toEqual({ calories: 0, protein: 0, carbs: 0, fat: 0 })
+    expect(result.hasPersonalMealPlan).toBe(true)
+  })
+
+  it('sums only the canonical logs recorded for the selected day', () => {
+    const result = resolveHomeNutritionRead({
+      plan: { data: { plan: { days: [] } }, error: null },
+      foodLogs: {
+        data: [
+          { meal_type: 'breakfast', calories: 350, protein: 20, carbs: 50, fat: 9 },
+          { meal_type: 'lunch', calories: 600, protein: 40, carbs: 70, fat: 18 },
+        ],
+        error: null,
+      },
     })
 
     expect(result.state).toBe('ready')

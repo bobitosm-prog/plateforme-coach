@@ -67,7 +67,7 @@ describe('Nutrition V2 photo and error safety', () => {
 describe('Nutrition V2 performance and accessibility guardrails', () => {
   it('adds no duplicate permanent dashboard reads', () => {
     expect(hook.match(/\.from\('daily_food_logs'\)/g)).toHaveLength(1)
-    expect(hook.match(/\.from\('meal_tracking'\)/g)).toHaveLength(1)
+    expect(hook.match(/\.from\('meal_tracking'\)/g)).toBeNull()
     expect(hook.match(/\.from\('meal_plans'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('client_meal_plans'\)/g)).toHaveLength(1)
     expect(hook.match(/\.from\('water_intake'\)/g)).toHaveLength(1)

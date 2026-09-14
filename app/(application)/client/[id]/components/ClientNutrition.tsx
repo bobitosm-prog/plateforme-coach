@@ -207,7 +207,7 @@ export default function ClientNutrition({
       )}
 
       {/* ── Active Meal Plan Summary ── */}
-      {!aiMealPreview && clientActivePlan?.plan_data && (
+      {!aiMealPreview && clientActivePlan?.plan && (
         <div style={{background:BG_CARD,border:'1px solid rgba(255,255,255,0.06)',borderRadius:RADIUS_CARD,overflow:'hidden'}}>
           <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',gap:8}}>
             <Utensils size={14} color={GOLD} strokeWidth={2.5}/>
@@ -215,7 +215,7 @@ export default function ClientNutrition({
             <span style={{fontSize:'0.65rem',fontFamily:FONT_BODY,color:TEXT_MUTED}}>{new Date(clientActivePlan.created_at).toLocaleDateString('fr-FR')}</span>
           </div>
           {(() => {
-            const parsed = parseMealPlan(clientActivePlan.plan_data)
+            const parsed = parseMealPlan(clientActivePlan.plan)
             return (
               <>
                 <div style={{display:'flex',gap:4,padding:'8px 12px',overflowX:'auto'}}>
