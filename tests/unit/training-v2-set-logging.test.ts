@@ -80,6 +80,11 @@ describe('Training V2 set logging', () => {
     expect(currentSetEditor).toContain('aria-pressed={rir === value}')
     expect(currentSetEditor).toContain("inputMode=\"decimal\"")
     expect(currentSetEditor).toContain("inputMode=\"numeric\"")
+    expect(currentSetEditor).toContain('className={styles.setProgress}')
+    expect(currentSetEditor).toContain('role="progressbar"')
+    expect(trainingStyles).toMatch(/\.stepperValue\s*\{[^}]*min-height:\s*104px;/)
+    expect(trainingStyles).toMatch(/\.stepper > button,[\s\S]*?min-height:\s*56px;/)
+    expect(trainingStyles).toMatch(/\.setEditor \.validateSetButton\s*\{[^}]*min-height:\s*60px;/)
   })
 
   it('clears an automatic weight suggestion on first focus without clearing entered weight', () => {

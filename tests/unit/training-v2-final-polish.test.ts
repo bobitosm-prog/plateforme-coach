@@ -60,10 +60,10 @@ describe('Training V2 final polish contracts', () => {
     expect(styles).toMatch(/\.focusHeading\s*\{[^}]*max-width:\s*100%;[^}]*overflow-wrap:\s*break-word;/)
     expect(styles).toMatch(/\.setEditor\s*\{[^}]*min-width:\s*0;[^}]*width:\s*100%;[^}]*max-width:\s*100%;/)
     expect(styles).toMatch(/\.setEditorControls\s*\{[^}]*min-width:\s*0;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/)
-    expect(styles).toMatch(/\.stepper\s*\{[^}]*max-width:\s*100%;[^}]*grid-template-columns:\s*44px\s+minmax\(0,\s*1fr\)\s+44px;/)
+    expect(styles).toMatch(/\.stepper\s*\{[^}]*max-width:\s*100%;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);[^}]*grid-template-areas:/)
     expect(styles).toMatch(/\.rirFieldset\s*\{[^}]*min-width:\s*0;[^}]*max-width:\s*100%;/)
-    expect(styles).toMatch(/\.rirOptions\s*\{[^}]*min-width:\s*0;[^}]*max-width:\s*100%;[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/)
-    expect(styles).toMatch(/\.stepper > button,[\s\S]*?\.rirOptions button,[\s\S]*?\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/)
+    expect(styles).toMatch(/\.rirOptions\s*\{[^}]*min-width:\s*0;[^}]*max-width:\s*100%;[^}]*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);/)
+    expect(styles).toMatch(/\.stepper > button,[\s\S]*?\.rirOptions button,[\s\S]*?\{[^}]*min-width:\s*48px;[^}]*min-height:\s*56px;/)
     expect(visualSources).toMatch(/\[0,\s*1,\s*2,\s*3,\s*4\]\.map/)
     expect(visualSources).toContain("value === 4 ? '4+' : value")
 

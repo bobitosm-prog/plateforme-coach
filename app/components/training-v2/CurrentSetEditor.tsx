@@ -45,10 +45,23 @@ export default function CurrentSetEditor({
   onValidate,
 }: CurrentSetEditorProps) {
   const t = useTranslations('training_tab.v2')
+  const setProgress = totalSets > 0 ? Math.min(100, Math.max(0, (setNumber / totalSets) * 100)) : 0
 
   return (
     <section className={styles.setEditor} aria-labelledby="current-set-title">
-      <div id="current-set-title" className={styles.setEditorTitle}>{t('currentSet', { current: setNumber, total: totalSets })}</div>
+      <div className={styles.setEditorHeader}>
+        <div id="current-set-title" className={styles.setEditorTitle}>{t('currentSet', { current: setNumber, total: totalSets })}</div>
+        <div
+          className={styles.setProgress}
+          role="progressbar"
+          aria-label={t('setProgress', { current: setNumber, total: totalSets })}
+          aria-valuemin={1}
+          aria-valuemax={Math.max(1, totalSets)}
+          aria-valuenow={Math.min(Math.max(1, setNumber), Math.max(1, totalSets))}
+        >
+          <span style={{ width: `${setProgress}%` }} />
+        </div>
+      </div>
 
       <div className={styles.setEditorControls}>
         <div className={styles.setControlGroup}>
