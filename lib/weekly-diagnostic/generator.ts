@@ -191,7 +191,7 @@ ${buildAthenaScientificPolicyPrompt()}
 <regles_absolues>
 1. Tu te bases UNIQUEMENT sur les données fournies — pas d'invention
 2. Si une donnée manque, dis-le explicitement dans raisonnement
-3. Propose le plus petit ajustement observable. Aucun changement calorique avec moins de 5 jours nutritionnels et 3 mesures de poids.
+3. Propose le plus petit ajustement observable. Aucun changement calorique sans 7 jours nutritionnels, 3 mesures de poids et un diagnostic hebdomadaire antérieur.
 4. Tu compares à la semaine précédente si elle existe
 5. Ne produis aucun score de santé : score_semaine est calculé par le serveur à partir de l'adhérence et de la couverture.
 6. Maximum 3 points forts + 2 alertes (focus, pas de liste à rallonge)
@@ -301,6 +301,12 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
       adherencePct, nutritionDays: daysLogged, weightMeasurements: weightLogs.length,
       calorieCompliancePct, proteinCompliancePct,
       completedSessions: sessionsDone, plannedSessions: sessionsPlanned,
+      currentCalorieGoal: calorieAvgTarget,
+      tdeeKcal: Number(profile.tdee || 0),
+      currentWeightKg: Number(profile.current_weight || 0),
+      objective: profile.objective,
+      dietaryType: profile.dietary_type,
+      hasPreviousDiagnostic: Boolean(prevDiagRes.data),
     })
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 

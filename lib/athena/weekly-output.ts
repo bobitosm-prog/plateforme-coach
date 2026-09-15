@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { calculateMacroTargetsForCalories, normalizeNutritionObjective } from '@/lib/nutrition/calorie-macro-targets'
 
 const outputSchema = z.object({
   points_forts: z.array(z.string().trim().min(1).max(180)).max(3),
@@ -22,6 +23,12 @@ export interface WeeklyEvidence {
   weightMeasurements: number
   completedSessions: number
   plannedSessions: number
+  currentCalorieGoal?: number | null
+  tdeeKcal?: number | null
+  currentWeightKg?: number | null
+  objective?: string | null
+  dietaryType?: string | null
+  hasPreviousDiagnostic?: boolean
 }
 export class AthenaWeeklyOutputError extends Error { constructor() { super('Diagnostic hebdomadaire non conforme'); this.name = 'AthenaWeeklyOutputError' } }
 
@@ -42,8 +49,49 @@ export function validateAthenaWeeklyOutput(value: unknown, evidence: WeeklyEvide
   const parsed = outputSchema.safeParse(value)
   if (!parsed.success) throw new AthenaWeeklyOutputError()
   const adjustments = { ...parsed.data.ajustements }
-  if (evidence.nutritionDays < 5 || evidence.weightMeasurements < 3) {
+  if (evidence.nutritionDays < 7 || evidence.weightMeasurements < 3 || !evidence.hasPreviousDiagnostic) {
     delete adjustments.calorie_goal_new
+    delete adjustments.protein_goal_new
+    delete adjustments.carbs_goal_new
+    delete adjustments.fat_goal_new
+  }
+  const proposedCalories = adjustments.calorie_goal_new
+  const currentCalories = Number(evidence.currentCalorieGoal)
+  const weightKg = Number(evidence.currentWeightKg)
+  if (proposedCalories !== undefined) {
+    delete adjustments.protein_goal_new
+    delete adjustments.carbs_goal_new
+    delete adjustments.fat_goal_new
+    if (!Number.isFinite(currentCalories) || currentCalories <= 0 || !Number.isFinite(weightKg) || weightKg <= 0) {
+      delete adjustments.calorie_goal_new
+    } else {
+      const boundedCalories = Math.round(Math.max(
+        currentCalories - 150,
+        Math.min(currentCalories + 150, proposedCalories),
+      ))
+      const tdee = Number(evidence.tdeeKcal)
+      const objective = normalizeNutritionObjective(evidence.objective)
+      const wrongDirection = Number.isFinite(tdee) && tdee > 0 && (
+        (objective === 'cut' && boundedCalories >= tdee)
+        || (objective === 'mass' && boundedCalories <= tdee)
+        || (objective === 'maintain' && Math.abs(boundedCalories - tdee) > 150)
+      )
+      if (wrongDirection || boundedCalories === currentCalories) {
+        delete adjustments.calorie_goal_new
+      } else {
+        const macros = calculateMacroTargetsForCalories({
+          targetCalories: boundedCalories,
+          weightKg,
+          objective,
+          dietaryType: evidence.dietaryType,
+        })
+        adjustments.calorie_goal_new = boundedCalories
+        adjustments.protein_goal_new = macros.proteinGrams
+        adjustments.carbs_goal_new = macros.carbsGrams
+        adjustments.fat_goal_new = macros.fatGrams
+      }
+    }
+  } else {
     delete adjustments.protein_goal_new
     delete adjustments.carbs_goal_new
     delete adjustments.fat_goal_new
