@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isReferenceAmount, nutritionForQuantity, resolveFitnessFood } from '@/lib/nutrition/food-reference'
+import { nutritionForQuantity, resolveFitnessFood } from '@/lib/nutrition/food-reference'
 
 const foodSchema = z.object({
   aliment: z.string().trim().min(1).max(120), quantite_g: z.number().positive().max(2000),
@@ -19,7 +19,13 @@ const ALLERGEN_TERMS: Record<string, string[]> = {
 }
 
 export interface NutritionTargets { calorieGoal: number; proteinGoal: number; carbsGoal: number; fatGoal: number; allergies: readonly string[] }
-export class AthenaNutritionOutputError extends Error { constructor() { super('Plan nutritionnel non conforme au contrat Athena'); this.name = 'AthenaNutritionOutputError' } }
+export type AthenaNutritionOutputErrorCode = 'shape' | 'allergen' | 'unknown_food' | 'targets'
+export class AthenaNutritionOutputError extends Error {
+  constructor(readonly code: AthenaNutritionOutputErrorCode) {
+    super('Plan nutritionnel non conforme au contrat Athena')
+    this.name = 'AthenaNutritionOutputError'
+  }
+}
 
 function fold(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
 function containsTerm(value: string, term: string): boolean {
@@ -27,22 +33,18 @@ function containsTerm(value: string, term: string): boolean {
   return ` ${words(fold(value))} `.includes(` ${words(term)} `)
 }
 
-export function validateAthenaNutritionDay(value: unknown, targets: NutritionTargets) {
+export function canonicalizeAthenaNutritionDay(value: unknown, allergies: readonly string[]) {
   const parsed = daySchema.safeParse(value)
-  if (!parsed.success) throw new AthenaNutritionOutputError()
+  if (!parsed.success) throw new AthenaNutritionOutputError('shape')
   const foods = Object.values(parsed.data.repas).flat()
-  const forbidden = targets.allergies.flatMap(item => ALLERGEN_TERMS[item] ?? [item]).map(fold).filter(Boolean)
-  if (foods.some(food => forbidden.some(term => containsTerm(food.aliment, term)))) throw new AthenaNutritionOutputError()
+  const forbidden = allergies.flatMap(item => ALLERGEN_TERMS[item] ?? [item]).map(fold).filter(Boolean)
+  if (foods.some(food => forbidden.some(term => containsTerm(food.aliment, term)))) throw new AthenaNutritionOutputError('allergen')
   const checkedMeals = Object.fromEntries(Object.entries(parsed.data.repas).map(([meal, entries]) => [
     meal,
     entries.map(food => {
       const reference = resolveFitnessFood(food.aliment)
-      if (!reference) throw new AthenaNutritionOutputError()
+      if (!reference) throw new AthenaNutritionOutputError('unknown_food')
       const referenceNutrition = nutritionForQuantity(reference, food.quantite_g)
-      if (!isReferenceAmount(food.kcal, referenceNutrition.calories, 5)
-        || !isReferenceAmount(food.proteines, referenceNutrition.protein, 2)
-        || !isReferenceAmount(food.glucides, referenceNutrition.carbs, 2)
-        || !isReferenceAmount(food.lipides, referenceNutrition.fat, 2)) throw new AthenaNutritionOutputError()
       return {
         ...food,
         aliment: reference.name,
@@ -53,6 +55,12 @@ export function validateAthenaNutritionDay(value: unknown, targets: NutritionTar
       }
     }),
   ])) as typeof parsed.data.repas
+  return { repas: checkedMeals }
+}
+
+export function validateAthenaNutritionDay(value: unknown, targets: NutritionTargets) {
+  const canonical = canonicalizeAthenaNutritionDay(value, targets.allergies)
+  const checkedMeals = canonical.repas
   const checkedFoods = Object.values(checkedMeals).flat()
   const totals = checkedFoods.reduce((sum, food) => ({
     kcal: sum.kcal + food.kcal, protein: sum.protein + food.proteines,
@@ -62,6 +70,6 @@ export function validateAthenaNutritionDay(value: unknown, targets: NutritionTar
   if (!within(totals.kcal, targets.calorieGoal, 0.08, 100)
     || !within(totals.protein, targets.proteinGoal, 0.15, 15)
     || !within(totals.carbs, targets.carbsGoal, 0.15, 20)
-    || !within(totals.fat, targets.fatGoal, 0.15, 8)) throw new AthenaNutritionOutputError()
+    || !within(totals.fat, targets.fatGoal, 0.15, 8)) throw new AthenaNutritionOutputError('targets')
   return { repas: checkedMeals, total_kcal: Math.round(totals.kcal), total_protein: Math.round(totals.protein), total_carbs: Math.round(totals.carbs), total_fat: Math.round(totals.fat) }
 }

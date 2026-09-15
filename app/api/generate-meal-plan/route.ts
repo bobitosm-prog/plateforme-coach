@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Legacy AI JSON boundary is normalized and validated below. */
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -5,7 +6,7 @@ import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimit
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
-import { validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
+import { AthenaNutritionOutputError, canonicalizeAthenaNutritionDay, validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
 import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
@@ -207,12 +208,10 @@ function extractProteins(dayPlan: any): string[] {
  * Convert legacy LLM day output (repas{} + French fields) to canonical DayPlan.
  * The LLM prompt stays in legacy format (reliable); conversion happens after.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function convertLegacyDayToCanonical(legacyDay: any): DayPlan {
   const repas = legacyDay?.repas ?? {}
   const meals = (Object.keys(MEAL_KEY_TO_TYPE) as MealKey[]).map(key => {
     const rawFoods = Array.isArray(repas[key]) ? repas[key] : []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return {
       type: MEAL_KEY_TO_TYPE[key],
       foods: rawFoods.map((f: any) => ({
@@ -408,6 +407,7 @@ async function generateOneDay(
   params: any,
   proteinsUsed: string[],
   clientContext: string,
+  repairAttempt = false,
 ): Promise<any> {
   const kcal = params.calorie_goal || 2500
   const proteinHint = proteinsUsed.length > 0
@@ -435,7 +435,12 @@ async function generateOneDay(
     ? `Rappel objectif : BULK — surplus de +${caloricAdj} kcal vs TDEE. Portions généreuses, glucides élevés.`
     : `Rappel objectif : MAINTIEN — calories = TDEE.`
 
+  const repairHint = repairAttempt
+    ? `\nCORRECTION OBLIGATOIRE : la proposition précédente n'a pas respecté le contrat. Utilise uniquement les noms EXACTS de la base, respecte les allergies et recalcule les quantités pour atteindre les quatre objectifs.\n`
+    : ''
+
   const userPrompt = `Génère le plan pour ${day.toUpperCase()}.
+${repairHint}
 
 ${objReminder}
 
@@ -463,7 +468,9 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
     },
     body: JSON.stringify({
       model: 'claude-opus-4-8',
-      max_tokens: 1500,
+      // Four meals with 3-4 structured foods can legitimately exceed 1,500
+      // tokens; truncating here produces an unrecoverable partial JSON object.
+      max_tokens: 2500,
       system: buildSystemPrompt(params, clientContext),
       messages: [{ role: 'user', content: userPrompt }],
     }),
@@ -480,7 +487,10 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error(`No JSON for ${day}`)
   const parsed = JSON.parse(jsonMatch[0])
-  const verified = verifyDayPlan(parsed, params)
+  // The model chooses foods and quantities. Nutrition always comes from our
+  // versioned reference database before any deterministic rebalancing.
+  const canonical = canonicalizeAthenaNutritionDay(parsed, Array.isArray(params.allergies) ? params.allergies : [])
+  const verified = verifyDayPlan(canonical, params)
   return validateAthenaNutritionDay(verified, {
     calorieGoal: params.calorie_goal,
     proteinGoal: params.protein_goal,
@@ -488,6 +498,14 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
     fatGoal: params.fat_goal,
     allergies: Array.isArray(params.allergies) ? params.allergies : [],
   })
+}
+
+function generationFailureCode(error: unknown): string {
+  if (error instanceof AthenaNutritionOutputError) return error.code
+  if (error instanceof SyntaxError) return 'invalid_json'
+  if (error instanceof Error && error.message.startsWith('Anthropic ')) return 'provider'
+  if (error instanceof Error && error.message.startsWith('No JSON')) return 'missing_json'
+  return 'unknown'
 }
 
 export async function POST(req: NextRequest) {
@@ -543,14 +561,24 @@ export async function POST(req: NextRequest) {
           const day = DAYS[i]
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
 
-          try {
-            const legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed, clientContext.prompt)
+          let legacyDay: any = null
+          let lastFailureCode = 'unknown'
+          for (let attempt = 1; attempt <= 2 && !legacyDay; attempt++) {
+            try {
+              legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed, clientContext.prompt, attempt === 2)
+            } catch (error) {
+              lastFailureCode = generationFailureCode(error)
+              console.warn(`[meal-plan] generation attempt rejected day=${day} attempt=${attempt} code=${lastFailureCode}`)
+            }
+          }
+
+          if (legacyDay) {
             // extractProteins reads legacy structure (repas{} + aliment), call BEFORE conversion
             proteinsUsed.push(...extractProteins(legacyDay))
             // Convert to canonical for storage + streaming to client
             plan[day] = convertLegacyDayToCanonical(legacyDay)
-          } catch {
-            console.error(`[meal-plan] validated generation failed for ${day}`)
+          } else {
+            console.error(`[meal-plan] validated generation failed day=${day} code=${lastFailureCode}`)
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Plan temporairement indisponible' })}\n\n`))
             controller.close()
             return
