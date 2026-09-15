@@ -11,10 +11,26 @@ import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
 import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
 import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
+import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
 
 export const maxDuration = 300
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+
+function normalizeDietaryType(value: unknown): string {
+  return value === 'mediterraneen' ? 'mediterranean' : String(value || 'omnivore')
+}
+
+function canonicalPreferenceNames(params: any): string[] {
+  const mealNames = Object.values(params.meal_food_names || {}).flat()
+  const availableNames = (params.available_foods || []).map((food: any) => food?.nom)
+  const scannedNames = (params.scanned_foods || []).map((food: any) => food?.name)
+
+  return [...new Set([...mealNames, ...availableNames, ...scannedNames]
+    .filter((name): name is string => typeof name === 'string')
+    .map(name => resolveFitnessFood(name)?.name)
+    .filter((name): name is string => Boolean(name)))]
+}
 
 function buildSystemPrompt(params: any, clientContext: string) {
   const kcal = params.calorie_goal || 2500
@@ -33,7 +49,7 @@ function buildSystemPrompt(params: any, clientContext: string) {
   const pdjG = Math.round(carbs * 0.25), dejG = Math.round(carbs * 0.35), collG = Math.round(carbs * 0.10), dinG = Math.round(carbs * 0.30)
   const pdjL = Math.round(fat * 0.25), dejL = Math.round(fat * 0.35), collL = Math.round(fat * 0.10), dinL = Math.round(fat * 0.30)
 
-  const diet = params.dietary_type || 'omnivore'
+  const diet = normalizeDietaryType(params.dietary_type)
 
   // Objective context
   const objMode = params.objective_mode || 'maintien'
@@ -54,7 +70,7 @@ Les lipides doivent représenter 65-75% des calories.`
     : diet === 'paleo'
     ? `\nRÈGLES RÉGIME PALÉO : Interdit céréales, légumineuses, produits laitiers, sucres raffinés, huiles végétales transformées.
 Autorisé : viandes, poissons, oeufs, légumes, fruits, noix, huile d'olive/coco, patate douce, miel.`
-    : diet === 'mediterraneen'
+    : diet === 'mediterranean'
     ? `\nRÈGLES RÉGIME MÉDITERRANÉEN : Beaucoup de poissons, légumes, légumineuses, huile d'olive, céréales complètes, fruits.
 Viande rouge max 2x/semaine. Peu de produits transformés. Privilégie huile d'olive comme matière grasse principale.`
     : diet === 'halal'
@@ -99,7 +115,7 @@ Remplace par : lait d'amande/soja/avoine, yaourt végétal, fromages affinés (s
 - Dîner : TOUJOURS inclure une VIANDE ou POISSON DIFFÉRENTE du déjeuner (si poulet au déj → poisson ou boeuf au dîner). Ajuste la quantité pour ~${dinP}g de protéines.
 IMPORTANT : Ne dépasse PAS la cible protéique globale de ${prot}g — c'est aussi important que les calories.`
 
-  const weeklyVariety = diet === 'omnivore' || diet === 'halal' || diet === 'kosher' || diet === 'paleo' || diet === 'mediterraneen' ? `
+  const weeklyVariety = diet === 'omnivore' || diet === 'halal' || diet === 'kosher' || diet === 'paleo' || diet === 'mediterranean' ? `
 VARIÉTÉ PROTÉINES SUR LA SEMAINE :
 - Alterner viande blanche (poulet, dinde), viande rouge (boeuf, steak haché), poisson (saumon, thon, cabillaud, crevettes)
 - Ne JAMAIS répéter la même protéine principale 2 jours de suite au même repas
@@ -129,12 +145,6 @@ PROTÉINES PAR REPAS (${diet}) :
 ${proteinRules}
 ${weeklyVariety}
 
-${params.scanned_foods?.length ? `
-ALIMENTS DU CLIENT (à utiliser EN PRIORITÉ) :
-Le client a ces aliments chez lui. Utilise-les en priorité :
-${params.scanned_foods.map((f: any) => `- ${f.name}${f.brand ? ' (' + f.brand + ')' : ''}: ${f.calories}kcal, P${f.proteins}g, G${f.carbs}g, L${f.fat}g /100g`).join('\n')}
-Complète avec les aliments fitness de base si nécessaire.
-` : ''}
 ═══ BASE D'ALIMENTS DE RÉFÉRENCE (valeurs pour 100g) ═══
 ${formatFitnessFoodsForPrompt()}
 
@@ -163,7 +173,7 @@ Tous les aliments qui se cuisent (riz, pâtes, légumineuses, quinoa, semoule, e
 - Recopie le nom EXACT de la base, état inclus. Aucun synonyme ni nom composé ne sera accepté.
 - Utilise les valeurs nutritionnelles du CUIT : riz/pâtes cuits ≈ 130 kcal/100g et ~28g de glucides/100g (PAS 350 kcal/100g qui correspond au cru).
 - Lentilles/légumineuses cuites ≈ 115-130 kcal/100g.
-- Les viandes, poissons, œufs : poids cuit également.
+- Viandes, poissons et œufs : respecte strictement l'état cru ou cuit indiqué dans le nom de la base.
 - Légumes, fruits, produits laitiers : poids tels quels (déjà consommables).
 
 VÉRIFICATION OBLIGATOIRE avant de retourner le JSON :
@@ -414,17 +424,19 @@ async function generateOneDay(
     ? `\nProtéines déjà utilisées les jours précédents (VARIE !) : ${proteinsUsed.join(', ')}`
     : ''
 
-  const foodListStr = (params.available_foods || [])
-    .map((f: any) => `${f.nom} (${f.kcal}kcal, P${f.p} G${f.g} L${f.l} /100g)`)
-    .join('\n')
+  const canonicalPreferences = canonicalPreferenceNames(params)
 
   // Per-meal preferences
   const mfn = params.meal_food_names || {}
+  const canonicalMealNames = (names: unknown): string[] => Array.isArray(names)
+    ? names.map(name => typeof name === 'string' ? resolveFitnessFood(name)?.name : null)
+      .filter((name): name is string => Boolean(name))
+    : []
   const prefHint = [
-    mfn.morning?.length ? `Petit-déj favori : ${mfn.morning.join(', ')}` : '',
-    mfn.lunch?.length ? `Déjeuner favori : ${mfn.lunch.join(', ')}` : '',
-    mfn.snack?.length ? `Collation favorite : ${mfn.snack.join(', ')}` : '',
-    mfn.dinner?.length ? `Dîner favori : ${mfn.dinner.join(', ')}` : '',
+    canonicalMealNames(mfn.morning).length ? `Petit-déj favori : ${canonicalMealNames(mfn.morning).join(', ')}` : '',
+    canonicalMealNames(mfn.lunch).length ? `Déjeuner favori : ${canonicalMealNames(mfn.lunch).join(', ')}` : '',
+    canonicalMealNames(mfn.snack).length ? `Collation favorite : ${canonicalMealNames(mfn.snack).join(', ')}` : '',
+    canonicalMealNames(mfn.dinner).length ? `Dîner favori : ${canonicalMealNames(mfn.dinner).join(', ')}` : '',
   ].filter(Boolean).join('\n')
 
   const objMode = params.objective_mode || 'maintien'
@@ -449,13 +461,11 @@ Allergènes structurés : ${(params.allergies || []).join(', ') || 'aucun'}
 Restrictions déclarées : ${params.dietary_restrictions || 'aucune'}
 ${params.disliked_foods?.length ? `Aliments à ÉVITER (le client n'aime pas) : ${params.disliked_foods.join(', ')}` : ''}
 
-${prefHint ? `PRÉFÉRENCES DU CLIENT :\n${prefHint}\nUtilise ces aliments en VARIANT chaque jour. Ne répète PAS le même petit-déjeuner 2 jours de suite.\n` : ''}ALIMENTS DISPONIBLES (valeurs /100g) :
-${foodListStr || 'Utilise des aliments fitness classiques.'}
+${prefHint ? `PRÉFÉRENCES DU CLIENT :\n${prefHint}\nUtilise ces aliments en VARIANT chaque jour. Ne répète PAS le même petit-déjeuner 2 jours de suite.\n` : ''}${canonicalPreferences.length ? `ALIMENTS CANONIQUES DISPONIBLES À PRIVILÉGIER : ${canonicalPreferences.join(', ')}\n` : ''}
 ${proteinHint}
 
 VARIÉTÉ : ce jour doit être DIFFÉRENT des précédents. 7 petits-déj différents, 7 déjeuners différents, 7 dîners différents.
 Déjeuner et dîner : inclure une source protéique compatible avec le régime déclaré.
-${params.scanned_foods?.length ? `\nAliments prioritaires du client : ${params.scanned_foods.slice(0, 10).map((f: any) => f.name).join(', ')}` : ''}
 Aliments féculents (riz, pâtes, légumineuses) : TOUJOURS pesés et calculés CUITS (~130 kcal/100g pour riz/pâtes), jamais crus.
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 

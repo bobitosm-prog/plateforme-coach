@@ -145,14 +145,6 @@ export default function NutritionPreferences({
   const manualTotalKcal = finalMacros.protein * 4 + finalMacros.carbs * 4 + finalMacros.fat * 9
   const kcalDiff = Math.abs(manualTotalKcal - objectiveKcal)
 
-  // ─── Weekly estimate ───
-  const weeklyChange = useMemo(() => {
-    if (objective === 'maintain') return null
-    const dailyDiff = objective === 'cut' ? adjustment : adjustment
-    const weeklyKg = Math.round(Math.abs(dailyDiff) * 7 / 7700 * 10) / 10
-    return weeklyKg
-  }, [objective, adjustment])
-
   // ─── Handlers ───
   function handleObjectiveChange(obj: ObjectiveType) {
     setObjective(obj)
@@ -448,9 +440,9 @@ export default function NutritionPreferences({
               <span style={{ fontFamily: fonts.alt, fontSize: '0.75rem', fontWeight: 800, color: colors.gold, letterSpacing: '1px', textTransform: 'uppercase' }}>{t('labels.calorieGoal')}</span>
             </div>
             <div style={{ fontFamily: fonts.headline, fontSize: '1.8rem', color: colors.text, lineHeight: 1 }}>{fmtNum(objectiveKcal)} <span style={{ fontSize: '0.8rem', color: colors.textMuted }}>kcal/jour</span></div>
-            {objective !== 'maintain' && weeklyChange !== null && (
+            {objective !== 'maintain' && (
               <div style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.textMuted, marginTop: 6 }}>
-                {objective === 'cut' ? `Deficit : ${adjustment} kcal/jour` : `Surplus : +${adjustment} kcal/jour`} &middot; {objective === 'cut' ? 'Perte' : 'Prise'} estimee : ~{weeklyChange} kg/semaine
+                {objective === 'cut' ? `Déficit : ${adjustment} kcal/jour` : `Surplus : +${adjustment} kcal/jour`}
               </div>
             )}
           </div>

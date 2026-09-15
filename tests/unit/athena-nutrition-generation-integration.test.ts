@@ -32,4 +32,18 @@ describe('Athena nutrition generation integration', () => {
     expect(route).toContain('max_tokens: 2500')
     expect(route).not.toContain('max_tokens: 1500')
   })
+  it('supports the canonical Mediterranean dietary identifier', () => {
+    expect(route).toContain("diet === 'mediterranean'")
+    expect(route).toContain("value === 'mediterraneen' ? 'mediterranean'")
+  })
+  it('only sends server-canonical food preferences to the model', () => {
+    expect(route).toContain('resolveFitnessFood(name)?.name')
+    expect(route).not.toContain('f.calories}kcal')
+    expect(route).not.toContain('f.kcal}kcal')
+    expect(route).not.toContain('Aliments prioritaires du client : ${params.scanned_foods')
+  })
+  it('uses the reference database raw or cooked state for animal foods', () => {
+    expect(route).toContain("respecte strictement l'état cru ou cuit indiqué dans le nom de la base")
+    expect(route).not.toContain('Les viandes, poissons, œufs : poids cuit également')
+  })
 })
