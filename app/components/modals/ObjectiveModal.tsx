@@ -24,7 +24,7 @@ interface ObjectiveModalProps {
 const OBJECTIVE_IDS = ['cut', 'mass', 'maintain'] as const
 const OBJECTIVE_EMOJIS: Record<string, string> = { cut: '🔥', mass: '💪', maintain: '⚖️' }
 const ACTIVITY_IDS = ['sedentary', 'light', 'moderate', 'active', 'extreme'] as const
-function computeMacros(objective: string, weight: number, height: number, age: number, gender: string, activity: string) {
+function computeMacros(objective: string, weight: number, height: number, age: number, gender: string, activity: string, dietaryType?: string | null) {
   const targets = calculateAutomaticCalorieMacroTargets({
     objective: objective === 'mass' ? 'mass' : objective === 'cut' ? 'cut' : 'maintain',
     weightKg: weight,
@@ -32,6 +32,7 @@ function computeMacros(objective: string, weight: number, height: number, age: n
     age,
     gender,
     activityLevel: activity,
+    dietaryType,
   })
   return {
     tdee: targets.tdee,
@@ -61,14 +62,16 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
     profile?.objective || 'maintain',
     currentWeight || profile?.current_weight || 75,
     height, age, gender,
-    profile?.activity_level || 'moderate'
+    profile?.activity_level || 'moderate',
+    profile?.dietary_type,
   ), [profile, currentWeight])
 
   const newMacros = useMemo(() => computeMacros(
     objective,
     parseFloat(weight) || 75,
     height, age, gender,
-    activity
+    activity,
+    profile?.dietary_type,
   ), [objective, weight, activity])
 
   function validateWeight(): boolean {

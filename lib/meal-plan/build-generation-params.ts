@@ -14,6 +14,7 @@
  * d'un diagnostic) sans avoir à attendre que le profile soit re-fetched du cache.
  */
 import type { Profile } from '@/lib/profile-service'
+import { calculateMacroTargetsForCalories } from '@/lib/nutrition/calorie-macro-targets'
 
 export type ObjectiveMode = 'seche' | 'maintien' | 'bulk'
 
@@ -82,9 +83,24 @@ export function buildMealPlanParams(
   overrides?: MacroOverrides
 ): MealPlanParams {
   const calorie_goal = overrides?.calorie_goal ?? profile.calorie_goal ?? 2200
-  const protein_goal = overrides?.protein_goal ?? profile.protein_goal ?? 150
-  const fat_goal = overrides?.fat_goal ?? profile.fat_goal ?? Math.round((calorie_goal * 0.25) / 9)
-  const carbs_goal = overrides?.carbs_goal ?? profile.carbs_goal ?? Math.round((calorie_goal - protein_goal * 4 - fat_goal * 9) / 4)
+  let protein_goal = overrides?.protein_goal ?? profile.protein_goal ?? 150
+  let fat_goal = overrides?.fat_goal ?? profile.fat_goal ?? Math.round((calorie_goal * 0.25) / 9)
+  let carbs_goal = overrides?.carbs_goal ?? profile.carbs_goal ?? Math.max(Math.round((calorie_goal - protein_goal * 4 - fat_goal * 9) / 4), 0)
+  const macroCalories = protein_goal * 4 + carbs_goal * 4 + fat_goal * 9
+  const targetMismatch = Math.abs(macroCalories - calorie_goal) > Math.max(100, calorie_goal * 0.08)
+  const ketoMismatch = profile.dietary_type === 'keto' && carbs_goal > 50
+  const weightKg = Number(profile.current_weight)
+  if ((targetMismatch || ketoMismatch) && Number.isFinite(weightKg) && weightKg > 0) {
+    const coherent = calculateMacroTargetsForCalories({
+      targetCalories: calorie_goal,
+      weightKg,
+      objective: profile.objective ?? 'maintain',
+      dietaryType: profile.dietary_type,
+    })
+    protein_goal = coherent.proteinGrams
+    carbs_goal = coherent.carbsGrams
+    fat_goal = coherent.fatGrams
+  }
   const tdee = profile.tdee ?? calorie_goal
   const caloric_adjustment = calorie_goal - tdee
   const mealPreferences = asRecord(profile.meal_preferences)

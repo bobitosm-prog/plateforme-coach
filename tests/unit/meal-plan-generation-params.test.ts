@@ -46,4 +46,36 @@ describe('meal plan generation parameters', () => {
 
     expect(params.dietary_restrictions).toHaveLength(500)
   })
+
+  it('repairs stale macros when a calorie target was edited independently', () => {
+    const params = buildMealPlanParams(profile({
+      objective: 'mass',
+      current_weight: 80,
+      calorie_goal: 3000,
+      protein_goal: 150,
+      carbs_goal: 250,
+      fat_goal: 70,
+    }))
+
+    expect(params).toMatchObject({
+      calorie_goal: 3000,
+      protein_goal: 144,
+      carbs_goal: 426,
+      fat_goal: 80,
+    })
+  })
+
+  it('repairs a carbohydrate target that contradicts the keto pattern', () => {
+    const params = buildMealPlanParams(profile({
+      current_weight: 80,
+      calorie_goal: 2400,
+      protein_goal: 160,
+      carbs_goal: 265,
+      fat_goal: 78,
+      dietary_type: 'keto',
+    }))
+
+    expect(params.carbs_goal).toBeLessThanOrEqual(50)
+    expect(Math.abs(params.protein_goal * 4 + params.carbs_goal * 4 + params.fat_goal * 9 - params.calorie_goal)).toBeLessThanOrEqual(4)
+  })
 })

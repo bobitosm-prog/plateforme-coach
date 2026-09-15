@@ -9,6 +9,10 @@ import {
   resolveCoachRelationAuthority,
   type ActiveRelationLookupResult,
 } from '@/lib/coach-relations/repository'
+import {
+  calculateAutomaticCalorieMacroTargets,
+  calculateMacroTargetsForCalories,
+} from '@/lib/nutrition/calorie-macro-targets'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -733,9 +737,20 @@ export default function useClientDetail() {
       mealPlanId
         ? supabase.from('client_meal_plans').update(payload).eq('id', mealPlanId)
         : supabase.from('client_meal_plans').insert(payload).select('id').single().then(({ data }) => { if (data?.id) setMealPlanId(data.id) }),
-      supabase.from('profiles').update({ calorie_goal: calorieTarget }).eq('id', id),
+      supabase.from('profiles').update({
+        calorie_goal: calorieTarget,
+        protein_goal: protTarget,
+        carbs_goal: carbTarget,
+        fat_goal: fatTarget,
+      }).eq('id', id),
     ])
-    setProfile(p => p ? { ...p, calorie_goal: calorieTarget } : p)
+    setProfile(p => p ? {
+      ...p,
+      calorie_goal: calorieTarget,
+      protein_goal: protTarget,
+      carbs_goal: carbTarget,
+      fat_goal: fatTarget,
+    } : p)
     setMealPlanSaving(false); setMealPlanSaved(true); showToast('Plan alimentaire sauvegardé'); setTimeout(() => setMealPlanSaved(false), 2000)
   }
 
@@ -755,6 +770,37 @@ export default function useClientDetail() {
       target_weight: editTargetW ? parseFloat(editTargetW) : null, body_fat_pct: editBodyFat ? parseFloat(editBodyFat) : null,
       status: editStatus, objective: editObj || null,
     }
+    const nutritionInputsChanged = editWeight !== String(profile?.current_weight ?? '')
+      || editHeight !== String(profile?.height ?? '')
+      || editBirth !== String(profile?.birth_date ?? '')
+      || editGender !== String(profile?.gender ?? '')
+      || editObj !== String(profile?.objective ?? '')
+    if (nutritionInputsChanged) {
+      const weightKg = Number(updates.current_weight)
+      const heightCm = Number(updates.height)
+      const birthTimestamp = Date.parse(String(updates.birth_date ?? ''))
+      const age = Number.isFinite(birthTimestamp)
+        ? Math.floor((Date.now() - birthTimestamp) / 31_557_600_000)
+        : 0
+      if (weightKg > 0 && heightCm > 0 && age > 0) {
+        const targets = calculateAutomaticCalorieMacroTargets({
+          weightKg,
+          heightCm,
+          age,
+          gender: String(updates.gender ?? 'female'),
+          activityLevel: profile?.activity_level || 'moderate',
+          objective: String(updates.objective ?? 'maintain'),
+          dietaryType: profile?.dietary_type,
+        })
+        Object.assign(updates, {
+          tdee: targets.tdee,
+          calorie_goal: targets.targetCalories,
+          protein_goal: targets.proteinGrams,
+          carbs_goal: targets.carbsGrams,
+          fat_goal: targets.fatGrams,
+        })
+      }
+    }
     const { error } = await supabase.from('profiles').update(updates).eq('id', id)
     if (error) { console.error('[saveProfile] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
     if (editWeight) {
@@ -771,10 +817,23 @@ export default function useClientDetail() {
   /* ── Save calorie goal ──────────────────────────────────────── */
   async function saveCalorieGoal() {
     const val = parseInt(calGoalInput)
-    if (!val || val <= 0) return
-    const { error } = await supabase.from('profiles').update({ calorie_goal: val }).eq('id', id)
+    const weightKg = Number(currentWeight ?? profile?.current_weight)
+    if (!val || val < 1000 || val > 6000 || !Number.isFinite(weightKg) || weightKg <= 0) return
+    const macros = calculateMacroTargetsForCalories({
+      targetCalories: val,
+      weightKg,
+      objective: profile?.objective || 'maintain',
+      dietaryType: profile?.dietary_type,
+    })
+    const targetUpdate = {
+      calorie_goal: val,
+      protein_goal: macros.proteinGrams,
+      carbs_goal: macros.carbsGrams,
+      fat_goal: macros.fatGrams,
+    }
+    const { error } = await supabase.from('profiles').update(targetUpdate).eq('id', id)
     if (error) { console.error('[saveCalorieGoal] Supabase error:', error); showToast(`Erreur : ${error.message}`); return }
-    setProfile(p => p ? { ...p, calorie_goal: val } : p)
+    setProfile(p => p ? { ...p, ...targetUpdate } : p)
     setEditingCalGoal(false); showToast('Objectif calorique mis à jour')
   }
 
@@ -789,9 +848,36 @@ export default function useClientDetail() {
   /* ── Save objective text ──────────────────────────────────────── */
   async function saveObjective(val: string | null) {
     if (!profile) return
-    const { error } = await supabase.from('profiles').update({ objective: val }).eq('id', id)
+    const weightKg = Number(currentWeight ?? profile.current_weight)
+    const heightCm = Number(profile.height)
+    const birthTimestamp = Date.parse(String(profile.birth_date ?? ''))
+    const age = Number.isFinite(birthTimestamp)
+      ? Math.floor((Date.now() - birthTimestamp) / 31_557_600_000)
+      : 0
+    const targets = weightKg > 0 && heightCm > 0 && age > 0
+      ? calculateAutomaticCalorieMacroTargets({
+        weightKg,
+        heightCm,
+        age,
+        gender: profile.gender || 'female',
+        activityLevel: profile.activity_level || 'moderate',
+        objective: val || 'maintain',
+        dietaryType: profile.dietary_type,
+      })
+      : null
+    const update = {
+      objective: val,
+      ...(targets ? {
+        tdee: targets.tdee,
+        calorie_goal: targets.targetCalories,
+        protein_goal: targets.proteinGrams,
+        carbs_goal: targets.carbsGrams,
+        fat_goal: targets.fatGrams,
+      } : {}),
+    }
+    const { error } = await supabase.from('profiles').update(update).eq('id', id)
     if (error) { console.error('[saveObjective] error:', error); return }
-    setProfile(p => p ? { ...p, objective: val } : p)
+    setProfile(p => p ? { ...p, ...update } : p)
   }
 
   /* ── Derived metrics ────────────────────────────────────────── */

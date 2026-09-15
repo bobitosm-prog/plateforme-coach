@@ -604,7 +604,7 @@ function CoachAppContent() {
       {h.modal === 'measure' && <MeasureModal measurements={h.measurements} onSave={h.saveMeasurements} onClose={() => h.setModal(null)} />}
 
       {/* ── BMR MODAL ── */}
-      {h.modal === 'bmr' && <BmrModal supabase={h.supabase} session={h.session} initialValues={h.bmrForm} onClose={() => h.setModal(null)} />}
+      {h.modal === 'bmr' && <BmrModal supabase={h.supabase} session={h.session} profile={h.profile} initialValues={h.bmrForm} onClose={() => h.setModal(null)} />}
 
       {/* ── OBJECTIVE MODAL ── */}
       {h.modal === 'objective' && <ObjectiveModal profile={h.profile} currentWeight={h.currentWeight} goalWeight={h.goalWeight} supabase={h.supabase} session={h.session} planRegenerationEnabled={objectivePlanRegenerationEnabled} onClose={() => h.setModal(null)} onSaved={() => h.fetchAll(true)} />}

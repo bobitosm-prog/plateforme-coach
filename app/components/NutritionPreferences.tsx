@@ -119,7 +119,8 @@ export default function NutritionPreferences({
     activityLevel,
     objective,
     calorieAdjustment: adjustment,
-  }), [gender, age, height, weight, activityLevel, objective, adjustment])
+    dietaryType,
+  }), [gender, age, height, weight, activityLevel, objective, adjustment, dietaryType])
 
   const {
     bmr,

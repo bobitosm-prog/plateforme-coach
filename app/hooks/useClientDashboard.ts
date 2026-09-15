@@ -54,6 +54,7 @@ import {
   resolvePostAuthDestination,
   type ProfileState,
 } from '../../lib/auth/post-auth-routing'
+import { normalizeActivityLevel } from '../../lib/nutrition/calorie-macro-targets'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -405,7 +406,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       height: profileData.height?.toString() || '',
       age: age.toString(),
       gender: profileData.gender || 'male',
-      activity: profileData.activity_level || 'moderate',
+      activity: normalizeActivityLevel(profileData.activity_level),
       body_fat: profileData.body_fat_pct?.toString() || '',
     }))
     setWSessions(sessData)

@@ -22,7 +22,7 @@ export interface CalorieMacroTargetInput {
   heightCm: number
   weightKg: number
   activityLevel: string
-  objective: AutomaticNutritionObjective | 'mass'
+  objective: string
   calorieAdjustment?: number
   dietaryType?: string | null
 }
@@ -67,7 +67,7 @@ export function normalizeActivityLevel(activityLevel: string | null | undefined)
 export interface CalorieMacroSplitInput {
   targetCalories: number
   weightKg: number
-  objective: AutomaticNutritionObjective | 'mass'
+  objective: string
   dietaryType?: string | null
 }
 

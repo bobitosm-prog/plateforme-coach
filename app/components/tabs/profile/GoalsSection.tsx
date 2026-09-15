@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Target, Flame, Droplets, Activity, ArrowLeft, Beef, Wheat, Droplet } from 'lucide-react'
 import { colors, fonts, cardStyle } from '../../../../lib/design-tokens'
 import { updateProfile } from '../../../../lib/profile-service'
+import { calculateMacroTargetsForCalories } from '../../../../lib/nutrition/calorie-macro-targets'
 import SectionTitle from '../../ui/SectionTitle'
 
 interface GoalsSectionProps {
@@ -44,9 +45,21 @@ export default function GoalsSection({
 
   async function saveCalories() {
     const val = parseInt(calorieInput, 10)
-    if (!val || val < 500 || val > 10000) return
+    const weightKg = Number(profile?.current_weight)
+    if (!val || val < 1000 || val > 6000 || !Number.isFinite(weightKg) || weightKg <= 0) return
+    const macros = calculateMacroTargetsForCalories({
+      targetCalories: val,
+      weightKg,
+      objective: profile?.objective || 'maintain',
+      dietaryType: profile?.dietary_type,
+    })
     setSaving(true)
-    await updateProfile(session.user.id, { calorie_goal: val }, supabase)
+    await updateProfile(session.user.id, {
+      calorie_goal: val,
+      protein_goal: macros.proteinGrams,
+      carbs_goal: macros.carbsGrams,
+      fat_goal: macros.fatGrams,
+    }, supabase)
     await fetchAll(true)
     setSaving(false)
     setEditingCalories(false)

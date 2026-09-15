@@ -7,10 +7,12 @@ import {
   ACTIVITY_LEVELS, calcMifflinStJeor, calcKatchMcArdle, calcHarrisBenedict,
 } from '../../../lib/design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
+import { calculateAutomaticCalorieMacroTargets } from '../../../lib/nutrition/calorie-macro-targets'
 
 interface BmrModalProps {
   supabase: any
   session: any
+  profile: any
   initialValues: {
     weight: string
     height: string
@@ -22,11 +24,11 @@ interface BmrModalProps {
   onClose: () => void
 }
 
-export default function BmrModal({ supabase, session, initialValues, onClose }: BmrModalProps) {
+export default function BmrModal({ supabase, session, profile, initialValues, onClose }: BmrModalProps) {
   const [bmrForm, setBmrForm] = useState(initialValues)
   const [bmrResult, setBmrResult] = useState<any>(null)
 
-  function calculateBMR() {
+  async function calculateBMR() {
     const w = parseFloat(bmrForm.weight)
     const h = parseFloat(bmrForm.height)
     const a = parseInt(bmrForm.age)
@@ -36,8 +38,16 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
     const mifflin = calcMifflinStJeor(w, h, a, bmrForm.gender)
     const harris = calcHarrisBenedict(w, h, a, bmrForm.gender)
     const katch = bf ? calcKatchMcArdle(w, bf) : null
-    const actMult = ACTIVITY_LEVELS.find(l => l.id === bmrForm.activity)?.mult || 1.55
-    const tdee = Math.round((katch || mifflin) * actMult)
+    const targets = calculateAutomaticCalorieMacroTargets({
+      weightKg: w,
+      heightCm: h,
+      age: a,
+      gender: bmrForm.gender,
+      activityLevel: bmrForm.activity,
+      objective: profile?.objective || 'maintain',
+      dietaryType: profile?.dietary_type,
+    })
+    const tdee = targets.tdee
     const fatLoss = Math.round(tdee * 0.8)
     const massGain = Math.round(tdee * 1.1)
     const protein = Math.round(w * 2.2)
@@ -47,7 +57,18 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
     const carbs = Math.round((tdee - proteinCal - fatCal) / 4)
 
     setBmrResult({ mifflin: Math.round(mifflin), harris: Math.round(harris), katch: katch ? Math.round(katch) : null, tdee, fatLoss, massGain, protein, fat, carbs })
-    updateProfile(session.user.id, { current_weight: w, height: h, gender: bmrForm.gender, activity_level: bmrForm.activity, body_fat_pct: bf || null, calorie_goal: tdee }, supabase)
+    await updateProfile(session.user.id, {
+      current_weight: w,
+      height: h,
+      gender: bmrForm.gender,
+      activity_level: bmrForm.activity,
+      body_fat_pct: bf || null,
+      tdee,
+      calorie_goal: targets.targetCalories,
+      protein_goal: targets.proteinGrams,
+      carbs_goal: targets.carbsGrams,
+      fat_goal: targets.fatGrams,
+    }, supabase)
   }
 
   return (
@@ -104,7 +125,7 @@ export default function BmrModal({ supabase, session, initialValues, onClose }: 
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>
               <div style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: TEXT_MUTED, marginBottom: 4 }}>TDEE (Dépense Totale)</div>
               <div style={{ fontFamily: FONT_DISPLAY, fontSize: '3rem', fontWeight: 700, color: GOLD, letterSpacing: '0.05em' }}>{bmrResult.tdee}</div>
-              <div style={{ fontSize: '0.75rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>kcal / jour · Sauvegardé comme objectif</div>
+              <div style={{ fontSize: '0.75rem', color: TEXT_MUTED, fontFamily: FONT_BODY, fontWeight: 300 }}>kcal / jour · TDEE et objectifs synchronisés</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {[['Mifflin', bmrResult.mifflin, false], ['Harris', bmrResult.harris, false], ['Katch', bmrResult.katch || '—', !!bmrResult.katch]].map(([n, v, hi]) => (
