@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  calculateMacroTargetsForCalories,
   calculateAutomaticCalorieMacroTargets,
   DEFAULT_CALORIE_ADJUSTMENTS,
+  normalizeActivityLevel,
   normalizeNutritionObjective,
   type CalorieMacroTargetInput,
 } from '../../lib/nutrition/calorie-macro-targets'
@@ -54,6 +56,16 @@ describe('calculateAutomaticCalorieMacroTargets', () => {
       ...MALE_PROFILE,
       activityLevel,
     }).tdee).toBe(expectedTdee)
+  })
+
+  it.each([
+    ['Sedentaire <1x/sem', 'sedentary', 2136],
+    ['Actif 1-2x/sem', 'light', 2448],
+    ['Regulier 3-4x/sem', 'moderate', 2759],
+    ['Avance 5x+/sem', 'active', 3071],
+  ] as const)('maps the onboarding activity %s to %s', (activityLevel, canonical, expectedTdee) => {
+    expect(normalizeActivityLevel(activityLevel)).toBe(canonical)
+    expect(calculateAutomaticCalorieMacroTargets({ ...MALE_PROFILE, activityLevel }).tdee).toBe(expectedTdee)
   })
 
   it('rounds BMR before applying the activity multiplier', () => {
@@ -123,6 +135,27 @@ describe('calculateAutomaticCalorieMacroTargets', () => {
       objective: 'cut',
       calorieAdjustment: -700,
     }).carbsGrams).toBe(0)
+  })
+
+  it('recomputes a coherent macro split when calories change', () => {
+    const macros = calculateMacroTargetsForCalories({
+      targetCalories: 3000,
+      weightKg: 80,
+      objective: 'mass',
+    })
+    expect(macros).toEqual({ proteinGrams: 144, carbsGrams: 426, fatGrams: 80 })
+    expect(macros.proteinGrams * 4 + macros.carbsGrams * 4 + macros.fatGrams * 9).toBe(3000)
+  })
+
+  it('creates a keto-compatible split without contradicting the calorie target', () => {
+    const macros = calculateMacroTargetsForCalories({
+      targetCalories: 2400,
+      weightKg: 80,
+      objective: 'maintain',
+      dietaryType: 'keto',
+    })
+    expect(macros.carbsGrams).toBeLessThanOrEqual(50)
+    expect(Math.abs(macros.proteinGrams * 4 + macros.carbsGrams * 4 + macros.fatGrams * 9 - 2400)).toBeLessThanOrEqual(4)
   })
 
   it.each([
