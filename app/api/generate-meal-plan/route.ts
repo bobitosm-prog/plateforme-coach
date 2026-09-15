@@ -6,7 +6,7 @@ import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimit
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
-import { AthenaNutritionOutputError, canonicalizeAthenaNutritionDay, validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
+import { AthenaNutritionOutputError, fitAthenaNutritionDayToTargets, validateAthenaNutritionDay } from '../../../lib/athena/nutrition-output'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
 import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-input'
 import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
@@ -16,6 +16,20 @@ import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
 export const maxDuration = 300
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+const GENERATION_CONCURRENCY = 3
+
+async function mapWithConcurrency<T, R>(items: readonly T[], concurrency: number, worker: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let nextIndex = 0
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex++
+      results[index] = await worker(items[index], index)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, runWorker))
+  return results
+}
 
 function normalizeDietaryType(value: unknown): string {
   return value === 'mediterraneen' ? 'mediterranean' : String(value || 'omnivore')
@@ -202,18 +216,6 @@ FORMAT JSON UNIQUE (pas de texte) :
 }`
 }
 
-function extractProteins(dayPlan: any): string[] {
-  const proteins: string[] = []
-  if (!dayPlan?.repas) return proteins
-  for (const meal of ['dejeuner', 'diner']) {
-    const foods = dayPlan.repas[meal]
-    if (!Array.isArray(foods) || foods.length === 0) continue
-    const name = foods[0]?.aliment || ''
-    if (name) proteins.push(name)
-  }
-  return proteins
-}
-
 /**
  * Convert legacy LLM day output (repas{} + French fields) to canonical DayPlan.
  * The LLM prompt stays in legacy format (reliable); conversion happens after.
@@ -243,172 +245,6 @@ function convertLegacyDayToCanonical(legacyDay: any): DayPlan {
       fat:  Number(legacyDay?.total_fat ?? 0) || 0,
     },
   }
-}
-
-/**
- * Rebalance macros deterministically after AI generation.
- * Reduces excess protein by shrinking the most protein-dense foods,
- * then reinjects freed calories into the most carb-dense foods.
- * Works on a deep copy — returns the rebalanced COPY if it improves the plan,
- * otherwise returns the ORIGINAL intact (never a half-mutated state).
- */
-function rebalanceMacros(day: any, targets: { protein_goal: number; carbs_goal: number; fat_goal: number; calorie_goal: number }): any {
-  const { protein_goal, carbs_goal, fat_goal, calorie_goal } = targets
-  if (!protein_goal || protein_goal <= 0 || !carbs_goal || carbs_goal <= 0) return day
-
-  // Deep copy — all mutations happen on working, original stays pristine
-  const original = day
-  const working = structuredClone(day)
-
-  // Collect all food items from the WORKING copy
-  const allItems: any[] = []
-  for (const foods of Object.values(working.repas || {}) as any[]) {
-    if (!Array.isArray(foods)) continue
-    for (const item of foods) allItems.push(item)
-  }
-  if (allItems.length === 0) return original
-
-  // Calculate current totals
-  const sumTotals = () => {
-    let p = 0, g = 0, l = 0, k = 0
-    for (const it of allItems) { p += it.proteines; g += it.glucides; l += it.lipides; k += it.kcal }
-    return { p, g, l, k }
-  }
-  const before = sumTotals()
-  const kcalBefore = before.k
-
-  // Memorize entry-state gaps for do-no-harm checks
-  const protGapBefore = Math.abs(before.p - protein_goal)
-  const pOutBefore = before.p < protein_goal * 0.85 || before.p > protein_goal * 1.15
-  const gOutBefore = before.g < carbs_goal * 0.85 || before.g > carbs_goal * 1.15
-  const lOutBefore = before.l < (fat_goal || 70) * 0.85 || before.l > (fat_goal || 70) * 1.15
-
-  // Step 1: reduce protein if > target × 1.10
-  if (before.p > protein_goal * 1.10) {
-    const excessP = before.p - protein_goal
-    const sorted = [...allItems].sort((a, b) => (b.proteines || 0) - (a.proteines || 0))
-    let remaining = excessP
-    for (const item of sorted) {
-      if (remaining <= 0) break
-      if (!item.quantite_g || item.quantite_g <= 40) continue
-      const pPerG = item.proteines / item.quantite_g
-      if (pPerG <= 0) continue
-      const gToRemove = Math.min(remaining / pPerG, item.quantite_g - 40)
-      if (gToRemove < 5) continue
-      const ratio = (item.quantite_g - gToRemove) / item.quantite_g
-      item.quantite_g = Math.round((item.quantite_g - gToRemove) / 5) * 5
-      item.proteines = Math.round(item.proteines * ratio)
-      item.glucides = Math.round(item.glucides * ratio)
-      item.lipides = Math.round(item.lipides * ratio)
-      item.kcal = Math.round(item.kcal * ratio)
-      remaining -= Math.round(gToRemove * pPerG)
-    }
-  }
-
-  // Step 2: reinject freed kcal into carbs if carbs are low
-  const afterReduce = sumTotals()
-  const freedKcal = kcalBefore - afterReduce.k
-  if (freedKcal > 10 && afterReduce.g < carbs_goal) {
-    const carbSorted = [...allItems].sort((a, b) => (b.glucides || 0) - (a.glucides || 0))
-    let kcalToAdd = freedKcal
-    for (const item of carbSorted) {
-      if (kcalToAdd < 10) break
-      if (!item.quantite_g || item.quantite_g <= 0) continue
-      const kcalPerG = item.kcal / item.quantite_g
-      if (kcalPerG <= 0) continue
-      const gToAdd = Math.min(kcalToAdd / kcalPerG, 80) // cap increase at 80g per item
-      if (gToAdd < 5) continue
-      const ratio = (item.quantite_g + gToAdd) / item.quantite_g
-      item.quantite_g = Math.round((item.quantite_g + gToAdd) / 5) * 5
-      item.proteines = Math.round(item.proteines * ratio)
-      item.glucides = Math.round(item.glucides * ratio)
-      item.lipides = Math.round(item.lipides * ratio)
-      item.kcal = Math.round(item.kcal * ratio)
-      kcalToAdd -= Math.round(gToAdd * kcalPerG)
-      // Stop if carbs overshoot
-      const checkG = allItems.reduce((s, i) => s + i.glucides, 0)
-      if (checkG >= carbs_goal * 1.10) break
-    }
-  }
-
-  // Safety checks on the working copy — revert to original if any fails
-  const final = sumTotals()
-
-  // (a) NaN / qty <= 0
-  for (const item of allItems) {
-    if (!Number.isFinite(item.quantite_g) || item.quantite_g <= 0 ||
-        !Number.isFinite(item.kcal) || !Number.isFinite(item.proteines) ||
-        !Number.isFinite(item.glucides) || !Number.isFinite(item.lipides)) {
-      console.warn('[rebalanceMacros] Invalid value detected, reverting to original')
-      return original
-    }
-  }
-
-  // (b) kcal out of range
-  if (Math.abs(final.k - calorie_goal) > 100) {
-    console.warn(`[rebalanceMacros] Kcal out of range after rebalance (${final.k} vs ${calorie_goal}), reverting`)
-    return original
-  }
-
-  // (c) do-no-harm: protein gap must not worsen
-  if (Math.abs(final.p - protein_goal) > protGapBefore + 1) {
-    console.warn(`[rebalanceMacros] Protein gap worsened (${Math.abs(final.p - protein_goal)} > ${protGapBefore}), reverting`)
-    return original
-  }
-
-  // (d) do-no-harm: no macro pushed out of ±15% that wasn't already out
-  const pOutAfter = final.p < protein_goal * 0.85 || final.p > protein_goal * 1.15
-  const gOutAfter = final.g < carbs_goal * 0.85 || final.g > carbs_goal * 1.15
-  const lOutAfter = final.l < (fat_goal || 70) * 0.85 || final.l > (fat_goal || 70) * 1.15
-  if ((pOutAfter && !pOutBefore) || (gOutAfter && !gOutBefore) || (lOutAfter && !lOutBefore)) {
-    console.warn('[rebalanceMacros] Macro pushed out of ±15% bounds, reverting')
-    return original
-  }
-
-  return working
-}
-
-function verifyDayPlan(day: any, params: any): any {
-  const targetKcal = params.calorie_goal || params
-  let totalKcal = 0, totalP = 0, totalG = 0, totalL = 0
-  for (const foods of Object.values(day.repas || {}) as any[]) {
-    if (!Array.isArray(foods)) continue
-    for (const item of foods) {
-      // Round all AI-generated values to integers
-      item.quantite_g = Math.round(item.quantite_g || 0)
-      item.kcal = Math.round(item.kcal || 0)
-      item.proteines = Math.round(item.proteines || 0)
-      item.glucides = Math.round(item.glucides || 0)
-      item.lipides = Math.round(item.lipides || 0)
-      totalKcal += item.kcal
-      totalP += item.proteines
-      totalG += item.glucides
-      totalL += item.lipides
-    }
-  }
-  if (Math.abs(totalKcal - (typeof targetKcal === 'number' ? targetKcal : targetKcal)) > 150) {
-    console.warn(`[meal-plan] Day off target: ${totalKcal} vs ${typeof targetKcal === 'number' ? targetKcal : params.calorie_goal} (diff: ${totalKcal - (typeof targetKcal === 'number' ? targetKcal : params.calorie_goal)})`)
-  }
-
-  // Rebalance macros if targets available (captures return — may be original or rebalanced copy)
-  if (params && typeof params === 'object' && params.protein_goal) {
-    day = rebalanceMacros(day, {
-      protein_goal: params.protein_goal,
-      carbs_goal: params.carbs_goal,
-      fat_goal: params.fat_goal,
-      calorie_goal: params.calorie_goal,
-    })
-    // Recalculate totals after rebalance
-    totalKcal = 0; totalP = 0; totalG = 0; totalL = 0
-    for (const foods of Object.values(day.repas || {}) as any[]) {
-      if (!Array.isArray(foods)) continue
-      for (const item of foods) {
-        totalKcal += item.kcal; totalP += item.proteines; totalG += item.glucides; totalL += item.lipides
-      }
-    }
-  }
-
-  return { ...day, total_kcal: totalKcal, total_protein: totalP, total_carbs: totalG, total_fat: totalL }
 }
 
 async function generateOneDay(
@@ -499,15 +335,15 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
   const parsed = JSON.parse(jsonMatch[0])
   // The model chooses foods and quantities. Nutrition always comes from our
   // versioned reference database before any deterministic rebalancing.
-  const canonical = canonicalizeAthenaNutritionDay(parsed, Array.isArray(params.allergies) ? params.allergies : [])
-  const verified = verifyDayPlan(canonical, params)
-  return validateAthenaNutritionDay(verified, {
+  const targets = {
     calorieGoal: params.calorie_goal,
     proteinGoal: params.protein_goal,
     carbsGoal: params.carbs_goal,
     fatGoal: params.fat_goal,
     allergies: Array.isArray(params.allergies) ? params.allergies : [],
-  })
+  }
+  const fitted = fitAthenaNutritionDayToTargets(parsed, targets)
+  return validateAthenaNutritionDay(fitted, targets)
 }
 
 function generationFailureCode(error: unknown): string {
@@ -565,34 +401,29 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const plan: Record<string, any> = {}
-        const proteinsUsed: string[] = []
-
-        for (let i = 0; i < DAYS.length; i++) {
-          const day = DAYS[i]
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: i + 1, total: 7 })}\n\n`))
-
+        const outcomes = await mapWithConcurrency(DAYS, GENERATION_CONCURRENCY, async (day, index) => {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: index + 1, total: 7 })}\n\n`))
           let legacyDay: any = null
           let lastFailureCode = 'unknown'
           for (let attempt = 1; attempt <= 2 && !legacyDay; attempt++) {
             try {
-              legacyDay = await generateOneDay(apiKey, day, params, proteinsUsed, clientContext.prompt, attempt === 2)
+              legacyDay = await generateOneDay(apiKey, day, params, [], clientContext.prompt, attempt === 2)
             } catch (error) {
               lastFailureCode = generationFailureCode(error)
               console.warn(`[meal-plan] generation attempt rejected day=${day} attempt=${attempt} code=${lastFailureCode}`)
             }
           }
+          return { day, legacyDay, lastFailureCode }
+        })
 
-          if (legacyDay) {
-            // extractProteins reads legacy structure (repas{} + aliment), call BEFORE conversion
-            proteinsUsed.push(...extractProteins(legacyDay))
-            // Convert to canonical for storage + streaming to client
-            plan[day] = convertLegacyDayToCanonical(legacyDay)
-          } else {
-            console.error(`[meal-plan] validated generation failed day=${day} code=${lastFailureCode}`)
+        for (const outcome of outcomes) {
+          if (!outcome.legacyDay) {
+            console.error(`[meal-plan] validated generation failed day=${outcome.day} code=${outcome.lastFailureCode}`)
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Plan temporairement indisponible' })}\n\n`))
             controller.close()
             return
           }
+          plan[outcome.day] = convertLegacyDayToCanonical(outcome.legacyDay)
         }
 
         await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')

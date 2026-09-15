@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AthenaNutritionOutputError, canonicalizeAthenaNutritionDay, validateAthenaNutritionDay } from '@/lib/athena/nutrition-output'
+import { AthenaNutritionOutputError, canonicalizeAthenaNutritionDay, fitAthenaNutritionDayToTargets, validateAthenaNutritionDay } from '@/lib/athena/nutrition-output'
 
 const food = (aliment: string, quantite_g: number, kcal: number, proteines: number, glucides: number, lipides: number) => ({ aliment, quantite_g, kcal, proteines, glucides, lipides })
 const day = () => ({ repas: {
@@ -38,5 +38,25 @@ describe('Athena nutrition output', () => {
       expect((error as AthenaNutritionOutputError).code).toBe('targets')
       expect(error).not.toHaveProperty('cause')
     }
+  })
+  it('deterministically fits canonical quantities to coherent targets', () => {
+    const badlyPortioned = day()
+    for (const foods of Object.values(badlyPortioned.repas)) {
+      for (const entry of foods) entry.quantite_g = Math.max(5, entry.quantite_g / 2)
+    }
+    const fitted = fitAthenaNutritionDayToTargets(badlyPortioned, targets)
+    expect(() => validateAthenaNutritionDay(fitted, targets)).not.toThrow()
+    expect(Object.values(fitted.repas).flat().every(entry => entry.quantite_g % 5 === 0)).toBe(true)
+  })
+  it('produces exactly the same fitted day on repeated runs', () => {
+    expect(fitAthenaNutritionDayToTargets(day(), targets)).toEqual(fitAthenaNutritionDayToTargets(day(), targets))
+  })
+  it.each([
+    { calorieGoal: 1800, proteinGoal: 150, carbsGoal: 180, fatGoal: 53, allergies: [] },
+    { calorieGoal: 2265, proteinGoal: 150, carbsGoal: 278, fatGoal: 61, allergies: [] },
+    { calorieGoal: 3000, proteinGoal: 160, carbsGoal: 390, fatGoal: 89, allergies: [] },
+  ])('fits common coherent target bundles ($calorieGoal kcal)', target => {
+    const fitted = fitAthenaNutritionDayToTargets(day(), target)
+    expect(() => validateAthenaNutritionDay(fitted, target)).not.toThrow()
   })
 })

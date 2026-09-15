@@ -8,7 +8,7 @@ describe('Athena nutrition generation integration', () => {
   it('injects the versioned scientific policy and validates every day', () => {
     expect(route).toContain('buildAthenaScientificPolicyPrompt()')
     expect(route).toContain('validateAthenaNutritionDay')
-    expect(route.indexOf('canonicalizeAthenaNutritionDay(parsed')).toBeLessThan(route.indexOf('verifyDayPlan(canonical'))
+    expect(route.indexOf('fitAthenaNutritionDayToTargets(parsed')).toBeLessThan(route.indexOf('validateAthenaNutritionDay(fitted'))
   })
   it('does not derive nutrition from a body photo', () => {
     expect(route).not.toContain('ai_photo_analysis')
@@ -27,6 +27,11 @@ describe('Athena nutrition generation integration', () => {
     expect(route).toContain('attempt === 2')
     expect(route).toContain('generationFailureCode(error)')
     expect(route).toContain("type: 'error'")
+  })
+  it('bounds provider concurrency instead of generating seven days sequentially', () => {
+    expect(route).toContain('const GENERATION_CONCURRENCY = 3')
+    expect(route).toContain('mapWithConcurrency(DAYS, GENERATION_CONCURRENCY')
+    expect(route).not.toContain('for (let i = 0; i < DAYS.length; i++)')
   })
   it('reserves enough output tokens for four complete structured meals', () => {
     expect(route).toContain('max_tokens: 2500')

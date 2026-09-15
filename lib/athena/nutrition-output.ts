@@ -58,6 +58,86 @@ export function canonicalizeAthenaNutritionDay(value: unknown, allergies: readon
   return { repas: checkedMeals }
 }
 
+type CanonicalDay = ReturnType<typeof canonicalizeAthenaNutritionDay>
+
+function targetError(
+  totals: { kcal: number; protein: number; carbs: number; fat: number },
+  targets: NutritionTargets,
+): number {
+  const terms = [
+    [totals.kcal, targets.calorieGoal, Math.max(targets.calorieGoal * 0.08, 100)],
+    [totals.protein, targets.proteinGoal, Math.max(targets.proteinGoal * 0.15, 15)],
+    [totals.carbs, targets.carbsGoal, Math.max(targets.carbsGoal * 0.15, 20)],
+    [totals.fat, targets.fatGoal, Math.max(targets.fatGoal * 0.15, 8)],
+  ]
+  return terms.reduce((sum, [actual, target, tolerance]) => sum + ((actual - target) / tolerance) ** 2, 0)
+}
+
+/**
+ * Adjusts only quantities selected by Athena. The food names, meal placement,
+ * allergen checks and reference nutrition remain authoritative. This turns a
+ * plausible menu into a target-compliant one without trusting model arithmetic.
+ */
+export function fitAthenaNutritionDayToTargets(value: unknown, targets: NutritionTargets): CanonicalDay {
+  const canonical = canonicalizeAthenaNutritionDay(value, targets.allergies)
+  const entries = Object.values(canonical.repas).flat()
+  const references = entries.map(entry => resolveFitnessFood(entry.aliment))
+  if (references.some(reference => !reference)) throw new AthenaNutritionOutputError('unknown_food')
+
+  const limits = references.map(reference => {
+    if (reference?.category === 'fat') return { min: 5, max: 80 }
+    if (reference?.category === 'protein') return { min: 25, max: 450 }
+    if (reference?.category === 'starch') return { min: 25, max: 600 }
+    return { min: 10, max: 500 }
+  })
+  const calorieScale = targets.calorieGoal / Math.max(1, entries.reduce((sum, entry) => sum + entry.kcal, 0))
+  const quantities = entries.map((entry, index) => {
+    const scaled = Math.round((entry.quantite_g * calorieScale) / 5) * 5
+    return Math.max(limits[index].min, Math.min(limits[index].max, scaled))
+  })
+
+  const totalsFor = (values: number[]) => values.reduce((totals, quantity, index) => {
+    const nutrition = nutritionForQuantity(references[index]!, quantity)
+    totals.kcal += nutrition.calories
+    totals.protein += nutrition.protein
+    totals.carbs += nutrition.carbs
+    totals.fat += nutrition.fat
+    return totals
+  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 })
+
+  // The score is a convex quadratic over linear nutrient totals. Coordinate
+  // descent on a 5 g grid is deterministic and cheap for a single day.
+  for (let pass = 0; pass < 16; pass++) {
+    let changed = false
+    for (let index = 0; index < quantities.length; index++) {
+      const previous = quantities[index]
+      let bestQuantity = previous
+      let bestError = targetError(totalsFor(quantities), targets)
+      for (let quantity = limits[index].min; quantity <= limits[index].max; quantity += 5) {
+        quantities[index] = quantity
+        const error = targetError(totalsFor(quantities), targets)
+        if (error + 1e-9 < bestError) {
+          bestError = error
+          bestQuantity = quantity
+        }
+      }
+      quantities[index] = bestQuantity
+      if (bestQuantity !== previous) changed = true
+    }
+    if (!changed) break
+  }
+
+  entries.forEach((entry, index) => {
+    const nutrition = nutritionForQuantity(references[index]!, quantities[index])
+    entry.quantite_g = quantities[index]
+    entry.kcal = Math.round(nutrition.calories)
+    entry.proteines = Math.round(nutrition.protein)
+    entry.glucides = Math.round(nutrition.carbs)
+    entry.lipides = Math.round(nutrition.fat)
+  })
+  return canonical
+}
+
 export function validateAthenaNutritionDay(value: unknown, targets: NutritionTargets) {
   const canonical = canonicalizeAthenaNutritionDay(value, targets.allergies)
   const checkedMeals = canonical.repas
