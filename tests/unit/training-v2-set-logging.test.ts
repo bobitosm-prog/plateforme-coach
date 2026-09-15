@@ -82,9 +82,12 @@ describe('Training V2 set logging', () => {
     expect(currentSetEditor).toContain("inputMode=\"numeric\"")
     expect(currentSetEditor).toContain('className={styles.setProgress}')
     expect(currentSetEditor).toContain('role="progressbar"')
-    expect(trainingStyles).toMatch(/\.stepperValue\s*\{[^}]*min-height:\s*104px;/)
-    expect(trainingStyles).toMatch(/\.stepper > button,[\s\S]*?min-height:\s*56px;/)
-    expect(trainingStyles).toMatch(/\.setEditor \.validateSetButton\s*\{[^}]*min-height:\s*60px;/)
+    expect(trainingStyles).toMatch(/\.stepperValue\s*\{[^}]*min-height:\s*82px;/)
+    expect(trainingStyles).toMatch(/\.stepper > button,[\s\S]*?min-height:\s*48px;/)
+    expect(trainingStyles).toMatch(/\.setEditor \.validateSetButton\s*\{[^}]*min-height:\s*56px;/)
+    expect(trainingStyles).toMatch(/\.setStatus:empty\s*\{[^}]*display:\s*none;/)
+    expect(trainingStyles.match(/\.focus\s*\{([^}]*)\}/)?.[1]).not.toContain('border:')
+    expect(trainingStyles.match(/\.setEditor\s*\{([^}]*)\}/)?.[1]).not.toContain('border:')
   })
 
   it('clears an automatic weight suggestion on first focus without clearing entered weight', () => {
