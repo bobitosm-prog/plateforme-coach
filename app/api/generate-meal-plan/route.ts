@@ -12,6 +12,7 @@ import { athenaNutritionRequestSchema } from '../../../lib/athena/nutrition-inpu
 import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientific-policy'
 import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
 import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
+import { replacePersonalMealPlan } from '../../../lib/meal-plan/replace-personal-plan'
 
 export const maxDuration = 300
 
@@ -426,6 +427,16 @@ export async function POST(req: NextRequest) {
           plan[outcome.day] = convertLegacyDayToCanonical(outcome.legacyDay)
         }
 
+        if (params.persist_generated_plan) {
+          const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan)
+          if (!replacement.ok) {
+            console.error(`[meal-plan] persistence failed stage=${replacement.stage}`)
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Sauvegarde temporairement indisponible' })}\n\n`))
+            controller.close()
+            return
+          }
+          console.info('[meal-plan] generation persisted days=7')
+        }
         await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', plan })}\n\n`))
         controller.close()

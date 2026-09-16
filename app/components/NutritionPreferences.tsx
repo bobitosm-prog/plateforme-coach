@@ -9,7 +9,6 @@ import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } fr
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
 import type { Profile } from '../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
-import { replacePersonalMealPlan } from '../../lib/meal-plan/replace-personal-plan'
 
 // ─── Constants ───
 
@@ -285,7 +284,10 @@ export default function NutritionPreferences({
       const res = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildMealPlanParams(generationProfile)),
+        body: JSON.stringify({
+          ...buildMealPlanParams(generationProfile),
+          persist_generated_plan: true,
+        }),
       })
       if (!res.ok) {
         const errText = await res.text()
@@ -317,17 +319,10 @@ export default function NutritionPreferences({
         setToastMsg('Generation echouee — aucun plan recu')
         setTimeout(() => setToastMsg(''), 3000)
       } else {
-        const replacement = await replacePersonalMealPlan(supabase, userId, planData)
-        if (!replacement.ok) {
-          console.error('Replace meal plan failed:', replacement.stage)
-          setToastMsg(t('save.generationError'))
-          setTimeout(() => setToastMsg(''), 3000)
-        } else {
-          setToastMsg('Plan regenere !')
-          setTimeout(() => setToastMsg(''), 2500)
-          onSaved()
-          onPlanRegenerated?.()
-        }
+        setToastMsg('Plan regenere !')
+        setTimeout(() => setToastMsg(''), 2500)
+        onSaved()
+        onPlanRegenerated?.()
       }
     } catch (err) {
       console.error('Regen error:', err)

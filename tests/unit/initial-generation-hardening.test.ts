@@ -232,7 +232,6 @@ describe('initial generation hardening', () => {
     expect(mealDeactivate).toBeGreaterThan(mealInsert)
     expect(mealReplacementSource).toContain(".lt('created_at', inserted.created_at)")
     expect(hookSource).toContain("'[initial-generation] training rollback failed'")
-    expect(hookSource).toContain("'[initial-generation] nutrition rollback failed'")
     expect(hookSource).toContain('inFlightByUser')
     expect(hookSource).toContain('navigator.locks.request')
     expect(INITIAL_GENERATION_IDEMPOTENCY).toBe('PARTIAL')

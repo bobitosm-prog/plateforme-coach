@@ -22,6 +22,7 @@ export const athenaNutritionRequestSchema = z.object({
   meal_food_names: mealNames,
   available_foods: z.array(availableFood).max(200).default([]),
   scanned_foods: z.array(scannedFood).max(40).default([]),
+  persist_generated_plan: z.boolean().default(false),
 })
 
 export type AthenaNutritionRequest = z.infer<typeof athenaNutritionRequestSchema>

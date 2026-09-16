@@ -51,4 +51,9 @@ describe('Athena nutrition generation integration', () => {
     expect(route).toContain("respecte strictement l'état cru ou cuit indiqué dans le nom de la base")
     expect(route).not.toContain('Les viandes, poissons, œufs : poids cuit également')
   })
+  it('persists account regenerations before emitting the terminal event', () => {
+    expect(route).toContain('if (params.persist_generated_plan)')
+    expect(route.indexOf('replacePersonalMealPlan(supabaseAuth')).toBeLessThan(route.indexOf("type: 'done'"))
+    expect(route).toContain('[meal-plan] generation persisted days=7')
+  })
 })

@@ -2,11 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 
-function replacementClient({ insertError = false, legacyMissing = false, deactivateError = false, rollbackError = false } = {}) {
+function replacementClient({ insertError = false, legacyMissing = false, deactivateError = false } = {}) {
   const events: string[] = []
   const insertPayloads: Array<Record<string, unknown>> = []
   const updatePayloads: Array<Record<string, unknown>> = []
-  let updateCount = 0
   let insertCount = 0
   const client = {
     from: vi.fn(() => ({
@@ -26,9 +25,7 @@ function replacementClient({ insertError = false, legacyMissing = false, deactiv
       }}),
       update: vi.fn((payload: Record<string, unknown>) => {
         updatePayloads.push(payload)
-        updateCount += 1
-        const isRollback = updateCount > 1
-        const result = Promise.resolve({ error: (isRollback ? rollbackError : deactivateError) ? { code: 'WRITE' } : null })
+        const result = Promise.resolve({ error: deactivateError ? { code: 'WRITE' } : null })
         const chain = {
           eq: vi.fn(() => chain),
           lt: vi.fn(() => chain),
@@ -38,7 +35,6 @@ function replacementClient({ insertError = false, legacyMissing = false, deactiv
           }),
           then: result.then.bind(result),
         }
-        if (isRollback) events.push('rollback')
         return chain
       }),
     })),
@@ -74,10 +70,10 @@ describe('replacePersonalMealPlan', () => {
     expect(events).toEqual(['insert'])
   })
 
-  it('deactivates the new plan as rollback when old-plan deactivation fails', async () => {
+  it('keeps a valid new plan when previous-plan cleanup is unavailable', async () => {
     const { client, events } = replacementClient({ deactivateError: true })
     await expect(replacePersonalMealPlan(client as never, 'user-1', {}))
-      .resolves.toEqual({ ok: false, stage: 'deactivate' })
-    expect(events).toEqual(['insert', 'deactivate', 'rollback'])
+      .resolves.toEqual({ ok: true, id: 'new-plan' })
+    expect(events).toEqual(['insert', 'deactivate'])
   })
 })

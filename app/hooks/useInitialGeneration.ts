@@ -233,9 +233,6 @@ export default function useInitialGeneration(
     const persistNutrition = async (payload: unknown): Promise<boolean> => {
       if (!isValidInitialMealPlan(payload)) return false
       const result = await replacePersonalMealPlan(supabase, userId, payload)
-      if (!result.ok && result.stage === 'rollback') {
-        reportError('error', '[initial-generation] nutrition rollback failed', { userId })
-      }
       return result.ok
     }
 

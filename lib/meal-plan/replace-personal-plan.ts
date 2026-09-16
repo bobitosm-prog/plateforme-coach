@@ -4,7 +4,7 @@ import { isMissingPersonalMealPlanColumn, type PersonalMealPlanSchema } from './
 
 export type PersonalMealPlanReplacement =
   | { ok: true; id: string }
-  | { ok: false; stage: 'insert' | 'deactivate' | 'rollback' }
+  | { ok: false; stage: 'insert' }
 
 export async function replacePersonalMealPlan(
   supabase: SupabaseClient,
@@ -38,12 +38,9 @@ export async function replacePersonalMealPlan(
     .eq(activeColumn, true)
     .lt('created_at', inserted.created_at)
     .neq('id', inserted.id)
-  if (!deactivateError) return { ok: true, id: inserted.id }
-
-  const { error: rollbackError } = await supabase
-    .from('meal_plans')
-    .update({ [activeColumn]: false })
-    .eq('id', inserted.id)
-    .eq('user_id', userId)
-  return { ok: false, stage: rollbackError ? 'rollback' : 'deactivate' }
+  // The new row is already valid and readers deterministically select the
+  // newest active plan. Cleanup must therefore never invalidate a successful
+  // replacement on schemas where UPDATE is temporarily unavailable.
+  if (deactivateError) console.warn('[meal-plan] previous-plan cleanup deferred')
+  return { ok: true, id: inserted.id }
 }

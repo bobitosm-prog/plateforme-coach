@@ -8,7 +8,7 @@ const initial = readFileSync('app/hooks/useInitialGeneration.ts', 'utf8')
 describe('Athena adjustment lifecycle', () => {
   it('uses the same safe personal meal-plan replacement in every personal flow', () => {
     expect(detail).toContain('replacePersonalMealPlan(supabase, userId, planData)')
-    expect(preferences).toContain('replacePersonalMealPlan(supabase, userId, planData)')
+    expect(preferences).toContain('persist_generated_plan: true')
     expect(initial).toContain('replacePersonalMealPlan(supabase, userId, payload)')
   })
 
