@@ -1,15 +1,16 @@
 import { spawn } from 'node:child_process'
-import { mkdirSync, rmSync } from 'node:fs'
+import { appendFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { createClient } from '@supabase/supabase-js'
 import { config as loadEnv } from 'dotenv'
-import { acquireE2eLock, assertLocalE2eUrl, assertTemporaryPortsClosed, getIntegratedCriticalE2eScenarios, redactE2eOutput } from './e2e-local-contract.mjs'
+import { acquireE2eLock, assertLocalE2eUrl, assertTemporaryPortsClosed, buildCriticalE2eMarkdownSummary, formatCriticalE2eProgress, getIntegratedCriticalE2eScenarios, redactE2eOutput } from './e2e-local-contract.mjs'
 import { assertNoRemoteProject, LOCAL_MAILPIT_URL } from './supabase-local-contract.mjs'
 
 const root = resolve(new URL('..', import.meta.url).pathname)
 const lockPath = resolve(root, '.critical-e2e.lock')
 const artifactsPath = resolve(root, 'test-results/critical-e2e')
+const summaryPath = resolve(artifactsPath, 'summary.json')
 const scenarios = getIntegratedCriticalE2eScenarios()
 
 function run(command, args, options = {}) {
@@ -134,9 +135,10 @@ try {
   await run(process.execPath, ['scripts/supabase-local.mjs', 'reset'], { label: 'Canonical Supabase reset' })
   await run(process.execPath, ['scripts/supabase-local.mjs', 'verify'], { label: 'Migration contract verification' })
 
-  for (const scenario of scenarios) {
+  for (const [scenarioIndex, scenario] of scenarios.entries()) {
     const scenarioStarted = performance.now()
     const scenarioArtifacts = resolve(artifactsPath, scenario.spec.replace(/^e2e\//, '').replace(/\.spec\.ts$/, ''))
+    console.log(formatCriticalE2eProgress({ index: scenarioIndex + 1, total: scenarios.length, name: scenario.name, status: 'DÉMARRAGE' }))
     try {
       await run(process.execPath, ['scripts/run-local-e2e.mjs', scenario.spec, ...scenario.flags], {
         label: scenario.name,
@@ -152,11 +154,15 @@ try {
       await assertTemporaryPortsClosed()
       await auditFinalState()
       rmSync(scenarioArtifacts, { recursive: true, force: true })
-      results.push({ ...scenario, status: 'VERT', duration: performance.now() - scenarioStarted })
+      const result = { ...scenario, status: 'VERT', duration: performance.now() - scenarioStarted }
+      results.push(result)
+      console.log(formatCriticalE2eProgress({ index: scenarioIndex + 1, total: scenarios.length, ...result, durationMs: result.duration }))
     } catch (error) {
       suiteFailed = true
       const output = redactE2eOutput(error.output || error.stack || error.message)
-      results.push({ ...scenario, status: 'ÉCHEC', kind: classifyFailure(output), duration: performance.now() - scenarioStarted, output })
+      const result = { ...scenario, status: 'ÉCHEC', kind: classifyFailure(output), duration: performance.now() - scenarioStarted, output }
+      results.push(result)
+      console.error(formatCriticalE2eProgress({ index: scenarioIndex + 1, total: scenarios.length, ...result, durationMs: result.duration }))
     }
   }
 
@@ -173,12 +179,25 @@ try {
   releaseLock()
 }
 
+const totalDuration = performance.now() - started
+mkdirSync(artifactsPath, { recursive: true })
+writeFileSync(summaryPath, `${JSON.stringify({
+  schemaVersion: 1,
+  suite: 'critical-e2e',
+  status: suiteFailed ? 'ÉCHEC' : 'VERT',
+  durationMs: Math.round(totalDuration),
+  retryCount: 0,
+  results,
+}, null, 2)}\n`, { mode: 0o600 })
+const markdownSummary = buildCriticalE2eMarkdownSummary(results, totalDuration, suiteFailed)
+if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary)
+
 console.log('\nSuite E2E critique MoovX')
 for (const result of results) {
   console.log(`- ${result.name}: ${result.status} (${(result.duration / 1000).toFixed(1)} s)${result.kind ? ` — ${result.kind}` : ''}`)
   if (result.status === 'ÉCHEC') console.error(result.output)
 }
-console.log(`Durée totale: ${((performance.now() - started) / 1000).toFixed(1)} s`)
+console.log(`Durée totale: ${(totalDuration / 1000).toFixed(1)} s`)
 if (!suiteFailed) rmSync(artifactsPath, { recursive: true, force: true })
 else console.error(`Traces d'échec conservées dans ${artifactsPath.replace(`${root}/`, '')}`)
 process.exitCode = suiteFailed ? 1 : 0

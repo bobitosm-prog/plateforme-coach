@@ -318,6 +318,15 @@ jobs:
       - name: Run critical browser journeys
         run: npm run test:e2e:critical
 
+      - name: Persist sanitized browser failure summary
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: critical-e2e-summary-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: test-results/critical-e2e/summary.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Audit synthetic browser cleanup
         if: always()
         shell: bash

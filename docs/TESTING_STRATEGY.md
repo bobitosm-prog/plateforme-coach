@@ -405,7 +405,10 @@ explicitement. Il exécute la suite canonique `test:e2e:critical` avec ses quinz
 parcours séquentiels, un worker, aucun retry et uniquement des fournisseurs
 locaux simulés. Son audit final refuse les comptes ou tables synthétiques non
 nettoyés, puis un cleanup `always()` ferme Supabase et contrôle les processus,
-volumes et ports réservés.
+volumes et ports réservés. Chaque parcours annonce immédiatement son démarrage
+et son résultat dans le log. En cas d'échec, Gate C2 conserve pendant 14 jours
+uniquement `summary.json`, un diagnostic textuel expurgé ; les traces Playwright
+brutes, cookies, requêtes et captures réseau ne sont jamais publiés.
 
 Les deux jobs Heavy sont indépendants de Gates A/B et l'un de l'autre : ils
 peuvent donc s'exécuter en parallèle sur des runners isolés. Ils sont ignorés

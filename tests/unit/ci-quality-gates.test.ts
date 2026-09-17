@@ -38,7 +38,7 @@ describe('progressive CI quality gates contract', () => {
   it('runs official JavaScript actions on Node 24 tags without changing gate cache policy', () => {
     expect(workflow.match(/uses: actions\/checkout@v7/g)).toHaveLength(4)
     expect(workflow.match(/uses: actions\/setup-node@v7/g)).toHaveLength(4)
-    expect(workflow).not.toContain('actions/upload-artifact')
+    expect(workflow.match(/uses: actions\/upload-artifact@v7/g)).toHaveLength(1)
     expect(workflow).not.toMatch(/actions\/(?:checkout|setup-node|upload-artifact)@v4/)
     for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
       expect(gate).toContain('uses: actions/checkout@v7')
@@ -221,6 +221,11 @@ describe('progressive CI quality gates contract', () => {
     expect(browserHeavyJob).not.toContain('test:integration:rls')
     expect(browserHeavyJob).not.toMatch(/^    needs:/m)
     expect(browserHeavyJob).not.toMatch(/retries|--workers[= ](?:[2-9]|[1-9][0-9]+)/)
+    expect(browserHeavyJob).toContain('name: Persist sanitized browser failure summary')
+    expect(browserHeavyJob).toContain('if: failure()')
+    expect(browserHeavyJob).toContain('path: test-results/critical-e2e/summary.json')
+    expect(browserHeavyJob).toContain('retention-days: 14')
+    expect(browserHeavyJob).not.toMatch(/path:\s+test-results\/critical-e2e\/(?!summary\.json)/)
   })
 
   it('audits and removes local heavy resources even after failures', () => {
@@ -238,14 +243,16 @@ describe('progressive CI quality gates contract', () => {
     expect(browserHeavyJob).toContain('BROWSER_HEAVY_SYNTHETIC_TABLE_RESIDUE')
   })
 
-  it('keeps observation collection out of cancellable development runs', () => {
+  it('keeps statistical collection out of cancellable development runs while retaining only a sanitized C2 failure summary', () => {
     expect(workflow).not.toContain('stability-observation')
     expect(workflow).not.toContain('collect-ci-stability-observation')
-    expect(workflow).not.toContain('upload-artifact')
-    for (const gate of [fastJob, standardJob, databaseHeavyJob, browserHeavyJob]) {
+    expect(workflow.match(/uses: actions\/upload-artifact@v7/g)).toHaveLength(1)
+    for (const gate of [fastJob, standardJob, databaseHeavyJob]) {
       expect(gate).not.toContain('collect-ci-stability-observation')
       expect(gate).not.toContain('upload-artifact')
     }
+    expect(browserHeavyJob).not.toContain('collect-ci-stability-observation')
+    expect(browserHeavyJob).toContain('path: test-results/critical-e2e/summary.json')
   })
 
   it('keeps all heavy jobs local-only, read-only toward the repository and deployment-free', () => {

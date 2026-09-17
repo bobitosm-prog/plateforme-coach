@@ -64,6 +64,9 @@ une clé publique synthétique de compilation, sans service role Supabase ni cl�
 Stripe. Gate C est versionné sous deux jobs indépendants : Database Heavy
 reconstruit les migrations et vérifie types et RLS/PostgREST ; Browser Heavy
 exécute les quinze parcours E2E critiques avec cleanup local systématique.
+Chaque parcours C2 publie sa progression en direct. Un échec produit uniquement
+un résumé JSON expurgé conservé 14 jours ; les traces Playwright brutes restent
+locales afin de ne jamais exposer cookie, session ou jeton dans un artefact CI.
 
 Le premier run complet (`31317128115`) a validé Gate A, Gate B, Gate C1 et Gate
 C2 en `16 min 07 s`, avec reconstruction depuis une base vide, E2E `15/15` et
