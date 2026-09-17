@@ -111,7 +111,7 @@ export default function AccountSection({
               <X size={16} color={colors.textMuted} />
             </button>
             <ClientIntlProvider>
-              <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
+              <Paywall role="client" coachId={coachId} onSignOut={() => setShowPaywall(false)} />
             </ClientIntlProvider>
           </div>
         </RailOverlay>)}

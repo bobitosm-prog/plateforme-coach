@@ -491,7 +491,7 @@ function CoachAppContent() {
         </div>
       )}
       <ClientIntlProvider>
-        <Paywall role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />
+        <Paywall role="client" coachId={h.coachId} onSignOut={() => { cache.clearAll(); h.supabase.auth.signOut().then(() => { window.location.href = '/login' }) }} />
       </ClientIntlProvider>
     </div>
   )

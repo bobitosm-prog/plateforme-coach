@@ -1,89 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limit'
+
+function limitedResponse(retryAfter = 60) {
+  return NextResponse.json(
+    { error: 'Trop de requêtes' },
+    { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+  )
+}
 
 export async function POST(req: NextRequest) {
-  // Auth check
-  const cookieStore = await cookies()
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } }
-  )
-  const { data: { user } } = await supabaseAuth.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const ipLimit = checkRateLimit(`stripe-coach-checkout:ip:${ip}`, 20, 60_000)
+  if (!ipLimit.allowed) return limitedResponse(ipLimit.retryAfter)
 
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json({ error: 'Stripe non configuré' }, { status: 500 })
+    const supabaseAuth = await createSupabaseRouteClient()
+    const { data: { user } } = await supabaseAuth.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const userLimit = checkRateLimit(`stripe-coach-checkout:user:${user.id}`, 5, 60_000)
+    if (!userLimit.allowed) return limitedResponse(userLimit.retryAfter)
+
+    const body: unknown = await req.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length > 0) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY.trim())
+    const secret = process.env.STRIPE_SECRET_KEY?.trim()
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceKey) {
-      console.error('[coach-checkout] SUPABASE_SERVICE_ROLE_KEY missing')
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!secret || !serviceKey || !supabaseUrl) {
+      return NextResponse.json({ error: 'Checkout unavailable' }, { status: 500 })
     }
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceKey
-    )
 
-    const { clientId, coachId } = await req.json()
-    if (!clientId || !coachId) return NextResponse.json({ error: 'clientId et coachId requis' }, { status: 400 })
-
-    // Fetch coach profile
-    const { data: coach } = await supabaseAdmin
+    const admin = createClient(supabaseUrl, serviceKey)
+    const { data: caller } = await admin
       .from('profiles')
-      .select('stripe_account_id, coach_monthly_rate, full_name, email')
+      .select('role,email,full_name,stripe_customer_id')
+      .eq('id', user.id)
+      .single()
+    if (!caller) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (caller.role !== 'client') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { data: relation, error: relationError } = await admin
+      .from('coach_clients')
+      .select('coach_id')
+      .eq('client_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (relationError || !relation?.coach_id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const coachId = relation.coach_id
+    const { data: coach } = await admin
+      .from('profiles')
+      .select('role,stripe_account_id,coach_monthly_rate,full_name')
       .eq('id', coachId)
       .single()
-
-    if (!coach?.stripe_account_id) {
+    if (!coach || coach.role !== 'coach') {
+      return NextResponse.json({ error: 'Coach not found' }, { status: 404 })
+    }
+    if (!coach.stripe_account_id) {
       return NextResponse.json({ error: "Le coach n'a pas encore configuré Stripe" }, { status: 400 })
     }
 
-    const MIN_COACH_RATE = 30
-    const MAX_COACH_RATE = 500
     const rawRate = coach.coach_monthly_rate || 50
-    if (
-      typeof rawRate !== 'number' ||
-      !Number.isFinite(rawRate) ||
-      rawRate < MIN_COACH_RATE ||
-      rawRate > MAX_COACH_RATE
-    ) {
-      return NextResponse.json(
-        { error: `Le tarif doit être entre ${MIN_COACH_RATE} et ${MAX_COACH_RATE} CHF.` },
-        { status: 400 }
-      )
+    if (typeof rawRate !== 'number' || !Number.isFinite(rawRate) || rawRate < 30 || rawRate > 500) {
+      return NextResponse.json({ error: 'Le tarif doit être entre 30 et 500 CHF.' }, { status: 400 })
     }
-    const rate = Math.round(rawRate * 100) / 100
-    const amountCentimes = Math.round(rate * 100)
+    const amountCentimes = Math.round(Math.round(rawRate * 100) / 100 * 100)
+    const stripe = new Stripe(secret)
 
-    // Fetch client
-    const { data: client } = await supabaseAdmin
-      .from('profiles')
-      .select('email, full_name, stripe_customer_id')
-      .eq('id', clientId)
-      .single()
-
-    // Get or create Stripe customer
-    let customerId = client?.stripe_customer_id
+    let customerId = caller.stripe_customer_id as string | null
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: client?.email || undefined,
-        name: client?.full_name || undefined,
-        metadata: { userId: clientId, coachId },
+        email: caller.email || user.email || undefined,
+        name: caller.full_name || undefined,
+        metadata: { userId: user.id, coachId },
       })
       customerId = customer.id
-      await supabaseAdmin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', clientId)
+      await admin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
     }
 
-    // Create checkout session with transfer to coach + idempotency key
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
-    const idempotencyKey = `coach-checkout-${clientId}-${coachId}-${Date.now()}`
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -103,17 +106,16 @@ export async function POST(req: NextRequest) {
       subscription_data: {
         application_fee_percent: 3,
         transfer_data: { destination: coach.stripe_account_id },
-        metadata: { clientId, coachId, type: 'coach_subscription' },
+        metadata: { clientId: user.id, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
       },
       success_url: `${appUrl}/?payment=success`,
       cancel_url: `${appUrl}/?payment=canceled`,
-      metadata: { clientId, coachId, type: 'coach_subscription' },
-    }, { idempotencyKey })
+      metadata: { clientId: user.id, coachId, subType: 'coach_monthly', type: 'coach_subscription' },
+    }, { idempotencyKey: `coach-checkout-${user.id}-${coachId}-${Date.now()}` })
 
     return NextResponse.json({ url: session.url })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Coach checkout error'
-    console.error('[stripe/coach-checkout] ERROR:', { message })
+  } catch {
+    console.error('[stripe/coach-checkout] Checkout failed')
     return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
   }
 }
