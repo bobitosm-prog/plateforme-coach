@@ -2910,6 +2910,20 @@
         "savedMeals": "My meals", "savedMealsBody": "Reuse a meal",
         "recipes": "Recipes", "recipesBody": "Browse ideas",
         "scannerPending": "Barcode scanning is available through food search."
+      },
+      "quickCard": {
+        "label": "Nutrition summary and quick access",
+        "caloriesRemaining": "kcal remaining",
+        "caloriesAbove": "kcal over",
+        "targetMissing": "Target not set",
+        "macrosRemaining": "Macronutrients remaining",
+        "protein": "Protein remaining",
+        "carbs": "Carbs remaining",
+        "fat": "Fat remaining",
+        "photo": "AI scan",
+        "photoLabel": "Analyse a meal from a photo",
+        "barcode": "Barcode",
+        "barcodeLabel": "Scan a food barcode"
       }
     }
   },

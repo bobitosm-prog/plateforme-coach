@@ -12,10 +12,12 @@ import {
   getNutritionDateLabel,
   getNutritionHeroState,
 } from '@/app/components/nutrition-v2/NutritionHero'
+import { getNutritionRemaining } from '@/app/components/nutrition-v2/NutritionQuickCard'
 
 const shell = readFileSync('app/components/nutrition-v2/NutritionV2.tsx', 'utf8')
 const hero = readFileSync('app/components/nutrition-v2/NutritionHero.tsx', 'utf8')
-const macros = readFileSync('app/components/nutrition-v2/NutritionMacros.tsx', 'utf8')
+const quickCard = readFileSync('app/components/nutrition-v2/NutritionQuickCard.tsx', 'utf8')
+const quickCardStyles = readFileSync('app/components/nutrition-v2/NutritionQuickCard.module.css', 'utf8')
 const styles = readFileSync('app/components/nutrition-v2/NutritionV2.module.css', 'utf8')
 const tab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
 
@@ -39,13 +41,13 @@ function model(overrides: Partial<NutritionViewModelInput> = {}) {
 }
 
 describe('Nutrition V2 shell hierarchy', () => {
-  it('renders the Hero before compact Macros and keeps legacy content last', () => {
-    expect(shell.indexOf('<NutritionHero')).toBeLessThan(shell.indexOf('<NutritionMacros'))
-    expect(shell.indexOf('<NutritionMacros')).toBeLessThan(shell.indexOf('data-nutrition-legacy-content'))
+  it('renders the Hero before the quick nutrition card and keeps legacy content last', () => {
+    expect(shell.indexOf('<NutritionHero')).toBeLessThan(shell.indexOf('<NutritionQuickCard'))
+    expect(shell.indexOf('<NutritionQuickCard')).toBeLessThan(shell.indexOf('data-nutrition-legacy-content'))
   })
 
   it('contains no Supabase access or generation/preferences controls', () => {
-    expect(`${shell}\n${hero}\n${macros}`).not.toMatch(/supabase|generate-meal-plan|générer|preferences|préférences/i)
+    expect(`${shell}\n${hero}\n${quickCard}`).not.toMatch(/supabase|generate-meal-plan|générer|preferences|préférences/i)
     expect(hero).not.toMatch(/meal_tracking|planned/i)
   })
 
@@ -70,6 +72,13 @@ describe('Nutrition V2 Hero semantics', () => {
   it('represents calories above target without hiding the excess', () => {
     expect(getCalorieBalance(2_260, 2_100)).toEqual({ kind: 'above', amount: 160 })
     expect(hero).toContain("t('above'")
+  })
+
+  it('computes remaining energy and macros without inventing missing targets', () => {
+    expect(getNutritionRemaining(1_640, 2_100)).toBe(460)
+    expect(getNutritionRemaining(128, 150)).toBe(22)
+    expect(getNutritionRemaining(165, 150)).toBe(0)
+    expect(getNutritionRemaining(30, null)).toBeNull()
   })
 
   it('does not invent a missing target', () => {
@@ -126,6 +135,19 @@ describe('Nutrition V2 responsive and accessible structure', () => {
     expect(hero).toContain('role="status"')
     expect(hero).toContain('role="progressbar"')
     expect(hero).toContain('aria-valuetext')
+    expect(quickCard).toContain('aria-busy')
+    expect(quickCard).toContain('aria-label={t(\'photoLabel\')}')
+    expect(quickCard).toContain('aria-label={t(\'barcodeLabel\')}')
+  })
+
+  it('uses the shared card for Home and Nutrition and wires both capture actions', () => {
+    const home = readFileSync('app/components/home-v2/DailyStatus.tsx', 'utf8')
+    const page = readFileSync('app/(application)/page.tsx', 'utf8')
+    expect(shell).toContain('<NutritionQuickCard')
+    expect(home).toContain('<NutritionQuickCard')
+    expect(page).toContain("setNutritionQuickAction('photo')")
+    expect(page).toContain("h.setModal('scan')")
+    expect(quickCard).toContain('getNutritionRemaining')
   })
 
   it('keeps compact mobile columns, desktop width and reduced motion support', () => {
@@ -133,6 +155,9 @@ describe('Nutrition V2 responsive and accessible structure', () => {
     expect(styles).toContain('@media (max-width: 767px)')
     expect(styles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))')
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(quickCardStyles).toContain('@media (max-width: 520px)')
+    expect(quickCardStyles).toContain('min-height: 52px')
+    expect(quickCardStyles).toContain('@media (prefers-reduced-motion: reduce)')
     expect(styles).toMatch(/\.shell\s*\{[\s\S]*?overflow-x:\s*hidden;/)
     for (const selector of ['hero', 'macros', 'todayMeals']) {
       const block = styles.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)\\}`))?.[1] ?? ''

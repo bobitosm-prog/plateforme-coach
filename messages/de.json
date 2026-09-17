@@ -2910,6 +2910,20 @@
         "savedMeals": "Meine Mahlzeiten", "savedMealsBody": "Mahlzeit wiederverwenden",
         "recipes": "Rezepte", "recipesBody": "Ideen durchsuchen",
         "scannerPending": "Barcode-Scannen ist über die Lebensmittelsuche verfügbar."
+      },
+      "quickCard": {
+        "label": "Ernährungsübersicht und Schnellzugriff",
+        "caloriesRemaining": "kcal übrig",
+        "caloriesAbove": "kcal darüber",
+        "targetMissing": "Ziel nicht festgelegt",
+        "macrosRemaining": "Verbleibende Makronährstoffe",
+        "protein": "Protein übrig",
+        "carbs": "Kohlenhydrate übrig",
+        "fat": "Fett übrig",
+        "photo": "KI-Scan",
+        "photoLabel": "Mahlzeit per Foto analysieren",
+        "barcode": "Barcode",
+        "barcodeLabel": "Lebensmittel-Barcode scannen"
       }
     }
   },

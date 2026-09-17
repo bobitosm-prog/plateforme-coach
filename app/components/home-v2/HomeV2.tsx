@@ -19,6 +19,8 @@ export interface HomeV2Actions {
   onOpenProgram?: () => void
   onStartFreeSession?: () => void
   onOpenNutrition?: () => void
+  onNutritionPhoto?: () => void
+  onNutritionBarcode?: () => void
   onNextBestAction?: (action: NextBestAction) => void
   onOpenProgression?: () => void
   onOpenRecovery?: () => void
@@ -49,6 +51,8 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       onOpenProgram={actions.onOpenProgram}
       onStartFreeSession={actions.onStartFreeSession}
       onOpenNutrition={actions.onOpenNutrition}
+      onNutritionPhoto={actions.onNutritionPhoto}
+      onNutritionBarcode={actions.onNutritionBarcode}
       onOpenRecovery={() => actions.onOpenRecovery?.()}
     />
     <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />

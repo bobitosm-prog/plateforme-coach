@@ -69,9 +69,12 @@ interface NutritionTabProps {
   userId: string
   fetchAll: () => Promise<void>
   onOpenProgramSettings: () => void
+  onOpenBarcode: () => void
+  quickAction?: 'photo' | null
+  onQuickActionHandled?: () => void
 }
 
-export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachRelationIsAuthoritative, coachId, supabase, userId, onOpenProgramSettings }: NutritionTabProps) {
+export default function NutritionTab({ profile, capabilities, coachRelationStatus, coachRelationIsAuthoritative, coachId, supabase, userId, onOpenProgramSettings, onOpenBarcode, quickAction, onQuickActionHandled }: NutritionTabProps) {
   const nt = useTranslations('nutrition_tab')
   const locale = useLocale()
   const MEAL_LABEL_MAP: Record<string, string> = { petit_dejeuner: 'breakfast', dejeuner: 'lunch', collation: 'snack', diner: 'dinner' }
@@ -322,6 +325,12 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
   const nutritionManaged = nutritionModel.coachRelation.status === 'active' && !capabilities.nutrition
 
+  useEffect(() => {
+    if (quickAction !== 'photo') return
+    setPendingMealAction('photo')
+    onQuickActionHandled?.()
+  }, [onQuickActionHandled, quickAction])
+
   function chooseMealContext(mealType: MealKey) {
     const action = pendingMealAction
     setPendingMealAction(null)
@@ -346,6 +355,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         setPendingMealAction('food')
       }}
       onRetry={() => void refreshNutrition()}
+      onPhoto={() => setPendingMealAction('photo')}
+      onBarcode={onOpenBarcode}
     >
 
       {/* PILLS NAVIGATION */}

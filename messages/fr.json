@@ -2910,6 +2910,20 @@
         "savedMeals": "Mes repas", "savedMealsBody": "Réutiliser un repas",
         "recipes": "Recettes", "recipesBody": "Parcourir les idées",
         "scannerPending": "Scanner code-barres disponible via la recherche d’aliments."
+      },
+      "quickCard": {
+        "label": "Synthèse nutritionnelle et accès rapides",
+        "caloriesRemaining": "kcal restantes",
+        "caloriesAbove": "kcal au-dessus",
+        "targetMissing": "Objectif non défini",
+        "macrosRemaining": "Macronutriments restants",
+        "protein": "Protéines restantes",
+        "carbs": "Glucides restants",
+        "fat": "Lipides restants",
+        "photo": "Scan IA",
+        "photoLabel": "Analyser un repas avec une photo",
+        "barcode": "Code-barres",
+        "barcodeLabel": "Scanner le code-barres d’un aliment"
       }
     }
   },

@@ -11,6 +11,7 @@ import {
   type DailyTrainingAction,
 } from '../../../lib/home/daily-status-presentation'
 import type { HomeTrainingSession, HomeViewModel } from '../../../lib/home/home-dashboard-model'
+import NutritionQuickCard from '../nutrition-v2/NutritionQuickCard'
 import styles from './HomeV2.module.css'
 
 export {
@@ -32,6 +33,8 @@ interface DailyStatusProps extends Pick<HomeViewModel, 'training' | 'nutrition' 
   onOpenProgram?: () => void
   onStartFreeSession?: () => void
   onOpenNutrition?: () => void
+  onNutritionPhoto?: () => void
+  onNutritionBarcode?: () => void
   onOpenRecovery: () => void
 }
 
@@ -82,6 +85,8 @@ export default function DailyStatus({
   onOpenProgram,
   onStartFreeSession,
   onOpenNutrition,
+  onNutritionPhoto,
+  onNutritionBarcode,
   onOpenRecovery,
 }: DailyStatusProps) {
   const t = useTranslations('home.v2.dailyStatus')
@@ -231,10 +236,30 @@ export default function DailyStatus({
         {selectedDomain === 'training' && trainingFacts.length > 0 && <p className={styles.statusFact}>
           {trainingFacts.join(' · ')}
         </p>}
-        {selectedDomain === 'nutrition' && availableMacros.length > 0 && <div className={styles.statusFacts}>
-          {availableMacros.map(([key, consumed, target]) => <span key={key}>
-            {t(`nutrition.${key}`)} {macroNumber.format(consumed)} / {macroNumber.format(target)} g
-          </span>)}
+        {selectedDomain === 'nutrition' && <div className={styles.statusNutritionQuick}>
+          <NutritionQuickCard
+            compact
+            state={nutrition.state}
+            consumed={{
+              calories: nutrition.caloriesConsumed,
+              protein: nutrition.macrosConsumed.protein,
+              carbs: nutrition.macrosConsumed.carbs,
+              fat: nutrition.macrosConsumed.fat,
+            }}
+            targets={{
+              calories: nutrition.caloriesTarget,
+              protein: nutrition.macrosTarget.protein,
+              carbs: nutrition.macrosTarget.carbs,
+              fat: nutrition.macrosTarget.fat,
+            }}
+            onPhoto={onNutritionPhoto}
+            onBarcode={onNutritionBarcode}
+          />
+          {availableMacros.length > 0 && <div className={styles.statusNutritionConsumed}>
+            {availableMacros.map(([key, consumed, target]) => <span key={key}>
+              {t(`nutrition.${key}`)} {macroNumber.format(consumed)} / {macroNumber.format(target)} g
+            </span>)}
+          </div>}
         </div>}
         {selectedDomain === 'recovery' && recoveryCountParts.length > 0 && <p className={styles.statusFact}>
           {recoveryCountParts.join(' · ')}

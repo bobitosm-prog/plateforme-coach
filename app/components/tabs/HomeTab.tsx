@@ -33,6 +33,8 @@ interface HomeTabProps {
   todaySessionDone: boolean
   setActiveTab: (tab: any) => void
   setModal: (modal: string) => void
+  onOpenNutritionPhoto?: () => void
+  onOpenNutritionBarcode?: () => void
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   completedThisWeek?: Map<number, string>
   aiAllowed?: boolean
@@ -48,7 +50,9 @@ export default function HomeTab({
   avatarRef, uploadAvatar,
   coachProgram, todayKey, todayCoachDay,
   setActiveTab, startProgramWorkout,
+  onOpenNutritionPhoto, onOpenNutritionBarcode,
   completedThisWeek, nextSession,
+  aiAllowed,
   latestDiagnostic, setLatestDiagnostic,
 }: HomeTabProps) {
   const ht = useTranslations('home')
@@ -234,6 +238,8 @@ export default function HomeTab({
           onOpenProgram: () => setActiveTab('training'),
           onStartFreeSession: () => startProgramWorkout({ day_name: ht('v2.hero.freeSession') }, []),
           onOpenNutrition: () => setActiveTab('nutrition'),
+          onNutritionPhoto: aiAllowed ? onOpenNutritionPhoto : undefined,
+          onNutritionBarcode: onOpenNutritionBarcode,
           onNextBestAction: handleNextBestAction,
           onOpenProgression: () => setActiveTab('progress'),
           onOpenRecovery: () => setShowRecoveryModal(true),

@@ -135,6 +135,8 @@
 .statusAction:focus-visible { outline: 3px solid rgba(230,195,100,.52); outline-offset: 3px; }
 .statusFact { padding-top: 9px; border-top: 1px solid rgba(255,255,255,.06); }
 .statusFacts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.06); color: #b2aa9c; font-size: .74rem; }
+.statusNutritionQuick { margin-top: 12px; }
+.statusNutritionConsumed { display: flex; padding-top: 8px; flex-wrap: wrap; justify-content: center; gap: 4px 10px; color: #9f978a; font-size: .7rem; text-align: center; }
 @keyframes status-panel-in { from { opacity: 0; transform: translateY(-3px); } }
 .nba { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin-top: 14px; padding: 22px; border: 1px solid rgba(201,168,76,.2); border-radius: 20px; background: linear-gradient(135deg,rgba(201,168,76,.09),rgba(255,255,255,.018)); }
 .nba > :first-child { min-width: 0; }
