@@ -737,17 +737,10 @@ export default function useCoachDashboard(initialSession?: any) {
       const res = await fetch('/api/stripe/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coachId: session.user.id,
-          email: session.user.email,
-          existingAccountId: coachProfile?.stripe_account_id || null,
-        }),
+        body: JSON.stringify({ coachId: session.user.id }),
       })
       const data = await res.json()
       if (data.url) {
-        if (data.accountId && data.accountId !== coachProfile?.stripe_account_id) {
-          await supabase.from('profiles').update({ stripe_account_id: data.accountId }).eq('id', session.user.id)
-        }
         window.location.href = data.url
       } else {
         alert('Erreur Stripe: ' + (data.error || 'Impossible de connecter'))
