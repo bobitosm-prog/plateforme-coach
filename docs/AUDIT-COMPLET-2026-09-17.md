@@ -596,3 +596,45 @@ Résultats :
 Ce commit n'est ni poussé ni déployé au moment de cette mise à jour. Le constat
 de vulnérabilité reste donc valable pour le SHA Production audité jusqu'à
 promotion explicite d'un candidat validé.
+
+### Remédiation Phase 9 — observabilité C2
+
+La branche locale `codex/phase9-ci-observability` part du SHA staging
+`3000c574`. Le commit isolé est :
+`b2f97279 ci: expose phase 9 browser failure diagnostics`.
+
+Reproduction terrain avant modification :
+
+- Gate C2 local, même SHA observé : 15/15 parcours verts en 546,8 s, sans
+  retry ;
+- Gate C1 local : 149/149 migrations, deux reconstructions de base vide avec
+  empreinte identique `0f7371a353b5180d8d36c9785557b343`, types Supabase
+  conformes et contrats RLS/PostgREST verts ;
+- ces résultats excluent un défaut déterministe de ce SHA, mais ne blanchissent
+  pas les 28 runs GitHub en échec : l'instabilité reste statistiquement réelle
+  et non résolue tant qu'un prochain échec n'a pas livré sa cause précise.
+
+Correctif livré :
+
+- démarrage et résultat de chacun des 15 parcours affichés en direct ;
+- résumé GitHub par parcours, durée et classification, sans retry automatique ;
+- en cas d'échec, conservation pendant 14 jours du seul fichier expurgé
+  `test-results/critical-e2e/summary.json` ;
+- aucune trace Playwright brute, requête, cookie ou capture réseau publiée ;
+- contrats CI actualisés sur le workflow de développement et le workflow
+  statistique sans réduction de couverture.
+
+Validation après modification :
+
+- runtime C2 : 15/15 verts en 576,2 s ;
+- résumé GitHub généré et vérifié ;
+- 3 639 tests réussis, 3 `todo`, sur 397 fichiers ;
+- tests ciblés : 38/38 ;
+- TypeScript, lint ciblé et `git diff --check` réussis ;
+- ancienne pile Supabase locale restaurée, zéro volume temporaire résiduel.
+
+Ce commit n'est ni poussé ni fusionné dans `phase-6-staging`. La prochaine
+étape Phase 9 est sa revue puis sa promotion sur staging. Comme il modifie
+l'instrumentation de Gate C2, la nouvelle fenêtre statistique doit être ouverte
+sur le SHA canonique promu ; elle ne doit pas réutiliser les échecs non
+diagnostiqués comme preuve de stabilité.
