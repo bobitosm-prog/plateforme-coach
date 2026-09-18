@@ -87,6 +87,29 @@ export function redactE2eOutput(value) {
     .replace(/("(?:system|prompt|messages|profile|payload)"\s*:\s*)("(?:\\.|[^"\\])*"|\[[\s\S]*?\]|\{[\s\S]*?\})/gi, '$1"[REDACTED]"')
 }
 
+export function formatCriticalE2eProgress({ index, total, name, status, durationMs, kind }) {
+  const position = Number.isInteger(index) && Number.isInteger(total) ? `[${index}/${total}] ` : ''
+  const duration = Number.isFinite(durationMs) ? ` (${(durationMs / 1000).toFixed(1)} s)` : ''
+  const classification = kind ? ` — ${kind}` : ''
+  return `${position}${name}: ${status}${duration}${classification}`
+}
+
+export function buildCriticalE2eMarkdownSummary(results, durationMs, suiteFailed) {
+  const escapeCell = value => String(value).replaceAll('|', '\\|').replaceAll('\n', ' ')
+  const lines = [
+    `## Suite E2E critique MoovX — ${suiteFailed ? 'ÉCHEC' : 'VERT'}`,
+    '',
+    `Durée totale : ${(durationMs / 1000).toFixed(1)} s. Aucun retry automatique.`,
+    '',
+    '| Parcours | Statut | Durée | Classification |',
+    '|---|---:|---:|---|',
+  ]
+  for (const result of results) {
+    lines.push(`| ${escapeCell(result.name)} | ${escapeCell(result.status)} | ${(result.duration / 1000).toFixed(1)} s | ${escapeCell(result.kind || '—')} |`)
+  }
+  return `${lines.join('\n')}\n`
+}
+
 export async function isPortOpen(port, host = '127.0.0.1', timeoutMs = 350) {
   return await new Promise(resolve => {
     const socket = net.createConnection({ port, host })

@@ -7,7 +7,9 @@ import {
   assertOnlyConfiguredLocalOrigins,
   assertLocalE2eUrl,
   assertLocalSupabaseConfig,
+  buildCriticalE2eMarkdownSummary,
   CRITICAL_E2E_TARGET_MATRIX,
+  formatCriticalE2eProgress,
   getIntegratedCriticalE2eScenarios,
   redactE2eOutput,
   validateCriticalE2eTargetMatrix,
@@ -83,6 +85,25 @@ describe('critical E2E local contract', () => {
     expect(output).not.toContain(jwt)
   })
 
+  it('formats bounded live progress and a scenario-level GitHub summary without retries', () => {
+    expect(formatCriticalE2eProgress({
+      index: 2,
+      total: 15,
+      name: 'Checkout plateforme',
+      status: 'ÉCHEC',
+      durationMs: 1234,
+      kind: 'fonctionnel',
+    })).toBe('[2/15] Checkout plateforme: ÉCHEC (1.2 s) — fonctionnel')
+
+    const summary = buildCriticalE2eMarkdownSummary([
+      { name: 'Checkout | plateforme', status: 'ÉCHEC', duration: 1234, kind: 'fonctionnel' },
+    ], 2345, true)
+    expect(summary).toContain('Suite E2E critique MoovX — ÉCHEC')
+    expect(summary).toContain('Aucun retry automatique')
+    expect(summary).toContain('Checkout \\| plateforme')
+    expect(summary).toContain('fonctionnel')
+  })
+
   it('refuses two concurrent suites and releases the lock', () => {
     const directory = mkdtempSync(join(tmpdir(), 'moovx-critical-e2e-'))
     const lock = join(directory, 'suite.lock')
@@ -104,6 +125,9 @@ describe('critical E2E local contract', () => {
     expect(script).toContain("import { spawn } from 'node:child_process'")
     expect(script).not.toContain('spawnSync')
     expect(script).toContain("await run(process.execPath, ['scripts/run-local-e2e.mjs'")
+    expect(script).toContain('formatCriticalE2eProgress')
+    expect(script).toContain('GITHUB_STEP_SUMMARY')
+    expect(script).toContain("resolve(artifactsPath, 'summary.json')")
     expect(localRunner).toContain("'--workers=1'")
     expect(script).toContain("['scripts/supabase-local.mjs', 'reset']")
   })
