@@ -1,4 +1,5 @@
 'use client'
+import type { Session } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
@@ -10,10 +11,10 @@ import { cache } from '../../lib/cache'
 import useMessages from './useMessages'
 import useAnalytics from './useAnalytics'
 import useProgressionViewModel from './useProgressionViewModel'
-import type { ProgressionPeriod } from '../../lib/progression/progression-dashboard-model'
+import type { ProgressionPeriod, ProgressionMeasurementRow, ProgressionWorkoutSession, ProgressionWorkoutSet, ProgressionWeightLog } from '../../lib/progression/progression-dashboard-model'
 import useScheduledSessions from './useScheduledSessions'
 import useFoodLog from './useFoodLog'
-import { getProfile, updateProfile, invalidateProfileCache } from '../../lib/profile-service'
+import { updateProfile, type Profile } from '../../lib/profile-service'
 import { normalizeCoachProgram } from '../../lib/normalizeCoachProgram'
 import { suggestNextSession, SuggestedSession } from '../../lib/suggestNextSession'
 import { computeStreak } from '../../lib/streak'
@@ -75,23 +76,37 @@ function personalToDays(program: unknown): { days: unknown[] } | null {
   return Array.isArray(days) ? { days } : null
 }
 
+interface ProgressPhoto {
+  id: string
+  photo_url: string
+  date?: string | null
+  view_type?: string | null
+}
+
+type CoachProgram = ReturnType<typeof normalizeCoachProgram>
+type DashboardMeasurement = ProgressionMeasurementRow & { date: string }
+type DashboardWorkoutSession = Omit<ProgressionWorkoutSession, 'created_at' | 'workout_sets'> & {
+  created_at: string
+  workout_sets?: ProgressionWorkoutSet[] | null
+}
+
 export default function useClientDashboard(initialTab: Tab = 'home') {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const [session, setSession] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [measurements, setMeasurements] = useState<any[]>([])
-  const [progressPhotos, setProgressPhotos] = useState<any[]>([])
-  const [wSessions, setWSessions] = useState<any[]>([])
+  const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [measurements, setMeasurements] = useState<DashboardMeasurement[]>([])
+  const [progressPhotos, setProgressPhotos] = useState<ProgressPhoto[]>([])
+  const [wSessions, setWSessions] = useState<DashboardWorkoutSession[]>([])
   const [workoutHistoryState, setWorkoutHistoryState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
   const [hasTrainedBefore, setHasTrainedBefore] = useState(false)
   const [sessionDates, setSessionDates] = useState<{ created_at: string }[]>([])
-  const [coachProgram, setCoachProgram] = useState<any>(null)
+  const [coachProgram, setCoachProgram] = useState<CoachProgram>(null)
   const [activeTrainingProgram, setActiveTrainingProgram] = useState<ActiveTrainingProgramContext>(() => (
     emptyActiveTrainingProgram()
   ))
-  const [planningDays, setPlanningDays] = useState<any[] | null>(null)
-  const [coachMealPlan, setCoachMealPlan] = useState<any>(null)
+  const [planningDays, setPlanningDays] = useState<unknown[] | null>(null)
+  const [coachMealPlan, setCoachMealPlan] = useState<unknown>(null)
   const [lastCompletedByIndex, setLastCompletedByIndex] = useState<Map<number, string>>(new Map())
   const [weightHistory30, setWeightHistory30] = useState<{ date: string; poids: number }[]>([])
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
@@ -105,7 +120,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
   const [workoutSession, setWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
   const [modal, setModal] = useState<string | null>(null)
-  const [latestDiagnostic, setLatestDiagnostic] = useState<any>(null)
+  const [latestDiagnostic, setLatestDiagnostic] = useState<unknown>(null)
 
   // BMR form state
   const [bmrForm, setBmrForm] = useState({ weight: '', height: '', age: '', gender: 'male', activity: 'moderate', body_fat: '' })
@@ -391,13 +406,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
   function applyActiveTrainingContext(context: ActiveTrainingProgramContext) {
     setActiveTrainingProgram(context)
-    const coachProgramValue = context.source === 'coach' ? context.program : null
+    const coachProgramValue = context.source === 'coach' ? normalizeCoachProgram(context.program) : null
     setCoachProgram(coachProgramValue)
     clientProgramIdRef.current = context.source === 'coach' ? context.programId : null
     coachOfProgramIdRef.current = context.source === 'coach' ? context.coachRelation.coachId : null
   }
 
-  function applyFetchedData(profileData: any, weightsData: any[], sessData: any[], measureData: any[], photosData: any[], coachProgData: any, coachMealData: any) {
+  function applyFetchedData(profileData: Profile, weightsData: ProgressionWeightLog[], sessData: DashboardWorkoutSession[], measureData: DashboardMeasurement[], photosData: ProgressPhoto[], coachProgData: unknown, coachMealData: unknown) {
     setProfile(profileData)
     const age = profileData.birth_date ? Math.floor((Date.now() - new Date(profileData.birth_date).getTime()) / 31557600000) : ''
     setBmrForm(p => ({
@@ -413,7 +428,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     setMeasurements(measureData)
     setProgressPhotos(photosData)
     setWeightHistory30(weightsData.map(w => ({ date: w.date, poids: w.poids })))
-    setCoachProgram(coachProgData || null)
+    setCoachProgram(normalizeCoachProgram(coachProgData))
     if (coachMealData) setCoachMealPlan(coachMealData)
   }
 
@@ -437,7 +452,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   /* ── Handlers ── */
-  async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
+  async function startProgramWorkout(day: { day_name?: string; name?: string }, exercises: unknown[], weekdayKey?: string) {
     if (!session?.user?.id) return
     const name = day.day_name || day.name || 'Séance'
     const draft = createActiveWorkoutDraft({
@@ -653,6 +668,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   async function saveWeight(value: number, date: string) {
+    if (!session) return
     const { error } = await supabase.from('weight_logs').upsert({ user_id: session.user.id, poids: value, date }, { onConflict: 'user_id,date' })
     if (error) { toast.error('Erreur lors de l’enregistrement'); return }
     await updateProfile(session.user.id, { current_weight: value, ...(profile?.start_weight ? {} : { start_weight: value }) }, supabase)
@@ -666,6 +682,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   async function saveMeasurements(data: Record<string, number>, date: string) {
+    if (!session) return
     const { error } = await supabase.from('body_measurements').insert({ user_id: session.user.id, date, ...data })
     if (error) { toast.error('Erreur lors de l’enregistrement'); return }
     setMeasurements(previous => [{ date, ...data }, ...previous].slice(0, 10))
@@ -690,12 +707,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       if (updateErr) { toast.error('Erreur sauvegarde: ' + updateErr.message); return }
       toast.success('Photo de profil mise à jour !')
       fetchAll(true)
-    } catch (err: any) {
-      toast.error('Erreur: ' + (err?.message || 'Inconnue'))
+    } catch (err: unknown) {
+      toast.error('Erreur: ' + (err instanceof Error ? err.message : 'Inconnue'))
     }
   }
 
   async function uploadProgressPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!session) return
     const file = e.target.files?.[0]; if (!file) return
     setPhotoUploading(true)
     const path = `${session.user.id}/${Date.now()}.${file.name.split('.').pop()}`
@@ -705,7 +723,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     toast.success('Photo ajoutée !'); setPhotoUploading(false); fetchAll(true)
   }
 
-  async function deletePhoto(photo: any) {
+  async function deletePhoto(photo: ProgressPhoto) {
     await supabase.storage.from('progress-photos').remove([photo.photo_url])
     await supabase.from('progress_photos').delete().eq('id', photo.id)
     setProgressPhotos(prev => prev.filter(p => p.id !== photo.id))
@@ -714,7 +732,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   /* ── Computed ── */
   const calorieGoal = profile?.calorie_goal || 2500
   const goalWeight = profile?.target_weight ?? null
-  const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight
+  const currentWeight = weightHistory30.length > 0 ? weightHistory30[weightHistory30.length - 1].poids : profile?.current_weight ?? undefined
   const completedSessions = sessionDates.length
   const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const restDates = projectRestDates(planningDays)
@@ -723,7 +741,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const streakResult = computeStreak(streakDates, toLocal(new Date()), restDates)
   const streak = streakResult.current
   const todayKey = JS_DAYS_FR[new Date().getDay()]
-  const todayCoachDay = coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null
+  const todayCoachDay = coachProgram ? (coachProgram[todayKey as keyof NonNullable<CoachProgram>] ?? { repos: false, exercises: [] }) : null
   const todaySessionDone = deriveTodayTrainingState({
     programSource: activeTrainingProgram.source,
     workoutSessions: sessionDates,
@@ -842,10 +860,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   // Wrappers for sub-hooks that need extra context
-  const checkForPR = (exerciseName: string, weight: number, reps: number) =>
-    analyticsHook.checkForPR(userId, exerciseName, weight, reps)
+  const checkForPR = async (exerciseName: string, weight: number, reps: number) => {
+    if (!userId) return { newPR: false }
+    return analyticsHook.checkForPR(userId, exerciseName, weight, reps)
+  }
 
   const regenerateWeekSchedule = async () => {
+    if (!userId) return
     const prog = activeTrainingProgram.source === 'personal'
       ? activeTrainingProgram.program
       : activeTrainingProgram.source === 'coach'
@@ -854,11 +875,15 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     return scheduledHook.regenerateWeekSchedule(userId, profile, prog)
   }
 
-  const updateReminderSettings = (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) =>
-    scheduledHook.updateReminderSettings(supabase, userId, settings, setProfile)
+  const updateReminderSettings = async (settings: { preferred_training_time?: string; reminder_enabled?: boolean; reminder_minutes_before?: number }) => {
+    if (!userId) return
+    return scheduledHook.updateReminderSettings(supabase, userId, settings, setProfile)
+  }
 
-  const updateRirSettings = (settings: { rir_tracking_enabled?: boolean; rir_scale_advanced?: boolean }) =>
-    scheduledHook.updateRirSettings(supabase, userId, settings, setProfile)
+  const updateRirSettings = async (settings: { rir_tracking_enabled?: boolean; rir_scale_advanced?: boolean }) => {
+    if (!userId) return
+    return scheduledHook.updateRirSettings(supabase, userId, settings, setProfile)
+  }
 
   return {
     // Auth / loading

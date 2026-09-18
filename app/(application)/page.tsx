@@ -23,6 +23,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
 import { cache } from '../../lib/cache'
 import { useOverlayOpen } from '../hooks/useOverlayOpen'
 import { resyncPushSubscription } from '../../lib/push-resync'
+import type { CompletedWorkoutData } from '../../lib/training/session-persistence'
 import type { ActiveWorkoutDraft } from '../../lib/training/active-workout-draft'
 
 import WorkoutSession from '../components/WorkoutSession'
@@ -76,7 +77,7 @@ function NavAccountLabel() {
 function WorkoutSessionWithCelebrations({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, onBadgesEarned, rirTrackingEnabled }: {
   draft: ActiveWorkoutDraft
   onDraftChange: (draft: ActiveWorkoutDraft) => void
-  onFinish: (data: any, draft?: ActiveWorkoutDraft) => Promise<{
+  onFinish: (data: CompletedWorkoutData, draft?: ActiveWorkoutDraft) => Promise<{
     newPRs: { exercise: string; value: number }[]
     newBadges: Badge[]
     secondary: Promise<{ newPRs: { exercise: string; value: number }[]; newBadges: Badge[] }>
@@ -88,7 +89,7 @@ function WorkoutSessionWithCelebrations({ draft, onDraftChange, onFinish, onClos
   rirTrackingEnabled?: boolean
 }) {
   const t = useTranslations('training_tab')
-  const handleFinish = React.useCallback(async (data: any, submittedDraft?: ActiveWorkoutDraft) => {
+  const handleFinish = React.useCallback(async (data: CompletedWorkoutData, submittedDraft?: ActiveWorkoutDraft) => {
     const result = await onFinish(data, submittedDraft ?? draft)
     void result.secondary.then(({ newPRs: prs, newBadges }) => {
       if (prs.length === 1) {
@@ -302,7 +303,7 @@ function CoachAppContent() {
   }
   // Mark active tab as visited (triggers render to mount it)
   React.useEffect(() => {
-    if (TAB_RAIL_KEYS.includes(h.activeTab as any) && !visitedTabs.current.has(h.activeTab)) {
+    if (TAB_RAIL_KEYS.some(tab => tab === h.activeTab) && !visitedTabs.current.has(h.activeTab)) {
       visitedTabs.current.add(h.activeTab)
       forceRender(n => n + 1)
     }
@@ -321,7 +322,7 @@ function CoachAppContent() {
     }
     // Délai plancher 3s puis idle (laisse le boot finir même sur machine rapide)
     const timer = setTimeout(() => {
-      if ('requestIdleCallback' in window) (window as any).requestIdleCallback(mount, { timeout: 2000 })
+      if ('requestIdleCallback' in window) window.requestIdleCallback(mount, { timeout: 2000 })
       else mount()
     }, 3000)
     return () => clearTimeout(timer)
@@ -634,8 +635,8 @@ function CoachAppContent() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-              {[['fitness', 'Fitness'], ['anses', 'ANSES'], ['custom', 'Mes aliments']].map(([id, label]) => (
-                <button key={id} onClick={() => { h.setSearchTab(id as any); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? GOLD : BORDER}`, background: h.searchTab === id ? GOLD_DIM : BG_BASE, borderRadius: 12, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
+              {([['fitness', 'Fitness'], ['anses', 'ANSES'], ['custom', 'Mes aliments']] as const).map(([id, label]) => (
+                <button key={id} onClick={() => { h.setSearchTab(id); h.setFoodSearch(''); h.setSelectedFood(null) }} style={{ flex: 1, border: `1px solid ${h.searchTab === id ? GOLD : BORDER}`, background: h.searchTab === id ? GOLD_DIM : BG_BASE, borderRadius: 12, padding: '8px 6px', fontSize: '0.7rem', fontWeight: 700, color: h.searchTab === id ? GOLD : TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms' }}>{label}</button>
               ))}
               <button onClick={() => { h.setModal('scan') }} style={{ border: `1px solid ${BORDER}`, background: BG_BASE, borderRadius: 12, padding: '8px 10px', fontSize: '0.7rem', fontWeight: 700, color: TEXT_MUTED, cursor: 'pointer', transition: 'all 200ms', flexShrink: 0 }}>📷</button>
             </div>
@@ -649,7 +650,7 @@ function CoachAppContent() {
                   <button onClick={() => h.setModal('custom_food')} style={{ width: '100%', border: `2px dashed ${BORDER}`, borderRadius: 12, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: TEXT_MUTED, fontSize: '0.8rem', fontWeight: 700, background: 'transparent', cursor: 'pointer', marginBottom: 12 }}><Plus size={14} /> Créer un aliment personnalisé</button>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {h.foodResults.map((food: any) => {
+                  {h.foodResults.map((food) => {
                     const cals = h.searchTab === 'custom' ? food.calories : (food.energy_kcal || food.calories || 0)
                     const prot = food.proteins || 0
                     return (
@@ -729,11 +730,11 @@ function CoachAppContent() {
               <input value={h.customFoodForm.name} onChange={e => h.setCustomFoodForm(p => ({ ...p, name: e.target.value }))} placeholder="Nom de l'aliment *" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
               <input value={h.customFoodForm.brand} onChange={e => h.setCustomFoodForm(p => ({ ...p, brand: e.target.value }))} placeholder="Marque (optionnel)" style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none' }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {[['calories_per_100g', 'Calories *', 'kcal'], ['proteins_per_100g', 'Protéines', 'g'], ['carbs_per_100g', 'Glucides', 'g'], ['fats_per_100g', 'Lipides', 'g']].map(([k, l, u]) => (
+                {([['calories_per_100g', 'Calories *', 'kcal'], ['proteins_per_100g', 'Protéines', 'g'], ['carbs_per_100g', 'Glucides', 'g'], ['fats_per_100g', 'Lipides', 'g']] as const).map(([k, l, u]) => (
                   <div key={k} style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '10px 12px' }}>
                     <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, textTransform: 'uppercase', marginBottom: 4 }}>{l} /100g</div>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <input type="number" value={(h.customFoodForm as any)[k]} onChange={e => h.setCustomFoodForm(p => ({ ...p, [k]: e.target.value }))} placeholder="0" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.9rem', fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }} />
+                      <input type="number" value={h.customFoodForm[k]} onChange={e => h.setCustomFoodForm(p => ({ ...p, [k]: e.target.value }))} placeholder="0" style={{ background: 'transparent', color: TEXT_PRIMARY, fontSize: '0.9rem', fontWeight: 700, flex: 1, outline: 'none', border: 'none', width: '100%' }} />
                       <span style={{ color: TEXT_MUTED, fontSize: '0.75rem' }}>{u}</span>
                     </div>
                   </div>

@@ -1,10 +1,9 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useMemo, useRef, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRole } from '../../../../lib/getRole'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import type { Session, RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import { listActiveClientsForCoach } from '../../../../lib/coach-relations/repository'
 
 const supabase = createBrowserClient(
@@ -41,6 +40,50 @@ export interface ScheduledSession {
   location: string | null
   created_at: string
 }
+
+interface CoachProfile {
+  id: string
+  full_name: string | null
+  email: string | null
+  stripe_account_id: string | null
+  stripe_onboarding_complete: boolean | null
+  subscription_price: number | null
+  coach_onboarding_complete: boolean | null
+  cgu_accepted_at: string | null
+  coach_bio: string | null
+  coach_speciality: string | null
+  coach_experience_years: number | null
+  coach_monthly_rate: number | null
+}
+
+interface AtRiskClient {
+  id: string
+  name: string
+  daysSince: number
+  lastSession: Date | null
+}
+
+interface CoachFood {
+  id: string
+  name: string
+  energy_kcal: number | null
+  proteins: number | null
+  carbohydrates: number | null
+  fat: number | null
+  source: string | null
+}
+
+interface ChatMessage {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  image_url: string | null
+  read: boolean
+  created_at: string
+}
+
+type ChatChange = RealtimePostgresInsertPayload<ChatMessage> | RealtimePostgresUpdatePayload<ChatMessage>
 
 /* ── Constants ─────────────────────────────────────────────── */
 
@@ -95,16 +138,20 @@ export function statusFor(createdAt: string): 'active' | 'warning' | 'inactive' 
 
 /* ── Hook ──────────────────────────────────────────────────── */
 
-export default function useCoachDashboard(initialSession?: any) {
+const subscribeToHydration = () => () => {}
+const clientIsMounted = () => true
+const serverIsMounted = () => false
+
+export default function useCoachDashboard(initialSession?: Session | null) {
   const router = useRouter()
-  const [mounted, setMounted]   = useState(false)
-  const [session, setSession]   = useState<any>(initialSession || null)
+  const mounted = useSyncExternalStore(subscribeToHydration, clientIsMounted, serverIsMounted)
+  const [session, setSession]   = useState<Session | null>(initialSession || null)
   const [roleChecked, setRoleChecked] = useState(!!initialSession)
   const [clients, setClients]   = useState<ClientRow[]>([])
   const [loading, setLoading]   = useState(!initialSession)
   const [search, setSearch]     = useState('')
   const [section, setSection]   = useState<'accueil' | 'dashboard' | 'suivi' | 'messages' | 'calendar' | 'aliments' | 'profil' | 'programs'>('accueil')
-  const [coachProfile, setCoachProfile] = useState<any>(null)
+  const [coachProfile, setCoachProfile] = useState<CoachProfile | null>(null)
   const [stripeConnecting, setStripeConnecting] = useState(false)
   const [monthRevenue, setMonthRevenue] = useState(0)
   const [yearRevenue, setYearRevenue] = useState(0)
@@ -113,13 +160,13 @@ export default function useCoachDashboard(initialSession?: any) {
   const [activeCoachingClients, setActiveCoachingClients] = useState(0)
   const [clientRelationsError, setClientRelationsError] = useState<string | null>(null)
   const [allPayments, setAllPayments] = useState<{ amount: number; paid_at: string }[]>([])
-  const [atRiskClients, setAtRiskClients] = useState<any[]>([])
+  const [atRiskClients, setAtRiskClients] = useState<AtRiskClient[]>([])
   const [pendingVideoCount, setPendingVideoCount] = useState(0)
   const [lastSessionByClient, setLastSessionByClient] = useState<Map<string, { name: string; completedAt: string }>>(new Map())
   const [sessionsThisWeekByClient, setSessionsThisWeekByClient] = useState<Map<string, number>>(new Map())
 
   // Food management state
-  const [foodList, setFoodList] = useState<any[]>([])
+  const [foodList, setFoodList] = useState<CoachFood[]>([])
   const [foodFilter, setFoodFilter] = useState<'fitness' | 'anses' | 'coach'>('fitness')
   const [foodSearchQ, setFoodSearchQ] = useState('')
   const [foodLoading, setFoodLoading] = useState(false)
@@ -144,7 +191,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
   // Messaging state
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null)
-  const [chatMessages, setChatMessages]     = useState<any[]>([])
+  const [chatMessages, setChatMessages]     = useState<ChatMessage[]>([])
   const [msgInput, setMsgInput]             = useState('')
   const [unreadCounts, setUnreadCounts]     = useState<Record<string, number>>({})
   const [lastMessages, setLastMessages]   = useState<Map<string, { content: string; image_url: string | null; created_at: string }>>(new Map())
@@ -168,277 +215,6 @@ export default function useCoachDashboard(initialSession?: any) {
   const coachName = coachProfile?.full_name || session?.user?.user_metadata?.full_name || 'Coach'
   const coachInitials = initials(coachName)
   const activeCount = clients.filter(c => statusFor(c.created_at) === 'active').length
-
-  /* ── Effects ───────────────────────────────────────────── */
-
-  /* ── Auth ── */
-  useEffect(() => {
-    setMounted(true)
-    // If session was passed from parent (page.tsx), skip auth check entirely
-    if (initialSession) {
-      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SKIP_AUTH', details: { userId: initialSession.user?.id }, page_url: '/coach' })
-      return
-    }
-    let alive = true
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/coach' })
-      if (alive) { setSession(s); setLoading(false) }
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/coach' })
-      if (!alive) return
-      if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
-      if (s) { setSession(s); setLoading(false) }
-    })
-    return () => { alive = false; subscription.unsubscribe() }
-  }, [])
-
-  // Handle Stripe return + verify account status on load
-  useEffect(() => {
-    if (!session) return
-    const params = new URLSearchParams(window.location.search)
-    const uid = session.user.id
-
-    if (params.get('stripe') === 'success') {
-      const accountId = params.get('account')
-      if (accountId) {
-        (async () => {
-          await supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', uid)
-          window.history.replaceState({}, '', window.location.pathname)
-          window.location.reload()
-        })()
-        return
-      }
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [session])
-
-  // Verify real Stripe status and sync to DB
-  useEffect(() => {
-    if (!coachProfile?.stripe_account_id) return
-    if (coachProfile.stripe_onboarding_complete) return
-    fetch('/api/stripe/check-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accountId: coachProfile.stripe_account_id }),
-    }).then(r => r.json()).then(data => {
-      if (data.connected) {
-        supabase.from('profiles').update({ stripe_onboarding_complete: true }).eq('id', session!.user.id)
-          .then(() => { setCoachProfile((p: any) => p ? { ...p, stripe_onboarding_complete: true } : p) })
-      }
-    }).catch(() => {})
-  }, [coachProfile?.stripe_account_id])
-
-  useEffect(() => {
-    if (!session) return
-
-    function loadCoachData() {
-      fetchClients(session.user.id)
-      supabase.from('exercise_feedback').select('id', { count: 'exact', head: true }).eq('coach_id', session.user.id).eq('status', 'pending').then(({ count }: { count: number | null }) => setPendingVideoCount(count || 0))
-      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years,coach_monthly_rate').eq('id', session.user.id).maybeSingle().then(({ data }) => {
-        if (data) {
-          if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
-          setCoachProfile(data)
-          const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
-          const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
-          supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
-            if (!allPayments) return
-            setAllPayments(allPayments as { amount: number; paid_at: string }[])
-            const monthStart = startOfMonth.toISOString()
-            const yearStart = startOfYear.toISOString()
-            let mRev = 0, yRev = 0, tRev = 0, mCount = 0
-            for (const p of allPayments) {
-              const amt = p.amount || 0
-              tRev += amt
-              if (p.paid_at && p.paid_at >= yearStart) yRev += amt
-              if (p.paid_at && p.paid_at >= monthStart) { mRev += amt; mCount++ }
-            }
-            setMonthRevenue(mRev); setYearRevenue(yRev); setTotalRevenue(tRev); setMonthPaymentsCount(mCount)
-          })
-        }
-      })
-    }
-
-    // If initialSession was provided, role already confirmed by page.tsx — skip getRole
-    if (initialSession) {
-      loadCoachData()
-      return
-    }
-
-    getRole(session.user.id, session.access_token).then(role => {
-      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_ROLE', details: { role, userId: session.user.id }, page_url: '/coach' })
-      if (!role) { setRoleChecked(true); return }
-      if (role !== 'coach' && role !== 'super_admin') {
-        router.replace('/')
-      } else {
-        setRoleChecked(true)
-        loadCoachData()
-      }
-    })
-  }, [session])
-
-  // Keep refs in sync with state so polling interval has fresh values
-  useEffect(() => { selectedClientRef.current = selectedClient }, [selectedClient])
-  useEffect(() => { clientsRef.current = clients }, [clients])
-  useEffect(() => {
-    const real = chatMessages.filter(m => !String(m.id).startsWith('opt-'))
-    if (real.length > 0) lastChatTimestampRef.current = real[real.length - 1].created_at
-  }, [chatMessages])
-
-  // Realtime subscription for chat messages (INSERT + UPDATE, filtered server-side)
-  useEffect(() => {
-    if (!session?.user?.id || !selectedClient) return
-    const coachId = session.user.id
-    const clientId = selectedClient.client_id
-
-    const handleMessage = (payload: any, type: 'INSERT' | 'UPDATE') => {
-      const m = payload.new
-      const isThisConv =
-        (m.sender_id === coachId && m.receiver_id === clientId) ||
-        (m.sender_id === clientId && m.receiver_id === coachId)
-      if (!isThisConv) return
-
-      if (type === 'INSERT') {
-        setChatMessages(prev => {
-          if (prev.some((x: any) => x.id === m.id)) return prev
-          return [...prev.filter((x: any) => !String(x.id).startsWith('opt-')), m]
-        })
-      } else {
-        setChatMessages(prev =>
-          prev.map((x: any) => x.id === m.id ? { ...x, ...m } : x)
-        )
-      }
-    }
-
-    // Channel A : messages reçus par le coach (INSERT du client + UPDATE)
-    const channelIn = supabase
-      .channel(`coach-chat-in-${coachId}-${clientId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'INSERT'))
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'UPDATE'))
-      .subscribe()
-
-    // Channel B : read receipts sur les messages envoyés par le coach
-    const channelOut = supabase
-      .channel(`coach-chat-out-${coachId}-${clientId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `sender_id=eq.${coachId}`,
-      }, (p: any) => handleMessage(p, 'UPDATE'))
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channelIn)
-      supabase.removeChannel(channelOut)
-    }
-  }, [session?.user?.id, selectedClient?.client_id])
-
-  // Channel global : unread counts + last messages live (toujours actif, indépendant de selectedClient)
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const coachId = session.user.id
-
-    const channel = supabase
-      .channel(`coach-global-${coachId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (payload: any) => {
-        const m = payload.new
-        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
-        setLastMessages(prev => {
-          const next = new Map(prev)
-          next.set(m.sender_id, {
-            content: m.content,
-            image_url: m.image_url,
-            created_at: m.created_at,
-          })
-          return next
-        })
-        const isOpenConv = selectedClientRef.current?.client_id === m.sender_id
-        if (!isOpenConv) {
-          setUnreadCounts(prev => ({
-            ...prev,
-            [m.sender_id]: (prev[m.sender_id] || 0) + 1,
-          }))
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'messages',
-        filter: `receiver_id=eq.${coachId}`,
-      }, (payload: any) => {
-        const m = payload.new
-        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
-        if (m.read === true) {
-          setUnreadCounts(prev => {
-            const cur = prev[m.sender_id] || 0
-            if (cur === 0) return prev
-            return { ...prev, [m.sender_id]: Math.max(0, cur - 1) }
-          })
-        }
-      })
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [session?.user?.id])
-
-  // Poll every 2min — fallback resync for unread counts + last messages
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const coachId = session.user.id
-    const id = setInterval(async () => {
-      const clientIds = clientsRef.current.map(c => c.client_id)
-      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId, clientIds) }
-    }, 120000)
-    return () => clearInterval(id)
-  }, [session?.user?.id])
-
-  // Scroll to bottom when chat messages update (with image load awareness)
-  const chatScrollInitial = useRef(true)
-  useEffect(() => {
-    if (chatMessages.length === 0) return
-    const behavior: ScrollBehavior = chatScrollInitial.current ? 'instant' : 'smooth'
-
-    const scrollToBottom = (b: ScrollBehavior = behavior) => {
-      msgEndRef.current?.scrollIntoView({ behavior: b, block: 'end' })
-    }
-
-    // Scroll initial après paint
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      scrollToBottom()
-      chatScrollInitial.current = false
-    }))
-
-    // Re-scroll après chargement images
-    const container = msgEndRef.current?.parentElement
-    const images = container?.querySelectorAll('img') ?? []
-    const handlers: Array<() => void> = []
-    images.forEach(img => {
-      if (img.complete) return
-      const onLoad = () => scrollToBottom('instant')
-      img.addEventListener('load', onLoad, { once: true })
-      img.addEventListener('error', onLoad, { once: true })
-      handlers.push(() => {
-        img.removeEventListener('load', onLoad)
-        img.removeEventListener('error', onLoad)
-      })
-    })
-
-    return () => handlers.forEach(fn => fn())
-  }, [chatMessages.length, selectedClient?.client_id])
-  // Reset to instant when conversation changes
-  useEffect(() => { chatScrollInitial.current = true }, [selectedClient])
-
-  // Fetch scheduled sessions when in calendar section or week offset changes
-  useEffect(() => {
-    if (!session?.user?.id) return
-    fetchScheduledSessions(session.user.id, calWeekOffset)
-  }, [session?.user?.id, calWeekOffset, section, clients])
 
   /* ── Data fetching ─────────────────────────────────────── */
 
@@ -528,7 +304,7 @@ export default function useCoachDashboard(initialSession?: any) {
 
   async function fetchAtRiskClients(clientRows: ClientRow[]) {
     if (!clientRows.length) { setAtRiskClients([]); return }
-    const results: any[] = []
+    const results: AtRiskClient[] = []
     for (const c of clientRows) {
       const { data } = await supabase
         .from('workout_sessions')
@@ -603,6 +379,278 @@ export default function useCoachDashboard(initialSession?: any) {
     setScheduledSessions((data ?? []).filter(session => activeClientIds.has(session.client_id)))
   }
 
+
+  /* ── Effects ───────────────────────────────────────────── */
+
+  /* ── Auth ── */
+  useEffect(() => {
+    // If session was passed from parent (page.tsx), skip auth check entirely
+    if (initialSession) {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SKIP_AUTH', details: { userId: initialSession.user?.id }, page_url: '/coach' })
+      return
+    }
+    let alive = true
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/coach' })
+      if (alive) { setSession(s); setLoading(false) }
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/coach' })
+      if (!alive) return
+      if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
+      if (s) { setSession(s); setLoading(false) }
+    })
+    return () => { alive = false; subscription.unsubscribe() }
+  }, [])
+
+  // Handle Stripe return + verify account status on load
+  useEffect(() => {
+    if (!session) return
+    const params = new URLSearchParams(window.location.search)
+    const uid = session.user.id
+
+    if (params.get('stripe') === 'success') {
+      const accountId = params.get('account')
+      if (accountId) {
+        (async () => {
+          await supabase.from('profiles').update({ stripe_account_id: accountId, stripe_onboarding_complete: true }).eq('id', uid)
+          window.history.replaceState({}, '', window.location.pathname)
+          window.location.reload()
+        })()
+        return
+      }
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [session])
+
+  // Verify real Stripe status and sync to DB
+  useEffect(() => {
+    if (!coachProfile?.stripe_account_id) return
+    if (coachProfile.stripe_onboarding_complete) return
+    fetch('/api/stripe/check-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountId: coachProfile.stripe_account_id }),
+    }).then(r => r.json()).then(data => {
+      if (data.connected) {
+        supabase.from('profiles').update({ stripe_onboarding_complete: true }).eq('id', session!.user.id)
+          .then(() => { setCoachProfile((p) => p ? { ...p, stripe_onboarding_complete: true } : p) })
+      }
+    }).catch(() => {})
+  }, [coachProfile?.stripe_account_id])
+
+  useEffect(() => {
+    if (!session) return
+
+    function loadCoachData() {
+      if (!session) return
+      fetchClients(session.user.id)
+      supabase.from('exercise_feedback').select('id', { count: 'exact', head: true }).eq('coach_id', session.user.id).eq('status', 'pending').then(({ count }: { count: number | null }) => setPendingVideoCount(count || 0))
+      supabase.from('profiles').select('id,full_name,email,stripe_account_id,stripe_onboarding_complete,subscription_price,coach_onboarding_complete,cgu_accepted_at,coach_bio,coach_speciality,coach_experience_years,coach_monthly_rate').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          if (!data.coach_onboarding_complete) { router.replace('/onboarding-coach'); return }
+          setCoachProfile(data)
+          const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
+          const startOfYear = new Date(startOfMonth.getFullYear(), 0, 1, 0, 0, 0, 0)
+          supabase.from('payments').select('amount,paid_at').eq('status', 'paid').limit(200).then(({ data: allPayments }) => {
+            if (!allPayments) return
+            setAllPayments(allPayments as { amount: number; paid_at: string }[])
+            const monthStart = startOfMonth.toISOString()
+            const yearStart = startOfYear.toISOString()
+            let mRev = 0, yRev = 0, tRev = 0, mCount = 0
+            for (const p of allPayments) {
+              const amt = p.amount || 0
+              tRev += amt
+              if (p.paid_at && p.paid_at >= yearStart) yRev += amt
+              if (p.paid_at && p.paid_at >= monthStart) { mRev += amt; mCount++ }
+            }
+            setMonthRevenue(mRev); setYearRevenue(yRev); setTotalRevenue(tRev); setMonthPaymentsCount(mCount)
+          })
+        }
+      })
+    }
+
+    // If initialSession was provided, role already confirmed by page.tsx — skip getRole
+    if (initialSession) {
+      loadCoachData()
+      return
+    }
+
+    getRole(session.user.id, session.access_token).then(role => {
+      supabase.from('app_logs').insert({ level: 'info', message: 'COACH_DASH_ROLE', details: { role, userId: session.user.id }, page_url: '/coach' })
+      if (!role) { setRoleChecked(true); return }
+      if (role !== 'coach' && role !== 'super_admin') {
+        router.replace('/')
+      } else {
+        setRoleChecked(true)
+        loadCoachData()
+      }
+    })
+  }, [session])
+
+  // Keep refs in sync with state so polling interval has fresh values
+  useEffect(() => { selectedClientRef.current = selectedClient }, [selectedClient])
+  useEffect(() => { clientsRef.current = clients }, [clients])
+  useEffect(() => {
+    const real = chatMessages.filter(m => !String(m.id).startsWith('opt-'))
+    if (real.length > 0) lastChatTimestampRef.current = real[real.length - 1].created_at
+  }, [chatMessages])
+
+  // Realtime subscription for chat messages (INSERT + UPDATE, filtered server-side)
+  useEffect(() => {
+    if (!session?.user?.id || !selectedClient) return
+    const coachId = session.user.id
+    const clientId = selectedClient.client_id
+
+    const handleMessage = (payload: ChatChange, type: 'INSERT' | 'UPDATE') => {
+      const m = payload.new
+      const isThisConv =
+        (m.sender_id === coachId && m.receiver_id === clientId) ||
+        (m.sender_id === clientId && m.receiver_id === coachId)
+      if (!isThisConv) return
+
+      if (type === 'INSERT') {
+        setChatMessages(prev => {
+          if (prev.some((x) => x.id === m.id)) return prev
+          return [...prev.filter((x) => !String(x.id).startsWith('opt-')), m]
+        })
+      } else {
+        setChatMessages(prev =>
+          prev.map((x) => x.id === m.id ? { ...x, ...m } : x)
+        )
+      }
+    }
+
+    // Channel A : messages reçus par le coach (INSERT du client + UPDATE)
+    const channelIn = supabase
+      .channel(`coach-chat-in-${coachId}-${clientId}`)
+      .on<ChatMessage>('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (p) => handleMessage(p, 'INSERT'))
+      .on<ChatMessage>('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (p) => handleMessage(p, 'UPDATE'))
+      .subscribe()
+
+    // Channel B : read receipts sur les messages envoyés par le coach
+    const channelOut = supabase
+      .channel(`coach-chat-out-${coachId}-${clientId}`)
+      .on<ChatMessage>('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `sender_id=eq.${coachId}`,
+      }, (p) => handleMessage(p, 'UPDATE'))
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channelIn)
+      supabase.removeChannel(channelOut)
+    }
+  }, [session?.user?.id, selectedClient?.client_id])
+
+  // Channel global : unread counts + last messages live (toujours actif, indépendant de selectedClient)
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const coachId = session.user.id
+
+    const channel = supabase
+      .channel(`coach-global-${coachId}`)
+      .on<ChatMessage>('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (payload) => {
+        const m = payload.new
+        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
+        setLastMessages(prev => {
+          const next = new Map(prev)
+          next.set(m.sender_id, {
+            content: m.content,
+            image_url: m.image_url,
+            created_at: m.created_at,
+          })
+          return next
+        })
+        const isOpenConv = selectedClientRef.current?.client_id === m.sender_id
+        if (!isOpenConv) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [m.sender_id]: (prev[m.sender_id] || 0) + 1,
+          }))
+        }
+      })
+      .on<ChatMessage>('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${coachId}`,
+      }, (payload) => {
+        const m = payload.new
+        if (!clientsRef.current.some(client => client.client_id === m.sender_id)) return
+        if (m.read === true) {
+          setUnreadCounts(prev => {
+            const cur = prev[m.sender_id] || 0
+            if (cur === 0) return prev
+            return { ...prev, [m.sender_id]: Math.max(0, cur - 1) }
+          })
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [session?.user?.id])
+
+  // Poll every 2min — fallback resync for unread counts + last messages
+  useEffect(() => {
+    if (!session?.user?.id) return
+    const coachId = session.user.id
+    const id = setInterval(async () => {
+      const clientIds = clientsRef.current.map(c => c.client_id)
+      if (clientIds.length) { fetchUnreadCounts(coachId, clientIds); fetchLastMessages(coachId, clientIds) }
+    }, 120000)
+    return () => clearInterval(id)
+  }, [session?.user?.id])
+
+  // Scroll to bottom when chat messages update (with image load awareness)
+  const chatScrollInitial = useRef(true)
+  useEffect(() => {
+    if (chatMessages.length === 0) return
+    const behavior: ScrollBehavior = chatScrollInitial.current ? 'instant' : 'smooth'
+
+    const scrollToBottom = (b: ScrollBehavior = behavior) => {
+      msgEndRef.current?.scrollIntoView({ behavior: b, block: 'end' })
+    }
+
+    // Scroll initial après paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      scrollToBottom()
+      chatScrollInitial.current = false
+    }))
+
+    // Re-scroll après chargement images
+    const container = msgEndRef.current?.parentElement
+    const images = container?.querySelectorAll('img') ?? []
+    const handlers: Array<() => void> = []
+    images.forEach(img => {
+      if (img.complete) return
+      const onLoad = () => scrollToBottom('instant')
+      img.addEventListener('load', onLoad, { once: true })
+      img.addEventListener('error', onLoad, { once: true })
+      handlers.push(() => {
+        img.removeEventListener('load', onLoad)
+        img.removeEventListener('error', onLoad)
+      })
+    })
+
+    return () => handlers.forEach(fn => fn())
+  }, [chatMessages.length, selectedClient?.client_id])
+  // Reset to instant when conversation changes
+  useEffect(() => { chatScrollInitial.current = true }, [selectedClient])
+
+  // Fetch scheduled sessions when in calendar section or week offset changes
+  useEffect(() => {
+    if (!session?.user?.id) return
+    fetchScheduledSessions(session.user.id, calWeekOffset)
+  }, [session?.user?.id, calWeekOffset, section, clients])
+
   /* ── Handlers ──────────────────────────────────────────── */
 
   async function saveNewSession() {
@@ -656,6 +704,7 @@ export default function useCoachDashboard(initialSession?: any) {
   }
 
   async function openChat(client: ClientRow) {
+    if (!session) return
     setSelectedClient(client)
     await loadChat(client.client_id, session.user.id)
     // Mark messages from this client as read
