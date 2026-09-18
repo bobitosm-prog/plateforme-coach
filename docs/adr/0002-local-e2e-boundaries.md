@@ -41,6 +41,30 @@ Le runner critique lance chaque sous-runner de façon asynchrone, capture puis e
 
 L'horloge du parcours Nutrition capture l'instant réel avant la création du JWT et en dérive la date UTC stable du scénario. Elle ne projette plus le navigateur à midi UTC, ce qui évite une expiration artificielle du token lors des exécutions matinales sans modifier Supabase Auth ni la durée de vie des sessions.
 
+### Suivi du cycle de vie des fournisseurs (18 septembre 2026)
+
+Le lanceur individuel vérifie ses ports avant de créer un service, y compris
+lorsqu'il est appelé après un parcours en échec. Il surveille la sortie des
+processus dès leur création : un fournisseur mort ne devient pas une attente
+HTTP d'une minute et ne peut pas être ignoré pendant les tests navigateur.
+Les sondes HTTP ont un délai borné et suivent au maximum cinq redirections,
+uniquement sur la même origine (notamment le renvoi normal vers `/login`).
+Une redirection externe ou une boucle est refusée avant tout accès externe.
+
+Le nettoyage attend la disparition des groupes de processus créés par le
+lanceur, avec escalade bornée TERM/KILL, puis vérifie les ports. Un service
+étranger sur un port provoque un échec, jamais sa terminaison. Les diagnostics
+du gestionnaire ne reproduisent ni arguments de commande ni environnement.
+Aucune nouvelle tentative des assertions navigateur n'est ajoutée.
+
+Les tests dédiés utilisent de vrais processus et sockets locaux. Ils couvrent
+port occupé, échec de démarrage, sortie anticipée, sonde bloquée, fournisseur
+perdu pendant les tests, code d'échec navigateur, arrêt lent et arrêt forcé.
+Ils ne remplacent pas le passage des 15 parcours sur un Supabase local isolé,
+ni la nouvelle fenêtre statistique après promotion. Les collisions historiques
+du port 55326 sont avérées ; leur propriétaire n'a pas été identifié par les
+journaux disponibles, donc cette amélioration n'en prouve pas la résolution.
+
 ## Conséquences
 
 - Un test peut être qualifié d'E2E local seulement si ses frontières principales ne sont pas remplacées dans le navigateur.
