@@ -47,7 +47,9 @@ Le lanceur individuel vérifie ses ports avant de créer un service, y compris
 lorsqu'il est appelé après un parcours en échec. Il surveille la sortie des
 processus dès leur création : un fournisseur mort ne devient pas une attente
 HTTP d'une minute et ne peut pas être ignoré pendant les tests navigateur.
-Les sondes HTTP ont un délai borné et ne suivent pas les redirections.
+Les sondes HTTP ont un délai borné et suivent au maximum cinq redirections,
+uniquement sur la même origine (notamment le renvoi normal vers `/login`).
+Une redirection externe ou une boucle est refusée avant tout accès externe.
 
 Le nettoyage attend la disparition des groupes de processus créés par le
 lanceur, avec escalade bornée TERM/KILL, puis vérifie les ports. Un service

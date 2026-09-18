@@ -23,6 +23,26 @@ export function startOwnedProcess(command, args, options = {}) {
   return owned
 }
 
+class ReadinessRedirectError extends Error {}
+
+async function localReadinessResponse(url, signal) {
+  let target = url
+  for (let redirects = 0; redirects <= 5; redirects += 1) {
+    const response = await fetch(target, { redirect: 'manual', signal })
+    await response.body?.cancel()
+    if (![301, 302, 303, 307, 308].includes(response.status)) return response.ok
+    const location = response.headers.get('location')
+    if (!location || redirects === 5) throw new ReadinessRedirectError('Local service readiness redirect loop or missing location')
+    try { target = new URL(location, target) } catch {
+      throw new ReadinessRedirectError('Local service readiness redirect is invalid')
+    }
+    if (target.origin !== url.origin || target.username || target.password) {
+      throw new ReadinessRedirectError('Local service readiness redirect leaves the configured origin')
+    }
+  }
+  return false
+}
+
 export async function readyOwnedService(owned, value, { timeoutMs = 60_000, pollMs = 100 } = {}) {
   const url = assertLocalE2eUrl(value)
   const controller = new AbortController()
@@ -34,13 +54,13 @@ export async function readyOwnedService(owned, value, { timeoutMs = 60_000, poll
     while (!controller.signal.aborted) {
       if (owned.outcome) throw new Error(`Local service exited before readiness: ${url.origin}`)
       try {
-        const response = await fetch(url, {
-          redirect: 'manual',
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(1_000)]),
-        })
-        await response.body?.cancel()
-        if (response.ok && !owned.outcome) return
-      } catch { /* Retry readiness only; never retry a browser assertion. */ }
+        const ready = await localReadinessResponse(url,
+          AbortSignal.any([controller.signal, AbortSignal.timeout(5_000)]))
+        if (ready && !owned.outcome) return
+      } catch (error) {
+        if (error instanceof ReadinessRedirectError) throw error
+        // Retry readiness only; never retry a browser assertion.
+      }
       await delay(pollMs, undefined, { signal: controller.signal }).catch(() => {})
     }
     throw new Error(`Local service unavailable: ${url.origin}`)

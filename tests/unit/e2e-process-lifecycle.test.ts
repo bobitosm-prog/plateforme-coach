@@ -61,6 +61,44 @@ describe('E2E lifecycle with real local processes', () => {
     expect(performance.now() - started).toBeLessThan(2_000)
   })
 
+  it('follows the app redirect to login on the same origin', async () => {
+    const child = start(`
+      const server = require('node:http').createServer((req, res) => {
+        if (req.url === '/') { res.writeHead(307, { Location: '/login' }); res.end(); }
+        else res.end('login');
+      });
+      server.listen(0, '127.0.0.1', () => console.log(server.address().port));
+    `)
+    const [message] = await once(child.child.stdout!, 'data')
+    await expect(readyOwnedService(child, `http://127.0.0.1:${Number(String(message).trim())}`)).resolves.toBeUndefined()
+  })
+
+  it('rejects cross-origin redirects without contacting the destination', async () => {
+    const destination = await server()
+    let contacted = false
+    destination.instance.on('request', () => { contacted = true })
+    const child = start(`
+      const server = require('node:http').createServer((req, res) => {
+        res.writeHead(302, { Location: ${JSON.stringify(destination.url)} }); res.end();
+      });
+      server.listen(0, '127.0.0.1', () => console.log(server.address().port));
+    `)
+    const [message] = await once(child.child.stdout!, 'data')
+    await expect(readyOwnedService(child, `http://127.0.0.1:${Number(String(message).trim())}`)).rejects.toThrow('leaves the configured origin')
+    expect(contacted).toBe(false)
+  })
+
+  it('rejects a same-origin redirect loop instead of probing indefinitely', async () => {
+    const child = start(`
+      const server = require('node:http').createServer((req, res) => {
+        res.writeHead(307, { Location: '/' }); res.end();
+      });
+      server.listen(0, '127.0.0.1', () => console.log(server.address().port));
+    `)
+    const [message] = await once(child.child.stdout!, 'data')
+    await expect(readyOwnedService(child, `http://127.0.0.1:${Number(String(message).trim())}`)).rejects.toThrow('redirect loop')
+  })
+
   it('stops waiting when a provider dies during the browser test', async () => {
     const provider = start('setInterval(() => {}, 1000)')
     const browser = start('setInterval(() => {}, 1000)')

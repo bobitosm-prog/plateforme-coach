@@ -58,7 +58,7 @@ function run(command, args, options = {}) {
 function classifyFailure(output) {
   if (/test timeout|expect\(.+\)\.to|\d+ failed/i.test(output)) return 'fonctionnel'
   if (/cleanup|residu|still open|synthetic|mailpit/i.test(output)) return 'nettoyage incomplet'
-  if (/docker|supabase|eaddrinuse|econnrefused|local (?:e2e )?service (?:unavailable|exited)|browser.*missing|infrastructure/i.test(output)) return 'infrastructure'
+  if (/docker|supabase|eaddrinuse|econnrefused|local (?:e2e )?service (?:unavailable|exited|readiness)|browser.*missing|infrastructure/i.test(output)) return 'infrastructure'
   return 'fonctionnel'
 }
 
