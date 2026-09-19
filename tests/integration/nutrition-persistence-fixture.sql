@@ -1,5 +1,6 @@
 -- Disposable local test database ONLY. Not an application migration.
 CREATE ROLE authenticated NOLOGIN;
+CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticator LOGIN NOINHERIT;
 GRANT authenticated TO authenticator;
 CREATE SCHEMA auth;
@@ -11,7 +12,8 @@ CREATE TABLE public.profiles (
   id uuid PRIMARY KEY, calorie_goal numeric, protein_goal numeric,
   carbs_goal numeric, fat_goal numeric, tdee numeric,
   current_weight numeric, height numeric, birth_date date,
-  gender text, objective text, activity_level text, meal_preferences jsonb
+  gender text, objective text, activity_level text, meal_preferences jsonb,
+  updated_at timestamptz DEFAULT clock_timestamp(), dietary_type text, allergies text[]
 );
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY profiles_own ON public.profiles FOR ALL TO authenticated
@@ -30,6 +32,8 @@ CREATE POLICY meal_plans_own ON public.meal_plans FOR ALL
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.meal_plans TO authenticated;
 CREATE SCHEMA canonical;
 GRANT USAGE ON SCHEMA canonical TO authenticated;
+CREATE VIEW canonical.profiles WITH (security_invoker=true) AS SELECT * FROM public.profiles;
+GRANT SELECT ON canonical.profiles TO authenticated;
 CREATE TABLE canonical.meal_plans (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,

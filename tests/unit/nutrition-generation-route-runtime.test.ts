@@ -2,13 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 
 const mocks = vi.hoisted(() => ({
-  user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(),
+  user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(), snapshot: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.user } }) }))
 vi.mock('@/lib/api-guard', () => ({ guardCoachManagedCapabilities: mocks.guard }))
 vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext: async () => ({ ok: true, prompt: 'Synthetic test profile' }) }))
 vi.mock('@/lib/meal-plan/replace-personal-plan', () => ({ replacePersonalMealPlan: mocks.persist }))
+vi.mock('@/lib/meal-plan/activation-snapshot', () => ({ loadActivationSnapshot: mocks.snapshot, ACTIVATION_CONTEXT_KEY: '_activation_context' }))
+vi.mock('@/lib/nutrition/server-authority', () => ({ applySavedNutritionAuthority: async (_client: unknown, _user: unknown, params: unknown) => ({ ok: true, params }) }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: () => ({ allowed: true }),
   checkAiRateLimit: async () => ({ allowed: true }),
@@ -49,6 +51,7 @@ beforeEach(() => {
   mocks.guard.mockResolvedValue(null)
   mocks.persist.mockResolvedValue({ ok: true, id: 'synthetic-plan' })
   mocks.usage.mockResolvedValue(undefined)
+  mocks.snapshot.mockResolvedValue({ profileUpdatedAt: null, activePlanId: null, operationId: 'synthetic-operation' })
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'info').mockImplementation(() => {})
@@ -56,6 +59,29 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks() })
 
 describe('nutrition POST runtime with synthetic provider and persistence', () => {
+  it('refuses an unreadable activation snapshot before provider usage', async () => {
+    mocks.snapshot.mockResolvedValue(null)
+    const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
+    expect((await POST(request())).status).toBe(503)
+    expect(fetch).not.toHaveBeenCalled()
+    expect(mocks.persist).not.toHaveBeenCalled()
+  })
+  it('reports a concurrent modification without declaring success', async () => {
+    mocks.persist.mockResolvedValue({ ok: false, stage: 'conflict' })
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => provider()))
+    const { events } = await run()
+    expect(events.at(-1)).toMatchObject({ type: 'error', error: expect.stringContaining('ont changé') })
+    expect(events.some(event => event.type === 'done')).toBe(false)
+  })
+  it('does not generate or persist an already aborted request', async () => {
+    const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
+    const abort = new AbortController(); abort.abort()
+    const aborted = new Request(request(), { signal: abort.signal }) as NextRequest
+    const result = await POST(aborted)
+    expect(await result.text()).not.toContain('"type":"done"')
+    expect(fetch).not.toHaveBeenCalled()
+    expect(mocks.persist).not.toHaveBeenCalled()
+  })
   it('counts Wednesday as the first completed day, not day three, when it finishes first', async () => {
     const gates: Array<(value: Response) => void> = []
     let calls = 0

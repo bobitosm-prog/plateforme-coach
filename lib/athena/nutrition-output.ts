@@ -21,6 +21,7 @@ const ALLERGEN_TERMS: Record<string, string[]> = {
   soy: ['soja', 'tofu', 'tempeh'], fish: ['poisson', 'saumon', 'thon', 'sardine', 'cabillaud'],
   shellfish: ['crevette', 'crabe', 'homard', 'moule'], sesame: ['sésame', 'sesame'],
 }
+export const SUPPORTED_NUTRITION_ALLERGENS = Object.freeze(Object.keys(ALLERGEN_TERMS))
 
 export interface NutritionTargets { calorieGoal: number; proteinGoal: number; carbsGoal: number; fatGoal: number; allergies: readonly string[] }
 export type AthenaNutritionOutputErrorCode = 'shape' | 'allergen' | 'unknown_food' | 'targets'

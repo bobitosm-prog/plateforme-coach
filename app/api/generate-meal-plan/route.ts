@@ -13,6 +13,8 @@ import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientifi
 import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
 import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
 import { replacePersonalMealPlan } from '../../../lib/meal-plan/replace-personal-plan'
+import { loadActivationSnapshot, ACTIVATION_CONTEXT_KEY } from '../../../lib/meal-plan/activation-snapshot'
+import { applySavedNutritionAuthority } from '../../../lib/nutrition/server-authority'
 import { NUTRITION_PROVIDER_OUTPUT_FORMAT, NutritionProviderOutputError, parseNutritionProviderOutput } from '../../../lib/athena/nutrition-provider-output'
 import { createNutritionPlanContext, NUTRITION_PLAN_CONTEXT_KEY } from '../../../lib/nutrition/plan-context'
 
@@ -257,6 +259,7 @@ async function generateOneDay(
   proteinsUsed: string[],
   clientContext: string,
   repairAttempt = false,
+  signal?: AbortSignal,
 ): Promise<any> {
   const kcal = params.calorie_goal || 2500
   const proteinHint = proteinsUsed.length > 0
@@ -309,6 +312,7 @@ Aliments féculents (riz, pâtes, légumineuses) : TOUJOURS pesés et calculés 
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(45_000)]) : AbortSignal.timeout(45_000),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -373,11 +377,16 @@ export async function POST(req: NextRequest) {
   if (!rl.allowed) return new Response(JSON.stringify({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }), { status: 429 })
 
   // DB-backed hourly rate limit (Sprint 3)
-  const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-meal-plan')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  // Monthly quota (cadrage coût vague beta)
-  const aiQ = await checkAiQuota(supabaseAuth, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
+  try {
+    const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-meal-plan', true)
+    if (aiRl.unavailable) return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
+    if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+    const aiQ = await checkAiQuota(supabaseAuth, user.id, true)
+    if (aiQ.unavailable) return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
+    if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
+  } catch {
+    return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
+  }
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
@@ -388,7 +397,7 @@ export async function POST(req: NextRequest) {
     if (!parsedRequest.success) {
       return new Response(JSON.stringify({ error: 'Requête invalide' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
-    const params = parsedRequest.data
+    let params = parsedRequest.data
 
     // Coach-managed capabilities do not include AI meal-plan generation.
     const userId = user.id
@@ -398,6 +407,16 @@ export async function POST(req: NextRequest) {
     if (!clientContext.ok) {
       return new Response(JSON.stringify({ error: 'Profil temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
     }
+    const activation = await loadActivationSnapshot(supabaseAuth, userId)
+    if (!activation) {
+      return Response.json({ error: 'État du plan temporairement indisponible' }, { status: 503 })
+    }
+    const authority = await applySavedNutritionAuthority(supabaseAuth, userId, params)
+    if (!authority.ok) {
+      return Response.json({ error: authority.status === 409 ? 'Enregistrez vos objectifs avant de générer le plan.' : authority.status === 422 ? 'Vos exclusions nécessitent une vérification avant la génération.' : 'Profil temporairement indisponible' }, { status: authority.status })
+    }
+    params = authority.params
+    const generationSignal = AbortSignal.any([req.signal, AbortSignal.timeout(240_000)])
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -408,8 +427,9 @@ export async function POST(req: NextRequest) {
           let legacyDay: any = null
           let lastFailureCode = 'unknown'
           for (let attempt = 1; attempt <= 2 && !legacyDay; attempt++) {
+            if (generationSignal.aborted) break
             try {
-              legacyDay = await generateOneDay(apiKey, day, params, [], clientContext.prompt, attempt === 2)
+              legacyDay = await generateOneDay(apiKey, day, params, [], clientContext.prompt, attempt === 2, generationSignal)
             } catch (error) {
               lastFailureCode = generationFailureCode(error)
               console.warn(`[meal-plan] generation attempt rejected day=${day} attempt=${attempt} code=${lastFailureCode}`)
@@ -425,7 +445,7 @@ export async function POST(req: NextRequest) {
         })
 
         for (const outcome of outcomes) {
-          if (!outcome.legacyDay) {
+          if (!outcome.legacyDay || generationSignal.aborted) {
             console.error(`[meal-plan] validated generation failed day=${outcome.day} code=${outcome.lastFailureCode}`)
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Plan temporairement indisponible' })}\n\n`))
             controller.close()
@@ -435,12 +455,15 @@ export async function POST(req: NextRequest) {
         }
 
         plan[NUTRITION_PLAN_CONTEXT_KEY] = createNutritionPlanContext(params)
+        // Client-side initial/diagnostic activation keeps the same pre-generation
+        // snapshot instead of checking only after the provider has finished.
+        plan[ACTIVATION_CONTEXT_KEY] = activation
         if (params.persist_generated_plan) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'saving' })}\n\n`))
-          const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan)
+          const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan, activation!)
           if (!replacement.ok) {
             console.error(`[meal-plan] persistence failed stage=${replacement.stage}`)
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Sauvegarde temporairement indisponible' })}\n\n`))
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: replacement.stage === 'conflict' ? 'Vos réglages ou votre plan ont changé pendant la génération. Rechargez puis réessayez.' : 'Sauvegarde temporairement indisponible' })}\n\n`))
             controller.close()
             return
           }

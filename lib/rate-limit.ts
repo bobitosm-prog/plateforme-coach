@@ -37,6 +37,7 @@ export const AI_RATE_LIMITS: Record<string, number> = {
 const WINDOW_SECONDS = 3600
 
 export type AiRateLimitResult = {
+  unavailable?: boolean
   allowed: boolean
   remaining: number
   limit: number
@@ -46,7 +47,8 @@ export type AiRateLimitResult = {
 export async function checkAiRateLimit(
   supabase: SupabaseClient,
   userId: string,
-  endpoint: string
+  endpoint: string,
+  failClosed = false,
 ): Promise<AiRateLimitResult> {
   const limit = AI_RATE_LIMITS[endpoint]
   if (limit === undefined) {
@@ -63,8 +65,9 @@ export async function checkAiRateLimit(
     .gte('created_at', windowStart)
 
   // Fail-open: better than global downtime
-  if (error) {
-    console.error('[AiRateLimit] DB error, failing open:', error.message)
+  if (error || (failClosed && count === null)) {
+    if (failClosed) return { allowed: false, remaining: 0, limit, resetIn: 60, unavailable: true }
+    console.error('[AiRateLimit] DB error, failing open:', error?.message)
     return { allowed: true, remaining: limit, limit, resetIn: 0 }
   }
 
@@ -102,6 +105,7 @@ const MONTHLY_WINDOW_SECONDS = 2592000 // 30 jours
 export async function checkAiQuota(
   supabase: SupabaseClient,
   userId: string,
+  failClosed = false,
 ): Promise<AiRateLimitResult> {
   const limit = MONTHLY_HEAVY_QUOTA
   const windowStart = new Date(Date.now() - MONTHLY_WINDOW_SECONDS * 1000).toISOString()
@@ -117,8 +121,9 @@ export async function checkAiQuota(
       .gte('created_at', windowStart)
 
     // Fail-open on DB error
-    if (error) {
-      console.error('[AiQuota] DB error, failing open:', error.message)
+    if (error || (failClosed && count === null)) {
+      if (failClosed) return { allowed: false, remaining: 0, limit, resetIn: 60, unavailable: true }
+      console.error('[AiQuota] DB error, failing open:', error?.message)
       return { allowed: true, remaining: limit, limit, resetIn: 0 }
     }
 
@@ -145,6 +150,7 @@ export async function checkAiQuota(
 
     return { allowed: false, remaining: 0, limit, resetIn }
   } catch {
+    if (failClosed) return { allowed: false, remaining: 0, limit, resetIn: 60, unavailable: true }
     // Fail-open
     return { allowed: true, remaining: limit, limit, resetIn: 0 }
   }

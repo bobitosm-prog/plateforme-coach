@@ -1,0 +1,27 @@
+name: Nutrition quality and recovery
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  synthetic-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run
+      - run: npx tsc --noEmit --incremental false
+      - run: npm run i18n:check
+      - run: node scripts/check-nutrition-persistence.mjs
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:56431
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: synthetic-local-key
+          SUPABASE_SERVICE_ROLE_KEY: synthetic-local-service-key
