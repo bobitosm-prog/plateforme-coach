@@ -1,5 +1,7 @@
 'use client'
-import React, { useState } from 'react'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import type { Profile } from '../../../../lib/profile-service'
+import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { LogOut, X, ArrowLeft } from 'lucide-react'
 import { RailOverlay } from '../../ui/RailOverlay'
@@ -12,9 +14,9 @@ import PaymentHistory from './PaymentHistory'
 import DeleteAccountSection from './DeleteAccountSection'
 
 interface AccountSectionProps {
-  supabase: any
-  session: any
-  profile: any
+  supabase: SupabaseClient
+  session: Session | null
+  profile: Profile | null
   coachId: string | null
   handleSubscribe?: () => void
   onBack: () => void
@@ -26,6 +28,12 @@ export default function AccountSection({
   const t = useTranslations('profile')
   const locale = useLocale()
   const [showPaywall, setShowPaywall] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    // Keep the countdown fresh without reading the clock during render.
+    const timer = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
 
   return (
     <div style={{ padding: '20px 20px calc(160px + env(safe-area-inset-bottom, 0px))', minHeight: '100vh', background: colors.background }}>
@@ -49,9 +57,10 @@ export default function AccountSection({
             const hasHistoricalCoachAccess = (
               st === 'invited' || subType === 'invited'
             )
-            const hasEndDate = !!profile?.subscription_end_date
-            const days = hasEndDate ? Math.max(0, Math.ceil((new Date(profile.subscription_end_date).getTime() - Date.now()) / 86400000)) : 0
-            const endDate = hasEndDate ? new Date(profile.subscription_end_date).toLocaleDateString(locale) : ''
+            const subscriptionEndDate = profile?.subscription_end_date
+            const hasEndDate = !!subscriptionEndDate
+            const days = subscriptionEndDate ? Math.max(0, Math.ceil((new Date(subscriptionEndDate).getTime() - now) / 86400000)) : 0
+            const endDate = subscriptionEndDate ? new Date(subscriptionEndDate).toLocaleDateString(locale) : ''
 
             if (st === 'lifetime') return (
               <div>
@@ -111,13 +120,13 @@ export default function AccountSection({
               <X size={16} color={colors.textMuted} />
             </button>
             <ClientIntlProvider>
-              <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
+              <Paywall role="client" coachId={coachId} onSignOut={() => setShowPaywall(false)} />
             </ClientIntlProvider>
           </div>
         </RailOverlay>)}
 
         {/* ═══ HISTORIQUE DES PAIEMENTS ═══ */}
-        <PaymentHistory supabase={supabase} userId={session?.user?.id} />
+        {session && <PaymentHistory supabase={supabase} userId={session.user.id} />}
 
         {/* ═══ DÉCONNEXION ═══ */}
         <button onClick={() => { cache.clearAll(); supabase.auth.signOut().then(() => { window.location.href = '/login' }) }}

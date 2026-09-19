@@ -26,7 +26,6 @@ export default function OnboardingCoachContent() {
   const answersRef = useRef<Answers>({})
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState('')
   const [step, setStep] = useState(1)
   const [editingFromSummary, setEditingFromSummary] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -59,7 +58,7 @@ export default function OnboardingCoachContent() {
       if (!mounted) return
       if (profileError || !profile || profile.role !== 'coach') { setFatal(true); setLoading(false); return }
       if (profile.coach_onboarding_complete) { router.replace('/'); return }
-      setUserId(session.user.id); setUserEmail(session.user.email || '')
+      setUserId(session.user.id)
       setFullName(profile.full_name || session.user.user_metadata?.full_name || '')
       setBio(profile.coach_bio || ''); setSpeciality(profile.coach_speciality || '')
       setExperience(profile.coach_experience_years || ''); setCertifications(profile.coach_certifications || '')
@@ -175,13 +174,9 @@ export default function OnboardingCoachContent() {
     setStripeLoading(true); setStripeError(null)
     try {
       if (!await update({}, 3)) throw new Error('resume-save')
-      const response = await fetch('/api/stripe/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ coachId: userId, email: userEmail }) })
+      const response = await fetch('/api/stripe/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ coachId: userId }) })
       const payload = await response.json()
       if (!response.ok || !payload.url) throw new Error('provider')
-      if (payload.accountId) {
-        const { error: accountError } = await supabase.from('profiles').update({ stripe_account_id: payload.accountId }).eq('id', userId)
-        if (accountError) throw accountError
-      }
       window.location.assign(payload.url)
     } catch { setStripeError(t('redesign.errors.stripe')); setStripeLoading(false) }
   }
