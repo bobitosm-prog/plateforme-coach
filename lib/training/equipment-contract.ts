@@ -22,7 +22,8 @@ export function isCatalogExerciseCompatible(exercise: CatalogExercise, equipment
   if (available.has('machine_gym')) return true
   if (!exercise.equipment || !available.has(exercise.equipment as Equipment)) return false
   const physical = fold(`${exercise.name} ${exercise.equipment_legacy ?? ''}`)
-  if (/poulie|machine|banc|bench|box|traction|pull up|chin up|parallele|dips|roue|wheel|cordes|battle rope|suspension|trx/.test(physical)) return false
+  if (/poulie|machine|banc|bench|box|traction|pull up|chin up|parallele|dips|roue|wheel|cordes|battle rope|suspension|trx|bulgar|incline|decline/.test(physical)) return false
+  if (exercise.equipment === 'bodyweight' && /barre/.test(physical)) return false
   return true
 }
 

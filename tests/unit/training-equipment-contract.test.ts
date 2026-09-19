@@ -7,6 +7,8 @@ const catalog = [
   { id: '3', name: 'Planche', equipment: 'bodyweight' },
   { id: '4', name: 'Roue abdominale', equipment: 'band', equipment_legacy: 'Roue abdominale' },
   { id: '5', name: 'Tractions', equipment: 'bodyweight', equipment_legacy: 'Barre de traction' },
+  { id: '6', name: 'Fentes Bulgares', equipment: 'bodyweight', equipment_legacy: 'Poids du corps' },
+  { id: '7', name: 'Pompes inclinées', equipment: 'bodyweight', equipment_legacy: 'Poids du corps' },
 ]
 describe('closed equipment contract', () => {
   it('excludes every unavailable accessory from a home/bands program', () => {
