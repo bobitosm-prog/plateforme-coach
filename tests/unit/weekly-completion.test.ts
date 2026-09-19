@@ -7,7 +7,7 @@ function fixture() {
   const rows: Record<string, any[]> = {
     profiles: [{ id: 'u', created_at: '2026-09-19T08:00:00Z' }],
     daily_food_logs: [{ user_id: 'u', date: '2026-09-20', id: 'food', calories: 200 }],
-    workout_sessions: [], scheduled_sessions: [], custom_programs: [], weekly_diagnostics: [], weekly_day_completions: [],
+    workout_sessions: [], scheduled_sessions: [], custom_programs: [], weekly_diagnostics: [], weekly_day_completions: [], coach_clients: [], client_programs: [],
   }
   let fail = ''
   const db = { from(table: string) {
@@ -80,6 +80,19 @@ describe('explicit Sunday closure', () => {
     f.rows.daily_food_logs[0].calories = 400
     expect((await readWeeklyCompletion(f.db, 'u', now)).status.canGenerate).toBe(false)
     expect(await f.confirm()).toMatchObject({ completion: { canGenerate: true } })
+  })
+  it('uses the authoritative coach Sunday when there is no dated calendar', async () => {
+    const f = fixture()
+    f.rows.coach_clients = [{ id: 'relation', client_id: 'u', coach_id: 'coach', status: 'active', source: 'invitation' }]
+    f.rows.client_programs = [{ client_id: 'u', coach_id: 'coach', program: { dimanche: { exercises: [{ name: 'Squat' }] } } }]
+    expect(await f.confirm()).toMatchObject({ status: 409 })
+    expect(await f.confirm({ skipTraining: true })).toMatchObject({ completion: { canGenerate: true } })
+  })
+  it('does not impose a legacy default coach program', async () => {
+    const f = fixture()
+    f.rows.coach_clients = [{ id: 'relation', client_id: 'u', coach_id: 'coach', status: 'active', source: 'default' }]
+    f.rows.client_programs = [{ client_id: 'u', coach_id: 'coach', program: { dimanche: { exercises: [{ name: 'Squat' }] } } }]
+    expect(await f.confirm()).toMatchObject({ completion: { canGenerate: true, trainingState: 'rest' } })
   })
   it('rejects future or stale weeks and weeks before registration', async () => {
     const f = fixture()

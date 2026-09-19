@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 import { diagnosticWeek } from './week'
 import { getSessionForDay } from '../get-today-session'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { findActiveCoachForClient, toActiveCoachResolutionState } from '../coach-relations/repository'
+import { normalizeCoachProgram } from '../normalizeCoachProgram'
 
 type WeeklyDatabase = Pick<SupabaseClient, 'from'>
 type Session = { id: string; completed: boolean; session_type?: string }
@@ -31,8 +33,24 @@ export async function readWeeklyCompletion(db: WeeklyDatabase, userId: string, n
   const [completion, food, workouts, schedule, profile, program, diagnostic] = results.map(r => r.data)
   const planned: Session[] = (schedule ?? []).filter((s: Session) => s.session_type !== 'rest')
   // The dated calendar is authoritative; fall back to the personal weekly plan.
-  const expected = schedule?.length ? planned.length
+  let expected = schedule?.length ? planned.length
     : getSessionForDay(program?.days ?? [], 6).type === 'workout' ? 1 : 0
+  if (!schedule?.length) {
+    // Same authoritative coach relation as the training dashboard; never use a
+    // legacy/default coach link or mislabel a coached Sunday as a rest day.
+    const relation = toActiveCoachResolutionState(await findActiveCoachForClient(db as SupabaseClient, userId))
+    if (relation.status === 'error' || relation.status === 'multiple_active') throw new Error('Weekly coach schedule unavailable')
+    if (relation.isAuthoritative && relation.coachId) {
+      const coached = await db.from('client_programs').select('program')
+        .eq('client_id', userId).eq('coach_id', relation.coachId).order('created_at', { ascending: false }).limit(20)
+      if (coached.error) throw new Error('Weekly coach program unavailable')
+      const active = coached.data?.map(row => normalizeCoachProgram(row.program)).find(Boolean)
+      if (active) {
+        const day = active.dimanche
+        expected = day && !day.repos && !day.is_rest && day.exercises?.length ? 1 : 0
+      }
+    }
+  }
   const finished = (workouts ?? []).filter((s: Session) => s.completed).length
   // Calendar completion and workout logs can refer to the same session: do not add them.
   const completedCount = Math.max(finished, planned.filter(s => s.completed).length)
