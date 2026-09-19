@@ -28,7 +28,7 @@ Use synthetic Supabase environment values for the local production build. Never 
 ## Rollout order
 
 1. Verify live `meal_plans.plan_data/is_active`, `profiles.updated_at`, owner RLS and the profile timestamp trigger.
-2. Apply `20260919110605_nutrition_atomic_activation.sql` to staging. Verify `prosecdef=false`, fixed empty search path, authenticated execute allowed and anonymous execute denied. Check advisors; distinguish pre-existing notices from new ones.
+2. Apply `20260919110605_nutrition_atomic_activation.sql` and `20260919112812_qualify_profile_role_lookup.sql` to staging before deploying the application. The second migration makes the existing privileged role lookup independent of caller search paths; it preserves ownership and permissions. Verify `prosecdef=false` on activation, fixed empty search paths, authenticated activation execute allowed and anonymous activation execute denied. Check advisors; distinguish pre-existing notices from new ones. Test `get_my_role()` under an empty caller search path: a legacy unqualified `profiles` lookup fails there even when simplified fixture RLS passes.
 3. After local runtime tests, apply the same additive migration to production before the application release. It does not alter existing plan rows or revoke existing table privileges.
 4. Require the PR's test workflow and preview build to succeed. Smoke-test login and anonymous generation (200 and 401 respectively), then deploy the reviewed commit.
 5. Verify the production commit/deployment identity and repeat smoke checks. An authenticated end-to-end test with a synthetic account is a separate release assurance; public smoke tests do not replace it.
