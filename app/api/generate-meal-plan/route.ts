@@ -13,6 +13,7 @@ import { buildAthenaScientificPolicyPrompt } from '../../../lib/athena/scientifi
 import { loadAthenaGenerationContext } from '../../../lib/athena/generation-context'
 import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
 import { replacePersonalMealPlan } from '../../../lib/meal-plan/replace-personal-plan'
+import { NUTRITION_PROVIDER_OUTPUT_FORMAT, NutritionProviderOutputError, parseNutritionProviderOutput } from '../../../lib/athena/nutrition-provider-output'
 
 export const maxDuration = 300
 
@@ -318,6 +319,7 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
       // Four meals with 3-4 structured foods can legitimately exceed 1,500
       // tokens; truncating here produces an unrecoverable partial JSON object.
       max_tokens: 2500,
+      output_config: { format: NUTRITION_PROVIDER_OUTPUT_FORMAT },
       system: buildSystemPrompt(params, clientContext),
       messages: [{ role: 'user', content: userPrompt }],
     }),
@@ -329,11 +331,7 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
   }
 
   const data = await res.json()
-  const rawText = data.content[0].text
-  const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error(`No JSON for ${day}`)
-  const parsed = JSON.parse(jsonMatch[0])
+  const parsed = parseNutritionProviderOutput(data)
   // The model chooses foods and quantities. Nutrition always comes from our
   // versioned reference database before any deterministic rebalancing.
   const targets = {
@@ -348,6 +346,7 @@ TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT 
 }
 
 function generationFailureCode(error: unknown): string {
+  if (error instanceof NutritionProviderOutputError) return error.code
   if (error instanceof AthenaNutritionOutputError) return error.code
   if (error instanceof SyntaxError) return 'invalid_json'
   if (error instanceof Error && error.message.startsWith('Anthropic ')) return 'provider'
