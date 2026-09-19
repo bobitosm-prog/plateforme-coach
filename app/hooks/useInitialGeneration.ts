@@ -82,12 +82,17 @@ export function isValidInitialProgram(value: unknown): value is GeneratedProgram
 
 export function isValidInitialMealPlan(value: unknown): value is Record<string, unknown> {
   if (!isRecord(value)) return false
-  const days = Object.values(value)
-  return days.length >= 7 && days.every(day => (
+  // The response also carries _nutrition_context and _activation_context.
+  // Validate the seven required days, not technical metadata as extra meals.
+  const days = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+  return days.every(key => {
+    const day = value[key]
+    return (
     isRecord(day)
     && Array.isArray(day.meals)
     && day.meals.length > 0
-  ))
+    )
+  })
 }
 
 async function consumeMealPlanStream(response: Response): Promise<unknown> {

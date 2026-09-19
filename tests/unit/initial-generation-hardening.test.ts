@@ -250,7 +250,26 @@ describe('initial generation hardening', () => {
     expect(isValidInitialProgram({ days: [{ exercises: [{ name: 'Squat' }] }] })).toBe(true)
     expect(isValidInitialMealPlan({ lundi: { meals: [] } })).toBe(false)
     expect(isValidInitialMealPlan(Object.fromEntries(
-      Array.from({ length: 7 }, (_, index) => [`day-${index}`, { meals: [{ name: 'Meal' }] }]),
+      ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(day => [day, { meals: [{ name: 'Meal' }] }]),
     ))).toBe(true)
+  })
+
+  it('accepts the server metadata without counting it as days or removing it', async () => {
+    const payload = Object.fromEntries([
+      ...['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(day => [day, { meals: [{ foods: [{ name: 'Tofu', qty: 100 }] }] }]),
+      ['_nutrition_context', { version: 1, calorie_goal: 1812 }],
+      ['_activation_context', { operationId: 'unchanged-operation' }],
+    ])
+    expect(isValidInitialMealPlan(payload)).toBe(true)
+    const nutrition = port({ reads: [{ kind: 'missing' }, { kind: 'missing' }, { kind: 'ready' }] })
+    nutrition.generate = vi.fn(async () => payload)
+    nutrition.validate = isValidInitialMealPlan
+    const { result } = await run({ nutrition, domains: ['nutrition'] })
+    expect(nutrition.persist).toHaveBeenCalledWith(payload)
+    expect(result.nutrition.phase).toBe('ready')
+    expect(payload._activation_context).toEqual({ operationId: 'unchanged-operation' })
+    delete payload.dimanche
+    expect(isValidInitialMealPlan(payload)).toBe(false)
+    expect(isValidInitialMealPlan(Object.fromEntries(Array.from({ length: 7 }, (_, i) => [`day-${i}`, { meals: [{}] }])))).toBe(false)
   })
 })
