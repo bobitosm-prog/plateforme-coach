@@ -62,3 +62,26 @@ The application sanitizes its uploads, but owner-authenticated direct Storage AP
 Unrelated existing Supabase advisor warnings (privileged functions, leaked-password protection) and dependency audit findings are not resolved by this scoped release. See [Supabase security advisors](https://supabase.com/docs/guides/database/database-linter) for remediation guidance.
 
 Sanitizer behavior follows [Sharp output metadata defaults](https://sharp.pixelplumbing.com/api-output/) and [input pixel limits](https://sharp.pixelplumbing.com/api-constructor/). Supabase guidance drove restrictive RLS boundaries and retention of session-scoped Storage operations.
+
+## Exclusive server ingestion — follow-up
+
+Task/scope: close direct avatar and progression-photo writes without breaking reads, authorized deletion or unrelated media. Preserve current server upload authentication, bounded decoding and per-user rate limit. Historical metadata cleanup is a separate operation, not a reason to delete unreferenced files automatically.
+
+`writeTrustedPhoto` is server-only and exposes only one narrow operation. It receives the identity verified by `auth.getUser`, checks UUID and bucket allowlist, sanitizes bytes inside its own boundary, generates a fresh path and uses a non-persistent privileged client to insert that image. It cannot accept a caller-chosen path, overwrite, raw metadata, user token or Storage operation. The privileged key never reaches browsers/responses. No session-client fallback if the key is missing. Writes have a 10-second network timeout; cache TTL is 60 seconds for new objects. Existing per-instance rate limiting is unchanged.
+
+`20260919150432_server_only_photo_ingestion.sql` adds restrictive INSERT and UPDATE policies for ordinary roles on avatars/progress-photos. This blocks direct uploads, replacements/upserts, copies into either bucket, moves and new signed-upload authorizations regardless of permissive policies. Only trusted bypass-RLS server credentials can write. Owner SELECT/DELETE and unrelated bucket rules remain unchanged. Existing signed-upload tokens may remain usable until expiry (normally two hours); no global key rotation is included. See [signed-upload validity](https://supabase.com/docs/reference/javascript/file-buckets-createsigneduploadurl).
+
+### Validation 4/4 and rollout order
+
+1. Runtime writer tests: verified identity/path, metadata-free bytes, missing credential fails closed, no session fallback, caller-supplied owner/path ignored, scoped cache settings and generic failures.
+2. Real PostgreSQL: migration twice; owner direct INSERT/upsert/UPDATE/cross-bucket move and anonymous upload denied even with an added broad policy; trusted write/update, owner read/delete and unrelated bucket preserved.
+3. Regression: complete unit suite, types, scoped lint, i18n, synthetic DB/restore and production build, then remote CI/preview.
+4. Deploy the server writer first; verify deployment and anonymous rejection. Only then apply the restrictive migration in production. Do not roll back to the old session-writer version after activation; fix forward or suspend uploads instead of reopening direct writes. Authenticated hosted upload is a separate release check.
+
+### Historical inventory and maintenance access
+
+Read-only database inventory at preparation time: four avatar objects (two referenced by profile avatar URLs), 45 progression objects (two directly referenced by progress_photos), total approximately 94 MB, including HEIC. Reference counts do not prove that other files are safe to delete. No deletion or rewrite follows automatically from this inventory.
+
+`scripts/audit-photo-metadata.mjs <project-ref>` only reads the two explicit buckets and emits aggregate counts, never keys, paths, image bytes or EXIF values. It refuses a mismatched project and caps per-object size/count/depth. Credentials must be supplied securely as environment variables. The local historical project configuration points to another project; never reuse it or change that unrelated configuration. The production deployment's protected server key was unavailable through `vercel env run` during preparation. Therefore no historical image cleanup has been executed at this stage.
+
+Before historical writes: establish authorized maintenance access without pasting keys in chat; dry-run every format including HEIC; preserve compressed image data, dimensions, orientation and color profile; compare image-content hashes; maintain a private recoverable checkpoint; recheck the exact object/version before each write; re-download and verify; retain references and stop on any mismatch. Do not use the app's 2048px lossy sanitizer for a bulk historical rewrite. Do not silently remove orphaned images. Browser caches/downloaded copies cannot be recalled; [CDN invalidation](https://supabase.com/docs/guides/storage/cdn/smart-cdn) is separate from browser cache expiry.

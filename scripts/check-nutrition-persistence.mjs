@@ -43,6 +43,11 @@ try {
     execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
   }
   console.log('Avatar Storage: three owner paths/upsert, foreign writes/reassignment/anonymous denial, restrictive boundaries passed.')
+  const ingestionMigration=readFileSync(new URL('../supabase/migrations/20260919150432_server_only_photo_ingestion.sql',import.meta.url))
+  for (const input of [ingestionMigration,ingestionMigration,readFileSync(new URL('../tests/integration/photo-ingestion-lockdown.sql',import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Photo ingestion: direct upload/upsert/update/move denied; trusted writes, owner reads/deletion and other buckets preserved.')
   const guardFixture = readFileSync(new URL('../supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql', import.meta.url))
   const triggerMigration = readFileSync(new URL('../supabase/migrations/20260919130017_harden_profile_trigger_search_paths.sql', import.meta.url))
   for (const input of [guardFixture, triggerMigration, triggerMigration,
