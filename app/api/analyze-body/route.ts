@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
+import { fetchOwnProgressPhoto, safePhotoError } from '@/lib/photos/secure-progress-photo'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -27,21 +28,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
 
     const { photoFrontUrl, photoBackUrl, photoSideUrl, weight, height } = await req.json()
     if (!photoFrontUrl || !photoBackUrl || !photoSideUrl) {
       return NextResponse.json({ error: '3 photos requises (face, dos, profil)' }, { status: 400 })
     }
 
-    const fetchImage = async (url: string) => {
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const buffer = await res.arrayBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
-      const mediaType = (res.headers.get('content-type') || 'image/jpeg').split(';')[0].trim()
-      return { base64, mediaType }
-    }
+    const fetchImage = (url: unknown) => fetchOwnProgressPhoto(supabase,user.id,url,req.signal)
 
     const [front, back, side] = await Promise.all([
       fetchImage(photoFrontUrl),
@@ -54,6 +48,7 @@ export async function POST(req: NextRequest) {
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
@@ -93,24 +88,23 @@ export async function POST(req: NextRequest) {
     })
 
     if (!response.ok) {
-      const err = await response.text()
-      console.error('[analyze-body] Claude API error:', response.status, err)
-      return NextResponse.json({ error: `Erreur IA (${response.status}): ${err.slice(0, 200)}` }, { status: response.status })
+      console.warn('[analyze-body] provider_failed', response.status)
+      return NextResponse.json({ error: 'Analyse temporairement indisponible' }, { status: 502 })
     }
 
     const data = await response.json()
-    const toolUseBlock = data.content?.find((c: any) => c.type === 'tool_use')
+    const toolUseBlock = data.content?.find((c: { type?: string }) => c.type === 'tool_use')
     if (!toolUseBlock) {
-      console.error('[analyze-body] No tool_use in response:', JSON.stringify(data).slice(0, 500))
+      console.warn('[analyze-body] invalid_provider_format')
       return NextResponse.json({ error: 'Format IA invalide' }, { status: 500 })
     }
 
     const result = unwrapToolInput(toolUseBlock.input)
     if (!await reservation.settle(true)) return quotaUnavailable()
     return NextResponse.json(result)
-  } catch (e: any) {
-    console.error('[analyze-body] Error:', e.message)
-    return NextResponse.json({ error: e.message || 'Erreur interne' }, { status: 500 })
+  } catch (error) {
+    console.warn('[analyze-body] analysis_failed')
+    return safePhotoError(error)
   } finally {
     await reservation.settle(false)
   }

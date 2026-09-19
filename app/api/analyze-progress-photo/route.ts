@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '../../../lib/rate-limit'
 import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
+import { fetchOwnProgressPhoto, safePhotoError } from '@/lib/photos/secure-progress-photo'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -26,38 +27,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-    if (!apiKey) return NextResponse.json({ error: 'API key manquante' }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
 
     const body = await req.json()
     const { photoUrl, profileData, previousPhotoUrl, mode, photoFrontUrl, photoBackUrl, photoSideUrl } = body
 
-    // Fetch photo as base64 with detailed error handling
-    const fetchImage = async (url: string): Promise<{ base64: string; mediaType: string }> => {
-      let res: Response
-      try {
-        res = await fetch(url)
-      } catch (fetchErr: any) {
-        console.error('[analyze-progress-photo] Fetch image failed:', fetchErr.message, 'URL:', url.slice(0, 120))
-        throw new Error(`Impossible de télécharger l'image: ${fetchErr.message}`)
-      }
-
-      if (!res.ok) {
-        console.error('[analyze-progress-photo] Image fetch HTTP error:', res.status, res.statusText, 'URL:', url.slice(0, 120))
-        throw new Error(`Erreur HTTP ${res.status} lors du téléchargement de l'image`)
-      }
-
-      const buffer = await res.arrayBuffer()
-      if (buffer.byteLength === 0) {
-        console.error('[analyze-progress-photo] Empty image buffer')
-        throw new Error('Image vide reçue')
-      }
-
-      const base64 = Buffer.from(buffer).toString('base64')
-      const contentType = res.headers.get('content-type') || 'image/jpeg'
-      const mediaType = contentType.split(';')[0].trim()
-
-      return { base64, mediaType }
-    }
+    const fetchImage = (url: unknown) => fetchOwnProgressPhoto(supabase,user.id,url,req.signal)
 
     // ── Assessment mode (3 photos) ──
     if (mode === 'assessment') {
@@ -128,6 +103,7 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
 
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
+        signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -142,8 +118,8 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
       })
 
       if (!res.ok) {
-        const err = await res.text()
-        return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+        console.warn('[analyze-progress-photo] provider_failed',res.status)
+        return NextResponse.json({ error: 'Analyse temporairement indisponible' }, { status: 502 })
       }
 
       const data = await res.json()
@@ -160,8 +136,8 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
     let mainImage: { base64: string; mediaType: string }
     try {
       mainImage = await fetchImage(photoUrl)
-    } catch (imgErr: any) {
-      return NextResponse.json({ error: imgErr.message }, { status: 500 })
+    } catch (error) {
+      return safePhotoError(error)
     }
 
     // ── System prompt ──
@@ -288,15 +264,17 @@ Donne une analyse structurée en 5 parties :
 Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
 
     // ── Build content array ──
-    let content: any[]
+    let content: Array<{ type: 'text'; text: string } | {
+      type: 'image'; source: { type: 'base64'; media_type: string; data: string }
+    }>
 
     if (previousPhotoUrl) {
-      let prevImage: { base64: string; mediaType: string }
+      let prevImage: { base64: string; mediaType: string } | null
       try {
         prevImage = await fetchImage(previousPhotoUrl)
-      } catch (imgErr: any) {
-        console.error('[analyze-progress-photo] Previous photo fetch failed, continuing without comparison')
-        prevImage = null as any
+      } catch {
+        console.warn('[analyze-progress-photo] previous_photo_unavailable')
+        prevImage = null
       }
 
       if (prevImage) {
@@ -320,6 +298,7 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
@@ -334,9 +313,8 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error('[analyze-progress-photo] Claude API error:', res.status, err.slice(0, 300))
-      return NextResponse.json({ error: `Erreur IA (${res.status})` }, { status: res.status })
+      console.warn('[analyze-progress-photo] provider_failed',res.status)
+      return NextResponse.json({ error: 'Analyse temporairement indisponible' }, { status: 502 })
     }
 
     const data = await res.json()
@@ -346,9 +324,8 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
 
     return NextResponse.json({ analysis })
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Erreur inattendue'
-    console.error('[analyze-progress-photo] Unhandled error:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.warn('[analyze-progress-photo] analysis_failed')
+    return safePhotoError(e)
   } finally {
     await reservation.settle(false)
   }
