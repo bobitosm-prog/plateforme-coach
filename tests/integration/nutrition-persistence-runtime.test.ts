@@ -7,6 +7,8 @@ import { getProfile, updateProfile } from '@/lib/profile-service'
 import { getNutritionPreferencesInitialState } from '@/lib/nutrition/preferences-initial-state'
 import { parseMealPlan } from '@/lib/meal-plan'
 import { getNutritionPlanConsistency } from '@/lib/nutrition/plan-context'
+import { loadActivationSnapshot } from '@/lib/meal-plan/activation-snapshot'
+import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
@@ -47,6 +49,12 @@ const day = () => ({ repas: {
   diner: [entry('Lentilles cuites', 300), entry("Huile d'olive", 10)],
 } })
 async function generate(overrides: Record<string, unknown> = {}) {
+  const profileClient = state.client!.schema('public')
+  const existing = await profileClient.from('profiles').select('id').eq('id', state.userId).maybeSingle()
+  if (!existing.data) {
+    const inserted = await profileClient.from('profiles').insert({ id: state.userId, calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52 })
+    expect(inserted.error).toBeNull()
+  }
   const response = await POST(new Request(`${url}/api/generate-meal-plan`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52, persist_generated_plan: true, ...overrides }),
@@ -101,6 +109,22 @@ describe('real isolated preference persistence', () => {
 })
 
 describe.each(['public', 'canonical'])('real isolated persistence (%s schema)', schema => {
+  it('rejects one of two concurrent activations from the same snapshot', async () => {
+    state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
+    const generated = await generate()
+    const plan = generated.events.at(-1).plan
+    const snapshot = await loadActivationSnapshot(state.client, state.userId)
+    expect(snapshot).not.toBeNull()
+    const results = await Promise.all([
+      replacePersonalMealPlan(state.client, state.userId, plan, snapshot!),
+      replacePersonalMealPlan(clientFor(state.userId, schema), state.userId, plan, { ...snapshot!, operationId: randomUUID() }),
+    ])
+    expect(results.filter(result => result.ok)).toHaveLength(1)
+    expect(results.filter(result => !result.ok)).toEqual([{ ok: false, stage: 'conflict' }])
+    const activeKey = schema === 'public' ? 'is_active' : 'active'
+    const rows = await state.client.from('meal_plans').select('*').eq(activeKey, true)
+    expect(rows.data).toHaveLength(1)
+  })
   it('generates seven days, replaces the plan and reloads exactly the persisted result', async () => {
     state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
     const first = await generate()

@@ -1,16 +1,34 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { ActivationSnapshot } from './activation-snapshot'
+import { ACTIVATION_CONTEXT_KEY, activationSnapshotSchema } from './activation-snapshot'
 
 import { isMissingPersonalMealPlanColumn, type PersonalMealPlanSchema } from './personal-plan-repository'
 
 export type PersonalMealPlanReplacement =
   | { ok: true; id: string }
-  | { ok: false; stage: 'insert' }
+  | { ok: false; stage: 'insert' | 'conflict' | 'activation' }
 
 export async function replacePersonalMealPlan(
   supabase: SupabaseClient,
   userId: string,
   plan: unknown,
+  snapshot?: ActivationSnapshot,
 ): Promise<PersonalMealPlanReplacement> {
+  if (!snapshot && plan && typeof plan === 'object' && ACTIVATION_CONTEXT_KEY in plan) {
+    const parsed = activationSnapshotSchema.safeParse((plan as Record<string, unknown>)[ACTIVATION_CONTEXT_KEY])
+    if (!parsed.success) return { ok: false, stage: 'activation' }
+    snapshot = parsed.data
+  }
+  if (snapshot) {
+    // No legacy fallback: an unavailable transaction must fail closed.
+    const { data, error } = await supabase.rpc('activate_personal_meal_plan_v1', {
+      p_operation_id: snapshot.operationId, p_plan: plan,
+      p_expected_profile_updated_at: snapshot.profileUpdatedAt,
+      p_expected_active_plan_id: snapshot.activePlanId,
+    })
+    if (error || typeof data !== 'string') return { ok: false, stage: error?.code === 'PT409' ? 'conflict' : 'activation' }
+    return { ok: true, id: data }
+  }
   const insertForSchema = (schema: PersonalMealPlanSchema) => supabase
     .from('meal_plans')
     .insert(schema === 'legacy'

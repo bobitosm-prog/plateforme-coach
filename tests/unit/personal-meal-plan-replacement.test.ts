@@ -43,6 +43,22 @@ function replacementClient({ insertError = false, legacyMissing = false, deactiv
 }
 
 describe('replacePersonalMealPlan', () => {
+  it('uses the generation snapshot for deferred client activation without direct writes', async () => {
+    const context = { profileUpdatedAt: '2026-01-01T00:00:00.000Z', activePlanId: null, operationId: '00000000-0000-4000-8000-000000000031' }
+    const rpc = vi.fn().mockResolvedValue({ data: context.operationId, error: null })
+    const from = vi.fn()
+    const plan = { _activation_context: context }
+    expect(await replacePersonalMealPlan({ rpc, from } as never, 'owner', plan)).toEqual({ ok: true, id: context.operationId })
+    expect(rpc).toHaveBeenCalledWith('activate_personal_meal_plan_v1', {
+      p_operation_id: context.operationId, p_plan: plan, p_expected_active_plan_id: null, p_expected_profile_updated_at: context.profileUpdatedAt,
+    })
+    expect(from).not.toHaveBeenCalled()
+  })
+  it('never falls back to nontransactional writes for invalid activation metadata', async () => {
+    const from = vi.fn()
+    expect(await replacePersonalMealPlan({ from } as never, 'owner', { _activation_context: {} })).toEqual({ ok: false, stage: 'activation' })
+    expect(from).not.toHaveBeenCalled()
+  })
   it('persists the replacement before deactivating the previous plan', async () => {
     const { client, events, insertPayloads, updatePayloads } = replacementClient()
     await expect(replacePersonalMealPlan(client as never, 'user-1', { lundi: {} }))
