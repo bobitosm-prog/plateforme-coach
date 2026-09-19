@@ -32,6 +32,12 @@ try {
     stdio: ['pipe', 'pipe', 'pipe'],
   })
   stage = 'profile trigger security'
+  const photoMigration = readFileSync(new URL('../supabase/migrations/20260919133822_private_progress_photos.sql', import.meta.url))
+  for (const input of [readFileSync(new URL('../tests/integration/photo-storage-fixture.sql', import.meta.url)),
+    photoMigration, photoMigration, readFileSync(new URL('../tests/integration/photo-storage-security.sql', import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Photo Storage: private bucket, owner/active-coach reads, former-coach/anonymous denial and scoped deletion passed.')
   const guardFixture = readFileSync(new URL('../supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql', import.meta.url))
   const triggerMigration = readFileSync(new URL('../supabase/migrations/20260919130017_harden_profile_trigger_search_paths.sql', import.meta.url))
   for (const input of [guardFixture, triggerMigration, triggerMigration,
@@ -99,7 +105,8 @@ try {
     const fingerprint = `select md5(jsonb_build_object(
       'profiles',(select jsonb_agg(to_jsonb(p) order by id) from public.profiles p),
       'plans',(select jsonb_agg(to_jsonb(p) order by id) from public.meal_plans p),
-      'policies',(select jsonb_agg(to_jsonb(p) order by tablename,policyname) from pg_policies p where schemaname in ('public','canonical')),
+      'policies',(select jsonb_agg(to_jsonb(p) order by schemaname,tablename,policyname) from pg_policies p where schemaname in ('public','canonical','storage')),
+      'buckets',(select jsonb_agg(to_jsonb(b) order by id) from storage.buckets b),
       'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure),
       'role_lookup',pg_get_functiondef('public.get_my_role()'::regprocedure),
       'profile_guard',pg_get_functiondef('public.guard_profile_sensitive_columns()'::regprocedure),
