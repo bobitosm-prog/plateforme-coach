@@ -1,4 +1,5 @@
 'use client'
+import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { createBrowserClient } from '@supabase/ssr'
 import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
@@ -676,13 +677,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file || !session?.user?.id) return
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
-      const path = `${session.user.id}/avatar.${ext}`
-      // Remove old avatar first (ignore errors)
-      await supabase.storage.from('avatars').remove([path]).catch(() => {})
-      // Upload new avatar
-      const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
-      if (uploadErr) { toast.error('Erreur upload: ' + uploadErr.message); return }
+      const path = await uploadPhoto(file, 'avatars')
       // Get public URL
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       // Update profile
@@ -698,11 +693,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   async function uploadProgressPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return
     setPhotoUploading(true)
-    const path = `${session.user.id}/${Date.now()}.${file.name.split('.').pop()}`
-    const { error: uploadError } = await supabase.storage.from('progress-photos').upload(path, file)
-    if (uploadError) { toast.error("Erreur lors de l'upload"); setPhotoUploading(false); return }
-    await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: path, view_type: 'front' })
-    toast.success('Photo ajoutée !'); setPhotoUploading(false); fetchAll(true)
+    try {
+      const path = await uploadPhoto(file, 'progress-photos')
+      const {error} = await supabase.from('progress_photos').insert({ user_id: session.user.id, photo_url: path, view_type: 'front' })
+      if (error) throw new Error('Enregistrement de la photo impossible.')
+      toast.success('Photo ajoutée !'); fetchAll(true)
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Erreur lors de l'envoi") }
+    finally { setPhotoUploading(false) }
   }
 
   async function deletePhoto(photo: any) {

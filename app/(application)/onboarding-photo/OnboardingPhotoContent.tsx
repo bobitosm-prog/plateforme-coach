@@ -1,4 +1,5 @@
 'use client'
+import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +18,7 @@ export default function OnboardingPhotoContent() {
   const [userId, setUserId] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>('upload')
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoPath, setPhotoPath] = useState<string | null>(null)
   const [analysisText, setAnalysisText] = useState('')
@@ -55,11 +57,16 @@ export default function OnboardingPhotoContent() {
   const handleFile = useCallback(async (file: File) => {
     if (!userId || !file) return
     setUploading(true)
-    const ext = file.name.split('.').pop() || 'jpg'
-    const path = `${userId}/${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('progress-photos').upload(path, file)
-    if (upErr) { setUploading(false); return }
-    await supabase.from('progress_photos').insert({ user_id: userId, photo_url: path, view_type: 'front' })
+    setUploadError(null)
+    let path: string
+    try {
+      path = await uploadPhoto(file, 'progress-photos')
+      const {error} = await supabase.from('progress_photos').insert({ user_id: userId, photo_url: path, view_type: 'front' })
+      if (error) throw error
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : t('results.analysisError'))
+      setUploading(false); return
+    }
     const { data: signed } = await supabase.storage.from('progress-photos').createSignedUrl(path, 3600)
     const signedUrl = signed?.signedUrl || ''
     setPhotoUrl(signedUrl)
@@ -187,6 +194,7 @@ export default function OnboardingPhotoContent() {
         <div style={{ flex: 1, maxWidth: 480, margin: '0 auto', padding: '40px 20px 0', width: '100%' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <h1 style={{ ...pageTitleStyle, fontSize: 32, letterSpacing: '0.08em', marginBottom: 12, lineHeight: 1 }}>{t('upload.title')}</h1>
+            {uploadError && <p role="alert">{uploadError}</p>}
             <p style={{ ...bodyStyle, fontSize: 15, lineHeight: 1.6, marginBottom: 36 }}>{t('upload.subtitle')}</p>
             <div ref={dragRef} onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onDrop={onDrop} onClick={() => fileRef.current?.click()}
               style={{ border: `2px dashed ${dragOver ? colors.gold : colors.goldRule}`, borderRadius: 20, padding: '40px 24px', textAlign: 'center', background: dragOver ? colors.goldDim : colors.surface, cursor: 'pointer', transition: 'all 0.2s' }}>

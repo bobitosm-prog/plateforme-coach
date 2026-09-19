@@ -1,4 +1,5 @@
 'use client'
+import { uploadPhoto } from '@/lib/photos/upload-photo'
 
 import { createBrowserClient } from '@supabase/ssr'
 import { Camera, Check, ChevronLeft, CreditCard } from 'lucide-react'
@@ -161,9 +162,7 @@ export default function OnboardingCoachContent() {
     if (!userId) return
     setAvatarUploading(true); setError(null)
     try {
-      const path = `avatars/${userId}.${file.name.split('.').pop() || 'jpg'}`
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-      if (uploadError) throw uploadError
+      const path = await uploadPhoto(file, 'avatars')
       const publicUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
       if (!await update({ avatar_url: publicUrl }, step)) throw new Error('avatar-save')
       setAvatarUrl(publicUrl)

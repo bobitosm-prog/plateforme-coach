@@ -1,11 +1,12 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest'
+import sharp from 'sharp'
 vi.mock('server-only',()=>({}))
 import {fetchOwnProgressPhoto,ownProgressPhotoPath,safePhotoError} from '@/lib/photos/secure-progress-photo'
 const origin='https://synthetic.supabase.co', user='00000000-0000-4000-8000-000000000001'
 const base=`${origin}/storage/v1/object/sign/progress-photos/${user}/photo.jpg`
 const sign=vi.fn()
 const db={storage:{from:()=>({createSignedUrl:sign})}} as never
-const jpeg=new Uint8Array([255,216,255,217])
+const jpeg=new Uint8Array(await sharp({create:{width:2,height:2,channels:3,background:'#ffffff'}}).jpeg().toBuffer())
 beforeEach(()=>{
  vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL',origin)
  sign.mockReset().mockResolvedValue({data:{signedUrl:base+'?token=fresh-server'}})

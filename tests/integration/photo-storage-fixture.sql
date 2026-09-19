@@ -14,7 +14,7 @@ CREATE FUNCTION public.is_active_coach_client_relation(coach_uuid uuid,client_uu
    AND r.status='active' AND r.source IN ('invitation','admin'))
 $$;
 GRANT USAGE ON SCHEMA storage,auth TO authenticated,anon;
-GRANT SELECT,INSERT,DELETE ON storage.objects TO authenticated,anon;
+GRANT SELECT,INSERT,UPDATE,DELETE ON storage.objects TO authenticated,anon;
 CREATE POLICY "clients can read progress photos" ON storage.objects FOR SELECT TO authenticated USING(bucket_id='progress-photos');
 CREATE POLICY "clients can upload progress photos" ON storage.objects FOR INSERT TO authenticated
  WITH CHECK(bucket_id='progress-photos' AND (storage.foldername(name))[1]=auth.uid()::text);

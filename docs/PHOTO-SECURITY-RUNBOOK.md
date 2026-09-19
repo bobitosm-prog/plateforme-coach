@@ -4,7 +4,7 @@
 
 Production progress-photos was public and its SELECT policy admitted every authenticated account. Staging already had an owner/active-coach policy and a private bucket; it was not representative of production. Before changing production, aggregate checks found no files outside UUID folders and no progress_photos records pointing to another owner's folder or absolute URLs. No image bodies were read for this audit.
 
-The protected scope is progression/body photos in progress-photos, their two AI analysis routes, and the desktop photo view. Avatars, message media, meal-photo data URLs and the scientific quality of visual assessments are separate workstreams.
+The initial scope is progression/body photos in progress-photos, their two AI analysis routes, and the desktop photo view. The avatar/metadata extension below adds avatars and upload sanitization. Message media, meal-photo data URLs and the scientific quality of visual assessments remain separate workstreams.
 
 ## Guarantees
 
@@ -26,6 +26,39 @@ Do not reopen the bucket to roll back an application problem. Restore a signed-l
 
 Changing permissions cannot recall copies already downloaded. Existing bearer signed URLs can remain valid until expiry, and CDN/browser caches require separate consideration. No key rotation, object renaming or purge is performed here; assess their need separately without claiming historical confidentiality has been restored retroactively.
 
-EXIF stripping, full decoding/re-encoding, upload-time type/size limits and signed-link renewal/revocation across existing UI views remain follow-ups. Existing unrelated avatar write policies need review. An authenticated hosted end-to-end upload/view/analysis test is still separate from synthetic tests and public smoke checks.
+Signed-link renewal/revocation across existing UI views remains a follow-up. An authenticated hosted end-to-end upload/view/analysis test is still separate from synthetic tests and public smoke checks.
 
 Guidance: [Storage buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals), [Storage access control](https://supabase.com/docs/guides/storage/security/access-control). The Supabase guides informed preservation of session-based RLS and existing active-coach authorization rather than introducing privileged image reads.
+
+## Avatar and metadata extension — 2026-09-19
+
+### Field audit and scope
+
+Production had bucket-wide authenticated avatar INSERT/UPDATE/DELETE permissions; staging already had narrower RC1 rules. Aggregate production inspection found four avatar objects, all in the three supported historical layouts. No original avatar or progression-photo body was downloaded. Preserve public avatar display; avatar confidentiality is not claimed.
+
+Task: restrict avatar writes to the path owner, retain historical path compatibility and sanitize new app uploads and progression/body AI payloads. No bulk historical rewrite, unrelated bucket policy changes or privileged upload client.
+
+### Implementation and expected behavior
+
+- `20260919140110_avatar_owner_write_boundaries.sql` drops six known legacy write policies, adds owner-specific INSERT/UPDATE/DELETE and restrictive boundaries for all ordinary database roles. UPDATE checks both old and new rows. Existing SELECT policies and bucket visibility are unchanged. Paths `<uid>/...`, `avatars/<uid>/...`, `avatars/<uid>.<extension>` remain usable. The migration is idempotent and does not modify stored files.
+- `/api/photos/upload`: verified session identity, existing per-instance user-keyed rate limiter (10/minute), bucket allowlist, streamed binary input capped at 4,000,000 bytes, read deadline 10 seconds/cancellation, generic errors. Session/RLS Storage client only, fresh random `.jpg` path, no client-supplied destination path, no deletion of an old working avatar.
+- Sharp 0.34.5 is a pinned production dependency. Decode JPEG/PNG/WebP/GIF (first frame), reject corrupt/unhandled formats, cap at 40 million input pixels, apply EXIF orientation, fit within 2048×2048 without enlargement, flatten transparency onto white, JPEG quality 88. Eight-second processing timeout. No metadata-retaining methods. EXIF/GPS/XMP/IPTC/camera information is omitted from output.
+- All avatar/progression upload sites in dashboard, coach onboarding, client onboarding-v2 and onboarding-photo use this endpoint, without raw-upload fallback. Existing AI analysis downloads are also re-encoded before sending bytes to the provider, including old stored images, without rewriting the stored original.
+- 4 MB raw-upload limit stays below the hosting function request ceiling. HEIC/HEIF and larger originals require conversion/reduction before upload; do not claim native support. Errors remain visible; no false saved-photo success after a failed database insert.
+
+### Validations 4/4
+
+1. Authorization: real disposable PostgreSQL tests for all three owner paths and upsert; foreign writes/deletes, reassignment, traversal and anonymous writes refused even with an extra broad permissive policy. Migration applied twice.
+2. Metadata runtime: real Sharp decoding tests for supported formats, synthetic camera/GPS/XMP removal, orientation preservation, malformed files and decompression bounds.
+3. Endpoint runtime: verified identity, sanitized Storage payload, rate limiting, bad destination, oversized declared/actual bodies, cancellation and generic Storage errors. Storage HTTP itself is mocked here; no live personal-file upload.
+4. Regression/release: full unit suite, 17 PostgreSQL/PostgREST tests and backup/restore fingerprint, types, i18n parity, scoped lint and synthetic-environment production build; then remote CI, preview and production anonymous smoke checks.
+
+### Rollout and remaining boundaries
+
+Apply and verify staging first; then merge only after CI and preview succeed, apply compatible RLS migration to production, confirm deployment identity and `/api/photos/upload` anonymous 401. Roll back application code without restoring broad avatar permissions. Existing URLs/files are not deleted or rewritten.
+
+The application sanitizes its uploads, but owner-authenticated direct Storage API writes still exist for compatibility. RLS enforces ownership, not image content. Enforcing sanitization against an intentional direct-API bypass requires a separately planned exclusive ingestion gateway and coordinated removal of direct write permissions. The current in-memory limiter is per instance, not a global distributed quota. Historical originals, cached copies and already-downloaded avatars may retain metadata. Random replacement paths leave old/orphaned files for a future audited retention/cleanup job; no mass deletion is included here.
+
+Unrelated existing Supabase advisor warnings (privileged functions, leaked-password protection) and dependency audit findings are not resolved by this scoped release. See [Supabase security advisors](https://supabase.com/docs/guides/database/database-linter) for remediation guidance.
+
+Sanitizer behavior follows [Sharp output metadata defaults](https://sharp.pixelplumbing.com/api-output/) and [input pixel limits](https://sharp.pixelplumbing.com/api-constructor/). Supabase guidance drove restrictive RLS boundaries and retention of session-scoped Storage operations.
