@@ -11,12 +11,14 @@ import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { buildAthenaScientificPolicyPrompt } from '../athena/scientific-policy'
 import { validateAthenaWeeklyOutput } from '../athena/weekly-output'
 import { normalizeNutritionObjective } from '../nutrition/calorie-macro-targets'
+import { readWeeklyCompletion } from './completion'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
   diagnostic?: any
   already_exists?: boolean
   error?: string
+  blocked?: boolean
 }
 
 export async function generateWeeklyDiagnostic(
@@ -27,61 +29,24 @@ export async function generateWeeklyDiagnostic(
   if (!apiKey) return { error: 'Diagnostic temporairement indisponible' }
 
   try {
-    // 1. WEEK BOUNDARIES — calcul en TZ Europe/Zurich (lundi 00:00 → dimanche 23:59)
-    // Fix bug : les anciens calculs getDay()/setHours() + toISOString() ramenaient au dimanche
-    // car minuit local en TZ positive = 22h/23h UTC du jour précédent.
-    const now = new Date()
-
-    // Extraire les composants calendaires en TZ Geneva (gère été/hiver automatiquement)
-    const tzFmt = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Europe/Zurich',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      weekday: 'short',
-    })
-    const tzParts = tzFmt.formatToParts(now)
-    const tzYear = parseInt(tzParts.find(p => p.type === 'year')!.value)
-    const tzMonth = parseInt(tzParts.find(p => p.type === 'month')!.value)
-    const tzDay = parseInt(tzParts.find(p => p.type === 'day')!.value)
-    const tzWeekday = tzParts.find(p => p.type === 'weekday')!.value
-    const weekdayMap: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 }
-    const dayOfWeek = weekdayMap[tzWeekday]
-    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-
-    // weekStartStr : string YYYY-MM-DD du lundi Geneva (pour colonne `date`)
-    const monday = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay))
-    monday.setUTCDate(monday.getUTCDate() - daysSinceMonday)
-    // Reculer d'1 semaine : cron quotidien individualisé → toujours analyser
-    // la dernière semaine complète lundi→dimanche révolue, pas la courante.
-    monday.setUTCDate(monday.getUTCDate() - 7)
-    const weekStartStr = monday.toISOString().slice(0, 10)
-
-    // weekStart : instant absolu du lundi 00:00 Geneva (pour filter completed_at timestamptz)
-    const offsetFmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Europe/Zurich',
-      timeZoneName: 'longOffset',
-    })
-    const offsetStr = offsetFmt.formatToParts(now).find(p => p.type === 'timeZoneName')!.value
-    const offsetMatch = offsetStr.match(/GMT([+-]\d{2}:\d{2})/)
-    const offset = offsetMatch ? offsetMatch[1] : '+00:00'
-    const weekStart = new Date(`${weekStartStr}T00:00:00.000${offset}`)
-
-    const weekEnd = new Date(weekStart)
-    weekEnd.setUTCDate(weekStart.getUTCDate() + 7)
-    const weekEndStr = weekEnd.toISOString().slice(0, 10)
+    // Sunday becomes eligible only after explicit closure. Cron uses this same gate.
+    const { status: completion, snapshot } = await readWeeklyCompletion(supabase, userId)
+    const weekStartStr = completion.weekStart
+    const weekEndStr = completion.endExclusive
 
     // 2. IDEMPOTENCY
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('weekly_diagnostics')
-      .select('id, score_semaine')
+      .select('*')
       .eq('user_id', userId)
       .eq('week_start', weekStartStr)
       .maybeSingle()
 
+    if (existingError) return { error: 'Diagnostic temporairement indisponible' }
     if (existing) {
-      return { already_exists: true, diagnostic_id: existing.id }
+      return { already_exists: true, diagnostic_id: existing.id, diagnostic: existing }
     }
+    if (!completion.canGenerate) return { blocked: true, error: 'Termine et confirme ta journée du dimanche avant de générer le bilan.' }
 
     // 3. COLLECT DATA (parallel)
     const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
@@ -98,6 +63,7 @@ export async function generateWeeklyDiagnostic(
         .select('date, poids')
         .eq('user_id', userId)
         .gte('date', weekStartStr)
+        .lt('date', weekEndStr)
         .order('date', { ascending: true }),
       supabase.from('workout_sessions')
         .select('id, date, completed')
@@ -114,6 +80,9 @@ export async function generateWeeklyDiagnostic(
         .maybeSingle(),
     ])
 
+    if ([profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes].some(r => r.error)) {
+      return { error: 'Données du bilan temporairement indisponibles. Réessaie.' }
+    }
     const profile = profileRes.data
     if (!profile) return { error: 'Profile introuvable' }
 
@@ -121,12 +90,13 @@ export async function generateWeeklyDiagnostic(
     let trainingVolumeTotal = 0
     if (workoutSessionsRes.data && workoutSessionsRes.data.length > 0) {
       const sessionIds = workoutSessionsRes.data.map((s: any) => s.id)
-      const { data: sets } = await supabase
+      const { data: sets, error: setsError } = await supabase
         .from('workout_sets')
         .select('weight, reps, completed')
         .in('session_id', sessionIds)
         .eq('completed', true)
 
+      if (setsError) return { error: 'Données des séances temporairement indisponibles' }
       if (sets) {
         trainingVolumeTotal = sets.reduce((sum: number, s: any) =>
           sum + ((s.weight || 0) * (s.reps || 0)), 0)
@@ -310,6 +280,11 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
     })
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 
+    // Do not publish a report if Sunday changed while the provider was working.
+    const latestCompletion = await readWeeklyCompletion(supabase, userId)
+    if (latestCompletion.status.weekStart !== weekStartStr || !latestCompletion.status.confirmed || latestCompletion.snapshot !== snapshot) {
+      return { blocked: true, error: 'Les données du dimanche ont changé. Confirme à nouveau la journée.' }
+    }
     // 9. PERSIST
     const { data: saved, error: insertErr } = await supabase
       .from('weekly_diagnostics')
@@ -343,8 +318,10 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
       return { error: 'Erreur sauvegarde' }
     }
 
-    // Schedule next diagnostic in 7 days (Architecture B: strict per-user rhythm)
-    const nextDiagAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    // A late Monday confirmation must not postpone the following Sunday review.
+    const nextSunday = new Date(`${completion.sunday}T00:00:00Z`)
+    nextSunday.setUTCDate(nextSunday.getUTCDate() + 7)
+    const nextDiagAt = nextSunday.toISOString()
     const { error: nextErr } = await supabase
       .from('profiles')
       .update({ next_diagnostic_at: nextDiagAt })

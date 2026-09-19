@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
 import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
 import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
+import { confirmWeeklyCompletion, readWeeklyCompletion } from '@/lib/weekly-diagnostic/completion'
 
-export async function POST(req: NextRequest) {
+const requestSchema = z.object({
+  action: z.literal('complete-week').optional(),
+  weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  mealsConfirmed: z.boolean().optional(),
+  skipTraining: z.boolean().optional(),
+})
+
+async function handle(req: NextRequest) {
   // Auth (session user)
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -17,30 +26,44 @@ export async function POST(req: NextRequest) {
 
   // Rate limit
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`diag:${ip}`, 3, 60000)
+  const rl = checkRateLimit(`diag:${user.id}:${ip}:${req.method}`, req.method === 'GET' ? 30 : 6, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
 
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'weekly-diagnostic')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  await logAiUsage(supabase, user.id, 'weekly-diagnostic')
+  try {
+    if (req.method === 'GET') {
+      return NextResponse.json({ completion: (await readWeeklyCompletion(supabase, user.id)).status }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+    const raw = await req.text()
+    let value: unknown
+    try { value = raw ? JSON.parse(raw) : {} } catch { return NextResponse.json({ error: 'Requête invalide' }, { status: 400 }) }
+    const parsed = requestSchema.safeParse(value)
+    if (!parsed.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+    const input = parsed.data
+    if (input.action === 'complete-week') {
+      const result = await confirmWeeklyCompletion(supabase, user.id, input)
+      return NextResponse.json(result, { status: result.status ?? 200 })
+    }
+    const { status: completion } = await readWeeklyCompletion(supabase, user.id)
+    if (!completion.canGenerate && !completion.diagnosticId) return NextResponse.json({ error: 'Confirme ta journée du dimanche.', completion }, { status: 409 })
+    if (!completion.diagnosticId) {
+      const aiRl = await checkAiRateLimit(supabase, user.id, 'weekly-diagnostic', true)
+      if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
+      await logAiUsage(supabase, user.id, 'weekly-diagnostic')
+    }
 
-  // Delegate to generator
-  const result = await generateWeeklyDiagnostic(user.id, supabase)
-
-  if (result.error) {
-    return NextResponse.json({ error: result.error }, { status: 500 })
-  }
-
-  if (result.already_exists) {
+    const result = await generateWeeklyDiagnostic(user.id, supabase)
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: result.blocked ? 409 : 500 })
+    }
     return NextResponse.json({
-      already_exists: true,
+      already_exists: result.already_exists ?? false,
       diagnostic_id: result.diagnostic_id,
-      message: 'Diagnostic déjà généré pour cette semaine',
+      diagnostic: result.diagnostic,
     })
+  } catch {
+    return NextResponse.json({ error: 'Diagnostic temporairement indisponible' }, { status: 503 })
   }
-
-  return NextResponse.json({
-    diagnostic_id: result.diagnostic_id,
-    diagnostic: result.diagnostic,
-  })
 }
+
+export const GET = handle
+export const POST = handle

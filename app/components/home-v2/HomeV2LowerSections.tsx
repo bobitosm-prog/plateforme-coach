@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useId, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
 import { Check, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -42,6 +42,7 @@ export interface HomeV2LowerSectionsHandle {
 }
 
 interface HomeV2LowerSectionsProps {
+  diagnosticControls?: ReactNode
   model: HomeViewModel
   waterToday: number
   waterTarget: number
@@ -84,6 +85,7 @@ function moodIcon(mood: string | null): string | null {
 }
 
 const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSectionsProps>(function HomeV2LowerSections({
+  diagnosticControls,
   model,
   waterToday,
   waterTarget,
@@ -305,7 +307,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
               {diagnostic ? <div className={styles.diagnosticSummary}>
                 <strong>{diagnostic.score_semaine}<small>/100</small></strong>
                 <p><time dateTime={diagnostic.week_start}>{formatDiagnosticWeek(diagnostic.week_start, locale)}</time> · {diagnostic.points_forts?.[0] ?? t('diagnostic.ready')}</p>
-              </div> : <p className={styles.quickCopy} role={diagnosticUnavailable ? 'status' : undefined}>
+              </div> : !diagnosticControls && <p className={styles.quickCopy} role={diagnosticUnavailable ? 'status' : undefined}>
                 {diagnosticUnavailable
                   ? t('diagnostic.unavailable')
                   : diagnosticLoading
@@ -318,7 +320,8 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
             <span className={styles.lowerIcon}><Sparkles size={19} aria-hidden="true" /></span>
           </div>
           {diagnosticGenerationError && <p className={styles.inlineError} role="status">{t('diagnostic.error')}</p>}
-          <button
+          {diagnosticControls}
+          {(diagnostic || !diagnosticControls) && <button
             type="button"
             className={styles.textButton}
             disabled={diagnosticLoading || (!diagnostic && !model.diagnostic.canGenerate)}
@@ -333,7 +336,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
                   ? t('diagnostic.generate')
                   : t('diagnostic.notAvailable')}
             {!diagnosticLoading && (diagnostic || model.diagnostic.canGenerate) && <ChevronRight size={16} aria-hidden="true" />}
-          </button>
+          </button>}
         </article>
 
         {showCoachWeek && <article className={styles.weeklyCard} data-coach-week>

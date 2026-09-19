@@ -24,6 +24,7 @@ export function checkRateLimit(id: string, max: number = 10, windowMs: number = 
 // ── DB-backed rate limiter (Sprint 3 — for expensive AI endpoints) ──
 
 export const AI_RATE_LIMITS: Record<string, number> = {
+  'weekly-diagnostic': 3,
   'generate-custom-program': 5,
   'analyze-progress-photo': 10,
   'generate-meal-plan': 10,

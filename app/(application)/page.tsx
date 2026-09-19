@@ -401,7 +401,8 @@ function CoachAppContent() {
       adherence: homeWeeklyProgress.adherence,
       latestPR: h.personalRecords?.[0] ?? null,
     },
-    diagnostic: { latest: h.latestDiagnostic ?? null, canGenerate: true },
+    // Eligibility is loaded and enforced by WeeklyCompletionControls and the server.
+    diagnostic: { latest: h.latestDiagnostic ?? null, canGenerate: false },
     coach: {
       relationStatus: h.coachRelationStatus,
       coachId: h.coachId ?? null,

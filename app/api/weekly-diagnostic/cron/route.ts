@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       try {
         const result = await generateWeeklyDiagnostic(u.id, supabaseAdmin)
 
-        if (result.already_exists) {
+        if (result.already_exists || result.blocked) {
           results.skipped++
           results.details.push({ user_id: u.id, status: 'skipped' })
         } else if (result.error) {
