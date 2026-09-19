@@ -1,5 +1,6 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { sanitizeImage, ImageValidationError } from './sanitize-image'
 
 export class PhotoAccessError extends Error {
   constructor(public readonly status = 400) { super('Photo unavailable') }
@@ -77,8 +78,10 @@ export async function fetchOwnProgressPhoto(db: SupabaseClient, userId: string, 
     const mediaType=imageType(bytes)
     const declaredType=response.headers.get('content-type')?.split(';')[0].trim().toLowerCase()
     if (!mediaType || declaredType !== mediaType) throw new PhotoAccessError(415)
-    return {base64:bytes.toString('base64'),mediaType}
+    const sanitized = await beforeAbort(sanitizeImage(bytes),signal)
+    return {base64:sanitized.toString('base64'),mediaType:'image/jpeg' as const}
   } catch(error) {
+    if (error instanceof ImageValidationError) throw new PhotoAccessError(error.status)
     if (error instanceof PhotoAccessError) throw error
     throw new PhotoAccessError(422)
   }

@@ -1,4 +1,5 @@
 import { afterEach,beforeEach,describe,expect,it,vi } from 'vitest'
+import sharp from 'sharp'
 import type { NextRequest } from 'next/server'
 const m=vi.hoisted(()=>({ user:vi.fn(),reserve:vi.fn(),settle:vi.fn(),generate:vi.fn(),sign:vi.fn() }))
 vi.mock('server-only',()=>({}))
@@ -18,6 +19,7 @@ const routes=[
  {name:'analyze-progress-photo',post:photo,input:{photoUrl:'https://synthetic.invalid/storage/v1/object/sign/progress-photos/verified-user/photo.jpg'}},
  {name:'generate-custom-program',post:program,input:{objective:'fitness',level:'beginner',daysPerWeek:3,duration:45,equipment:'bodyweight'}},
 ]
+const jpeg=new Uint8Array(await sharp({create:{width:2,height:2,channels:3,background:'#ffffff'}}).jpeg().toBuffer())
 function request(input:unknown){return new Request('http://localhost/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)}) as NextRequest}
 beforeEach(()=>{
  vi.clearAllMocks();vi.stubEnv('ANTHROPIC_API_KEY','synthetic-key')
@@ -28,7 +30,7 @@ beforeEach(()=>{
  m.generate.mockResolvedValue({weeks:[]})
  vi.stubGlobal('fetch',vi.fn(async input=>String(input).includes('api.anthropic.com')
    ? Response.json({content:[{type:'text',text:'Synthetic analysis'},{type:'tool_use',input:{summary:'Synthetic'}}]})
-   : new Response(new Uint8Array([255,216,255,217]),{headers:{'Content-Type':'image/jpeg'}})))
+   : new Response(jpeg,{headers:{'Content-Type':'image/jpeg'}})))
  vi.spyOn(console,'error').mockImplementation(()=>{})
  vi.spyOn(console,'warn').mockImplementation(()=>{})
 })
@@ -43,7 +45,7 @@ describe.each(routes)('$name quota lifecycle',({name,post,input})=>{
    expect(await response.text()).not.toContain('169.254')
    vi.mocked(fetch).mockImplementation(async target=>String(target).includes('api.anthropic.com')
      ? new Response('signed-url-token biometric-private',{status:500})
-     : new Response(new Uint8Array([255,216,255,217]),{headers:{'content-type':'image/jpeg'}}))
+     : new Response(jpeg,{headers:{'content-type':'image/jpeg'}}))
    const failed=await post(request(input))
    expect(failed.status).toBe(502)
    expect(await failed.text()).not.toMatch(/signed-url-token|biometric-private/)
