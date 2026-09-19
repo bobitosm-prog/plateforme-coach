@@ -32,6 +32,13 @@ try {
     stdio: ['pipe', 'pipe', 'pipe'],
   })
   stage = 'atomic activation migration and rollback tests'
+  const roleMigration = readFileSync(new URL('../supabase/migrations/20260919112812_qualify_profile_role_lookup.sql', import.meta.url))
+  for (const input of [roleMigration, roleMigration]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input, stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  }
+  docker('exec', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `BEGIN READ ONLY; SET LOCAL search_path = ''; SELECT public.get_my_role(); ROLLBACK;`)
   const migration = readFileSync(new URL('../supabase/migrations/20260919110605_nutrition_atomic_activation.sql', import.meta.url))
   for (const input of [migration, migration, readFileSync(new URL('../tests/integration/nutrition-activation.sql', import.meta.url))]) {
     execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
@@ -72,7 +79,8 @@ try {
       'profiles',(select jsonb_agg(to_jsonb(p) order by id) from public.profiles p),
       'plans',(select jsonb_agg(to_jsonb(p) order by id) from public.meal_plans p),
       'policies',(select jsonb_agg(to_jsonb(p) order by tablename,policyname) from pg_policies p where schemaname in ('public','canonical')),
-      'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure)
+      'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure),
+      'role_lookup',pg_get_functiondef('public.get_my_role()'::regprocedure)
     )::text)`
     const digest = db => docker('exec', database, 'psql', '-U', 'postgres', '-d', db, '-Atc', fingerprint).trim()
     if (digest('postgres') !== digest('nutrition_restore')) throw new Error('Synthetic restore mismatch')
