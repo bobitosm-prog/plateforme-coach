@@ -9,7 +9,10 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
 $$;
 GRANT USAGE ON SCHEMA public, auth TO authenticated;
 CREATE TABLE public.profiles (
-  id uuid PRIMARY KEY, role text, calorie_goal numeric, protein_goal numeric,
+  id uuid PRIMARY KEY, role text, status text, subscription_type text,
+  subscription_status text, subscription_end_date timestamptz,
+  subscription_price numeric, trial_ends_at timestamptz,
+  calorie_goal numeric, protein_goal numeric,
   carbs_goal numeric, fat_goal numeric, tdee numeric,
   current_weight numeric, height numeric, birth_date date,
   gender text, objective text, activity_level text, meal_preferences jsonb,
@@ -24,6 +27,12 @@ CREATE FUNCTION public.get_my_role() RETURNS text LANGUAGE sql STABLE SECURITY D
 $$;
 CREATE POLICY profiles_select_role ON public.profiles FOR SELECT TO authenticated
   USING (id = auth.uid() OR public.get_my_role() = 'super_admin');
+-- Match the existing production timestamp trigger, before hardening is applied.
+CREATE FUNCTION public.update_profiles_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$;
+CREATE TRIGGER trigger_profiles_updated_at BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.update_profiles_updated_at();
 CREATE TABLE public.meal_plans (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,

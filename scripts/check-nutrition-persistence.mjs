@@ -31,6 +31,16 @@ try {
     input: readFileSync(new URL('../tests/integration/nutrition-persistence-fixture.sql', import.meta.url)),
     stdio: ['pipe', 'pipe', 'pipe'],
   })
+  stage = 'profile trigger security'
+  const guardFixture = readFileSync(new URL('../supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql', import.meta.url))
+  const triggerMigration = readFileSync(new URL('../supabase/migrations/20260919130017_harden_profile_trigger_search_paths.sql', import.meta.url))
+  for (const input of [guardFixture, triggerMigration, triggerMigration,
+    readFileSync(new URL('../tests/integration/profile-trigger-security.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input, stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  }
+  console.log('Profile triggers: seven protected fields, safe nutrition edits and shadow-resistant timestamps passed.')
   stage = 'atomic activation migration and rollback tests'
   const roleMigration = readFileSync(new URL('../supabase/migrations/20260919112812_qualify_profile_role_lookup.sql', import.meta.url))
   for (const input of [roleMigration, roleMigration]) {
@@ -53,6 +63,9 @@ try {
   execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
     input: canonicalMigration, stdio: ['pipe', 'pipe', 'pipe'],
   })
+  // Separate image retrieval from runtime failures; neither command contains credentials.
+  stage = 'postgrest image pull'
+  docker('pull', 'public.ecr.aws/supabase/postgrest:v14.14')
   // Secret is generated per run, passed in process environment, never printed.
   stage = 'rest'
   execFileSync('docker', ['run', '-d', '--name', rest, '--network', network,
@@ -80,7 +93,9 @@ try {
       'plans',(select jsonb_agg(to_jsonb(p) order by id) from public.meal_plans p),
       'policies',(select jsonb_agg(to_jsonb(p) order by tablename,policyname) from pg_policies p where schemaname in ('public','canonical')),
       'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure),
-      'role_lookup',pg_get_functiondef('public.get_my_role()'::regprocedure)
+      'role_lookup',pg_get_functiondef('public.get_my_role()'::regprocedure),
+      'profile_guard',pg_get_functiondef('public.guard_profile_sensitive_columns()'::regprocedure),
+      'profile_timestamp',pg_get_functiondef('public.update_profiles_updated_at()'::regprocedure)
     )::text)`
     const digest = db => docker('exec', database, 'psql', '-U', 'postgres', '-d', db, '-Atc', fingerprint).trim()
     if (digest('postgres') !== digest('nutrition_restore')) throw new Error('Synthetic restore mismatch')
@@ -88,7 +103,9 @@ try {
   }
 } catch (error) {
   console.error(`Isolated nutrition persistence check failed at ${stage}; no production service was used.`)
-  if (stage === 'fixture') console.error(String(error.stderr ?? 'Fixture error'))
+  // Never print the full child-process error: it can contain environment values.
+  // This disposable runner has no production credentials; redact its generated JWT secret too.
+  if (error.stderr) console.error(String(error.stderr).replaceAll(secret, '[REDACTED]'))
   process.exitCode = 1
 } finally {
   for (const name of [rest, database]) if (created.includes(name)) docker('rm', '-f', '-v', name)

@@ -23,6 +23,8 @@ node scripts/check-nutrition-persistence.mjs
 
 The persistence script creates only uniquely named disposable Docker services on loopback. It applies the activation migration twice, checks rollback and permissions, runs concurrent activations through PostgreSQL/PostgREST, dumps the synthetic database and restores it into another database. Data, policy and activation-function fingerprints must match. It removes its containers, volumes and network even after failure. It does not load production credentials or `.env` files.
 
+The fixture also reproduces the existing profile UPDATE triggers. The trigger hardening migration is applied twice. Runtime checks reject changes to all seven protected fields by an authenticated owner, allow calorie edits and trusted backend updates, and verify timestamp integrity even with a caller-controlled `now()` shadow function. Restoration fingerprints include both trigger functions. These tests do not certify every privileged RPC that can update profiles.
+
 Use synthetic Supabase environment values for the local production build. Never place a service-role key in a `NEXT_PUBLIC_*` variable. The GitHub workflow uses placeholders, not production secrets.
 
 ## Rollout order
@@ -32,6 +34,10 @@ Use synthetic Supabase environment values for the local production build. Never 
 3. After local runtime tests, apply the same additive migration to production before the application release. It does not alter existing plan rows or revoke existing table privileges.
 4. Require the PR's test workflow and preview build to succeed. Smoke-test login and anonymous generation (200 and 401 respectively), then deploy the reviewed commit.
 5. Verify the production commit/deployment identity and repeat smoke checks. An authenticated end-to-end test with a synthetic account is a separate release assurance; public smoke tests do not replace it.
+
+### Profile trigger hardening follow-up
+
+Apply `20260919130017_harden_profile_trigger_search_paths.sql` in staging, verify function metadata and advisors, then repeat in production. It only fixes the search path of the two inspected functions; their bodies, owners, execution grants and SECURITY INVOKER behavior are unchanged. It must fail if either expected function is absent rather than silently skipping the protection. Reapplying it is safe. No profile or plan rows are changed. Keep this database fix when rolling back the application. Do not replace either trigger with SECURITY DEFINER: that would bypass the sensitive-column guard based on `current_user`.
 
 ## Application rollback
 
