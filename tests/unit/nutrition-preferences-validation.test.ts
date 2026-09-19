@@ -9,6 +9,27 @@ import NutritionPreferences from '@/app/components/NutritionPreferences'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks() })
 describe('nutrition preferences runtime validation', () => {
+  it('saves and reopens exact legacy goals without changing calories or manual macros', async () => {
+    vi.stubGlobal('React', React)
+    mocks.updateProfile.mockResolvedValue({ data: {}, error: null })
+    const profile = { id: 'synthetic-user', current_weight: 80, height: 180, gender: 'male', birth_date: '1996-01-01', activity_level: 'moderate', objective: 'cut',
+      calorie_goal: 2109, protein_goal: 150, carbs_goal: 230, fat_goal: 65,
+      meal_preferences: { breakfast: ['Banane'], disliked_foods: ['Tomate'], dietary_restrictions: 'existing restriction' },
+    }
+    const props = { userId: 'synthetic-user', supabase: {}, onSaved: vi.fn() }
+    const first = render(React.createElement(NutritionPreferences, { ...props, profile }))
+    fireEvent.click(screen.getByRole('button', { name: /save\.save/ }))
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledOnce())
+    const updates = mocks.updateProfile.mock.calls[0][1]
+    expect(updates).toMatchObject({ calorie_goal: 2109, protein_goal: 150, carbs_goal: 230, fat_goal: 65,
+      meal_preferences: { ...profile.meal_preferences, nutrition_settings: { version: 1, macro_mode: 'manual' } },
+    })
+    first.unmount()
+    render(React.createElement(NutritionPreferences, { ...props, profile: { ...profile, ...updates } }))
+    fireEvent.click(screen.getByRole('button', { name: /save\.save/ }))
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(2))
+    expect(mocks.updateProfile.mock.calls[1][1]).toMatchObject({ calorie_goal: 2109, protein_goal: 150, carbs_goal: 230, fat_goal: 65 })
+  })
   it('renders preparation, completed-day count and saving without declaring success early', async () => {
     vi.stubGlobal('React', React)
     mocks.updateProfile.mockResolvedValue({ data: {}, error: null })
