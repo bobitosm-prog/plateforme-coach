@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { checkRateLimit } from '../../../lib/rate-limit'
+import { reserveHeavyAi } from '@/lib/ai/heavy-reservation'
 import { generateProgram } from '../../../lib/training/generate-program'
 import { loadExerciseCatalog } from '../../../lib/training/load-exercise-catalog'
 import { guardCoachManagedCapabilities } from '../../../lib/api-guard'
@@ -34,11 +35,6 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`custom-prog:${ip}`, 3, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
-  // DB-backed hourly rate limit (Sprint 3)
-  const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-custom-program')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  const aiQ = await checkAiQuota(supabaseAuth, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
   try {
     const parsed = schema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
@@ -60,6 +56,8 @@ export async function POST(req: NextRequest) {
     }
 
     const days = daysPerWeek
+    const reservation = await reserveHeavyAi(userId, 'generate-custom-program')
+    if (!reservation.ok) return reservation.response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -78,7 +76,7 @@ export async function POST(req: NextRequest) {
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
             clientContext: clientContext.prompt,
           }, apiKey, catalog)
-          await logAiUsage(supabaseAuth, user.id, 'generate-custom-program')
+          if (!await reservation.settle(true)) throw new Error('Quota settlement unavailable')
           clearInterval(heartbeat)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', program })}\n\n`))
           controller.close()
@@ -87,6 +85,9 @@ export async function POST(req: NextRequest) {
           console.error('[generate-custom-program] validated generation failed')
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Génération temporairement indisponible' })}\n\n`))
           controller.close()
+        } finally {
+          clearInterval(heartbeat)
+          await reservation.settle(false)
         }
       },
     })

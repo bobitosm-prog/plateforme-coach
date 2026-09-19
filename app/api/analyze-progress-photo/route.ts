@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { checkRateLimit } from '../../../lib/rate-limit'
+import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -20,12 +21,8 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`photo:${ip}`, 3, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
-  // DB-backed hourly rate limit (Sprint 3)
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-progress-photo')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  const aiQ = await checkAiQuota(supabase, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabase, user.id, 'analyze-progress-photo')
+  const reservation = await reserveHeavyAi(user.id, 'analyze-progress-photo')
+  if (!reservation.ok) return reservation.response
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -150,7 +147,9 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
       }
 
       const data = await res.json()
-      const analysis = data.content?.[0]?.text || 'Analyse indisponible.'
+      const analysis = data.content?.[0]?.text
+      if (typeof analysis !== 'string' || !analysis.trim()) return NextResponse.json({ error: 'Format IA invalide' }, { status: 502 })
+      if (!await reservation.settle(true)) return quotaUnavailable()
       return NextResponse.json({ analysis })
     }
 
@@ -341,12 +340,16 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
     }
 
     const data = await res.json()
-    const analysis = data.content?.[0]?.text || 'Impossible de générer l\'analyse.'
+    const analysis = data.content?.[0]?.text
+    if (typeof analysis !== 'string' || !analysis.trim()) return NextResponse.json({ error: 'Format IA invalide' }, { status: 502 })
+    if (!await reservation.settle(true)) return quotaUnavailable()
 
     return NextResponse.json({ analysis })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Erreur inattendue'
     console.error('[analyze-progress-photo] Unhandled error:', message)
     return NextResponse.json({ error: message }, { status: 500 })
+  } finally {
+    await reservation.settle(false)
   }
 }

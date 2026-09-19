@@ -17,6 +17,7 @@ vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => state.client }))
 vi.mock('@/lib/api-guard', () => ({ guardCoachManagedCapabilities: async () => null }))
 vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext: async () => ({ ok: true, prompt: 'Synthetic integration profile' }) }))
+vi.mock('@/lib/ai/heavy-reservation', () => ({ reserveHeavyAi: async () => ({ ok: true, settle: async () => true }) }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: () => ({ allowed: true }), checkAiRateLimit: async () => ({ allowed: true }),
   checkAiQuota: async () => ({ allowed: true }), logAiUsage: async () => {},

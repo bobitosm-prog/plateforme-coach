@@ -2,7 +2,8 @@
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, logAiUsage, aiRateLimitResponse, aiQuotaResponse } from '../../../lib/rate-limit'
+import { checkRateLimit } from '../../../lib/rate-limit'
+import { reserveHeavyAi } from '@/lib/ai/heavy-reservation'
 import { NUTRITION_GENERATION_PROMPT } from '../../../lib/coach-knowledge'
 import { formatFitnessFoodsForPrompt } from '../../../lib/fitness-food-database'
 import { MEAL_KEY_TO_TYPE, type MealKey, type DayPlan } from '../../../lib/meal-plan'
@@ -376,17 +377,6 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`meal-plan:${ip}`, 3, 60000)
   if (!rl.allowed) return new Response(JSON.stringify({ error: 'Trop de requetes. Reessayez dans ' + rl.retryAfter + 's.' }), { status: 429 })
 
-  // DB-backed hourly rate limit (Sprint 3)
-  try {
-    const aiRl = await checkAiRateLimit(supabaseAuth, user.id, 'generate-meal-plan', true)
-    if (aiRl.unavailable) return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
-    if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-    const aiQ = await checkAiQuota(supabaseAuth, user.id, true)
-    if (aiQ.unavailable) return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
-    if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  } catch {
-    return Response.json({ error: 'Vérification des limites indisponible' }, { status: 503 })
-  }
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
     if (!apiKey) {
@@ -416,10 +406,13 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: authority.status === 409 ? 'Enregistrez vos objectifs avant de générer le plan.' : authority.status === 422 ? 'Vos exclusions nécessitent une vérification avant la génération.' : 'Profil temporairement indisponible' }, { status: authority.status })
     }
     params = authority.params
+    const reservation = await reserveHeavyAi(userId, 'generate-meal-plan')
+    if (!reservation.ok) return reservation.response
     const generationSignal = AbortSignal.any([req.signal, AbortSignal.timeout(240_000)])
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
+        try {
         const plan: Record<string, any> = {}
         let completedDays = 0
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'preparing' })}\n\n`))
@@ -469,9 +462,17 @@ export async function POST(req: NextRequest) {
           }
           console.info('[meal-plan] generation persisted days=7')
         }
-        await logAiUsage(supabaseAuth, user.id, 'generate-meal-plan')
+        if (!await reservation.settle(true)) throw new Error('Quota settlement unavailable')
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', plan })}\n\n`))
         controller.close()
+        } catch {
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Finalisation temporairement indisponible. Rechargez pour vérifier votre plan.' })}\n\n`))
+            controller.close()
+          } catch { /* The reader may already have disconnected. */ }
+        } finally {
+          await reservation.settle(false)
+        }
       },
     })
 
