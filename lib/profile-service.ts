@@ -71,7 +71,8 @@ export async function getProfile(userId: string, supabase: any, force = false): 
     .eq('id', userId)
     .single()
 
-  if (error || !data) return cachedProfile // Return stale cache on error
+  // Offline fallback must never cross the requested account boundary.
+  if (error || !data) return cachedProfile?.id === userId ? cachedProfile : null
   cachedProfile = data
   cacheTimestamp = Date.now()
   return data
@@ -102,8 +103,8 @@ export function invalidateProfileCache() {
   cacheTimestamp = 0
 }
 
-export function getCachedProfile(): Profile | null {
-  if (cachedProfile && Date.now() - cacheTimestamp < CACHE_TTL) {
+export function getCachedProfile(userId: string): Profile | null {
+  if (cachedProfile?.id === userId && Date.now() - cacheTimestamp < CACHE_TTL) {
     return cachedProfile
   }
   return null
