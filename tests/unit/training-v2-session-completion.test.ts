@@ -93,7 +93,7 @@ describe('Training V2 session completion', () => {
   it('shows existing PR results compactly without rebuilding PR history', () => {
     expect(completion).toContain("t('newRecord')")
     expect(completion).toContain('records.map(record =>')
-    expect(completion).toContain('<strong>{record.value} kg</strong>')
+    expect(completion).toContain("<strong>{record.value} kg · {t('estimated1rm')}</strong>")
     expect(completion).not.toContain('personal_records')
   })
 

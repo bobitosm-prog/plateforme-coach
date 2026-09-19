@@ -61,7 +61,7 @@ export default function SessionCompletion({
             {records.map(record => (
               <div key={`${record.exercise}-${record.value}`} className={styles.completionRecord}>
                 <span>{getExerciseName({ name: record.exercise }, locale)}</span>
-                <strong>{record.value} kg</strong>
+                <strong>{record.value} kg · {t('estimated1rm')}</strong>
               </div>
             ))}
           </section>

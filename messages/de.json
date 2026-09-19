@@ -1909,7 +1909,7 @@
         "phaseChange": "Wechsel zu {phase}!",
         "deleted": "Programm gelöscht",
         "updated": "Programm aktualisiert",
-        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (1RM)",
+        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (geschätztes 1RM)",
         "newPRMultiple": "🏆 {count} Rekorde! {list}"
       },
       "buttons": {
@@ -1986,6 +1986,7 @@
         "exercises": "Übungen",
         "setsCount": "{count} Sätze",
         "newRecord": "Neuer Rekord",
+        "estimated1rm": "Geschätztes 1RM",
         "backHome": "Zur Startseite",
         "viewProgress": "Meine Fortschritte ansehen",
         "saving": "Training wird gespeichert…",
@@ -3112,6 +3113,7 @@
         "sessions": "{count, plural, =0 {Keine Trainings diese Woche} one {# Training diese Woche} other {# Trainings diese Woche}}",
         "adherence": "Planerfüllung",
         "latestPR": "Letzter Rekord",
+        "estimated1rm": "Geschätztes 1RM",
         "recordGain": "+{value}"
       },
       "athenaInsight": {

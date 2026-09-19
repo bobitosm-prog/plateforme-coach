@@ -116,6 +116,7 @@ export default function ProgressionSnapshot({
         <strong className={styles.progressionMetricValue}>{progression.latestPR.exerciseName}</strong>
         {progression.latestPR.value != null && <span className={styles.progressionMetricMeta}>
           {number.format(progression.latestPR.value)}{progression.latestPR.unit ? ` ${progression.latestPR.unit}` : ''}
+          {progression.latestPR.recordType === '1rm' ? ` · ${t('estimated1rm')}` : ''}
           {recordImprovement != null && recordImprovement > 0
             ? ` · ${t('recordGain', { value: number.format(recordImprovement) })}${progression.latestPR.unit ? ` ${progression.latestPR.unit}` : ''}`
             : ''}
