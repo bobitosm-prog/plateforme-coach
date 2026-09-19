@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { randomUUID } from 'node:crypto'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { sanitizeImage, ImageValidationError } from '@/lib/photos/sanitize-image'
+import { ImageValidationError } from '@/lib/photos/sanitize-image'
+import { writeTrustedPhoto } from '@/lib/photos/trusted-photo-writer'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -38,16 +38,11 @@ export async function POST(req: Request) {
         chunks.push(value)
       }
     } finally { signal.removeEventListener('abort',cancel); await reader.cancel().catch(()=>{}); reader.releaseLock() }
-    const bytes = await sanitizeImage(Buffer.concat(chunks,length),MAX_BYTES)
-    req.signal.throwIfAborted()
-    // Identity/path come only from the verified session. No privileged Storage client.
-    // Unique filenames also avoid stale caches and deleting a working avatar first.
-    const path = `${user.id}/${randomUUID()}.jpg`
-    const { error: uploadError } = await db.storage.from(bucket).upload(path,bytes,{contentType:'image/jpeg',upsert:false})
-    if (uploadError) return Response.json({error:'Envoi de la photo impossible.'},{status:502})
+    const path = await writeTrustedPhoto(user.id,bucket,Buffer.concat(chunks,length),req.signal)
     return Response.json({path},{headers:{'Cache-Control':'no-store'}})
   } catch (error) {
-    const status = error instanceof ImageValidationError ? error.status : 422
-    return Response.json({error:status === 413 ? 'Photo trop volumineuse (maximum 4 Mo).' : 'Photo illisible. Utilisez JPEG, PNG, WebP ou GIF.'},{status})
+    const status = error instanceof ImageValidationError ? error.status : req.signal.aborted ? 422 : 503
+    return Response.json({error:status === 413 ? 'Photo trop volumineuse (maximum 4 Mo).' : status === 415
+      ? 'Photo illisible. Utilisez JPEG, PNG, WebP ou GIF.' : 'Envoi de la photo indisponible. Réessayez.'},{status})
   }
 }
