@@ -1,0 +1,112 @@
+import { createHmac, randomUUID } from 'node:crypto'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { NextRequest } from 'next/server'
+import { readActivePersonalMealPlan } from '@/lib/meal-plan/personal-plan-repository'
+
+// Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
+// Authentication/provider/quota are simulated; persistence and row isolation are real.
+const state = vi.hoisted(() => ({ client: null as SupabaseClient | null, userId: '' }))
+vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
+vi.mock('@supabase/ssr', () => ({ createServerClient: () => state.client }))
+vi.mock('@/lib/api-guard', () => ({ guardCoachManagedCapabilities: async () => null }))
+vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext: async () => ({ ok: true, prompt: 'Synthetic integration profile' }) }))
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: () => ({ allowed: true }), checkAiRateLimit: async () => ({ allowed: true }),
+  checkAiQuota: async () => ({ allowed: true }), logAiUsage: async () => {},
+  aiRateLimitResponse: () => new Response(null, { status: 429 }),
+  aiQuotaResponse: () => new Response(null, { status: 429 }),
+}))
+import { POST } from '@/app/api/generate-meal-plan/route'
+
+const url = 'http://127.0.0.1:56431'
+const jwtSecret = process.env.NUTRITION_TEST_JWT_SECRET
+if (!jwtSecret) throw new Error('Disposable integration fixture secret is required')
+function clientFor(userId: string, schema: string): SupabaseClient {
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url')
+  const payload = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ role: 'authenticated', sub: userId, exp: Math.floor(Date.now() / 1000) + 600 })}`
+  const jwt = `${payload}.${createHmac('sha256', jwtSecret!).update(payload).digest('base64url')}`
+  const client = createClient(url, 'synthetic-local-key', {
+    db: { schema }, global: { headers: { Authorization: `Bearer ${jwt}` } },
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  })
+  vi.spyOn(client.auth, 'getUser').mockResolvedValue({ data: { user: { id: userId } }, error: null } as never)
+  // The application repository accepts the default public schema type; this
+  // fixture exercises the same table contract under a second PostgREST schema.
+  return client as unknown as SupabaseClient
+}
+const entry = (aliment: string, quantite_g: number) => ({ aliment, quantite_g, kcal: 0, proteines: 0, glucides: 0, lipides: 0 })
+const day = () => ({ repas: {
+  petit_dejeuner: [entry("Flocons d'avoine secs", 100)],
+  dejeuner: [entry('Blanc de poulet cuit', 200), entry('Riz basmati cuit', 300)],
+  collation: [entry('Banane', 200), entry('Amandes', 50)],
+  diner: [entry('Lentilles cuites', 300), entry("Huile d'olive", 10)],
+} })
+async function generate(overrides: Record<string, unknown> = {}) {
+  const response = await POST(new Request(`${url}/api/generate-meal-plan`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52, persist_generated_plan: true, ...overrides }),
+  }) as NextRequest)
+  const text = await response.text()
+  const events = text.split('\n').filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)))
+  return { response, events }
+}
+beforeEach(() => {
+  vi.stubEnv('ANTHROPIC_API_KEY', 'synthetic-provider-key')
+  const realFetch = globalThis.fetch.bind(globalThis)
+  vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const target = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
+    if (target.origin === 'https://api.anthropic.com') return Response.json({ stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(day()) }] })
+    if (target.origin !== url) throw new Error('External network forbidden in integration test')
+    target.pathname = target.pathname.replace(/^\/rest\/v1/, '') || '/'
+    return realFetch(target, init)
+  }))
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.spyOn(console, 'info').mockImplementation(() => {})
+})
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+describe.each(['public', 'canonical'])('real isolated persistence (%s schema)', schema => {
+  it('generates seven days, replaces the plan and reloads exactly the persisted result', async () => {
+    state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
+    const first = await generate()
+    expect(first.events.at(-1)?.type).toBe('done')
+    const loaded = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
+    expect(loaded.error).toBeNull()
+    expect(loaded.data?.plan).toEqual(first.events.at(-1).plan)
+    expect(Object.keys(loaded.data!.plan as object)).toHaveLength(7)
+    const second = await generate()
+    expect(second.events.at(-1)?.type).toBe('done')
+    const reloaded = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
+    expect(reloaded.data?.id).not.toBe(loaded.data?.id)
+    const rows = await state.client.from('meal_plans').select('*')
+    expect(rows.error).toBeNull()
+    expect(rows.data).toHaveLength(2)
+    const activeKey = schema === 'public' ? 'is_active' : 'active'
+    expect(rows.data!.filter(row => row[activeKey])).toHaveLength(1)
+  })
+  it('preserves the old plan after allergen validation fails', async () => {
+    state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
+    await generate()
+    const before = await readActivePersonalMealPlan(state.client, state.userId)
+    const rejected = await generate({ allergies: ['tree_nuts'] })
+    expect(rejected.events.at(-1)?.type).toBe('error')
+    const after = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
+    expect(after.data).toEqual(before.data)
+  })
+  it('cannot read, replace or deactivate another user’s plan', async () => {
+    state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
+    await generate()
+    const stranger = clientFor(randomUUID(), schema)
+    const hidden = await readActivePersonalMealPlan(stranger, state.userId)
+    expect(hidden.error).toBeNull(); expect(hidden.data).toBeNull()
+    const activeKey = schema === 'public' ? 'is_active' : 'active'
+    const planKey = schema === 'public' ? 'plan_data' : 'plan'
+    const forged = await stranger.from('meal_plans').insert({ user_id: state.userId, [activeKey]: true, [planKey]: {} })
+    expect(forged.error?.code).toBe('42501')
+    const changed = await stranger.from('meal_plans').update({ [activeKey]: false }).eq('user_id', state.userId).select('id')
+    expect(changed.error).toBeNull(); expect(changed.data).toEqual([])
+    expect((await readActivePersonalMealPlan(state.client, state.userId)).data?.active).toBe(true)
+  })
+})

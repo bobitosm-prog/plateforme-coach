@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { areCalorieMacroTargetsCoherent } from '@/lib/nutrition/calorie-macro-targets'
 
 const text = z.string().trim().max(120)
 const textList = z.array(text).max(40).default([])
@@ -23,6 +24,9 @@ export const athenaNutritionRequestSchema = z.object({
   available_foods: z.array(availableFood).max(200).default([]),
   scanned_foods: z.array(scannedFood).max(40).default([]),
   persist_generated_plan: z.boolean().default(false),
+}).refine(value => areCalorieMacroTargetsCoherent(value.calorie_goal, value.protein_goal, value.carbs_goal, value.fat_goal), {
+  message: 'Les calories et les macronutriments sont incohérents.',
+  path: ['calorie_goal'],
 })
 
 export type AthenaNutritionRequest = z.infer<typeof athenaNutritionRequestSchema>
