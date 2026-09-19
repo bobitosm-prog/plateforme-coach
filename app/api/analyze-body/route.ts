@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { checkRateLimit, checkAiRateLimit, checkAiQuota, aiRateLimitResponse, aiQuotaResponse, logAiUsage } from '../../../lib/rate-limit'
+import { checkRateLimit } from '../../../lib/rate-limit'
+import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 
 export async function POST(req: NextRequest) {
@@ -21,12 +22,8 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`body:${ip}`, 5, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
 
-  // DB-backed hourly rate limit
-  const aiRl = await checkAiRateLimit(supabase, user.id, 'analyze-body')
-  if (!aiRl.allowed) return aiRateLimitResponse(aiRl.limit, aiRl.resetIn)
-  const aiQ = await checkAiQuota(supabase, user.id)
-  if (!aiQ.allowed) return aiQuotaResponse(aiQ.limit, aiQ.resetIn)
-  await logAiUsage(supabase, user.id, 'analyze-body')
+  const reservation = await reserveHeavyAi(user.id, 'analyze-body')
+  if (!reservation.ok) return reservation.response
 
   try {
     const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -109,9 +106,12 @@ export async function POST(req: NextRequest) {
     }
 
     const result = unwrapToolInput(toolUseBlock.input)
+    if (!await reservation.settle(true)) return quotaUnavailable()
     return NextResponse.json(result)
   } catch (e: any) {
     console.error('[analyze-body] Error:', e.message)
     return NextResponse.json({ error: e.message || 'Erreur interne' }, { status: 500 })
+  } finally {
+    await reservation.settle(false)
   }
 }

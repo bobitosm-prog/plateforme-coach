@@ -1,0 +1,45 @@
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+const mocks=vi.hoisted(()=>({rpc:vi.fn(),create:vi.fn()}))
+vi.mock('server-only',()=>({}))
+vi.mock('@supabase/supabase-js',()=>({createClient:mocks.create}))
+beforeEach(()=>{
+  vi.resetModules();vi.clearAllMocks()
+  vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL','https://synthetic.invalid')
+  vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY','synthetic-test-key')
+  mocks.create.mockReturnValue({rpc:mocks.rpc})
+})
+afterEach(()=>vi.unstubAllEnvs())
+describe('trusted quota admission',()=>{
+  it.each([{error:{}}, {data:null}, {data:{allowed:'true'} }])('fails closed on unavailable or malformed admission',async result=>{
+    mocks.rpc.mockResolvedValue(result)
+    const {reserveHeavyAi}=await import('@/lib/ai/heavy-reservation')
+    const r=await reserveHeavyAi('verified-user','generate-meal-plan')
+    expect(r.ok).toBe(false);if(!r.ok) expect(r.response.status).toBe(503)
+  })
+  it('returns quota refusal without calling a provider',async()=>{
+    mocks.rpc.mockResolvedValue({data:{allowed:false,reason:'monthly',limit:6,resetIn:45}})
+    const {reserveHeavyAi}=await import('@/lib/ai/heavy-reservation')
+    const r=await reserveHeavyAi('verified-user','generate-meal-plan')
+    if(r.ok) throw new Error('Unexpected admission')
+    expect(r.response.status).toBe(429)
+    expect(r.response.headers.get('Retry-After')).toBe('45')
+  })
+  it('uses verified identity and settles once, without refunding completed success',async()=>{
+    mocks.rpc.mockImplementation(async(name,args)=> name==='reserve_heavy_ai_v1'
+      ? {data:{allowed:true,operationId:args.p_operation_id}} : {data:true})
+    const {reserveHeavyAi}=await import('@/lib/ai/heavy-reservation')
+    const r=await reserveHeavyAi('verified-user','generate-meal-plan')
+    if(!r.ok) throw new Error('Unexpected refusal')
+    expect(await r.settle(true)).toBe(true)
+    expect(await r.settle(true)).toBe(true)
+    expect(await r.settle(false)).toBe(false)
+    expect(mocks.rpc).toHaveBeenCalledTimes(2)
+    expect(mocks.rpc.mock.calls[0][1]).toMatchObject({p_user_id:'verified-user',p_endpoint:'generate-meal-plan'})
+  })
+  it('fails closed when the server key is absent',async()=>{
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY','')
+    const {reserveHeavyAi}=await import('@/lib/ai/heavy-reservation')
+    const r=await reserveHeavyAi('verified-user','generate-meal-plan')
+    expect(r.ok).toBe(false);expect(mocks.rpc).not.toHaveBeenCalled()
+  })
+})

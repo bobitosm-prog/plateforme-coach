@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 
 const mocks = vi.hoisted(() => ({
-  user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(), snapshot: vi.fn(),
+  user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(), snapshot: vi.fn(), reserve: vi.fn(), settle: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.user } }) }))
@@ -11,6 +11,7 @@ vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext:
 vi.mock('@/lib/meal-plan/replace-personal-plan', () => ({ replacePersonalMealPlan: mocks.persist }))
 vi.mock('@/lib/meal-plan/activation-snapshot', () => ({ loadActivationSnapshot: mocks.snapshot, ACTIVATION_CONTEXT_KEY: '_activation_context' }))
 vi.mock('@/lib/nutrition/server-authority', () => ({ applySavedNutritionAuthority: async (_client: unknown, _user: unknown, params: unknown) => ({ ok: true, params }) }))
+vi.mock('@/lib/ai/heavy-reservation', () => ({ reserveHeavyAi: mocks.reserve }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: () => ({ allowed: true }),
   checkAiRateLimit: async () => ({ allowed: true }),
@@ -51,6 +52,8 @@ beforeEach(() => {
   mocks.guard.mockResolvedValue(null)
   mocks.persist.mockResolvedValue({ ok: true, id: 'synthetic-plan' })
   mocks.usage.mockResolvedValue(undefined)
+  mocks.settle.mockImplementation(async (success: boolean) => { if (success) await mocks.usage(); return true })
+  mocks.reserve.mockResolvedValue({ ok: true, settle: mocks.settle })
   mocks.snapshot.mockResolvedValue({ profileUpdatedAt: null, activePlanId: null, operationId: 'synthetic-operation' })
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -59,6 +62,20 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks() })
 
 describe('nutrition POST runtime with synthetic provider and persistence', () => {
+  it('refuses before provider and persistence when admission fails', async () => {
+    mocks.reserve.mockResolvedValue({ ok: false, response: new Response(null, { status: 503 }) })
+    const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
+    expect((await POST(request())).status).toBe(503)
+    expect(fetch).not.toHaveBeenCalled(); expect(mocks.persist).not.toHaveBeenCalled()
+  })
+  it('reports uncertain finalization rather than done when settlement fails', async () => {
+    mocks.settle.mockResolvedValue(false)
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => provider()))
+    const { events } = await run()
+    expect(events.at(-1).type).toBe('error')
+    expect(events.some(e => e.type === 'done')).toBe(false)
+    expect(mocks.settle).toHaveBeenCalledWith(false)
+  })
   it('refuses an unreadable activation snapshot before provider usage', async () => {
     mocks.snapshot.mockResolvedValue(null)
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
