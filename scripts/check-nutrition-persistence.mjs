@@ -63,6 +63,9 @@ try {
   execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
     input: canonicalMigration, stdio: ['pipe', 'pipe', 'pipe'],
   })
+  // Separate image retrieval from runtime failures; neither command contains credentials.
+  stage = 'postgrest image pull'
+  docker('pull', 'public.ecr.aws/supabase/postgrest:v14.14')
   // Secret is generated per run, passed in process environment, never printed.
   stage = 'rest'
   execFileSync('docker', ['run', '-d', '--name', rest, '--network', network,
@@ -100,7 +103,9 @@ try {
   }
 } catch (error) {
   console.error(`Isolated nutrition persistence check failed at ${stage}; no production service was used.`)
-  if (stage === 'fixture' || stage === 'profile trigger security') console.error(String(error.stderr ?? 'Fixture error'))
+  // Never print the full child-process error: it can contain environment values.
+  // This disposable runner has no production credentials; redact its generated JWT secret too.
+  if (error.stderr) console.error(String(error.stderr).replaceAll(secret, '[REDACTED]'))
   process.exitCode = 1
 } finally {
   for (const name of [rest, database]) if (created.includes(name)) docker('rm', '-f', '-v', name)
