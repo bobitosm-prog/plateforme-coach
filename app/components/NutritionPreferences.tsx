@@ -7,6 +7,7 @@ import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
 import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } from '../../lib/nutrition/calorie-macro-targets'
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
+import { athenaNutritionRequestSchema } from '../../lib/athena/nutrition-input'
 import type { Profile } from '../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
 
@@ -223,7 +224,22 @@ export default function NutritionPreferences({
   }
 
   // ─── Save ───
+  function validateCurrentTargets() {
+    const result = athenaNutritionRequestSchema.safeParse({
+      calorie_goal: objectiveKcal,
+      protein_goal: finalMacros.protein,
+      carbs_goal: finalMacros.carbs,
+      fat_goal: finalMacros.fat,
+    })
+    if (!result.success) {
+      setToastMsg('Objectifs calories/macros incompatibles. Ajustez vos réglages avant de sauvegarder ou générer.')
+      return false
+    }
+    return true
+  }
+
   async function save() {
+    if (!validateCurrentTargets()) return
     setSaving(true)
     const objMap: Record<ObjectiveType, string> = { cut: 'cut', maintain: 'maintain', bulk: 'mass' }
     const { data, error } = await updateProfile(userId, {
@@ -263,6 +279,7 @@ export default function NutritionPreferences({
 
   // ─── Regenerate Meal Plan ───
   async function regeneratePlan() {
+    if (!validateCurrentTargets()) return
     setRegenerating(true)
     setToastMsg('Generation en cours...')
     try {
