@@ -1,4 +1,19 @@
 {
+  "weeklyCompletion": {
+    "error": "La confirmation n’a pas pu être vérifiée. Actualise puis réessaie.",
+    "retry": "Réessayer", "loading": "Vérification du dimanche…",
+    "waitSunday": "Ton premier bilan s’ouvrira après confirmation de ta journée du dimanche.",
+    "period": "Semaine du {start} au {end} inclus",
+    "ready": "Dimanche confirmé : tu peux générer ton bilan.",
+    "generate": "Générer le bilan de cette semaine", "generating": "Génération…",
+    "explanation": "Après ton dernier repas du dimanche, confirme la journée. Une modification du journal avant génération demandera une nouvelle confirmation.",
+    "missingMeals": "Enregistre d’abord tes repas du dimanche dans le journal nutrition.",
+    "meals": "J’ai enregistré tous mes repas du dimanche et terminé ma journée alimentaire.",
+    "skip": "Je déclare sautée la séance du dimanche restant à faire. Elle ne comptera pas comme réalisée.",
+    "rest": "Dimanche de repos : aucune séance à terminer.",
+    "completed": "Séance du dimanche enregistrée comme terminée.",
+    "saving": "Confirmation…", "confirm": "J’ai terminé ma journée", "refresh": "Actualiser les repas et séances"
+  },
   "_meta": {
     "locale": "fr",
     "name": "Français",

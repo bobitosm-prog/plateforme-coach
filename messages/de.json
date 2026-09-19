@@ -1,4 +1,19 @@
 {
+  "weeklyCompletion": {
+    "error": "Die Bestätigung konnte nicht geprüft werden. Aktualisiere und versuche es erneut.",
+    "retry": "Erneut versuchen", "loading": "Sonntag wird geprüft…",
+    "waitSunday": "Dein erster Wochenbericht wird nach der Bestätigung deines abgeschlossenen Sonntags freigeschaltet.",
+    "period": "Woche vom {start} bis einschließlich {end}",
+    "ready": "Sonntag bestätigt: Du kannst deinen Bericht erstellen.",
+    "generate": "Wochenbericht erstellen", "generating": "Wird erstellt…",
+    "explanation": "Bestätige nach deiner letzten Sonntagsmahlzeit. Änderungen am Tagebuch vor der Erstellung erfordern eine erneute Bestätigung.",
+    "missingMeals": "Trage zuerst deine Sonntagsmahlzeiten ins Ernährungstagebuch ein.",
+    "meals": "Ich habe alle Sonntagsmahlzeiten eingetragen und meinen Ernährungstag abgeschlossen.",
+    "skip": "Ich erkläre das noch offene Sonntagstraining als ausgelassen. Es zählt nicht als absolviert.",
+    "rest": "Sonntag ist Ruhetag: kein Training abzuschließen.",
+    "completed": "Sonntagstraining als abgeschlossen erfasst.",
+    "saving": "Wird bestätigt…", "confirm": "Ich habe meinen Tag abgeschlossen", "refresh": "Mahlzeiten und Training aktualisieren"
+  },
   "_meta": {
     "locale": "de",
     "name": "Deutsch",

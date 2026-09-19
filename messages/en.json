@@ -1,4 +1,19 @@
 {
+  "weeklyCompletion": {
+    "error": "Could not verify confirmation. Refresh and try again.",
+    "retry": "Try again", "loading": "Checking Sunday…",
+    "waitSunday": "Your first review opens after you confirm your Sunday is complete.",
+    "period": "Week from {start} through {end}, inclusive",
+    "ready": "Sunday confirmed: you can generate your review.",
+    "generate": "Generate this week’s review", "generating": "Generating…",
+    "explanation": "Confirm after your last Sunday meal. Changes to your journal before generation require confirmation again.",
+    "missingMeals": "First record your Sunday meals in the nutrition journal.",
+    "meals": "I recorded all my Sunday meals and finished eating for the day.",
+    "skip": "I declare the remaining Sunday workout skipped. It will not count as completed.",
+    "rest": "Sunday rest day: no workout to finish.",
+    "completed": "Sunday workout recorded as completed.",
+    "saving": "Confirming…", "confirm": "I have finished my day", "refresh": "Refresh meals and workouts"
+  },
   "_meta": {
     "locale": "en",
     "name": "English",

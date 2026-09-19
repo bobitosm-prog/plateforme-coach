@@ -13,6 +13,7 @@ import HomeV2LowerSections, { type HomeV2LowerSectionsHandle } from '../home-v2/
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import type { NextBestAction } from '../../../lib/home/next-best-action'
 import RecoveryModal from '../home/modals/RecoveryModal'
+import WeeklyCompletionControls from '../home/WeeklyCompletionControls'
 
 interface HomeTabProps {
   homeModel: HomeViewModel
@@ -250,6 +251,7 @@ export default function HomeTab({
         }}
       >
         <HomeV2LowerSections
+          diagnosticControls={<WeeklyCompletionControls generating={generatingDiag} onGenerate={handleGenerateDiagnostic} />}
           ref={lowerSectionsRef}
           model={homeModel}
           waterToday={waterToday}
