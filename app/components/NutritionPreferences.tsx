@@ -8,6 +8,7 @@ import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-
 import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } from '../../lib/nutrition/calorie-macro-targets'
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
 import { athenaNutritionRequestSchema } from '../../lib/athena/nutrition-input'
+import { getNutritionPreferencesInitialState, type NutritionPreferenceSettings } from '../../lib/nutrition/preferences-initial-state'
 import type { Profile } from '../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../lib/athena/objective-transition'
 
@@ -58,6 +59,7 @@ export default function NutritionPreferences({
   generationBlockedReason = null,
 }: NutritionPreferencesProps) {
   const t = useTranslations('nutritionPrefs')
+  const [initialSettings] = useState(() => getNutritionPreferencesInitialState(profile ?? { id: userId }))
   // ─── Body Data ───
   const [weight, setWeight] = useState<number>(profile?.current_weight || 0)
   const [targetWeight, setTargetWeight] = useState<number>(profile?.target_weight || 0)
@@ -67,19 +69,16 @@ export default function NutritionPreferences({
   // ─── Metabolisme ───
   const [activityLevel, setActivityLevel] = useState<string>(profile?.activity_level || 'moderate')
   const [objective, setObjective] = useState<ObjectiveType>(normalizeObjective(profile?.objective))
-  const [adjustment, setAdjustment] = useState<number>(() => {
-    const obj = normalizeObjective(profile?.objective)
-    return DEFAULT_CALORIE_ADJUSTMENTS[obj === 'bulk' ? 'mass' : obj]
-  })
+  const [adjustment, setAdjustment] = useState<number>(initialSettings.adjustment)
 
   // ─── Macros ───
-  const [macroMode, setMacroMode] = useState<MacroMode>('auto')
-  const [manualProtein, setManualProtein] = useState<number>(profile?.protein_goal || 150)
-  const [manualCarbs, setManualCarbs] = useState<number>(profile?.carbs_goal || 200)
-  const [manualFat, setManualFat] = useState<number>(profile?.fat_goal || 60)
-  const [ratioProtein, setRatioProtein] = useState(30)
-  const [ratioCarbs, setRatioCarbs] = useState(45)
-  const [ratioFat, setRatioFat] = useState(25)
+  const [macroMode, setMacroMode] = useState<MacroMode>(initialSettings.macroMode)
+  const [manualProtein, setManualProtein] = useState<number>(initialSettings.manual.protein)
+  const [manualCarbs, setManualCarbs] = useState<number>(initialSettings.manual.carbs)
+  const [manualFat, setManualFat] = useState<number>(initialSettings.manual.fat)
+  const [ratioProtein, setRatioProtein] = useState(initialSettings.ratios.protein)
+  const [ratioCarbs, setRatioCarbs] = useState(initialSettings.ratios.carbs)
+  const [ratioFat, setRatioFat] = useState(initialSettings.ratios.fat)
 
   // ─── Diet ───
   const [dietaryType, setDietaryType] = useState<string>(profile?.dietary_type || 'omnivore')
@@ -258,7 +257,13 @@ export default function NutritionPreferences({
       activity_level: activityLevel,
       dietary_type: dietaryType,
       allergies,
-      meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
+      meal_preferences: {
+        ...mealPrefs, disliked_foods: dislikedFoods,
+        nutrition_settings: {
+          version: 1, macro_mode: macroMode,
+          ratios: { protein: ratioProtein, carbs: ratioCarbs, fat: ratioFat },
+        } satisfies NutritionPreferenceSettings,
+      },
       current_weight: weight,
       target_weight: targetWeight,
       height,

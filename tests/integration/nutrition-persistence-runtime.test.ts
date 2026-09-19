@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
 import { readActivePersonalMealPlan } from '@/lib/meal-plan/personal-plan-repository'
+import { getProfile, updateProfile } from '@/lib/profile-service'
+import { getNutritionPreferencesInitialState } from '@/lib/nutrition/preferences-initial-state'
 
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
@@ -66,6 +68,35 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
 })
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+describe('real isolated preference persistence', () => {
+  it('writes JSON settings with the profile service and restores exact goals on a fresh read', async () => {
+    const userId = randomUUID()
+    const client = clientFor(userId, 'public')
+    const seed = await client.from('profiles').insert({ id: userId, current_weight: 80, height: 180, birth_date: '1996-01-01',
+      gender: 'male', objective: 'cut', activity_level: 'moderate', calorie_goal: 2359,
+      meal_preferences: { breakfast: ['Banane'], dietary_restrictions: 'synthetic existing preference' },
+    }).select().single()
+    expect(seed.error).toBeNull()
+    const settings = { version: 1, macro_mode: 'ratio', ratios: { protein: 25, carbs: 50, fat: 25 } }
+    const saved = await updateProfile(userId, { calorie_goal: 2200, protein_goal: 138, carbs_goal: 275, fat_goal: 61,
+      meal_preferences: { ...seed.data.meal_preferences, nutrition_settings: settings },
+    }, client)
+    expect(saved.error).toBeNull()
+    const reloaded = await getProfile(userId, clientFor(userId, 'public'), true)
+    expect(reloaded).toMatchObject({ calorie_goal: 2200, protein_goal: 138, carbs_goal: 275, fat_goal: 61,
+      meal_preferences: { ...seed.data.meal_preferences, nutrition_settings: settings },
+    })
+    expect(getNutritionPreferencesInitialState(reloaded!, Date.parse('2026-09-19T12:00:00Z'))).toMatchObject({
+      adjustment: -559, macroMode: 'ratio', ratios: settings.ratios,
+    })
+    const stranger = clientFor(randomUUID(), 'public')
+    expect((await stranger.from('profiles').select().eq('id', userId).maybeSingle()).data).toBeNull()
+    const forbidden = await updateProfile(userId, { calorie_goal: 1000 }, stranger)
+    expect(forbidden.error).not.toBeNull()
+    expect((await getProfile(userId, clientFor(userId, 'public'), true))?.calorie_goal).toBe(2200)
+  })
+})
 
 describe.each(['public', 'canonical'])('real isolated persistence (%s schema)', schema => {
   it('generates seven days, replaces the plan and reloads exactly the persisted result', async () => {
