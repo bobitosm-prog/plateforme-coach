@@ -21,6 +21,7 @@ import {
   type RecoveryWorkoutSession,
 } from '../../lib/home/recovery-model'
 import { readActivePersonalMealPlan } from '../../lib/meal-plan/personal-plan-repository'
+import { subscribeNutritionJournal } from '../../lib/nutrition/journal-events'
 
 interface HomeSupplementalData {
   xp: number | null
@@ -138,6 +139,11 @@ export default function useHomeDashboardModel({
   now,
 }: UseHomeDashboardModelInput): HomeViewModel {
   const [clock, setClock] = useState(() => now ?? new Date())
+  const [nutritionRevision, setNutritionRevision] = useState(0)
+  useEffect(() => {
+    if (!userId) return
+    return subscribeNutritionJournal(userId, () => setNutritionRevision(value => value + 1))
+  }, [userId])
   const effectiveNow = now ?? clock
   const today = useMemo(() => getHomeDayWindow(effectiveNow), [effectiveNow])
   const [supplemental, setSupplemental] = useState<HomeSupplementalState>({
@@ -232,7 +238,7 @@ export default function useHomeDashboardModel({
         .select('calories,protein,carbs,fat')
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
-        .limit(20),
+        .limit(1000),
       coachProfileRead,
       appointmentRead,
     ]).then(([xp, checkIn, plan, foodLogs, coachProfile, appointment]) => {
@@ -285,6 +291,7 @@ export default function useHomeDashboardModel({
   }, [
     base.coach.coachId,
     base.coach.relationStatus,
+    nutritionRevision,
     enabled,
     requestKey,
     supabase,
