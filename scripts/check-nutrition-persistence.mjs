@@ -49,6 +49,14 @@ try {
   }
   console.log('Photo ingestion: direct upload/upsert/update/move denied; trusted writes, owner reads/deletion and other buckets preserved.')
   const guardFixture = readFileSync(new URL('../supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql', import.meta.url))
+  const trialMigration = readFileSync(new URL('../supabase/migrations/20260919153623_restore_onboarding_trial.sql', import.meta.url))
+  for (const input of [guardFixture, trialMigration, trialMigration,
+    readFileSync(new URL('../tests/integration/initial-trial.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input, stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  }
+  console.log('Initial trial: fixed 14 days, idempotency, expired/paid/coach guards and scoped privileges passed.')
   const triggerMigration = readFileSync(new URL('../supabase/migrations/20260919130017_harden_profile_trigger_search_paths.sql', import.meta.url))
   for (const input of [guardFixture, triggerMigration, triggerMigration,
     readFileSync(new URL('../tests/integration/profile-trigger-security.sql', import.meta.url))]) {
