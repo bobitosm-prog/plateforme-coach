@@ -41,6 +41,14 @@ try {
     })
   }
   console.log('Profile triggers: seven protected fields, safe nutrition edits and shadow-resistant timestamps passed.')
+  stage = 'atomic AI quota migration'
+  const quotaMigration = readFileSync(new URL('../supabase/migrations/20260919131647_atomic_heavy_ai_reservations.sql', import.meta.url))
+  for (const input of [quotaMigration, quotaMigration,
+    readFileSync(new URL('../tests/integration/ai-quota-expiry.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+      input, stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  }
   stage = 'atomic activation migration and rollback tests'
   const roleMigration = readFileSync(new URL('../supabase/migrations/20260919112812_qualify_profile_role_lookup.sql', import.meta.url))
   for (const input of [roleMigration, roleMigration]) {
@@ -95,7 +103,11 @@ try {
       'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure),
       'role_lookup',pg_get_functiondef('public.get_my_role()'::regprocedure),
       'profile_guard',pg_get_functiondef('public.guard_profile_sensitive_columns()'::regprocedure),
-      'profile_timestamp',pg_get_functiondef('public.update_profiles_updated_at()'::regprocedure)
+      'profile_timestamp',pg_get_functiondef('public.update_profiles_updated_at()'::regprocedure),
+      'reservations',(select jsonb_agg(to_jsonb(r) order by id) from ai_quota_private.reservations r),
+      'usage',(select jsonb_agg(to_jsonb(l) order by id) from public.ai_usage_logs l),
+      'reserve_function',pg_get_functiondef('public.reserve_heavy_ai_v1(uuid,text,uuid)'::regprocedure),
+      'settle_function',pg_get_functiondef('public.settle_heavy_ai_v1(uuid,uuid,boolean)'::regprocedure)
     )::text)`
     const digest = db => docker('exec', database, 'psql', '-U', 'postgres', '-d', db, '-Atc', fingerprint).trim()
     if (digest('postgres') !== digest('nutrition_restore')) throw new Error('Synthetic restore mismatch')

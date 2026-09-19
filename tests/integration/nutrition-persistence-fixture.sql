@@ -1,8 +1,10 @@
 -- Disposable local test database ONLY. Not an application migration.
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE anon NOLOGIN;
+CREATE ROLE service_role NOLOGIN BYPASSRLS;
 CREATE ROLE authenticator LOGIN NOINHERIT;
 GRANT authenticated TO authenticator;
+GRANT service_role, anon TO authenticator;
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
   SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'sub')::uuid
@@ -22,6 +24,17 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY profiles_own ON public.profiles FOR ALL TO authenticated
   USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO service_role;
+CREATE TABLE public.ai_usage_logs (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES public.profiles(id),
+ endpoint text NOT NULL, success boolean DEFAULT true, created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.ai_usage_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY usage_own_read ON public.ai_usage_logs FOR SELECT TO authenticated USING(auth.uid()=user_id);
+CREATE POLICY usage_own_insert ON public.ai_usage_logs FOR INSERT TO authenticated WITH CHECK(auth.uid()=user_id);
+GRANT SELECT,INSERT ON public.ai_usage_logs TO authenticated;
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.ai_usage_logs TO service_role;
 CREATE FUNCTION public.get_my_role() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid()
 $$;
