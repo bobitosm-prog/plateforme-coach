@@ -272,7 +272,7 @@ export default function NutritionPreferences({
       return
     }
     setToastMsg('Preferences sauvegardees !')
-    setTimeout(() => setToastMsg(''), 2500)
+    setTimeout(() => setToastMsg(current => current === 'Preferences sauvegardees !' ? '' : current), 2500)
     onSaved()
     if (generationEnabled) setShowRegenCard(true)
   }
@@ -281,7 +281,7 @@ export default function NutritionPreferences({
   async function regeneratePlan() {
     if (!validateCurrentTargets()) return
     setRegenerating(true)
-    setToastMsg('Generation en cours...')
+    setToastMsg(t('generation.preparing'))
     try {
       const objectiveMap: Record<ObjectiveType, string> = { cut: 'cut', maintain: 'maintain', bulk: 'mass' }
       const generationProfile = {
@@ -326,7 +326,9 @@ export default function NutritionPreferences({
           if (!line.startsWith('data: ')) continue
           try {
             const parsed = JSON.parse(line.slice(6))
-            if (parsed.type === 'progress') setToastMsg(`Generation ${parsed.day}... (${parsed.index}/7)`)
+            if (parsed.type === 'status' && parsed.phase === 'preparing') setToastMsg(t('generation.preparing'))
+            if (parsed.type === 'status' && parsed.phase === 'saving') setToastMsg(t('generation.saving'))
+            if (parsed.type === 'progress') setToastMsg(t('generation.progress', { count: parsed.index, total: parsed.total }))
             if (parsed.type === 'error') { console.error('SSE error:', parsed.error); throw new Error(parsed.error) }
             if (parsed.type === 'done') planData = parsed.plan
           } catch (e) { if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e }

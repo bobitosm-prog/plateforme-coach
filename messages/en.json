@@ -518,6 +518,11 @@
     "image_alt": "MoovX athlete shouting in victory after accomplished transformation"
   },
   "nutritionPrefs": {
+    "generation": {
+      "preparing": "Preparing your week…",
+      "progress": "{count, plural, one {# day completed} other {# days completed}} out of {total}",
+      "saving": "Saving your plan…"
+    },
     "objectives": {
       "cut": { "label": "CUT", "desc": "Lose fat", "sub": "-300 to -500 kcal" },
       "maintain": { "label": "MAINTAIN", "desc": "Maintain weight", "sub": "Exact TDEE" },
@@ -3366,7 +3371,7 @@
     "tokens_used": "Tokens used",
     "apply_success_no_regen": "Adjustments applied ✓",
     "regen_starting": "Regenerating your meal plan...",
-    "regen_progress": "Generating... (day {day}/7)",
+    "regen_progress": "{day} days completed out of 7",
     "regen_success": "Meal plan updated ✓",
     "regen_error": "Meal plan not regenerated (retry manually)",
     "regen_program_starting": "Regenerating your program...",

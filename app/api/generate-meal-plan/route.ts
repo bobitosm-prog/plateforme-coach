@@ -401,8 +401,9 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const plan: Record<string, any> = {}
-        const outcomes = await mapWithConcurrency(DAYS, GENERATION_CONCURRENCY, async (day, index) => {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: index + 1, total: 7 })}\n\n`))
+        let completedDays = 0
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'preparing' })}\n\n`))
+        const outcomes = await mapWithConcurrency(DAYS, GENERATION_CONCURRENCY, async (day) => {
           let legacyDay: any = null
           let lastFailureCode = 'unknown'
           for (let attempt = 1; attempt <= 2 && !legacyDay; attempt++) {
@@ -412,6 +413,12 @@ export async function POST(req: NextRequest) {
               lastFailureCode = generationFailureCode(error)
               console.warn(`[meal-plan] generation attempt rejected day=${day} attempt=${attempt} code=${lastFailureCode}`)
             }
+          }
+          if (legacyDay) {
+            completedDays++
+            // Preserve index for existing consumers, but count validated days,
+            // not calendar positions or provider requests (including retries).
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', day, index: completedDays, total: DAYS.length })}\n\n`))
           }
           return { day, legacyDay, lastFailureCode }
         })
@@ -427,6 +434,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (params.persist_generated_plan) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'saving' })}\n\n`))
           const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan)
           if (!replacement.ok) {
             console.error(`[meal-plan] persistence failed stage=${replacement.stage}`)

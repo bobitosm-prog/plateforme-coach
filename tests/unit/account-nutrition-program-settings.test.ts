@@ -73,7 +73,7 @@ describe('Nutrition generation relocation', () => {
       'meal_food_names',
     ]) expect(generationParams).toContain(field)
     expect(preferences).toContain('buildMealPlanParams(generationProfile)')
-    expect(preferences).toContain("parsed.index}/7")
+    expect(preferences).toContain("t('generation.progress', { count: parsed.index, total: parsed.total })")
     expect(program).not.toContain('durationWeeks')
     expect(generationContract).toContain('durationWeeks: NutritionPlanDurationWeeks')
     expect(generationRoute).toContain("const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']")

@@ -55,6 +55,34 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks() })
 
 describe('nutrition POST runtime with synthetic provider and persistence', () => {
+  it('counts Wednesday as the first completed day, not day three, when it finishes first', async () => {
+    const gates: Array<(value: Response) => void> = []
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => {
+      if (++calls <= 3) return new Promise<Response>(resolve => gates.push(resolve))
+      return Promise.resolve(provider())
+    }))
+    const response = await POST(request())
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let text = decoder.decode((await reader.read()).value)
+    expect(text).toContain('"phase":"preparing"')
+    expect(text).not.toContain('"type":"progress"')
+    expect(gates).toHaveLength(3)
+    gates[2](provider())
+    text += decoder.decode((await reader.read()).value)
+    gates[0](provider()); gates[1](provider())
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      text += decoder.decode(chunk.value)
+    }
+    const events = text.split('\n').filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)))
+    const progress = events.filter(e => e.type === 'progress')
+    expect(progress[0]).toEqual({ type: 'progress', day: 'mercredi', index: 1, total: 7 })
+    expect(progress.map(e => e.index)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(Object.keys(events.at(-1).plan)).toEqual(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
+  })
   it('rejects inconsistent targets before any provider call or persistence', async () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
     const response = await POST(request({ calorie_goal: 1000, protein_goal: 220, carbs_goal: 20, fat_goal: 80 }))
@@ -86,6 +114,9 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     expect(Object.keys(events.at(-1).plan)).toHaveLength(7)
     expect(mocks.persist).toHaveBeenCalledOnce()
     expect(mocks.usage).toHaveBeenCalledOnce()
+    expect(events[0]).toEqual({ type: 'status', phase: 'preparing' })
+    expect(events.filter(e => e.type === 'progress').map(e => e.index)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(events.at(-2)).toEqual({ type: 'status', phase: 'saving' })
   })
   it('reproduces an unknown Thursday twice: error event, no saved partial plan', async () => {
     const fetch = vi.fn().mockImplementation(async (_url, options) => {
@@ -100,6 +131,8 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     expect(fetch).toHaveBeenCalledTimes(8)
     expect(events.at(-1).type).toBe('error')
     expect(events.some(e => e.type === 'done')).toBe(false)
+    expect(events.filter(e => e.type === 'progress').map(e => e.index)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(events.some(e => e.phase === 'saving')).toBe(false)
     expect(mocks.persist).not.toHaveBeenCalled()
     expect(mocks.usage).not.toHaveBeenCalled()
   })
@@ -111,6 +144,7 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     }))
     const { events } = await run()
     expect(calls).toBe(8)
+    expect(events.filter(e => e.type === 'progress')).toHaveLength(7)
     expect(events.at(-1).type).toBe('done')
     expect(mocks.persist).toHaveBeenCalledOnce()
   })
@@ -119,6 +153,7 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     vi.stubGlobal('fetch', fetch)
     const { events } = await run()
     expect(fetch).toHaveBeenCalledTimes(14)
+    expect(events.filter(e => e.type === 'progress')).toHaveLength(0)
     expect(events.at(-1).type).toBe('error')
     expect(mocks.persist).not.toHaveBeenCalled()
   })
@@ -128,6 +163,8 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     const { events } = await run()
     expect(events.at(-1).type).toBe('error')
     expect(mocks.usage).not.toHaveBeenCalled()
+    expect(events.at(-2)).toEqual({ type: 'status', phase: 'saving' })
+    expect(events.some(e => e.type === 'done')).toBe(false)
   })
   it('never calls the provider for an unauthenticated request', async () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
