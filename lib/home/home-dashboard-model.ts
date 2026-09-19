@@ -53,6 +53,7 @@ export interface HomeMacros {
 }
 
 export interface HomeProgressionRecord {
+  recordType?: string
   exerciseName: string
   value: number | null
   unit: string | null
@@ -339,6 +340,7 @@ export function normalizeHomeProgressionRecord(value: unknown): HomeProgressionR
 
   return {
     exerciseName,
+    ...(typeof record.record_type === 'string' ? { recordType: record.record_type } : {}),
     value: typeof record.value === 'number' && Number.isFinite(record.value) ? record.value : null,
     unit: typeof record.unit === 'string' && record.unit.trim() ? record.unit.trim() : null,
     previousValue: typeof record.previous_value === 'number' && Number.isFinite(record.previous_value)

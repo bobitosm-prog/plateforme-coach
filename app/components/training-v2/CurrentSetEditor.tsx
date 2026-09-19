@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 import styles from './TrainingV2.module.css'
 
 interface CurrentSetEditorProps {
+  timed?: boolean
   setNumber: number
   totalSets: number
   weight: string
@@ -24,6 +25,7 @@ interface CurrentSetEditorProps {
 }
 
 export default function CurrentSetEditor({
+  timed = false,
   setNumber,
   totalSets,
   weight,
@@ -64,7 +66,7 @@ export default function CurrentSetEditor({
       </div>
 
       <div className={styles.setEditorControls}>
-        <div className={styles.setControlGroup}>
+        {!timed && <div className={styles.setControlGroup}>
           <label className={styles.setControlLabel} htmlFor="training-current-weight">{t('weight')}</label>
           <div className={styles.stepper}>
             <button type="button" aria-label={t('decreaseWeight', { step: weightStep })} onClick={() => onAdjustWeight(-1)}>−</button>
@@ -83,12 +85,12 @@ export default function CurrentSetEditor({
             </div>
             <button type="button" aria-label={t('increaseWeight', { step: weightStep })} onClick={() => onAdjustWeight(1)}>+</button>
           </div>
-        </div>
+        </div>}
 
         <div className={styles.setControlGroup}>
-          <label className={styles.setControlLabel} htmlFor="training-current-reps">{t('repetitions')}</label>
+          <label className={styles.setControlLabel} htmlFor="training-current-reps">{t(timed ? 'durationSeconds' : 'repetitions')}</label>
           <div className={styles.stepper}>
-            <button type="button" aria-label={t('decreaseReps')} onClick={() => onAdjustReps(-1)}>−</button>
+            <button type="button" aria-label={t(timed ? 'decreaseDuration' : 'decreaseReps')} onClick={() => onAdjustReps(-1)}>−</button>
             <div className={styles.stepperValue}>
               <input
                 id="training-current-reps"
@@ -99,7 +101,7 @@ export default function CurrentSetEditor({
                 onChange={event => onRepsChange(event.target.value)}
               />
             </div>
-            <button type="button" aria-label={t('increaseReps')} onClick={() => onAdjustReps(1)}>+</button>
+            <button type="button" aria-label={t(timed ? 'increaseDuration' : 'increaseReps')} onClick={() => onAdjustReps(1)}>+</button>
           </div>
         </div>
       </div>

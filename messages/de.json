@@ -1711,6 +1711,9 @@
       "currentSet": "Satz {current} von {total}",
       "weight": "Gewicht",
       "repetitions": "Wiederholungen",
+      "durationSeconds": "Geleistete Dauer (Sekunden)",
+      "decreaseDuration": "5 Sekunden entfernen",
+      "increaseDuration": "5 Sekunden hinzufügen",
       "rir": "Wiederholungen in Reserve",
       "decreaseWeight": "Gewicht um {step} kg reduzieren",
       "increaseWeight": "Gewicht um {step} kg erhöhen",
@@ -1909,7 +1912,7 @@
         "phaseChange": "Wechsel zu {phase}!",
         "deleted": "Programm gelöscht",
         "updated": "Programm aktualisiert",
-        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (1RM)",
+        "newPR": "🏆 NEUER REKORD! {exercise} — {value} kg (geschätztes 1RM)",
         "newPRMultiple": "🏆 {count} Rekorde! {list}"
       },
       "buttons": {
@@ -1977,6 +1980,7 @@
         "addExercises": "{count, plural, one {# ÜBUNG HINZUFÜGEN} other {# ÜBUNGEN HINZUFÜGEN}}",
         "sets": "SÄTZE",
         "reps": "WDH.",
+        "duration": "DAUER",
         "rest": "PAUSE"
       },
       "done": {
@@ -1986,6 +1990,7 @@
         "exercises": "Übungen",
         "setsCount": "{count} Sätze",
         "newRecord": "Neuer Rekord",
+        "estimated1rm": "Geschätztes 1RM",
         "backHome": "Zur Startseite",
         "viewProgress": "Meine Fortschritte ansehen",
         "saving": "Training wird gespeichert…",
@@ -2132,6 +2137,7 @@
         "variants": "Varianten",
         "setsLabel": "Sätze",
         "repsLabel": "Wdh.",
+        "durationLabel": "Dauer (s)",
         "restLabel": "Pause",
         "tempoLabel": "Tempo (exzentrisch - Pause - konzentrisch)",
         "techniqueLabel": "Fortgeschrittene Technik (optional)",
@@ -3112,6 +3118,7 @@
         "sessions": "{count, plural, =0 {Keine Trainings diese Woche} one {# Training diese Woche} other {# Trainings diese Woche}}",
         "adherence": "Planerfüllung",
         "latestPR": "Letzter Rekord",
+        "estimated1rm": "Geschätztes 1RM",
         "recordGain": "+{value}"
       },
       "athenaInsight": {

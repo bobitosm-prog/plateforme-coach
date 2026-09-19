@@ -70,7 +70,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
           <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
             <span style={gridHeader}>SET</span>
             <span style={gridHeader}>KG</span>
-            <span style={gridHeader}>REPS</span>
+            <span style={gridHeader}>{ex.sets.some(set => set.duration_seconds) ? t('v2.durationSeconds') : 'REPS'}</span>
             <span style={{ ...gridHeader, textAlign: 'right' }}>VOLUME</span>
           </div>
           {/* Set rows */}
@@ -78,7 +78,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
             <div key={si} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '5px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
               <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, width: 22, height: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
-              <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.reps || 0}</span>
+              <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.duration_seconds ? `${set.duration_seconds} s` : set.reps || 0}</span>
               <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{((set.weight || 0) * (set.reps || 0)).toLocaleString(locale)} kg</span>
             </div>
           ))}

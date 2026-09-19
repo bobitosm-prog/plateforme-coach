@@ -38,7 +38,7 @@ export default function SessionDoneModal({
     setDetailLoading(true)
     supabase
       .from('workout_sets')
-      .select('exercise_name, set_number, weight, reps, completed')
+      .select('exercise_name, set_number, weight, reps, duration_seconds, completed')
       .eq('session_id', sessionId)
       .order('exercise_name').order('set_number', { ascending: true })
       .then(({ data }: any) => {

@@ -20,6 +20,7 @@ import {
   getNutritionWeekWindow,
 } from '../../lib/nutrition/nutrition-date'
 import { readActivePersonalMealPlan } from '../../lib/meal-plan/personal-plan-repository'
+import { notifyNutritionJournalRefreshed } from '../../lib/nutrition/journal-events'
 
 interface UseNutritionDashboardModelInput {
   supabase: SupabaseClient
@@ -117,6 +118,7 @@ export default function useNutritionDashboardModel({
       loadedAt: new Date().toISOString(),
     })
     setLoading(false)
+    if (!logs.error) notifyNutritionJournalRefreshed(userId)
   }, [coachRelation.coachId, coachRelation.isAuthoritative, day.localDateKey, historyStart, supabase, userId])
 
   useEffect(() => {

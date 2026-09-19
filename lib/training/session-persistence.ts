@@ -1,6 +1,7 @@
 import { updateActiveWorkoutDraft, type ActiveWorkoutDraft } from './active-workout-draft'
 
 export interface CompletedWorkoutSet {
+  durationSeconds?: number | null
   weight: number | ''
   reps: number | ''
   rir: number | null
