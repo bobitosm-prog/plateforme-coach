@@ -349,7 +349,7 @@ export default function useClientDetail() {
           if (!line.startsWith('data: ')) continue
           try {
             const evt = JSON.parse(line.slice(6))
-            if (evt.type === 'progress') setAiMealStreamStatus(`Génération jour ${evt.index}/7 — ${evt.day}...`)
+            if (evt.type === 'progress') setAiMealStreamStatus(`${evt.index} jours terminés sur ${evt.total}`)
             else if (evt.type === 'done') plan = evt.plan
           } catch { /* skip malformed lines */ }
         }

@@ -518,6 +518,11 @@
     "image_alt": "MoovX-Athlet schreit vor Freude nach vollbrachter Transformation"
   },
   "nutritionPrefs": {
+    "generation": {
+      "preparing": "Deine Woche wird vorbereitet…",
+      "progress": "{count, plural, one {# Tag fertig} other {# Tage fertig}} von {total}",
+      "saving": "Dein Plan wird gespeichert…"
+    },
     "objectives": {
       "cut": { "label": "DEFINITION", "desc": "Fett verlieren", "sub": "-300 bis -500 kcal" },
       "maintain": { "label": "ERHALTUNG", "desc": "Gewicht halten", "sub": "Exakter TDEE" },
@@ -3366,7 +3371,7 @@
     "tokens_used": "Tokens verwendet",
     "apply_success_no_regen": "Anpassungen übernommen ✓",
     "regen_starting": "Dein Mahlzeitenplan wird neu erstellt...",
-    "regen_progress": "Generierung... (Tag {day}/7)",
+    "regen_progress": "{day} von 7 Tagen fertig",
     "regen_success": "Mahlzeitenplan aktualisiert ✓",
     "regen_error": "Mahlzeitenplan nicht aktualisiert (manuell wiederholen)",
     "regen_program_starting": "Dein Programm wird neu erstellt...",

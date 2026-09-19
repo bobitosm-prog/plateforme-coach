@@ -518,6 +518,11 @@
     "image_alt": "Athlète MoovX hurlant de victoire après transformation accomplie"
   },
   "nutritionPrefs": {
+    "generation": {
+      "preparing": "Préparation de votre semaine…",
+      "progress": "{count, plural, one {# jour terminé} other {# jours terminés}} sur {total}",
+      "saving": "Sauvegarde de votre programme…"
+    },
     "objectives": {
       "cut": { "label": "SÈCHE", "desc": "Perdre du gras", "sub": "-300 à -500 kcal" },
       "maintain": { "label": "MAINTIEN", "desc": "Maintenir le poids", "sub": "TDEE exact" },
@@ -3366,7 +3371,7 @@
     "tokens_used": "Tokens utilisés",
     "apply_success_no_regen": "Ajustements appliqués ✓",
     "regen_starting": "Régénération de ton plan repas...",
-    "regen_progress": "Génération... (jour {day}/7)",
+    "regen_progress": "{day} jours terminés sur 7",
     "regen_success": "Plan repas mis à jour ✓",
     "regen_error": "Plan repas non régénéré (réessayer manuellement)",
     "regen_program_starting": "Régénération de ton programme...",
