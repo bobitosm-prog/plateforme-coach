@@ -38,6 +38,11 @@ try {
     execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
   }
   console.log('Photo Storage: private bucket, owner/active-coach reads, former-coach/anonymous denial and scoped deletion passed.')
+  const avatarMigration=readFileSync(new URL('../supabase/migrations/20260919140110_avatar_owner_write_boundaries.sql',import.meta.url))
+  for (const input of [avatarMigration,avatarMigration,readFileSync(new URL('../tests/integration/avatar-storage-security.sql',import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Avatar Storage: three owner paths/upsert, foreign writes/reassignment/anonymous denial, restrictive boundaries passed.')
   const guardFixture = readFileSync(new URL('../supabase/migrations/20260617120000_guard_profile_sensitive_columns.sql', import.meta.url))
   const triggerMigration = readFileSync(new URL('../supabase/migrations/20260919130017_harden_profile_trigger_search_paths.sql', import.meta.url))
   for (const input of [guardFixture, triggerMigration, triggerMigration,
