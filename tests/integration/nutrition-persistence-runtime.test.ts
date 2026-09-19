@@ -5,6 +5,8 @@ import type { NextRequest } from 'next/server'
 import { readActivePersonalMealPlan } from '@/lib/meal-plan/personal-plan-repository'
 import { getProfile, updateProfile } from '@/lib/profile-service'
 import { getNutritionPreferencesInitialState } from '@/lib/nutrition/preferences-initial-state'
+import { parseMealPlan } from '@/lib/meal-plan'
+import { getNutritionPlanConsistency } from '@/lib/nutrition/plan-context'
 
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
@@ -106,7 +108,10 @@ describe.each(['public', 'canonical'])('real isolated persistence (%s schema)', 
     const loaded = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
     expect(loaded.error).toBeNull()
     expect(loaded.data?.plan).toEqual(first.events.at(-1).plan)
-    expect(Object.keys(loaded.data!.plan as object)).toHaveLength(7)
+    expect(Object.keys(parseMealPlan(loaded.data!.plan))).toHaveLength(7)
+    const profile = { calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52 }
+    expect(getNutritionPlanConsistency(loaded.data!.plan, profile)).toBe('aligned')
+    expect(getNutritionPlanConsistency(loaded.data!.plan, { ...profile, calorie_goal: 2400 })).toBe('outdated')
     const second = await generate()
     expect(second.events.at(-1)?.type).toBe('done')
     const reloaded = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
@@ -125,6 +130,7 @@ describe.each(['public', 'canonical'])('real isolated persistence (%s schema)', 
     expect(rejected.events.at(-1)?.type).toBe('error')
     const after = await readActivePersonalMealPlan(clientFor(state.userId, schema), state.userId)
     expect(after.data).toEqual(before.data)
+    expect(getNutritionPlanConsistency(after.data!.plan, { calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52, allergies: ['tree_nuts'] })).toBe('outdated')
   })
   it('cannot read, replace or deactivate another user’s plan', async () => {
     state.userId = randomUUID(); state.client = clientFor(state.userId, schema)
