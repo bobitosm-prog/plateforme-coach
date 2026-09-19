@@ -10,6 +10,15 @@ export type CanonicalActivityLevel = keyof typeof ACTIVITY_MULTIPLIERS
 
 export type AutomaticNutritionObjective = 'cut' | 'maintain' | 'bulk'
 
+/** Arithmetic consistency only, not a medical suitability assessment.
+ * Preserve the existing application's 8% / 100 kcal target tolerance.
+ */
+export function areCalorieMacroTargetsCoherent(calories: number, protein: number, carbs: number, fat: number): boolean {
+  if (![calories, protein, carbs, fat].every(Number.isFinite)
+    || calories <= 0 || protein < 0 || carbs < 0 || fat < 0) return false
+  return Math.abs(protein * 4 + carbs * 4 + fat * 9 - calories) <= Math.max(100, calories * 0.08)
+}
+
 export const DEFAULT_CALORIE_ADJUSTMENTS = {
   cut: -400,
   maintain: 0,

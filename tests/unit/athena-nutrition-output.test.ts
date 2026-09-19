@@ -11,6 +11,25 @@ const day = () => ({ repas: {
 const targets = { calorieGoal: 2003, proteinGoal: 123, carbsGoal: 268, fatGoal: 52, allergies: [] }
 
 describe('Athena nutrition output', () => {
+  it.each([
+    ['Seitan', 'gluten'], ['Semoule cuite', 'gluten'],
+    ['Amandes', 'tree_nuts'], ['Crevettes cuites', 'shellfish'],
+    ['Sardines en boîte au naturel', 'fish'], ['Skyr nature', 'lactose'],
+    ['Cottage cheese', 'lactose'], ['Caséine (poudre)', 'milk'],
+    ['Beurre', 'milk'], ['Beurre', 'lactose'], ['Œuf entier', 'eggs'],
+  ])('rejects regression food %s for %s before fitting', (name, allergy) => {
+    const value = day()
+    value.repas.diner[0] = food(name, 100, 0, 0, 0, 0)
+    expect(() => canonicalizeAthenaNutritionDay(value, [allergy])).toThrow(expect.objectContaining({ code: 'allergen' }))
+  })
+  it('does not treat peanut butter as dairy butter', () => {
+    const value = day()
+    value.repas.diner[0] = food('Beurre de cacahuète', 20, 0, 0, 0, 0)
+    expect(() => canonicalizeAthenaNutritionDay(value, ['milk', 'lactose'])).not.toThrow()
+  })
+  it('normalizes allergy code casing and whitespace', () => {
+    expect(() => canonicalizeAthenaNutritionDay(day(), [' TREE_NUTS '])).toThrow(expect.objectContaining({ code: 'allergen' }))
+  })
   it('recomputes totals from reference foods and quantities', () => expect(validateAthenaNutritionDay(day(), targets).total_kcal).toBe(2003))
   it('rejects missing meals and empty foods', () => expect(() => validateAthenaNutritionDay({ repas: {} }, targets)).toThrow(/non conforme/))
   it('rejects invented self-consistent foods', () => { const value = day(); value.repas.diner[0] = food('Aliment inexistant', 300, 348, 27, 60, 1.2); expect(() => validateAthenaNutritionDay(value, targets)).toThrow(/non conforme/) })

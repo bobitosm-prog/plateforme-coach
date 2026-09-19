@@ -14,7 +14,7 @@
  * d'un diagnostic) sans avoir à attendre que le profile soit re-fetched du cache.
  */
 import type { Profile } from '@/lib/profile-service'
-import { calculateMacroTargetsForCalories } from '@/lib/nutrition/calorie-macro-targets'
+import { areCalorieMacroTargetsCoherent, calculateMacroTargetsForCalories } from '@/lib/nutrition/calorie-macro-targets'
 
 export type ObjectiveMode = 'seche' | 'maintien' | 'bulk'
 
@@ -86,8 +86,7 @@ export function buildMealPlanParams(
   let protein_goal = overrides?.protein_goal ?? profile.protein_goal ?? 150
   let fat_goal = overrides?.fat_goal ?? profile.fat_goal ?? Math.round((calorie_goal * 0.25) / 9)
   let carbs_goal = overrides?.carbs_goal ?? profile.carbs_goal ?? Math.max(Math.round((calorie_goal - protein_goal * 4 - fat_goal * 9) / 4), 0)
-  const macroCalories = protein_goal * 4 + carbs_goal * 4 + fat_goal * 9
-  const targetMismatch = Math.abs(macroCalories - calorie_goal) > Math.max(100, calorie_goal * 0.08)
+  const targetMismatch = !areCalorieMacroTargetsCoherent(calorie_goal, protein_goal, carbs_goal, fat_goal)
   const ketoMismatch = profile.dietary_type === 'keto' && carbs_goal > 50
   const weightKg = Number(profile.current_weight)
   if ((targetMismatch || ketoMismatch) && Number.isFinite(weightKg) && weightKg > 0) {

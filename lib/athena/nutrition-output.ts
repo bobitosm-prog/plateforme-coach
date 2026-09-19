@@ -12,7 +12,11 @@ const daySchema = z.object({
 })
 
 const ALLERGEN_TERMS: Record<string, string[]> = {
-  gluten: ['blé', 'ble', 'orge', 'seigle', 'épeautre', 'epeautre', 'pain', 'pâtes', 'pates', 'avoine'], lactose: ['lait', 'yaourt', 'fromage', 'whey'],
+  gluten: ['blé', 'ble', 'orge', 'seigle', 'épeautre', 'epeautre', 'pain', 'pâtes', 'pates', 'avoine', 'seitan', 'semoule'],
+  // Conservative exclusions: the generic catalogue has no certified lactose
+  // content. This does NOT equate lactose intolerance with milk allergy.
+  lactose: ['lait', 'yaourt', 'fromage', 'whey', 'caséine', 'skyr', 'cottage cheese', 'mozzarella', 'feta', 'parmesan'],
+  milk: ['lait', 'yaourt', 'fromage', 'whey', 'caséine', 'skyr', 'cottage cheese', 'mozzarella', 'feta', 'parmesan'],
   eggs: ['œuf', 'oeuf'], tree_nuts: ['amande', 'noix', 'noisette', 'pistache', 'cajou'], peanuts: ['cacahuète', 'cacahuete'],
   soy: ['soja', 'tofu', 'tempeh'], fish: ['poisson', 'saumon', 'thon', 'sardine', 'cabillaud'],
   shellfish: ['crevette', 'crabe', 'homard', 'moule'], sesame: ['sésame', 'sesame'],
@@ -27,23 +31,30 @@ export class AthenaNutritionOutputError extends Error {
   }
 }
 
-function fold(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }
+function fold(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/œ/g, 'oe') }
 function containsTerm(value: string, term: string): boolean {
   const words = (input: string) => input.replace(/[^a-z0-9]+/g, ' ').trim()
-  return ` ${words(fold(value))} `.includes(` ${words(term)} `)
+  const normalizedTerm = words(fold(term))
+  const normalizedValue = ` ${words(fold(value))} `
+  // Match whole terms and French regular plurals, never arbitrary substrings.
+  return [normalizedTerm, `${normalizedTerm}s`].some(candidate => normalizedValue.includes(` ${candidate} `))
 }
 
 export function canonicalizeAthenaNutritionDay(value: unknown, allergies: readonly string[]) {
   const parsed = daySchema.safeParse(value)
   if (!parsed.success) throw new AthenaNutritionOutputError('shape')
   const foods = Object.values(parsed.data.repas).flat()
-  const forbidden = allergies.flatMap(item => ALLERGEN_TERMS[item] ?? [item]).map(fold).filter(Boolean)
+  const forbidden = allergies.flatMap(item => ALLERGEN_TERMS[fold(item).trim()] ?? [item]).map(fold).filter(Boolean)
   if (foods.some(food => forbidden.some(term => containsTerm(food.aliment, term)))) throw new AthenaNutritionOutputError('allergen')
   const checkedMeals = Object.fromEntries(Object.entries(parsed.data.repas).map(([meal, entries]) => [
     meal,
     entries.map(food => {
       const reference = resolveFitnessFood(food.aliment)
       if (!reference) throw new AthenaNutritionOutputError('unknown_food')
+      // Exact canonical match avoids confusing peanut butter with dairy butter.
+      if (reference.name === 'Beurre' && allergies.some(item => ['milk', 'lactose'].includes(fold(item).trim()))) {
+        throw new AthenaNutritionOutputError('allergen')
+      }
       const referenceNutrition = nutritionForQuantity(reference, food.quantite_g)
       return {
         ...food,

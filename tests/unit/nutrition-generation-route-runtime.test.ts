@@ -31,9 +31,9 @@ const day = () => ({ repas: {
 const provider = (value = day(), stop_reason = 'end_turn') => Response.json({
   stop_reason, content: [{ type: 'text', text: JSON.stringify(value) }],
 })
-const request = () => new Request('http://localhost/api/generate-meal-plan', {
+const request = (overrides: Record<string, unknown> = {}) => new Request('http://localhost/api/generate-meal-plan', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52, persist_generated_plan: true }),
+  body: JSON.stringify({ calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52, persist_generated_plan: true, ...overrides }),
 }) as NextRequest
 async function run() {
   const response = await POST(request())
@@ -55,6 +55,23 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks() })
 
 describe('nutrition POST runtime with synthetic provider and persistence', () => {
+  it('rejects inconsistent targets before any provider call or persistence', async () => {
+    const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
+    const response = await POST(request({ calorie_goal: 1000, protein_goal: 220, carbs_goal: 20, fat_goal: 80 }))
+    expect(response.status).toBe(400)
+    expect(fetch).not.toHaveBeenCalled()
+    expect(mocks.persist).not.toHaveBeenCalled()
+    expect(mocks.usage).not.toHaveBeenCalled()
+  })
+  it('never persists a provider plan containing a declared nut allergen', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => provider()))
+    const response = await POST(request({ allergies: ['tree_nuts'] }))
+    const body = await response.text()
+    expect(body).toContain('"type":"error"')
+    expect(body).not.toContain('"type":"done"')
+    expect(mocks.persist).not.toHaveBeenCalled()
+    expect(mocks.usage).not.toHaveBeenCalled()
+  })
   it('sends the catalogue schema on all seven requests, validates and persists before done', async () => {
     const fetch = vi.fn().mockImplementation(async () => provider())
     vi.stubGlobal('fetch', fetch)
