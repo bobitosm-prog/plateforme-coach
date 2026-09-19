@@ -25,7 +25,7 @@ function anthropicResponse() {
           focus: 'Corps entier',
           muscle_groups: ['back'],
           exercises: ['Rowing', 'Squat', 'Développé'].map((name, exerciseIndex) => ({
-            custom_name: name,
+            custom_name: ({ Rowing: 'Rowing haltères', Squat: 'Squat au poids du corps', Développé: 'Pompes au sol' } as Record<string, string>)[name],
             muscle_primary: 'Dos',
             sets: 3,
             reps: 10,
@@ -43,12 +43,18 @@ function anthropicResponse() {
 
 describe('Athena training generation contract', () => {
   afterEach(() => vi.unstubAllGlobals())
+  it('rejects a provider response requiring undeclared equipment', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => anthropicResponse()))
+    await expect(generateProgram({ ...INPUT, equipment: 'maison : bandes élastiques' }, 'test-key', [
+      { id: 'exercise-row', name: 'Rowing haltères', equipment: 'dumbbell' },
+    ])).rejects.toThrow(/non conforme/)
+  })
 
   it('sends the normalized evidence policy and bounded tool schema', async () => {
     const fetchMock = vi.fn().mockImplementation(async () => anthropicResponse())
     vi.stubGlobal('fetch', fetchMock)
 
-    await generateProgram(INPUT, 'test-key', [{ id: 'exercise-row', name: 'Rowing' }])
+    await generateProgram(INPUT, 'test-key', [{ id: 'exercise-row', name: 'Rowing haltères', equipment: 'dumbbell' }])
 
     const request = fetchMock.mock.calls[0]?.[1] as RequestInit
     const body = JSON.parse(String(request.body))
@@ -65,14 +71,14 @@ describe('Athena training generation contract', () => {
     const fetchMock = vi.fn().mockImplementation(async () => anthropicResponse())
     vi.stubGlobal('fetch', fetchMock)
 
-    const program = await generateProgram(INPUT, 'test-key', [{ id: 'exercise-row', name: 'Rowing' }])
+    const program = await generateProgram(INPUT, 'test-key', [{ id: 'exercise-row', name: 'Rowing haltères', equipment: 'dumbbell' }])
     const firstBody = JSON.parse(String((fetchMock.mock.calls[0]?.[1] as RequestInit).body))
     fetchMock.mockClear()
-    await generateProgram({ ...INPUT, gender: 'male' }, 'test-key', [{ id: 'exercise-row', name: 'Rowing' }])
+    await generateProgram({ ...INPUT, gender: 'male' }, 'test-key', [{ id: 'exercise-row', name: 'Rowing haltères', equipment: 'dumbbell' }])
     const secondBody = JSON.parse(String((fetchMock.mock.calls[0]?.[1] as RequestInit).body))
 
     expect(program.days[0].exercises[0]).toMatchObject({
-      custom_name: 'Rowing',
+      custom_name: 'Rowing haltères',
       exercise_id: 'exercise-row',
     })
     expect(firstBody.system).toBe(secondBody.system)

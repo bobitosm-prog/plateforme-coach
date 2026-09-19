@@ -1711,6 +1711,9 @@
       "currentSet": "Série {current} sur {total}",
       "weight": "Charge",
       "repetitions": "Répétitions",
+      "durationSeconds": "Durée réalisée (secondes)",
+      "decreaseDuration": "Retirer 5 secondes",
+      "increaseDuration": "Ajouter 5 secondes",
       "rir": "Répétitions en réserve",
       "decreaseWeight": "Réduire la charge de {step} kg",
       "increaseWeight": "Augmenter la charge de {step} kg",
@@ -1977,6 +1980,7 @@
         "addExercises": "{count, plural, one {AJOUTER # EXERCICE} other {AJOUTER # EXERCICES}}",
         "sets": "SETS",
         "reps": "REPS",
+        "duration": "DURÉE",
         "rest": "REPOS"
       },
       "done": {
@@ -2133,6 +2137,7 @@
         "variants": "Variantes",
         "setsLabel": "Séries",
         "repsLabel": "Reps",
+        "durationLabel": "Durée (s)",
         "restLabel": "Repos",
         "tempoLabel": "Tempo (excentrique - pause - concentrique)",
         "techniqueLabel": "Technique avancée (optionnel)",

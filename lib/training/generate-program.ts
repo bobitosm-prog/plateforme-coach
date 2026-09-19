@@ -4,9 +4,9 @@
  */
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { PROGRAM_GENERATION_PROMPT } from '../coach-knowledge'
-import { findExerciseMatch } from '../exercise-matching'
+import { availableEquipment, exactEquipmentMatch, generationCatalog, type CatalogExercise } from './equipment-contract'
 import { buildAthenaTrainingPolicyPrompt, normalizeAthenaTrainingRequest } from '../athena/training-policy'
-import { validateAthenaTrainingOutput, type ValidatedAthenaProgram } from '../athena/training-output'
+import { AthenaTrainingOutputError, validateAthenaTrainingOutput, type ValidatedAthenaProgram } from '../athena/training-output'
 
 export interface GenerateProgramInput {
   objective: string
@@ -44,7 +44,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Pure function: no auth, no request, no rate-limit.
  * Throws on error (caller handles).
  */
-export async function generateProgram(input: GenerateProgramInput, apiKey: string, catalog: { id: string; name: string }[] = []): Promise<GeneratedProgram> {
+export async function generateProgram(input: GenerateProgramInput, apiKey: string, catalog: CatalogExercise[] = []): Promise<GeneratedProgram> {
   const request = normalizeAthenaTrainingRequest({
     objective: input.objective,
     level: input.level,
@@ -55,6 +55,8 @@ export async function generateProgram(input: GenerateProgramInput, apiKey: strin
     notes: input.notes,
   })
   const days = request.daysPerWeek
+  const restrictedEquipment = !availableEquipment(request.equipment).has('machine_gym')
+  catalog = generationCatalog(catalog, request.equipment)
 
   const systemPrompt = `${PROGRAM_GENERATION_PROMPT}
 
@@ -74,7 +76,7 @@ ${catalog.length > 0 ? `
 RÉFÉRENTIEL D'EXERCICES (${catalog.length} exercices) :
 Choisis le nom de chaque exercice EXACTEMENT dans cette liste quand le mouvement y figure.
 N'invente pas de variante orthographique (accents, pluriels, casse).
-Si un mouvement n'existe pas dans la liste, nomme-le clairement.
+${restrictedEquipment ? 'Liste fermée : utilise UNIQUEMENT ces mouvements compatibles avec le matériel déclaré. Aucun ajout ni variante.' : "Si un mouvement n'existe pas dans la liste, nomme-le clairement."}
 ${catalog.map(c => c.name).join(', ')}
 ` : ''}
 Reponds UNIQUEMENT avec du JSON valide, aucun texte avant ou apres.`
@@ -113,6 +115,7 @@ IMPORTANT :
 - Respecte la plage d'exercices par séance définie dans le contrat
 - Suis le split suggéré, sauf justification explicite plus adaptée dans la description
 - Chaque exercice a un order (1, 2, 3...), sets, reps, rest_seconds
+- Pour un maintien statique (planche, gainage, chaise) : duration_seconds de 5 à 180 et reps=0. Pour les mouvements répétés : reps de 1 à 30 et duration_seconds=null.
 - muscle_groups utilise des IDs anglais : chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, core, abs
 - Chaque exercice a un tempo (format "X-X-X"), technique (null ou "dropset"/"restpause"/"superset"/"mechanical"), et technique_details
 - Pour les debutants : pas de techniques avancees, tempo "2-0-2" partout
@@ -169,7 +172,8 @@ IMPORTANT :
                         custom_name: { type: 'string', description: 'Nom de l\'exercice' },
                         muscle_primary: { type: 'string', description: 'Muscle principal travaille (en francais)' },
                         sets: { type: 'integer', minimum: 1, maximum: 4, description: 'Nombre de series' },
-                        reps: { type: 'integer', minimum: 1, maximum: 30, description: 'Nombre de repetitions' },
+                        reps: { type: 'integer', minimum: 0, maximum: 30, description: 'Nombre de repetitions ; 0 uniquement pour un maintien chronométré' },
+                        duration_seconds: { type: ['integer', 'null'], minimum: 5, maximum: 180, description: 'Durée du maintien par série ; null pour les répétitions' },
                         rest_seconds: { type: 'integer', minimum: 30, maximum: 300, description: 'Temps de repos en secondes' },
                         order: { type: 'integer', description: 'Ordre de l\'exercice dans la seance (1, 2, 3...)' },
                         tempo: { type: 'string', description: 'Tempo format X-X-X (ex: 2-0-2)' },
@@ -209,10 +213,11 @@ IMPORTANT :
   if (catalog.length > 0 && program?.days) {
     for (const day of program.days) {
       for (const ex of (day.exercises || [])) {
-        const match = findExerciseMatch(catalog, ex.custom_name)
+        const match = exactEquipmentMatch(catalog, ex.custom_name)
+        if (restrictedEquipment && !match) throw new AthenaTrainingOutputError(['equipment: mouvement hors du référentiel autorisé'])
         if (match) {
           ex.custom_name = match.name
-          ex.exercise_id = match.id
+          ex.exercise_id = match.id || null
         } else {
           ex.exercise_id = null
         }

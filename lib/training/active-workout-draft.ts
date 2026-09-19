@@ -1,4 +1,5 @@
 import type { TrainingProgramSource } from './active-program'
+import { prescribedDuration } from './exercise-measurement'
 
 export const ACTIVE_WORKOUT_DRAFT_VERSION = 2 as const
 export const ACTIVE_WORKOUT_STORAGE_KEY = 'moovx_training_session_v2'
@@ -9,6 +10,7 @@ export const ACTIVE_WORKOUT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 export type ActiveWorkoutStatus = 'active' | 'saving' | 'save_error' | 'completed'
 
 export interface WorkoutDraftSet {
+  durationSeconds?: number | ''
   id: string
   num: number
   weight: number | ''
@@ -20,6 +22,7 @@ export interface WorkoutDraftSet {
 }
 
 export interface WorkoutDraftExercise {
+  targetDurationSeconds?: number
   id: string
   name: string
   muscle: string
@@ -102,6 +105,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
     const row = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
     const targetSets = positiveInteger(row.targetSets ?? row.sets, 3)
     const existingSets = Array.isArray(row.sets) ? row.sets : null
+    const targetDurationSeconds = prescribedDuration(row)
     const sets = existingSets
       ? existingSets.map((setValue, index) => {
           const set = typeof setValue === 'object' && setValue !== null ? setValue as Record<string, unknown> : {}
@@ -114,6 +118,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
             weightRaw: typeof set.weightRaw === 'string' ? set.weightRaw : weight === '' ? '' : String(weight).replace('.', ','),
             weightInputSource: set.weightInputSource === 'suggested' ? 'suggested' as const : 'entered' as const,
             reps,
+            ...(targetDurationSeconds ? { durationSeconds: typeof set.durationSeconds === 'number' ? set.durationSeconds : '' as const } : {}),
             done: set.done === true,
             rir: typeof set.rir === 'number' && Number.isFinite(set.rir) ? set.rir : null,
           }
@@ -134,6 +139,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
       name: String(row.name ?? row.exercise_name ?? 'Exercice'),
       muscle: String(row.muscle ?? row.muscle_group ?? ''),
       targetSets,
+      ...(targetDurationSeconds ? { targetDurationSeconds } : {}),
       targetReps: String(row.targetReps ?? row.reps ?? '10-12'),
       rest: positiveInteger(row.rest ?? row.rest_seconds, 90),
       tempo: typeof row.tempo === 'string' ? row.tempo : undefined,

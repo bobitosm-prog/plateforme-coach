@@ -45,6 +45,13 @@ function validProgram() {
 }
 
 describe('Athena training output validation', () => {
+  it('requires a duration for a plank, and never stores its seconds in reps', () => {
+    const program = validProgram()
+    program.days[0].exercises[0] = exercise(1, { custom_name: 'Planche', reps: 12 })
+    expect(() => validateAthenaTrainingOutput(program, REQUEST)).toThrow(AthenaTrainingOutputError)
+    program.days[0].exercises[0] = exercise(1, { custom_name: 'Planche', reps: 0, duration_seconds: 30 })
+    expect(validateAthenaTrainingOutput(program, REQUEST).days[0].exercises[0].duration_seconds).toBe(30)
+  })
   it('accepts a program matching the normalized contract', () => {
     expect(validateAthenaTrainingOutput(validProgram(), REQUEST).days).toHaveLength(2)
   })

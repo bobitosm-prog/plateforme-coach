@@ -21,6 +21,7 @@ import ConfirmDialog from '../ui/ConfirmDialog'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { buildProgramParams, type Level } from '@/lib/training/build-program-params'
 import type { Profile } from '@/lib/profile-service'
+import { prescribedDuration } from '@/lib/training/exercise-measurement'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -342,7 +343,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           name: exercise.name,
           muscle_group: exercise.muscle_group,
           sets: exercise.sets || 3,
-          reps: exercise.reps || 10,
+          reps: prescribedDuration(exercise) ? 0 : exercise.reps || 10,
+          duration_seconds: prescribedDuration(exercise),
           rest: exercise.rest_seconds || 90,
           isCustom,
         },
@@ -370,6 +372,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
       const day = { ...updated[dayIdx] }
       day.exercises = [...(day.exercises || [])]
       day.exercises[exIdx] = { ...day.exercises[exIdx], [field]: value }
+      if (field === 'duration_seconds') day.exercises[exIdx].reps = 0
       updated[dayIdx] = day
       return updated
     })
@@ -1222,11 +1225,11 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       />
                     </div>
                     <div>
-                      <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.repsLabel')}</div>
+                      <div style={{ ...labelStyle, marginBottom: 4 }}>{prescribedDuration(ex) ? t('day.durationLabel') : t('day.repsLabel')}</div>
                       <input
-                        type="number" min={1} max={100}
-                        value={ex.reps || 10}
-                        onChange={e => updateExerciseField(editingDayIndex, exIdx, 'reps', Number(e.target.value))}
+                        type="number" min={1} max={prescribedDuration(ex) ? 600 : 100}
+                        value={prescribedDuration(ex) ?? (ex.reps || 10)}
+                        onChange={e => updateExerciseField(editingDayIndex, exIdx, prescribedDuration(ex) ? 'duration_seconds' : 'reps', Number(e.target.value))}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
                     </div>

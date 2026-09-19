@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { NormalizedAthenaTrainingRequest } from './training-policy'
+import { isTimedHold } from '../training/exercise-measurement'
 
 const MUSCLE_GROUP_IDS = [
   'chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads',
@@ -12,12 +13,17 @@ const exerciseSchema = z.object({
   custom_name: z.string().trim().min(1).max(120),
   muscle_primary: z.string().trim().min(1).max(80),
   sets: z.number().int().min(1).max(4),
-  reps: z.number().int().min(1).max(30),
+  reps: z.number().int().min(0).max(30),
+  duration_seconds: z.number().int().min(5).max(180).nullable().optional(),
   rest_seconds: z.number().int().min(30).max(300),
   order: z.number().int().min(1).max(10),
   tempo: z.string().regex(/^\d-\d-\d$/),
   technique: techniqueSchema,
   technique_details: z.string().max(160),
+}).superRefine((exercise, context) => {
+  if (exercise.duration_seconds != null ? exercise.reps !== 0 : exercise.reps < 1 || isTimedHold(exercise.custom_name)) {
+    context.addIssue({ code: 'custom', path: ['duration_seconds'], message: 'Maintien statique : durée obligatoire et reps=0 ; sinon répétitions positives.' })
+  }
 })
 
 const daySchema = z.object({

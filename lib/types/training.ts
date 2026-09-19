@@ -50,6 +50,7 @@ export type Exercise = {
   // Parametres d'entrainement
   sets?: number;
   reps?: string | number;          // '8-12' ou 10
+  duration_seconds?: number | null;
   tempo?: string;                  // '2-0-2'
 
   // Repos (2 variantes, gerees par getRestSeconds)

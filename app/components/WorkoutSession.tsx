@@ -41,12 +41,13 @@ import {
   type PreviousExerciseReference,
 } from '../../lib/training/set-logging'
 import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/rest-timer'
+import { prescribedDuration } from '../../lib/training/exercise-measurement'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; done: boolean; rir: number | null }
-interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
+interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
+interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
 interface WorkoutFinishResult {
@@ -109,8 +110,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   }, [])
 
   const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : [...p, e])
-  const goConfig = () => { setCfg(selected.map(e => ({ ...e, targetSets: 3, targetReps: '10-12', rest: getRestSeconds(e) }))); setStep('config') }
-  const launch = () => onStart(name, cfg.map(e => ({ exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetReps, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
+  const goConfig = () => { setCfg(selected.map(e => ({ ...e, targetSets: 3, targetReps: '10-12', targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e) }))); setStep('config') }
+  const launch = () => onStart(name, cfg.map(e => ({ exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
   const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
 
   if (step === 'config') return (
@@ -135,7 +136,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              {[[t('builder.sets'), 'targetSets', 'number', ''], [t('builder.reps'), 'targetReps', 'text', ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
+              {[[t('builder.sets'), 'targetSets', 'number', ''], [e.targetDurationSeconds ? t('builder.duration') : t('builder.reps'), e.targetDurationSeconds ? 'targetDurationSeconds' : 'targetReps', 'text', e.targetDurationSeconds ? 's' : ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
                 <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
@@ -349,6 +350,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
     for (const exo of exos) {
+      if (exo.targetDurationSeconds) continue
       const progression = computeProgression(
         previousPerformance[exo.id]?.sessions ?? [],
         exo.targetReps,
@@ -403,6 +405,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setExos(current => {
       let changed = false
       const next = current.map(exercise => {
+        if (exercise.targetDurationSeconds) return exercise
         const performance = previousPerformance[exercise.id]
         const prescribedReps = parseRepsTarget(exercise.targetReps)
         const sets = exercise.sets.map((set, index) => {
@@ -543,7 +546,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
   const dismissRestDone = () => { setRestDone(false) }
-  const setField = (eid: string, sid: string, f: 'weight' | 'reps', v: string) => {
+  const setField = (eid: string, sid: string, f: 'weight' | 'reps' | 'durationSeconds', v: string) => {
     if (f === 'weight') {
       setExos(p => p.map(e => e.id !== eid ? e : { ...e, sets: e.sets.map(s => s.id !== sid ? s : { ...s, weightRaw: v, weightInputSource: 'entered' }) }))
     } else {
@@ -613,6 +616,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
     const set = exo?.sets.find(s => s.id === sid)
+    if (exo?.targetDurationSeconds) {
+      const seconds = Number(set?.durationSeconds)
+      if (!Number.isInteger(seconds) || seconds < 1 || seconds > 600) return
+      doValidate(eid, sid)
+      return
+    }
     const reps = Number(set?.reps) || 0
     if (reps > 15) { setRepsWarning({ eid, sid, reps }); return }
     doValidate(eid, sid)
@@ -623,7 +632,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
-  const volume = exos.reduce((v, e) => v + e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0), 0)
+  const volume = exos.reduce((v, e) => v + (e.targetDurationSeconds ? 0 : e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0)), 0)
   const completedExercises = exos.filter(exercise => (
     exercise.sets.length > 0 && exercise.sets.every(set => set.done)
   )).length
@@ -648,7 +657,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaving(true)
     setSaveError(false)
     try {
-      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => ({ weight: s.weight, reps: s.reps, rir: s.rir })) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { weight: s.weight, reps: s.reps, rir: s.rir }) })) }, draftRef.current)
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
       setDone(true)
@@ -728,6 +737,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? {
       ...e,
       name: v.name,
+      targetDurationSeconds: prescribedDuration({ name: v.name }),
       muscle: v.muscle_group || e.muscle,
       exerciseId: v.id || e.exerciseId,
       videoUrl: v.video_url || undefined,
@@ -736,7 +746,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setVariantPopup(null)
   }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, exerciseId: null, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, exerciseId: null, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) {
     return (
@@ -909,11 +919,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           const activeSetNumber = activeSet?.num ?? 1
           const previousState = prevSessionsByExo[exo.name]
           const previousSet = previousPerformance[exo.id]?.latestSets[activeSetIndex]
-          const previousLabel = previousSet
+          const previousLabel = exo.targetDurationSeconds ? null : previousSet
             ? `${previousSet.weight} kg × ${previousSet.reps}${previousSet.rir != null ? ` · RIR ${previousSet.rir === 4 ? '4+' : previousSet.rir}` : ''}`
             : null
           const progression = progressionByExo[exo.id]
-          const targetLabel = progression
+          const targetLabel = exo.targetDurationSeconds ? `${exo.targetDurationSeconds} s` : progression
             ? `${fmtStep(progression.weight)} kg × ${progression.reps}`
             : `${exo.targetReps} reps`
           const suggestion = progression && !activeSet?.done
@@ -949,14 +959,15 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 <div className={trainingV2Styles.focusEditorColumn}>
                   {activeSet && (
                     <CurrentSetEditor
+                      timed={Boolean(exo.targetDurationSeconds)}
                       setNumber={activeSet.num}
                       totalSets={exo.sets.length}
                       weight={activeSet.weightRaw ?? ''}
-                      reps={activeSet.reps}
+                      reps={exo.targetDurationSeconds ? activeSet.durationSeconds ?? '' : activeSet.reps}
                       rir={activeSet.rir}
                       weightStep={getIncrementForExercise(exo.name)}
-                      showRir={Boolean(rirTrackingEnabled)}
-                      canValidate={!activeSet.done && (activeSet.weightRaw !== '' || activeSet.reps !== '')}
+                      showRir={Boolean(rirTrackingEnabled) && !exo.targetDurationSeconds}
+                      canValidate={!activeSet.done && (exo.targetDurationSeconds ? Number(activeSet.durationSeconds) > 0 && Number(activeSet.durationSeconds) <= 600 : activeSet.weightRaw !== '' || activeSet.reps !== '')}
                       suggestion={suggestion}
                       statusMessage={setStatusMessage}
                       onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}
@@ -968,11 +979,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       }}
                       onRepsChange={value => {
                         setSetStatusMessage('')
-                        setField(exo.id, activeSet.id, 'reps', value.replace(/\D/g, ''))
+                        setField(exo.id, activeSet.id, exo.targetDurationSeconds ? 'durationSeconds' : 'reps', value.replace(/\D/g, ''))
                       }}
                       onAdjustReps={direction => {
                         setSetStatusMessage('')
-                        setField(exo.id, activeSet.id, 'reps', String(adjustRepsValue(activeSet.reps, direction)))
+                        if (exo.targetDurationSeconds) setField(exo.id, activeSet.id, 'durationSeconds', String(Math.min(600, Math.max(0, Number(activeSet.durationSeconds || 0) + direction * 5))))
+                        else setField(exo.id, activeSet.id, 'reps', String(adjustRepsValue(activeSet.reps, direction)))
                       }}
                       onRirChange={value => setSetRir(exo.id, activeSet.id, value)}
                       onUseSuggestion={() => {
