@@ -2568,6 +2568,10 @@
     "daysLeft": "{count, plural, one {# day left} other {# days left}}",
     "signOut": "Sign out"
   },
+  "nutritionPlanConsistency": {
+    "outdated": "Your plan was generated with different targets, diet or exclusions. It remains available but has not been updated to your saved settings. Regenerate it from Account → Nutrition program.",
+    "unknown": "This plan’s original settings cannot be verified. Its match with your current targets, diet and exclusions is not confirmed. You can regenerate it from Account → Nutrition program."
+  },
   "accountPrograms": {
     "back": "Back to account",
     "programsEyebrow": "Programs",

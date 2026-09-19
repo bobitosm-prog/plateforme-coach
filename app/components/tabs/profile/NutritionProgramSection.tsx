@@ -21,6 +21,7 @@ import {
 } from '../../../../lib/nutrition/nutrition-program-access'
 import { readActivePersonalMealPlan } from '../../../../lib/meal-plan/personal-plan-repository'
 import styles from './NutritionProgramSection.module.css'
+import NutritionPlanConsistencyNotice from '../../nutrition-v2/NutritionPlanConsistencyNotice'
 
 const NutritionPreferences = dynamic(() => import('../../NutritionPreferences'), {
   ssr: false,
@@ -225,6 +226,9 @@ export default function NutritionProgramSection({
             <div><dt>{t('objective')}</dt><dd>{t(`objectives.${objectiveKey(profile?.objective)}`)}</dd></div>
           </dl>}
           {snapshot.error && <p className={styles.error} role="status">{t('loadError')}</p>}
+          {planStatus === 'ready' && <NutritionPlanConsistencyNotice
+            plan={activePlan.plan} profile={profile} source={activePlan.source}
+          />}
           {relationUncertain && <p className={styles.notice} role="status">{t('relationUncertain')}</p>}
           {coachPlanActive && <p className={styles.coachNotice} role="status">
             <ShieldCheck size={17} aria-hidden="true" />

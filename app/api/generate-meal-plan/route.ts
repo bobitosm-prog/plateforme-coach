@@ -14,6 +14,7 @@ import { loadAthenaGenerationContext } from '../../../lib/athena/generation-cont
 import { resolveFitnessFood } from '../../../lib/nutrition/food-reference'
 import { replacePersonalMealPlan } from '../../../lib/meal-plan/replace-personal-plan'
 import { NUTRITION_PROVIDER_OUTPUT_FORMAT, NutritionProviderOutputError, parseNutritionProviderOutput } from '../../../lib/athena/nutrition-provider-output'
+import { createNutritionPlanContext, NUTRITION_PLAN_CONTEXT_KEY } from '../../../lib/nutrition/plan-context'
 
 export const maxDuration = 300
 
@@ -433,6 +434,7 @@ export async function POST(req: NextRequest) {
           plan[outcome.day] = convertLegacyDayToCanonical(outcome.legacyDay)
         }
 
+        plan[NUTRITION_PLAN_CONTEXT_KEY] = createNutritionPlanContext(params)
         if (params.persist_generated_plan) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'saving' })}\n\n`))
           const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan)

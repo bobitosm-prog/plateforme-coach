@@ -20,6 +20,7 @@ vi.mock('@/lib/rate-limit', () => ({
 
 import { POST } from '@/app/api/generate-meal-plan/route'
 import { NUTRITION_PROVIDER_OUTPUT_FORMAT } from '@/lib/athena/nutrition-provider-output'
+import { parseMealPlan } from '@/lib/meal-plan'
 
 const entry = (aliment: string, quantite_g: number) => ({ aliment, quantite_g, kcal: 0, proteines: 0, glucides: 0, lipides: 0 })
 const day = () => ({ repas: {
@@ -81,7 +82,7 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     const progress = events.filter(e => e.type === 'progress')
     expect(progress[0]).toEqual({ type: 'progress', day: 'mercredi', index: 1, total: 7 })
     expect(progress.map(e => e.index)).toEqual([1, 2, 3, 4, 5, 6, 7])
-    expect(Object.keys(events.at(-1).plan)).toEqual(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
+    expect(Object.keys(parseMealPlan(events.at(-1).plan))).toEqual(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
   })
   it('rejects inconsistent targets before any provider call or persistence', async () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
@@ -111,7 +112,9 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     }
     expect(events.filter(e => e.type === 'done')).toHaveLength(1)
     expect(events.some(e => e.type === 'error')).toBe(false)
-    expect(Object.keys(events.at(-1).plan)).toHaveLength(7)
+    expect(Object.keys(parseMealPlan(events.at(-1).plan))).toHaveLength(7)
+    expect(events.at(-1).plan._nutrition_context).toMatchObject({ version: 1, calorie_goal: 2003, protein_goal: 123, carbs_goal: 268, fat_goal: 52 })
+    expect(mocks.persist.mock.calls[0][2]).toEqual(events.at(-1).plan)
     expect(mocks.persist).toHaveBeenCalledOnce()
     expect(mocks.usage).toHaveBeenCalledOnce()
     expect(events[0]).toEqual({ type: 'status', phase: 'preparing' })

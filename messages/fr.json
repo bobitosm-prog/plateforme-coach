@@ -2568,6 +2568,10 @@
     "daysLeft": "{count, plural, one {# jour restant} other {# jours restants}}",
     "signOut": "Déconnexion"
   },
+  "nutritionPlanConsistency": {
+    "outdated": "Votre plan a été généré avec d’autres objectifs, un autre régime ou d’autres exclusions. Il reste disponible, mais n’a pas été mis à jour avec vos réglages enregistrés. Régénérez-le depuis Compte → Programme nutrition.",
+    "unknown": "Les réglages d’origine de ce plan ne sont pas vérifiables. Sa correspondance avec vos objectifs, votre régime et vos exclusions actuels n’est pas confirmée. Vous pouvez le régénérer depuis Compte → Programme nutrition."
+  },
   "accountPrograms": {
     "back": "Retour au compte",
     "programsEyebrow": "Programmes",

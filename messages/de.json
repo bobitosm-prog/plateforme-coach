@@ -2568,6 +2568,10 @@
     "daysLeft": "{count, plural, one {# Tag übrig} other {# Tage übrig}}",
     "signOut": "Abmelden"
   },
+  "nutritionPlanConsistency": {
+    "outdated": "Dein Plan wurde mit anderen Zielen, einer anderen Ernährungsweise oder anderen Ausschlüssen erstellt. Er bleibt verfügbar, wurde aber nicht an deine gespeicherten Einstellungen angepasst. Erstelle ihn unter Konto → Ernährungsprogramm neu.",
+    "unknown": "Die ursprünglichen Einstellungen dieses Plans sind nicht überprüfbar. Die Übereinstimmung mit deinen aktuellen Zielen, deiner Ernährungsweise und deinen Ausschlüssen ist nicht bestätigt. Du kannst ihn unter Konto → Ernährungsprogramm neu erstellen."
+  },
   "accountPrograms": {
     "back": "Zurück zum Konto",
     "programsEyebrow": "Programme",

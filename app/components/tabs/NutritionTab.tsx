@@ -7,6 +7,7 @@ import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
 import ShoppingList from '../ShoppingList'
+import NutritionPlanConsistencyNotice from '../nutrition-v2/NutritionPlanConsistencyNotice'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
 import SectionTitle from '../ui/SectionTitle'
@@ -403,6 +404,9 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       />}
 
       {/* MON PLAN TAB — daily logs as source of truth */}
+      {(subTab === 'today' || subTab === 'plan') && nutritionModel.activePlan.state === 'ready' && <NutritionPlanConsistencyNotice
+        plan={nutritionModel.activePlan.plan} profile={profile} source={nutritionModel.activePlan.source}
+      />}
       {subTab === 'today' && ((): React.ReactNode => {
         const isViewingPast = selectedDate < today
         const waterGoal = profile?.water_goal || 3000
