@@ -73,7 +73,7 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
       eyebrow: 'Coaching adaptatif · Conçu à Genève',
       titleA: 'Ton plan s’adapte.',
       titleB: 'Tes progrès aussi.',
-      body: 'Entraînement, nutrition, récupération et Athena réunis dans une seule app qui évolue avec tes séances et ton quotidien.',
+      body: 'Ton application de musculation et de nutrition personnalisées : organise tes séances, suis ta récupération et ta progression avec Athena, ton assistant de coaching.',
       primary: 'Créer mon programme',
       secondary: 'Voir MoovX en action',
       note: '14 jours gratuits · Sans carte · Sans engagement',
