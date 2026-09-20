@@ -297,12 +297,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         .eq('completed', false)
       if (deleteScheduleError) throw new Error('SCHEDULE_DELETE_FAILED')
 
+      // Completed sessions survive edits: never recreate their calendar slot.
+      const { data: remaining, error: readScheduleError } = await supabase.from('scheduled_sessions')
+        .select('scheduled_date, session_type')
+        .eq('user_id', session.user.id)
+        .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
+      if (readScheduleError) throw new Error('SCHEDULE_READ_FAILED')
+      const occupiedSlots = new Set((remaining || []).map((row: { scheduled_date: string; session_type: string }) => `${row.scheduled_date}|${row.session_type}`))
+
       const newSessions: any[] = []
       for (let i = 0; i < 7; i++) {
         const day = programDays[i]
         if (!day || day.is_rest) continue
         const date = new Date(monday)
         date.setDate(monday.getDate() + i)
+        if (occupiedSlots.has(`${toDateStr(date)}|custom`)) continue
         newSessions.push({
           user_id: session.user.id,
           title: day.name || day.weekday || DAY_NAMES[i],
@@ -314,7 +323,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         })
       }
       if (newSessions.length > 0) {
-        const { error: insertScheduleError } = await supabase.from('scheduled_sessions').insert(newSessions)
+        const { error: insertScheduleError } = await supabase.from('scheduled_sessions').upsert(newSessions, {
+          onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+        })
         if (insertScheduleError) throw new Error('SCHEDULE_INSERT_FAILED')
       }
     } catch (e) {

@@ -21,7 +21,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
 
-    const { data: existing } = await supabase
+    const { data: existing, error: readError } = await supabase
       .from('scheduled_sessions')
       .select('*')
       .eq('user_id', uid)
@@ -30,6 +30,7 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
       .order('scheduled_date', { ascending: true })
       .limit(500)
 
+    if (readError) throw new Error('SCHEDULE_READ_FAILED')
     let sessions = existing || []
 
     // Gap-fill: insert only missing expected sessions (idempotent, never duplicates)
@@ -45,8 +46,17 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
       const existingKeys = new Set(sessions.map((s: any) => `${s.scheduled_date}|${s.session_type}`))
       const missing = expected.filter(e => !existingKeys.has(`${e.scheduled_date}|${e.session_type}`))
       if (missing.length > 0) {
-        const { data: inserted } = await supabase.from('scheduled_sessions').insert(missing).select()
-        sessions = [...sessions, ...(inserted || [])].sort((a: any, b: any) => a.scheduled_date.localeCompare(b.scheduled_date))
+        const { error: insertError } = await supabase.from('scheduled_sessions').upsert(missing, {
+          onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+        })
+        if (insertError) throw new Error('SCHEDULE_INSERT_FAILED')
+        // A concurrent request may have inserted/completed the same rows.
+        const { data: refreshed, error: refreshError } = await supabase.from('scheduled_sessions')
+          .select('*').eq('user_id', uid)
+          .gte('scheduled_date', toDateStr(monday)).lte('scheduled_date', toDateStr(sunday))
+          .order('scheduled_date', { ascending: true }).limit(500)
+        if (refreshError) throw new Error('SCHEDULE_READ_FAILED')
+        sessions = refreshed || []
       }
     }
 
@@ -115,21 +125,23 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     const sundayStr = toDateStr(sunday)
 
     // Delete only non-completed sessions (preserve done ones)
-    await supabase
+    const { error: deleteError } = await supabase
       .from('scheduled_sessions')
       .delete()
       .eq('user_id', uid)
       .gte('scheduled_date', mondayStr)
       .lte('scheduled_date', sundayStr)
       .eq('completed', false)
+    if (deleteError) throw new Error('SCHEDULE_DELETE_FAILED')
 
     // Fetch remaining (completed) sessions
-    const { data: remaining } = await supabase
+    const { data: remaining, error: readError } = await supabase
       .from('scheduled_sessions')
       .select('*')
       .eq('user_id', uid)
       .gte('scheduled_date', mondayStr)
       .lte('scheduled_date', sundayStr)
+    if (readError) throw new Error('SCHEDULE_READ_FAILED')
 
     // Gap-fill: only insert sessions whose date|type key doesn't already exist
     const remainingKeys = new Set((remaining || []).map((s: any) => `${s.scheduled_date}|${s.session_type}`))
@@ -143,17 +155,21 @@ export default function useScheduledSessions({ supabase }: UseScheduledSessionsP
     }, program)
     const missing = expected.filter(e => !remainingKeys.has(`${e.scheduled_date}|${e.session_type}`))
     if (missing.length > 0) {
-      await supabase.from('scheduled_sessions').insert(missing)
+      const { error: insertError } = await supabase.from('scheduled_sessions').upsert(missing, {
+        onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+      })
+      if (insertError) throw new Error('SCHEDULE_INSERT_FAILED')
     }
 
     // Refetch full week (completed preserved + new)
-    const { data: refreshed } = await supabase
+    const { data: refreshed, error: refreshError } = await supabase
       .from('scheduled_sessions')
       .select('*')
       .eq('user_id', uid)
       .gte('scheduled_date', mondayStr)
       .lte('scheduled_date', sundayStr)
       .order('scheduled_date', { ascending: true })
+    if (refreshError) throw new Error('SCHEDULE_READ_FAILED')
     setScheduledSessions(refreshed || [])
     scheduleReminders(refreshed || [])
     toast.success('Planning régénéré !')
