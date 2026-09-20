@@ -19,7 +19,7 @@ import {
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
-import { resolveProgramDays } from '../../../lib/training/resolve-program'
+import { resolveProgramDays, trainingMonday } from '../../../lib/training/resolve-program'
 import { deriveTodayTrainingState } from '../../../lib/training/today-training-state'
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
@@ -69,7 +69,9 @@ export default function TrainingTab({
   const coachProgram = activeTrainingProgram.source === 'coach'
     ? activeTrainingProgram.program as CoachProgram
     : null
-  const resolvedDays = resolveProgramDays(activeCustomProgram)
+  const prescriptionDate = new Date(`${trainingMonday()}T12:00:00Z`)
+  prescriptionDate.setUTCDate(prescriptionDate.getUTCDate()+weekOffset*7+Math.max(0,frDayToIndex(trainingDay)))
+  const resolvedDays = resolveProgramDays(activeCustomProgram,prescriptionDate)
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
@@ -78,7 +80,7 @@ export default function TrainingTab({
   // Use local date (not UTC) to avoid timezone issues
   const _now = new Date()
   const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`
-  const trainingIsToday  = trainingDay === todayKey
+  const trainingIsToday  = weekOffset === 0 && trainingDay === todayKey
 
   // Program choice is owned by ActiveTrainingProgramContext. This component
   // only renders the already-resolved personal OR coach authority.
@@ -252,7 +254,7 @@ export default function TrainingTab({
         completedSessionName={todayTrainingState.completedSession?.name || null}
         canStart={v2CanStart}
         canViewNext={v2NextSession != null}
-        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName }, trainingExercises, trainingDay)}
+        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName, prescription_date: prescriptionDate.toISOString().slice(0,10) }, trainingExercises, trainingDay)}
         onViewNext={showNextPlannedSession}
         onViewCompleted={todayTrainingState.completedSession
           ? () => openWorkoutDetail(todayTrainingState.completedSession)

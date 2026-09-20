@@ -442,6 +442,9 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
     if (!session?.user?.id) return
     const name = day.day_name || day.name || 'Séance'
+    const requestedDate = typeof day.prescription_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day.prescription_date)
+      ? new Date(`${day.prescription_date}T12:00:00Z`) : new Date()
+    const prescriptionDate = Number.isFinite(requestedDate.getTime()) ? requestedDate : new Date()
     const draft = createActiveWorkoutDraft({
       userId: session.user.id,
       programSource: activeTrainingProgram.source,
@@ -449,7 +452,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       sessionKey: `${activeTrainingProgram.programId || 'free'}:${weekdayKey || name}`,
       sessionName: name,
       trainingDay: weekdayKey || null,
-      exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program)) : exercises,
+      exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program, prescriptionDate)) : exercises,
     })
     writeActiveWorkoutDraft(localStorage, draft)
     setWorkoutSession(draft)
