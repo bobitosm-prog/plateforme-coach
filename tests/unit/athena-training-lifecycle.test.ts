@@ -13,7 +13,7 @@ describe('Athena training lifecycle', () => {
     expect(cron).toContain(".not('onboarding_answers->plan_regeneration_request', 'is', null)")
     expect(cron).toContain('readPlanRegenerationRequest(profile.onboarding_answers)')
     expect(initial).toContain('next_program_regen_at: null')
-    expect(weekly).toContain('next_program_regen_at: null')
+    expect(weekly).not.toContain('regenProgram(')
   })
 
   it('uses profile and onboarding context for explicit objective replacement', () => {
@@ -24,7 +24,8 @@ describe('Athena training lifecycle', () => {
 
   it('shares one insert-first replacement policy across training flows', () => {
     expect(initial).toContain('replacePersonalTrainingProgram(supabase, userId')
-    expect(weekly).toContain('replacePersonalTrainingProgram(supabase, userId')
+    expect(weekly).toContain('/api/weekly-diagnostic/${diagnostic.id}/apply')
+    expect(weekly).not.toContain('replacePersonalTrainingProgram(')
     expect(cron).toContain('replacePersonalTrainingProgram(supabaseAdmin, profile.id')
     expect(replacement.indexOf('.insert(')).toBeLessThan(replacement.indexOf('.update({ is_active: false })'))
     expect(replacement).toContain("stage: rollbackError ? 'rollback' : 'deactivate'")

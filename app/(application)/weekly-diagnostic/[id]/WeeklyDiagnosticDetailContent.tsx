@@ -5,13 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Check, Dumbbell, Target, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
-import { updateProfile, invalidateProfileCache } from '@/lib/profile-service'
+import { invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
-import { buildMealPlanParams } from '@/lib/meal-plan/build-generation-params'
-import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
-import { buildProgramParams } from '@/lib/training/build-program-params'
-import { consumeProgramStream } from '@/lib/training/consume-program-stream'
-import { replacePersonalTrainingProgram } from '@/lib/training/replace-personal-program'
+import { diagnosticWeek } from '@/lib/weekly-diagnostic/week'
 import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
@@ -52,6 +48,7 @@ const sectionHeading: React.CSSProperties = {
 
 export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
   const t = useTranslations('weekly_diagnostic_detail')
+  const at = useTranslations('weeklyAdjustment')
   const locale = useLocale()
   const router = useRouter()
   const supabase = useRef(createBrowserClient(SUPABASE_URL, SUPABASE_KEY)).current
@@ -88,164 +85,25 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleApply() {
-    if (!userId || !diagnostic) return
+    if (!userId || !diagnostic || applying || applied) return
     setApplying(true)
+    setRegenMsg(at('preparing'))
     try {
-      const updates: Record<string, number> = {}
-      const adj = diagnostic.ajustements || {}
-      if (adj.calorie_goal_new) updates.calorie_goal = adj.calorie_goal_new
-      if (adj.protein_goal_new) updates.protein_goal = adj.protein_goal_new
-      if (adj.carbs_goal_new) updates.carbs_goal = adj.carbs_goal_new
-      if (adj.fat_goal_new) updates.fat_goal = adj.fat_goal_new
-
-      const macrosChanged = Object.keys(updates).length > 0
-      const volumeDeltaPct = typeof adj.training_volume_delta_pct === 'number' ? adj.training_volume_delta_pct : 0
-      const volumeChanged = volumeDeltaPct !== 0
-
-      if (macrosChanged && !await regenMealPlan(updates)) throw new Error('Meal plan regeneration failed')
-      if (volumeChanged && !await regenProgram(volumeDeltaPct)) throw new Error('Training regeneration failed')
-
-      if (macrosChanged) {
-        const { error } = await updateProfile(userId, updates, supabase)
-        if (error) throw error
-        invalidateProfileCache()
-        cache.remove(`dashboard_${userId}`)
+      const response = await fetch(`/api/weekly-diagnostic/${diagnostic.id}/apply`, { method: 'POST' })
+      const result = await response.json()
+      if (!response.ok) {
+        setRegenMsg(at(response.status === 409 ? 'changed' : response.status === 403 ? 'coach' : 'failed'))
+        return
       }
-
-      const { error: appliedError } = await supabase
-        .from('weekly_diagnostics')
-        .update({
-          applied_at: new Date().toISOString(),
-          applied_changes: updates,
-        })
-        .eq('id', diagnostic.id)
-      if (appliedError) throw appliedError
-
-      setApplied(true)
-      if (!macrosChanged && !volumeChanged) {
-        setRegenMsg(t('apply_success_no_regen'))
-        setTimeout(() => setRegenMsg(''), 3000)
-      }
-    } catch (e) {
-      console.error('Apply error:', e)
-    } finally {
-      setApplying(false)
-    }
-  }
-
-  async function regenMealPlan(macrosOverrides: Record<string, number>): Promise<boolean> {
-    if (!userId) return false
-    setRegenMsg(t('regen_starting'))
-
-    try {
-      const { data: profile, error: profErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      if (profErr || !profile) throw new Error('Profile fetch failed')
-
-      const params = buildMealPlanParams(profile, macrosOverrides)
-
-      const res = await fetch('/api/generate-meal-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      })
-
-      if (!res.ok || !res.body) throw new Error('SSE response not OK')
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      let planData: any = null
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          try {
-            const parsed = JSON.parse(line.slice(6))
-            if (parsed.type === 'progress') {
-              setRegenMsg(t('regen_progress', { day: parsed.index }))
-            } else if (parsed.type === 'error') {
-              throw new Error(parsed.error)
-            } else if (parsed.type === 'done') {
-              planData = parsed.plan
-            }
-          } catch (parseErr) {
-            if (parseErr instanceof Error && parseErr.message !== 'Unexpected end of JSON input') throw parseErr
-          }
-        }
-      }
-
-      if (!planData) throw new Error('No plan received')
-
-      const replacement = await replacePersonalMealPlan(supabase, userId, planData)
-      if (!replacement.ok) throw new Error(`Meal plan replacement failed: ${replacement.stage}`)
-
-      setRegenMsg(t('regen_success'))
-      setTimeout(() => setRegenMsg(''), 3000)
-      return true
-    } catch (e: any) {
-      console.error('Regen meal plan error:', e)
-      setRegenMsg(t('regen_error'))
-      setTimeout(() => setRegenMsg(''), 5000)
-      return false
-    }
-  }
-
-  // F6.B.5b : régénération programme training via JSON (best-effort)
-  // Déclenchée quand le diagnostic recommande un ajustement de volume.
-  async function regenProgram(volumeDeltaPct: number): Promise<boolean> {
-    if (!userId) return false
-    setRegenMsg(t('regen_program_starting'))
-    try {
-      const { data: profile, error: profErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      if (profErr || !profile) throw new Error('Profile fetch failed')
-
-      const sign = volumeDeltaPct > 0 ? '+' : ''
-      const params = buildProgramParams(profile, {
-        notes: `Ajuste le volume total d'entrainement de ${sign}${volumeDeltaPct}% par rapport a un programme standard pour ce profil (plus/moins de series ou d'exercices selon le signe).`,
-      })
-
-      const res = await fetch('/api/generate-custom-program', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      })
-      const program = await consumeProgramStream(res)
-      if (!program) throw new Error('No program received')
-
-      const replacement = await replacePersonalTrainingProgram(supabase, userId, {
-        name: program.program_name || 'Programme IA',
-        description: program.description || '',
-        days: program.days || [],
-        source: 'diagnostic_auto',
-      })
-      if (!replacement.ok) throw new Error(`Training replacement failed: ${replacement.stage}`)
-
-      await updateProfile(userId, {
-        next_program_regen_at: null,
-      }, supabase)
       invalidateProfileCache()
       cache.remove(`dashboard_${userId}`)
-      setRegenMsg(t('regen_program_success'))
-      setTimeout(() => setRegenMsg(''), 3000)
-      return true
-    } catch (e: any) {
-      console.error('Regen program error:', e)
-      setRegenMsg(t('regen_program_error'))
-      setTimeout(() => setRegenMsg(''), 5000)
-      return false
+      setDiagnostic((previous: typeof diagnostic) => ({ ...previous, applied_at: result.applied_at ?? new Date().toISOString() }))
+      setApplied(true)
+      setRegenMsg(at('success'))
+    } catch {
+      setRegenMsg(at('failed'))
+    } finally {
+      setApplying(false)
     }
   }
 
@@ -261,23 +119,24 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
   const scoreColor = getScoreColor(diagnostic.score_semaine)
   const adj = diagnostic.ajustements || {}
+  const applicable = diagnostic.policy_version === 2 && diagnostic.week_start === diagnosticWeek().weekStart
   const hasAdjustments = adj.calorie_goal_new || adj.protein_goal_new || adj.carbs_goal_new || adj.fat_goal_new || adj.training_volume_delta_pct
   const appliedDate = diagnostic.applied_at
     ? new Date(diagnostic.applied_at).toLocaleDateString(locale === 'fr' ? 'fr-CH' : locale === 'de' ? 'de-CH' : 'en-GB', { day: 'numeric', month: 'short' })
     : null
 
   const metrics = [
-    { label: t('metric_adherence'), value: `${(diagnostic.adherence_pct || 0).toFixed(0)}%` },
-    { label: t('metric_weight_delta'), value: `${diagnostic.weight_delta_kg > 0 ? '+' : ''}${(diagnostic.weight_delta_kg || 0).toFixed(1)} kg` },
-    { label: t('metric_calories'), value: `${(diagnostic.calorie_avg_real || 0).toFixed(0)}` },
-    { label: t('metric_protein_compliance'), value: `${(diagnostic.protein_compliance_pct || 0).toFixed(0)}%` },
+    { label: t('metric_adherence'), value: diagnostic.evidence?.planned_sessions_known === false ? at('unknown') : `${(diagnostic.adherence_pct || 0).toFixed(0)}%` },
+    { label: t('metric_weight_delta'), value: diagnostic.evidence?.weight_known === false ? at('unknown') : `${diagnostic.weight_delta_kg > 0 ? '+' : ''}${(diagnostic.weight_delta_kg || 0).toFixed(1)} kg` },
+    { label: t('metric_calories'), value: diagnostic.evidence?.nutrition_days === 0 ? at('unknown') : `${(diagnostic.calorie_avg_real || 0).toFixed(0)}` },
+    { label: t('metric_protein_compliance'), value: diagnostic.evidence?.nutrition_days === 0 ? at('unknown') : `${(diagnostic.protein_compliance_pct || 0).toFixed(0)}%` },
   ]
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
       {/* ─── Toast regen meal plan ─── */}
       {regenMsg && (
-        <div style={{
+        <div role="status" aria-live="polite" style={{
           position: 'fixed',
           bottom: 24,
           left: '50%',
@@ -368,7 +227,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
                 <AdjRow label="Calories" current={diagnostic.calorie_avg_target} next={adj.calorie_goal_new} unit="kcal" />
               )}
               {adj.protein_goal_new && (
-                <AdjRow label={t('metric_protein_compliance')} current={diagnostic.protein_avg_g} next={adj.protein_goal_new} unit="g" />
+                <AdjRow label={at('proteinTarget')} current={diagnostic.evidence?.protein_target ?? null} next={adj.protein_goal_new} unit="g" />
               )}
               {adj.carbs_goal_new && (
                 <AdjRow label="Carbs" current={null} next={adj.carbs_goal_new} unit="g" />
@@ -378,7 +237,9 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
               )}
               {adj.training_volume_delta_pct && (
                 <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
-                  Volume: {adj.training_volume_delta_pct > 0 ? '+' : ''}{adj.training_volume_delta_pct}%
+                  {diagnostic.adjustment_preview?.setsBefore != null
+                    ? at('sets', { before: diagnostic.adjustment_preview.setsBefore, after: diagnostic.adjustment_preview.setsAfter, percent: diagnostic.adjustment_preview.actualPct })
+                    : at('legacyVolume', { percent: adj.training_volume_delta_pct })}
                 </p>
               )}
             </div>
@@ -387,10 +248,13 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
               {t('adjustments_none')}
             </p>
           )}
+          {hasAdjustments && !applicable && !applied && <p role="status">{at('expired')}</p>}
+          {hasAdjustments && applicable && !applied && <p>{at('preserve')}</p>}
+          {diagnostic.evidence && <p>{at('coverage', { logged: diagnostic.evidence.nutrition_days, complete: diagnostic.evidence.complete_nutrition_days, weights: diagnostic.evidence.weight_measurements })}</p>}
           {hasAdjustments && (
             <button
               onClick={handleApply}
-              disabled={applied || applying}
+              disabled={applied || applying || !applicable}
               style={{
                 ...btnPrimary,
                 width: '100%',
@@ -399,7 +263,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: applied || applying ? 0.5 : 1,
+                opacity: applied || applying || !applicable ? 0.5 : 1,
               }}
             >
               {applied ? (

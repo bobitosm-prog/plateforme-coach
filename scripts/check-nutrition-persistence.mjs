@@ -88,6 +88,13 @@ try {
     })
   }
   console.log('Atomic activation: idempotent migration, retries, stale snapshots, RLS and rollback checks passed.')
+  stage = 'weekly atomic adjustments'
+  const weeklyMigration = readFileSync(new URL('../supabase/migrations/20260920091849_weekly_atomic_adjustments.sql', import.meta.url))
+  for (const input of [readFileSync(new URL('../tests/integration/weekly-adjustment-fixture.sql', import.meta.url)),
+    weeklyMigration, weeklyMigration, readFileSync(new URL('../tests/integration/weekly-adjustment-atomic.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
+  }
+  console.log('Weekly adjustments: server-only decisions/RPCs, owner reads, retries, stale state and complete rollback passed.')
   // Exercise the same transaction on the alternate historical storage contract.
   const canonicalMigration = migration.toString().replaceAll('public.meal_plans', 'canonical.meal_plans')
     .replaceAll('public.activate_personal_meal_plan_v1', 'canonical.activate_personal_meal_plan_v1')

@@ -2,12 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { generateWeeklyDiagnostic } from '@/lib/weekly-diagnostic/generator'
 import { checkAiRateLimit } from '@/lib/rate-limit'
 import { readWeeklyCompletion } from '@/lib/weekly-diagnostic/completion'
+import { loadWeeklyAdjustmentState } from '@/lib/weekly-diagnostic/adjustment-state'
+import { weeklyFixture } from '../fixtures/weekly-adjustment'
 
 vi.mock('@/lib/weekly-diagnostic/completion', () => ({ readWeeklyCompletion: vi.fn() }))
+vi.mock('@/lib/weekly-diagnostic/adjustment-state', () => ({ loadWeeklyAdjustmentState: vi.fn() }))
 
 // Regression tests converted from the audit reproductions.
 // All database writes and provider calls are synthetic, never production.
 function fixture(foodReadError = false) {
+  const baseline = weeklyFixture()
+  vi.mocked(loadWeeklyAdjustmentState).mockResolvedValue(baseline)
   vi.mocked(readWeeklyCompletion).mockResolvedValue({ snapshot: 'fixture', status: {
     today: '2026-09-19', weekStart: '2026-09-07', sunday: '2026-09-13', endExclusive: '2026-09-14',
     eligible: true, hasMeals: true, trainingState: 'completed', confirmed: true, canGenerate: true, diagnosticId: null,
@@ -17,8 +22,9 @@ function fixture(foodReadError = false) {
   vi.stubEnv('ANTHROPIC_API_KEY', 'synthetic-audit-key')
   vi.stubEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY', '')
   const rows: Record<string, any[]> = {
-    profiles: [{ id: 'audit', calorie_goal: 2200, protein_goal: 160, current_weight: 80, tdee: 2600, objective: 'cut', onboarding_answers: { sessions_per_week: 3 } }],
-    daily_food_logs: Array.from({ length: 7 }, (_, i) => ({ user_id: 'audit', date: `2026-09-${String(7 + i).padStart(2, '0')}`, calories: 2200, protein: 160 })),
+    profiles: [baseline.profile],
+    daily_food_logs: Array.from({ length: 7 }, (_, i) => ['petit_dejeuner', 'dejeuner', 'collation', 'diner'].map(meal_type =>
+      ({ user_id: 'audit', date: `2026-09-${String(7 + i).padStart(2, '0')}`, meal_type, calories: 550, protein: 40 }))).flat(),
     weight_logs: [
       { user_id: 'audit', date: '2026-09-07', poids: 80 },
       { user_id: 'audit', date: '2026-09-12', poids: 79 },
@@ -29,7 +35,7 @@ function fixture(foodReadError = false) {
   }
   const inserts: any[] = []
   const reads: { table: string; filters: any[] }[] = []
-  const db = { from(table: string) {
+  const db = { rpc: async () => ({ data: baseline.context, error: null }), from(table: string) {
     const filters: any[] = []
     let operation = 'read', payload: any
     const resolve = (single = false) => {
@@ -91,6 +97,15 @@ describe('weekly diagnostic audit regressions', () => {
       .mockResolvedValueOnce({ ...ready, snapshot: 'edited', status: { ...ready.status, confirmed: false } })
     expect(await generateWeeklyDiagnostic('audit', f.db)).toMatchObject({ blocked: true })
     expect(f.inserts).toHaveLength(0)
+  })
+  it('does not adapt calories when days only contain a snack', async () => {
+    const f = fixture()
+    f.rows.weight_logs.splice(1, 0, { user_id: 'audit', date: '2026-09-10', poids: 79.5 })
+    f.rows.daily_food_logs = f.rows.daily_food_logs.filter(row => row.meal_type === 'collation')
+    await generateWeeklyDiagnostic('audit', f.db)
+    expect(f.inserts[0].ajustements).toEqual({})
+    expect(f.inserts[0].evidence.complete_nutrition_days).toBe(0)
+    expect(f.inserts[0].sessions_planned).toBe(3) // Current plan, not onboarding's six.
   })
   it('does not generate or persist when the nutrition database read fails', async () => {
     const f = fixture(true)

@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server'
 const mocks = vi.hoisted(() => ({ user: { id: 'u' } as { id: string } | null, read: vi.fn(), confirm: vi.fn(), generate: vi.fn(), quota: vi.fn() }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: mocks.user } }) } }) }))
+vi.mock('@supabase/supabase-js', () => ({ createClient: () => ({}) }))
 vi.mock('@/lib/weekly-diagnostic/completion', () => ({ readWeeklyCompletion: mocks.read, confirmWeeklyCompletion: mocks.confirm }))
 vi.mock('@/lib/weekly-diagnostic/generator', () => ({ generateWeeklyDiagnostic: mocks.generate }))
 vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: () => ({ allowed: true }), checkAiRateLimit: mocks.quota, logAiUsage: vi.fn(), aiRateLimitResponse: () => new Response('{}', { status: 429 }) }))

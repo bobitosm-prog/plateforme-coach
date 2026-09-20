@@ -12,6 +12,10 @@ import { buildAthenaScientificPolicyPrompt } from '../athena/scientific-policy'
 import { validateAthenaWeeklyOutput } from '../athena/weekly-output'
 import { normalizeNutritionObjective } from '../nutrition/calorie-macro-targets'
 import { readWeeklyCompletion } from './completion'
+import { loadWeeklyAdjustmentState } from './adjustment-state'
+import { countPlannedSessions, prepareWeeklyAdjustment } from './adjustments'
+import { normalizeNutritionMealType } from '../nutrition/nutrition-dashboard-model'
+import { addNutritionDays } from '../nutrition/nutrition-date'
 
 export interface DiagnosticResult {
   diagnostic_id?: string
@@ -23,7 +27,8 @@ export interface DiagnosticResult {
 
 export async function generateWeeklyDiagnostic(
   userId: string,
-  supabase: any
+  supabase: any,
+  writer: any = supabase,
 ): Promise<DiagnosticResult> {
   const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
   if (!apiKey) return { error: 'Diagnostic temporairement indisponible' }
@@ -47,15 +52,16 @@ export async function generateWeeklyDiagnostic(
       return { already_exists: true, diagnostic_id: existing.id, diagnostic: existing }
     }
     if (!completion.canGenerate) return { blocked: true, error: 'Termine et confirme ta journée du dimanche avant de générer le bilan.' }
+    const baseline = await loadWeeklyAdjustmentState(writer, userId)
 
     // 3. COLLECT DATA (parallel)
-    const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes] = await Promise.all([
+    const [profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes, scheduleRes] = await Promise.all([
       supabase.from('profiles')
         .select('*')
         .eq('id', userId)
         .single(),
       supabase.from('daily_food_logs')
-        .select('date, calories, protein, carbs, fat')
+        .select('date, meal_type, calories, protein, carbs, fat')
         .eq('user_id', userId)
         .gte('date', weekStartStr)
         .lt('date', weekEndStr),
@@ -72,15 +78,17 @@ export async function generateWeeklyDiagnostic(
         .gte('date', weekStartStr)
         .lt('date', weekEndStr),
       supabase.from('weekly_diagnostics')
-        .select('score_semaine, ajustements, objectif_semaine_prochaine, applied_changes')
+        .select('week_start, score_semaine, calorie_avg_real, calorie_avg_target, protein_avg_g, weight_delta_kg, sessions_done, sessions_planned, ajustements, objectif_semaine_prochaine, applied_changes')
         .eq('user_id', userId)
         .lt('week_start', weekStartStr)
         .order('week_start', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase.from('scheduled_sessions').select('session_type').eq('user_id', userId)
+        .gte('scheduled_date', weekStartStr).lt('scheduled_date', weekEndStr),
     ])
 
-    if ([profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes].some(r => r.error)) {
+    if ([profileRes, foodLogsRes, weightLogsRes, workoutSessionsRes, prevDiagRes, scheduleRes].some(r => r.error)) {
       return { error: 'Données du bilan temporairement indisponibles. Réessaie.' }
     }
     const profile = profileRes.data
@@ -105,7 +113,9 @@ export async function generateWeeklyDiagnostic(
 
     // 5. SERVER PRE-ANALYSIS (deterministic)
     const sessionsDone = workoutSessionsRes.data?.length || 0
-    const sessionsPlanned = (profile.onboarding_answers as any)?.sessions_per_week || 4
+    const sessionsPlanned = scheduleRes.data?.length
+      ? scheduleRes.data.filter((s: any) => s.session_type !== 'rest').length
+      : baseline.coachManaged ? 0 : countPlannedSessions(baseline.program?.days) ?? 0
     const adherencePct = sessionsPlanned > 0
       ? Math.min(100, (sessionsDone / sessionsPlanned) * 100)
       : 0
@@ -118,6 +128,14 @@ export async function generateWeeklyDiagnostic(
       foodByDate[d].prot += Number(log.protein || 0)
     }
     const daysLogged = Object.keys(foodByDate).length
+    const mealCoverage = new Map<string, Set<string>>()
+    for (const log of foodLogsRes.data ?? []) {
+      const type = normalizeNutritionMealType(log.meal_type)
+      if (!type) continue
+      if (!mealCoverage.has(log.date)) mealCoverage.set(log.date, new Set())
+      mealCoverage.get(log.date)!.add(type)
+    }
+    const completeNutritionDays = [...mealCoverage.values()].filter(meals => meals.size === 4).length
     const totalKcal = Object.values(foodByDate).reduce((s, d) => s + d.kcal, 0)
     const totalProt = Object.values(foodByDate).reduce((s, d) => s + d.prot, 0)
     const calorieAvgReal = daysLogged > 0 ? totalKcal / daysLogged : 0
@@ -132,6 +150,7 @@ export async function generateWeeklyDiagnostic(
       : null
 
     const weightLogs = weightLogsRes.data || []
+    const weightMeasurements = new Set(weightLogs.map((row: any) => row.date)).size
     const weightDeltaKg = weightLogs.length >= 2
       ? Number(weightLogs[weightLogs.length - 1].poids) - Number(weightLogs[0].poids)
       : 0
@@ -194,16 +213,21 @@ Target: ${calorieAvgTarget} kcal/jour
 Écart moyen: ${(calorieAvgReal - calorieAvgTarget).toFixed(0)} kcal/jour
 Protéines moyennes: ${proteinAvgG.toFixed(0)}g (compliance: ${proteinCompliancePct?.toFixed(0) ?? '?'}%)
 Jours loggés: ${daysLogged}/7
+Jours avec les quatre moments alimentaires renseignés: ${completeNutritionDays}/7 (couverture, pas preuve d’exhaustivité)
 </nutrition_week>
 
 <body_metrics>
-Variation poids cette semaine: ${weightDeltaKg > 0 ? '+' : ''}${weightDeltaKg.toFixed(1)} kg
+Jours de pesée distincts: ${weightMeasurements}
+Variation poids cette semaine: ${weightMeasurements < 2 ? 'inconnue — données insuffisantes' : `${weightDeltaKg > 0 ? '+' : ''}${weightDeltaKg.toFixed(1)} kg`}
 </body_metrics>
 
 ${coherenceFlags.length > 0 ? `<coherence_flags>\n${coherenceFlags.join('\n')}\n</coherence_flags>` : ''}
 
-${prevDiagRes.data ? `<previous_diagnostic>
+${prevDiagRes.data?.week_start === addNutritionDays(weekStartStr, -7) ? `<previous_diagnostic>
 Score S-1: ${prevDiagRes.data.score_semaine}
+Calories moyennes / cible S-1: ${prevDiagRes.data.calorie_avg_real ?? '?'} / ${prevDiagRes.data.calorie_avg_target ?? '?'}
+Séances faites / prévues S-1: ${prevDiagRes.data.sessions_done ?? '?'} / ${prevDiagRes.data.sessions_planned ?? '?'}
+Variation poids S-1: ${prevDiagRes.data.weight_delta_kg ?? '?'} kg
 Ajustements appliqués: ${prevDiagRes.data.applied_changes ? 'Oui' : 'Non'}
 Objectif S-1: ${prevDiagRes.data.objectif_semaine_prochaine}
 </previous_diagnostic>` : ''}
@@ -254,8 +278,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error('[generateWeeklyDiagnostic] Claude API error:', res.status, err.slice(0, 300))
+      console.error('[generateWeeklyDiagnostic] provider failure:', res.status)
       return { error: 'Diagnostic temporairement indisponible' }
     }
 
@@ -263,12 +286,12 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
 
     const toolUseBlock = aiData.content?.find((c: any) => c.type === 'tool_use')
     if (!toolUseBlock) {
-      console.error('[generateWeeklyDiagnostic] No tool_use in response:', JSON.stringify(aiData).slice(0, 500))
+      console.error('[generateWeeklyDiagnostic] missing structured output')
       return { error: 'Format IA invalide' }
     }
 
     const aiOutput = validateAthenaWeeklyOutput(unwrapToolInput(toolUseBlock.input), {
-      adherencePct, nutritionDays: daysLogged, weightMeasurements: weightLogs.length,
+      adherencePct, nutritionDays: daysLogged, completeNutritionDays, weightMeasurements,
       calorieCompliancePct, proteinCompliancePct,
       completedSessions: sessionsDone, plannedSessions: sessionsPlanned,
       currentCalorieGoal: calorieAvgTarget,
@@ -276,8 +299,25 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
       currentWeightKg: Number(profile.current_weight || 0),
       objective: profile.objective,
       dietaryType: profile.dietary_type,
-      hasPreviousDiagnostic: Boolean(prevDiagRes.data),
+      hasPreviousDiagnostic: prevDiagRes.data?.week_start === addNutritionDays(weekStartStr, -7),
     })
+    let adjustmentPreview = null
+    if (Object.values(aiOutput.ajustements).some(Boolean)) {
+      try {
+        if (baseline.coachManaged) throw new Error('Coach managed')
+        const candidate = prepareWeeklyAdjustment(profile, baseline.program, baseline.mealPlan, aiOutput.ajustements)
+        adjustmentPreview = { domain: candidate.domain, ...candidate.changes }
+      } catch { aiOutput.ajustements = {} }
+    }
+    // Explanations must describe the final server-validated action, never a
+    // numeric proposal discarded or clamped after the model returned it.
+    const action = adjustmentPreview?.domain === 'training'
+      ? `Séries de travail du programme actuel : ${adjustmentPreview.setsBefore} → ${adjustmentPreview.setsAfter} (${adjustmentPreview.actualPct} % réels). Exercices, charges et durées conservés.`
+      : adjustmentPreview?.domain === 'nutrition'
+        ? `Nouvelle cible : ${aiOutput.ajustements.calorie_goal_new} kcal. Menus conservés, portions et macros recalculées.`
+        : 'Aucun changement de plan validé : conserver les objectifs et compléter le suivi.'
+    aiOutput.raisonnement = `${daysLogged}/7 jours avec journal, dont ${completeNutritionDays}/7 avec quatre moments alimentaires renseignés. ${weightMeasurements} jours de pesée distincts. ${sessionsDone} séances réalisées ; ${sessionsPlanned || 'nombre inconnu de'} séances prévues. La couverture ne prouve pas que chaque journée est exhaustive. ${action}`
+    aiOutput.objectif_semaine_prochaine = adjustmentPreview ? action : 'Conserver le plan et renseigner les repas et séances de la prochaine semaine.'
     const aiTokensUsed = (aiData.usage?.input_tokens || 0) + (aiData.usage?.output_tokens || 0)
 
     // Do not publish a report if Sunday changed while the provider was working.
@@ -285,12 +325,22 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
     if (latestCompletion.status.weekStart !== weekStartStr || !latestCompletion.status.confirmed || latestCompletion.snapshot !== snapshot) {
       return { blocked: true, error: 'Les données du dimanche ont changé. Confirme à nouveau la journée.' }
     }
+    const contextCheck = await writer.rpc('weekly_adjustment_context_v1', { p_user_id: userId })
+    if (contextCheck.error || JSON.stringify(contextCheck.data) !== JSON.stringify(baseline.context)) {
+      return { blocked: true, error: 'Le profil ou le plan a changé pendant le bilan. Réessaie.' }
+    }
     // 9. PERSIST
-    const { data: saved, error: insertErr } = await supabase
+    const { data: saved, error: insertErr } = await writer
       .from('weekly_diagnostics')
       .insert({
         user_id: userId,
         week_start: weekStartStr,
+        policy_version: 2,
+        application_context: baseline.context,
+        adjustment_preview: adjustmentPreview,
+        evidence: { nutrition_days: daysLogged, complete_nutrition_days: completeNutritionDays,
+          weight_measurements: weightMeasurements, weight_known: weightMeasurements >= 2,
+          protein_target: proteinGoal, planned_sessions_known: sessionsPlanned > 0 },
         adherence_pct: adherencePct,
         weight_delta_kg: weightDeltaKg,
         calorie_avg_real: calorieAvgReal,
@@ -314,7 +364,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
       .single()
 
     if (insertErr) {
-      console.error('[generateWeeklyDiagnostic] Insert error:', insertErr)
+      console.error('[generateWeeklyDiagnostic] persistence failure:', insertErr.code)
       return { error: 'Erreur sauvegarde' }
     }
 

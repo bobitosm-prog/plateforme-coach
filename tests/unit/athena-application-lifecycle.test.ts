@@ -6,24 +6,20 @@ const preferences = readFileSync('app/components/NutritionPreferences.tsx', 'utf
 const initial = readFileSync('app/hooks/useInitialGeneration.ts', 'utf8')
 
 describe('Athena adjustment lifecycle', () => {
-  it('uses the same safe personal meal-plan replacement in every personal flow', () => {
-    expect(detail).toContain('replacePersonalMealPlan(supabase, userId, planData)')
+  it('uses server-owned weekly application and safe replacement for full generation', () => {
+    expect(detail).toContain('/api/weekly-diagnostic/${diagnostic.id}/apply')
     expect(preferences).toContain('persist_generated_plan: true')
     expect(initial).toContain('replacePersonalMealPlan(supabase, userId, payload)')
   })
 
   it('does not mark a weekly adjustment applied before required plans exist', () => {
-    const mealRegen = detail.indexOf('if (macrosChanged && !await regenMealPlan(updates))')
-    const trainingRegen = detail.indexOf('if (volumeChanged && !await regenProgram(volumeDeltaPct))')
-    const profileUpdate = detail.indexOf('await updateProfile(userId, updates, supabase)', mealRegen)
-    const appliedUpdate = detail.indexOf(".from('weekly_diagnostics')", profileUpdate)
-    const appliedState = detail.indexOf('setApplied(true)', appliedUpdate)
-
-    expect(mealRegen).toBeGreaterThan(-1)
-    expect(trainingRegen).toBeGreaterThan(mealRegen)
-    expect(profileUpdate).toBeGreaterThan(trainingRegen)
-    expect(appliedUpdate).toBeGreaterThan(profileUpdate)
-    expect(appliedState).toBeGreaterThan(appliedUpdate)
+    const request = detail.indexOf('/api/weekly-diagnostic/${diagnostic.id}/apply')
+    const success = detail.indexOf('if (!response.ok)', request)
+    expect(request).toBeGreaterThan(-1)
+    expect(success).toBeGreaterThan(request)
+    expect(detail.indexOf('setApplied(true)', success)).toBeGreaterThan(success)
+    expect(detail).not.toContain('await updateProfile(')
+    expect(detail).not.toContain('replacePersonalMealPlan(')
     expect(detail).not.toContain(';(async () =>')
   })
 })
