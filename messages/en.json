@@ -1,5 +1,6 @@
 {
   "weeklyAdjustment": {
+    "effectiveWeek": "Adjustment only for the week starting {date}. Other weeks and phases remain unchanged.",
     "preparing": "Checking and preparing adjustments…", "success": "Adjustments applied and verified.",
     "changed": "Your profile, plan or review period changed. Reload; no new adjustment was applied.",
     "failed": "Application could not be confirmed. Reload to check the result before trying again.",

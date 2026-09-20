@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { getTodaySession } from '../../../lib/get-today-session'
+import { resolveProgramDays } from '../../../lib/training/resolve-program'
 import { toast } from 'sonner'
 import SessionDoneModal from '../training/SessionDoneModal'
 import { colors } from '../../../lib/design-tokens'
@@ -137,10 +138,10 @@ export default function HomeTab({
     if (!session?.user?.id) return
     const userId = session.user.id
     // Fetch active custom program exercises for today — using shared utility
-    supabase.from('custom_programs').select('days').eq('user_id', userId).eq('is_active', true).maybeSingle()
+    supabase.from('custom_programs').select('days,phases,start_date,total_weeks,current_week').eq('user_id', userId).eq('is_active', true).maybeSingle()
       .then(({ data }: any) => {
         if (data?.days) {
-          const session = getTodaySession(data.days)
+          const session = getTodaySession(resolveProgramDays(data))
           if (session.type === 'rest') {
             setCustomDayName(ht('rest'))
             setCustomIsRest(true)

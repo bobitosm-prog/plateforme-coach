@@ -5,6 +5,8 @@ import { athenaNutritionRequestSchema } from '../athena/nutrition-input'
 import { buildMealPlanParams } from '../meal-plan/build-generation-params'
 import { createNutritionPlanContext, getNutritionPlanConsistency, NUTRITION_PLAN_CONTEXT_KEY } from '../nutrition/plan-context'
 import type { Profile } from '../profile-service'
+import { phaseKeyAt, programWeekAt, resolveProgramDays, trainingMonday } from '../training/resolve-program'
+import { diagnosticWeek } from './week'
 
 export class WeeklyAdjustmentError extends Error {
   constructor(readonly code: 'no_change' | 'unsupported_program' | 'plan_outdated' | 'invalid_adjustment') { super(code) }
@@ -13,7 +15,7 @@ const exerciseSchema = z.object({ sets: z.coerce.number().int().min(1).max(10) }
 const daysSchema = z.array(z.object({
   is_rest: z.boolean().optional(), repos: z.boolean().optional(),
   exercises: z.array(z.record(z.string(), z.unknown())).max(20).optional(),
-}).passthrough()).length(7)
+}).passthrough()).min(1).max(7)
 
 /** Preserve exercises, equipment, loads, reps, timed holds, rest and calendar slots. */
 export function adjustTrainingSets(input: unknown, deltaPct: number) {
@@ -58,11 +60,12 @@ export type WeeklyAdjustments = {
   calorie_goal_new?: number; protein_goal_new?: number; carbs_goal_new?: number; fat_goal_new?: number;
   training_volume_delta_pct?: number
 }
-export type ProgramBaseline = { id: string; days: unknown; phases?: unknown }
+export type ProgramBaseline = { id: string; days: unknown; phases?: unknown; start_date?: string | null; total_weeks?: number; current_week?: number }
 
 /** Small weekly nutrition adjustments retain all foods and meal slots; only portions change. */
 export function prepareWeeklyAdjustment(profile: Profile, program: ProgramBaseline | null,
-  mealPlan: { id: string; plan_data: unknown } | null, adjustment: WeeklyAdjustments) {
+  mealPlan: { id: string; plan_data: unknown } | null, adjustment: WeeklyAdjustments,
+  effectiveWeekStart = diagnosticWeek().endExclusive) {
   if (adjustment.calorie_goal_new !== undefined) {
     if (adjustment.training_volume_delta_pct || !Number.isFinite(adjustment.calorie_goal_new)
       || Math.abs(adjustment.calorie_goal_new - Number(profile.calorie_goal)) > 150) throw new WeeklyAdjustmentError('invalid_adjustment')
@@ -92,10 +95,37 @@ export function prepareWeeklyAdjustment(profile: Profile, program: ProgramBaseli
       changes: { mealPlanId: mealPlan.id, targets, beforeTargets: { calorie_goal: profile.calorie_goal, protein_goal: profile.protein_goal,
         carbs_goal: profile.carbs_goal, fat_goal: profile.fat_goal } } }
   }
-  if (!program || (Array.isArray(program.phases) && program.phases.length > 0)
-    || (program.phases && !Array.isArray(program.phases))) throw new WeeklyAdjustmentError('unsupported_program')
-  const training = adjustTrainingSets(program.days, adjustment.training_volume_delta_pct ?? 0)
-  return { domain: 'training' as const, plan: null, days: training.days,
+  if (!program) throw new WeeklyAdjustmentError('unsupported_program')
+  if (program.phases && !Array.isArray(program.phases)) throw new WeeklyAdjustmentError('unsupported_program')
+  if (Array.isArray(program.phases) && program.phases.length) {
+    const ranges = z.array(z.object({ weeks: z.tuple([z.number().int().positive(),z.number().int().positive()]) }).passthrough()).safeParse(program.phases)
+    if (!ranges.success || ranges.data.some((phase,i) => phase.weeks[0] !== (i ? ranges.data[i-1].weeks[1]+1 : 1) || phase.weeks[1]<phase.weeks[0])
+      || ranges.data.at(-1)!.weeks[1] !== program.total_weeks) throw new WeeklyAdjustmentError('unsupported_program')
+  }
+  const parsed = daysSchema.safeParse(program.days)
+  if (!parsed.success) throw new WeeklyAdjustmentError('unsupported_program')
+  const phased = Boolean(Array.isArray(program.phases) && program.phases.length)
+    || parsed.data.some(day => day.exercises?.some(ex => ex.phases))
+  const at = new Date(`${effectiveWeekStart}T12:00:00Z`)
+  const end = new Date(at); end.setUTCDate(end.getUTCDate()+6)
+  if (!Number.isFinite(at.getTime()) || trainingMonday(at)!==effectiveWeekStart) throw new WeeklyAdjustmentError('invalid_adjustment')
+  if (phased && (!program.start_date || !Number.isInteger(program.total_weeks)
+    || !Number.isFinite(Date.parse(`${program.start_date}T12:00:00Z`)) || Number(program.total_weeks)<1 || Number(program.total_weeks)>52
+    || programWeekAt(program,at)>Number(program.total_weeks) || !phaseKeyAt(program,at)
+    || programWeekAt(program,end)>Number(program.total_weeks) || phaseKeyAt(program,at)!==phaseKeyAt(program,end)
+    || program.start_date>effectiveWeekStart)) throw new WeeklyAdjustmentError('unsupported_program')
+  const training = adjustTrainingSets(phased ? resolveProgramDays(program,at) : program.days, adjustment.training_volume_delta_pct ?? 0)
+  let days = training.days
+  if (phased) {
+    // Date-scoped override: never rewrite p1/p2/p3 or later weeks.
+    days = structuredClone(parsed.data)
+    days.forEach((day,i) => day.exercises?.forEach((ex,j) => {
+      if (day.is_rest || day.repos || ex.is_warmup || ex.warmup) return
+      const previous = ex._weekly_sets && typeof ex._weekly_sets === 'object' && !Array.isArray(ex._weekly_sets) ? ex._weekly_sets : {}
+      ex._weekly_sets = { ...previous, [effectiveWeekStart]: training.days[i].exercises![j].sets }
+    }))
+  }
+  return { domain: 'training' as const, plan: null, days,
     changes: { programId: program.id, setsBefore: training.before, setsAfter: training.after,
-      requestedPct: training.requestedPct, actualPct: training.actualPct } }
+      requestedPct: training.requestedPct, actualPct: training.actualPct, effectiveWeekStart: phased ? effectiveWeekStart : null } }
 }

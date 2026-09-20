@@ -8,7 +8,7 @@ export async function loadWeeklyAdjustmentState(db: SupabaseClient, userId: stri
   if (error || !context) throw new Error('Weekly baseline unavailable')
   const [profile, program, plan] = await Promise.all([
     db.from('profiles').select('*').eq('id', userId).single(),
-    context.programId ? db.from('custom_programs').select('id,days,phases').eq('user_id', userId).eq('id', context.programId).single() : { data: null, error: null },
+    context.programId ? db.from('custom_programs').select('id,days,phases,start_date,total_weeks,current_week').eq('user_id', userId).eq('id', context.programId).single() : { data: null, error: null },
     context.mealPlanId ? db.from('meal_plans').select('id,plan_data').eq('user_id', userId).eq('id', context.mealPlanId).single() : { data: null, error: null },
   ])
   if (profile.error || program.error || plan.error) throw new Error('Weekly baseline data unavailable')

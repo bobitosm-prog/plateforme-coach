@@ -19,6 +19,7 @@ import {
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
+import { resolveProgramDays } from '../../../lib/training/resolve-program'
 import { deriveTodayTrainingState } from '../../../lib/training/today-training-state'
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
@@ -68,6 +69,7 @@ export default function TrainingTab({
   const coachProgram = activeTrainingProgram.source === 'coach'
     ? activeTrainingProgram.program as CoachProgram
     : null
+  const resolvedDays = resolveProgramDays(activeCustomProgram)
   // Workout detail
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null)
   const [workoutDetail, setWorkoutDetail] = useState<any[]>([])
@@ -84,31 +86,14 @@ export default function TrainingTab({
     if (!activeCustomProgram?.days?.length) return null
     const dayIndex = frDayToIndex(trainingDay)
     if (dayIndex < 0) return null
-    const session = getSessionForDay(activeCustomProgram.days, dayIndex)
+    const session = getSessionForDay(resolvedDays, dayIndex)
     if (session.type === 'rest') return { repos: true, exercises: [] }
     return { repos: false, exercises: session.exercises }
   })()
   const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
   const baseExercises: any[] = trainingDayData?.exercises || []
 
-  // Resolve exercises for current phase (periodized programs)
-  const resolvedExercises: any[] = baseExercises.map((ex: any) => {
-    if (!ex.phases || !activeCustomProgram) return ex
-    const week = getEffectiveWeek(activeCustomProgram)
-    const phaseKey = week <= 4 ? 'p1' : week <= 8 ? 'p2' : 'p3'
-    const phaseData = ex.phases[phaseKey] || ex.phases.p1 || {}
-    return {
-      ...ex,
-      sets: phaseData.sets ?? ex.sets,
-      reps: typeof phaseData.reps === 'string' ? parseInt(phaseData.reps) || ex.reps : phaseData.reps ?? ex.reps,
-      tempo: phaseData.tempo ?? ex.tempo,
-      technique: phaseData.technique ?? ex.technique,
-      technique_details: phaseData.technique_details ?? ex.technique_details,
-      rest_seconds: phaseData.rest_seconds ?? ex.rest_seconds,
-    }
-  })
-
-  const trainingExercises: any[] = resolvedExercises
+  const trainingExercises: any[] = baseExercises
 
   const trainingTotalSets = trainingExercises.reduce((sum: number, exercise: any) => sum + (Number(exercise.sets) || 0), 0)
 
@@ -122,7 +107,7 @@ export default function TrainingTab({
   // Build week sessions from custom program (single source of truth for calendar)
   const weekSessions: any[] = (() => {
     if (!activeCustomProgram?.days?.length) return scheduledSessions
-    const paddedDays = padTo7Days(activeCustomProgram.days)
+    const paddedDays = padTo7Days(resolvedDays)
     const today = new Date()
     const dow = today.getDay()
     const monday = new Date(today)
@@ -211,7 +196,7 @@ export default function TrainingTab({
       const dayIndex = (currentIndex + offset) % 7
       const dayKey = dayKeys[dayIndex]
       const exercises = activeCustomProgram?.days?.length
-        ? getSessionForDay(activeCustomProgram.days, dayIndex).exercises
+        ? getSessionForDay(resolvedDays, dayIndex).exercises
         : coachProgram?.[dayKey]?.exercises || []
       if (exercises.length > 0) {
         return { dayKey, dayIndex, weekOffset: currentIndex + offset > 6 ? 1 : 0 }
@@ -289,7 +274,7 @@ export default function TrainingTab({
           d.setDate(baseMonday.getDate() + i)
           const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
           const ws = weekSessions.find((s: any) => s.scheduled_date === dateStr)
-          const progSession = activeCustomProgram?.days?.length ? getSessionForDay(activeCustomProgram.days, i) : null
+          const progSession = activeCustomProgram?.days?.length ? getSessionForDay(resolvedDays, i) : null
           const isProgRest = progSession?.type === 'rest'
           return { date: d, dateStr, ws, isProgRest }
         })

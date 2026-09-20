@@ -1,5 +1,6 @@
 'use client'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
+import { resolveProgramDays, resolveProgramExercise } from '@/lib/training/resolve-program'
 import { createBrowserClient } from '@supabase/ssr'
 import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
@@ -249,7 +250,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
         setProgressionBaseErrors(cached.progressionBaseErrorsData || {})
         setWorkoutHistoryState(cached.progressionBaseErrorsData?.sessions ? 'error' : cached.sessData?.some((item: { completed?: boolean }) => item.completed) ? 'ready' : 'empty')
         const planningProgram = context.source === 'personal' ? personalToDays(context.program) : coachToDays(context.program)
-        setPlanningDays(planningProgram?.days || null)
+        setPlanningDays(context.source === 'personal' ? resolveProgramDays(context.program) : planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
         fetchAllComplete.current = true
         setPostAuthProfileState('ready')
@@ -373,7 +374,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     setSessionDates(sessionDatesRes?.data || [])
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
     const planningProgram = trainingContext.source === 'personal' ? personalToDays(trainingContext.program) : coachToDays(coachProgData)
-    setPlanningDays(planningProgram?.days || null)
+    setPlanningDays(trainingContext.source === 'personal' ? resolveProgramDays(trainingContext.program) : planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     fetchAllComplete.current = true
     setPostAuthProfileState('ready')
@@ -448,7 +449,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       sessionKey: `${activeTrainingProgram.programId || 'free'}:${weekdayKey || name}`,
       sessionName: name,
       trainingDay: weekdayKey || null,
-      exercises,
+      exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program)) : exercises,
     })
     writeActiveWorkoutDraft(localStorage, draft)
     setWorkoutSession(draft)
