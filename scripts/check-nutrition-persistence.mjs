@@ -102,6 +102,13 @@ try {
   }
   execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input:readFileSync(new URL('../tests/integration/weekly-supervision-security.sql',import.meta.url)),stdio:['pipe','pipe','pipe']})
   // Exercise the same transaction on the alternate historical storage contract.
+  stage = 'calendar exact duplicate repair'
+  const scheduleMigration = readFileSync(new URL('../supabase/migrations/20260920112251_scheduled_session_exact_dedup.sql', import.meta.url))
+  for (const input of [readFileSync(new URL('../tests/integration/schedule-dedup-fixture.sql', import.meta.url)),
+    scheduleMigration, scheduleMigration, readFileSync(new URL('../tests/integration/schedule-dedup-security.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
+  }
+  console.log('Calendar repair: completed history preserved, three duplicates archived privately, idempotent migration passed.')
   const canonicalMigration = migration.toString().replaceAll('public.meal_plans', 'canonical.meal_plans')
     .replaceAll('public.activate_personal_meal_plan_v1', 'canonical.activate_personal_meal_plan_v1')
     .replaceAll('plan_data', 'plan').replaceAll('is_active', 'active')

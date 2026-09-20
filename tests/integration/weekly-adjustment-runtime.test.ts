@@ -5,6 +5,7 @@ import { diagnosticWeek } from '@/lib/weekly-diagnostic/week'
 import { adjustTrainingSets, prepareWeeklyAdjustment } from '@/lib/weekly-diagnostic/adjustments'
 import { weeklyFixture } from '../fixtures/weekly-adjustment'
 import { resolveProgramDays } from '@/lib/training/resolve-program'
+import { buildHomeWeeklyProgress } from '@/lib/home/home-weekly-progress'
 
 const secret = process.env.NUTRITION_TEST_JWT_SECRET
 if (!secret) throw new Error('Disposable integration fixture required')
@@ -21,6 +22,43 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('repairs 63% to 100% and concurrent calendar retries never erase completions', async () => {
+    const userId = '10000000-0000-4000-8000-000000000099'
+    const ownerPayload = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ role: 'authenticated', sub: userId, exp: Math.floor(Date.now() / 1000) + 600 })}`
+    const ownerToken = `${ownerPayload}.${createHmac('sha256', secret!).update(ownerPayload).digest('base64url')}`
+    const owner = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${ownerToken}` }, fetch: (input, init) => {
+        const target = new URL(String(input))
+        if (target.origin !== 'http://127.0.0.1:56431') throw new Error('External network forbidden')
+        target.pathname = target.pathname.replace(/^\/rest\/v1/, '')
+        return fetch(target, init)
+      } },
+    })
+    const original = await db.from('scheduled_sessions').select('*').eq('user_id', userId)
+    expect(original.error).toBeNull()
+    expect(buildHomeWeeklyProgress({ now: new Date('2026-09-20T12:00:00Z'),
+      workoutSessions: [], scheduledSessions: original.data! }).adherence).toBe(1)
+    const rows = original.data!.map(({ user_id, scheduled_date, session_type, title }) =>
+      ({ user_id, scheduled_date, session_type, title, completed: false }))
+    const results = await Promise.all(Array.from({ length: 8 }, () => owner.from('scheduled_sessions').upsert(rows, {
+      onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+    })))
+    expect(results.every(result => result.error === null)).toBe(true)
+    const after = await db.from('scheduled_sessions').select('*').eq('user_id', userId)
+    expect(after.data).toHaveLength(5)
+    expect(after.data!.every(row => row.completed)).toBe(true)
+    const newRow = { ...rows[0], scheduled_date: '2026-09-21' }
+    const inserted = await Promise.all(Array.from({ length: 8 }, () => owner.from('scheduled_sessions').upsert(newRow, {
+      onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+    })))
+    expect(inserted.every(result => result.error === null)).toBe(true)
+    expect((await db.from('scheduled_sessions').select('id').eq('user_id',userId).eq('scheduled_date','2026-09-21')).data).toHaveLength(1)
+    // Different titles may represent real activity: do not merge them blindly.
+    expect((await db.from('scheduled_sessions').insert({ ...newRow, title: 'Distinct session' })).error).toBeNull()
+    expect((await owner.from('scheduled_session_duplicate_archive').select('*')).error).not.toBeNull()
+    expect((await owner.from('scheduled_sessions').insert({ ...newRow, user_id: randomUUID() })).error).not.toBeNull()
+  })
   it('persists a date-scoped phase adjustment without changing any phase prescription', async () => {
     const week=diagnosticWeek(); const userId=randomUUID(); const id=randomUUID(); const diag=randomUUID()
     const start=new Date(`${week.endExclusive}T12:00:00Z`); start.setUTCDate(start.getUTCDate()-28)
