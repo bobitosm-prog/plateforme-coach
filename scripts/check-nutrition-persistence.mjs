@@ -95,6 +95,12 @@ try {
     execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
   }
   console.log('Weekly adjustments: server-only decisions/RPCs, owner reads, retries, stale state and complete rollback passed.')
+  stage = 'weekly supervision and historical programs'
+  for (const name of ['20260920100749_weekly_generation_supervision','20260920100750_weekly_historical_phase_adjustments','20260920101926_weekly_supervised_schedule']) {
+    const input=readFileSync(new URL(`../supabase/migrations/${name}.sql`,import.meta.url))
+    for (let pass=0;pass<2;pass++) execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input:readFileSync(new URL('../tests/integration/weekly-supervision-security.sql',import.meta.url)),stdio:['pipe','pipe','pipe']})
   // Exercise the same transaction on the alternate historical storage contract.
   const canonicalMigration = migration.toString().replaceAll('public.meal_plans', 'canonical.meal_plans')
     .replaceAll('public.activate_personal_meal_plan_v1', 'canonical.activate_personal_meal_plan_v1')
@@ -130,6 +136,11 @@ try {
     const fingerprint = `select md5(jsonb_build_object(
       'profiles',(select jsonb_agg(to_jsonb(p) order by id) from public.profiles p),
       'plans',(select jsonb_agg(to_jsonb(p) order by id) from public.meal_plans p),
+      'weekly_jobs',(select jsonb_agg(to_jsonb(j) order by user_id,week_start) from public.weekly_generation_jobs j),
+      'weekly_runs',(select jsonb_agg(to_jsonb(r) order by id) from public.weekly_generation_runs r),
+      'weekly_claim',pg_get_functiondef('public.claim_weekly_generation_v1(uuid)'::regprocedure),
+      'weekly_settle',pg_get_functiondef('public.settle_weekly_generation_v1(uuid,uuid,date,text,uuid)'::regprocedure),
+      'weekly_apply',pg_get_functiondef('public.apply_weekly_adjustment_v1(uuid,uuid,jsonb)'::regprocedure),
       'policies',(select jsonb_agg(to_jsonb(p) order by schemaname,tablename,policyname) from pg_policies p where schemaname in ('public','canonical','storage')),
       'buckets',(select jsonb_agg(to_jsonb(b) order by id) from storage.buckets b),
       'function',pg_get_functiondef('public.activate_personal_meal_plan_v1(uuid,jsonb,timestamptz,uuid)'::regprocedure),

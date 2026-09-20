@@ -2,6 +2,7 @@
 import { PageHeader } from '../_components/PageHeader'
 import { LogsTable } from './_components/LogsTable'
 import { useLogs } from './_hooks/useLogs'
+import { WeeklyGenerationMonitor } from './_components/WeeklyGenerationMonitor'
 
 export default function AdminLogsPage() {
   const { logs, loading, error, search, setSearch, levelFilter, setLevelFilter, actionFilter, setActionFilter } = useLogs()
@@ -12,6 +13,7 @@ export default function AdminLogsPage() {
         title="Logs"
         description="Journal des actions administrateur (audit trail)"
       />
+      <WeeklyGenerationMonitor />
       <LogsTable
         logs={logs}
         loading={loading}
