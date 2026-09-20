@@ -2,6 +2,7 @@ export type LandingV2Locale = 'fr' | 'en' | 'de'
 
 export type LandingV2Copy = {
   a11y: { home: string; navigation: string }
+  install: { title: string; body: string; ios: readonly string[]; android: readonly string[]; note: string; cta: string; link: string }
   nav: { product: string; method: string; pricing: string; login: string; start: string }
   hero: {
     eyebrow: string
@@ -67,6 +68,14 @@ export type LandingV2Copy = {
 
 export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
   fr: {
+    install: {
+      title: 'MoovX sur ton écran d’accueil',
+      body: 'Installe MoovX depuis ton navigateur, sans passer par un magasin d’applications. Tu pourras ensuite ouvrir l’app depuis son icône.',
+      ios: ['Ouvre app.moovx.ch dans Safari.', 'Ouvre le menu de la page, puis « Partager » (ou touche directement le bouton Partager).', 'Choisis « Sur l’écran d’accueil », active « Ouvrir comme app web » si proposé, puis touche « Ajouter ».'],
+      android: ['Ouvre app.moovx.ch dans Chrome.', 'Ouvre le menu ⋮, puis « Installer et créer un raccourci » ou « Ajouter à l’écran d’accueil », selon ta version.', 'Choisis « Installer » et confirme. Retrouve ensuite MoovX parmi tes applications.'],
+      note: 'Depuis Instagram ou une autre app, ouvre d’abord le lien dans Safari ou Chrome. L’installation est facultative : MoovX reste accessible dans le navigateur.',
+      cta: 'Ouvrir MoovX pour l’installer', link: 'Installer MoovX',
+    },
     a11y: { home: 'MoovX — accueil', navigation: 'Navigation principale' },
     nav: { product: 'Le produit', method: 'La méthode', pricing: 'Tarifs', login: 'Connexion', start: 'Essayer MoovX' },
     hero: {
@@ -150,6 +159,14 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
     footer: { product: 'Produit', resources: 'Ressources', legal: 'Légal', privacy: 'Confidentialité', terms: 'Conditions générales', login: 'Connexion', coach: 'Espace coach', note: 'Coaching fitness adaptatif · Genève, Suisse' },
   },
   en: {
+    install: {
+      title: 'MoovX on your home screen',
+      body: 'Install MoovX from your browser without an app store. Then open the app directly from its icon.',
+      ios: ['Open app.moovx.ch in Safari.', 'Open the page menu and choose Share, or tap the Share button directly.', 'Choose Add to Home Screen, enable Open as Web App if offered, then tap Add.'],
+      android: ['Open app.moovx.ch in Chrome.', 'Open the ⋮ menu, then Install and create shortcut or Add to Home screen, depending on your version.', 'Choose Install and confirm. Find MoovX among your apps.'],
+      note: 'If you arrived from Instagram or another app, open the link in Safari or Chrome first. Installation is optional: you can still use MoovX in your browser.',
+      cta: 'Open MoovX to install it', link: 'Install MoovX',
+    },
     a11y: { home: 'MoovX — home', navigation: 'Main navigation' },
     nav: { product: 'Product', method: 'Method', pricing: 'Pricing', login: 'Log in', start: 'Try MoovX' },
     hero: {
@@ -227,6 +244,14 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
     footer: { product: 'Product', resources: 'Resources', legal: 'Legal', privacy: 'Privacy', terms: 'Terms and conditions', login: 'Log in', coach: 'Coach space', note: 'Adaptive fitness coaching · Geneva, Switzerland' },
   },
   de: {
+    install: {
+      title: 'MoovX auf deinem Home-Bildschirm',
+      body: 'Installiere MoovX direkt über deinen Browser, ohne App-Store. Danach öffnest du die App über ihr Symbol.',
+      ios: ['Öffne app.moovx.ch in Safari.', 'Öffne das Seitenmenü und wähle „Teilen“ oder tippe direkt auf die Teilen-Taste.', 'Wähle „Zum Home-Bildschirm“, aktiviere „Als Web-App öffnen“, falls angeboten, und tippe auf „Hinzufügen“.'],
+      android: ['Öffne app.moovx.ch in Chrome.', 'Öffne das Menü ⋮ und wähle je nach Version „Installieren und Verknüpfung erstellen“ oder „Zum Startbildschirm hinzufügen“.', 'Wähle „Installieren“ und bestätige. Du findest MoovX anschließend unter deinen Apps.'],
+      note: 'Wenn du von Instagram oder einer anderen App kommst, öffne den Link zuerst in Safari oder Chrome. Die Installation ist optional: MoovX bleibt im Browser nutzbar.',
+      cta: 'MoovX zur Installation öffnen', link: 'MoovX installieren',
+    },
     a11y: { home: 'MoovX — Startseite', navigation: 'Hauptnavigation' },
     nav: { product: 'Produkt', method: 'Methode', pricing: 'Preise', login: 'Anmelden', start: 'MoovX testen' },
     hero: {
