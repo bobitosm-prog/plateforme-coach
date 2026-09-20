@@ -45,6 +45,16 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
       </section>
 
       <AppScreens copy={copy} />
+      <section className={styles.installSection} id="install" aria-labelledby="install-title">
+        <h2 id="install-title">{copy.install.title}</h2>
+        <p>{copy.install.body}</p>
+        <div className={styles.installGrid}>
+          <article><h3>iPhone · Safari</h3><ol>{copy.install.ios.map(step => <li key={step}>{step}</li>)}</ol></article>
+          <article><h3>Android · Chrome</h3><ol>{copy.install.android.map(step => <li key={step}>{step}</li>)}</ol></article>
+        </div>
+        <p>{copy.install.note}</p>
+        <a className={styles.primaryButton} href={APP_URL}>{copy.install.cta}<ArrowRight size={17} aria-hidden="true" /></a>
+      </section>
 
       <section className={styles.methodSection} id="method">
         <div className={styles.methodIntro} data-landing-reveal>
@@ -188,7 +198,7 @@ function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: stri
 function Footer({ locale, copy }: { locale: LandingV2Locale; copy: LandingV2Copy }) {
   return <footer className={styles.footer}>
     <div className={styles.footerBrand}><Image src="/logo-moovx-48.png" width={32} height={32} alt="" /><strong>MOOVX</strong><p>{copy.footer.note}</p></div>
-    <div><strong>{copy.footer.product}</strong><a href="#product">{copy.nav.product}</a><a href="#pricing">{copy.nav.pricing}</a><a href={`${APP_URL}/login`}>{copy.footer.login}</a></div>
+    <div><strong>{copy.footer.product}</strong><a href="#product">{copy.nav.product}</a><a href="#pricing">{copy.nav.pricing}</a><a href="#install">{copy.install.link}</a><a href={`${APP_URL}/login`}>{copy.footer.login}</a></div>
     <div><strong>{copy.footer.resources}</strong><Link href={`/${locale}/blog`}>Blog</Link><Link href={`/${locale}/coach-sportif-ia`}>Athena</Link><a href={`${APP_URL}/onboarding-coach`}>{copy.footer.coach}</a></div>
     <div><strong>{copy.footer.legal}</strong><Link href={`/${locale}/privacy`}>{copy.footer.privacy}</Link><Link href={`/${locale}/cgu`}>{copy.footer.terms}</Link></div>
     <small>© 2026 MoovX</small>
