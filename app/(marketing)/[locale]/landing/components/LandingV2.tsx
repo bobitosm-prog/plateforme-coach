@@ -112,6 +112,17 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
       <section className={styles.finalSection}>
         <div data-landing-reveal><p className={styles.eyebrow}>{copy.final.eyebrow}</p><h2>{copy.final.title}</h2><p>{copy.final.body}</p><a className={styles.primaryButton} href={`${APP_URL}/register-client`}>{copy.final.cta}<ArrowRight size={17} aria-hidden="true" /></a></div>
       </section>
+      {locale === 'fr' && <section className={styles.resourcesSection} aria-labelledby="landing-resources-title">
+        <h2 id="landing-resources-title">Ressources gratuites pour ton entraînement et ta nutrition</h2>
+        <p>Prépare tes séances et trouve des repères pour ton alimentation avec nos guides et outils.</p>
+        <nav aria-label="Guides et outils MoovX" className={styles.resourceLinks}>
+          <Link href="/fr/programmes/musculation/3-jours">Programme de musculation sur 3 jours</Link>
+          <Link href="/fr/programmes/musculation/debutant">Programme de musculation pour débutant</Link>
+          <Link href="/fr/outils/calculateur-calories-macros">Calculateur de calories et macros</Link>
+          <Link href="/fr/guides/nutrition">Guide de la nutrition sportive</Link>
+          <Link href="/fr/guides/musculation">Guide de la musculation</Link>
+        </nav>
+      </section>}
     </main>
 
     <Footer locale={locale} copy={copy} />
