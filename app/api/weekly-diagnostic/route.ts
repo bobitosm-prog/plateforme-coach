@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { checkRateLimit, checkAiRateLimit, logAiUsage, aiRateLimitResponse } from '../../../lib/rate-limit'
@@ -51,7 +52,10 @@ async function handle(req: NextRequest) {
       await logAiUsage(supabase, user.id, 'weekly-diagnostic')
     }
 
-    const result = await generateWeeklyDiagnostic(user.id, supabase)
+    const writer = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+    const result = await generateWeeklyDiagnostic(user.id, supabase, writer)
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.blocked ? 409 : 500 })
     }

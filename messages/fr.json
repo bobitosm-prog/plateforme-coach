@@ -1,4 +1,16 @@
 {
+  "weeklyAdjustment": {
+    "preparing": "Vérification et préparation des ajustements…", "success": "Ajustements appliqués et vérifiés.",
+    "changed": "Le profil, le plan ou la période du bilan a changé. Recharge la page ; aucun nouvel ajustement n’a été appliqué.",
+    "failed": "L’application n’a pas pu être confirmée. Recharge pour vérifier le résultat avant de réessayer.",
+    "coach": "Ces changements doivent être validés avec ton coach.",
+    "expired": "Ce bilan reste consultable, mais n’est plus applicable. Utilise le prochain bilan sécurisé.",
+    "preserve": "Les menus et exercices sont conservés. Seules les portions ou les séries validées sont ajustées.",
+    "sets": "Séries de travail : {before} → {after} ({percent} % réels après arrondi). Charges, répétitions et durées conservées.",
+    "legacyVolume": "Ancienne proposition de volume : {percent} % (non vérifiée sur le programme actuel).",
+    "proteinTarget": "Objectif protéines", "unknown": "Données insuffisantes",
+    "coverage": "Suivi : {logged}/7 jours renseignés, {complete}/7 avec les quatre moments alimentaires ; {weights} jours de pesée."
+  },
   "weeklyCompletion": {
     "error": "La confirmation n’a pas pu être vérifiée. Actualise puis réessaie.",
     "retry": "Réessayer", "loading": "Vérification du dimanche…",

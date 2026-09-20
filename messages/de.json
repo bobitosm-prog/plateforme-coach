@@ -1,4 +1,16 @@
 {
+  "weeklyAdjustment": {
+    "preparing": "Anpassungen werden geprüft und vorbereitet…", "success": "Anpassungen angewendet und geprüft.",
+    "changed": "Profil, Plan oder Berichtszeitraum wurden geändert. Lade neu; keine neue Anpassung wurde angewendet.",
+    "failed": "Die Anwendung konnte nicht bestätigt werden. Lade neu und prüfe das Ergebnis, bevor du es erneut versuchst.",
+    "coach": "Diese Änderungen müssen mit deinem Coach abgestimmt werden.",
+    "expired": "Dieser Bericht bleibt lesbar, kann aber nicht mehr angewendet werden. Nutze deinen nächsten geprüften Bericht.",
+    "preserve": "Mahlzeiten und Übungen bleiben erhalten. Nur geprüfte Portionen oder Sätze werden angepasst.",
+    "sets": "Arbeitssätze: {before} → {after} ({percent}% tatsächliche Änderung nach Rundung). Gewichte, Wiederholungen und Dauer bleiben erhalten.",
+    "legacyVolume": "Früherer Volumenvorschlag: {percent}% (nicht am aktuellen Programm geprüft).",
+    "proteinTarget": "Proteinziel", "unknown": "Unzureichende Daten",
+    "coverage": "Erfassung: {logged}/7 Tage, {complete}/7 mit allen vier Mahlzeiten; {weights} Wiegetage."
+  },
   "weeklyCompletion": {
     "error": "Die Bestätigung konnte nicht geprüft werden. Aktualisiere und versuche es erneut.",
     "retry": "Erneut versuchen", "loading": "Sonntag wird geprüft…",

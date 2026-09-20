@@ -1,4 +1,16 @@
 {
+  "weeklyAdjustment": {
+    "preparing": "Checking and preparing adjustments…", "success": "Adjustments applied and verified.",
+    "changed": "Your profile, plan or review period changed. Reload; no new adjustment was applied.",
+    "failed": "Application could not be confirmed. Reload to check the result before trying again.",
+    "coach": "These changes must be reviewed with your coach.",
+    "expired": "This review is still readable but can no longer be applied. Use your next verified review.",
+    "preserve": "Meals and exercises are preserved. Only validated portions or sets are adjusted.",
+    "sets": "Working sets: {before} → {after} ({percent}% actual change after rounding). Loads, reps and durations preserved.",
+    "legacyVolume": "Previous volume proposal: {percent}% (not verified against the current program).",
+    "proteinTarget": "Protein target", "unknown": "Insufficient data",
+    "coverage": "Tracking: {logged}/7 logged days, {complete}/7 with all four meal slots; {weights} weight-log days."
+  },
   "weeklyCompletion": {
     "error": "Could not verify confirmation. Refresh and try again.",
     "retry": "Try again", "loading": "Checking Sunday…",

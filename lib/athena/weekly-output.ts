@@ -18,6 +18,7 @@ const outputSchema = z.object({
 export interface WeeklyEvidence {
   adherencePct: number
   nutritionDays: number
+  completeNutritionDays?: number
   calorieCompliancePct: number | null
   proteinCompliancePct: number | null
   weightMeasurements: number
@@ -49,7 +50,7 @@ export function validateAthenaWeeklyOutput(value: unknown, evidence: WeeklyEvide
   const parsed = outputSchema.safeParse(value)
   if (!parsed.success) throw new AthenaWeeklyOutputError()
   const adjustments = { ...parsed.data.ajustements }
-  if (evidence.nutritionDays < 7 || evidence.weightMeasurements < 3 || !evidence.hasPreviousDiagnostic) {
+  if (evidence.nutritionDays < 7 || (evidence.completeNutritionDays ?? evidence.nutritionDays) < 7 || evidence.weightMeasurements < 3 || !evidence.hasPreviousDiagnostic) {
     delete adjustments.calorie_goal_new
     delete adjustments.protein_goal_new
     delete adjustments.carbs_goal_new
