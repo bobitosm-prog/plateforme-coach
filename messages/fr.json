@@ -1,5 +1,6 @@
 {
   "weeklyAdjustment": {
+    "effectiveWeek": "Adaptation limitée à la semaine du {date}. Les autres semaines et phases restent inchangées.",
     "preparing": "Vérification et préparation des ajustements…", "success": "Ajustements appliqués et vérifiés.",
     "changed": "Le profil, le plan ou la période du bilan a changé. Recharge la page ; aucun nouvel ajustement n’a été appliqué.",
     "failed": "L’application n’a pas pu être confirmée. Recharge pour vérifier le résultat avant de réessayer.",

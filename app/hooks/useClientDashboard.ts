@@ -1,5 +1,6 @@
 'use client'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
+import { resolveProgramDays, resolveProgramExercise } from '@/lib/training/resolve-program'
 import { createBrowserClient } from '@supabase/ssr'
 import { toDateStr } from '../../lib/schedule-utils'
 import { useEffect, useState, useRef } from 'react'
@@ -249,7 +250,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
         setProgressionBaseErrors(cached.progressionBaseErrorsData || {})
         setWorkoutHistoryState(cached.progressionBaseErrorsData?.sessions ? 'error' : cached.sessData?.some((item: { completed?: boolean }) => item.completed) ? 'ready' : 'empty')
         const planningProgram = context.source === 'personal' ? personalToDays(context.program) : coachToDays(context.program)
-        setPlanningDays(planningProgram?.days || null)
+        setPlanningDays(context.source === 'personal' ? resolveProgramDays(context.program) : planningProgram?.days || null)
         await scheduledHook.fetchScheduledSessions(uid, cached.profileData, planningProgram)
         fetchAllComplete.current = true
         setPostAuthProfileState('ready')
@@ -373,7 +374,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     setSessionDates(sessionDatesRes?.data || [])
     if (diagRes.data) setLatestDiagnostic(diagRes.data)
     const planningProgram = trainingContext.source === 'personal' ? personalToDays(trainingContext.program) : coachToDays(coachProgData)
-    setPlanningDays(planningProgram?.days || null)
+    setPlanningDays(trainingContext.source === 'personal' ? resolveProgramDays(trainingContext.program) : planningProgram?.days || null)
     await scheduledHook.fetchScheduledSessions(uid, profileData, planningProgram)
     fetchAllComplete.current = true
     setPostAuthProfileState('ready')
@@ -441,6 +442,9 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
     if (!session?.user?.id) return
     const name = day.day_name || day.name || 'Séance'
+    const requestedDate = typeof day.prescription_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day.prescription_date)
+      ? new Date(`${day.prescription_date}T12:00:00Z`) : new Date()
+    const prescriptionDate = Number.isFinite(requestedDate.getTime()) ? requestedDate : new Date()
     const draft = createActiveWorkoutDraft({
       userId: session.user.id,
       programSource: activeTrainingProgram.source,
@@ -448,7 +452,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       sessionKey: `${activeTrainingProgram.programId || 'free'}:${weekdayKey || name}`,
       sessionName: name,
       trainingDay: weekdayKey || null,
-      exercises,
+      exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program, prescriptionDate)) : exercises,
     })
     writeActiveWorkoutDraft(localStorage, draft)
     setWorkoutSession(draft)

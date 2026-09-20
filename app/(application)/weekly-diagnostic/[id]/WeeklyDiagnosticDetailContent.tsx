@@ -250,6 +250,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
           )}
           {hasAdjustments && !applicable && !applied && <p role="status">{at('expired')}</p>}
           {hasAdjustments && applicable && !applied && <p>{at('preserve')}</p>}
+          {diagnostic.adjustment_preview?.effectiveWeekStart && <p>{at('effectiveWeek', { date: diagnostic.adjustment_preview.effectiveWeekStart })}</p>}
           {diagnostic.evidence && <p>{at('coverage', { logged: diagnostic.evidence.nutrition_days, complete: diagnostic.evidence.complete_nutrition_days, weights: diagnostic.evidence.weight_measurements })}</p>}
           {hasAdjustments && (
             <button

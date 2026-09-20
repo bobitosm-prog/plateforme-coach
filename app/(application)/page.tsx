@@ -45,6 +45,7 @@ import TrainingProgramSection from '../components/tabs/profile/TrainingProgramSe
 import AccountTab from '../components/tabs/AccountTab'
 import { getSessionForDay } from '../../lib/get-today-session'
 import { getHomeDayWindow } from '../../lib/home/home-date'
+import { resolveProgramDays } from '../../lib/training/resolve-program'
 import { buildHomeWeeklyProgress } from '../../lib/home/home-weekly-progress'
 
 import {
@@ -356,13 +357,15 @@ function CoachAppContent() {
     }
   }, [])
 
+  const homeLocalDate = getHomeDayWindow().localDateKey
   const homeProgramSession = React.useMemo(() => {
-    const localDate = getHomeDayWindow().localDateKey
+    const localDate = homeLocalDate
     const [year, month, day] = localDate.split('-').map(Number)
     const jsDay = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
     const mondayIndex = jsDay === 0 ? 6 : jsDay - 1
     if (h.planningDays?.length) {
-      const value = getSessionForDay(h.planningDays, mondayIndex)
+      const days = h.activeTrainingProgram.source === 'personal' ? resolveProgramDays(h.activeTrainingProgram.program,new Date(`${localDate}T12:00:00Z`)) : h.planningDays
+      const value = getSessionForDay(days, mondayIndex)
       return { title: value.name, exercises: value.exercises, isRest: value.type === 'rest', source: 'custom_program' as const }
     }
     if (h.todayCoachDay) return {
@@ -372,7 +375,7 @@ function CoachAppContent() {
       source: 'coach_program' as const,
     }
     return null
-  }, [h.planningDays, h.todayCoachDay])
+  }, [h.planningDays, h.todayCoachDay, h.activeTrainingProgram, homeLocalDate])
 
   const homeWeeklyProgress = React.useMemo(() => buildHomeWeeklyProgress({
     workoutSessions: h.wSessions ?? [],

@@ -237,6 +237,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
 
     // 8. CALL OPUS 4.7 WITH TOOL_USE
     const res = await fetch('https://api.anthropic.com/v1/messages', {
+      signal: AbortSignal.timeout(35000),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -305,7 +306,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
     if (Object.values(aiOutput.ajustements).some(Boolean)) {
       try {
         if (baseline.coachManaged) throw new Error('Coach managed')
-        const candidate = prepareWeeklyAdjustment(profile, baseline.program, baseline.mealPlan, aiOutput.ajustements)
+        const candidate = prepareWeeklyAdjustment(profile, baseline.program, baseline.mealPlan, aiOutput.ajustements, weekEndStr)
         adjustmentPreview = { domain: candidate.domain, ...candidate.changes }
       } catch { aiOutput.ajustements = {} }
     }

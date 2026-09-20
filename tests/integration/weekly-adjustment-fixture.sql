@@ -1,12 +1,16 @@
 -- Completes the existing disposable nutrition fixture, never production data.
 ALTER TABLE public.coach_clients ADD COLUMN id uuid DEFAULT gen_random_uuid();
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed boolean DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS next_diagnostic_at timestamptz;
+CREATE TABLE public.weekly_day_completions(user_id uuid REFERENCES public.profiles(id),sunday date,meals_confirmed boolean,confirmed_at timestamptz DEFAULT now(),PRIMARY KEY(user_id,sunday));
+GRANT ALL ON public.weekly_day_completions TO service_role;
 ALTER TABLE public.meal_plans ADD COLUMN total_calories integer;
 ALTER TABLE public.meal_plans ADD COLUMN protein_g integer;
 ALTER TABLE public.meal_plans ADD COLUMN carbs_g integer;
 ALTER TABLE public.meal_plans ADD COLUMN fat_g integer;
 CREATE TABLE public.custom_programs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid NOT NULL,name text,
-  days jsonb,phases jsonb,is_active boolean DEFAULT true,updated_at timestamptz DEFAULT now()
+  days jsonb,phases jsonb,start_date date,total_weeks integer,current_week integer,is_active boolean DEFAULT true,updated_at timestamptz DEFAULT now()
 );
 CREATE TABLE public.weekly_diagnostics (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid NOT NULL REFERENCES public.profiles(id),
