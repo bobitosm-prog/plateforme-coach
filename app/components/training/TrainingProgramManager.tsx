@@ -170,7 +170,9 @@ export default function TrainingProgramManager({
     const sessions = buildWeekSessions(userId, monday, scheduleProfile, program)
       .filter(item => !remainingKeys.has(`${item.scheduled_date}|${item.session_type}`))
     if (sessions.length === 0) return true
-    const { error: insertError } = await supabase.from('scheduled_sessions').insert(sessions)
+    const { error: insertError } = await supabase.from('scheduled_sessions').upsert(sessions, {
+      onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
+    })
     return !insertError
   }
 
