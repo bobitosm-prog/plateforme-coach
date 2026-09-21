@@ -1,4 +1,10 @@
 {
+  "trainingTechnique": {"dropInstructions":"Sur la dernière série, ajoute un palier de drop set si prévu. Termine la série principale, réduis la charge, puis enchaîne le palier sans repos programmé. Enregistre sa charge et ses répétitions séparément.","fstInstructions":"Bloc FST-7 : 7 séries, cible {reps} répétitions, repos prescrit {rest} secondes. Enregistre chaque série séparément. À utiliser uniquement avec une prescription adaptée.","prescription":"Suis les consignes détaillées du programme ; ne devine pas les paramètres manquants.","stage":"Palier dégressif après la série {parent}","addDrop":"Ajouter un palier de drop set final","configureFst":"Configurer cet exercice en 7 séries FST-7","lowerWeight":"Valide d’abord la série précédente, puis saisis une charge positive inférieure pour le palier dégressif."},
+  "trainingFollowup": {
+    "analysisLimit":"Tendances descriptives sur quatre séances standard comparables, pas un diagnostic de fatigue. Une stabilité ne suffit pas à imposer un changement.","retry":"Réessayer","preparing":"Préparation et vérification de la proposition…","partial":"Historique limité : certaines tendances peuvent être incomplètes.","prepareMonthly":"Préparer ma proposition mensuelle","previewAlternative":"Examiner : {from} → {to}","finishFirst":"Termine ou ferme ta séance en cours avant de modifier le programme.","unchanged":"Ton programme reste inchangé jusqu’à validation. Les séances passées sont conservées.","preview":"Voir toutes les séances proposées","approve":"Valider et appliquer au programme","decline":"Refuser cette proposition","trend":{"insufficient":"données insuffisantes","stable":"performances stables — à examiner","improving":"volume réalisé en hausse","declining":"volume réalisé en baisse — à examiner","returning":"historique ancien — reprise à revalider"},
+    "title": "Suivi entraînement Athena", "description": "Suivi optionnel de tes performances. Les modifications du programme restent soumises à ta validation. L’historique des séances est conservé même si tu désactives le suivi.",
+    "enabled": "Activer le suivi Athena", "monthly_review": "Proposer un renouvellement chaque mois", "advanced_techniques": "Autoriser les propositions de techniques avancées", "loading": "Chargement des préférences…", "error": "Préférences indisponibles ou enregistrement refusé. Réessaie."
+  },
   "weeklyAdjustment": {
     "effectiveWeek": "Adaptation limitée à la semaine du {date}. Les autres semaines et phases restent inchangées.",
     "preparing": "Vérification et préparation des ajustements…", "success": "Ajustements appliqués et vérifiés.",
@@ -82,6 +88,7 @@
     "cardio": "Cardio"
   },
   "techniques": {
+    "fst7": {"label":"FST-7","short":"Un bloc de sept séries avec un repos court prescrit.","full":"Effectue les sept séries et enregistre chaque charge et chaque nombre de répétitions. Respecte les répétitions et le repos indiqués dans la séance ; n’ajoute pas de drop set au même bloc.","why":"Option avancée à utiliser uniquement dans un programme adapté. Elle n’est pas nécessaire pour progresser et ne garantit aucun résultat.","example":"Exemple de prescription : 7 × 10 répétitions, 45 secondes de repos. La charge reste à choisir selon tes capacités."},
     "dropset": {
       "label": "DROP SET",
       "short": "Fais tes reps, réduis le poids de 20-30%, repars sans repos. Fatigue maximale des fibres.",

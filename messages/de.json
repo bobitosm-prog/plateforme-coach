@@ -1,4 +1,10 @@
 {
+  "trainingTechnique": {"dropInstructions":"Füge bei entsprechender Vorgabe am Ende einen Reduktionssatz hinzu. Beende den Hauptsatz, reduziere das Gewicht und fahre ohne geplante Pause fort. Erfasse Gewicht und Wiederholungen separat.","fstInstructions":"FST-7-Block: 7 Sätze, Ziel {reps} Wiederholungen, vorgegebene Pause {rest} Sekunden. Erfasse jeden Satz separat. Nur mit geeigneter Trainingsvorgabe verwenden.","prescription":"Befolge die detaillierten Programmvorgaben; rate fehlende Parameter nicht.","stage":"Reduktionssatz nach Satz {parent}","addDrop":"Letzten Reduktionssatz hinzufügen","configureFst":"Diese Übung als 7 FST-7-Sätze konfigurieren","lowerWeight":"Bestätige zuerst den vorherigen Satz und gib dann ein positives, niedrigeres Gewicht für den Reduktionssatz ein."},
+  "trainingFollowup": {
+    "analysisLimit":"Beschreibende Trends aus vier vergleichbaren Standardsitzungen, keine Ermüdungsdiagnose. Stabile Leistungen allein erfordern keine Änderung.","retry":"Erneut versuchen","preparing":"Vorschlag wird vorbereitet und geprüft…","partial":"Begrenzter Verlauf: Einige Trends können unvollständig sein.","prepareMonthly":"Monatlichen Vorschlag vorbereiten","previewAlternative":"Prüfen: {from} → {to}","finishFirst":"Beende oder schließe dein laufendes Training vor einer Programmänderung.","unchanged":"Dein Programm bleibt bis zur Bestätigung unverändert. Frühere Trainings bleiben erhalten.","preview":"Alle vorgeschlagenen Einheiten ansehen","approve":"Bestätigen und im Programm anwenden","decline":"Vorschlag ablehnen","trend":{"insufficient":"unzureichende Daten","stable":"stabile Leistung — prüfen","improving":"erfasstes Volumen gestiegen","declining":"erfasstes Volumen gesunken — prüfen","returning":"älterer Verlauf — Wiedereinstieg prüfen"},
+    "title": "Athena Trainingsbegleitung", "description": "Optionale Leistungsbegleitung. Programmänderungen benötigen weiterhin deine Zustimmung. Der Trainingsverlauf bleibt auch nach der Deaktivierung erhalten.",
+    "enabled": "Athena Begleitung aktivieren", "monthly_review": "Monatlich ein neues Programm vorschlagen", "advanced_techniques": "Vorschläge für fortgeschrittene Techniken erlauben", "loading": "Einstellungen werden geladen…", "error": "Einstellungen nicht verfügbar oder Speichern abgelehnt. Bitte erneut versuchen."
+  },
   "weeklyAdjustment": {
     "effectiveWeek": "Anpassung nur für die Woche ab {date}. Andere Wochen und Phasen bleiben unverändert.",
     "preparing": "Anpassungen werden geprüft und vorbereitet…", "success": "Anpassungen angewendet und geprüft.",
@@ -82,6 +88,7 @@
     "cardio": "Cardio"
   },
   "techniques": {
+    "fst7": {"label":"FST-7","short":"Ein Block aus sieben Sätzen mit vorgegebener kurzer Pause.","full":"Führe sieben Sätze aus und erfasse jeweils Gewicht und Wiederholungen. Halte dich an die vorgegebenen Wiederholungen und Pausen; ergänze im selben Block keinen Dropsatz.","why":"Eine fortgeschrittene Option für ein geeignetes Programm. Sie ist für Fortschritte nicht erforderlich und garantiert keine Ergebnisse.","example":"Beispiel: 7 × 10 Wiederholungen, 45 Sekunden Pause. Wähle ein Gewicht passend zu deinen Fähigkeiten."},
     "dropset": {
       "label": "DROP SET",
       "short": "Mache deine Reps, reduziere das Gewicht um 20-30%, weiter ohne Pause. Maximale Faserermüdung.",
