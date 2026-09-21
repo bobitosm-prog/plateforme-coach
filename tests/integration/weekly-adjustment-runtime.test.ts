@@ -22,6 +22,46 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('keeps follow-up preferences/proposals owner-readable and service-writable only',async()=>{
+    const userId=randomUUID();const otherId=randomUUID();const programId=randomUUID()
+    expect((await db.from('profiles').insert([{id:userId},{id:otherId}])).error).toBeNull()
+    expect((await db.from('custom_programs').insert({id:programId,user_id:userId,name:'Synthetic',days:[]})).error).toBeNull()
+    expect((await db.from('training_followup_preferences').insert([{user_id:userId},{user_id:otherId}])).error).toBeNull()
+    expect((await db.from('training_followup_proposals').insert({user_id:userId,program_id:programId,kind:'monthly',baseline_context:{},candidate:{days:[]},explanation:'Synthetic'})).error).toBeNull()
+    const payload=`${encode({alg:'HS256',typ:'JWT'})}.${encode({role:'authenticated',sub:userId,exp:Math.floor(Date.now()/1000)+600})}`
+    const ownerToken=`${payload}.${createHmac('sha256',secret!).update(payload).digest('base64url')}`
+    const request=(path:string,method='GET',body?:unknown)=>fetch(`http://127.0.0.1:56431/${path}`,{method,headers:{Authorization:`Bearer ${ownerToken}`,'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body)})
+    const prefs=await request('training_followup_preferences');expect(prefs.status).toBe(200)
+    expect((await prefs.json()).map((row:{user_id:string})=>row.user_id)).toEqual([userId])
+    const proposals=await request('training_followup_proposals');expect(proposals.status).toBe(200)
+    const rows=await proposals.json();expect(rows).toHaveLength(1);expect(rows[0].user_id).toBe(userId)
+    expect((await request('training_followup_preferences','POST',{user_id:userId,enabled:true})).status).toBe(403)
+    expect((await request(`training_followup_preferences?user_id=eq.${userId}`,'PATCH',{enabled:true})).status).toBe(403)
+    expect((await request(`training_followup_proposals?id=eq.${rows[0].id}`,'PATCH',{status:'applied'})).status).toBe(403)
+    expect((await request('rpc/apply_training_followup_v1','POST',{p_user_id:userId,p_proposal_id:rows[0].id})).status).toBe(403)
+  })
+  it('applies a monthly proposal exactly once, preserves past workouts and fails closed when disabled or stale',async()=>{
+    const userId=randomUUID();const oldId=randomUUID();const proposalId=randomUUID()
+    expect((await db.from('profiles').insert({id:userId})).error).toBeNull()
+    expect((await db.from('custom_programs').insert({id:oldId,user_id:userId,name:'Old',days:[{exercises:[{name:'Row',sets:3,reps:'8-12'}]}],is_active:true})).error).toBeNull()
+    const context=await db.rpc('weekly_adjustment_context_v1',{p_user_id:userId})
+    expect((await db.from('training_followup_proposals').insert({id:proposalId,user_id:userId,program_id:oldId,kind:'monthly',baseline_context:context.data,candidate:{name:'Next',description:'Reviewed',days:[{exercises:[{name:'Row',sets:3,reps:'8-12'}]}]},explanation:'Synthetic'})).error).toBeNull()
+    const apply=()=>db.rpc('apply_training_followup_v1',{p_user_id:userId,p_proposal_id:proposalId})
+    expect((await apply()).error?.code).toBe('PT409')
+    expect((await db.from('training_followup_preferences').insert({user_id:userId,enabled:true,monthly_review:true})).error).toBeNull()
+    const savedWorkout=randomUUID()
+    expect((await db.from('workout_sessions').insert({id:savedWorkout,user_id:userId,completed:true})).error).toBeNull()
+    const applied=await Promise.all([apply(),apply()])
+    expect(applied.every(row=>!row.error)).toBe(true)
+    expect(applied.map(row=>row.data.already_applied).sort()).toEqual([false,true])
+    expect((await db.from('custom_programs').select('id').eq('user_id',userId).eq('is_active',true)).data).toHaveLength(1)
+    expect((await db.from('workout_sessions').select('id').eq('id',savedWorkout)).data).toHaveLength(1)
+    const wrongOwner=await db.rpc('apply_training_followup_v1',{p_user_id:randomUUID(),p_proposal_id:proposalId})
+    expect(wrongOwner.error).not.toBeNull()
+    const stale=randomUUID()
+    expect((await db.from('training_followup_proposals').insert({id:stale,user_id:userId,program_id:oldId,kind:'alternative',baseline_context:context.data,candidate:{days:[]},explanation:'Stale'})).error).toBeNull()
+    expect((await db.rpc('apply_training_followup_v1',{p_user_id:userId,p_proposal_id:stale})).error?.code).toBe('PT409')
+  })
   it('repairs 63% to 100% and concurrent calendar retries never erase completions', async () => {
     const userId = '10000000-0000-4000-8000-000000000099'
     const ownerPayload = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ role: 'authenticated', sub: userId, exp: Math.floor(Date.now() / 1000) + 600 })}`
@@ -70,6 +110,8 @@ describe('real weekly adjustment concurrency', () => {
     const context=await db.rpc('weekly_adjustment_context_v1',{p_user_id:userId})
     expect((await db.from('weekly_diagnostics').insert({id:diag,user_id:userId,week_start:week.weekStart,policy_version:2,application_context:context.data,ajustements:{training_volume_delta_pct:10}})).error).toBeNull()
     const candidate=prepareWeeklyAdjustment(weeklyFixture().profile,program,null,{training_volume_delta_pct:10},week.endExclusive)
+    expect((await db.rpc('apply_weekly_adjustment_v1',{p_user_id:userId,p_diagnostic_id:diag,p_candidate:candidate})).error?.code).toBe('PT409')
+    expect((await db.from('training_followup_preferences').insert({user_id:userId,enabled:true})).error).toBeNull()
     expect((await db.rpc('apply_weekly_adjustment_v1',{p_user_id:userId,p_diagnostic_id:diag,p_candidate:candidate})).error).toBeNull()
     const saved=(await db.from('custom_programs').select('*').eq('id',id).single()).data
     expect(saved.phases).toEqual(phases)
@@ -91,6 +133,7 @@ describe('real weekly adjustment concurrency', () => {
       week_start: diagnosticWeek().weekStart, policy_version: 2, application_context: context.data,
       ajustements: { training_volume_delta_pct: 10 } })).error).toBeNull()
     const adjusted = adjustTrainingSets(days, 10)
+    expect((await db.from('training_followup_preferences').insert({user_id:userId,enabled:true})).error).toBeNull()
     const args = { p_user_id: userId, p_diagnostic_id: diagnosticId,
       p_candidate: { domain: 'training', days: adjusted.days, changes: { setsBefore: adjusted.before, setsAfter: adjusted.after } } }
     const results = await Promise.all([db.rpc('apply_weekly_adjustment_v1', args), db.rpc('apply_weekly_adjustment_v1', args)])
