@@ -303,6 +303,11 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
       hasPreviousDiagnostic: prevDiagRes.data?.week_start === addNutritionDays(weekStartStr, -7),
     })
     let adjustmentPreview = null
+    if (aiOutput.ajustements.training_volume_delta_pct) {
+      const followup = await supabase.from('training_followup_preferences').select('enabled').eq('user_id',userId).maybeSingle()
+      if(followup.error) return {error:'Préférences de suivi indisponibles'}
+      if(followup.data?.enabled!==true) delete aiOutput.ajustements.training_volume_delta_pct
+    }
     if (Object.values(aiOutput.ajustements).some(Boolean)) {
       try {
         if (baseline.coachManaged) throw new Error('Coach managed')

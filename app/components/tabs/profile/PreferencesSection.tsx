@@ -7,6 +7,7 @@ import { colors, fonts, cardStyle } from '../../../../lib/design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../../lib/timer-audio'
 import SectionTitle from '../../ui/SectionTitle'
 import LocaleSelector from '@/components/LocaleSelector'
+import FollowupPreferences from '../../training/FollowupPreferences'
 
 const supabasePush = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,6 +97,7 @@ export default function PreferencesSection({
         </div>
 
         {/* ═══ LANGUE ═══ */}
+        <FollowupPreferences />
         <SectionTitle noPadding title={t('sections.language')} />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

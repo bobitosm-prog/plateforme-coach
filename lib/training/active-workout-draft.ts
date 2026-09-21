@@ -10,6 +10,7 @@ export const ACTIVE_WORKOUT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 export type ActiveWorkoutStatus = 'active' | 'saving' | 'save_error' | 'completed'
 
 export interface WorkoutDraftSet {
+  parentSetNumber?: number
   durationSeconds?: number | ''
   id: string
   num: number
@@ -28,6 +29,8 @@ export interface WorkoutDraftExercise {
   muscle: string
   targetSets: number
   targetReps: string
+  prescribedWeight?: number
+  prescribedReps?: number
   rest: number
   tempo?: string
   rir?: number | null
@@ -114,6 +117,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           return {
             id: typeof set.id === 'string' ? set.id : setId(),
             num: positiveInteger(set.num, index + 1),
+            ...(typeof set.parentSetNumber==='number' && set.parentSetNumber>0 && set.parentSetNumber<index+1 ? {parentSetNumber:set.parentSetNumber}:{}),
             weight,
             weightRaw: typeof set.weightRaw === 'string' ? set.weightRaw : weight === '' ? '' : String(weight).replace('.', ','),
             weightInputSource: set.weightInputSource === 'suggested' ? 'suggested' as const : 'entered' as const,
@@ -141,6 +145,8 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
       targetSets,
       ...(targetDurationSeconds ? { targetDurationSeconds } : {}),
       targetReps: String(row.targetReps ?? row.reps ?? '10-12'),
+      ...(typeof row.prescribedWeight==='number'&&row.prescribedWeight>0?{prescribedWeight:row.prescribedWeight}:{}),
+      ...(typeof row.prescribedReps==='number'&&row.prescribedReps>0?{prescribedReps:row.prescribedReps}:{}),
       rest: positiveInteger(row.rest ?? row.rest_seconds, 90),
       tempo: typeof row.tempo === 'string' ? row.tempo : undefined,
       rir: typeof row.rir === 'number' ? row.rir : null,

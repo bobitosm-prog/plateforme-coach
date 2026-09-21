@@ -109,6 +109,12 @@ try {
     execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
   }
   console.log('Calendar repair: completed history preserved, three duplicates archived privately, idempotent migration passed.')
+  stage='training follow-up'
+  execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input:readFileSync(new URL('../tests/integration/training-followup-fixture.sql',import.meta.url)),stdio:['pipe','pipe','pipe']})
+  for(const name of ['20260921145109_training_followup_preferences','20260921145357_training_set_techniques','20260921145813_training_followup_proposals','20260921173100_weekly_followup_consent','20260921173200_overload_expiry']) {
+    const input=readFileSync(new URL(`../supabase/migrations/${name}.sql`,import.meta.url))
+    for(let pass=0;pass<2;pass++)execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
   const canonicalMigration = migration.toString().replaceAll('public.meal_plans', 'canonical.meal_plans')
     .replaceAll('public.activate_personal_meal_plan_v1', 'canonical.activate_personal_meal_plan_v1')
     .replaceAll('plan_data', 'plan').replaceAll('is_active', 'active')

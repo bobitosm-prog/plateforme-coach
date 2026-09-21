@@ -86,6 +86,9 @@ export async function POST(req: NextRequest) {
   try {
     const input = parsed.data
     const supabase = getServiceSupabase()
+    const followup = await supabase.from('training_followup_preferences').select('enabled').eq('user_id',user.id).maybeSingle()
+    if(followup.error) return NextResponse.json({error:'Suivi indisponible'},{status:503})
+    if(followup.data?.enabled!==true) return NextResponse.json({skipped:true,reason:'followup_disabled'})
     const { data: origin, error: originError } = await supabase
       .from('workout_sessions')
       .select('id')
@@ -97,12 +100,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true, reason: 'completed_session_not_found' })
     }
 
+    const expired=await supabase.from('progressive_overload_suggestions').update({status:'expired',responded_at:new Date().toISOString()})
+      .eq('user_id',user.id).eq('status','pending').lt('triggered_at',new Date(Date.now()-28*86400000).toISOString())
+    if(expired.error)return NextResponse.json({error:'Suivi indisponible'},{status:503})
     const { data: existing, error: existingError } = await supabase
       .from('progressive_overload_suggestions')
       .select('id')
       .eq('user_id', user.id)
       .eq('exercise_name', input.exerciseName)
       .eq('status', 'pending')
+      .gte('triggered_at',new Date(Date.now()-28*86400000).toISOString())
       .maybeSingle()
     if (existingError) return NextResponse.json({ error: 'Lecture impossible' }, { status: 503 })
     if (existing) return NextResponse.json({ skipped: true, reason: 'already_pending' })
@@ -113,6 +120,7 @@ export async function POST(req: NextRequest) {
       .eq('user_id', user.id)
       .eq('completed', true)
       .eq('workout_sessions.completed', true)
+      .is('technique',null)
       .order('created_at', { ascending: false })
       .limit(60)
     historyQuery = input.exerciseId
@@ -122,13 +130,23 @@ export async function POST(req: NextRequest) {
     if (historyError) return NextResponse.json({ error: 'Historique indisponible' }, { status: 503 })
 
     const history = ((historyRows ?? []) as HistoryRow[]).flatMap(row => historySet(row) ?? [])
+    const current=history.filter(set=>set.sessionId===input.sessionId)
+    if(history[0]?.sessionId!==input.sessionId||!current.length||!current.every(set=>set.weight===current[0].weight&&set.reps===current[0].reps)) {
+      return NextResponse.json({skipped:true,reason:'performance_changed'})
+    }
+    const programs=await supabase.from('custom_programs').select('days').eq('user_id',user.id).eq('is_active',true).limit(2)
+    if(programs.error)return NextResponse.json({error:'Programme indisponible'},{status:503})
+    if(programs.data?.length!==1)return NextResponse.json({skipped:true,reason:'ambiguous_program'})
+    const exercises=(programs.data[0].days as {exercises?:Record<string,unknown>[]}[]).flatMap(day=>day.exercises??[])
+      .filter(ex=>input.exerciseId?ex.exercise_id===input.exerciseId:(ex.name??ex.custom_name??ex.exercise_name)===input.exerciseName)
+    if(exercises.length!==1||exercises[0].technique||exercises[0].phases)return NextResponse.json({skipped:true,reason:'unsupported_prescription'})
     const decision = deriveProgressionDecision({
-      currentWeight: input.currentWeight,
-      currentReps: input.currentReps,
-      setsCompleted: input.setsCompleted,
-      setsTarget: input.setsTarget,
-      targetReps: input.targetReps,
-      currentRirs: input.currentRirs,
+      currentWeight: current[0].weight,
+      currentReps: current[0].reps,
+      setsCompleted: current.length,
+      setsTarget: Number(exercises[0].sets),
+      targetReps: String(exercises[0].reps??''),
+      currentRirs: current.map(set=>set.rir),
       history,
     })
     if (decision.action === 'hold') {
@@ -140,8 +158,8 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: user.id,
         exercise_name: input.exerciseName,
-        current_weight: input.currentWeight,
-        current_reps: input.currentReps,
+        current_weight: current[0].weight,
+        current_reps: current[0].reps,
         suggested_weight: decision.suggestedWeight,
         suggested_reps: decision.suggestedReps,
         reasoning: decision.reasoning,
@@ -159,7 +177,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       suggestion: {
         exerciseName: input.exerciseName,
-        currentWeight: input.currentWeight,
+        currentWeight: current[0].weight,
         suggestedWeight: decision.suggestedWeight,
         suggestedReps: decision.suggestedReps,
         reasoning: decision.reasoning,

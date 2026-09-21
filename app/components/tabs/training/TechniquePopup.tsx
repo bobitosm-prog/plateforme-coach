@@ -15,14 +15,14 @@ import {
    ═══════════════════════════════════════════════════ */
 
 const TECHNIQUE_EMOJIS: Record<string, string> = {
-  dropset: '🔻', restpause: '⏸️', superset: '🔗', mechanical: '🔄',
+  dropset: '🔻', restpause: '⏸️', superset: '🔗', mechanical: '🔄', fst7: '7️⃣',
 }
 
 type TechniqueRecord = Record<string, { emoji: string; label: string; short: string; full: string; why: string; example: string }>
 
 function buildTechniqueData(t: (key: string) => string): TechniqueRecord {
   return Object.fromEntries(
-    ['dropset', 'restpause', 'superset', 'mechanical'].map(key => [
+    ['dropset', 'restpause', 'superset', 'mechanical', 'fst7'].map(key => [
       key,
       {
         emoji: TECHNIQUE_EMOJIS[key],

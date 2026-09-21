@@ -9,6 +9,11 @@ export async function applyWeeklyDiagnostic(db: SupabaseClient, userId: string, 
   if (error || !diagnostic) return { status: 404, code: 'not_found' }
   if (diagnostic.applied_at) return { status: 200, already_applied: true, applied_at: diagnostic.applied_at, changes: diagnostic.applied_changes?.summary }
   if (diagnostic.policy_version !== 2 || diagnostic.week_start !== diagnosticWeek(now).weekStart) return { status: 409, code: 'expired' }
+  if(diagnostic.ajustements?.training_volume_delta_pct) {
+    const followup=await db.from('training_followup_preferences').select('enabled').eq('user_id',userId).maybeSingle()
+    if(followup.error) return {status:503,code:'unavailable'}
+    if(followup.data?.enabled!==true) return {status:409,code:'followup_disabled'}
+  }
   const state = await loadWeeklyAdjustmentState(db, userId)
   if (state.coachManaged) return { status: 403, code: 'coach_managed' }
   if (JSON.stringify(state.context) !== JSON.stringify(diagnostic.application_context)) return { status: 409, code: 'changed' }

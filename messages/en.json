@@ -1,4 +1,10 @@
 {
+  "trainingTechnique": {"dropInstructions":"Add a final drop stage if prescribed. Complete the main set, reduce the load, then perform the drop stage without scheduled rest. Log its load and repetitions separately.","fstInstructions":"FST-7 block: 7 sets, target {reps} repetitions, prescribed rest {rest} seconds. Log each set separately. Use only with an appropriate prescription.","prescription":"Follow the program's detailed instructions; do not guess missing parameters.","stage":"Drop stage after set {parent}","addDrop":"Add a final drop stage","configureFst":"Configure this exercise as 7 FST-7 sets","lowerWeight":"Complete the preceding set first, then enter a positive, lower load for the drop stage."},
+  "trainingFollowup": {
+    "analysisLimit":"Descriptive trends across four comparable standard sessions, not a fatigue diagnosis. Stable performance alone does not require a change.","retry":"Retry","preparing":"Preparing and checking the proposal…","partial":"Limited history: some trends may be incomplete.","prepareMonthly":"Prepare my monthly proposal","previewAlternative":"Review: {from} → {to}","finishFirst":"Finish or close your current workout before changing the program.","unchanged":"Your program stays unchanged until approval. Past workouts are preserved.","preview":"View all proposed sessions","approve":"Approve and apply to program","decline":"Decline proposal","trend":{"insufficient":"insufficient data","stable":"stable performance — review suggested","improving":"recorded volume increased","declining":"recorded volume decreased — review suggested","returning":"old history — reassess your return"},
+    "title": "Athena training follow-up", "description": "Optional performance tracking. Program changes still require your approval. Workout history is kept even if you disable follow-up.",
+    "enabled": "Enable Athena follow-up", "monthly_review": "Propose a program renewal each month", "advanced_techniques": "Allow advanced technique proposals", "loading": "Loading preferences…", "error": "Preferences unavailable or save rejected. Please retry."
+  },
   "weeklyAdjustment": {
     "effectiveWeek": "Adjustment only for the week starting {date}. Other weeks and phases remain unchanged.",
     "preparing": "Checking and preparing adjustments…", "success": "Adjustments applied and verified.",
@@ -82,6 +88,7 @@
     "cardio": "Cardio"
   },
   "techniques": {
+    "fst7": {"label":"FST-7","short":"A block of seven sets with prescribed short rest.","full":"Perform seven sets and record the weight and repetitions for each. Follow the prescribed repetitions and rest; do not add a drop set to the same block.","why":"An advanced option for an appropriate program. It is not necessary for progress and guarantees no results.","example":"Example prescription: 7 × 10 repetitions, 45 seconds of rest. Choose a load appropriate to your ability."},
     "dropset": {
       "label": "DROP SET",
       "short": "Do your reps, drop the weight by 20-30%, restart with no rest. Maximum fiber fatigue.",

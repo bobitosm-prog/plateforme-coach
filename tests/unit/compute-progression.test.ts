@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { computeProgression, parseRepsTarget, roundToStep, type PrevSessionSet } from '../../lib/training/compute-progression'
+import { computeProgression as derive, parseRepsTarget, roundToStep, type PrevSessionSet } from '../../lib/training/compute-progression'
 
-const set = (weight: number, reps: number, rir: number | null = 2, completed = true): PrevSessionSet => ({ weight, reps, rir, completed })
+const now = new Date('2026-09-21T12:00:00Z')
+const computeProgression = (sessions: PrevSessionSet[][], target: unknown) => derive(sessions, target, { setsTarget: 3, now })
+const set = (weight: number, reps: number, rir: number | null = 2, completed = true): PrevSessionSet => ({ weight, reps, rir, completed, createdAt:'2026-09-20T12:00:00Z' })
 const session = (weight: number, reps: number, rir: number | null = 2) => Array.from({ length: 3 }, () => set(weight, reps, rir))
 
 describe('session progression adapter', () => {
@@ -24,4 +26,11 @@ describe('session progression adapter', () => {
     expect(computeProgression([session(60, 12)], 'AMRAP')).toBeNull()
   })
   it('retains deterministic rounding', () => expect(roundToStep(58.5, 2.5)).toBe(57.5))
+  it('holds a partial session instead of changing the required set count', () => {
+    expect(derive([[set(60,12),set(60,12)]], '8-12', {setsTarget:3,now})).toMatchObject({action:'hold'})
+  })
+  it('does not manufacture evidence dates', () => {
+    expect(derive([[{...set(60,12),createdAt:null}]],'8-12',{setsTarget:1,now})).toBeNull()
+    expect(derive([[{...set(60,12),createdAt:'2026-01-01T12:00:00Z'}]],'8-12',{setsTarget:1,now})).toBeNull()
+  })
 })

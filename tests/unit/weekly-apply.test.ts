@@ -9,13 +9,18 @@ const now = new Date('2026-09-20T18:00:00Z')
 function database(overrides: Record<string, unknown> = {}) {
   const diagnostic = { policy_version: 2, week_start: '2026-09-14', application_context: weeklyFixture().context,
     ajustements: { training_volume_delta_pct: 10 }, ...overrides }
-  const query = { select: vi.fn(), eq: vi.fn(), single: vi.fn().mockResolvedValue({ data: diagnostic, error: null }) }
+  const query = { select: vi.fn(), eq: vi.fn(), single: vi.fn().mockResolvedValue({ data: diagnostic, error: null }), maybeSingle:vi.fn().mockResolvedValue({data:{enabled:true},error:null}) }
   query.select.mockReturnValue(query); query.eq.mockReturnValue(query)
   const rpc = vi.fn().mockResolvedValue({ data: { already_applied: false, applied_at: now.toISOString() }, error: null })
   return { query, rpc, db: { from: () => query, rpc } as unknown as SupabaseClient }
 }
 beforeEach(() => { vi.clearAllMocks(); mocks.load.mockResolvedValue(weeklyFixture()) })
 describe('weekly application service', () => {
+  it('does not apply training changes after follow-up was disabled',async()=>{
+    const f=database(); f.query.maybeSingle.mockResolvedValue({data:{enabled:false},error:null})
+    expect(await applyWeeklyDiagnostic(f.db,'owner','d',now)).toMatchObject({status:409,code:'followup_disabled'})
+    expect(f.rpc).not.toHaveBeenCalled()
+  })
   it('scopes the decision to its owner and sends a deterministic candidate to the transaction', async () => {
     const f = database()
     expect(await applyWeeklyDiagnostic(f.db, 'owner', 'diagnostic', now)).toMatchObject({ status: 200, already_applied: false })

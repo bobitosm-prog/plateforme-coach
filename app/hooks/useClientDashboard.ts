@@ -505,9 +505,11 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
             user_id: session.user.id,
             exercise_name: exercise.name,
             exercise_id: exercise.exerciseId ?? null,
-            set_number: index + 1,
+            set_number: set.setNumber ?? index + 1,
             reps: Number(set.reps) || 0,
             duration_seconds: set.durationSeconds ?? null,
+            technique: exercise.technique || null,
+            parent_set_number: set.parentSetNumber ?? null,
             weight: Number(set.weight) || 0,
             completed: true,
             rir: set.rir ?? null,
@@ -531,9 +533,11 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       user_id: session.user.id,
       exercise_name: exercise.name,
       exercise_id: exercise.exerciseId ?? null,
-      set_number: index + 1,
+      set_number: set.setNumber ?? index + 1,
       reps: Number(set.reps) || 0,
       duration_seconds: set.durationSeconds ?? null,
+      technique: exercise.technique || null,
+      parent_set_number: set.parentSetNumber ?? null,
       weight: Number(set.weight) || 0,
       completed: true,
       rir: set.rir ?? null,
@@ -601,6 +605,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
     const overloadRequests: Promise<void>[] = []
     for (const exercise of data.exercises) {
+      if(exercise.technique) continue
       if (!exercise.sets.length || (exercise.setsTarget && exercise.sets.length < exercise.setsTarget)) continue
       const reps = Number(exercise.sets[0].reps) || 0
       const weight = Number(exercise.sets[0].weight) || 0

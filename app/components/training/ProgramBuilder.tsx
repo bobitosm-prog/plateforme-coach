@@ -1290,12 +1290,18 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       onChange={e => {
                         const val = e.target.value || null
                         updateExerciseField(editingDayIndex, exIdx, 'technique', val)
+                        if(val==='fst7') {
+                          updateExerciseField(editingDayIndex, exIdx, 'sets', 7)
+                          updateExerciseField(editingDayIndex, exIdx, 'reps', 10)
+                          updateExerciseField(editingDayIndex, exIdx, 'rest_seconds', 45)
+                        }
                         if (!val) updateExerciseField(editingDayIndex, exIdx, 'technique_details', '')
                       }}
                       style={{ ...inputStyle, width: '100%', padding: '8px', appearance: 'auto' as any }}
                     >
                       <option value="">{t('day.techniqueNone')}</option>
                       <option value="dropset">Drop Set</option>
+                      <option value="fst7" disabled={Boolean(prescribedDuration(ex))}>FST-7 (7 × 10 · 45 s)</option>
                       <option value="restpause">Rest Pause</option>
                       <option value="superset">Superset</option>
                       <option value="mechanical">Mechanical Drop Set</option>
