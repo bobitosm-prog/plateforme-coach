@@ -44,6 +44,9 @@ import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/re
 import { prescribedDuration } from '../../lib/training/exercise-measurement'
 import { useTrainingFollowup } from '../hooks/useTrainingFollowup'
 import { addDropStage, configureFst7 } from '../../lib/training/technique-execution'
+import { normalizeWorkoutDraftExercises } from '../../lib/training/active-workout-draft'
+import { bisetFor, techniqueIssue, transitionRest } from '../../lib/training/guided-techniques'
+import TechniqueGuidance from './training-v2/TechniqueGuidance'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -266,7 +269,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
   useBeforeUnload(true)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
-  const [exos, setExos] = useState<Exo[]>(() => raw as Exo[])
+  const [exos, setExos] = useState<Exo[]>(() => normalizeWorkoutDraftExercises(raw))
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => (
     Math.min(Math.max(draft.currentExerciseIndex, 0), Math.max(raw.length - 1, 0))
   ))
@@ -583,7 +586,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     initAudio()
     // Compute r SYNCHRONOUSLY before any state update
     const targetExo = exos.find(e => e.id === eid)
-    const r = targetExo ? getRestSeconds(targetExo) : 90
 
     // Project the next set before the asynchronous state update.
     const projectedSets = targetExo?.sets.map(s =>
@@ -615,7 +617,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     })
     setActiveExerciseIndex(nextPosition.currentExerciseIndex)
 
-    if (nextPosition.currentExerciseIndex > exerciseIndex) {
+    if (nextPosition.currentExerciseIndex !== exerciseIndex) {
       setSetStatusMessage(tv2('nextExerciseReady'))
     } else if (nextUndone) {
       setSetStatusMessage(tv2('nextSetReady', { set: nextUndone.num }))
@@ -624,11 +626,22 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
 
     // A drop stage follows immediately; the ordinary rest starts afterwards.
-    if(nextUndone?.parentSetNumber) skipRest()
-    else startRest(r)
+    const rest = transitionRest(updatedExercises, exerciseIndex, nextPosition)
+    if (rest === 0) skipRest()
+    else startRest(rest)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
+    const exerciseIndex = exos.findIndex(e => e.id === eid)
+    const issue = techniqueIssue(exos, exerciseIndex)
+    if (issue) { setSetStatusMessage(tTechnique(issue)); return }
+    const pair = bisetFor(exos, exerciseIndex)
+    if (pair) {
+      const next = findNextWorkoutPosition(exos, exerciseIndex, -1)
+      if (next.currentExerciseIndex !== exerciseIndex) {
+        setSetStatusMessage(tTechnique('bisetOrder')); selectExercise(next.currentExerciseIndex); return
+      }
+    }
     const set = exo?.sets.find(s => s.id === sid)
     if (exo?.targetDurationSeconds) {
       const seconds = Number(set?.durationSeconds)
@@ -639,7 +652,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     const reps = Number(set?.reps) || 0
     if(set?.parentSetNumber) {
       const parent=exo?.sets.find(row=>row.num===set.parentSetNumber)
-      if(!parent?.done || !(Number(set.weight)>0) || !(Number(set.weight)<Number(parent.weight))) {
+      const load = Number(set.weightRaw.replace(',', '.'))
+      if(!parent?.done || !(load>0) || !(load<Number(parent.weight)) || !Number.isInteger(reps) || reps<1) {
         setSetStatusMessage(tTechnique('lowerWeight')); return
       }
     }
@@ -656,11 +670,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const completedExercises = exos.filter(exercise => (
     exercise.sets.length > 0 && exercise.sets.every(set => set.done)
   )).length
-  const timelineExercises = exos.map(exercise => ({
+  const timelineExercises = exos.map((exercise, index) => ({
     id: exercise.id,
     name: getExerciseName(exercise, locale),
     completedSets: exercise.sets.filter(set => set.done).length,
     totalSets: exercise.sets.length,
+    technique: bisetFor(exos, index) ? tTechnique('bisetTitle', {side: bisetFor(exos, index)!.a === index ? 'A' : 'B'}) : TECHNIQUE_LABELS[exercise.technique || '']?.label,
   }))
 
   const selectExercise = (index: number) => {
@@ -975,7 +990,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               target={targetLabel}
             >
             <div style={{ marginBottom: 12 }}>
-              {exo.technique && <div role="note" style={{padding:12,border:`1px solid ${GOLD}`,borderRadius:12,marginBottom:12}}>
+              <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />
+              {exo.technique && !['dropset','superset'].includes(exo.technique) && <div role="note" style={{padding:12,border:`1px solid ${GOLD}`,borderRadius:12,marginBottom:12}}>
                 <strong>{TECHNIQUE_LABELS[exo.technique]?.label ?? exo.technique}</strong>
                 <p>{exo.technique==='dropset' ? tTechnique('dropInstructions') : exo.technique==='fst7' ? tTechnique('fstInstructions',{reps:exo.targetReps,rest:exo.rest}) : exo.techniqueDetails || tTechnique('prescription')}</p>
                 {activeSet?.parentSetNumber && <strong>{tTechnique('stage',{parent:activeSet.parentSetNumber})}</strong>}
@@ -1000,7 +1016,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       rir={activeSet.rir}
                       weightStep={getIncrementForExercise(exo.name)}
                       showRir={Boolean(rirTrackingEnabled) && !exo.targetDurationSeconds}
-                      canValidate={!activeSet.done && (exo.targetDurationSeconds ? Number(activeSet.durationSeconds) > 0 && Number(activeSet.durationSeconds) <= 600 : activeSet.weightRaw !== '' || activeSet.reps !== '')}
+                      canValidate={!techniqueIssue(exos, idx) && !activeSet.done && (exo.targetDurationSeconds ? Number(activeSet.durationSeconds) > 0 && Number(activeSet.durationSeconds) <= 600 : activeSet.weightRaw !== '' || activeSet.reps !== '')}
                       suggestion={suggestion}
                       statusMessage={setStatusMessage}
                       onWeightChange={value => { setSetStatusMessage(''); setField(exo.id, activeSet.id, 'weight', value) }}

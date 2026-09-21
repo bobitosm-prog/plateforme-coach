@@ -12,6 +12,20 @@ const props={supabase:{from:()=>chain},session:{user:{id:'synthetic-owner'}},edi
 beforeEach(()=>{vi.stubGlobal('React',React);localStorage.clear();vi.clearAllMocks();vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({program}),{status:200})));vi.spyOn(window,'confirm').mockReturnValue(true)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 describe('actual editor interactions',()=>{
+ it('stores the displayed drop default and selects a real biset partner',async()=>{
+  const paired={...program,days:[{exercises:[{name:'A',sets:3,reps:10},{name:'B',sets:3,reps:10}]}]}
+  render(React.createElement(ProgramBuilder,{...props,editProgram:paired}))
+  fireEvent.change(await screen.findByLabelText('day.techniqueLabel — A'),{target:{value:'dropset'}})
+  let stored=JSON.parse(localStorage.getItem(editorDraftKey('synthetic-owner',program.id))!)
+  expect(stored.days[0].exercises[0].technique_details).toBe('2')
+  fireEvent.change(screen.getByLabelText('day.techniqueLabel — A'),{target:{value:'superset'}})
+  const partner=screen.getByLabelText('day.partnerExercise — A') as HTMLSelectElement
+  expect([...partner.options].map(option=>option.value)).toEqual(['','B'])
+  fireEvent.change(partner,{target:{value:'B'}})
+  stored=JSON.parse(localStorage.getItem(editorDraftKey('synthetic-owner',program.id))!)
+  expect(stored.days[0].exercises[0].technique_details).toBe('B')
+  expect(fetch).not.toHaveBeenCalled()
+ })
  it('keeps controls compact, edits canonical rest, previews then saves only after confirmation',async()=>{
   render(React.createElement(ProgramBuilder,props))
   const rest=await screen.findByLabelText('day.restLabel — Row')
