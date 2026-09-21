@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import { diagnosticWeek } from '@/lib/weekly-diagnostic/week'
 import { adjustTrainingSets, prepareWeeklyAdjustment } from '@/lib/weekly-diagnostic/adjustments'
@@ -22,6 +22,30 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('persists one repaired day through the actual API while retaining another legacy warning',async()=>{
+    const user=randomUUID();expect((await db.from('profiles').insert({id:user})).error).toBeNull()
+    const days=[{name:'Pull',exercises:[{name:'Face Pulls',sets:3,reps:15,technique:'dropset',technique_details:''}]},{name:'Upper',exercises:[{name:'Raise',sets:3,reps:12,technique:'superset',technique_details:'Absent'}]}]
+    const original=await db.from('custom_programs').insert({user_id:user,name:'Synthetic legacy',days,is_active:false}).select('*').single()
+    expect(original.error).toBeNull()
+    vi.doMock('@/lib/supabase/server',()=>({createSupabaseRouteClient:async()=>({auth:{getUser:async()=>({data:{user:{id:user}}})}})}))
+    vi.doMock('@/lib/training/followup-server',()=>({followupDatabase:()=>db}))
+    vi.doMock('@/lib/rate-limit',()=>({checkRateLimit:()=>({allowed:true})}))
+    vi.doMock('@/lib/entitlements/server-context',()=>({loadEffectiveEntitlementContext:async()=>({capabilities:{training:true}})}))
+    try {
+      const {POST}=await import('@/app/api/training-program/route')
+      const {NextRequest}=await import('next/server')
+      const candidate=structuredClone(days);candidate[0].exercises[0].technique_details='2'
+      const body={operationId:randomUUID(),action:'save',programId:original.data.id,expected:original.data,candidate:{name:'Repaired Pull',days:candidate}}
+      const call=()=>POST(new NextRequest('https://synthetic.invalid/api/training-program',{method:'POST',body:JSON.stringify(body)}))
+      expect((await call()).status).toBe(200)
+      expect((await call()).status).toBe(200)
+      const saved=await db.from('custom_programs').select('days').eq('id',original.data.id).eq('user_id',user).single()
+      expect(saved.error).toBeNull();expect(saved.data!.days[0].exercises[0].technique_details).toBe('2');expect(saved.data!.days[1]).toEqual(days[1])
+      expect((await db.from('training_program_changes').select('id').eq('user_id',user)).data).toHaveLength(1)
+    } finally {
+      for(const module of ['@/lib/supabase/server','@/lib/training/followup-server','@/lib/rate-limit','@/lib/entitlements/server-context'])vi.doUnmock(module)
+    }
+  })
   it('archives reversibly and protects coached programs without blocking an unassigned client',async()=>{
     const user=randomUUID(),coach=randomUUID();expect((await db.from('profiles').insert([{id:user},{id:coach}])).error).toBeNull()
     expect((await db.from('coach_clients').insert({client_id:user,coach_id:coach,status:'active',source:'invitation'})).error).toBeNull()

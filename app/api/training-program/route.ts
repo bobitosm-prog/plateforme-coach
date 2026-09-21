@@ -4,7 +4,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase/server";
 import { followupDatabase } from "@/lib/training/followup-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { loadEffectiveEntitlementContext } from "@/lib/entitlements/server-context";
-import { validateEditorDays } from "@/lib/training/program-editor";
+import { editorDays, validateEditorDays, validateProgramEdit } from "@/lib/training/program-editor";
 
 const schema = z
   .object({
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const { operationId, ...input } = parsed.data;
     if (
       input.action === "save" &&
-      (!input.candidate || !validateEditorDays(input.candidate.days))
+      (!input.candidate || !validateEditorDays(input.candidate.days, true))
     )
       return NextResponse.json({ code: "invalid_program" }, { status: 422 });
     const db = followupDatabase();
@@ -68,6 +68,19 @@ export async function POST(req: NextRequest) {
     );
     if (!context.capabilities.training)
       return NextResponse.json({ code: "forbidden" }, { status: 403 });
+    if (input.action === 'save') {
+      // Never trust `expected` as an exemption from validation: load the authenticated owner's baseline.
+      let baseline: Record<string, any>[] = [];
+      if (input.programId) {
+        const existing = await db.from('custom_programs').select('days').eq('id', input.programId).eq('user_id', user.id).maybeSingle();
+        if (existing.error) throw existing.error;
+        if (!existing.data) return NextResponse.json({code:'not_found'}, {status:404});
+        baseline = Array.isArray(existing.data.days) ? editorDays(existing.data.days) : [];
+      }
+      if (!validateProgramEdit(input.candidate!.days, baseline))
+        return NextResponse.json({code:'invalid_program'}, {status:422});
+      // The atomic RPC still verifies the full expected revision and handles idempotent retries.
+    }
     const result = await db.rpc("edit_training_program_v1", {
       p_user_id: user.id,
       p_operation_id: operationId,
