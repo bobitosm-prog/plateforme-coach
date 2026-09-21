@@ -17,7 +17,7 @@
 .deleteConfirm button,
 .dialogActions button { min-height: 44px; border: 1px solid rgba(200,169,110,.24); border-radius: 12px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
 .header button { display: grid; min-width: 44px; place-items: center; border: 0; }
-.primaryActions { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 16px; }
+.primaryActions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin: 16px 0; }
 .primaryActions button,
 .programActions button,
 .deleteButton,
@@ -43,6 +43,14 @@
 .programBody { padding: 0 13px 13px; border-top: 1px solid rgba(255,255,255,.07); }
 .programActions { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; margin: 12px 0; }
 .days { display: grid; gap: 6px; }
+.days > details, .tools { padding: 12px; border-radius: 10px; background: rgba(255,255,255,.035); }
+.tools { margin-top: 14px; }
+.tools button, .tools input { min-height: 44px; padding: 8px 12px; margin: 6px 4px 6px 0; border: 1px solid rgba(200,169,110,.3); border-radius: 10px; color: inherit; background: #17130f; max-width: 100%; }
+.tools label { display: grid; gap: 6px; }
+.tools summary, .days summary { cursor: pointer; min-height: 32px; line-height: 1.6; }
+.tools :focus-visible, .days :focus-visible { outline: 2px solid #f0c978; outline-offset: 3px; }
+.version { border-top: 1px solid rgba(255,255,255,.1); padding-top: 8px; }
+.header p { color: #c2b8a9; line-height: 1.5; }
 .days > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; border-radius: 10px; background: rgba(255,255,255,.035); font-size: .75rem; }
 .days span { color: #8f8577; }
 .deleteButton { width: 100%; margin-top: 12px; color: #f29b9b; }

@@ -39,7 +39,7 @@ describe('Training V2 no-session hierarchy', () => {
     expect(frenchMessages.training_tab.v2.start).toBe('Commencer la séance')
     expect(sessionHero).toContain('className={styles.primaryAction}')
     expect(noActiveSession).toContain('className={styles.tertiaryAction}')
-    expect(frenchMessages.training_tab.v2.manageInAccount).toBe('Gérer dans Compte')
+    expect(frenchMessages.training_tab.v2.manageInAccount).toBe('Mon programme')
   })
 
   it('routes the neutral next-session action to the next non-empty program day', () => {
