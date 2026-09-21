@@ -115,6 +115,11 @@ try {
     const input=readFileSync(new URL(`../supabase/migrations/${name}.sql`,import.meta.url))
     for(let pass=0;pass<2;pass++)execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
   }
+  stage='program editor atomic persistence'
+  const editorMigration=readFileSync(new URL('../supabase/migrations/20260921160900_training_program_atomic_editor.sql',import.meta.url))
+  for(const input of [readFileSync(new URL('../tests/integration/program-editor-fixture.sql',import.meta.url)),editorMigration,editorMigration]){
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
   const canonicalMigration = migration.toString().replaceAll('public.meal_plans', 'canonical.meal_plans')
     .replaceAll('public.activate_personal_meal_plan_v1', 'canonical.activate_personal_meal_plan_v1')
     .replaceAll('plan_data', 'plan').replaceAll('is_active', 'active')

@@ -32,9 +32,10 @@ describe('Account training program section', () => {
     expect(section).not.toMatch(/createClient|\.from\(|fetch\(/i)
   })
 
-  it('keeps manager, builder and quota behind the configuration interaction', () => {
+  it('opens the manager directly while keeping the editor lazy and access-controlled', () => {
     expect(section).toContain("dynamic(() => import('../../training/TrainingProgramManager')")
-    expect(section).toContain('configureOpen && access.canConfigure')
+    expect(section).toContain('{access.canConfigure && (')
+    expect(section).not.toContain('configureOpen && access.canConfigure')
     expect(section).not.toMatch(/ProgramBuilder|useAiQuota|generate-program|custom_programs|client_programs/)
     expect(page).not.toMatch(/training_program['"][\s\S]{0,250}ProgramBuilder/)
   })
@@ -54,7 +55,7 @@ describe('Account training program section', () => {
 
   it('uses accessible controls and responsive, reduced-motion styles', () => {
     expect(section).toContain('<button')
-    expect(section).toContain('aria-expanded=')
+    expect(section).toContain('aria-labelledby="training-program-title"')
     expect(section).toContain('aria-live="polite"')
     expect(styles).toContain('min-height: 44px')
     expect(styles).toContain(':focus-visible')

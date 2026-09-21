@@ -1,6 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
-import { AlertTriangle, ArrowLeft, ChevronDown, Dumbbell, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Dumbbell, ShieldCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { UserCapabilities } from '../../../../lib/entitlements/capabilities'
@@ -44,6 +44,7 @@ export default function TrainingProgramSection({
   onConfigureChange,
 }: TrainingProgramSectionProps) {
   const t = useTranslations('accountPrograms.training')
+  const tx = useTranslations('programWorkspace')
   const access = resolveTrainingProgramAccess({ capabilities, activeProgramContext: activeProgram })
   const frequency = resolveTrainingProgramFrequency(activeProgram)
   const objective = resolveProfileTrainingObjective(profileObjective)
@@ -92,13 +93,13 @@ export default function TrainingProgramSection({
       <div className={styles.shell}>
         <button type="button" className={styles.back} onClick={onBack}>
           <ArrowLeft size={18} aria-hidden="true" />
-          {t('back')}
+          {tx('back')}
         </button>
 
         <header className={styles.header}>
           <span>{t('eyebrow')}</span>
-          <h1 id="training-program-title">{t('title')}</h1>
-          <p>{t('subtitle')}</p>
+          <h1 id="training-program-title">{tx('title')}</h1>
+          <p>{tx('subtitle')}</p>
         </header>
 
         {isLoading ? (
@@ -107,7 +108,7 @@ export default function TrainingProgramSection({
             <div className={styles.loadingIcon} />
             <div className={styles.loadingLines}><i /><i /><i /></div>
           </div>
-        ) : (
+        ) : !access.canConfigure ? (
           <article className={styles.summary} aria-live="polite">
             <div className={styles.summaryIcon} aria-hidden="true"><Dumbbell size={22} /></div>
             <div className={styles.summaryContent}>
@@ -134,27 +135,12 @@ export default function TrainingProgramSection({
                 <p className={styles.coachNotice}><ShieldCheck size={16} aria-hidden="true" />{t('coachNotice')}</p>
               )}
 
-              {!isCoachPlan && (
-                <div className={styles.actions}>
-                  <button
-                    type="button"
-                    className={styles.configureButton}
-                    disabled={!access.canConfigure}
-                    aria-expanded={access.canConfigure ? configureOpen : undefined}
-                    aria-controls={access.canConfigure ? 'training-program-preparation' : undefined}
-                    onClick={() => onConfigureChange(!configureOpen)}
-                  >
-                    <span>{t('configure')}</span>
-                    <ChevronDown size={18} aria-hidden="true" />
-                  </button>
-                  {disabledReason && <p className={styles.disabledReason}>{disabledReason}</p>}
-                </div>
-              )}
+              {!isCoachPlan && disabledReason && <p className={styles.disabledReason}>{disabledReason}</p>}
             </div>
           </article>
-        )}
+        ) : null}
 
-        {configureOpen && access.canConfigure && (
+        {access.canConfigure && (
           <div id="training-program-preparation">
             <TrainingProgramManager
               embedded

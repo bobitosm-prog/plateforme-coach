@@ -32,9 +32,10 @@ export function resolveProgramExercise(exercise: unknown, program: unknown, date
   const key = phaseKeyAt(program,date)
   const phase = record((key && phases[key]) || phases.p1)
   const resolved = { ...ex }
-  for (const field of ['sets','reps','tempo','technique','technique_details','rest_seconds']) {
-    if (phase[field] != null) resolved[field]=phase[field]
+  for (const field of ['sets','reps','tempo','technique','technique_details','rest_seconds','duration_seconds','targetDurationSeconds']) {
+    if (phase[field] != null || (field==='technique' && field in phase)) resolved[field]=phase[field]
   }
+  if(phase.rest_seconds==null&&phase.rest!=null)resolved.rest_seconds=phase.rest
   // Keep ranges (8-12) intact; the set editor separately chooses its initial value.
   const override = record(ex._weekly_sets)[trainingMonday(date)]
   if (typeof override === 'number' && Number.isInteger(override) && override>=1 && override<=10) resolved.sets=override

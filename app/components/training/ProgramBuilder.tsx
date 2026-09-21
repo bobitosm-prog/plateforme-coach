@@ -22,6 +22,12 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { buildProgramParams, type Level } from '@/lib/training/build-program-params'
 import type { Profile } from '@/lib/profile-service'
 import { prescribedDuration } from '@/lib/training/exercise-measurement'
+import { getRestSeconds } from '@/lib/utils/exercise'
+import { editorDays, editExercise, setDayRest, resizeTrainingDays, validateEditorDays, editorDraftKey, readEditorDraft, programSessionCount, editorProgramContext } from '@/lib/training/program-editor'
+import { resolveProgramExercise } from '@/lib/training/resolve-program'
+import { mutateProgram } from '@/lib/training/program-mutation'
+import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
+import { isCatalogExerciseCompatible } from '@/lib/training/equipment-contract'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -39,7 +45,7 @@ interface ProgramBuilderProps {
 const MUSCLE_OPTIONS = ['Poitrine', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Fessiers', 'Abdos']
 const MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos']
 const EQUIPMENT_OPTIONS = ['Haltères', 'Barre', 'Machine', 'Câble', 'Poids du corps', 'Autre']
-const REST_OPTIONS = [30, 60, 90, 120, 180]
+const REST_OPTIONS = [30, 45, 60, 90, 120, 180]
 
 /* ─── Shared styles ─── */
 const inputStyle: React.CSSProperties = {
@@ -85,7 +91,9 @@ const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 /* ─── Component ─── */
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram, profile }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
+  const tx = useTranslations('programWorkspace')
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const prescriptionContext=editorProgramContext(editProgram)
   const tMuscle = useTranslations('muscles')
   // Display-only day names (translated). DAY_NAMES at module-level stays FR for DB/padTo7Days.
   const dayNamesDisplay = DAY_NAMES // padTo7Days stores FR weekday in DB — display translation happens at render
@@ -134,8 +142,34 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const [aiResult, setAiResult] = useState<any>(null)
 
   // Manual mode
-  const [programName, setProgramName] = useState('')
-  const [programDays, setProgramDays] = useState<any[]>([])
+  const [programName, setProgramName] = useState(editProgram?.name??'')
+  const [programDays, setProgramDays] = useState<any[]>(()=>editProgram?editorDays(editProgram.days||[]):[])
+  const [scope,setScope]=useState<'phase'|'program'>('phase')
+  const [reviewing,setReviewing]=useState(false)
+  const reviewRef=useRef<HTMLElement>(null)
+  useEffect(()=>{if(reviewing){reviewRef.current?.scrollIntoView?.({block:'start'});reviewRef.current?.focus()}},[reviewing])
+  const [recovery,setRecovery]=useState<{name:string;days:any[];aiResult?:any}|null>(null)
+  const mutationRetry=useRef<{body:string;id:string}|null>(null)
+  const draftKey=editorDraftKey(session?.user?.id||'',editProgram?.id)
+  const baseline=JSON.stringify(editProgram??null)
+  const initialDays=editProgram?editorDays(editProgram.days||[]):[]
+  const dirty=programName!==(editProgram?.name??'')||JSON.stringify(programDays)!==JSON.stringify(initialDays)
+  const draftReady=useRef(false)
+  useEffect(()=>{
+    try {setRecovery(readEditorDraft(localStorage.getItem(draftKey),baseline))} catch { /* local storage unavailable */ }
+    draftReady.current=true
+  },[draftKey,baseline])
+  useEffect(()=>{
+    setReviewing(false)
+    if(!draftReady.current||!dirty||recovery) return
+    try {localStorage.setItem(draftKey,JSON.stringify({baseline,name:programName,days:programDays,aiResult,savedAt:Date.now()}))} catch { /* explicit close warning still protects changes */ }
+  },[programName,programDays,draftKey,baseline,dirty,recovery,aiResult])
+  useEffect(()=>{
+    if(!dirty)return
+    const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue=''}
+    window.addEventListener('beforeunload',warn)
+    return()=>window.removeEventListener('beforeunload',warn)
+  },[dirty])
   const [manualStep, setManualStep] = useState(0)
   const [showExerciseSearch, setShowExerciseSearch] = useState(false)
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
@@ -168,7 +202,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
   /* ─── Load exercises + profile gender (au montage) ─── */
   useEffect(() => {
-    supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(200)
+    supabase.from('exercises_db').select('id, name, muscle_group, equipment, equipment_legacy').order('name').limit(200)
       .then(({ data, error }: any) => {
         setExerciseCatalogError(Boolean(error))
         if (!error) setDbExercises(data || [])
@@ -186,7 +220,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   useEffect(() => {
     if (editProgram) {
       setProgramName(editProgram.name)
-      setProgramDays(padTo7Days(editProgram.days || []))
+      setProgramDays(editorDays(editProgram.days || []))
       setMode('manual')
       setManualStep(1)
     }
@@ -252,94 +286,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
   /* ─── Save program ─── */
   async function saveProgram() {
-    if (!canMutate || !programName.trim() || !programDays.length) return
+    if (!canMutate || saving || !programName.trim()) return
+    if (!validateEditorDays(programDays)) { toast.error(tx('invalid')); return }
+    if (!reviewing) { setReviewing(true); return }
+    if (readActiveWorkoutDraft(localStorage, session.user.id)) { toast.error(tx('finishWorkout')); return }
     setSaving(true)
-    const payload = {
-      user_id: session.user.id,
-      name: programName.trim(),
-      description: aiResult?.description || '',
-      days: programDays,
-      source: aiResult ? 'ai' : 'manual',
-      updated_at: new Date().toISOString(),
-    }
-    let saveError: unknown = null
-    if (editProgram?.id) {
-      // Editing: keep current is_active status (don't deactivate on save)
-      const { error } = await supabase.from('custom_programs').update(payload).eq('id', editProgram.id).eq('user_id', session.user.id)
-      saveError = error
-    } else {
-      // New program: start inactive, user activates explicitly
-      const { error } = await supabase.from('custom_programs').insert({ ...payload, is_active: false })
-      saveError = error
-    }
-
-    if (saveError) {
-      toast.error(t('toast.persistenceError'))
-      setSaving(false)
-      return
-    }
-
-    // A new inactive program must not alter the active schedule.
-    if (editProgram?.id && editProgram.is_active) try {
-      const today = new Date()
-      const dow = today.getDay()
-      const monday = new Date(today)
-      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-      monday.setHours(0, 0, 0, 0)
-      const sunday = new Date(monday)
-      sunday.setDate(monday.getDate() + 6)
-      const mondayStr = toDateStr(monday)
-      const sundayStr = toDateStr(sunday)
-
-      const { error: deleteScheduleError } = await supabase.from('scheduled_sessions').delete()
-        .eq('user_id', session.user.id)
-        .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
-        .eq('completed', false)
-      if (deleteScheduleError) throw new Error('SCHEDULE_DELETE_FAILED')
-
-      // Completed sessions survive edits: never recreate their calendar slot.
-      const { data: remaining, error: readScheduleError } = await supabase.from('scheduled_sessions')
-        .select('scheduled_date, session_type')
-        .eq('user_id', session.user.id)
-        .gte('scheduled_date', mondayStr).lte('scheduled_date', sundayStr)
-      if (readScheduleError) throw new Error('SCHEDULE_READ_FAILED')
-      const occupiedSlots = new Set((remaining || []).map((row: { scheduled_date: string; session_type: string }) => `${row.scheduled_date}|${row.session_type}`))
-
-      const newSessions: any[] = []
-      for (let i = 0; i < 7; i++) {
-        const day = programDays[i]
-        if (!day || day.is_rest) continue
-        const date = new Date(monday)
-        date.setDate(monday.getDate() + i)
-        if (occupiedSlots.has(`${toDateStr(date)}|custom`)) continue
-        newSessions.push({
-          user_id: session.user.id,
-          title: day.name || day.weekday || DAY_NAMES[i],
-          session_type: 'custom',
-          scheduled_date: toDateStr(date),
-          scheduled_time: '08:00',
-          duration_min: 60,
-          completed: false,
-        })
-      }
-      if (newSessions.length > 0) {
-        const { error: insertScheduleError } = await supabase.from('scheduled_sessions').upsert(newSessions, {
-          onConflict: 'user_id,scheduled_date,session_type,title', ignoreDuplicates: true,
-        })
-        if (insertScheduleError) throw new Error('SCHEDULE_INSERT_FAILED')
-      }
-    } catch (e) {
-      console.error('[saveProgram] scheduled_sessions sync error:', e)
-      toast.error(t('toast.scheduleError'))
-      setSaving(false)
-      onSave()
-      return
-    }
-
-    toast.success(t('toast.programSaved'))
-    setSaving(false)
-    onSave()
-    onClose()
+    try {
+      await mutateProgram({action:'save',programId:editProgram?.id??null,expected:editProgram??null,candidate:{
+        name:programName.trim(),days:programDays,description:editProgram?.description??aiResult?.description??'',
+        source:editProgram ? undefined : aiResult?'ai':'manual',
+      }},mutationRetry)
+      try {localStorage.removeItem(draftKey)} catch { /* mutation already confirmed by server */ }
+      toast.success(t('toast.programSaved'))
+      onSave(); onClose()
+    } catch(error) { toast.error(tx(error instanceof Error&&error.message==='PROGRAM_INVALID'?'invalid':'conflict')) }
+    finally { setSaving(false) }
   }
 
   /* ─── Helpers ─── */
@@ -351,12 +312,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         ...(day.exercises || []),
         {
           id: exercise.id,
+          exercise_id: isCustom?undefined:exercise.id,
           name: exercise.name,
           muscle_group: exercise.muscle_group,
           sets: exercise.sets || 3,
           reps: prescribedDuration(exercise) ? 0 : exercise.reps || 10,
           duration_seconds: prescribedDuration(exercise),
-          rest: exercise.rest_seconds || 90,
+          rest: getRestSeconds(exercise),
+          rest_seconds: getRestSeconds(exercise),
+          equipment: exercise.equipment,
           isCustom,
         },
       ]
@@ -382,8 +346,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
       const updated = [...prev]
       const day = { ...updated[dayIdx] }
       day.exercises = [...(day.exercises || [])]
-      day.exercises[exIdx] = { ...day.exercises[exIdx], [field]: value }
-      if (field === 'duration_seconds') day.exercises[exIdx].reps = 0
+      day.exercises[exIdx] = editExercise(day.exercises[exIdx],field,value,prescriptionContext,scope)
       updated[dayIdx] = day
       return updated
     })
@@ -396,21 +359,30 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
     if (!current?.variant_group) {
       const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
       const { data: similar } = await supabase
-        .from('exercises_db').select('name, equipment, muscle_group')
+        .from('exercises_db').select('id, name, equipment, equipment_legacy, muscle_group')
         .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
-      setVariantPopup({ dayIdx, exIdx, variants: similar || [] })
+      setVariantPopup({ dayIdx, exIdx, variants: (similar || []).filter((v:any)=>isCatalogExerciseCompatible(v,profileProgramParams?.equipment||'salle')) })
       return
     }
     const { data: variants } = await supabase
-      .from('exercises_db').select('name, equipment, muscle_group')
+      .from('exercises_db').select('id, name, equipment, equipment_legacy, muscle_group')
       .eq('variant_group', current.variant_group)
       .neq('name', exerciseName).order('equipment').limit(10)
-    setVariantPopup({ dayIdx, exIdx, variants: variants || [] })
+    setVariantPopup({ dayIdx, exIdx, variants: (variants || []).filter((v:any)=>isCatalogExerciseCompatible(v,profileProgramParams?.equipment||'salle')) })
   }
   function selectVariant(variant: any) {
     if (!variantPopup) return
-    updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'name', variant.name)
-    updateExerciseField(variantPopup.dayIdx, variantPopup.exIdx, 'exercise_name', variant.name)
+    const {dayIdx,exIdx}=variantPopup
+    setProgramDays(prev=>prev.map((day,i)=>i!==dayIdx?day:{...day,exercises:day.exercises.map((ex:any,j:number)=>{
+      if(j!==exIdx)return ex
+      // Preserve the prescription, not the previous movement's identity, media or loads.
+      const replacement:any={id:variant.id,exercise_id:variant.id,name:variant.name,exercise_name:variant.name,equipment:variant.equipment,muscle_group:variant.muscle_group}
+      for(const field of ['sets','reps','rest','rest_seconds','tempo','technique','technique_details','phases','_weekly_sets'])if(ex[field]!==undefined)replacement[field]=ex[field]
+      const duration=prescribedDuration(replacement)
+      if(duration){replacement.duration_seconds=duration;replacement.reps=0}
+      else if(!Number.parseInt(String(replacement.reps)))replacement.reps=10
+      return replacement
+    })}))
     setVariantPopup(null)
   }
 
@@ -451,16 +423,37 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
   function requestClose() {
     if (aiGenerating && !window.confirm(t('confirm.closeGenerating'))) return
+    if (dirty && !window.confirm(tx('leaveDraft'))) return
     onClose()
   }
 
   /* ─── RENDER ─── */
   if (typeof document === 'undefined') return null
   const portalContent = (
-    <div ref={builderRef} role="dialog" aria-modal="true" aria-label={t('createTitle')} data-no-tab-swipe="true" style={{
-      position: 'fixed', inset: 0, zIndex: Z_MODAL, background: BG_BASE, overflowY: 'auto',
+    <div ref={builderRef} role="dialog" aria-modal="true" aria-label={editProgram?tx('adjust'):tx('prepare')} data-no-tab-swipe="true" style={{
+      position: 'fixed', inset: 0, zIndex: Z_MODAL, background: BG_BASE, color:TEXT_PRIMARY, overflowY: 'auto',
     }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '24px 16px calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+        <header style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:16}}>
+          <strong>{editProgram?tx('adjust'):tx('prepare')}</strong>
+          <button type="button" onClick={requestClose} style={{...selBtn(false),minHeight:44}}>{tx('close')}</button>
+        </header>
+        <p>{editProgram?tx('futureOnly'):tx('draftOnly')}</p>
+        {dirty&&<p role="status">{tx('dirty')}</p>}
+        {recovery&&<aside role="status"><p>{tx('draftFound')}</p><button type="button" onClick={()=>{setProgramName(recovery.name);setProgramDays(recovery.days);setAiResult(recovery.aiResult??null);setRecovery(null);setMode('manual');setManualStep(1)}}>{tx('resume')}</button> <button type="button" onClick={()=>{try{localStorage.removeItem(draftKey)}catch{}setRecovery(null)}}>{tx('discard')}</button></aside>}
+        {programDays.some(d=>d.exercises?.some((ex:any)=>ex.phases))&&<label>{tx('scope')} <select value={scope} onChange={e=>setScope(e.target.value as 'phase'|'program')}><option value="phase">{tx('phase')}</option><option value="program">{tx('allPhases')}</option></select></label>}
+        {reviewing&&<aside ref={reviewRef} tabIndex={-1} aria-label={tx('review')} style={{padding:16,border:`1px solid ${GOLD}`,marginBottom:16}}>
+          <strong>{tx('review')}</strong><p>{programName} · {tx('sessionCount',{count:programSessionCount(programDays)})}</p>
+          {programDays.map((day,index)=>{
+            if(JSON.stringify(day)===JSON.stringify(initialDays[index]))return null
+            const describe=(value:any)=>!value||value.is_rest||value.repos?tx('rest'):(value.exercises||[]).map((raw:any)=>{
+              const ex=resolveProgramExercise(raw,prescriptionContext)
+              return `${ex.name||ex.exercise_name} : ${ex.sets} × ${prescribedDuration(ex)?prescribedDuration(ex)+' s':ex.reps} · ${getRestSeconds(ex)} s${ex.technique?' · '+ex.technique:''}`
+            }).join(' ; ')
+            return <div key={index} style={{borderTop:`1px solid ${BORDER}`,padding:'8px 0'}}><strong>{day.weekday}</strong>{editProgram&&<p>{tx('before')} : {describe(initialDays[index])}</p>}<p>{tx('after')} : {describe(day)}</p></div>
+          })}
+          <p>{editProgram?tx('futureOnly'):tx('draftOnly')}</p><button type="button" onClick={()=>setReviewing(false)}>{tx('keepEditing')}</button>
+        </aside>}
 
         {/* ──────── MODE SELECT ──────── */}
         {mode === 'select' && (
@@ -685,7 +678,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                 cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
               }}
             >
-              {saving ? t('saving') : t('save')}
+              {saving ? t('saving') : reviewing ? tx('apply') : tx('review')}
             </button>
           </div>
         )}
@@ -725,15 +718,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       value={programDays.filter(d => !d.is_rest).length || 3}
                       onChange={e => {
                         const n = parseInt(e.target.value)
-                        setProgramDays(DAY_NAMES.map((wd, i) => {
-                          const existing = programDays[i]
-                          if (i < n) {
-                            return existing && !existing.is_rest
-                              ? { ...existing, weekday: wd }
-                              : { name: existing?.name || '', weekday: wd, is_rest: false, exercises: existing?.exercises || [] }
-                          }
-                          return { name: '', weekday: wd, is_rest: true, exercises: [] }
-                        }))
+                        setProgramDays(resizeTrainingDays(programDays,n))
                       }}
                       style={{ flex: 1, accentColor: GOLD }}
                     />
@@ -747,13 +732,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                   onClick={() => {
                     if (!programName.trim()) { toast.error(t('config.nameRequired')); return }
                     if (!programDays.length || programDays.length < 7) {
-                      const trainingCount = programDays.filter(d => !d.is_rest).length || 4
-                      setProgramDays(DAY_NAMES.map((wd, i) => {
-                        const existing = programDays[i]
-                        if (i < trainingCount && existing && !existing.is_rest) return { ...existing, weekday: wd }
-                        if (i < trainingCount) return { name: '', weekday: wd, is_rest: false, exercises: [] }
-                        return { name: '', weekday: wd, is_rest: true, exercises: [] }
-                      }))
+                      const trainingCount = programDays.filter(d => !d.is_rest).length || 3
+                      setProgramDays(resizeTrainingDays(programDays,trainingCount))
                     }
                     setManualStep(1)
                   }}
@@ -780,7 +760,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                     cursor: saving ? 'not-allowed' : 'pointer', marginTop: 24,
                   }}
                 >
-                  {saving ? t('saving') : t('saveProgram')}
+                  {saving ? t('saving') : reviewing ? tx('apply') : tx('review')}
                 </button>
               </div>
             )}
@@ -1149,14 +1129,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
               </span>
               <button
                 onClick={() => {
-                  setProgramDays(prev => {
-                    const updated = [...prev]
-                    const day = { ...updated[editingDayIndex] }
-                    day.is_rest = !day.is_rest
-                    if (day.is_rest) { day.exercises = [] }
-                    updated[editingDayIndex] = day
-                    return updated
-                  })
+                  setProgramDays(prev => setDayRest(prev,editingDayIndex,!prev[editingDayIndex].is_rest))
                 }}
                 style={{
                   padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
@@ -1170,9 +1143,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
               </button>
             </div>
 
+            {programDays[editingDayIndex]?.is_rest&&programDays[editingDayIndex]?.exercises?.length>0&&<p>{tx('parked')}</p>}
             {!programDays[editingDayIndex]?.is_rest && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={labelStyle}>{t('day.sessionType')}</div>
+            <details style={{ marginBottom: 16 }}>
+              <summary style={{...labelStyle,minHeight:44,cursor:'pointer'}}>{t('day.sessionType')} · {programDays[editingDayIndex]?.name||tx('session')}</summary>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                 {SESSION_TYPE_OPTIONS.map(t => {
                   const isSelected = programDays[editingDayIndex]?.name === t.label
@@ -1190,20 +1164,22 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                   )
                 })}
               </div>
-            </div>
+            </details>
             )}
 
             {/* Exercise list — hidden for rest days */}
             {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-              {(programDays[editingDayIndex]?.exercises || []).map((ex: any, exIdx: number) => {
+              {(programDays[editingDayIndex]?.exercises || []).map((rawEx: any, exIdx: number) => {
+                const ex:any=resolveProgramExercise(rawEx,prescriptionContext)
                 const exerciseNameRaw = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || ''
                 const exerciseName = exerciseNameRaw || t('day.unknownExercise') // display fallback
                 const exerciseNameDisplay = getExerciseName(ex, locale) || exerciseName
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 const exCount = programDays[editingDayIndex]?.exercises?.length || 0
                 return (
-                <div key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
+                <details key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
+                  <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets||3} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps||10} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseNameDisplay}</div>
@@ -1230,6 +1206,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.setsLabel')}</div>
                       <input
                         type="number" min={1} max={10}
+                        aria-label={`${t('day.setsLabel')} — ${exerciseNameDisplay}`}
                         value={ex.sets || 3}
                         onChange={e => updateExerciseField(editingDayIndex, exIdx, 'sets', Number(e.target.value))}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
@@ -1238,26 +1215,29 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                     <div>
                       <div style={{ ...labelStyle, marginBottom: 4 }}>{prescribedDuration(ex) ? t('day.durationLabel') : t('day.repsLabel')}</div>
                       <input
-                        type="number" min={1} max={prescribedDuration(ex) ? 600 : 100}
+                        type={prescribedDuration(ex)?'number':'text'} inputMode={prescribedDuration(ex)?'numeric':'text'}
+                        aria-label={`${prescribedDuration(ex)?t('day.durationLabel'):t('day.repsLabel')} — ${exerciseNameDisplay}`}
                         value={prescribedDuration(ex) ?? (ex.reps || 10)}
-                        onChange={e => updateExerciseField(editingDayIndex, exIdx, prescribedDuration(ex) ? 'duration_seconds' : 'reps', Number(e.target.value))}
+                        onChange={e => updateExerciseField(editingDayIndex, exIdx, prescribedDuration(ex) ? 'duration_seconds' : 'reps', prescribedDuration(ex)?Number(e.target.value):e.target.value)}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
                     </div>
                     <div>
                       <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.restLabel')}</div>
                       <select
-                        value={ex.rest || 90}
-                        onChange={e => updateExerciseField(editingDayIndex, exIdx, 'rest', Number(e.target.value))}
+                        value={getRestSeconds(ex)}
+                        aria-label={`${t('day.restLabel')} — ${exerciseNameDisplay}`}
+                        onChange={e => updateExerciseField(editingDayIndex, exIdx, 'rest_seconds', Number(e.target.value))}
                         style={{ ...inputStyle, width: 80, padding: '8px', appearance: 'auto' as any }}
                       >
-                        {REST_OPTIONS.map(r => (
+                        {[...new Set([...REST_OPTIONS,getRestSeconds(ex)])].sort((a,b)=>a-b).map(r => (
                           <option key={r} value={r}>{r}s</option>
                         ))}
                       </select>
                     </div>
                   </div>
 
+                  <details style={{marginTop:12}}><summary style={{cursor:'pointer',minHeight:44}}>{tx('advancedExercise')}</summary>
                   {/* Tempo input */}
                   <div style={{ marginTop: 12 }}>
                     <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.tempoLabel')}</div>
@@ -1268,6 +1248,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                           <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input
                               type="number" min={0} max={9}
+                              aria-label={`${t('day.tempoLabel')} ${i+1} — ${exerciseNameDisplay}`}
                               value={parts[i] || (i === 1 ? '0' : '2')}
                               onChange={e => {
                                 const p = [...parts]; p[i] = e.target.value
@@ -1287,21 +1268,17 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                     <div style={{ ...labelStyle, marginBottom: 4 }}>{t('day.techniqueLabel')}</div>
                     <select
                       value={ex.technique || ''}
+                      aria-label={`${t('day.techniqueLabel')} — ${exerciseNameDisplay}`}
                       onChange={e => {
                         const val = e.target.value || null
                         updateExerciseField(editingDayIndex, exIdx, 'technique', val)
-                        if(val==='fst7') {
-                          updateExerciseField(editingDayIndex, exIdx, 'sets', 7)
-                          updateExerciseField(editingDayIndex, exIdx, 'reps', 10)
-                          updateExerciseField(editingDayIndex, exIdx, 'rest_seconds', 45)
-                        }
                         if (!val) updateExerciseField(editingDayIndex, exIdx, 'technique_details', '')
                       }}
                       style={{ ...inputStyle, width: '100%', padding: '8px', appearance: 'auto' as any }}
                     >
                       <option value="">{t('day.techniqueNone')}</option>
                       <option value="dropset">Drop Set</option>
-                      <option value="fst7" disabled={Boolean(prescribedDuration(ex))}>FST-7 (7 × 10 · 45 s)</option>
+                      <option value="fst7" disabled={Boolean(prescribedDuration(ex))}>FST-7 (7 × 8–12 · 45 s)</option>
                       <option value="restpause">Rest Pause</option>
                       <option value="superset">Superset</option>
                       <option value="mechanical">Mechanical Drop Set</option>
@@ -1375,7 +1352,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       </div>
                     )}
                   </div>
-                </div>
+                  </details>
+                </details>
               )})}
             </div>
 
