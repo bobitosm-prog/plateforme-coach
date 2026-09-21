@@ -24,6 +24,7 @@ import { deriveTodayTrainingState } from '../../../lib/training/today-training-s
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import RecentSessionsList from '../training/RecentSessionsList'
+import FollowupPanel from '../training/FollowupPanel'
 import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
 import { TrainingV2 } from '../training-v2/TrainingV2'
 import NoActiveSession from '../training-v2/NoActiveSession'
@@ -240,6 +241,7 @@ export default function TrainingTab({
         }
       `}</style>
 
+      {activeTrainingProgram.source==='personal' && <FollowupPanel programId={activeTrainingProgram.programId} hasActiveDraft={hasActiveDraft} />}
       <NoActiveSession
         programState={activeTrainingProgram.state}
         programSource={activeTrainingProgram.source}

@@ -9,6 +9,7 @@ import {
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
 } from '../../../lib/design-tokens'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTranslations } from 'next-intl'
 
 interface OverloadModalProps {
   open: boolean
@@ -21,6 +22,8 @@ interface OverloadModalProps {
 export default function OverloadModal({ open, onClose, suggestions, accept, decline }: OverloadModalProps) {
   const isMobile = useIsMobile()
   const [acting, setActing] = useState(false)
+  const [failed,setFailed]=useState(false)
+  const tFollowup=useTranslations('trainingFollowup')
   const dialogRef = useRef<HTMLDivElement>(null)
 
   const suggestion = suggestions[0] ?? null
@@ -45,9 +48,9 @@ export default function OverloadModal({ open, onClose, suggestions, accept, decl
   async function handleAccept() {
     if (!suggestion) return
     setActing(true)
-    await accept(suggestion.id)
-    setActing(false)
-    onClose()
+    setFailed(false)
+    try { await accept(suggestion.id); onClose() }
+    catch {setFailed(true)} finally {setActing(false)}
   }
 
   async function handleDecline() {
@@ -127,6 +130,7 @@ export default function OverloadModal({ open, onClose, suggestions, accept, decl
           </button>
         </div>
 
+        {failed&&<p role="alert">{tFollowup('error')}</p>}
         {/* Exercice */}
         <div style={{
           fontFamily: FONT_ALT, fontSize: '0.78rem', fontWeight: 700,
