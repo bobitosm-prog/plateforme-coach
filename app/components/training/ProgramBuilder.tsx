@@ -23,12 +23,13 @@ import { buildProgramParams, type Level } from '@/lib/training/build-program-par
 import type { Profile } from '@/lib/profile-service'
 import { prescribedDuration } from '@/lib/training/exercise-measurement'
 import { getRestSeconds } from '@/lib/utils/exercise'
-import { editorDays, editExercise, setDayRest, resizeTrainingDays, validateEditorDays, editorDraftKey, readEditorDraft, programSessionCount, editorProgramContext } from '@/lib/training/program-editor'
+import { editorDays, editExercise, setDayRest, resizeTrainingDays, editorDraftKey, readEditorDraft, programSessionCount, editorProgramContext } from '@/lib/training/program-editor'
 import { resolveProgramExercise } from '@/lib/training/resolve-program'
 import { mutateProgram } from '@/lib/training/program-mutation'
 import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 import { isCatalogExerciseCompatible } from '@/lib/training/equipment-contract'
 import { bisetFor, dropCount } from '@/lib/training/guided-techniques'
+import { programTechniqueIssues, validateProgramEdit } from '@/lib/training/program-editor'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -289,7 +290,14 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   /* ─── Save program ─── */
   async function saveProgram() {
     if (!canMutate || saving || !programName.trim()) return
-    if (!validateEditorDays(programDays)) { toast.error(tx('invalid')); return }
+    if (!validateProgramEdit(programDays, initialDays)) {
+      const issue = programTechniqueIssues(programDays, initialDays).find(issue=>!issue.inherited)
+      if (issue) {
+        setEditingDayIndex(issue.day)
+        toast.error(`${DAY_NAMES[issue.day]} — ${issue.name} : ${tTechnique(issue.code)}`)
+      } else toast.error(tx('invalid'))
+      return
+    }
     if (!reviewing) { setReviewing(true); return }
     if (readActiveWorkoutDraft(localStorage, session.user.id)) { toast.error(tx('finishWorkout')); return }
     setSaving(true)
@@ -442,6 +450,13 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         </header>
         <p>{editProgram?tx('futureOnly'):tx('draftOnly')}</p>
         {dirty&&<p role="status">{tx('dirty')}</p>}
+        {programTechniqueIssues(programDays, initialDays).length > 0 && <aside aria-label={tx('techniqueReview')} style={{padding:12,border:`1px solid ${GOLD}`,marginBottom:12}}>
+          <strong>{tx('techniqueReview')}</strong><p>{tx('legacyTechniqueHelp')}</p>
+          {programTechniqueIssues(programDays, initialDays).map(issue=><div key={`${issue.day}:${issue.exercise}:${issue.phase}`} style={{marginBottom:10}}>
+            <button type="button" onClick={()=>{setEditingDayIndex(issue.day);setMode('manual');setManualStep(1)}}>{DAY_NAMES[issue.day]} — {issue.name}{issue.phase ? ` · ${issue.phase}` : ''}</button>
+            <p>{tTechnique(issue.code)} {tx(issue.inherited?'legacyTechniqueWarning':'techniqueBlocking')}</p>
+          </div>)}
+        </aside>}
         {recovery&&<aside role="status"><p>{tx('draftFound')}</p><button type="button" onClick={()=>{setProgramName(recovery.name);setProgramDays(recovery.days);setAiResult(recovery.aiResult??null);setRecovery(null);setMode('manual');setManualStep(1)}}>{tx('resume')}</button> <button type="button" onClick={()=>{try{localStorage.removeItem(draftKey)}catch{}setRecovery(null)}}>{tx('discard')}</button></aside>}
         {programDays.some(d=>d.exercises?.some((ex:any)=>ex.phases))&&<label>{tx('scope')} <select value={scope} onChange={e=>setScope(e.target.value as 'phase'|'program')}><option value="phase">{tx('phase')}</option><option value="program">{tx('allPhases')}</option></select></label>}
         {reviewing&&<aside ref={reviewRef} tabIndex={-1} aria-label={tx('review')} style={{padding:16,border:`1px solid ${GOLD}`,marginBottom:16}}>

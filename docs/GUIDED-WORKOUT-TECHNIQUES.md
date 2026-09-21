@@ -30,3 +30,13 @@ Partner names remain the compatibility identifier in saved programs. A future sc
 ## Release checks
 
 Require green PR checks, then confirm the deployed commit and the app.moovx.ch alias (not just a successful preview). Rollback is a revert of the application commits; no database rollback is needed.
+
+## Incremental repair of historical programs
+
+The initial strict whole-program save validation prevented repairing one day while another day retained an old incomplete technique. The editor now lists each issue with day, exercise, phase and warning/blocking status. Unchanged historical technique issues may be carried forward while unrelated prescriptions or a different day/phase are repaired. The affected exercise remains blocked during execution until repaired.
+
+New/modified invalid techniques are still rejected, as are invalid ordinary prescriptions and malformed structures. Historical exemptions compare canonical resolved prescriptions and relevant partner relationships, at the same day/exercise/phase position; object key ordering does not affect the comparison. Reordering or modifying an unresolved prescription may require repairing it first.
+
+The API loads the authenticated owner's existing days from `custom_programs`, normalizes its day layout like the editor, and uses that trusted baseline rather than the client's `expected` object. Owner filtering, entitlements, rate limiting and the atomic RPC's revision/retry checks remain in place. No migration or customer data rewrite.
+
+Regression coverage includes the actual editor repairing day one with day two unresolved, rejected forged baselines, all-phase validation and a real API → disposable PostgreSQL save/read/retry test verifying the untouched day and a single version record.
