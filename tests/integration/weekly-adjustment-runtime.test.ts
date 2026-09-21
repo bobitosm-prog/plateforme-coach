@@ -22,6 +22,58 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('edits programs atomically with idempotency, revisions, versions and protected history',async()=>{
+    const owner=randomUUID(),other=randomUUID()
+    expect((await db.from('profiles').insert([{id:owner,preferred_training_time:'18:30',reminder_enabled:false},{id:other}])).error).toBeNull()
+    const days=Array.from({length:7},(_,i)=>({name:'Day '+i,exercises:[{name:'Row',sets:3,reps:'8-12',rest_seconds:90}]}))
+    const call=(request:any,id=randomUUID(),user=owner)=>db.rpc('edit_training_program_v1',{p_user_id:user,p_operation_id:id,p_request:request})
+    const createId=randomUUID(),create={action:'save',programId:null,expected:null,candidate:{name:'Draft',days,source:'import',total_weeks:8,phases:[{weeks:[1,4]},{weeks:[5,8]}]}}
+    const created=await Promise.all([call(create,createId),call(create,createId)])
+    expect(created[0].error).toBeNull();expect(created[1].data).toEqual(created[0].data)
+    let program=created[0].data.program
+    expect(program.is_active).toBe(false);expect(program.total_weeks).toBe(8);expect(program.phases).toHaveLength(2)
+    expect((await db.from('custom_programs').select('id').eq('user_id',owner)).data).toHaveLength(1)
+    expect((await call({...create,candidate:{...create.candidate,name:'Changed'}},createId)).error?.code).toBe('PT409')
+    expect((await call({action:'activate',programId:program.id,expected:program,activeProgramId:null},randomUUID(),other)).error?.code).toBe('PT404')
+    const activated=await call({action:'activate',programId:program.id,expected:program,activeProgramId:null})
+    expect(activated.error).toBeNull();program=activated.data.program
+    const today=diagnosticWeek().today
+    const scheduled=await db.from('scheduled_sessions').select('*').eq('user_id',owner)
+    expect(scheduled.error).toBeNull();expect(scheduled.data!.length).toBeGreaterThan(0)
+    expect(scheduled.data!.every(s=>s.scheduled_time==='18:30:00'&&s.reminder_enabled===false)).toBe(true)
+    const current=scheduled.data!.find(s=>s.scheduled_date===today)!
+    expect((await db.from('scheduled_sessions').update({completed:true}).eq('id',current.id)).error).toBeNull()
+    const cardio=randomUUID(),past=randomUUID()
+    expect((await db.from('scheduled_sessions').insert([{id:cardio,user_id:owner,title:'Cardio',session_type:'cardio',scheduled_date:today},{id:past,user_id:owner,title:'Past',session_type:'custom',scheduled_date:'2020-01-01'}])).error).toBeNull()
+    const operation=randomUUID(),save={action:'save',programId:program.id,expected:program,candidate:{name:'Edited',days}}
+    const edited=await call(save,operation);expect(edited.error).toBeNull()
+    expect(edited.data.program.source).toBe('import');expect(edited.data.program.phases).toEqual(program.phases)
+    expect((await call(save,operation)).data).toEqual(edited.data)
+    expect((await call(save)).error?.code).toBe('PT409')
+    const remaining=await db.from('scheduled_sessions').select('*').in('id',[cardio,past,current.id])
+    expect(remaining.data).toHaveLength(3);expect(remaining.data!.find(s=>s.id===current.id)?.completed).toBe(true)
+    const restored=await call({action:'restore',programId:program.id,expected:edited.data.program,versionId:operation})
+    expect(restored.error).toBeNull();expect(restored.data.program.name).toBe('Draft')
+    expect((await call({action:'archive',programId:program.id,expected:restored.data.program})).error?.code).toBe('PT409')
+    const ownerPayload=`${encode({alg:'HS256',typ:'JWT'})}.${encode({role:'authenticated',sub:other,exp:Math.floor(Date.now()/1000)+600})}`
+    const ownerToken=`${ownerPayload}.${createHmac('sha256',secret!).update(ownerPayload).digest('base64url')}`
+    const headers={Authorization:`Bearer ${ownerToken}`,'Content-Type':'application/json'}
+    expect(await (await fetch('http://127.0.0.1:56431/training_program_changes',{headers})).json()).toEqual([])
+    expect((await fetch('http://127.0.0.1:56431/rpc/edit_training_program_v1',{method:'POST',headers,body:JSON.stringify({p_user_id:owner,p_operation_id:randomUUID(),p_request:save})})).status).toBe(403)
+  })
+  it('rolls back active program, history and calendar together after a schedule failure',async()=>{
+    const user=randomUUID();expect((await db.from('profiles').insert({id:user})).error).toBeNull()
+    const days=Array.from({length:7},()=>({name:'Good',exercises:[{name:'Row',sets:3,reps:10}]}))
+    const first=await db.from('custom_programs').insert({user_id:user,name:'Previous',days,is_active:true}).select('*').single()
+    const next=await db.from('custom_programs').insert({user_id:user,name:'Next',days:days.map(d=>({...d,name:'SYNTHETIC_CALENDAR_FAILURE'})),is_active:false}).select('*').single()
+    expect(first.error).toBeNull();expect(next.error).toBeNull()
+    const slot=randomUUID();expect((await db.from('scheduled_sessions').insert({id:slot,user_id:user,title:'Existing',session_type:'custom',scheduled_date:diagnosticWeek().today,completed:false})).error).toBeNull()
+    const result=await db.rpc('edit_training_program_v1',{p_user_id:user,p_operation_id:randomUUID(),p_request:{action:'activate',programId:next.data!.id,expected:next.data,activeProgramId:first.data!.id}})
+    expect(result.error).not.toBeNull()
+    expect((await db.from('custom_programs').select('id').eq('user_id',user).eq('is_active',true)).data).toEqual([{id:first.data!.id}])
+    expect((await db.from('scheduled_sessions').select('id').eq('id',slot)).data).toHaveLength(1)
+    expect((await db.from('training_program_changes').select('id').eq('user_id',user)).data).toEqual([])
+  })
   it('keeps follow-up preferences/proposals owner-readable and service-writable only',async()=>{
     const userId=randomUUID();const otherId=randomUUID();const programId=randomUUID()
     expect((await db.from('profiles').insert([{id:userId},{id:otherId}])).error).toBeNull()
