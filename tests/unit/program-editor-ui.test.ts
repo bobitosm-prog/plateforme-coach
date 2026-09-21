@@ -12,6 +12,20 @@ const props={supabase:{from:()=>chain},session:{user:{id:'synthetic-owner'}},edi
 beforeEach(()=>{vi.stubGlobal('React',React);localStorage.clear();vi.clearAllMocks();vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({program}),{status:200})));vi.spyOn(window,'confirm').mockReturnValue(true)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 describe('actual editor interactions',()=>{
+ it('saves one repaired day while warning about an unchanged issue in another day',async()=>{
+  const legacy={...program,days:[{name:'Pull',exercises:[{name:'Face Pulls',sets:3,reps:15,technique:'dropset',technique_details:''}]},{name:'Upper',exercises:[{name:'Raise',sets:3,reps:12,technique:'superset',technique_details:'Absent'}]}]}
+  render(React.createElement(ProgramBuilder,{...props,editProgram:legacy}))
+  expect(await screen.findByRole('complementary',{name:'techniqueReview'})).toBeTruthy()
+  expect(screen.getByRole('button',{name:/Raise/})).toBeTruthy()
+  fireEvent.click(screen.getByRole('button',{name:'2'}))
+  fireEvent.click(screen.getByRole('button',{name:'review'}))
+  expect(fetch).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button',{name:'apply'}))
+  await waitFor(()=>expect(props.onSave).toHaveBeenCalledOnce())
+  const body=JSON.parse((fetch as any).mock.calls[0][1].body)
+  expect(body.candidate.days[0].exercises[0].technique_details).toBe('2')
+  expect(body.candidate.days[1].exercises).toEqual(legacy.days[1].exercises)
+ })
  it('stores the displayed drop default and selects a real biset partner',async()=>{
   const paired={...program,days:[{exercises:[{name:'A',sets:3,reps:10},{name:'B',sets:3,reps:10}]}]}
   render(React.createElement(ProgramBuilder,{...props,editProgram:paired}))

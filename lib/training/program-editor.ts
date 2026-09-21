@@ -81,7 +81,7 @@ export function editExercise(
   }
   return result;
 }
-export function validateEditorDays(days: Row[]): boolean {
+export function validateEditorDays(days: Row[], structureOnly = false): boolean {
   if (
     !Array.isArray(days) ||
     days.some((day) => !day || typeof day !== "object" || Array.isArray(day))
@@ -111,11 +111,11 @@ export function validateEditorDays(days: Row[]): boolean {
         day.exercises.length > 0 &&
         day.exercises.length <= 30 &&
         // Validate each phase as a complete day, not isolated partner text.
-        [null, ...new Set(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))].every(phase => {
+        (structureOnly || [null, ...new Set(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))].every(phase => {
           const rows = day.exercises.map((ex: Row) => ({ ...ex, ...(phase ? ex?.phases?.[String(phase)] : {}) }));
           const prescriptions = rows.map((ex: Row) => ({ name: String(ex.name || ex.exercise_name || ex.custom_name || ''), technique: ex.technique, techniqueDetails: ex.technique_details, targetSets: Number(ex.sets), targetDurationSeconds: prescribedDuration(ex) || undefined }));
           return prescriptions.every((ex: any, i: number) => (ex.technique !== 'dropset' || (!ex.targetDurationSeconds && dropCount(ex.techniqueDetails) !== null)) && (ex.technique !== 'superset' || Boolean(bisetFor(prescriptions, i))));
-        }) &&
+        })) &&
         day.exercises.every((ex: Row) => {
           if (!ex || typeof ex !== "object" || Array.isArray(ex)) return false;
           if (
@@ -183,6 +183,51 @@ export function validateEditorDays(days: Row[]): boolean {
           });
         })),
   );
+}
+
+export interface ProgramTechniqueIssue {
+  day: number
+  exercise: number
+  phase: string | null
+  name: string
+  code: 'missingDrops' | 'invalidBiset'
+  inherited: boolean
+}
+
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`
+  if (value && typeof value === 'object') return `{${Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,v])=>`${JSON.stringify(key)}:${canonical(v)}`).join(',')}}`
+  return JSON.stringify(value) ?? 'null'
+}
+
+/** Only unchanged historical technique issues can be carried forward. Numeric/shape validation remains strict. */
+export function programTechniqueIssues(days: Row[], baseline: Row[] = []): ProgramTechniqueIssue[] {
+  const collect = (source: Row[]) => {
+    const issues: (ProgramTechniqueIssue & { fingerprint: string })[] = []
+    source.forEach((day, dayIndex) => {
+      if (!day || day.is_rest || day.repos || !Array.isArray(day.exercises)) return
+      const phases: (string | null)[] = [null, ...new Set<string>(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))]
+      for (const phase of phases) {
+        const rows = day.exercises.map((ex: Row) => ({...ex,...(phase ? ex?.phases?.[phase] : {})}))
+        const prescriptions = rows.map((ex: Row) => ({name:String(ex.name || ex.exercise_name || ex.custom_name || ''),technique:ex.technique,techniqueDetails:ex.technique_details,targetSets:Number(ex.sets),targetDurationSeconds:prescribedDuration(ex)||undefined}))
+        prescriptions.forEach((ex: typeof prescriptions[number], i: number) => {
+          const code = ex.technique === 'dropset' && (ex.targetDurationSeconds || !dropCount(ex.techniqueDetails)) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(prescriptions,i) ? 'invalidBiset' : null
+          if (!code) return
+          // Include partner/claimant prescriptions so changing a relationship cannot inherit an old warning.
+          const related = ex.technique === 'superset' ? prescriptions.filter((other: typeof ex, j: number) => j !== i && (other.name === ex.techniqueDetails || other.techniqueDetails === ex.name || other.name === ex.name)) : []
+          const { phases: _phases, ...prescription } = rows[i]
+          issues.push({day:dayIndex,exercise:i,phase,name:ex.name,code,inherited:false,fingerprint:canonical({prescription,related})})
+        })
+      }
+    })
+    return issues
+  }
+  const previous = collect(baseline)
+  return collect(days).map(({fingerprint,...issue})=>({...issue,inherited:previous.some(old=>old.day===issue.day && old.exercise===issue.exercise && old.phase===issue.phase && old.code===issue.code && old.fingerprint===fingerprint)}))
+}
+
+export function validateProgramEdit(days: Row[], baseline: Row[] = []): boolean {
+  return validateEditorDays(days, true) && programTechniqueIssues(days, baseline).every(issue=>issue.inherited)
 }
 export function programSource(
   source: unknown,
