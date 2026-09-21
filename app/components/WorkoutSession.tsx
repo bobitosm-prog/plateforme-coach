@@ -42,12 +42,14 @@ import {
 } from '../../lib/training/set-logging'
 import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/rest-timer'
 import { prescribedDuration } from '../../lib/training/exercise-measurement'
+import { useTrainingFollowup } from '../hooks/useTrainingFollowup'
+import { addDropStage, configureFst7 } from '../../lib/training/technique-execution'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-interface ExSet { id: string; num: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
-interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
+interface ExSet { id: string; num: number; parentSetNumber?: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
+interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; prescribedWeight?:number; prescribedReps?:number; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
 interface WorkoutFinishResult {
@@ -252,6 +254,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 }
 
 export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
+  const {preferences:followup}=useTrainingFollowup()
+  const tTechnique=useTranslations('trainingTechnique')
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
   const raw = draft.exercises
@@ -350,7 +354,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
     for (const exo of exos) {
-      if (exo.targetDurationSeconds) continue
+      if (exo.targetDurationSeconds || !followup.enabled || exo.technique) continue
       const progression = computeProgression(
         previousPerformance[exo.id]?.sessions ?? [],
         exo.targetReps,
@@ -360,7 +364,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       map[exo.name] = progression
     }
     return map
-  }, [exos, previousPerformance])
+  }, [exos, previousPerformance, followup.enabled])
 
   // Compatibility adapter for the existing progression helper.
   const prevSessionsByExo = useMemo<Record<string, PrevSessionSet[][] | null>>(() => Object.fromEntries(
@@ -390,6 +394,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const { data, error } = await supabase
         .from('workout_sets')
         .select('exercise_id, exercise_name, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
+        .is('technique',null)
         .eq('user_id', userId)
         .eq('completed', true)
         .eq('workout_sessions.completed', true)
@@ -408,18 +413,21 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const next = current.map(exercise => {
         if (exercise.targetDurationSeconds) return exercise
         const performance = previousPerformance[exercise.id]
-        const prescribedReps = parseRepsTarget(exercise.targetReps)
+        const previousAt = performance?.lastPerformedAt ? Date.parse(performance.lastPerformedAt) : NaN
+        const recent = Number.isFinite(previousAt) && previousAt <= Date.now()
+          && previousAt >= Date.now() - 56 * 86_400_000
+        const prescribedReps = (recent ? exercise.prescribedReps : undefined) ?? parseRepsTarget(exercise.targetReps)
         const sets = exercise.sets.map((set, index) => {
           if (set.done) return set
-          const previousAt = performance?.lastPerformedAt ? Date.parse(performance.lastPerformedAt) : NaN
-          const recent = Number.isFinite(previousAt) && previousAt <= Date.now()
-            && previousAt >= Date.now() - 56 * 86_400_000
+          // Drop loads are entered explicitly; never prefill from an ordinary set.
+          if (set.parentSetNumber) return set
           const previousSet = recent ? performance?.latestSets[index] : undefined
           const prefill = resolveCurrentSetPrefill({
             draftWeight: set.weight,
             draftWeightRaw: set.weightRaw,
             draftReps: set.reps,
             prescribedReps,
+            prescribedWeight: recent ? exercise.prescribedWeight : undefined,
             previousWeight: previousSet?.weight,
             previousReps: previousSet?.reps,
           })
@@ -615,7 +623,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       setSetStatusMessage(tv2('workoutComplete'))
     }
 
-    startRest(r)
+    // A drop stage follows immediately; the ordinary rest starts afterwards.
+    if(nextUndone?.parentSetNumber) skipRest()
+    else startRest(r)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -627,6 +637,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       return
     }
     const reps = Number(set?.reps) || 0
+    if(set?.parentSetNumber) {
+      const parent=exo?.sets.find(row=>row.num===set.parentSetNumber)
+      if(!parent?.done || !(Number(set.weight)>0) || !(Number(set.weight)<Number(parent.weight))) {
+        setSetStatusMessage(tTechnique('lowerWeight')); return
+      }
+    }
     if (reps > 15) { setRepsWarning({ eid, sid, reps }); return }
     doValidate(eid, sid)
   }
@@ -661,7 +677,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaving(true)
     setSaveError(false)
     try {
-      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { weight: s.weight, reps: s.reps, rir: s.rir }) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber }) })) }, draftRef.current)
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
       setDone(true)
@@ -959,6 +975,19 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               target={targetLabel}
             >
             <div style={{ marginBottom: 12 }}>
+              {exo.technique && <div role="note" style={{padding:12,border:`1px solid ${GOLD}`,borderRadius:12,marginBottom:12}}>
+                <strong>{TECHNIQUE_LABELS[exo.technique]?.label ?? exo.technique}</strong>
+                <p>{exo.technique==='dropset' ? tTechnique('dropInstructions') : exo.technique==='fst7' ? tTechnique('fstInstructions',{reps:exo.targetReps,rest:exo.rest}) : exo.techniqueDetails || tTechnique('prescription')}</p>
+                {activeSet?.parentSetNumber && <strong>{tTechnique('stage',{parent:activeSet.parentSetNumber})}</strong>}
+              </div>}
+              {!exo.targetDurationSeconds && ((followup.enabled && followup.advanced_techniques)||exo.technique==='dropset') && <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+                <button type="button" disabled={Boolean(exo.technique&&exo.technique!=='dropset')||exo.sets.filter(set=>set.parentSetNumber).length>=3} onClick={()=>{
+                  setExos(items=>items.map(item=>item.id===exo.id ? addDropStage(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
+                }}>{tTechnique('addDrop')}</button>
+                {followup.enabled && followup.advanced_techniques && <button type="button" disabled={exo.sets.length>7||exo.sets.some(set=>set.done||set.parentSetNumber)} onClick={()=>{
+                  setExos(items=>items.map(item=>item.id===exo.id ? configureFst7(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
+                }}>{tTechnique('configureFst')}</button>}
+              </div>}
               <div className={trainingV2Styles.focusExecutionLayout}>
                 <div className={trainingV2Styles.focusEditorColumn}>
                   {activeSet && (

@@ -9,6 +9,7 @@ import { buildAthenaTrainingPolicyPrompt, normalizeAthenaTrainingRequest } from 
 import { AthenaTrainingOutputError, validateAthenaTrainingOutput, type ValidatedAthenaProgram } from '../athena/training-output'
 
 export interface GenerateProgramInput {
+  allowAdvancedTechniques?: boolean
   objective: string
   level: string
   daysPerWeek: number
@@ -71,6 +72,8 @@ ${buildAthenaTrainingPolicyPrompt({
 })}
 
 ${input.clientContext || ''}
+
+${input.allowAdvancedTechniques ? 'Techniques avancées autorisées selon le niveau, jamais obligatoires. FST-7 uniquement niveau avancé, dernier exercice : 7 séries de 8–12 répétitions, repos 30–45 s, consignes explicites. Ne cumule pas des techniques sur un même exercice.' : 'Techniques avancées désactivées : technique=null et technique_details="" pour chaque exercice.'}
 
 ${catalog.length > 0 ? `
 RÉFÉRENTIEL D'EXERCICES (${catalog.length} exercices) :
@@ -171,13 +174,13 @@ IMPORTANT :
                       properties: {
                         custom_name: { type: 'string', description: 'Nom de l\'exercice' },
                         muscle_primary: { type: 'string', description: 'Muscle principal travaille (en francais)' },
-                        sets: { type: 'integer', minimum: 1, maximum: 4, description: 'Nombre de series' },
+                        sets: { type: 'integer', minimum: 1, maximum: input.allowAdvancedTechniques ? 7 : 4, description: '1 à 4 séries standard ; exactement 7 uniquement pour FST-7 autorisé' },
                         reps: { type: 'integer', minimum: 0, maximum: 30, description: 'Nombre de repetitions ; 0 uniquement pour un maintien chronométré' },
                         duration_seconds: { type: ['integer', 'null'], minimum: 5, maximum: 180, description: 'Durée du maintien par série ; null pour les répétitions' },
                         rest_seconds: { type: 'integer', minimum: 30, maximum: 300, description: 'Temps de repos en secondes' },
                         order: { type: 'integer', description: 'Ordre de l\'exercice dans la seance (1, 2, 3...)' },
                         tempo: { type: 'string', description: 'Tempo format X-X-X (ex: 2-0-2)' },
-                        technique: { type: ['string', 'null'], enum: ['dropset', 'restpause', 'superset', 'mechanical', null], description: 'Technique avancee ou null' },
+                        technique: { type: ['string', 'null'], enum: input.allowAdvancedTechniques ? ['dropset', 'restpause', 'superset', 'mechanical', 'fst7', null] : [null], description: 'Technique avancee autorisée ou null' },
                         technique_details: { type: 'string', description: 'Details de la technique ou chaine vide' },
                       },
                     },
@@ -207,7 +210,7 @@ IMPORTANT :
   }
 
   const rawProgram = unwrapToolInput<unknown>(toolUseBlock.input)
-  const program: GeneratedProgram = validateAthenaTrainingOutput(rawProgram, request)
+  const program: GeneratedProgram = validateAthenaTrainingOutput(rawProgram, request,{allowAdvancedTechniques:input.allowAdvancedTechniques===true})
 
   // Post-process: resolve exercise names against catalog + set exercise_id
   if (catalog.length > 0 && program?.days) {

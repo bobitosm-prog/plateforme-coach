@@ -33,7 +33,6 @@ export function computeProgression(prevSessions: PrevSessionSet[][], targetReps:
   const weight = latest[0].weight
   const reps = Math.min(...latest.map(item => item.reps))
   if (weight <= 0 || reps <= 0) return null
-  if (!latest.every(item => Math.abs(item.weight - weight) < 0.01)) return hold(weight, reps, 'Séries à charges variables : conserve le plan prévu.')
 
   const now = options.now ?? new Date()
   // Missing/old dates are not evidence for an increase or a return-to-training load.
@@ -42,6 +41,7 @@ export function computeProgression(prevSessions: PrevSessionSet[][], targetReps:
     return Number.isFinite(at) && at <= now.getTime() && at >= now.getTime() - 56 * 86_400_000
   }
   if (!latest.every(recent)) return null
+  if (!latest.every(item => Math.abs(item.weight - weight) < 0.01)) return hold(weight, reps, 'Séries à charges variables : conserve le plan prévu.')
   if (!options.setsTarget || latest.length < options.setsTarget) return hold(weight, reps, 'Séries prévues non confirmées : conserve le plan prévu.')
   const history: ProgressionHistorySet[] = prevSessions.flatMap((session, index) => session.map(item => ({
     sessionId: item.sessionId ?? `history-${index}`,

@@ -1,6 +1,8 @@
 import { updateActiveWorkoutDraft, type ActiveWorkoutDraft } from './active-workout-draft'
 
 export interface CompletedWorkoutSet {
+  setNumber?: number
+  parentSetNumber?: number
   durationSeconds?: number | null
   weight: number | ''
   reps: number | ''
@@ -8,6 +10,7 @@ export interface CompletedWorkoutSet {
 }
 
 export interface CompletedWorkoutExercise {
+  technique?: string
   name: string
   muscle: string
   exerciseId?: string | null
