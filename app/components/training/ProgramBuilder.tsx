@@ -23,7 +23,7 @@ import { buildProgramParams, type Level } from '@/lib/training/build-program-par
 import type { Profile } from '@/lib/profile-service'
 import { prescribedDuration } from '@/lib/training/exercise-measurement'
 import { getRestSeconds } from '@/lib/utils/exercise'
-import { editorDays, editExercise, setDayRest, resizeTrainingDays, validateEditorDays, editorDraftKey, readEditorDraft, programSessionCount } from '@/lib/training/program-editor'
+import { editorDays, editExercise, setDayRest, resizeTrainingDays, validateEditorDays, editorDraftKey, readEditorDraft, programSessionCount, editorProgramContext } from '@/lib/training/program-editor'
 import { resolveProgramExercise } from '@/lib/training/resolve-program'
 import { mutateProgram } from '@/lib/training/program-mutation'
 import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
@@ -93,6 +93,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const t = useTranslations('training_tab.builder')
   const tx = useTranslations('programWorkspace')
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const prescriptionContext=editorProgramContext(editProgram)
   const tMuscle = useTranslations('muscles')
   // Display-only day names (translated). DAY_NAMES at module-level stays FR for DB/padTo7Days.
   const dayNamesDisplay = DAY_NAMES // padTo7Days stores FR weekday in DB — display translation happens at render
@@ -345,7 +346,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
       const updated = [...prev]
       const day = { ...updated[dayIdx] }
       day.exercises = [...(day.exercises || [])]
-      day.exercises[exIdx] = editExercise(day.exercises[exIdx],field,value,editProgram,scope)
+      day.exercises[exIdx] = editExercise(day.exercises[exIdx],field,value,prescriptionContext,scope)
       updated[dayIdx] = day
       return updated
     })
@@ -446,7 +447,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           {programDays.map((day,index)=>{
             if(JSON.stringify(day)===JSON.stringify(initialDays[index]))return null
             const describe=(value:any)=>!value||value.is_rest||value.repos?tx('rest'):(value.exercises||[]).map((raw:any)=>{
-              const ex=resolveProgramExercise(raw,editProgram)
+              const ex=resolveProgramExercise(raw,prescriptionContext)
               return `${ex.name||ex.exercise_name} : ${ex.sets} × ${prescribedDuration(ex)?prescribedDuration(ex)+' s':ex.reps} · ${getRestSeconds(ex)} s${ex.technique?' · '+ex.technique:''}`
             }).join(' ; ')
             return <div key={index} style={{borderTop:`1px solid ${BORDER}`,padding:'8px 0'}}><strong>{day.weekday}</strong>{editProgram&&<p>{tx('before')} : {describe(initialDays[index])}</p>}<p>{tx('after')} : {describe(day)}</p></div>
@@ -1170,7 +1171,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
             {!programDays[editingDayIndex]?.is_rest && (<>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
               {(programDays[editingDayIndex]?.exercises || []).map((rawEx: any, exIdx: number) => {
-                const ex:any=resolveProgramExercise(rawEx,editProgram)
+                const ex:any=resolveProgramExercise(rawEx,prescriptionContext)
                 const exerciseNameRaw = ex.exercise_name || ex.custom_name || ex.name || dbExercises.find(e => e.id === ex.exercise_id)?.name || ''
                 const exerciseName = exerciseNameRaw || t('day.unknownExercise') // display fallback
                 const exerciseNameDisplay = getExerciseName(ex, locale) || exerciseName

@@ -1,10 +1,17 @@
 import {describe,it,expect} from 'vitest'
-import {editorDays,setDayRest,resizeTrainingDays,editExercise,validateEditorDays,programSessionCount,programSource,readEditorDraft,editorDraftKey} from '@/lib/training/program-editor'
+import {editorDays,setDayRest,resizeTrainingDays,editExercise,validateEditorDays,programSessionCount,programSource,readEditorDraft,editorDraftKey,editorProgramContext} from '@/lib/training/program-editor'
 import {resolveProgramExercise} from '@/lib/training/resolve-program'
 import {getRestSeconds} from '@/lib/utils/exercise'
 const now=new Date('2026-09-21T12:00:00Z')
 const ex={name:'Row',sets:3,reps:'8-12',rest_seconds:120}
 describe('program editor preservation',()=>{
+ it('edits the activation phase for an inactive historical program, not its old final phase',()=>{
+  const program=editorProgramContext({is_active:false,current_week:8,start_date:'2026-01-01',total_weeks:8})
+  const phased={...ex,phases:{p1:{rest_seconds:90},p2:{rest_seconds:180}}}
+  const changed=editExercise(phased,'rest_seconds',60,program,'phase',now)
+  expect(changed.phases.p1.rest_seconds).toBe(60);expect(changed.phases.p2.rest_seconds).toBe(180)
+  expect(getRestSeconds(resolveProgramExercise(changed,program,now))).toBe(60)
+ })
  it('pads without mutating and parks exercises across rest/frequency changes',()=>{
   const input=[{exercises:[ex]}];const copy=JSON.stringify(input);const days=editorDays(input)
   expect(days).toHaveLength(7);expect(JSON.stringify(input)).toBe(copy)

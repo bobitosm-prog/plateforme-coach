@@ -10,7 +10,7 @@ Rendre la gestion quotidienne accessible directement depuis « Mon programme »,
 - Plages de répétitions et durées conservées ; repos édité dans le champ utilisé à l'exécution.
 - Changement de repos/fréquence sans effacer les exercices ; reprise d'un brouillon local pendant sept jours, lié au compte et à la version du programme.
 - Confirmation avec aperçu avant/après et mise au point clavier sur cet aperçu.
-- Réglages des programmes à phases : phase actuelle ou toutes les phases. Les séries hebdomadaires de la semaine courante sont remplacées seulement lorsque l'utilisateur édite explicitement les séries.
+- Réglages des programmes à phases : phase actuelle (ou phase de départ pour un inactif) ou toutes les phases. L'activation annonce le redémarrage à la semaine 1. Les séries hebdomadaires de la semaine courante sont remplacées seulement lorsque l'utilisateur édite explicitement les séries.
 - L'alternative d'exercice remplace l'identité du mouvement ; les propositions du catalogue respectent le matériel déclaré.
 - L'origine, la description et les phases d'un programme existant ne sont pas écrasées par une modification manuelle.
 
@@ -34,7 +34,7 @@ Les historiques de versions locaux/distants divergeaient déjà. Ne pas lancer u
 
 ## Validations 4/4
 
-1. **Logique** : suite habituelle 1 907 tests / 208 fichiers, TypeScript et build local réussis ; parité 3 282 clés FR/EN/DE.
+1. **Logique** : suite habituelle 1 908 tests / 208 fichiers, TypeScript et build local réussis ; parité 3 282 clés FR/EN/DE.
 2. **Persistance réelle** : PostgreSQL/PostgREST jetables, migration appliquée deux fois, 28 tests d'intégration. Couverture des reprises simultanées, conflits, isolation propriétaire, archivage/restauration et protection coach. Panne volontaire du calendrier : rollback intégral vérifié. Sauvegarde synthétique restaurée et comparée.
 3. **Interactions** : tests React du vrai éditeur : champ de repos, plage de répétitions, confirmation en deux étapes, reprise locale, jour de repos réversible, refus serveur sans faux succès.
 4. **Vérification visuelle** : écran local synthétique dans le navigateur, desktop puis 390 × 844. Contraste et position de l'aperçu corrigés après inspection, puis revérifiés. Exercices récupérés avec leur repos modifié après passage repos/entraînement. Route de démonstration retirée avant commit ; aucune donnée réelle modifiée.

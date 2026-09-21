@@ -4,6 +4,10 @@ import { phaseKeyAt, trainingMonday } from "./resolve-program";
 import { prescribedDuration } from "./exercise-measurement";
 
 type Row = Record<string, any>;
+/** Activation starts a fresh cycle; drafts must preview that same first phase. */
+export function editorProgramContext(program: Row | null | undefined): Row | null | undefined {
+  return program?.is_active===false ? {...program,start_date:null,current_week:1} : program;
+}
 export function editorDays(days: Row[]): Row[] {
   // padTo7Days tags days: never let that mutate the live program while editing.
   return padTo7Days(structuredClone(days)).map((day) => ({
