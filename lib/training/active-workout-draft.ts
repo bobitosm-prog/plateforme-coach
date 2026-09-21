@@ -1,5 +1,6 @@
 import type { TrainingProgramSource } from './active-program'
 import { prescribedDuration } from './exercise-measurement'
+import { bisetFor, bisetPairs, dropCount } from './guided-techniques'
 
 export const ACTIVE_WORKOUT_DRAFT_VERSION = 2 as const
 export const ACTIVE_WORKOUT_STORAGE_KEY = 'moovx_training_session_v2'
@@ -104,7 +105,7 @@ function exerciseId(): string {
 }
 
 export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): WorkoutDraftExercise[] {
-  return rows.map((value) => {
+  const exercises: WorkoutDraftExercise[] = rows.map((value) => {
     const row = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
     const targetSets = positiveInteger(row.targetSets ?? row.sets, 3)
     const existingSets = Array.isArray(row.sets) ? row.sets : null
@@ -138,16 +139,25 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           rir: null,
         }))
 
+    const count = row.technique === 'dropset' && !targetDurationSeconds ? dropCount(row.techniqueDetails ?? row.technique_details) : null
+    if (count) {
+      const missing = Math.max(0, count - sets.filter(set => 'parentSetNumber' in set && set.parentSetNumber).length)
+      for (let i = 0; i < missing; i++) {
+        const parent = sets.at(-1)
+        if (!parent) break
+        sets.push({ id: setId(), num: parent.num + 1, parentSetNumber: parent.num, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null })
+      }
+    }
     return {
       id: typeof row.id === 'string' ? row.id : exerciseId(),
-      name: String(row.name ?? row.exercise_name ?? 'Exercice'),
+      name: String(row.name ?? row.exercise_name ?? row.custom_name ?? 'Exercice'),
       muscle: String(row.muscle ?? row.muscle_group ?? ''),
       targetSets,
       ...(targetDurationSeconds ? { targetDurationSeconds } : {}),
       targetReps: String(row.targetReps ?? row.reps ?? '10-12'),
       ...(typeof row.prescribedWeight==='number'&&row.prescribedWeight>0?{prescribedWeight:row.prescribedWeight}:{}),
       ...(typeof row.prescribedReps==='number'&&row.prescribedReps>0?{prescribedReps:row.prescribedReps}:{}),
-      rest: positiveInteger(row.rest ?? row.rest_seconds, 90),
+      rest: positiveInteger(row.rest_seconds ?? row.rest, 90),
       tempo: typeof row.tempo === 'string' ? row.tempo : undefined,
       rir: typeof row.rir === 'number' ? row.rir : null,
       notes: String(row.notes ?? row.description ?? row.tips ?? ''),
@@ -160,6 +170,13 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
       open: row.open !== false,
     }
   })
+  // Both members must be labelled in history and excluded from ordinary-set progression.
+  for (const { a, b } of bisetPairs(exercises)) {
+    exercises[a].technique = exercises[b].technique = 'superset'
+    exercises[a].techniqueDetails = exercises[b].name
+    exercises[b].techniqueDetails = exercises[a].name
+  }
+  return exercises
 }
 
 export function createActiveWorkoutDraft(input: CreateActiveWorkoutDraftInput): ActiveWorkoutDraft {
@@ -200,11 +217,21 @@ export function findNextWorkoutPosition(
   currentSetIndex: number,
 ): { currentExerciseIndex: number; currentSetIndex: number } {
   const current = exercises[currentExerciseIndex]
+  const pair = bisetFor(exercises, currentExerciseIndex)
+  if (pair) {
+    const a = exercises[pair.a].sets.findIndex(set => !set.done)
+    const b = exercises[pair.b].sets.findIndex(set => !set.done)
+    if (a >= 0 || b >= 0) {
+      const next = a >= 0 && (b < 0 || a <= b) ? pair.a : pair.b
+      return { currentExerciseIndex: next, currentSetIndex: next === pair.a ? a : b }
+    }
+  }
   if (current) {
     const nextSet = current.sets.findIndex((set, index) => index > currentSetIndex && !set.done)
     if (nextSet >= 0) return { currentExerciseIndex, currentSetIndex: nextSet }
   }
-  for (let exerciseIndex = currentExerciseIndex + 1; exerciseIndex < exercises.length; exerciseIndex += 1) {
+  // Non-adjacent pairs can leave an earlier unpaired exercise unfinished.
+  for (let exerciseIndex = 0; exerciseIndex < exercises.length; exerciseIndex += 1) {
     const nextSet = exercises[exerciseIndex].sets.findIndex(set => !set.done)
     if (nextSet >= 0) return { currentExerciseIndex: exerciseIndex, currentSetIndex: nextSet }
   }

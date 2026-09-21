@@ -28,6 +28,7 @@ import { resolveProgramExercise } from '@/lib/training/resolve-program'
 import { mutateProgram } from '@/lib/training/program-mutation'
 import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 import { isCatalogExerciseCompatible } from '@/lib/training/equipment-contract'
+import { bisetFor, dropCount } from '@/lib/training/guided-techniques'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -92,6 +93,7 @@ const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram, profile }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
   const tx = useTranslations('programWorkspace')
+  const tTechnique = useTranslations('trainingTechnique')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const prescriptionContext=editorProgramContext(editProgram)
   const tMuscle = useTranslations('muscles')
@@ -1177,9 +1179,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                 const exerciseNameDisplay = getExerciseName(ex, locale) || exerciseName
                 const exerciseMuscle = ex.muscle_group || ex.focus || dbExercises.find(e => e.id === ex.exercise_id)?.muscle_group || ''
                 const exCount = programDays[editingDayIndex]?.exercises?.length || 0
+                const dayPrescriptions = programDays[editingDayIndex].exercises.map((row: any) => {
+                  const resolved: any = resolveProgramExercise(row, prescriptionContext)
+                  return { name: String(resolved.name || resolved.exercise_name || resolved.custom_name || ''), technique: resolved.technique, techniqueDetails: resolved.technique_details, targetSets: Number(resolved.sets), targetDurationSeconds: prescribedDuration(resolved) || undefined }
+                })
+                const techniqueError = ex.technique === 'dropset' && !dropCount(ex.technique_details) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(dayPrescriptions, exIdx) ? 'invalidBiset' : null
                 return (
                 <details key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
                   <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets||3} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps||10} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
+                  {techniqueError && <p role="alert">{tTechnique(techniqueError)}</p>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseNameDisplay}</div>
@@ -1291,7 +1299,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                         <div style={{ display: 'flex', gap: 6 }}>
                           {[1, 2, 3].map(n => (
                             <button key={n} onClick={() => updateExerciseField(editingDayIndex, exIdx, 'technique_details', String(n))}
-                              style={{ padding: '6px 14px', border: `1px solid ${(ex.technique_details || '2') === String(n) ? GOLD : BORDER}`, background: (ex.technique_details || '2') === String(n) ? GOLD_DIM : BG_BASE, color: (ex.technique_details || '2') === String(n) ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                              aria-pressed={ex.technique_details === String(n)}
+                              style={{ padding: '6px 14px', border: `1px solid ${ex.technique_details === String(n) ? GOLD : BORDER}`, background: ex.technique_details === String(n) ? GOLD_DIM : BG_BASE, color: ex.technique_details === String(n) ? GOLD : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
                             >{n}</button>
                           ))}
                         </div>
@@ -1330,13 +1339,21 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                     {ex.technique === 'superset' && (
                       <div style={{ marginTop: 8 }}>
                         <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.partnerExercise')}</div>
-                        <input
-                          type="text"
+                        <select
+                          aria-label={`${t('day.partnerExercise')} — ${exerciseNameDisplay}`}
                           value={ex.technique_details || ''}
                           onChange={e => updateExerciseField(editingDayIndex, exIdx, 'technique_details', e.target.value)}
-                          placeholder={t('day.partnerPlaceholder')}
                           style={{ ...inputStyle, width: '100%', padding: '8px' }}
-                        />
+                        >
+                          <option value="">{t('day.partnerExercise')}</option>
+                          {ex.technique_details && !programDays[editingDayIndex].exercises.some((row: any) => (row.name || row.exercise_name || row.custom_name) === ex.technique_details) && <option value={ex.technique_details} disabled>{ex.technique_details}</option>}
+                          {programDays[editingDayIndex].exercises.map((row: any, partnerIndex: number) => {
+                            const name = row.name || row.exercise_name || row.custom_name
+                            if (partnerIndex === exIdx || !name) return null
+                            return <option key={partnerIndex} value={name}>{name}</option>
+                          })}
+                        </select>
+                        <p>{tTechnique('bisetSetup')}</p>
                       </div>
                     )}
                     {ex.technique === 'mechanical' && (

@@ -6,6 +6,7 @@ export interface TimelineExercise {
   name: string
   completedSets: number
   totalSets: number
+  technique?: string
 }
 
 export type TimelineExerciseState = 'done' | 'active' | 'upcoming'
@@ -46,11 +47,11 @@ export default function SessionTimeline({ exercises, activeIndex, onSelect }: Se
               data-active={active}
               data-done={done}
               aria-current={active ? 'step' : undefined}
-              aria-label={`${exercise.name}, ${t(state)}, ${exercise.completedSets}/${exercise.totalSets}`}
+              aria-label={`${exercise.name}, ${exercise.technique || ''}, ${t(state)}, ${exercise.completedSets}/${exercise.totalSets}`}
               onClick={() => onSelect(index)}
             >
               <span className={styles.timelineStatus} aria-hidden="true">{done ? '✓' : active ? '●' : index + 1}</span>
-              <span className={styles.timelineName}>{exercise.name}</span>
+              <span className={styles.timelineName}>{exercise.name}{exercise.technique && <small style={{display:'block'}}>{exercise.technique}</small>}</span>
               <span className={styles.timelineProgress}>{exercise.completedSets}/{exercise.totalSets}</span>
             </button>
           )
