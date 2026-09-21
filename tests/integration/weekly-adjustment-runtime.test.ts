@@ -22,6 +22,19 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('archives reversibly and protects coached programs without blocking an unassigned client',async()=>{
+    const user=randomUUID(),coach=randomUUID();expect((await db.from('profiles').insert([{id:user},{id:coach}])).error).toBeNull()
+    expect((await db.from('coach_clients').insert({client_id:user,coach_id:coach,status:'active',source:'invitation'})).error).toBeNull()
+    const call=(request:any)=>db.rpc('edit_training_program_v1',{p_user_id:user,p_operation_id:randomUUID(),p_request:request})
+    const created=await call({action:'save',programId:null,expected:null,candidate:{name:'Personal draft',days:[{name:'A',exercises:[{name:'Row',sets:3,reps:10}]}]}})
+    expect(created.error).toBeNull()
+    const p=created.data.program
+    const archived=await call({action:'archive',programId:p.id,expected:p});expect(archived.error).toBeNull();expect(archived.data.program.archived_at).toBeTruthy()
+    expect((await call({action:'activate',programId:p.id,expected:archived.data.program,activeProgramId:null})).error?.code).toBe('PT409')
+    const restored=await call({action:'restore',programId:p.id,expected:archived.data.program});expect(restored.error).toBeNull();expect(restored.data.program.archived_at).toBeNull()
+    expect((await db.from('client_programs').insert({client_id:user,coach_id:coach,program:{lundi:{exercises:[]}}})).error).toBeNull()
+    expect((await call({action:'activate',programId:p.id,expected:restored.data.program,activeProgramId:null})).error?.code).toBe('42501')
+  })
   it('edits programs atomically with idempotency, revisions, versions and protected history',async()=>{
     const owner=randomUUID(),other=randomUUID()
     expect((await db.from('profiles').insert([{id:owner,preferred_training_time:'18:30',reminder_enabled:false},{id:other}])).error).toBeNull()
