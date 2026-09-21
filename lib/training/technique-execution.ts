@@ -19,6 +19,7 @@ export function addDropStage(
   return {
     ...exercise,
     technique: "dropset",
+    techniqueDetails: String(exercise.sets.filter(set => set.parentSetNumber).length + 1),
     sets: [
       ...exercise.sets,
       { ...stage, num: parent.num + 1, parentSetNumber: parent.num },

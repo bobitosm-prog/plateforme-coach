@@ -1,0 +1,49 @@
+import type { WorkoutDraftExercise } from './active-workout-draft'
+
+export function dropCount(details: unknown): number | null {
+  return typeof details === 'string' && /^[123]$/.test(details.trim()) ? Number(details) : null
+}
+
+type Prescription = { name: string; technique?: string; techniqueDetails?: string; targetSets: number; targetDurationSeconds?: number }
+export type BisetPair = { a: number; b: number }
+
+/** Legacy names are accepted only when they identify one real partner. Never guess. */
+export function bisetPairs(exercises: readonly Prescription[]): BisetPair[] {
+  const candidates: BisetPair[] = []
+  exercises.forEach((exercise, index) => {
+    if (exercise.technique !== 'superset' || !exercise.techniqueDetails?.trim() || exercise.targetDurationSeconds) return
+    if (exercises.filter(e => e.name === exercise.name).length !== 1) return
+    const matches = exercises.flatMap((e, i) => e.name === exercise.techniqueDetails?.trim() && i !== index ? [i] : [])
+    if (matches.length !== 1) return
+    const partnerIndex = matches[0], partner = exercises[partnerIndex]
+    if (partner.targetDurationSeconds || partner.targetSets !== exercise.targetSets) return
+    if (partner.technique && !(partner.technique === 'superset' && partner.techniqueDetails?.trim() === exercise.name)) return
+    const a = Math.min(index, partnerIndex), b = Math.max(index, partnerIndex)
+    if (!candidates.some(pair => pair.a === a && pair.b === b)) candidates.push({ a, b })
+  })
+  // A third exercise claiming either member makes the whole group ambiguous.
+  return candidates.filter(pair =>
+    !exercises.some((ex, i) => i !== pair.a && i !== pair.b && ex.technique === 'superset' && [exercises[pair.a].name, exercises[pair.b].name].includes(ex.techniqueDetails?.trim() || '')) &&
+    !candidates.some(other => other !== pair && [other.a, other.b].some(i => i === pair.a || i === pair.b)))
+}
+
+export function bisetFor(exercises: readonly Prescription[], index: number): BisetPair | undefined {
+  return bisetPairs(exercises).find(pair => pair.a === index || pair.b === index)
+}
+
+export function techniqueIssue(exercises: readonly WorkoutDraftExercise[], index: number): 'missingDrops' | 'invalidBiset' | null {
+  const ex = exercises[index]
+  if (ex?.technique === 'dropset' && (ex.targetDurationSeconds || !ex.sets.some(set => set.parentSetNumber))) return 'missingDrops'
+  if (ex?.technique === 'superset' && !bisetFor(exercises, index)) return 'invalidBiset'
+  return null
+}
+
+/** Rest after B; no programmed break between A and B or before a drop stage. */
+export function transitionRest(exercises: readonly WorkoutDraftExercise[], from: number, next: { currentExerciseIndex: number; currentSetIndex: number }): number {
+  if (exercises.every(ex => ex.sets.every(set => set.done))) return 0
+  const upcoming = exercises[next.currentExerciseIndex]?.sets[next.currentSetIndex]
+  if (next.currentExerciseIndex === from && upcoming?.parentSetNumber && !upcoming.done) return 0
+  const pair = bisetFor(exercises, from)
+  if (pair?.a === from && next.currentExerciseIndex === pair.b) return 0
+  return exercises[from]?.rest ?? 90
+}

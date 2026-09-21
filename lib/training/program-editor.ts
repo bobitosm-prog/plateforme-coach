@@ -2,6 +2,7 @@ import { getRestSeconds } from "../utils/exercise";
 import { padTo7Days } from "../schedule-utils";
 import { phaseKeyAt, trainingMonday } from "./resolve-program";
 import { prescribedDuration } from "./exercise-measurement";
+import { bisetFor, dropCount } from './guided-techniques';
 
 type Row = Record<string, any>;
 /** Activation starts a fresh cycle; drafts must preview that same first phase. */
@@ -49,6 +50,7 @@ export function editExercise(
     field === "rest" || field === "rest_seconds"
       ? { rest: value, rest_seconds: value }
       : { [field]: value };
+  if (field === 'technique') patch.technique_details = value === 'dropset' ? '2' : value === 'restpause' ? '2,15' : '';
   if (field === "duration_seconds") {
     patch.reps = 0;
     patch.targetDurationSeconds = value;
@@ -108,6 +110,12 @@ export function validateEditorDays(days: Row[]): boolean {
       (Array.isArray(day.exercises) &&
         day.exercises.length > 0 &&
         day.exercises.length <= 30 &&
+        // Validate each phase as a complete day, not isolated partner text.
+        [null, ...new Set(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))].every(phase => {
+          const rows = day.exercises.map((ex: Row) => ({ ...ex, ...(phase ? ex?.phases?.[String(phase)] : {}) }));
+          const prescriptions = rows.map((ex: Row) => ({ name: String(ex.name || ex.exercise_name || ex.custom_name || ''), technique: ex.technique, techniqueDetails: ex.technique_details, targetSets: Number(ex.sets), targetDurationSeconds: prescribedDuration(ex) || undefined }));
+          return prescriptions.every((ex: any, i: number) => (ex.technique !== 'dropset' || (!ex.targetDurationSeconds && dropCount(ex.techniqueDetails) !== null)) && (ex.technique !== 'superset' || Boolean(bisetFor(prescriptions, i))));
+        }) &&
         day.exercises.every((ex: Row) => {
           if (!ex || typeof ex !== "object" || Array.isArray(ex)) return false;
           if (
