@@ -89,6 +89,8 @@ export function buildPreviousPerformanceMap(
           reps: Number(row.reps) || 0,
           completed: row.completed !== false,
           rir: typeof row.rir === 'number' ? row.rir : null,
+          createdAt: row.created_at ?? null,
+          sessionId: sessionKey,
         }))
     ))
     const latestSets = sessions[0] ?? []

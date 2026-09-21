@@ -35,7 +35,7 @@ export function resolveProgramExercise(exercise: unknown, program: unknown, date
   for (const field of ['sets','reps','tempo','technique','technique_details','rest_seconds']) {
     if (phase[field] != null) resolved[field]=phase[field]
   }
-  if (typeof phase.reps === 'string') resolved.reps = parseInt(phase.reps) || ex.reps
+  // Keep ranges (8-12) intact; the set editor separately chooses its initial value.
   const override = record(ex._weekly_sets)[trainingMonday(date)]
   if (typeof override === 'number' && Number.isInteger(override) && override>=1 && override<=10) resolved.sets=override
   return resolved

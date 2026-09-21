@@ -354,6 +354,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const progression = computeProgression(
         previousPerformance[exo.id]?.sessions ?? [],
         exo.targetReps,
+        { setsTarget: exo.targetSets },
       )
       map[exo.id] = progression
       map[exo.name] = progression
@@ -410,7 +411,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         const prescribedReps = parseRepsTarget(exercise.targetReps)
         const sets = exercise.sets.map((set, index) => {
           if (set.done) return set
-          const previousSet = performance?.latestSets[index]
+          const previousAt = performance?.lastPerformedAt ? Date.parse(performance.lastPerformedAt) : NaN
+          const recent = Number.isFinite(previousAt) && previousAt <= Date.now()
+            && previousAt >= Date.now() - 56 * 86_400_000
+          const previousSet = recent ? performance?.latestSets[index] : undefined
           const prefill = resolveCurrentSetPrefill({
             draftWeight: set.weight,
             draftWeightRaw: set.weightRaw,

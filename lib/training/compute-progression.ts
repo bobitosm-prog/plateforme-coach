@@ -1,6 +1,6 @@
 import { deriveProgressionDecision, parseRepetitionRange, type ProgressionHistorySet } from '../athena/progression-model'
 
-export type PrevSessionSet = { weight: number; reps: number; completed: boolean; rir: number | null }
+export type PrevSessionSet = { weight: number; reps: number; completed: boolean; rir: number | null; createdAt?: string | null; sessionId?: string }
 export type ProgressionStatus = 'progress' | 'hold'
 export type ProgressionResult = { weight: number; reps: number; status: ProgressionStatus; action: 'increase_reps' | 'increase_load' | 'hold'; reason: string; step: number }
 
@@ -24,7 +24,8 @@ function hold(weight: number, reps: number, reason: string): ProgressionResult {
 }
 
 /** Session adapter for Athena's canonical, repetition-first progression rule. */
-export function computeProgression(prevSessions: PrevSessionSet[][], targetReps: unknown): ProgressionResult | null {
+export function computeProgression(prevSessions: PrevSessionSet[][], targetReps: unknown,
+  options: { setsTarget?: number; now?: Date } = {}): ProgressionResult | null {
   const target = typeof targetReps === 'number' ? String(targetReps) : String(targetReps ?? '')
   const range = parseRepetitionRange(target)
   const latest = (prevSessions[0] ?? []).filter(item => item.completed)
@@ -34,21 +35,28 @@ export function computeProgression(prevSessions: PrevSessionSet[][], targetReps:
   if (weight <= 0 || reps <= 0) return null
   if (!latest.every(item => Math.abs(item.weight - weight) < 0.01)) return hold(weight, reps, 'Séries à charges variables : conserve le plan prévu.')
 
-  const now = new Date('2026-01-31T12:00:00.000Z')
+  const now = options.now ?? new Date()
+  // Missing/old dates are not evidence for an increase or a return-to-training load.
+  const recent = (item: PrevSessionSet) => {
+    const at = item.createdAt ? Date.parse(item.createdAt) : NaN
+    return Number.isFinite(at) && at <= now.getTime() && at >= now.getTime() - 56 * 86_400_000
+  }
+  if (!latest.every(recent)) return null
+  if (!options.setsTarget || latest.length < options.setsTarget) return hold(weight, reps, 'Séries prévues non confirmées : conserve le plan prévu.')
   const history: ProgressionHistorySet[] = prevSessions.flatMap((session, index) => session.map(item => ({
-    sessionId: `history-${index}`,
+    sessionId: item.sessionId ?? `history-${index}`,
     completed: item.completed,
     sessionCompleted: true,
     weight: item.weight,
     reps: item.reps,
     rir: item.rir,
-    createdAt: new Date(now.getTime() - index * 86_400_000).toISOString(),
+    createdAt: item.createdAt ?? '',
   })))
   const decision = deriveProgressionDecision({
     currentWeight: weight,
     currentReps: reps,
     setsCompleted: latest.length,
-    setsTarget: latest.length,
+    setsTarget: options.setsTarget,
     targetReps: target,
     currentRirs: latest.map(item => item.rir),
     history,
