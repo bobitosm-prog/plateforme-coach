@@ -171,7 +171,9 @@ describe('Training V2 session completion', () => {
   })
 
   it('replaces the global close refresh with targeted local dashboard updates', () => {
-    expect(application).toContain('onClose={() => h.setWorkoutSession(null)}')
+    expect(application).toContain('onClose={h.closeWorkoutSession}')
+    expect(dashboard).toContain("setPausedWorkoutSession(pending?.status !== 'completed' ? pending : null)")
+    expect(dashboard).toContain('const pending = readActiveWorkoutDraft(localStorage, session.user.id)')
     expect(application).not.toContain('onClose={() => { h.setWorkoutSession(null); void h.fetchAll(true) }}')
     expect(dashboard).toContain('setWSessions(previous => [completedSession')
     expect(dashboard).toContain("setWorkoutHistoryState('ready')")
