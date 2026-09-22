@@ -116,6 +116,16 @@ try {
     for(let pass=0;pass<2;pass++)execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
   }
   stage='program editor atomic persistence'
+  const identityMigration=readFileSync(new URL('../supabase/migrations/20260922190839_exercise_identity_load_volume.sql',import.meta.url))
+  for(const input of [readFileSync(new URL('../tests/integration/exercise-identity-fixture.sql',import.meta.url)),identityMigration,identityMigration,readFileSync(new URL('../tests/integration/exercise-identity-assert.sql',import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Exercise identity: idempotent alias linking, preserved IDs/custom rows, equipment corrections and invoker RLS passed.')
+  const recordLoadMigration=readFileSync(new URL('../supabase/migrations/20260922194000_personal_record_load_convention.sql',import.meta.url))
+  for(const input of [readFileSync(new URL('../tests/integration/record-load-fixture.sql',import.meta.url)),recordLoadMigration,recordLoadMigration,readFileSync(new URL('../tests/integration/record-load-assert.sql',import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Record loads: idempotent migration, legacy values preserved and convention-specific upserts passed.')
   const editorMigration=readFileSync(new URL('../supabase/migrations/20260921160900_training_program_atomic_editor.sql',import.meta.url))
   for(const input of [readFileSync(new URL('../tests/integration/program-editor-fixture.sql',import.meta.url)),editorMigration,editorMigration]){
     execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
