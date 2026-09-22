@@ -1,6 +1,8 @@
 import { normalizeExerciseName } from "../exercise-matching";
+import { setTonnage } from './load-volume';
 
 export type FollowupSet = {
+  load_mode?: string | null;
   session_id: string;
   exercise_id?: string | null;
   exercise_name: string;
@@ -86,6 +88,7 @@ export function analyzeTrainingContinuity(
         .sort((a, b) => b.created_at.localeCompare(a.created_at));
       const groups = new Map<string, FollowupSet[]>();
       for (const row of history) {
+        if ((row.load_mode ?? 'legacy') !== (history[0]?.load_mode ?? 'legacy') || row.load_mode === 'band') continue;
         const sets = groups.get(row.session_id) ?? [];
         sets.push(row);
         groups.set(row.session_id, sets);
@@ -109,7 +112,7 @@ export function analyzeTrainingContinuity(
         !ex.phases
       ) {
         const volume = (sets: FollowupSet[]) =>
-          sets.reduce((sum, set) => sum + set.weight * set.reps, 0);
+          sets.reduce((sum, set) => sum + setTonnage(set), 0);
         before = volume(sessions[3]);
         after = volume(sessions[0]);
         const values = sessions.map(volume);

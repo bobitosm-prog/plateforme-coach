@@ -15,7 +15,7 @@ export function addDropStage(
   )
     return exercise;
   const parent = exercise.sets.at(-1)!;
-  const stage = normalizeWorkoutDraftExercises([{ sets: 1 }])[0].sets[0];
+  const stage = normalizeWorkoutDraftExercises([{ sets: 1, loadMode: exercise.loadMode ?? 'legacy' }])[0].sets[0];
   return {
     ...exercise,
     technique: "dropset",
@@ -37,7 +37,7 @@ export function configureFst7(
   )
     return exercise;
   // Explicit preset; keep any entered loads, never invent them.
-  const fresh = normalizeWorkoutDraftExercises([{ sets: 7 }])[0].sets;
+  const fresh = normalizeWorkoutDraftExercises([{ sets: 7, loadMode: exercise.loadMode ?? 'legacy' }])[0].sets;
   return {
     ...exercise,
     technique: "fst7",

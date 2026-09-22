@@ -1,6 +1,8 @@
 import type { TrainingProgramSource } from './active-program'
 import { prescribedDuration } from './exercise-measurement'
 import { bisetFor, bisetPairs, dropCount, restPausePrescription } from './guided-techniques'
+import { defaultLoadMode, isLoadMode, type LoadMode } from './load-volume'
+import { canonicalExerciseName } from './exercise-identity'
 
 export const ACTIVE_WORKOUT_DRAFT_VERSION = 2 as const
 export const ACTIVE_WORKOUT_STORAGE_KEY = 'moovx_training_session_v2'
@@ -11,6 +13,7 @@ export const ACTIVE_WORKOUT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 export type ActiveWorkoutStatus = 'active' | 'saving' | 'save_error' | 'completed'
 
 export interface WorkoutDraftSet {
+  loadMode?: LoadMode
   parentSetNumber?: number
   durationSeconds?: number | ''
   id: string
@@ -24,6 +27,7 @@ export interface WorkoutDraftSet {
 }
 
 export interface WorkoutDraftExercise {
+  loadMode?: LoadMode
   targetDurationSeconds?: number
   id: string
   name: string
@@ -109,6 +113,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
     const row = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
     const targetSets = positiveInteger(row.targetSets ?? row.sets, 3)
     const existingSets = Array.isArray(row.sets) ? row.sets : null
+    const loadMode = isLoadMode(row.loadMode) ? row.loadMode : existingSets?.some((s:any)=>s.done || Number(s.weight)>0 || s.weightRaw) || Number(row.prescribedWeight)>0 ? 'legacy' : defaultLoadMode(row)
     const targetDurationSeconds = prescribedDuration(row)
     const sets = existingSets
       ? existingSets.map((setValue, index) => {
@@ -116,6 +121,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           const weight: number | '' = typeof set.weight === 'number' && Number.isFinite(set.weight) ? set.weight : ''
           const reps: number | '' = typeof set.reps === 'number' && Number.isFinite(set.reps) ? set.reps : ''
           return {
+            loadMode: isLoadMode(set.loadMode) ? set.loadMode : set.done ? 'legacy' as const : loadMode,
             id: typeof set.id === 'string' ? set.id : setId(),
             num: positiveInteger(set.num, index + 1),
             ...(typeof set.parentSetNumber==='number' && set.parentSetNumber>0 && set.parentSetNumber<index+1 ? {parentSetNumber:set.parentSetNumber}:{}),
@@ -129,6 +135,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           }
         })
       : Array.from({ length: targetSets }, (_, index) => ({
+          loadMode,
           id: setId(),
           num: index + 1,
           weight: '' as const,
@@ -147,12 +154,13 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
       for (let i = 0; i < missing; i++) {
         const parent = sets.at(-1)
         if (!parent) break
-        sets.push({ id: setId(), num: parent.num + 1, parentSetNumber: parent.num, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null })
+        sets.push({ loadMode, id: setId(), num: parent.num + 1, parentSetNumber: parent.num, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null })
       }
     }
     return {
+      loadMode,
       id: typeof row.id === 'string' ? row.id : exerciseId(),
-      name: String(row.name ?? row.exercise_name ?? row.custom_name ?? 'Exercice'),
+      name: canonicalExerciseName(String(row.name ?? row.exercise_name ?? row.custom_name ?? 'Exercice')),
       muscle: String(row.muscle ?? row.muscle_group ?? ''),
       targetSets,
       ...(targetDurationSeconds ? { targetDurationSeconds } : {}),
@@ -166,7 +174,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
       videoUrl: typeof (row.videoUrl ?? row.video_url) === 'string' ? String(row.videoUrl ?? row.video_url) : undefined,
       imageUrl: typeof (row.imageUrl ?? row.image_url ?? row.gif_url) === 'string' ? String(row.imageUrl ?? row.image_url ?? row.gif_url) : undefined,
       technique: typeof row.technique === 'string' ? row.technique : undefined,
-      techniqueDetails: typeof (row.techniqueDetails ?? row.technique_details) === 'string' ? String(row.techniqueDetails ?? row.technique_details) : undefined,
+      techniqueDetails: typeof (row.techniqueDetails ?? row.technique_details) === 'string' ? (row.technique==='superset'?canonicalExerciseName(String(row.techniqueDetails ?? row.technique_details)):String(row.techniqueDetails ?? row.technique_details)) : undefined,
       exerciseId: typeof (row.exerciseId ?? row.exercise_id) === 'string' ? String(row.exerciseId ?? row.exercise_id) : null,
       sets,
       open: row.open !== false,

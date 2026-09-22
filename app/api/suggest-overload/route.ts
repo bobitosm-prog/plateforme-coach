@@ -23,6 +23,7 @@ const requestSchema = z.object({
 }).strict()
 
 type HistoryRow = {
+  load_mode?: string | null
   session_id?: unknown
   weight?: unknown
   reps?: unknown
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     let historyQuery = supabase
       .from('workout_sets')
-      .select('session_id, weight, reps, rir, completed, created_at, workout_sessions!inner(completed)')
+      .select('session_id, load_mode, weight, reps, rir, completed, created_at, workout_sessions!inner(completed)')
       .eq('user_id', user.id)
       .eq('completed', true)
       .eq('workout_sessions.completed', true)
@@ -129,8 +130,13 @@ export async function POST(req: NextRequest) {
     const { data: historyRows, error: historyError } = await historyQuery
     if (historyError) return NextResponse.json({ error: 'Historique indisponible' }, { status: 503 })
 
-    const history = ((historyRows ?? []) as HistoryRow[]).flatMap(row => historySet(row) ?? [])
+    const rows = (historyRows ?? []) as HistoryRow[]
+    const currentMode = rows.find(row => row.session_id === input.sessionId)?.load_mode ?? 'legacy'
+    if (currentMode === 'band') return NextResponse.json({skipped:true, reason:'non_comparable_load'})
+    const history = rows.filter(row => (row.load_mode ?? 'legacy') === currentMode).flatMap(row => historySet(row) ?? [])
     const current=history.filter(set=>set.sessionId===input.sessionId)
+    if (rows.some(row => row.session_id === input.sessionId && (row.load_mode ?? 'legacy') !== currentMode))
+      return NextResponse.json({skipped:true, reason:'non_comparable_load'})
     if(history[0]?.sessionId!==input.sessionId||!current.length||!current.every(set=>set.weight===current[0].weight&&set.reps===current[0].reps)) {
       return NextResponse.json({skipped:true,reason:'performance_changed'})
     }

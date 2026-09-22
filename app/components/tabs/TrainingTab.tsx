@@ -144,7 +144,7 @@ export default function TrainingTab({
     setLoadingDetail(true)
     const { data } = await supabase
       .from('workout_sets')
-      .select('exercise_name, set_number, weight, reps, duration_seconds, completed')
+      .select('exercise_name, set_number, weight, reps, duration_seconds, completed, load_mode')
       .eq('session_id', workout.id)
       .order('exercise_name').order('set_number', { ascending: true })
     // Group by exercise

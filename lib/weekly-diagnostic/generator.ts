@@ -6,6 +6,7 @@
  *
  * @see lib/anthropic/unwrap-tool-input.ts for the double-wrap 'input' fix
  */
+import { setTonnage } from '@/lib/training/load-volume'
 import webpush from 'web-push'
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { buildAthenaScientificPolicyPrompt } from '../athena/scientific-policy'
@@ -100,14 +101,14 @@ export async function generateWeeklyDiagnostic(
       const sessionIds = workoutSessionsRes.data.map((s: any) => s.id)
       const { data: sets, error: setsError } = await supabase
         .from('workout_sets')
-        .select('weight, reps, completed')
+        .select('weight, reps, completed, load_mode, duration_seconds')
         .in('session_id', sessionIds)
         .eq('completed', true)
 
       if (setsError) return { error: 'Données des séances temporairement indisponibles' }
       if (sets) {
         trainingVolumeTotal = sets.reduce((sum: number, s: any) =>
-          sum + ((s.weight || 0) * (s.reps || 0)), 0)
+          sum + setTonnage(s), 0)
       }
     }
 

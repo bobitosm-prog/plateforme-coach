@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeExerciseName } from '@/lib/exercise-matching';
 import { z } from "zod";
 import { createSupabaseRouteClient } from "@/lib/supabase/server";
 import { guardCoachManagedCapabilities } from "@/lib/api-guard";
@@ -148,9 +149,9 @@ export async function POST(req: NextRequest) {
         (day: { exercises?: Record<string, unknown>[] }, dayIndex: number) =>
           day.exercises?.forEach((exercise, exerciseIndex) => {
             if (
-              (exercise.name ??
+              normalizeExerciseName(String(exercise.name ??
                 exercise.custom_name ??
-                exercise.exercise_name) === row.exercise_name
+                exercise.exercise_name ?? '')) === normalizeExerciseName(row.exercise_name)
             )
               matches.push({ dayIndex, exerciseIndex, exercise });
           }),
@@ -168,7 +169,7 @@ export async function POST(req: NextRequest) {
       let query = state.db
         .from("workout_sets")
         .select(
-          "session_id,weight,reps,rir,completed,created_at,workout_sessions!inner(completed)",
+          "session_id,load_mode,weight,reps,rir,completed,created_at,workout_sessions!inner(completed)",
         )
         .eq("user_id", auth.user.id)
         .eq("completed", true)
@@ -189,6 +190,9 @@ export async function POST(req: NextRequest) {
       const latest = history.data.filter(
         (set) => set.session_id === row.session_id_origin,
       );
+      const loadMode = latest[0]?.load_mode ?? 'legacy';
+      if (loadMode === 'band' || latest.some(set => (set.load_mode ?? 'legacy') !== loadMode))
+        return NextResponse.json({code:'changed'}, {status:409});
       if (
         !latest.every(
           (set) =>
@@ -204,7 +208,7 @@ export async function POST(req: NextRequest) {
         setsTarget: Number(match.exercise.sets),
         targetReps: String(match.exercise.reps ?? ""),
         currentRirs: latest.map((set) => set.rir),
-        history: history.data.map((set) => ({
+        history: history.data.filter(set => (set.load_mode ?? 'legacy') === loadMode).map((set) => ({
           sessionId: set.session_id,
           weight: Number(set.weight),
           reps: Number(set.reps),
@@ -224,6 +228,7 @@ export async function POST(req: NextRequest) {
       days[match.dayIndex].exercises[match.exerciseIndex] = {
         ...match.exercise,
         prescribedWeight: decision.suggestedWeight,
+        loadMode,
         prescribedReps: decision.suggestedReps,
       };
       const saved = await state.db

@@ -1,5 +1,6 @@
 'use client'
 
+import { setTonnage } from '@/lib/training/load-volume'
 import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts } from '../../../lib/design-tokens'
 
@@ -26,6 +27,7 @@ const gridHeader: React.CSSProperties = {
 export default function WorkoutDetailList({ detail, loading }: WorkoutDetailListProps) {
   const locale = useLocale()
   const t = useTranslations('training_tab')
+  const tLoad = useTranslations('trainingLoad')
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 40, color: colors.textMuted }}>{t('calendar.loading')}</div>
@@ -37,7 +39,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
 
   const totalExercises = detail.length
   const totalSets = detail.reduce((s, e) => s + e.sets.length, 0)
-  const totalVolume = detail.reduce((s, e) => s + e.sets.reduce((a, st) => a + (st.weight || 0) * (st.reps || 0), 0), 0)
+  const totalVolume = detail.reduce((s, e) => s + e.sets.reduce((a, st) => a + setTonnage(st), 0), 0)
 
   return (
     <>
@@ -67,6 +69,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
             <span style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', flexShrink: 0 }}>{ex.sets.length} SETS</span>
           </div>
           {/* Column headers */}
+          <small>{Array.from(new Set(ex.sets.map(set=>set.load_mode ?? 'legacy'))).map(mode=>tLoad(mode)).join(' · ')}</small>
           <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
             <span style={gridHeader}>SET</span>
             <span style={gridHeader}>KG</span>
@@ -79,7 +82,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
               <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, width: 22, height: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.duration_seconds ? `${set.duration_seconds} s` : set.reps || 0}</span>
-              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{((set.weight || 0) * (set.reps || 0)).toLocaleString(locale)} kg</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{setTonnage(set).toLocaleString(locale)} kg</span>
             </div>
           ))}
         </div>

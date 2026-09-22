@@ -534,6 +534,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
             technique: exercise.technique || null,
             parent_set_number: set.parentSetNumber ?? null,
             weight: Number(set.weight) || 0,
+            load_mode: set.loadMode ?? null,
             completed: true,
             rir: set.rir ?? null,
           })))
@@ -562,6 +563,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       technique: exercise.technique || null,
       parent_set_number: set.parentSetNumber ?? null,
       weight: Number(set.weight) || 0,
+      load_mode: set.loadMode ?? null,
       completed: true,
       rir: set.rir ?? null,
       created_at: completedAt,
@@ -613,7 +615,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
         const best = valid.reduce((left, right) => (
           Number(left.weight) * (1 + Number(left.reps) / 30) >= Number(right.weight) * (1 + Number(right.reps) / 30) ? left : right
         ))
-        const result = await checkForPR(exercise.name, Number(best.weight), Number(best.reps))
+        const result = await checkForPR(exercise.name, Number(best.weight), Number(best.reps), best.loadMode ?? 'legacy')
         if (result.newPR && result.exercise && result.value) newPRs.push({ exercise: result.exercise, value: result.value })
       }
     } catch (error) { console.error('[workout-secondary] PR detection failed', error) }
@@ -873,8 +875,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   // Wrappers for sub-hooks that need extra context
-  const checkForPR = (exerciseName: string, weight: number, reps: number) =>
-    analyticsHook.checkForPR(userId, exerciseName, weight, reps)
+  const checkForPR = (exerciseName: string, weight: number, reps: number, loadMode = 'legacy') =>
+    analyticsHook.checkForPR(userId, exerciseName, weight, reps, loadMode)
 
   const regenerateWeekSchedule = async () => {
     const prog = activeTrainingProgram.source === 'personal'

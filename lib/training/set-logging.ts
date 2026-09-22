@@ -5,12 +5,14 @@ export const PREVIOUS_PERFORMANCE_SETS_PER_EXERCISE = 30
 export const PREVIOUS_PERFORMANCE_MAX_ROWS = 240
 
 export interface PreviousExerciseReference {
+  loadMode?: string
   key: string
   exerciseId: string | null
   name: string
 }
 
 export interface PreviousPerformanceRow {
+  load_mode?: string | null
   exercise_id?: string | null
   exercise_name?: string | null
   weight?: number | null
@@ -45,6 +47,7 @@ function emptyPerformance(state: PreviousPerformance['state']): PreviousPerforma
 }
 
 function matchesReference(row: PreviousPerformanceRow, reference: PreviousExerciseReference): boolean {
+  if (reference.loadMode && reference.loadMode !== (row.load_mode ?? 'legacy')) return false
   if (reference.exerciseId && row.exercise_id === reference.exerciseId) return true
   if (!row.exercise_name) return false
   return normalizeExerciseName(row.exercise_name) === normalizeExerciseName(reference.name)

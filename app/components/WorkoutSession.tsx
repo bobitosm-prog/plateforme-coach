@@ -25,6 +25,8 @@ import TrainingSessionHero from './training-v2/TrainingSessionHero'
 import SessionTimeline from './training-v2/SessionTimeline'
 import ActiveExerciseFocus from './training-v2/ActiveExerciseFocus'
 import CurrentSetEditor from './training-v2/CurrentSetEditor'
+import { defaultLoadMode, setTonnage, type LoadMode } from '../../lib/training/load-volume'
+import { canonicalExerciseName } from '../../lib/training/exercise-identity'
 import ExerciseTools from './training-v2/ExerciseTools'
 import RestTimerCompact from './training-v2/RestTimerCompact'
 import TrainingSheet from './training-v2/TrainingSheet'
@@ -51,8 +53,8 @@ import TechniqueGuidance from './training-v2/TechniqueGuidance'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-interface ExSet { id: string; num: number; parentSetNumber?: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
-interface Exo { id: string; name: string; muscle: string; targetSets: number; targetReps: string; prescribedWeight?:number; prescribedReps?:number; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
+interface ExSet { loadMode?: LoadMode; id: string; num: number; parentSetNumber?: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
+interface Exo { loadMode?: LoadMode; id: string; name: string; muscle: string; targetSets: number; targetReps: string; prescribedWeight?:number; prescribedReps?:number; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
 interface WorkoutFinishResult {
@@ -96,7 +98,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   useEffect(() => {
     clearTimeout(ref.current)
     ref.current = setTimeout(async () => {
-      let q = supabase.from('exercises_db').select('id, name, muscle_group, equipment, difficulty, description')
+      let q = supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description')
       if (search.length >= 2) q = q.ilike('name', `%${search}%`)
       if (filter && filter !== ALL_KEY) q = q.eq('muscle_group', filter)
       const { data } = await q.limit(60).order('name')
@@ -107,7 +109,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   }, [search, filter])
 
   useEffect(() => {
-    supabase.from('exercises_db').select('id, name, muscle_group, equipment, difficulty, description').order('name').limit(60)
+    supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description').order('name').limit(60)
       .then(({ data }: any) => {
         const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
         setDbExos(unique)
@@ -116,7 +118,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 
   const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : [...p, e])
   const goConfig = () => { setCfg(selected.map(e => ({ ...e, targetSets: 3, targetReps: '10-12', targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e) }))); setStep('config') }
-  const launch = () => onStart(name, cfg.map(e => ({ exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
+  const launch = () => onStart(name, cfg.map(e => ({ exercise_id: e.id, equipment: e.equipment, exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
   const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
 
   if (step === 'config') return (
@@ -265,6 +267,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const raw = draft.exercises
   const t = useTranslations('training_tab.ws')
   const tv2 = useTranslations('training_tab.v2')
+  const tLoad = useTranslations('trainingLoad')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
@@ -382,9 +385,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     key: exercise.id,
     exerciseId: exercise.exerciseId ?? null,
     name: exercise.name,
+    loadMode: exercise.loadMode ?? 'legacy',
   })), [exos])
 
   // Exactly one bounded previous-performance read per mounted active draft.
+  const previousReferencesRef = useRef(previousReferences)
+  previousReferencesRef.current = previousReferences
   useEffect(() => {
     if (previousLoadStartedRef.current || previousReferences.length === 0) return
     previousLoadStartedRef.current = true
@@ -392,19 +398,19 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const { data: userData } = await supabase.auth.getUser()
       const userId = userData?.user?.id
       if (!userId) {
-        setPreviousPerformance(buildPreviousPerformanceMap(previousReferences, [], true))
+        setPreviousPerformance(buildPreviousPerformanceMap(previousReferencesRef.current, [], true))
         return
       }
       const { data, error } = await supabase
         .from('workout_sets')
-        .select('exercise_id, exercise_name, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
+        .select('exercise_id, exercise_name, load_mode, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
         .is('technique',null)
         .eq('user_id', userId)
         .eq('completed', true)
         .eq('workout_sessions.completed', true)
         .order('created_at', { ascending: false })
         .limit(getPreviousPerformanceLimit(previousReferences.length))
-      setPreviousPerformance(buildPreviousPerformanceMap(previousReferences, data || [], Boolean(error)))
+      setPreviousPerformance(buildPreviousPerformanceMap(previousReferencesRef.current, data || [], Boolean(error)))
     }
     void fetchPrev()
   }, [draft.draftId, previousReferences, supabase])
@@ -672,7 +678,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
-  const volume = exos.reduce((v, e) => v + (e.targetDurationSeconds ? 0 : e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + Number(s.weight) * Number(s.reps), 0)), 0)
+  const volume = exos.reduce((v, e) => v + (e.targetDurationSeconds ? 0 : e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + setTonnage(s), 0)), 0)
   const completedExercises = exos.filter(exercise => (
     exercise.sets.length > 0 && exercise.sets.every(set => set.done)
   )).length
@@ -698,7 +704,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaving(true)
     setSaveError(false)
     try {
-      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber }) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber, loadMode: s.loadMode ?? e.loadMode ?? 'legacy' }) })) }, draftRef.current)
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
       setDone(true)
@@ -712,7 +718,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setVariantPopup({ exIdx, variants: [], originalName: exo.name, status: 'loading' })
     try {
       const { data: current, error: currentError } = await supabase
-        .from('exercises_db')
+        .from('exercises_catalog')
         .select('variant_group, equipment')
         .ilike('name', exo.name)
         .limit(1)
@@ -722,7 +728,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       let variants: ExerciseVariant[] = []
       if (current?.variant_group) {
         const { data, error } = await supabase
-          .from('exercises_db')
+          .from('exercises_catalog')
           .select('id, name, equipment, muscle_group, video_url')
           .eq('variant_group', current.variant_group)
           .neq('name', exo.name)
@@ -732,7 +738,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       } else {
         const baseName = exo.name.split(' ').slice(0, 2).join(' ')
         const { data, error } = await supabase
-          .from('exercises_db')
+          .from('exercises_catalog')
           .select('id, name, equipment, muscle_group, video_url')
           .ilike('name', `%${baseName}%`)
           .neq('name', exo.name)
@@ -754,16 +760,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setExerciseInfoError(false)
     const fields = 'name, muscle_group, equipment, difficulty, description, execution_tips, instructions, tips, gif_url, video_url, variant_group'
     try {
-      const exact = await supabase.from('exercises_db')
-        .select(fields).ilike('name', exo.name).limit(1).maybeSingle()
+      const exact = await supabase.from('exercises_catalog')
+        .select(fields).ilike('name', canonicalExerciseName(exo.name)).limit(1).maybeSingle()
       if (exact.error) throw exact.error
-      let data = exact.data
-      if (!data) {
-        const fuzzy = await supabase.from('exercises_db')
-          .select(fields).ilike('name', `%${exo.name}%`).limit(1).maybeSingle()
-        if (fuzzy.error) throw fuzzy.error
-        data = fuzzy.data
-      }
+      const data = exact.data
       setExerciseInfo(data || { name: exo.name })
     } catch {
       setExerciseInfoError(true)
@@ -774,10 +774,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   function selectSessionVariant(v: ExerciseVariant) {
     if (!variantPopup) return
     const replacedExercise = exos[variantPopup.exIdx]
-    if (replacedExercise?.sets.some(set => set.done) && !window.confirm(tv2('replaceCompletedConfirm'))) return
+    if (replacedExercise?.sets.some(set => set.done)) { window.alert(tLoad('lockedReplacement')); return }
     setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? {
       ...e,
       name: v.name,
+      loadMode: defaultLoadMode({...v}),
+      sets: e.sets.map(set => ({...set, loadMode:defaultLoadMode({...v}), weight:'', weightRaw:'', weightInputSource:undefined})),
       targetDurationSeconds: prescribedDuration({ name: v.name }),
       muscle: v.muscle_group || e.muscle,
       exerciseId: v.id || e.exerciseId,
@@ -787,7 +789,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setVariantPopup(null)
   }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...exercises.map(e => ({ id: uid(), name: e.exercise_name || e.name || t('exercise'), muscle: e.muscle_group || '', targetSets: e.sets || 3, targetReps: String(e.reps || '10-12'), targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e), tempo: undefined, rir: null, notes: e.notes || '', videoUrl: e.video_url, exerciseId: null, sets: makeSets(e.sets || 3), open: true }))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...normalizeWorkoutDraftExercises(exercises.map(e => ({...e, id:uid()})))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
 
   if (done) {
     return (
@@ -1027,6 +1029,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                   )}
                   {activeSet && (
                     <CurrentSetEditor
+                      loadMode={exo.loadMode ?? 'legacy'}
+                      loadModeLocked={exo.sets.some(set => set.done)}
+                      onLoadModeChange={loadMode => {
+                        if (exo.sets.some(set => set.done)) return
+                        setPreviousPerformance(previous => ({...previous, ...buildPreviousPerformanceMap([{key:exo.id, exerciseId:exo.exerciseId ?? null, name:exo.name, loadMode}], [])}))
+                        setExos(items => items.map(item => item.id !== exo.id ? item : {...item, loadMode, sets:item.sets.map(set => ({...set, loadMode, weight:'', weightRaw:'', weightInputSource:undefined}))}))
+                      }}
                       stepLabel={stepLabel}
                       timed={Boolean(exo.targetDurationSeconds)}
                       setNumber={activeSet.num}

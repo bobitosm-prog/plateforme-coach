@@ -79,10 +79,12 @@ function recordValue(record: ProgressionRecord, locale: string): string {
 
 function RecordRow({ record }: { record: ProgressionRecord }) {
   const t = useTranslations('progress.v2')
+  const tLoad = useTranslations('trainingLoad')
   const locale = useLocale()
   return <article className={styles.recordRow}>
     <div className={styles.recordRowMain}>
       <h3>{record.exerciseName}</h3>
+      <small>{tLoad(record.loadMode ?? 'legacy')}</small>
       <span>{t(`records.types.${getRecordTypeKey(record.recordType)}`)}</span>
       <time dateTime={record.recordedAt ?? undefined}>
         {record.recordedAt ? dateLabel(record.recordedAt, locale) : t('records.dateUnavailable')}
@@ -157,7 +159,7 @@ export default function PersonalRecordsV2({ records }: { records: RecordsModel }
 
           {isOpen && <div id={contentId} className={styles.recordGroupContent}>
             <div className={styles.recordRows}>{visibleRecords.map((record, index) => <RecordRow
-              key={`${record.exerciseId ?? record.exerciseName}-${record.recordType}-${record.recordedAt ?? index}`}
+              key={`${record.exerciseId ?? record.exerciseName}-${record.loadMode ?? 'legacy'}-${record.recordType}-${record.recordedAt ?? index}`}
               record={record}
             />)}</div>
             {group.count > 3 && <button

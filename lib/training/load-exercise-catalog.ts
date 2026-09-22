@@ -9,7 +9,7 @@ export async function loadExerciseCatalog(
 ): Promise<CatalogExercise[]> {
   try {
     const { data, error } = await supabase
-      .from('exercises_db')
+      .from('exercises_catalog')
       .select('id, name, equipment, equipment_legacy')
     if (error) {
       console.warn('[loadExerciseCatalog] DB error:', error.message)

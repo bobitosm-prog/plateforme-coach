@@ -27,7 +27,7 @@ export function getExerciseMetricKey(metric: ProgressionExerciseSeries['metric']
 }
 
 function exerciseKey(exercise: ProgressionExerciseSeries): string {
-  return exercise.exerciseId ?? exercise.exerciseName
+  return `${exercise.exerciseId ?? exercise.exerciseName}:${exercise.loadMode ?? 'legacy'}`
 }
 
 function dateLabel(date: string, locale: string): string {
@@ -61,6 +61,7 @@ function chartGeometry(series: ProgressionExerciseSeries['series']) {
 
 export default function ExerciseProgression({ exerciseProgress }: { exerciseProgress: ExerciseModel }) {
   const t = useTranslations('progress.v2')
+  const tLoad = useTranslations('trainingLoad')
   const locale = useLocale()
   const [selectedKey, setSelectedKey] = useState('')
   const exercises = exerciseProgress.exercises
@@ -107,7 +108,7 @@ export default function ExerciseProgression({ exerciseProgress }: { exerciseProg
         value={exerciseKey(selected)}
         onChange={event => setSelectedKey(event.target.value)}
       >
-        {exercises.map(exercise => <option key={exerciseKey(exercise)} value={exerciseKey(exercise)}>{exercise.exerciseName}</option>)}
+        {exercises.map(exercise => <option key={exerciseKey(exercise)} value={exerciseKey(exercise)}>{exercise.exerciseName} — {tLoad(exercise.loadMode ?? 'legacy')}</option>)}
       </select>
 
       {selected.series.length > 1 ? <figure className={styles.exerciseFigure}>

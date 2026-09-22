@@ -5,6 +5,7 @@ import {
   progressionPeriodStart,
   PROGRESSION_TIME_ZONE,
 } from './progression-date'
+import { setTonnage } from '../training/load-volume'
 
 export type ProgressionDomainState = 'loading' | 'ready' | 'partial' | 'empty' | 'error'
 export type ProgressionPeriod = '7d' | '30d' | '90d' | 'all'
@@ -30,6 +31,8 @@ export interface ProgressionWeightLog {
 }
 
 export interface ProgressionWorkoutSet {
+  load_mode?: string | null
+  duration_seconds?: number | null
   exercise_id?: string | null
   exercise_name?: string | null
   weight?: number | null
@@ -46,6 +49,7 @@ export interface ProgressionWorkoutSession {
 }
 
 export interface ProgressionRecordRow {
+  load_mode?: string | null
   exercise_id?: string | null
   exercise_name?: string | null
   muscle_group?: string | null
@@ -208,6 +212,7 @@ export interface ProgressionWeekSummary {
 }
 
 export interface ProgressionRecord {
+  loadMode?: string
   exerciseId: string | null
   exerciseName: string
   recordType: string
@@ -221,6 +226,7 @@ export interface ProgressionRecord {
 }
 
 export interface ProgressionExerciseSeries {
+  loadMode?: string
   exerciseId: string | null
   exerciseName: string
   metric: 'e1rm' | 'max_weight' | 'volume'
@@ -412,6 +418,7 @@ function buildRegularity(input: ProgressionViewModelInput, now: Date) {
 function completedSets(input: ProgressionViewModelInput): Array<ProgressionWorkoutSet & { date: string }> {
   const rows: Array<ProgressionWorkoutSet & { date: string }> = []
   for (const session of input.sessions.rows) {
+    if (session.completed === false) continue
     for (const set of session.workout_sets ?? []) {
       if (set.completed === false) continue
       const date = getProgressionDateKey(set.created_at ?? session.created_at ?? '')
@@ -433,7 +440,7 @@ function buildVolume(input: ProgressionViewModelInput, now: Date) {
   for (const set of sets) {
     if (!finiteNumber(set.weight) || !finiteNumber(set.reps) || set.weight <= 0 || set.reps <= 0) continue
     const weekKey = getProgressionWeekKey(set.date)
-    if (weekKey) sums.set(weekKey, (sums.get(weekKey) ?? 0) + set.weight * set.reps)
+    if (weekKey) sums.set(weekKey, (sums.get(weekKey) ?? 0) + setTonnage(set))
   }
   const weeklyVolume = Array.from({ length: weekCount }, (_, index) => {
     const weekKey = addProgressionDays(currentWeekKey, -(weekCount - 1 - index) * 7)
@@ -462,6 +469,7 @@ function buildRecords(input: ProgressionViewModelInput) {
     return [{
       exerciseId: row.exercise_id ?? null,
       exerciseName: row.exercise_name,
+      loadMode: row.load_mode ?? 'legacy',
       recordType: row.record_type,
       value: row.value,
       unit: row.unit ?? null,
@@ -478,12 +486,13 @@ function buildRecords(input: ProgressionViewModelInput) {
 function buildExerciseProgress(input: ProgressionViewModelInput, now: Date) {
   if (sourceIsError(input.sessions)) return { state: 'error' as const, exercises: [] }
   if (input.sessions.state === 'loading') return { state: 'loading' as const, exercises: [] }
-  const grouped = new Map<string, { id: string | null; name: string; days: Map<string, { value: number; weight: number; reps: number }> }>()
+  const grouped = new Map<string, { id: string | null; name: string; loadMode: string; days: Map<string, { value: number; weight: number; reps: number }> }>()
   for (const set of periodRows(completedSets(input), input.period ?? '30d', now)) {
     if (!set.exercise_name || !finiteNumber(set.weight) || !finiteNumber(set.reps) || set.weight <= 0 || set.reps <= 0) continue
-    const key = set.exercise_id ?? set.exercise_name
+    if (set.load_mode === 'band' || Number(set.duration_seconds) > 0) continue
+    const key = `${set.exercise_id ?? set.exercise_name}:${set.load_mode ?? 'legacy'}`
     const e1rm = round(set.weight * (1 + set.reps / 30))
-    if (!grouped.has(key)) grouped.set(key, { id: set.exercise_id ?? null, name: set.exercise_name, days: new Map() })
+    if (!grouped.has(key)) grouped.set(key, { id: set.exercise_id ?? null, name: set.exercise_name, loadMode:set.load_mode ?? 'legacy', days: new Map() })
     const day = grouped.get(key)!.days
     const previous = day.get(set.date)
     if (!previous || e1rm > previous.value) day.set(set.date, { value: e1rm, weight: set.weight, reps: set.reps })
@@ -491,6 +500,7 @@ function buildExerciseProgress(input: ProgressionViewModelInput, now: Date) {
   const exercises = Array.from(grouped.values()).map<ProgressionExerciseSeries>(exercise => ({
     exerciseId: exercise.id,
     exerciseName: exercise.name,
+    loadMode: exercise.loadMode,
     metric: 'e1rm',
     series: Array.from(exercise.days.entries())
       .map(([date, value]) => ({ date, ...value }))

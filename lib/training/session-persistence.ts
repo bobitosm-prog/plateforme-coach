@@ -1,6 +1,7 @@
 import { updateActiveWorkoutDraft, type ActiveWorkoutDraft } from './active-workout-draft'
 
 export interface CompletedWorkoutSet {
+  loadMode?: import('./load-volume').LoadMode
   setNumber?: number
   parentSetNumber?: number
   durationSeconds?: number | null
