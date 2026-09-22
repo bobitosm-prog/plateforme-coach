@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeExerciseName } from '@/lib/exercise-matching';
 import { z } from "zod";
 import { createSupabaseRouteClient } from "@/lib/supabase/server";
 import { guardCoachManagedCapabilities } from "@/lib/api-guard";
@@ -148,9 +149,9 @@ export async function POST(req: NextRequest) {
         (day: { exercises?: Record<string, unknown>[] }, dayIndex: number) =>
           day.exercises?.forEach((exercise, exerciseIndex) => {
             if (
-              (exercise.name ??
+              normalizeExerciseName(String(exercise.name ??
                 exercise.custom_name ??
-                exercise.exercise_name) === row.exercise_name
+                exercise.exercise_name ?? '')) === normalizeExerciseName(row.exercise_name)
             )
               matches.push({ dayIndex, exerciseIndex, exercise });
           }),

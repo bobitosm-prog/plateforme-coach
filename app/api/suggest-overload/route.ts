@@ -135,6 +135,8 @@ export async function POST(req: NextRequest) {
     if (currentMode === 'band') return NextResponse.json({skipped:true, reason:'non_comparable_load'})
     const history = rows.filter(row => (row.load_mode ?? 'legacy') === currentMode).flatMap(row => historySet(row) ?? [])
     const current=history.filter(set=>set.sessionId===input.sessionId)
+    if (rows.some(row => row.session_id === input.sessionId && (row.load_mode ?? 'legacy') !== currentMode))
+      return NextResponse.json({skipped:true, reason:'non_comparable_load'})
     if(history[0]?.sessionId!==input.sessionId||!current.length||!current.every(set=>set.weight===current[0].weight&&set.reps===current[0].reps)) {
       return NextResponse.json({skipped:true,reason:'performance_changed'})
     }

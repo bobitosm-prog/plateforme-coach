@@ -203,7 +203,7 @@ export default function DesktopDashboard({
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
 
-    supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid)
+    supabase.from('workout_sessions').select('*, workout_sets(*)').eq('user_id', uid).eq('completed', true)
       .gte('created_at', weekAgo).order('created_at', { ascending: true })
       .then(({ data }: any) => {
         if (!data) return
