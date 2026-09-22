@@ -35,7 +35,7 @@ export default function TrainingSessionHero({
   const hasPlannedExercises = mode === 'active' || exerciseCount > 0
 
   return (
-    <section className={styles.hero} aria-labelledby={`training-${mode}-title`}>
+    <section className={styles.hero} data-mode={mode} aria-labelledby={`training-${mode}-title`}>
       <div className={styles.eyebrow}>
         {mode === 'active'
           ? t('sessionActive')

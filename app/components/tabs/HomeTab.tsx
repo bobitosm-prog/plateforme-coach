@@ -17,6 +17,8 @@ import RecoveryModal from '../home/modals/RecoveryModal'
 import WeeklyCompletionControls from '../home/WeeklyCompletionControls'
 
 interface HomeTabProps {
+  pausedWorkoutName?: string
+  onResumeWorkout?: () => void
   homeModel: HomeViewModel
   supabase: any
   session: any
@@ -47,6 +49,7 @@ interface HomeTabProps {
 }
 
 export default function HomeTab({
+  pausedWorkoutName, onResumeWorkout,
   homeModel,
   supabase, session, profile,
   avatarRef, uploadAvatar,
@@ -58,6 +61,7 @@ export default function HomeTab({
   latestDiagnostic, setLatestDiagnostic,
 }: HomeTabProps) {
   const ht = useTranslations('home')
+  const training = useTranslations('training_tab.v2')
   const router = useRouter()
   const [showRecoveryModal, setShowRecoveryModal] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
@@ -228,6 +232,11 @@ export default function HomeTab({
   return (
     <div style={{ background: colors.background, minHeight: '100vh', overflowX: 'hidden', maxWidth: '100%' }}>
       <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadAvatar} />
+      {pausedWorkoutName && onResumeWorkout && <div style={{padding:16}}>
+        <button type="button" onClick={onResumeWorkout} style={{minHeight:48,width:'100%',padding:12,borderRadius:12,border:`1px solid ${colors.gold}`,color:colors.gold,background:colors.background}}>
+          {training('resume')} — {pausedWorkoutName}
+        </button>
+      </div>}
 
       <HomeV2
         model={homeModel}

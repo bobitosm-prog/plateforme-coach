@@ -28,7 +28,7 @@ import { resolveProgramExercise } from '@/lib/training/resolve-program'
 import { mutateProgram } from '@/lib/training/program-mutation'
 import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 import { isCatalogExerciseCompatible } from '@/lib/training/equipment-contract'
-import { bisetFor, dropCount } from '@/lib/training/guided-techniques'
+import { bisetFor, dropCount, restPausePrescription } from '@/lib/training/guided-techniques'
 import { programTechniqueIssues, validateProgramEdit } from '@/lib/training/program-editor'
 
 /* ─── Types ─── */
@@ -95,6 +95,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const t = useTranslations('training_tab.builder')
   const tx = useTranslations('programWorkspace')
   const tTechnique = useTranslations('trainingTechnique')
+  const guide = useTranslations('techniqueGuide')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const prescriptionContext=editorProgramContext(editProgram)
   const tMuscle = useTranslations('muscles')
@@ -1198,7 +1199,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                   const resolved: any = resolveProgramExercise(row, prescriptionContext)
                   return { name: String(resolved.name || resolved.exercise_name || resolved.custom_name || ''), technique: resolved.technique, techniqueDetails: resolved.technique_details, targetSets: Number(resolved.sets), targetDurationSeconds: prescribedDuration(resolved) || undefined }
                 })
-                const techniqueError = ex.technique === 'dropset' && !dropCount(ex.technique_details) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(dayPrescriptions, exIdx) ? 'invalidBiset' : null
+                const techniqueError = ex.technique === 'dropset' && !dropCount(ex.technique_details) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(dayPrescriptions, exIdx) ? 'invalidBiset' : ex.technique === 'restpause' && !restPausePrescription(ex.technique_details) ? 'invalidRestPause' : null
                 return (
                 <details key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
                   <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets||3} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps||10} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
@@ -1303,7 +1304,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       <option value="dropset">Drop Set</option>
                       <option value="fst7" disabled={Boolean(prescribedDuration(ex))}>FST-7 (7 × 8–12 · 45 s)</option>
                       <option value="restpause">Rest Pause</option>
-                      <option value="superset">Superset</option>
+                      <option value="superset">{guide('biset')}</option>
                       <option value="mechanical">Mechanical Drop Set</option>
                     </select>
 
@@ -1322,7 +1323,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       </div>
                     )}
                     {ex.technique === 'restpause' && (
-                      <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
+                      <div style={{ marginTop: 8, display: 'flex', gap: 12, flexWrap:'wrap' }}>
+                        <p style={{width:'100%',margin:0}}>{guide('restPause')}</p>
                         <div>
                           <div style={{ ...labelStyle, marginBottom: 4, fontSize: 9 }}>{t('day.miniSets')}</div>
                           <div style={{ display: 'flex', gap: 4 }}>

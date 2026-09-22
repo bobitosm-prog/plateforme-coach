@@ -259,6 +259,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
   const {preferences:followup}=useTrainingFollowup()
   const tTechnique=useTranslations('trainingTechnique')
+  const guide=useTranslations('techniqueGuide')
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
   const raw = draft.exercises
@@ -620,7 +621,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (nextPosition.currentExerciseIndex !== exerciseIndex) {
       setSetStatusMessage(tv2('nextExerciseReady'))
     } else if (nextUndone) {
-      setSetStatusMessage(tv2('nextSetReady', { set: nextUndone.num }))
+      setSetStatusMessage(nextUndone.parentSetNumber
+        ? `${guide(updatedExercises[exerciseIndex].technique==='restpause'?'mini':'drop')} ${updatedExercises[exerciseIndex].sets.slice(0,nextPosition.currentSetIndex+1).filter(s=>s.parentSetNumber).length}`
+        : tv2('nextSetReady', { set: nextUndone.num }))
     } else {
       setSetStatusMessage(tv2('workoutComplete'))
     }
@@ -634,7 +637,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     const exo = exos.find(e => e.id === eid)
     const exerciseIndex = exos.findIndex(e => e.id === eid)
     const issue = techniqueIssue(exos, exerciseIndex)
-    if (issue) { setSetStatusMessage(tTechnique(issue)); return }
+    if (issue) { setSetStatusMessage(issue==='invalidRestPause'?guide('invalid'):tTechnique(issue)); return }
     const pair = bisetFor(exos, exerciseIndex)
     if (pair) {
       const next = findNextWorkoutPosition(exos, exerciseIndex, -1)
@@ -653,8 +656,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if(set?.parentSetNumber) {
       const parent=exo?.sets.find(row=>row.num===set.parentSetNumber)
       const load = Number(set.weightRaw.replace(',', '.'))
-      if(!parent?.done || !(load>0) || !(load<Number(parent.weight)) || !Number.isInteger(reps) || reps<1) {
-        setSetStatusMessage(tTechnique('lowerWeight')); return
+      const restPause = exo?.technique === 'restpause'
+      const main = exo?.sets.filter(row=>!row.parentSetNumber).at(-1)
+      const validLoad = restPause ? load>=0 && load===Number(main?.weight) : load>0 && load<Number(parent?.weight)
+      if(!parent?.done || set.weightRaw.trim()==='' || !validLoad || !Number.isInteger(reps) || reps<1) {
+        setSetStatusMessage(restPause ? guide('sameError') : tTechnique('lowerWeight')); return
       }
     }
     if (reps > 15) { setRepsWarning({ eid, sid, reps }); return }
@@ -958,7 +964,14 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             ? `${previousSet.weight} kg × ${previousSet.reps}${previousSet.rir != null ? ` · RIR ${previousSet.rir === 4 ? '4+' : previousSet.rir}` : ''}`
             : null
           const progression = progressionByExo[exo.id]
-          const targetLabel = exo.targetDurationSeconds ? `${exo.targetDurationSeconds} s` : progression
+          const stageCount = exo.sets.filter(s=>s.parentSetNumber).length
+          const mainCount = exo.sets.length-stageCount
+          const stageNumber = exo.sets.slice(0,activeSetIndex+1).filter(s=>s.parentSetNumber).length
+          const stepLabel = stageCount ? activeSet?.parentSetNumber
+            ? `${exo.technique==='restpause'?guide('mini'):guide('drop')} ${stageNumber}/${stageCount}`
+            : `${guide('main')} ${activeSetNumber}/${mainCount}` : undefined
+          const mainWeight = exo.sets.filter(s=>!s.parentSetNumber).at(-1)?.weight
+          const targetLabel = activeSet?.parentSetNumber ? `${exo.technique==='restpause'?`${mainWeight ?? ''} kg — ${guide('same')}`:guide('reduced')} · ${guide('logReps')}` : exo.targetDurationSeconds ? `${exo.targetDurationSeconds} s` : progression
             ? `${fmtStep(progression.weight)} kg × ${progression.reps}`
             : `${exo.targetReps} reps`
           const suggestion = progression && !activeSet?.done
@@ -974,11 +987,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           const techniqueSummary = [
             exo.tempo ? `Tempo ${exo.tempo}` : null,
             exo.technique && TECHNIQUE_LABELS[exo.technique]
-              ? `${TECHNIQUE_LABELS[exo.technique].emoji} ${TECHNIQUE_LABELS[exo.technique].label}${exo.techniqueDetails ? ` · ${exo.techniqueDetails}` : ''}`
+              ? `${TECHNIQUE_LABELS[exo.technique].emoji} ${TECHNIQUE_LABELS[exo.technique].label}`
               : null,
           ].filter(Boolean).join(' · ') || null
           return (
             <ActiveExerciseFocus
+              stepLabel={stepLabel}
               key={exo.id}
               name={getExerciseName(exo, locale)}
               exerciseIndex={idx}
@@ -991,23 +1005,29 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             >
             <div style={{ marginBottom: 12 }}>
               <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />
-              {exo.technique && !['dropset','superset'].includes(exo.technique) && <div role="note" style={{padding:12,border:`1px solid ${GOLD}`,borderRadius:12,marginBottom:12}}>
-                <strong>{TECHNIQUE_LABELS[exo.technique]?.label ?? exo.technique}</strong>
-                <p>{exo.technique==='dropset' ? tTechnique('dropInstructions') : exo.technique==='fst7' ? tTechnique('fstInstructions',{reps:exo.targetReps,rest:exo.rest}) : exo.techniqueDetails || tTechnique('prescription')}</p>
-                {activeSet?.parentSetNumber && <strong>{tTechnique('stage',{parent:activeSet.parentSetNumber})}</strong>}
-              </div>}
-              {!exo.targetDurationSeconds && ((followup.enabled && followup.advanced_techniques)||exo.technique==='dropset') && <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                <button type="button" disabled={Boolean(exo.technique&&exo.technique!=='dropset')||exo.sets.filter(set=>set.parentSetNumber).length>=3} onClick={()=>{
+              {!exo.targetDurationSeconds && (!exo.technique || exo.technique==='dropset') && ((followup.enabled && followup.advanced_techniques)||exo.technique==='dropset') && <details style={{marginBottom:12}}>
+                <summary style={{minHeight:44,cursor:'pointer'}}>{guide('tools')}</summary>
+                {stageCount<3 && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? addDropStage(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
-                }}>{tTechnique('addDrop')}</button>
-                {followup.enabled && followup.advanced_techniques && <button type="button" disabled={exo.sets.length>7||exo.sets.some(set=>set.done||set.parentSetNumber)} onClick={()=>{
+                }}>{tTechnique('addDrop')}</button>}
+                {followup.enabled && followup.advanced_techniques && !exo.technique && exo.sets.length<=7 && !exo.sets.some(set=>set.done||set.parentSetNumber) && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? configureFst7(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('configureFst')}</button>}
-              </div>}
+              </details>}
               <div className={trainingV2Styles.focusExecutionLayout}>
                 <div className={trainingV2Styles.focusEditorColumn}>
+                  {(restOn || restDone) && (
+                    <RestTimerCompact
+                      state={restDone ? 'finished' : 'running'}
+                      remainingSeconds={restSecs}
+                      onSkip={skipRest}
+                      onAddThirtySeconds={addRestTime}
+                      onDismissFinished={dismissRestDone}
+                    />
+                  )}
                   {activeSet && (
                     <CurrentSetEditor
+                      stepLabel={stepLabel}
                       timed={Boolean(exo.targetDurationSeconds)}
                       setNumber={activeSet.num}
                       totalSets={exo.sets.length}
@@ -1047,15 +1067,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </div>
 
                 <aside className={trainingV2Styles.contextRail}>
-                  {(restOn || restDone) && (
-                    <RestTimerCompact
-                      state={restDone ? 'finished' : 'running'}
-                      remainingSeconds={restSecs}
-                      onSkip={skipRest}
-                      onAddThirtySeconds={addRestTime}
-                      onDismissFinished={dismissRestDone}
-                    />
-                  )}
                   <ExerciseTools
                     notes={exo.notes?.trim() || null}
                     technique={techniqueSummary}
@@ -1091,30 +1102,28 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           aria-label={t('addExercise')}
           className="active:scale-90"
           style={{
-            position: 'fixed',
-            left: 20,
-            bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
-            zIndex: 201,
-            width: 56, height: 56, borderRadius: '50%',
-            background: GOLD, border: 'none',
+            position: 'relative',
+            margin: '12px auto 140px',
+            minWidth: 160, minHeight: 44, borderRadius: 12,
+            background: 'transparent', color: GOLD, border: `1px solid ${GOLD_RULE}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(212,175,55,0.3)',
             cursor: 'pointer',
             transition: 'transform 120ms ease',
           }}
         >
-          <Plus size={26} color={colors.onGold} strokeWidth={2.5} />
+          {t('addExercise')}
         </button>
       )}
 
       {/* BARRE BAS — centered TERMINER — hidden in reorder mode */}
       {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, maxWidth:600, margin:'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
             <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
           </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ minHeight: 44, background: GOLD, border: 'none', borderRadius: 12, padding: '12px 0', width: '60%', maxWidth: 280, color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
+          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ minHeight: 44, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '8px 16px', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
         </div>
       </div>}
 

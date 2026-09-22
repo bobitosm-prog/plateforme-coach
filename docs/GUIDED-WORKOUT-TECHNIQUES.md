@@ -23,7 +23,7 @@ The editor stored a drop count without expanding it into executable sets. Supers
 
 ## Remaining limits
 
-Rest-pause and mechanical-drop execution are outside this two-bug patch; their free-form guidance is not a mini-set/timer engine. FST-7 keeps its existing seven-set preset. This patch does not claim to validate every advanced training method.
+The September 21 patch did not include a rest-pause engine. The September 22 extension below adds it. Mechanical-drop variants remain free-form instructions: no variant order, load or repetitions are invented, and their individual execution is not automatically tracked. FST-7 uses the prescribed seven-set block.
 
 Partner names remain the compatibility identifier in saved programs. A future schema can introduce instance IDs with a dedicated migration; currently duplicate names are explicitly rejected for bisets.
 
@@ -40,3 +40,16 @@ New/modified invalid techniques are still rejected, as are invalid ordinary pres
 The API loads the authenticated owner's existing days from `custom_programs`, normalizes its day layout like the editor, and uses that trusted baseline rather than the client's `expected` object. Owner filtering, entitlements, rate limiting and the atomic RPC's revision/retry checks remain in place. No migration or customer data rewrite.
 
 Regression coverage includes the actual editor repairing day one with day two unresolved, rejected forged baselines, all-phase validation and a real API → disposable PostgreSQL save/read/retry test verifying the untouched day and a single version record.
+
+## September 22: precise execution tables and Home continuity
+
+- Every supported technique has a disclosure table: ordered step, exercise, repetition target (or actual result), load and rest after the step. FST-7 has seven separate rows; a biset alternates both named exercises A1/B1/A2/B2. The current row and completed rows are identified. Missing drop/mini-set repetition targets are not invented.
+- Rest-pause uses the existing `count,seconds` prescription (2–3 mini-sets; 10/15/20 seconds), **after the last main set only**, as confirmed by the owner. Mini-sets use the same load as the final main set and record their actual reps separately. Normal rest applies between main sets, short rest before each mini-set, and no timer starts once the complete workout is done.
+- Existing mini-set IDs/results survive normalization and resume without duplication. New or modified invalid prescriptions are rejected; unchanged historical warnings retain the incremental-repair contract.
+- `training_restpause_stages` broadens the parent-set CHECK constraint to rest-pause. It is idempotent, rejects missing/unsupported technique types, changes no historical rows, and leaves RLS and access policies untouched. Deploy this compatible DB change before the new application. Roll back the application first; do not restore the old constraint after mini-set rows exist.
+- Main sets, drop stages and mini-sets are named separately in the logger and focus. The rest timer precedes the inputs on mobile. The large redundant session metrics are hidden on mobile, the floating add button no longer covers inputs, and incompatible technique modifiers are not offered.
+- Home now offers explicit resume. Starting another workout while a valid same-owner draft exists resumes it instead of overwriting it. Abandonment/completion removes the draft and must not resurrect a resume banner.
+
+### Verification
+
+Four layers: model/editor and phased validation; actual React WorkoutSession and dashboard-hook runtime; disposable PostgreSQL/PostgREST save/read and constraint rejection (migration applied twice); regression suite, TypeScript, translation parity and production build. Mobile browser verification at 402×874 used a temporary local fixture rendering the actual component: rest-pause transition/15-second timers/close-resume, seven-row FST-7 table, and A→B without rest followed by B→A with 60 seconds. The fixture was removed before commit; no customer's completed session was created or edited.

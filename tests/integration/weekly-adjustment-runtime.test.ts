@@ -22,6 +22,20 @@ const db = createClient('http://127.0.0.1:56431', 'synthetic-local-key', {
   } },
 })
 describe('real weekly adjustment concurrency', () => {
+  it('persists and reloads distinct rest-pause mini-sets and rejects invalid parents',async()=>{
+    const user=randomUUID()
+    const session=await db.from('workout_sessions').insert({user_id:user}).select('id').single()
+    expect(session.error).toBeNull()
+    const base={user_id:user,session_id:session.data!.id,exercise_name:'Synthetic curl',weight:25,reps:8,completed:true,technique:'restpause'}
+    expect((await db.from('workout_sets').insert([1,2,3,4,5].map(n=>({...base,set_number:n,parent_set_number:n>3?n-1:null})))).error).toBeNull()
+    const saved=await db.from('workout_sets').select('set_number,parent_set_number,technique,weight').eq('session_id',session.data!.id).order('set_number')
+    expect(saved.error).toBeNull()
+    expect(saved.data?.map(s=>s.parent_set_number)).toEqual([null,null,null,3,4])
+    expect(saved.data?.every(s=>s.technique==='restpause'&&Number(s.weight)===25)).toBe(true)
+    for(const invalid of [{technique:'fst7',parent_set_number:3},{technique:null,parent_set_number:3},{technique:'restpause',parent_set_number:6}]) {
+      expect((await db.from('workout_sets').insert({...base,set_number:6,...invalid})).error?.code).toBe('23514')
+    }
+  })
   it('persists one repaired day through the actual API while retaining another legacy warning',async()=>{
     const user=randomUUID();expect((await db.from('profiles').insert({id:user})).error).toBeNull()
     const days=[{name:'Pull',exercises:[{name:'Face Pulls',sets:3,reps:15,technique:'dropset',technique_details:''}]},{name:'Upper',exercises:[{name:'Raise',sets:3,reps:12,technique:'superset',technique_details:'Absent'}]}]

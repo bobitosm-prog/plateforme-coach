@@ -2,7 +2,7 @@ import { getRestSeconds } from "../utils/exercise";
 import { padTo7Days } from "../schedule-utils";
 import { phaseKeyAt, trainingMonday } from "./resolve-program";
 import { prescribedDuration } from "./exercise-measurement";
-import { bisetFor, dropCount } from './guided-techniques';
+import { bisetFor, dropCount, restPausePrescription } from './guided-techniques';
 
 type Row = Record<string, any>;
 /** Activation starts a fresh cycle; drafts must preview that same first phase. */
@@ -114,7 +114,7 @@ export function validateEditorDays(days: Row[], structureOnly = false): boolean 
         (structureOnly || [null, ...new Set(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))].every(phase => {
           const rows = day.exercises.map((ex: Row) => ({ ...ex, ...(phase ? ex?.phases?.[String(phase)] : {}) }));
           const prescriptions = rows.map((ex: Row) => ({ name: String(ex.name || ex.exercise_name || ex.custom_name || ''), technique: ex.technique, techniqueDetails: ex.technique_details, targetSets: Number(ex.sets), targetDurationSeconds: prescribedDuration(ex) || undefined }));
-          return prescriptions.every((ex: any, i: number) => (ex.technique !== 'dropset' || (!ex.targetDurationSeconds && dropCount(ex.techniqueDetails) !== null)) && (ex.technique !== 'superset' || Boolean(bisetFor(prescriptions, i))));
+          return prescriptions.every((ex: any, i: number) => (ex.technique !== 'dropset' || (!ex.targetDurationSeconds && dropCount(ex.techniqueDetails) !== null)) && (ex.technique !== 'restpause' || (!ex.targetDurationSeconds && restPausePrescription(ex.techniqueDetails) !== null)) && (ex.technique !== 'superset' || Boolean(bisetFor(prescriptions, i))));
         })) &&
         day.exercises.every((ex: Row) => {
           if (!ex || typeof ex !== "object" || Array.isArray(ex)) return false;
@@ -190,7 +190,7 @@ export interface ProgramTechniqueIssue {
   exercise: number
   phase: string | null
   name: string
-  code: 'missingDrops' | 'invalidBiset'
+  code: 'missingDrops' | 'invalidBiset' | 'invalidRestPause'
   inherited: boolean
 }
 
@@ -211,7 +211,7 @@ export function programTechniqueIssues(days: Row[], baseline: Row[] = []): Progr
         const rows = day.exercises.map((ex: Row) => ({...ex,...(phase ? ex?.phases?.[phase] : {})}))
         const prescriptions = rows.map((ex: Row) => ({name:String(ex.name || ex.exercise_name || ex.custom_name || ''),technique:ex.technique,techniqueDetails:ex.technique_details,targetSets:Number(ex.sets),targetDurationSeconds:prescribedDuration(ex)||undefined}))
         prescriptions.forEach((ex: typeof prescriptions[number], i: number) => {
-          const code = ex.technique === 'dropset' && (ex.targetDurationSeconds || !dropCount(ex.techniqueDetails)) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(prescriptions,i) ? 'invalidBiset' : null
+          const code = ex.technique === 'dropset' && (ex.targetDurationSeconds || !dropCount(ex.techniqueDetails)) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(prescriptions,i) ? 'invalidBiset' : ex.technique === 'restpause' && (ex.targetDurationSeconds || !restPausePrescription(ex.techniqueDetails)) ? 'invalidRestPause' : null
           if (!code) return
           // Include partner/claimant prescriptions so changing a relationship cannot inherit an old warning.
           const related = ex.technique === 'superset' ? prescriptions.filter((other: typeof ex, j: number) => j !== i && (other.name === ex.techniqueDetails || other.techniqueDetails === ex.name || other.name === ex.name)) : []

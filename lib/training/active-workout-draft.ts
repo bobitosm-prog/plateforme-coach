@@ -1,6 +1,6 @@
 import type { TrainingProgramSource } from './active-program'
 import { prescribedDuration } from './exercise-measurement'
-import { bisetFor, bisetPairs, dropCount } from './guided-techniques'
+import { bisetFor, bisetPairs, dropCount, restPausePrescription } from './guided-techniques'
 
 export const ACTIVE_WORKOUT_DRAFT_VERSION = 2 as const
 export const ACTIVE_WORKOUT_STORAGE_KEY = 'moovx_training_session_v2'
@@ -139,7 +139,9 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
           rir: null,
         }))
 
-    const count = row.technique === 'dropset' && !targetDurationSeconds ? dropCount(row.techniqueDetails ?? row.technique_details) : null
+    const details = row.techniqueDetails ?? row.technique_details
+    const count = targetDurationSeconds ? null : row.technique === 'dropset' ? dropCount(details)
+      : row.technique === 'restpause' ? restPausePrescription(details)?.count : null
     if (count) {
       const missing = Math.max(0, count - sets.filter(set => 'parentSetNumber' in set && set.parentSetNumber).length)
       for (let i = 0; i < missing; i++) {

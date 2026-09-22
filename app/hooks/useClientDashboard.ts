@@ -106,6 +106,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   )
 
   const [workoutSession, setWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
+  const [pausedWorkoutSession, setPausedWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
   const [modal, setModal] = useState<string | null>(null)
   const [latestDiagnostic, setLatestDiagnostic] = useState<any>(null)
 
@@ -439,8 +440,29 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   /* ── Handlers ── */
+  function closeWorkoutSession() {
+    const pending = session?.user?.id ? readActiveWorkoutDraft(localStorage, session.user.id) : null
+    // Explicit abandonment/completion removes storage first: never resurrect that draft.
+    setPausedWorkoutSession(pending?.status !== 'completed' ? pending : null)
+    setWorkoutSession(null)
+  }
+
+  function resumeWorkoutSession() {
+    if (!session?.user?.id) return
+    const pending = readActiveWorkoutDraft(localStorage, session.user.id)
+    setPausedWorkoutSession(null)
+    if (pending && pending.status !== 'completed') setWorkoutSession(pending)
+  }
+
   async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
     if (!session?.user?.id) return
+    // Closing the overlay does not discard a workout. Resume before creating any new draft.
+    const pending = readActiveWorkoutDraft(localStorage, session.user.id)
+    if (pending && pending.status !== 'completed') {
+      setPausedWorkoutSession(null)
+      setWorkoutSession(pending)
+      return
+    }
     const name = day.day_name || day.name || 'Séance'
     const requestedDate = typeof day.prescription_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day.prescription_date)
       ? new Date(`${day.prescription_date}T12:00:00Z`) : new Date()
@@ -455,6 +477,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program, prescriptionDate)) : exercises,
     })
     writeActiveWorkoutDraft(localStorage, draft)
+    setPausedWorkoutSession(null)
     setWorkoutSession(draft)
   }
 
@@ -877,7 +900,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     // Tabs
     activeTab, setActiveTab,
     // Workout session
-    workoutSession, setWorkoutSession, updateWorkoutSessionDraft,
+    workoutSession, setWorkoutSession, updateWorkoutSessionDraft, pausedWorkoutSession, closeWorkoutSession, resumeWorkoutSession,
     // Modals
     modal, setModal,
     // Food modal (from sub-hook)
