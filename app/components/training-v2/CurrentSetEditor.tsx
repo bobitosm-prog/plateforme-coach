@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 import styles from './TrainingV2.module.css'
 
 interface CurrentSetEditorProps {
+  stepLabel?: string
   timed?: boolean
   setNumber: number
   totalSets: number
@@ -25,6 +26,7 @@ interface CurrentSetEditorProps {
 }
 
 export default function CurrentSetEditor({
+  stepLabel,
   timed = false,
   setNumber,
   totalSets,
@@ -52,7 +54,7 @@ export default function CurrentSetEditor({
   return (
     <section className={styles.setEditor} aria-labelledby="current-set-title">
       <div className={styles.setEditorHeader}>
-        <div id="current-set-title" className={styles.setEditorTitle}>{t('currentSet', { current: setNumber, total: totalSets })}</div>
+        <div id="current-set-title" className={styles.setEditorTitle}>{stepLabel || t('currentSet', { current: setNumber, total: totalSets })}</div>
         <div
           className={styles.setProgress}
           role="progressbar"

@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import styles from './TrainingV2.module.css'
 
 interface ActiveExerciseFocusProps {
+  stepLabel?: string
   name: string
   exerciseIndex: number
   exerciseCount: number
@@ -15,6 +16,7 @@ interface ActiveExerciseFocusProps {
 }
 
 export default function ActiveExerciseFocus({
+  stepLabel,
   name,
   exerciseIndex,
   exerciseCount,
@@ -34,7 +36,7 @@ export default function ActiveExerciseFocus({
       <h2 id="active-exercise-title" className={styles.focusHeading}>{name}</h2>
       <div className={styles.focusMeta}>
         <span>{t('exerciseProgress', { current: exerciseIndex + 1, total: exerciseCount })}</span>
-        <span>{t('setProgress', { current: activeSet, total: totalSets })}</span>
+        <span>{stepLabel || t('setProgress', { current: activeSet, total: totalSets })}</span>
       </div>
       <div className={styles.focusStats}>
         <div className={styles.focusStat}>

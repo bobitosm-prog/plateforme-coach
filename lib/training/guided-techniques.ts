@@ -4,6 +4,12 @@ export function dropCount(details: unknown): number | null {
   return typeof details === 'string' && /^[123]$/.test(details.trim()) ? Number(details) : null
 }
 
+/** Editor prescription: mini-set count, pause in seconds. Applied after the final main set only. */
+export function restPausePrescription(details: unknown): { count: number; rest: number } | null {
+  const match = typeof details === 'string' ? /^([23]),(10|15|20)$/.exec(details.trim()) : null
+  return match ? { count: Number(match[1]), rest: Number(match[2]) } : null
+}
+
 type Prescription = { name: string; technique?: string; techniqueDetails?: string; targetSets: number; targetDurationSeconds?: number }
 export type BisetPair = { a: number; b: number }
 
@@ -31,10 +37,11 @@ export function bisetFor(exercises: readonly Prescription[], index: number): Bis
   return bisetPairs(exercises).find(pair => pair.a === index || pair.b === index)
 }
 
-export function techniqueIssue(exercises: readonly WorkoutDraftExercise[], index: number): 'missingDrops' | 'invalidBiset' | null {
+export function techniqueIssue(exercises: readonly WorkoutDraftExercise[], index: number): 'missingDrops' | 'invalidBiset' | 'invalidRestPause' | null {
   const ex = exercises[index]
   if (ex?.technique === 'dropset' && (ex.targetDurationSeconds || !ex.sets.some(set => set.parentSetNumber))) return 'missingDrops'
   if (ex?.technique === 'superset' && !bisetFor(exercises, index)) return 'invalidBiset'
+  if (ex?.technique === 'restpause' && (ex.targetDurationSeconds || !restPausePrescription(ex.techniqueDetails))) return 'invalidRestPause'
   return null
 }
 
@@ -42,7 +49,9 @@ export function techniqueIssue(exercises: readonly WorkoutDraftExercise[], index
 export function transitionRest(exercises: readonly WorkoutDraftExercise[], from: number, next: { currentExerciseIndex: number; currentSetIndex: number }): number {
   if (exercises.every(ex => ex.sets.every(set => set.done))) return 0
   const upcoming = exercises[next.currentExerciseIndex]?.sets[next.currentSetIndex]
-  if (next.currentExerciseIndex === from && upcoming?.parentSetNumber && !upcoming.done) return 0
+  if (next.currentExerciseIndex === from && upcoming?.parentSetNumber && !upcoming.done) {
+    return exercises[from].technique === 'restpause' ? restPausePrescription(exercises[from].techniqueDetails)?.rest ?? 0 : 0
+  }
   const pair = bisetFor(exercises, from)
   if (pair?.a === from && next.currentExerciseIndex === pair.b) return 0
   return exercises[from]?.rest ?? 90

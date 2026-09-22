@@ -1,11 +1,24 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeWorkoutDraftExercises as normalize, findNextWorkoutPosition as next, createActiveWorkoutDraft, readActiveWorkoutDraft, writeActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 import { bisetPairs, techniqueIssue, transitionRest } from '@/lib/training/guided-techniques'
-import { editExercise, validateEditorDays } from '@/lib/training/program-editor'
+import { editExercise, validateEditorDays, validateProgramEdit } from '@/lib/training/program-editor'
 import { resolveProgramExercise } from '@/lib/training/resolve-program'
 
 const pair = () => normalize([{name:'A',sets:3,reps:10,rest:90,technique:'superset',technique_details:'B'},{name:'B',sets:3,reps:12,rest:60},{name:'C',sets:1,reps:10}])
 describe('prescription to guided workout', () => {
+  it('prepares rest-pause once after the final main set and validates historical prescriptions safely',()=>{
+    const exercise={name:'Curl',sets:3,reps:10,rest:90,technique:'restpause',technique_details:'3,20'}
+    const ex=normalize([exercise])
+    expect(ex[0].sets.map(s=>s.parentSetNumber)).toEqual([undefined,undefined,undefined,3,4,5])
+    expect(normalize(ex)).toEqual(ex)
+    ex[0].sets.slice(0,3).forEach(s=>s.done=true)
+    expect(transitionRest(ex,0,next(ex,0,2))).toBe(20)
+    const days=[{exercises:[{...exercise,technique_details:''}]}]
+    expect(validateEditorDays(days)).toBe(false)
+    expect(validateProgramEdit(days,days)).toBe(true)
+    expect(validateProgramEdit(days,[])).toBe(false)
+    expect(techniqueIssue(normalize(days[0].exercises),0)).toBe('invalidRestPause')
+  })
   it('prepares final drop stages once, keeps blank loads and survives partial resume', () => {
     const ex = normalize([{name:'Row',sets:3,technique:'dropset',technique_details:'2'}])[0]
     expect(ex.sets.map(s=>s.parentSetNumber)).toEqual([undefined,undefined,undefined,3,4])

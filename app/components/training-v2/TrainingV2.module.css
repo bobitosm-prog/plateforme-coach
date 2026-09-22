@@ -1332,6 +1332,16 @@
   }
 }
 
+/* During execution the logger, not the overview, is the primary interface. */
+@media (max-width: 767px) {
+  .hero[data-mode='active'] { padding: 12px 16px; }
+  .hero[data-mode='active'] .heroTitle { font-size: 24px; margin: 6px 0; }
+  .hero[data-mode='active'] .metricRow { display: none; }
+  .hero[data-mode='active'] .progressTrack { margin-top: 8px; }
+  .sessionShell .focusHeading { font-size: 28px; line-height: 1.15; }
+  .sessionShell .focusStats { margin-block: 10px; }
+}
+
 @media (max-width: 374px) {
   .landing {
     padding-inline: 14px;
