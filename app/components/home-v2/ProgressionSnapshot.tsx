@@ -45,6 +45,7 @@ export default function ProgressionSnapshot({
   onOpenProgression?: () => void
 }) {
   const t = useTranslations('home.v2.progression')
+  const tLoad = useTranslations('trainingLoad')
   const locale = useLocale()
   const state = resolveProgressionSnapshotState(progression)
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
@@ -114,6 +115,7 @@ export default function ProgressionSnapshot({
         <span className={styles.progressionIcon}><Trophy size={18} aria-hidden="true" /></span>
         <span className={styles.progressionMetricLabel}>{t('latestPR')}</span>
         <strong className={styles.progressionMetricValue}>{progression.latestPR.exerciseName}</strong>
+        <small>{tLoad(progression.latestPR.loadMode ?? 'legacy')}</small>
         {progression.latestPR.value != null && <span className={styles.progressionMetricMeta}>
           {number.format(progression.latestPR.value)}{progression.latestPR.unit ? ` ${progression.latestPR.unit}` : ''}
           {progression.latestPR.recordType === '1rm' ? ` · ${t('estimated1rm')}` : ''}

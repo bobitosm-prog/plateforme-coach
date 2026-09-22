@@ -1,3 +1,4 @@
+import { setTonnage } from '@/lib/training/load-volume'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const ATHENA_OBSERVED_CONTEXT_VERSION = 1 as const
@@ -20,6 +21,8 @@ export interface ObservedWorkoutSessionRow {
 }
 
 export interface ObservedWorkoutSetRow {
+  load_mode?: unknown
+  duration_seconds?: unknown
   session_id?: unknown
   completed?: unknown
   exercise_id?: unknown
@@ -198,7 +201,7 @@ export function buildAthenaObservedContext(
   const loadEntries = sets.flatMap(row => {
     const weight = finiteNumber(row.weight)
     const reps = finiteNumber(row.reps)
-    return weight !== null && reps !== null ? [weight * reps] : []
+    return weight !== null && reps !== null ? [setTonnage({...row, completed:row.completed === true})] : []
   })
   const sessionDates = sessions.map(session => session.recordedAt).sort((left, right) => left.getTime() - right.getTime())
   const lastSession = sessionDates.at(-1) ?? null
@@ -320,7 +323,7 @@ export async function loadAthenaObservedContext(
   const sessions = (sessionsResult.data ?? []) as ObservedWorkoutSessionRow[]
   const sessionIds = sessions.flatMap(row => stringValue(row.id) ?? []).filter(Boolean)
   const setsResult = sessionIds.length
-    ? await supabase.from('workout_sets').select('session_id, completed, exercise_id, exercise_name, weight, reps, rir').eq('user_id', userId).eq('completed', true).in('session_id', sessionIds)
+    ? await supabase.from('workout_sets').select('session_id, completed, exercise_id, exercise_name, weight, reps, rir, load_mode, duration_seconds').eq('user_id', userId).eq('completed', true).in('session_id', sessionIds)
     : { data: [], error: null }
 
   const sourceErrors: SourceName[] = []

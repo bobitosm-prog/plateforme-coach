@@ -206,7 +206,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
   /* ─── Load exercises + profile gender (au montage) ─── */
   useEffect(() => {
-    supabase.from('exercises_db').select('id, name, muscle_group, equipment, equipment_legacy').order('name').limit(200)
+    supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, equipment_legacy').order('name').limit(200)
       .then(({ data, error }: any) => {
         setExerciseCatalogError(Boolean(error))
         if (!error) setDbExercises(data || [])
@@ -365,18 +365,18 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
   async function loadVariants(exerciseName: string, dayIdx: number, exIdx: number) {
     const { data: current } = await supabase
-      .from('exercises_db').select('variant_group')
+      .from('exercises_catalog').select('variant_group')
       .ilike('name', exerciseName).limit(1).maybeSingle()
     if (!current?.variant_group) {
       const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
       const { data: similar } = await supabase
-        .from('exercises_db').select('id, name, equipment, equipment_legacy, muscle_group')
+        .from('exercises_catalog').select('id, name, equipment, equipment_legacy, muscle_group')
         .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
       setVariantPopup({ dayIdx, exIdx, variants: (similar || []).filter((v:any)=>isCatalogExerciseCompatible(v,profileProgramParams?.equipment||'salle')) })
       return
     }
     const { data: variants } = await supabase
-      .from('exercises_db').select('id, name, equipment, equipment_legacy, muscle_group')
+      .from('exercises_catalog').select('id, name, equipment, equipment_legacy, muscle_group')
       .eq('variant_group', current.variant_group)
       .neq('name', exerciseName).order('equipment').limit(10)
     setVariantPopup({ dayIdx, exIdx, variants: (variants || []).filter((v:any)=>isCatalogExerciseCompatible(v,profileProgramParams?.equipment||'salle')) })

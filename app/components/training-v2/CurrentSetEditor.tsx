@@ -1,7 +1,11 @@
 import { useTranslations } from 'next-intl'
 import styles from './TrainingV2.module.css'
+import { LOAD_MODES, type LoadMode } from '@/lib/training/load-volume'
 
 interface CurrentSetEditorProps {
+  loadMode?: LoadMode
+  loadModeLocked?: boolean
+  onLoadModeChange?: (mode: LoadMode) => void
   stepLabel?: string
   timed?: boolean
   setNumber: number
@@ -26,6 +30,7 @@ interface CurrentSetEditorProps {
 }
 
 export default function CurrentSetEditor({
+  loadMode, loadModeLocked, onLoadModeChange,
   stepLabel,
   timed = false,
   setNumber,
@@ -49,6 +54,7 @@ export default function CurrentSetEditor({
   onValidate,
 }: CurrentSetEditorProps) {
   const t = useTranslations('training_tab.v2')
+  const load = useTranslations('trainingLoad')
   const setProgress = totalSets > 0 ? Math.min(100, Math.max(0, (setNumber / totalSets) * 100)) : 0
 
   return (
@@ -107,6 +113,14 @@ export default function CurrentSetEditor({
           </div>
         </div>
       </div>
+
+      {!timed && loadMode && onLoadModeChange && <div style={{marginBlock:12}}>
+        <label htmlFor="training-load-mode">{load('convention')}</label>
+        <select id="training-load-mode" disabled={loadModeLocked} value={loadMode} onChange={event=>onLoadModeChange(event.target.value as LoadMode)} style={{display:'block',width:'100%',minHeight:44,background:'#18150e',color:'#fff',padding:8,border:'1px solid #C9A84C',borderRadius:8}}>
+          {LOAD_MODES.filter(mode=>mode!=='legacy'||loadMode==='legacy').map(mode=><option key={mode} value={mode}>{load(mode)}</option>)}
+        </select>
+        <p style={{fontSize:13}}>{load(`${loadMode}Help`)}</p>
+      </div>}
 
       {showRir && <fieldset className={styles.rirFieldset}>
         <legend>{t('rir')}</legend>

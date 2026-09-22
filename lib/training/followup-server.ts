@@ -34,7 +34,7 @@ export async function loadFollowupState(userId: string) {
       db
         .from("workout_sets")
         .select(
-          "session_id,exercise_id,exercise_name,weight,reps,created_at,technique,workout_sessions!inner(completed)",
+          "session_id,exercise_id,exercise_name,load_mode,weight,reps,created_at,technique,workout_sessions!inner(completed)",
         )
         .eq("user_id", userId)
         .eq("completed", true)
@@ -94,7 +94,7 @@ export async function followupAlternatives(
   state: Awaited<ReturnType<typeof loadFollowupState>>,
 ) {
   const { data, error } = await state.db
-    .from("exercises_db")
+    .from("exercises_catalog")
     .select("id,name,muscle_group,equipment,equipment_legacy")
     .limit(1000);
   if (error) throw new Error("CATALOG_UNAVAILABLE");

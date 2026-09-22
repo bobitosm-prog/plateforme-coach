@@ -82,7 +82,7 @@ export default function CoachPrograms({ session, clients }: { session: any; clie
 
   useEffect(() => {
     loadPrograms()
-    supabase.from('exercises_db').select('name').order('name').limit(200).then(({ data }) => setExerciseDb(data || []))
+    supabase.from('exercises_catalog').select('name').order('name').limit(200).then(({ data }) => setExerciseDb(data || []))
   }, [])
 
   useEffect(() => {

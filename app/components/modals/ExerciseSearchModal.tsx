@@ -35,7 +35,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
 
   // Load all exercises on mount
   useEffect(() => {
-    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }: any) => {
+    supabase.from('exercises_catalog').select('*').order('name').limit(200).then(({ data }: any) => {
       setExDbAllResults(data || [])
     })
   }, [])
@@ -45,7 +45,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
     clearTimeout(exSearchRef.current)
     if (exSearch.length < 2) { setExResults([]); return }
     exSearchRef.current = setTimeout(async () => {
-      const { data } = await supabase.from('exercises_db').select('*').ilike('name', `%${exSearch}%`).limit(10)
+      const { data } = await supabase.from('exercises_catalog').select('*').ilike('name', `%${exSearch}%`).limit(10)
       setExResults(data || [])
     }, 300)
   }, [exSearch])
@@ -130,14 +130,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       key={ex.id}
                       whileTap={{ scale: 0.96 }}
                       onClick={async () => {
-                        let selected = { ...ex }
-                        // If no video_url but has variant_group, try siblings
-                        if (!selected.video_url && selected.variant_group) {
-                          const { data: sibling } = await supabase.from('exercises_db')
-                            .select('video_url').eq('variant_group', selected.variant_group)
-                            .not('video_url', 'is', null).limit(1).maybeSingle()
-                          if (sibling?.video_url) selected.video_url = sibling.video_url
-                        }
+                        const selected = { ...ex }
                         setSelectedExDb(selected)
                         setExDbAddSets('3')
                         setExDbAddReps(ex.reps ? String(ex.reps) : '10')

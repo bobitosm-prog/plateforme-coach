@@ -588,7 +588,7 @@ export default function useClientDetail() {
   /* ── Exercise DB modal: load all on open ────────────────────── */
   useEffect(() => {
     if (!showExDbModal || exDbAll.length > 0) return
-    supabase.from('exercises_db').select('*').order('name').limit(200).then(({ data }) => setExDbAll(data || []))
+    supabase.from('exercises_catalog').select('*').order('name').limit(200).then(({ data }) => setExDbAll(data || []))
   }, [showExDbModal])
 
   /* ── Exercise DB modal: debounced search ────────────────────── */
@@ -596,7 +596,7 @@ export default function useClientDetail() {
     if (exDbRef.current) clearTimeout(exDbRef.current)
     if (exDbSearch.length < 2) { setExDbResults([]); return }
     exDbRef.current = setTimeout(async () => {
-      const { data } = await supabase.from('exercises_db').select('*').ilike('name', `%${exDbSearch}%`).limit(30)
+      const { data } = await supabase.from('exercises_catalog').select('*').ilike('name', `%${exDbSearch}%`).limit(30)
       setExDbResults(data || [])
     }, 280)
   }, [exDbSearch])
@@ -691,18 +691,18 @@ export default function useClientDetail() {
   }
   async function loadVariants(exerciseName: string, day: string, idx: number) {
     const { data: current } = await supabase
-      .from('exercises_db').select('variant_group')
+      .from('exercises_catalog').select('variant_group')
       .ilike('name', exerciseName).limit(1).maybeSingle()
     if (!current?.variant_group) {
       const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
       const { data: similar } = await supabase
-        .from('exercises_db').select('name, equipment, muscle_group')
+        .from('exercises_catalog').select('name, equipment, muscle_group')
         .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
       setVariantPopup({ day, idx, variants: similar || [] })
       return
     }
     const { data: variants } = await supabase
-      .from('exercises_db').select('name, equipment, muscle_group')
+      .from('exercises_catalog').select('name, equipment, muscle_group')
       .eq('variant_group', current.variant_group)
       .neq('name', exerciseName).order('equipment').limit(10)
     setVariantPopup({ day, idx, variants: variants || [] })

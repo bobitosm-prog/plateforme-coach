@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getProgressionWeekKey } from '../../lib/progression/progression-date'
+import { setTonnage } from '../../lib/training/load-volume'
 import type {
   ProgressionRecordRow,
   ProgressionWorkoutSession,
@@ -88,11 +89,12 @@ export default function useAnalytics({
   const weeklyVolume = useMemo(() => {
     const volumeByWeek = new Map<string, number>()
     for (const session of workoutSessions) {
+      if (session.completed === false) continue
       for (const set of session.workout_sets ?? []) {
         if (set.completed === false) continue
         const weekKey = getProgressionWeekKey(set.created_at ?? session.created_at ?? '')
         if (!weekKey) continue
-        const volume = (Number(set.weight) || 0) * (Number(set.reps) || 0)
+        const volume = setTonnage(set)
         volumeByWeek.set(weekKey, (volumeByWeek.get(weekKey) ?? 0) + volume)
       }
     }
@@ -182,37 +184,43 @@ export default function useAnalytics({
   }, [enabled, fetchAnalyticsData, userId])
 
   // PR detection -- called after finishing a workout set
-  async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
-    if (!uid || !weight || !reps) return { newPR: false }
+  async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number, loadMode = 'legacy'): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
+    if (!uid || !weight || !reps || loadMode === 'band') return { newPR: false }
 
     const estimated1RM = weight * (1 + reps / 30) // Epley formula
-    const { data: currentRecord } = await supabase
+    const { data: currentRecord, error: recordError } = await supabase
       .from('personal_records')
       .select('value')
       .eq('user_id', uid)
       .eq('exercise_name', exerciseName)
       .eq('record_type', '1rm')
+      .eq('load_mode', loadMode)
       .maybeSingle()
+    if (recordError) throw recordError
 
     if (!currentRecord || estimated1RM > (currentRecord.value || 0)) {
-      await supabase.from('personal_records').upsert({
+      const {error: saveRecordError} = await supabase.from('personal_records').upsert({
         user_id: uid,
         exercise_name: exerciseName,
         record_type: '1rm',
+        load_mode: loadMode,
         value: Math.round(estimated1RM * 10) / 10,
         unit: 'kg',
         previous_value: currentRecord?.value || null,
         achieved_at: new Date().toISOString().split('T')[0],
-      }, { onConflict: 'user_id, exercise_name, record_type' })
+      }, { onConflict: 'user_id, exercise_name, record_type, load_mode' })
+      if (saveRecordError) throw saveRecordError
 
-      await supabase.from('personal_records').upsert({
+      const {error: saveWeightError} = await supabase.from('personal_records').upsert({
         user_id: uid,
         exercise_name: exerciseName,
         record_type: 'max_weight',
+        load_mode: loadMode,
         value: weight,
         unit: 'kg',
         achieved_at: new Date().toISOString().split('T')[0],
-      }, { onConflict: 'user_id, exercise_name, record_type' })
+      }, { onConflict: 'user_id, exercise_name, record_type, load_mode' })
+      if (saveWeightError) throw saveWeightError
 
       const { data: prs } = await supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(enabled ? 50 : 1)
       setPersonalRecords(enrichRecordsWithMuscleMetadata(prs || [], recordMuscleMetadataRef.current))

@@ -1,5 +1,6 @@
 'use client'
 
+import { setTonnage } from '@/lib/training/load-volume'
 import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
@@ -11,6 +12,8 @@ import { SizedContainer, useHasSize } from './ui/SizedChart'
 
 const RIR_MIN_SETS_FOR_AVG = 5
 interface AdvancedWorkoutSet {
+  load_mode?: string | null
+  duration_seconds?: number | null
   completed?: boolean | null
   created_at?: string | null
   exercise_id?: string | null
@@ -20,6 +23,7 @@ interface AdvancedWorkoutSet {
 }
 
 export interface AdvancedWorkoutSession {
+  completed?: boolean | null
   created_at?: string | null
   workout_sets?: AdvancedWorkoutSet[] | null
 }
@@ -40,13 +44,13 @@ export default function AnalyticsSection({ wSessions, muscleMap, mappingState }:
   const volumeByMuscle = useMemo(() => {
     const aggregate: Record<string, { sets: number; tonnage: number }> = {}
     for (const session of wSessions) for (const set of session.workout_sets || []) {
-      if (!set.completed || !set.exercise_id) continue
+      if (session.completed === false || !set.completed || !set.exercise_id) continue
       const timestamp = new Date(set.created_at || session.created_at || '').getTime()
       const muscle = muscleMap.get(set.exercise_id)
       if (!timestamp || timestamp < analysisCutoff || !muscle) continue
       if (!aggregate[muscle]) aggregate[muscle] = { sets: 0, tonnage: 0 }
       aggregate[muscle].sets += 1
-      aggregate[muscle].tonnage += (set.weight || 0) * (set.reps || 0)
+      aggregate[muscle].tonnage += setTonnage(set)
     }
     return Object.entries(aggregate).map(([muscle, value]) => ({
       muscle,

@@ -1,4 +1,5 @@
 // Gamification: badge checking, XP, levels
+import { setTonnage } from '@/lib/training/load-volume'
 import { computeStreak } from './streak'
 import { projectRestDates } from './project-rest-days'
 import { getLevelFromXP, getLevelTitle } from './gamification'
@@ -39,8 +40,8 @@ async function getConditionValue(userId: string, conditionType: string, supabase
       return computeStreak(dates, today, restDates).current
     }
     case 'total_volume': {
-      const { data } = await supabase.from('workout_sets').select('weight, reps').eq('user_id', userId)
-      return (data || []).reduce((s: number, r: any) => s + (r.weight || 0) * (r.reps || 0), 0)
+      const { data } = await supabase.from('workout_sets').select('weight, reps, load_mode, duration_seconds, completed, workout_sessions!inner(completed)').eq('user_id', userId).eq('completed', true).eq('workout_sessions.completed', true)
+      return (data || []).reduce((s: number, r: any) => s + setTonnage(r), 0)
     }
     case 'pr_count': {
       const { data } = await supabase.from('workout_sessions').select('personal_records').eq('user_id', userId).not('personal_records', 'is', null)
