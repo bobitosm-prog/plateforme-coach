@@ -1,5 +1,6 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import { loadWorkoutHistory } from '../../../lib/training/workout-history'
 import { RailOverlay } from '../ui/RailOverlay'
 import WorkoutDetailList from '../training/WorkoutDetailList'
 import ModalHeader from '../ui/ModalHeader'
@@ -58,6 +59,7 @@ export default function TrainingTab({
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
   const locale = useLocale() as 'fr' | 'en' | 'de'
+  const loadHistory = useCallback((signal: AbortSignal) => loadWorkoutHistory(supabase, session?.user?.id, signal), [supabase, session?.user?.id])
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [weekOffset, setWeekOffset] = useState(0)
@@ -394,7 +396,7 @@ export default function TrainingTab({
       })()}
 
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
-      <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} />
+      <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />
       {/* ═══ SECTION 6 — CARDIO ═══ */}
       <div style={{ padding: '0 24px 16px' }}>
         <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />

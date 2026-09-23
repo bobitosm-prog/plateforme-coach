@@ -150,7 +150,8 @@ describe('Training V2 session completion', () => {
 
   it('limits the primary recent history to three rows and keeps expanded history secondary', () => {
     expect(history).toContain('workoutHistory.slice(0, 3)')
-    expect(history).toContain('filtered.slice(0, 20)')
+    expect(history).toContain('filtered.slice(0, visibleCount)')
+    expect(history).toContain('useState(20)')
     expect(history).toContain('<TrainingSheet')
     expect(history).toContain('data-training-history-filters="advanced"')
   })

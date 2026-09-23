@@ -57,9 +57,9 @@ describe('Training V2 history modal layout', () => {
 
   it('preserves history bounds, filters and data ownership', () => {
     expect(history).toContain('workoutHistory.slice(0, 3)')
-    expect(history).toContain('filtered.slice(0, 20)')
-    expect(history).toContain("if (historyFilter === 'all') return true")
-    expect(history).toContain('resolveSessionType(session.name)')
+    expect(history).toContain('filtered.slice(0, visibleCount)')
+    expect(history).toContain('matchesWorkoutHistory(session, historyFilter)')
+    expect(history).toContain('loadHistory(controller.signal)')
     expect(history).not.toMatch(/supabase|createBrowserClient|\.from\(|\.rpc\(|fetch\(/i)
   })
 })

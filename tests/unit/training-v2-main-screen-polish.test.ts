@@ -17,8 +17,9 @@ describe('Training V2 main-screen polish', () => {
   })
 
   it('preserves the total count inside the secondary history view', () => {
-    expect(recentSessions).toContain("description={t('historyTotal', { count: workoutHistory.length })}")
-    expect(recentSessions).toContain('filtered.slice(0, 20)')
+    expect(recentSessions).toContain("t('historyTotal', { count: allHistory.length })")
+    expect(recentSessions).toContain('filtered.slice(0, visibleCount)')
+    expect(recentSessions).toContain('useState(20)')
     expect(recentSessions).toContain("t('viewAll')")
   })
 
