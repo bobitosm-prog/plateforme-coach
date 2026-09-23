@@ -147,7 +147,7 @@ describe('Training V2 critical session persistence', () => {
     const hook = readFileSync('app/hooks/useClientDashboard.ts', 'utf8')
     const tab = readFileSync('app/components/tabs/TrainingTab.tsx', 'utf8')
     const persistIndex = hook.indexOf('const critical = await persistCriticalWorkout({')
-    const removeIndex = hook.indexOf('removeActiveWorkoutDraft(localStorage, critical.draft.draftId)')
+    const removeIndex = hook.indexOf('removeActiveWorkoutDraft(localStorage, critical.draft.draftId, critical.draft.userId)')
     expect(persistIndex).toBeGreaterThan(-1)
     expect(removeIndex).toBeGreaterThan(persistIndex)
     expect(tab).not.toContain("from('workout_sessions').insert")

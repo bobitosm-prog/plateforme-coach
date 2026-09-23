@@ -12,6 +12,7 @@ import {
   readActiveWorkoutDraft,
   updateActiveWorkoutDraft,
   writeActiveWorkoutDraft,
+  workoutDraftStorageKey,
   type WorkoutDraftStorage,
 } from '@/lib/training/active-workout-draft'
 
@@ -100,11 +101,13 @@ describe('Training V2 active workout draft', () => {
   it('adapts the two legacy keys once into the single V2 authority', () => {
     const storage = new MemoryStorage()
     storage.setItem(LEGACY_ACTIVE_WORKOUT_STORAGE_KEY, JSON.stringify({
+      userId: 'user-1',
       name: 'Haut du corps',
       weekdayKey: 'mardi',
       startedAt: '2026-08-28T09:00:00.000Z',
     }))
     storage.setItem(LEGACY_WORKOUT_DRAFT_STORAGE_KEY, JSON.stringify({
+      userId: 'user-1',
       sessionName: 'Haut du corps',
       startedAt: '2026-08-28T09:00:00.000Z',
       exos: [{ name: 'Row', sets: [{ num: 1, weight: 40, reps: 10, done: true }] }],
@@ -113,7 +116,7 @@ describe('Training V2 active workout draft', () => {
     const restored = readActiveWorkoutDraft(storage, 'user-1', now)
     expect(restored?.version).toBe(2)
     expect(restored?.exercises[0].sets[0].done).toBe(true)
-    expect(storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY)).not.toBeNull()
+    expect(storage.getItem(workoutDraftStorageKey('user-1'))).not.toBeNull()
     expect(storage.getItem(LEGACY_ACTIVE_WORKOUT_STORAGE_KEY)).toBeNull()
     expect(storage.getItem(LEGACY_WORKOUT_DRAFT_STORAGE_KEY)).toBeNull()
   })

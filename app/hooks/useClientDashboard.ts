@@ -124,7 +124,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const [coachRelationIsAuthoritative, setCoachRelationIsAuthoritative] = useState(false)
   const [coachRelationRequiresReconciliation, setCoachRelationRequiresReconciliation] = useState(false)
 
-  const initialFetchDone = useRef(false)
+  const initialFetchDone = useRef<string | null>(null)
   const fetchAllComplete = useRef(false)
   const clientProgramIdRef = useRef<string | null>(null)
   const coachOfProgramIdRef = useRef<string | null>(null)
@@ -138,6 +138,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
   // --- Sub-hooks ---
   const userId = session?.user?.id
+  const workoutOwnerRef = useRef<string | undefined>(userId)
+  workoutOwnerRef.current = userId
 
   const messagesHook = useMessages({ supabase, userId, coachId, activeTab })
   const analyticsHook = useAnalytics({
@@ -181,8 +183,12 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }, [session])
 
   useEffect(() => {
-    if (!session || initialFetchDone.current) return
-    initialFetchDone.current = true
+    const owner = session?.user?.id ?? null
+    if (initialFetchDone.current === owner) return
+    initialFetchDone.current = owner
+    setWorkoutSession(null)
+    setPausedWorkoutSession(null)
+    if (!session) return
     const restored = readActiveWorkoutDraft(localStorage, session.user.id)
     if (restored && restored.status !== 'completed') setWorkoutSession(restored)
     fetchAll()
@@ -441,6 +447,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
   /* ── Handlers ── */
   function closeWorkoutSession() {
+    if (workoutOwnerRef.current !== session?.user?.id) return
     const pending = session?.user?.id ? readActiveWorkoutDraft(localStorage, session.user.id) : null
     // Explicit abandonment/completion removes storage first: never resurrect that draft.
     setPausedWorkoutSession(pending?.status !== 'completed' ? pending : null)
@@ -448,14 +455,14 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }
 
   function resumeWorkoutSession() {
-    if (!session?.user?.id) return
+    if (!session?.user?.id || workoutOwnerRef.current !== session.user.id) return
     const pending = readActiveWorkoutDraft(localStorage, session.user.id)
     setPausedWorkoutSession(null)
     if (pending && pending.status !== 'completed') setWorkoutSession(pending)
   }
 
   async function startProgramWorkout(day: any, exercises: any[], weekdayKey?: string) {
-    if (!session?.user?.id) return
+    if (!session?.user?.id || workoutOwnerRef.current !== session.user.id) return
     // Closing the overlay does not discard a workout. Resume before creating any new draft.
     const pending = readActiveWorkoutDraft(localStorage, session.user.id)
     if (pending && pending.status !== 'completed') {
@@ -476,13 +483,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       trainingDay: weekdayKey || null,
       exercises: activeTrainingProgram.source === 'personal' ? exercises.map(ex => resolveProgramExercise(ex, activeTrainingProgram.program, prescriptionDate)) : exercises,
     })
-    writeActiveWorkoutDraft(localStorage, draft)
+    if (workoutOwnerRef.current !== draft.userId || !writeActiveWorkoutDraft(localStorage, draft, { create: true })) return
     setPausedWorkoutSession(null)
     setWorkoutSession(draft)
   }
 
   function updateWorkoutSessionDraft(draft: ActiveWorkoutDraft) {
-    writeActiveWorkoutDraft(localStorage, draft)
+    if (workoutOwnerRef.current !== draft.userId || !writeActiveWorkoutDraft(localStorage, draft)) return
     setWorkoutSession(draft)
   }
 
@@ -493,10 +500,11 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   }> {
     const activeDraft = submittedDraft ?? workoutSession
     if (!activeDraft || !session?.user?.id) throw new Error('WORKOUT_DRAFT_UNAVAILABLE')
+    if (activeDraft.userId !== session.user.id || workoutOwnerRef.current !== activeDraft.userId) throw new Error('WORKOUT_DRAFT_OWNER_MISMATCH')
     const newPRs: { exercise: string; value: number }[] = []
     const newBadges: Badge[] = []
     const persistDraft = (draft: ActiveWorkoutDraft) => {
-      writeActiveWorkoutDraft(localStorage, draft)
+      if (workoutOwnerRef.current !== draft.userId || !writeActiveWorkoutDraft(localStorage, draft)) throw new Error('WORKOUT_DRAFT_CONFLICT')
       setWorkoutSession(draft)
     }
     const musclesWorked = [...new Set(data.exercises.map(exercise => exercise.muscle).filter(Boolean))] as string[]
@@ -548,7 +556,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
         },
       },
     })
-    removeActiveWorkoutDraft(localStorage, critical.draft.draftId)
+    removeActiveWorkoutDraft(localStorage, critical.draft.draftId, critical.draft.userId)
 
     const completedAt = new Date().toISOString()
     const todayStr = toDateStr(new Date(completedAt))

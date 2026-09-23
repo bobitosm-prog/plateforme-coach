@@ -538,7 +538,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
   }, [])
 
-  const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId) }
+  const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId, draftRef.current.userId) }
 
   const startRest = (s: number) => {
     if (restT.current) clearInterval(restT.current)

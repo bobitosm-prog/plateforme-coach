@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+const authControl = vi.hoisted(() => ({ change: null as null | ((event: string, session: any) => void) }))
 vi.mock('next/navigation',()=>({useRouter:()=>({replace:vi.fn()})}))
 vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({
-  auth:{getSession:async()=>({data:{session:{user:{id:'synthetic-resume'}}}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},
+  auth:{getSession:async()=>({data:{session:{user:{id:'synthetic-resume'}}}}),onAuthStateChange:(callback: typeof authControl.change)=>{authControl.change=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from:()=>({insert:vi.fn()}),
 })}))
 vi.mock('@/lib/getRole',()=>({getRole:async()=>null}))
@@ -36,7 +37,34 @@ it('resumes the actual dashboard draft after Home instead of replacing it, but r
   expect(result.current.workoutSession?.draftId).toBe(draft.draftId)
   expect(result.current.workoutSession?.exercises[0].sets[0].weight).toBe(25)
   expect(result.current.pausedWorkoutSession).toBeNull()
-  act(()=>{removeActiveWorkoutDraft(localStorage);result.current.closeWorkoutSession()})
+  act(()=>{removeActiveWorkoutDraft(localStorage,draft.draftId,draft.userId);result.current.closeWorkoutSession()})
   expect(result.current.pausedWorkoutSession).toBeNull()
   expect(result.current.workoutSession).toBeNull()
+})
+
+it('isolates live account switches and rejects callbacks from the former account', async()=>{
+  const {result}=renderHook(()=>useClientDashboard())
+  await waitFor(()=>expect(result.current.session?.user.id).toBe('synthetic-resume'))
+  await act(async()=>{await result.current.startProgramWorkout({name:'Account A'},[{name:'Curl',sets:3,reps:10}])})
+  const first=structuredClone(result.current.workoutSession!)
+  first.exercises[0].sets[0].done=true
+  act(()=>result.current.updateWorkoutSessionDraft(first))
+  const staleUpdate=result.current.updateWorkoutSessionDraft
+  const staleStart=result.current.startProgramWorkout
+  const staleResume=result.current.resumeWorkoutSession
+  const staleClose=result.current.closeWorkoutSession
+  act(()=>authControl.change!('SIGNED_IN',{user:{id:'synthetic-B'}}))
+  expect(result.current.workoutSession).toBeNull()
+  expect(result.current.pausedWorkoutSession).toBeNull()
+  act(()=>staleUpdate(first))
+  expect(result.current.workoutSession).toBeNull()
+  await act(async()=>{await result.current.startProgramWorkout({name:'Account B'},[{name:'Squat',sets:3,reps:10}])})
+  const second=result.current.workoutSession!.draftId
+  await act(async()=>{staleClose();staleResume();await staleStart({name:'Stale A'},[])})
+  expect(result.current.workoutSession?.draftId).toBe(second)
+  act(()=>authControl.change!('SIGNED_IN',{user:{id:'synthetic-resume'}}))
+  expect(result.current.workoutSession?.draftId).toBe(first.draftId)
+  expect(result.current.workoutSession?.exercises[0].sets[0].done).toBe(true)
+  act(()=>authControl.change!('SIGNED_IN',{user:{id:'synthetic-B'}}))
+  expect(result.current.workoutSession?.draftId).toBe(second)
 })
