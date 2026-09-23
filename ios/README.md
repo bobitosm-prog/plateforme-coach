@@ -100,5 +100,10 @@ Correction web distincte : numéro de série en cours et nombre de séries valid
 séparés ; barre fondée sur `set.done`, pas sur l'index de la série active. Quatre
 tests de rendu React couvrent début, dernière série non validée, fin et libellés
 de techniques. Traductions FR/EN/DE. Ne modifie ni les séries, ni le calcul du
-volume, ni la persistance. Ce code web doit être livré séparément avant d'être
-visible dans le prototype connecté à la production.
+volume, ni la persistance. Ce code web a été livré séparément par la PR 37,
+fusionnée au commit `51cdb03f03e353c7e27b6600e35ac45f7fbe56fc` : CI verte,
+déploiement production READY avec l'alias app.moovx.ch vérifié le 23 septembre.
+Les 2 027 tests, TypeScript, traductions et le build standard passent.
+La vérification visuelle de ce nouvel affichage dans la séance en production
+reste à effectuer après rechargement ; le brouillon de test n'a pas été modifié.
+Le prototype natif de cette PR reste en brouillon et n'a pas été publié.
