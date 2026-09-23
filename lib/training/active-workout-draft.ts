@@ -10,6 +10,11 @@ export const LEGACY_ACTIVE_WORKOUT_STORAGE_KEY = 'moovx_active_workout'
 export const LEGACY_WORKOUT_DRAFT_STORAGE_KEY = 'moovx_workout_draft'
 export const ACTIVE_WORKOUT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
+export function workoutDraftStorageKey(userId: string): string {
+  if (!userId) throw new Error('WORKOUT_DRAFT_OWNER_REQUIRED')
+  return `${ACTIVE_WORKOUT_STORAGE_KEY}:${encodeURIComponent(userId)}`
+}
+
 export type ActiveWorkoutStatus = 'active' | 'saving' | 'save_error' | 'completed'
 
 export interface WorkoutDraftSet {
@@ -274,6 +279,8 @@ function adaptLegacyDraft(storage: WorkoutDraftStorage, userId: string, now: Dat
   const activeRow = typeof active === 'object' && active !== null ? active as Record<string, unknown> : null
   const progressRow = typeof progress === 'object' && progress !== null ? progress as Record<string, unknown> : null
   if (!activeRow && !progressRow) return null
+  // Unowned historical drafts cannot safely be attributed to the current login.
+  if ((activeRow && activeRow.userId !== userId) || (progressRow && progressRow.userId !== userId)) return null
 
   const sessionName = String(activeRow?.name ?? progressRow?.sessionName ?? 'Séance')
   const progressMatches = !progressRow?.sessionName || progressRow.sessionName === sessionName
@@ -295,7 +302,7 @@ function adaptLegacyDraft(storage: WorkoutDraftStorage, userId: string, now: Dat
     now: new Date(startedAt),
   })
   const adapted = updateActiveWorkoutDraft(draft, { exercises: normalizeWorkoutDraftExercises(exercises) }, now)
-  writeActiveWorkoutDraft(storage, adapted)
+  if (!writeActiveWorkoutDraft(storage, adapted)) return null
   storage.removeItem(LEGACY_ACTIVE_WORKOUT_STORAGE_KEY)
   storage.removeItem(LEGACY_WORKOUT_DRAFT_STORAGE_KEY)
   return adapted
@@ -306,7 +313,24 @@ export function readActiveWorkoutDraft(
   userId: string,
   now = new Date(),
 ): ActiveWorkoutDraft | null {
-  const parsed = parseStorage(storage, ACTIVE_WORKOUT_STORAGE_KEY)
+  const key = workoutDraftStorageKey(userId)
+  const ownedRaw = storage.getItem(key)
+  let parsed = parseStorage(storage, key)
+  if (ownedRaw === null) {
+    const sharedRaw = storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY)
+    const shared = parseStorage(storage, ACTIVE_WORKOUT_STORAGE_KEY)
+    if (isDraft(shared, userId, now)) {
+      if (!writeActiveWorkoutDraft(storage, shared)) return null
+      // Copy first. Never remove the original if the destination write failed.
+      if (storage.getItem(key) === JSON.stringify(shared) && storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY) === sharedRaw) {
+        storage.removeItem(ACTIVE_WORKOUT_STORAGE_KEY)
+      }
+      parsed = shared
+    } else {
+      // A foreign or uncertain shared draft is neither exposed nor deleted.
+      return adaptLegacyDraft(storage, userId, now)
+    }
+  }
   if (isDraft(parsed, userId, now)) {
     // A request cannot still be in flight after a reload. Preserve the draft and
     // expose an explicit retry state instead of leaving the UI stuck on saving.
@@ -315,26 +339,37 @@ export function readActiveWorkoutDraft(
         status: 'save_error',
         errorCode: 'WORKOUT_SAVE_INTERRUPTED',
       }, now)
-      writeActiveWorkoutDraft(storage, interrupted)
+      if (!writeActiveWorkoutDraft(storage, interrupted)) return null
       return interrupted
     }
     return parsed
   }
-  if (parsed !== null) storage.removeItem(ACTIVE_WORKOUT_STORAGE_KEY)
-  return adaptLegacyDraft(storage, userId, now)
+  // Leave invalid/expired scoped data in place: do not resurrect older shared data.
+  return null
 }
 
-export function writeActiveWorkoutDraft(storage: WorkoutDraftStorage, draft: ActiveWorkoutDraft): void {
-  storage.setItem(ACTIVE_WORKOUT_STORAGE_KEY, JSON.stringify(draft))
-}
-
-export function removeActiveWorkoutDraft(storage: WorkoutDraftStorage, draftId?: string): boolean {
-  if (draftId) {
-    const current = parseStorage(storage, ACTIVE_WORKOUT_STORAGE_KEY)
-    if (typeof current !== 'object' || current === null || (current as Record<string, unknown>).draftId !== draftId) return false
+export function writeActiveWorkoutDraft(storage: WorkoutDraftStorage, draft: ActiveWorkoutDraft, options: { create?: boolean } = {}): boolean {
+  const key = workoutDraftStorageKey(draft.userId)
+  const current = parseStorage(storage, key) as Partial<ActiveWorkoutDraft> | null
+  if (current) {
+    if (current.userId !== draft.userId) return false
+    const removed = current.status === 'completed'
+    if (removed && (!options.create || current.draftId === draft.draftId)) return false
+    if (current.draftId !== draft.draftId && !removed) {
+      if (!options.create || isDraft(current, draft.userId, new Date(draft.updatedAt))) return false
+    }
+    if (current.draftId === draft.draftId && Date.parse(current.updatedAt ?? '') > Date.parse(draft.updatedAt)) return false
   }
-  storage.removeItem(ACTIVE_WORKOUT_STORAGE_KEY)
-  storage.removeItem(LEGACY_ACTIVE_WORKOUT_STORAGE_KEY)
-  storage.removeItem(LEGACY_WORKOUT_DRAFT_STORAGE_KEY)
+  storage.setItem(key, JSON.stringify(draft))
+  return true
+}
+
+export function removeActiveWorkoutDraft(storage: WorkoutDraftStorage, draftId: string, userId: string): boolean {
+  const key = workoutDraftStorageKey(userId)
+  const current = parseStorage(storage, key) as Partial<ActiveWorkoutDraft> | null
+  if (!current || current.userId !== userId || current.draftId !== draftId) return false
+  // A minimal tombstone prevents delayed callbacks from resurrecting this draft.
+  // No exercises, measurements or performance values are retained in it.
+  storage.setItem(key, JSON.stringify({ version: ACTIVE_WORKOUT_DRAFT_VERSION, userId, draftId, status: 'completed', updatedAt: new Date().toISOString() }))
   return true
 }

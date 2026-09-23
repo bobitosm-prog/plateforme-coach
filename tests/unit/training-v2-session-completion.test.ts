@@ -98,7 +98,7 @@ describe('Training V2 session completion', () => {
   })
 
   it('does not let secondary failures hide durable critical success', () => {
-    const criticalIndex = dashboard.indexOf('removeActiveWorkoutDraft(localStorage, critical.draft.draftId)')
+    const criticalIndex = dashboard.indexOf('removeActiveWorkoutDraft(localStorage, critical.draft.draftId, critical.draft.userId)')
     const secondaryIndex = dashboard.indexOf('const secondary = (async () =>')
     const returnIndex = dashboard.indexOf('return { newPRs: [], newBadges: [], secondary }')
     expect(criticalIndex).toBeGreaterThan(-1)
