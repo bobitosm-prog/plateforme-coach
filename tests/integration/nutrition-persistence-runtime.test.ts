@@ -9,6 +9,7 @@ import { parseMealPlan } from '@/lib/meal-plan'
 import { getNutritionPlanConsistency } from '@/lib/nutrition/plan-context'
 import { loadActivationSnapshot } from '@/lib/meal-plan/activation-snapshot'
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
+import { draftFood, mealDraftRows, persistMealDraft } from '@/lib/nutrition/meal-draft'
 
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
@@ -79,6 +80,28 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
 })
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+describe('journal composer real persistence', () => {
+  it('atomically inserts a meal, retries without duplicates and isolates owners', async () => {
+    const owner = randomUUID(), other = randomUUID()
+    const client = clientFor(owner, 'public')
+    const food = {name:'Synthetic food',qty:100,kcal:100,prot:10,carb:10,fat:2}
+    const rows = mealDraftRows([draftFood(food),draftFood(food)],owner,'2026-09-22','dejeuner')
+    await persistMealDraft(client,rows)
+    await persistMealDraft(client,rows)
+    const read = await client.from('daily_food_logs').select('*').eq('user_id',owner)
+    expect(read.error).toBeNull()
+    expect(read.data).toHaveLength(2)
+    const hidden = await clientFor(other,'public').from('daily_food_logs').select('*').eq('user_id',owner)
+    expect(hidden.error).toBeNull()
+    expect(hidden.data).toEqual([])
+    const invalidBatch = mealDraftRows([draftFood(food),draftFood(food)],owner,'2026-09-22','diner')
+    invalidBatch[1].user_id=other
+    await expect(persistMealDraft(client,invalidBatch)).rejects.toThrow('MEAL_SAVE_FAILED')
+    const unchanged=await client.from('daily_food_logs').select('id').eq('user_id',owner)
+    expect(unchanged.data).toHaveLength(2)
+  })
+})
 
 describe('real isolated preference persistence', () => {
   it('writes JSON settings with the profile service and restores exact goals on a fresh read', async () => {

@@ -24,6 +24,17 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY profiles_own ON public.profiles FOR ALL TO authenticated
   USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+-- Journal composer fixture: existing production column contract and owner isolation.
+CREATE TABLE IF NOT EXISTS public.daily_food_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL,
+  date date NOT NULL, meal_type text NOT NULL, custom_name text,
+  quantity_g numeric, calories numeric, protein numeric, carbs numeric, fat numeric
+);
+ALTER TABLE public.daily_food_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS daily_logs_own ON public.daily_food_logs;
+CREATE POLICY daily_logs_own ON public.daily_food_logs FOR ALL TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_food_logs TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO service_role;
 CREATE TABLE public.ai_usage_logs (
