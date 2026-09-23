@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronDown, Copy, FolderOpen, ImagePlus, MoreHorizontal, Pencil, Plus, RefreshCw, Save, Trash2 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -117,6 +117,9 @@ export default function TodayMeals({
   onUpdateFood,
 }: TodayMealsProps) {
   const t = useTranslations('nutrition_tab.v2.todayMeals')
+  const locale = useLocale()
+  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+  const macroValue = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? '—' : number.format(value)
   const [openMeal, setOpenMeal] = useState<NutritionMealType | null>(null)
   const [collapsedMeals, setCollapsedMeals] = useState<Partial<Record<NutritionMealType, boolean>>>({})
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
@@ -279,6 +282,14 @@ export default function TodayMeals({
                   <strong>{log.custom_name || log.food_name || t('foodFallback')}</strong>
                   <span>{log.quantity_g ?? 0} g · {Math.round(Number(log.calories) || 0)} kcal</span>
                 </button>}
+                <p className={styles.loggedFoodMacros}>
+                  {t('loggedMacros', {
+                    quantity: macroValue(log.quantity_g),
+                    protein: macroValue(log.protein),
+                    carbs: macroValue(log.carbs),
+                    fat: macroValue(log.fat),
+                  })}
+                </p>
               </div>)}
             </div>
 

@@ -8,6 +8,7 @@ import NutritionQuickCard from './NutritionQuickCard'
 import styles from './NutritionV2.module.css'
 
 interface NutritionV2Props {
+  userId?: string
   model: NutritionViewModel
   selectedDate: string
   onAddMeal: () => void
@@ -18,6 +19,7 @@ interface NutritionV2Props {
 }
 
 export default function NutritionV2({
+  userId,
   model,
   selectedDate,
   onAddMeal,
@@ -34,6 +36,8 @@ export default function NutritionV2({
       onRetry={onRetry}
     />
     <NutritionQuickCard
+      key={userId}
+      userId={userId}
       state={model.summary.state}
       consumed={{
         calories: model.consumed.data?.calories ?? null,

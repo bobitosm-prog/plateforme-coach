@@ -470,9 +470,10 @@
 
 .loggedFood {
   display: flex;
+  flex-direction: column;
   min-height: 50px;
   padding: 7px 0;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 10px;
   border-top: 1px solid rgba(255, 255, 255, .045);
@@ -481,6 +482,7 @@
 .loggedFood > div:first-child { min-width: 0; }
 .loggedFood strong { display: block; color: #e7e2d9; font-size: .78rem; }
 .loggedFood span { display: block; margin-top: 3px; color: #827b70; font-size: .68rem; }
+.loggedFood .loggedFoodMacros { margin: 0; padding: 0 8px; color: #d0c5b2; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 
 .foodSelector {
   width: 100%;

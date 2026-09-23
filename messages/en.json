@@ -2948,6 +2948,7 @@
         "logged": "Actual log",
         "noLoggedFoods": "No food logged for this meal.",
         "foodFallback": "Food",
+        "loggedMacros": "For {quantity} g logged: protein {protein} g · carbs {carbs} g · fat {fat} g",
         "quantity": "Quantity in grams",
         "save": "Save",
         "cancel": "Cancel",
@@ -3003,6 +3004,14 @@
         "scannerPending": "Barcode scanning is available through food search."
       },
       "quickCard": {
+        "displayMode": "Nutrition summary display",
+        "consumed": "Consumed",
+        "remaining": "Remaining",
+        "caloriesConsumed": "kcal consumed",
+        "macrosConsumed": "Macronutrients consumed",
+        "proteinConsumed": "Protein consumed",
+        "carbsConsumed": "Carbs consumed",
+        "fatConsumed": "Fat consumed",
         "label": "Nutrition summary and quick access",
         "caloriesRemaining": "kcal remaining",
         "caloriesAbove": "kcal over",

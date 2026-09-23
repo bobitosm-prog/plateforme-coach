@@ -2948,6 +2948,7 @@
         "logged": "Journal réel",
         "noLoggedFoods": "Aucun aliment enregistré pour ce repas.",
         "foodFallback": "Aliment",
+        "loggedMacros": "Pour {quantity} g enregistrés : protéines {protein} g · glucides {carbs} g · lipides {fat} g",
         "quantity": "Quantité en grammes",
         "save": "Valider",
         "cancel": "Annuler",
@@ -3003,6 +3004,14 @@
         "scannerPending": "Scanner code-barres disponible via la recherche d’aliments."
       },
       "quickCard": {
+        "displayMode": "Affichage du bilan nutritionnel",
+        "consumed": "Consommé",
+        "remaining": "Restant",
+        "caloriesConsumed": "kcal consommées",
+        "macrosConsumed": "Macronutriments consommés",
+        "proteinConsumed": "Protéines consommées",
+        "carbsConsumed": "Glucides consommés",
+        "fatConsumed": "Lipides consommés",
         "label": "Synthèse nutritionnelle et accès rapides",
         "caloriesRemaining": "kcal restantes",
         "caloriesAbove": "kcal au-dessus",

@@ -2948,6 +2948,7 @@
         "logged": "Tatsächliches Protokoll",
         "noLoggedFoods": "Für diese Mahlzeit wurden keine Lebensmittel erfasst.",
         "foodFallback": "Lebensmittel",
+        "loggedMacros": "Für {quantity} g erfasst: Protein {protein} g · Kohlenhydrate {carbs} g · Fett {fat} g",
         "quantity": "Menge in Gramm",
         "save": "Speichern",
         "cancel": "Abbrechen",
@@ -3003,6 +3004,14 @@
         "scannerPending": "Barcode-Scannen ist über die Lebensmittelsuche verfügbar."
       },
       "quickCard": {
+        "displayMode": "Anzeige der Ernährungsbilanz",
+        "consumed": "Verzehrt",
+        "remaining": "Übrig",
+        "caloriesConsumed": "kcal verzehrt",
+        "macrosConsumed": "Verzehrte Makronährstoffe",
+        "proteinConsumed": "Protein verzehrt",
+        "carbsConsumed": "Kohlenhydrate verzehrt",
+        "fatConsumed": "Fett verzehrt",
         "label": "Ernährungsübersicht und Schnellzugriff",
         "caloriesRemaining": "kcal übrig",
         "caloriesAbove": "kcal darüber",
