@@ -69,7 +69,9 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
             <span style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', flexShrink: 0 }}>{ex.sets.length} SETS</span>
           </div>
           {/* Column headers */}
-          <small>{Array.from(new Set(ex.sets.map(set=>set.load_mode ?? 'legacy'))).map(mode=>tLoad(mode)).join(' · ')}</small>
+          <small style={{ display: 'block', color: colors.textMuted, fontFamily: fonts.body, fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
+            {Array.from(new Set(ex.sets.map(set=>set.load_mode ?? 'legacy'))).map(mode=>tLoad(mode)).join(' · ')}
+          </small>
           <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
             <span style={gridHeader}>SET</span>
             <span style={gridHeader}>KG</span>
