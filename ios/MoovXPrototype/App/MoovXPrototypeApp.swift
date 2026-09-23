@@ -2,7 +2,13 @@ import SwiftUI
 
 @main
 struct MoovXPrototypeApp: App {
-    var body: some Scene { WindowGroup { PrototypeHome() } }
+    var body: some Scene { WindowGroup {
+#if STORAGE_PROBE
+        StorageProbeView()
+#else
+        PrototypeHome()
+#endif
+    } }
 }
 
 struct PrototypeHome: View {
