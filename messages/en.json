@@ -2751,6 +2751,10 @@
       "saveError": "Save not confirmed. Retry without duplicating foods; the selection is locked.",
       "discard": "Leave without saving this selection?",
       "uncertainClose": "Uncertain result: retry here without duplicates, or close and check your diary before adding again.",
+      "uncertainRetained": "The result is uncertain. Closing keeps this attempt on this device. Reopen the same meal on the same date to retry without recreating the foods.",
+      "restoredDraft": "Selection restored on this device. Check quantities before confirming.",
+      "restoredPending": "Unconfirmed submission restored. Retry this attempt; do not recreate the foods elsewhere.",
+      "storageError": "The draft could not be stored or changed in another window. No new submission was sent. Close and reopen this meal before retrying.",
       "keep": "Continue",
       "close": "Close"
     },

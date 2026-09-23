@@ -2751,6 +2751,10 @@
       "saveError": "Speicherung nicht bestätigt. Ohne Duplikate erneut versuchen; die Auswahl ist gesperrt.",
       "discard": "Auswahl ohne Speichern verlassen?",
       "uncertainClose": "Ergebnis unklar: hier ohne Duplikate erneut versuchen oder schließen und vor weiteren Einträgen das Tagebuch prüfen.",
+      "uncertainRetained": "Das Ergebnis ist unklar. Beim Schließen bleibt dieser Versuch auf diesem Gerät gespeichert. Öffne dieselbe Mahlzeit am selben Datum erneut, ohne die Lebensmittel neu anzulegen.",
+      "restoredDraft": "Auswahl auf diesem Gerät wiederhergestellt. Prüfe die Mengen vor dem Bestätigen.",
+      "restoredPending": "Unbestätigten Speicherversuch wiederhergestellt. Wiederhole diesen Versuch, statt die Lebensmittel erneut anzulegen.",
+      "storageError": "Der Entwurf konnte nicht gespeichert werden oder wurde in einem anderen Fenster geändert. Keine neue Übermittlung. Schließe und öffne die Mahlzeit erneut.",
       "keep": "Fortfahren",
       "close": "Schließen"
     },

@@ -2751,6 +2751,10 @@
       "saveError": "Enregistrement non confirmé. Réessaie sans doubler les aliments ; la sélection est verrouillée.",
       "discard": "Quitter sans enregistrer cette sélection ?",
       "uncertainClose": "Résultat incertain : réessaie ici sans doublon, ou ferme et vérifie le journal avant tout nouvel ajout.",
+      "uncertainRetained": "Le résultat est incertain. En fermant, tu conserves cette tentative sur cet appareil. Rouvre le même repas à la même date pour réessayer sans recréer les aliments.",
+      "restoredDraft": "Sélection récupérée sur cet appareil. Vérifie les quantités avant de confirmer.",
+      "restoredPending": "Enregistrement à confirmer récupéré. Réessaie cette tentative ; ne recrée pas les aliments ailleurs.",
+      "storageError": "Le brouillon ne peut pas être conservé ou a changé dans une autre fenêtre. Aucun nouvel envoi effectué. Ferme puis rouvre ce repas avant de réessayer.",
       "keep": "Continuer",
       "close": "Fermer"
     },
