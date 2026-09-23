@@ -1,0 +1,4 @@
+"cameraDeniedTitle" = "Caméra désactivée";
+"cameraDeniedMessage" = "Autorise l’accès à la caméra pour MoovX Test dans Réglages, puis réessaie.";
+"cameraSettings" = "Ouvrir Réglages";
+"cameraCancel" = "Annuler";

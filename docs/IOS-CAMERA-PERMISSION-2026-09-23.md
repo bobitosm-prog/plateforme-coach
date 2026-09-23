@@ -26,7 +26,22 @@ donc pas être présentée correctement lorsque cette fonction était utilisée.
    ouverte et qu'il a pu prendre une photo après autorisation. Le résultat de
    l'analyse de la photo et le cas d'un accès refusé ne sont pas encore validés.
 
+## Régression révélée par le refus
+
+Lorsque Marco a désactivé l'accès caméra dans Réglages, le sélecteur photo iOS
+s'est ouvert sur une image entièrement noire, sans explication (capture fournie).
+Apple précise qu'un accès vidéo refusé peut produire des images noires.
+
+Le prototype vérifie maintenant l'autorisation vidéo au moment où le champ
+photo avec `capture` est activé. Si elle est refusée ou restreinte, le sélecteur
+est empêché de s'ouvrir et une alerte native localisée propose les réglages de
+l'app. Le statut est actualisé lorsque l'app revient au premier plan. Le pont
+JavaScript reçoit seulement un événement de clic refusé, vérifié côté natif ;
+aucun fichier, jeton ou contenu de page n'y transite. Le contrôle manuel de ce
+nouveau comportement sur l'iPhone reste en attente du retour utilisateur.
+
 Il s'agit toujours du prototype, avec son accès au site de production. Ce lot
 ne constitue ni une archive TestFlight, ni une validation de l'analyse photo.
 
 Référence Apple : https://developer.apple.com/documentation/bundleresources/information-property-list/nscamerausagedescription
+Comportement des images noires : https://developer.apple.com/documentation/avfoundation/avcapturedevice/authorizationstatus%28for%3A%29
