@@ -7,6 +7,7 @@ import TrainingSheet from '../training-v2/TrainingSheet'
 import BarcodeScanner from '../BarcodeScanner'
 import { normalizeFoodItem } from '../../../lib/utils/food'
 import { draftFood, draftNutrients, mealDraftRows, persistMealDraft, type MealDraftFood } from '../../../lib/nutrition/meal-draft'
+import { mealDraftKey, readMealDraft, writeMealDraft } from '../../../lib/nutrition/meal-draft-storage'
 import styles from './MealComposer.module.css'
 
 interface Props {
@@ -15,7 +16,11 @@ interface Props {
   photoEnabled: boolean; onClose: () => void; onSaved: () => Promise<void>
 }
 
-export default function MealComposer({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved}: Props) {
+export default function MealComposer(props: Props) {
+  return <MealComposerSession key={`${props.userId}:${props.date}:${props.mealType}`} {...props} />
+}
+
+function MealComposerSession({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved}: Props) {
   const t = useTranslations('nutrition_tab.composer')
   const [foods, setFoods] = useState<MealDraftFood[]>([])
   const [query, setQuery] = useState('')
@@ -37,14 +42,47 @@ export default function MealComposer({supabase, userId, date, mealType, mealLabe
   const submission = useRef<ReturnType<typeof mealDraftRows> | null>(null)
   const busy = useRef(false)
   const alive = useRef(true)
+  const snapshot = useRef<string | null>(null)
+  const storageBlocked = useRef(false)
+  const foodRef = useRef<MealDraftFood[]>([])
+  const [restored, setRestored] = useState(false)
+  const storageKey = mealDraftKey(userId,date,mealType)
   const photoInput = useRef<HTMLInputElement>(null)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   const initialized = useRef(false)
-  useEffect(() => { if (!initialized.current) { initialized.current = true; if (initialFoods?.length) add(initialFoods) } }, [])
+  useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+    try {
+      snapshot.current = localStorage.getItem(storageKey)
+      const saved = readMealDraft(snapshot.current,userId,date,mealType)
+      if (saved) {
+        foodRef.current = saved.foods; setFoods(saved.foods); setRestored(true)
+        if (saved.submitted) { submission.current = mealDraftRows(saved.foods,userId,date,mealType); setLocked(true) }
+      } else if (initialFoods?.length) add(initialFoods)
+    } catch { storageBlocked.current = true; setError(t('storageError')) }
+  }, [])
+
+  function store(next: MealDraftFood[], submitted: boolean) {
+    if (storageBlocked.current) throw new Error('MEAL_STORAGE_UNAVAILABLE')
+    snapshot.current = writeMealDraft(localStorage,storageKey,snapshot.current,{version:1,userId,date,mealType,foods:next,submitted})
+  }
+
+  function changeFoods(next: MealDraftFood[]) {
+    if (!alive.current || busy.current || submission.current) return
+    try { store(next,false); foodRef.current=next; setFoods(next); setError(null) }
+    catch { setError(t('storageError')) }
+  }
+
+  function discardOrKeep() {
+    if (submission.current) return onClose() // Uncertain writes keep their IDs for the next opening.
+    try { snapshot.current=writeMealDraft(localStorage,storageKey,snapshot.current,null); onClose() }
+    catch { setDiscard(false); setError(t('storageError')) }
+  }
 
   function add(items: Record<string, any>[]) {
     if (locked || busy.current) return
-    try { const next = items.map(draftFood); setFoods(current => [...current, ...next]); setError(null) }
+    try { const next = items.map(draftFood); changeFoods([...foodRef.current, ...next]) }
     catch { setError(t('invalid')) }
   }
 
@@ -105,13 +143,18 @@ export default function MealComposer({supabase, userId, date, mealType, mealLabe
   }
 
   async function save() {
-    if (busy.current || analyzing) return
+    if (!alive.current || busy.current || analyzing) return
     busy.current=true;setSaving(true);setError(null)
+    try { store(foods,!!submission.current) }
+    catch { setError(t('storageError'));setSaving(false);busy.current=false;return }
     try {
       submission.current ??= mealDraftRows(foods,userId,date,mealType)
       setLocked(true)
+      store(foods,true) // Durable identical IDs before the first network write.
       await persistMealDraft(supabase,submission.current)
+      snapshot.current=writeMealDraft(localStorage,storageKey,snapshot.current,null)
     } catch {setError(t(submission.current ? 'saveError' : 'invalid'));setSaving(false);busy.current=false;return}
+    if (!alive.current) return
     // Refresh is not part of the write: never offer a second insertion if refresh fails.
     try { await onSaved() } catch { /* The confirmed write succeeded; the parent retries its refresh on close. */ }
     finally { if (alive.current) {setSaving(false);busy.current=false;onClose()} }
@@ -124,7 +167,8 @@ export default function MealComposer({supabase, userId, date, mealType, mealLabe
   return <RailOverlay><div className={styles.sheet}>{scanner ? <BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType} onProductAdded={()=>{}} onClose={()=>setScanner(false)} onSelected={food=>{add([food]);setScanner(false)}} /> :
     <TrainingSheet viewportContained title={mealLabel} description={`${date} · ${t('draft')}`} onClose={close}>
       <div className={styles.body}>
-        {discard ? <div role="alert"><p>{t(locked ? 'uncertainClose' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={onClose}>{t('close')}</button></div> : <>
+        {discard ? <div role="alert"><p>{t(locked ? 'uncertainRetained' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={discardOrKeep}>{t('close')}</button></div> : <>
+        {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
         <div className={styles.search}>
           <input aria-label={t('search')} placeholder={t('search')} value={query} disabled={locked} onChange={event=>setQuery(event.target.value)} />
           <button type="button" disabled={locked || analyzing} aria-label={t('barcode')} onClick={()=>setScanner(true)}><ScanBarcode size={18}/></button>
@@ -149,8 +193,8 @@ export default function MealComposer({supabase, userId, date, mealType, mealLabe
         {!foods.length && <p className={styles.muted}>{t('empty')}</p>}
         <ul className={styles.draft}>{foods.map(food=><li key={food.id}>
           <div>{food.name}<small>{Number.isFinite(food.quantity) ? draftNutrients(food).calories : '—'} kcal</small></div>
-          <label>{t('grams')}<input aria-label={`${t('quantity')} — ${food.name}`} type="number" min="0.1" step="0.1" value={Number.isFinite(food.quantity)?food.quantity:''} disabled={locked || analyzing} onChange={event=>setFoods(current=>current.map(item=>item.id===food.id ? {...item,quantity:event.target.value===''?NaN:Number(event.target.value)} : item))}/></label>
-          <button disabled={locked || analyzing} aria-label={`${t('remove')} — ${food.name}`} onClick={()=>setFoods(current=>current.filter(item=>item.id!==food.id))}><Trash2 size={16}/></button>
+          <label>{t('grams')}<input aria-label={`${t('quantity')} — ${food.name}`} type="number" min="0.1" step="0.1" value={Number.isFinite(food.quantity)?food.quantity:''} disabled={locked || analyzing} onChange={event=>changeFoods(foodRef.current.map(item=>item.id===food.id ? {...item,quantity:event.target.value===''?NaN:Number(event.target.value)} : item))}/></label>
+          <button disabled={locked || analyzing} aria-label={`${t('remove')} — ${food.name}`} onClick={()=>changeFoods(foodRef.current.filter(item=>item.id!==food.id))}><Trash2 size={16}/></button>
         </li>)}</ul>
         {error && <p className={styles.error} role="alert">{error}</p>}
         <div className={styles.footer}>
