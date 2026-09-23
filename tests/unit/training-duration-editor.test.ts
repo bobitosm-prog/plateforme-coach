@@ -10,7 +10,7 @@ it('runs the timed editor with a seconds field, no weight input, and working con
   vi.stubGlobal('React', React)
   const change = vi.fn(), adjust = vi.fn(), validate = vi.fn()
   render(React.createElement(CurrentSetEditor, {
-    timed: true, setNumber: 1, totalSets: 3, weight: '', reps: 30, rir: null,
+    timed: true, setNumber: 1, totalSets: 3, completedSets: 0, weight: '', reps: 30, rir: null,
     weightStep: 1, showRir: false, canValidate: true, suggestion: null, statusMessage: '',
     onWeightChange: vi.fn(), onWeightFocus: vi.fn(), onWeightBlur: vi.fn(), onAdjustWeight: vi.fn(),
     onRepsChange: change, onAdjustReps: adjust, onRirChange: vi.fn(), onUseSuggestion: vi.fn(), onValidate: validate,

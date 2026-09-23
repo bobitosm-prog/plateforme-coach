@@ -991,6 +991,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               exerciseCount={exos.length}
               activeSet={activeSetNumber}
               totalSets={exo.sets.length}
+              completedSets={exo.sets.filter(set => set.done).length}
               previous={previousLabel}
               previousError={previousState === null}
               target={targetLabel}
@@ -1030,6 +1031,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       timed={Boolean(exo.targetDurationSeconds)}
                       setNumber={activeSet.num}
                       totalSets={exo.sets.length}
+                      completedSets={exo.sets.filter(set => set.done).length}
                       weight={activeSet.weightRaw ?? ''}
                       reps={exo.targetDurationSeconds ? activeSet.durationSeconds ?? '' : activeSet.reps}
                       rir={activeSet.rir}

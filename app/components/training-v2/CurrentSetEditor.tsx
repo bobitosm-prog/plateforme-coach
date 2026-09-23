@@ -10,6 +10,7 @@ interface CurrentSetEditorProps {
   timed?: boolean
   setNumber: number
   totalSets: number
+  completedSets: number
   weight: string
   reps: number | ''
   rir: number | null
@@ -35,6 +36,7 @@ export default function CurrentSetEditor({
   timed = false,
   setNumber,
   totalSets,
+  completedSets,
   weight,
   reps,
   rir,
@@ -55,7 +57,8 @@ export default function CurrentSetEditor({
 }: CurrentSetEditorProps) {
   const t = useTranslations('training_tab.v2')
   const load = useTranslations('trainingLoad')
-  const setProgress = totalSets > 0 ? Math.min(100, Math.max(0, (setNumber / totalSets) * 100)) : 0
+  const doneCount = Math.min(Math.max(0, completedSets), Math.max(0, totalSets))
+  const setProgress = totalSets > 0 ? (doneCount / totalSets) * 100 : 0
 
   return (
     <section className={styles.setEditor} aria-labelledby="current-set-title">
@@ -64,10 +67,10 @@ export default function CurrentSetEditor({
         <div
           className={styles.setProgress}
           role="progressbar"
-          aria-label={t('setProgress', { current: setNumber, total: totalSets })}
-          aria-valuemin={1}
+          aria-label={t('completedSetProgress', { current: doneCount, total: totalSets })}
+          aria-valuemin={0}
           aria-valuemax={Math.max(1, totalSets)}
-          aria-valuenow={Math.min(Math.max(1, setNumber), Math.max(1, totalSets))}
+          aria-valuenow={doneCount}
         >
           <span style={{ width: `${setProgress}%` }} />
         </div>
