@@ -47,7 +47,7 @@ describe('meal composer runtime',()=>{
     expect(screen.getAllByLabelText('quantity — Rice')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button',{name:'closeTools'}))
     expect(screen.getByRole('alert').textContent).toContain('discard')
-    fireEvent.click(screen.getByRole('button',{name:'close',exact:true}))
+    fireEvent.click(screen.getByRole('button',{name:/^close$/}))
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(upsert).not.toHaveBeenCalled()
   })
