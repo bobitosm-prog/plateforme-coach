@@ -9,6 +9,7 @@ interface ActiveExerciseFocusProps {
   exerciseCount: number
   activeSet: number
   totalSets: number
+  completedSets: number
   previous: string | null
   previousError: boolean
   target: string
@@ -22,6 +23,7 @@ export default function ActiveExerciseFocus({
   exerciseCount,
   activeSet,
   totalSets,
+  completedSets,
   previous,
   previousError,
   target,
@@ -36,7 +38,8 @@ export default function ActiveExerciseFocus({
       <h2 id="active-exercise-title" className={styles.focusHeading}>{name}</h2>
       <div className={styles.focusMeta}>
         <span>{t('exerciseProgress', { current: exerciseIndex + 1, total: exerciseCount })}</span>
-        <span>{stepLabel || t('setProgress', { current: activeSet, total: totalSets })}</span>
+        <span>{stepLabel || t('currentSet', { current: activeSet, total: totalSets })}</span>
+        <span>{t('completedSetProgress', { current: completedSets, total: totalSets })}</span>
       </div>
       <div className={styles.focusStats}>
         <div className={styles.focusStat}>
