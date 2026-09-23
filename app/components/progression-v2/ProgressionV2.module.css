@@ -72,6 +72,7 @@
 .recordRow:last-child { border-bottom: 0; }
 .recordRowMain { min-width: 0; }
 .recordRowMain h3 { margin: 0; overflow: hidden; color: #d8d0c3; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.recordRowMain small { display: block; margin: 4px 0; color: #b9b1a3; font-size: .72rem; line-height: 1.5; overflow-wrap: anywhere; }
 .recordRowMain span, .recordRowMain time { display: inline; color: #827b70; font-size: .69rem; }
 .recordRowMain span { color: #bba356; }
 .recordRowMain span::after { content: ' · '; color: #625d54; }
