@@ -1721,6 +1721,7 @@
       "estimatedDuration": "~{minutes} min",
       "exerciseProgress": "{current} / {total} exercices",
       "setProgress": "{current} / {total} séries",
+      "completedSetProgress": "{current} / {total} séries validées",
       "activeProgram": "Programme actif",
       "coachPlan": "Plan coach",
       "personalProgram": "Programme personnel",

@@ -1721,6 +1721,7 @@
       "estimatedDuration": "~{minutes} min",
       "exerciseProgress": "{current} / {total} exercises",
       "setProgress": "{current} / {total} sets",
+      "completedSetProgress": "{current} / {total} sets completed",
       "activeProgram": "Active program",
       "coachPlan": "Coach plan",
       "personalProgram": "Personal program",
