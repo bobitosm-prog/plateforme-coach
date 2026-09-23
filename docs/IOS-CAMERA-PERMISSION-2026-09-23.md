@@ -41,7 +41,8 @@ aucun fichier, jeton ou contenu de page n'y transite. Le contrôle manuel de ce
 nouveau comportement sur l'iPhone est confirmé par une capture de Marco du
 23 septembre à 21 h 12 : l'alerte « Caméra désactivée » apparaît sur le repas,
 avec « Ouvrir Réglages » et « Annuler » ; l'écran photo noir ne s'ouvre plus.
-La réactivation de la caméra après retour de Réglages reste à confirmer.
+Marco confirme ensuite avoir réactivé la caméra dans Réglages : de retour
+dans l'app, l'icône photo ouvre normalement la caméra, sans réinstallation.
 
 Il s'agit toujours du prototype, avec son accès au site de production. Ce lot
 ne constitue ni une archive TestFlight, ni une validation de l'analyse photo.
