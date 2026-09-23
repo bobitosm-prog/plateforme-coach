@@ -335,6 +335,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
   return (
     <NutritionV2
+      userId={userId}
       model={nutritionModel}
       selectedDate={selectedDate}
       onAddMeal={() => {

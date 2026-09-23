@@ -3,6 +3,7 @@
 import { Apple, Beef, Camera, Flame, ScanLine, Wheat } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { CSSProperties, ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 
 import styles from './NutritionQuickCard.module.css'
 
@@ -16,6 +17,7 @@ export interface NutritionQuickValues {
 }
 
 interface NutritionQuickCardProps {
+  userId?: string
   state: NutritionQuickCardState
   consumed: NutritionQuickValues
   targets: NutritionQuickValues
@@ -50,6 +52,7 @@ function MacroRow({
 }
 
 export default function NutritionQuickCard({
+  userId,
   state,
   consumed,
   targets,
@@ -59,6 +62,18 @@ export default function NutritionQuickCard({
 }: NutritionQuickCardProps) {
   const t = useTranslations('nutrition_tab.v2.quickCard')
   const locale = useLocale()
+  const storageKey = userId ? `moovx_nutrition_display:${encodeURIComponent(userId)}` : null
+  const [selection, setSelection] = useState<{ key: string | null; mode: 'consumed' | 'remaining' }>({ key: storageKey, mode: 'remaining' })
+  const mode = selection.key === storageKey ? selection.mode : 'remaining'
+  useEffect(() => {
+    let saved: string | null = null
+    try { saved = storageKey ? localStorage.getItem(storageKey) : null } catch { /* Display works even if browser storage is unavailable. */ }
+    setSelection({ key: storageKey, mode: saved === 'consumed' ? 'consumed' : 'remaining' })
+  }, [storageKey])
+  const selectMode = (next: 'consumed' | 'remaining') => {
+    setSelection({ key: storageKey, mode: next })
+    try { if (storageKey) localStorage.setItem(storageKey, next) } catch { /* Keep the choice for this mounted screen. */ }
+  }
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 })
   const isLoading = state === 'loading'
   const isError = state === 'error'
@@ -74,7 +89,9 @@ export default function NutritionQuickCard({
     carbs: getNutritionRemaining(consumed.carbs, targets.carbs),
     fat: getNutritionRemaining(consumed.fat, targets.fat),
   }
-  const display = (value: number | null) => isLoading ? '…' : isError || value == null ? '—' : `${number.format(value)} g`
+  const values = mode === 'consumed' ? consumed : remaining
+  const calorieValue = mode === 'consumed' ? consumed.calories : caloriesAbove > 0 ? caloriesAbove : calorieRemaining
+  const display = (value: number | null) => isLoading ? '…' : isError || value == null || !Number.isFinite(value) ? '—' : `${number.format(value)} g`
   const ringStyle = { '--nutrition-progress': `${calorieProgress * 3.6}deg` } as CSSProperties
 
   return <section
@@ -84,20 +101,24 @@ export default function NutritionQuickCard({
     aria-label={t('label')}
     aria-busy={isLoading}
   >
+    <div className={styles.displayToggle} role="group" aria-label={t('displayMode')}>
+      <button type="button" aria-pressed={mode === 'consumed'} onClick={() => selectMode('consumed')}>{t('consumed')}</button>
+      <button type="button" aria-pressed={mode === 'remaining'} onClick={() => selectMode('remaining')}>{t('remaining')}</button>
+    </div>
     <div className={styles.energy}>
       <div className={styles.ring} style={ringStyle}>
         <div>
-          <strong>{isLoading ? '…' : isError || calorieRemaining == null ? '—' : number.format(caloriesAbove > 0 ? caloriesAbove : calorieRemaining)}</strong>
-          <span>{caloriesAbove > 0 ? t('caloriesAbove') : t('caloriesRemaining')}</span>
+          <strong>{isLoading ? '…' : isError || calorieValue == null || !Number.isFinite(calorieValue) ? '—' : number.format(calorieValue)}</strong>
+          <span>{mode === 'consumed' ? t('caloriesConsumed') : !isLoading && !isError && caloriesAbove > 0 ? t('caloriesAbove') : t('caloriesRemaining')}</span>
         </div>
       </div>
-      {!isLoading && !isError && calorieRemaining == null && <small className={styles.missing}>{t('targetMissing')}</small>}
+      {mode === 'remaining' && !isLoading && !isError && calorieRemaining == null && <small className={styles.missing}>{t('targetMissing')}</small>}
     </div>
 
-    <div className={styles.macros} aria-label={t('macrosRemaining')}>
-      <MacroRow icon={<Beef size={18} />} label={t('protein')} value={display(remaining.protein)} tone="protein" />
-      <MacroRow icon={<Wheat size={18} />} label={t('carbs')} value={display(remaining.carbs)} tone="carbs" />
-      <MacroRow icon={<Flame size={18} />} label={t('fat')} value={display(remaining.fat)} tone="fat" />
+    <div className={styles.macros} aria-label={t(mode === 'consumed' ? 'macrosConsumed' : 'macrosRemaining')}>
+      <MacroRow icon={<Beef size={18} />} label={t(mode === 'consumed' ? 'proteinConsumed' : 'protein')} value={display(values.protein)} tone="protein" />
+      <MacroRow icon={<Wheat size={18} />} label={t(mode === 'consumed' ? 'carbsConsumed' : 'carbs')} value={display(values.carbs)} tone="carbs" />
+      <MacroRow icon={<Flame size={18} />} label={t(mode === 'consumed' ? 'fatConsumed' : 'fat')} value={display(values.fat)} tone="fat" />
     </div>
 
     <div className={styles.actions}>

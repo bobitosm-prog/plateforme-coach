@@ -14,6 +14,10 @@
   box-sizing: border-box;
 }
 
+.displayToggle { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid rgba(230,195,100,.25); border-radius: 14px; }
+.displayToggle button { flex: 1; min-height: 44px; border: 0; border-radius: 10px; padding: 8px 12px; background: transparent; color: #d0c5b2; font: inherit; font-weight: 700; cursor: pointer; }
+.displayToggle button[aria-pressed='true'] { color: #131313; background: #e6c364; }
+.displayToggle button:focus-visible { outline: 3px solid #e6c364; outline-offset: 2px; }
 .energy { display: grid; min-width: 0; justify-items: center; gap: 7px; }
 .ring {
   display: grid;
@@ -47,7 +51,7 @@
 .macroRow[data-tone='carbs'] .macroIcon { color: #efc55b; background: rgba(224, 174, 52, .16); }
 .macroRow[data-tone='fat'] .macroIcon { color: #ee7b6f; background: rgba(223, 91, 79, .16); }
 .macroRow strong { display: block; overflow: hidden; color: #f8f5ef; font-size: clamp(1rem, 3vw, 1.35rem); line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
-.macroRow small { display: block; margin-top: 3px; overflow: hidden; color: #9d978e; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.macroRow small { display: block; margin-top: 3px; color: #b8b0a3; font-size: .72rem; line-height: 1.35; overflow-wrap: anywhere; }
 
 .actions { display: grid; min-width: 0; align-self: stretch; gap: 8px; }
 .actions button {
