@@ -1,7 +1,7 @@
 /**
  * Equipment Normalization Helper — Phase 6B.0
  *
- * Maps the 43 legacy textual values in exercises_db.equipment to 6 strict enum values.
+ * Maps legacy textual values to explicit equipment categories.
  * Used by:
  *   - SQL migration backfill (one-shot)
  *   - Future writes to exercises_db (if user_id-created exos via NutritionPreferences or admin)
@@ -9,7 +9,7 @@
  *
  * Decisions (see docs/PHASE_6B_TRAINING_VISION.md):
  *   - "Barre de traction" → bodyweight (pull-up bar = environment, exo uses body weight)
- *   - "Battle Ropes" → band (transportable cardio accessory)
+ *   - Ab wheels and battle ropes have distinct categories, never elastic bands.
  *   - "Debout"/"Assis" (positions) → machine_gym (calf extensions context)
  *   - "Barre ou Haltères" → barbell (heavier/more serious option)
  *   - "banc" → machine_gym (mixed cases compromise)
@@ -25,6 +25,8 @@ export type Equipment =
   | 'band'
   | 'bodyweight'
   | 'machine_gym'
+  | 'ab_wheel'
+  | 'battle_rope'
 
 export const EQUIPMENT_VALUES: readonly Equipment[] = [
   'barbell',
@@ -33,6 +35,8 @@ export const EQUIPMENT_VALUES: readonly Equipment[] = [
   'band',
   'bodyweight',
   'machine_gym',
+  'ab_wheel',
+  'battle_rope',
 ] as const
 
 export const HOME_FRIENDLY_EQUIPMENT: readonly Equipment[] = [
@@ -104,8 +108,8 @@ const EQUIPMENT_LEGACY_MAP: Record<string, Equipment> = {
   'Kettlebell': 'kettlebell',
 
   // === band (3 exos) ===
-  'Cordes': 'band',
-  'Roue abdominale': 'band',
+  'Cordes': 'battle_rope',
+  'Roue abdominale': 'ab_wheel',
 
   // === bodyweight (≈27 exos après normalisation) ===
   'Poids du corps': 'bodyweight',

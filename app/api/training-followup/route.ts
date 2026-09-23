@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
         (set) => set.session_id === row.session_id_origin,
       );
       const loadMode = latest[0]?.load_mode ?? 'legacy';
-      if (loadMode === 'band' || latest.some(set => (set.load_mode ?? 'legacy') !== loadMode))
+      if ((loadMode === 'band' || loadMode === 'unquantified') || latest.some(set => (set.load_mode ?? 'legacy') !== loadMode))
         return NextResponse.json({code:'changed'}, {status:409});
       if (
         !latest.every(

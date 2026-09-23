@@ -185,7 +185,7 @@ export default function useAnalytics({
 
   // PR detection -- called after finishing a workout set
   async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number, loadMode = 'legacy'): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
-    if (!uid || !weight || !reps || loadMode === 'band') return { newPR: false }
+    if (!uid || !weight || !reps || (loadMode === 'band' || loadMode === 'unquantified')) return { newPR: false }
 
     const estimated1RM = weight * (1 + reps / 30) // Epley formula
     const { data: currentRecord, error: recordError } = await supabase

@@ -133,7 +133,8 @@ describe('Training V2 exercise tools', () => {
 
   it('keeps replacement lazy, bounded and session-only', () => {
     expect(exerciseTools).toContain('onReplace')
-    expect(workoutSession.match(/\.limit\(5\)/g)?.length).toBeGreaterThanOrEqual(2)
+    expect(workoutSession.match(/\.limit\(5\)/g)?.length).toBeGreaterThanOrEqual(1)
+    expect(workoutSession).not.toContain("const baseName = exo.name.split")
     const replacement = workoutSession.slice(workoutSession.indexOf('async function loadVariantsForSession'), workoutSession.indexOf("if (mode === 'custom')"))
     expect(replacement).not.toMatch(/\.update\(|\.insert\(|\.upsert\(/)
     expect(replacement).toContain('setSessionModified(true)')

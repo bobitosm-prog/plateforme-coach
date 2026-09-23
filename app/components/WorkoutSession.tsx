@@ -735,16 +735,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           .limit(5)
         if (error) throw error
         variants = (data || []) as ExerciseVariant[]
-      } else {
-        const baseName = exo.name.split(' ').slice(0, 2).join(' ')
-        const { data, error } = await supabase
-          .from('exercises_catalog')
-          .select('id, name, equipment, muscle_group, video_url')
-          .ilike('name', `%${baseName}%`)
-          .neq('name', exo.name)
-          .limit(5)
-        if (error) throw error
-        variants = (data || []) as ExerciseVariant[]
       }
       if (current?.equipment) {
         variants.sort((left, right) => Number(right.equipment === current.equipment) - Number(left.equipment === current.equipment))

@@ -5,6 +5,7 @@
 import { unwrapToolInput } from '../anthropic/unwrap-tool-input'
 import { PROGRAM_GENERATION_PROMPT } from '../coach-knowledge'
 import { availableEquipment, exactEquipmentMatch, generationCatalog, type CatalogExercise } from './equipment-contract'
+import { CATALOG_REVIEW_NAMES, requiresCatalogReview } from './catalog-review'
 import { buildAthenaTrainingPolicyPrompt, normalizeAthenaTrainingRequest } from '../athena/training-policy'
 import { AthenaTrainingOutputError, validateAthenaTrainingOutput, type ValidatedAthenaProgram } from '../athena/training-output'
 
@@ -82,6 +83,7 @@ N'invente pas de variante orthographique (accents, pluriels, casse).
 ${restrictedEquipment ? 'Liste fermée : utilise UNIQUEMENT ces mouvements compatibles avec le matériel déclaré. Aucun ajout ni variante.' : "Si un mouvement n'existe pas dans la liste, nomme-le clairement."}
 ${catalog.map(c => c.name).join(', ')}
 ` : ''}
+Les noms suivants sont ambigus et interdits pour une nouvelle prescription : ${CATALOG_REVIEW_NAMES.join(', ')}. Choisis un mouvement explicitement décrit du référentiel, sans fusionner ces anciens noms.
 Reponds UNIQUEMENT avec du JSON valide, aucun texte avant ou apres.`
 
   const userPrompt = `Génère le programme correspondant exactement à la demande normalisée du contrat Athena.
@@ -211,6 +213,8 @@ IMPORTANT :
 
   const rawProgram = unwrapToolInput<unknown>(toolUseBlock.input)
   const program: GeneratedProgram = validateAthenaTrainingOutput(rawProgram, request,{allowAdvancedTechniques:input.allowAdvancedTechniques===true})
+  if (program.days.some(day => day.exercises.some(ex => requiresCatalogReview(ex.custom_name))))
+    throw new AthenaTrainingOutputError(['exercise: variante ambiguë nécessitant une définition explicite'])
 
   // Post-process: resolve exercise names against catalog + set exercise_id
   if (catalog.length > 0 && program?.days) {

@@ -95,7 +95,7 @@ export async function followupAlternatives(
 ) {
   const { data, error } = await state.db
     .from("exercises_catalog")
-    .select("id,name,muscle_group,equipment,equipment_legacy")
+    .select("id,name,muscle_group,equipment,equipment_legacy,variant_group")
     .limit(1000);
   if (error) throw new Error("CATALOG_UNAVAILABLE");
   const equipment = composeEquipmentString(
@@ -110,12 +110,13 @@ export async function followupAlternatives(
       const source = data?.find((row) => row.id === ex?.exercise_id);
       return {
         ...trend,
-        alternatives: !source?.muscle_group
+        alternatives: !source?.muscle_group || !source?.variant_group
           ? []
           : (data ?? [])
               .filter(
                 (row) =>
                   row.id !== source.id &&
+                  row.variant_group === source.variant_group &&
                   row.muscle_group === source.muscle_group &&
                   isCatalogExerciseCompatible(row, equipment),
               )

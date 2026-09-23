@@ -1,5 +1,6 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
+import { canonicalExerciseName } from '@/lib/training/exercise-identity'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useExerciseInfo } from '../../../../hooks/useExerciseInfo'
@@ -692,13 +693,9 @@ export default function useClientDetail() {
   async function loadVariants(exerciseName: string, day: string, idx: number) {
     const { data: current } = await supabase
       .from('exercises_catalog').select('variant_group')
-      .ilike('name', exerciseName).limit(1).maybeSingle()
+      .ilike('name', canonicalExerciseName(exerciseName)).limit(1).maybeSingle()
     if (!current?.variant_group) {
-      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
-      const { data: similar } = await supabase
-        .from('exercises_catalog').select('name, equipment, muscle_group')
-        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
-      setVariantPopup({ day, idx, variants: similar || [] })
+      setVariantPopup({day, idx, variants:[]})
       return
     }
     const { data: variants } = await supabase
