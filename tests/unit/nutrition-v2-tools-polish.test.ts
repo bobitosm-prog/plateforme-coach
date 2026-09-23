@@ -20,16 +20,16 @@ describe('Nutrition V2 compact tools', () => {
   })
 
   it('moves recipes and saved meals to secondary tools without a direct data read', () => {
-    expect(tab).toContain('<NutritionTools')
-    expect(tab).toContain("onSavedMeals={() => setSubTab('meals')}")
-    expect(tab).toContain("onRecipes={() => setSubTab('recipes')}")
+    expect(tab).not.toContain('<NutritionTools')
+    expect(tab).toContain("onClick={() => setSubTab('meals')}")
+    expect(tab).toContain("onClick={() => setSubTab('recipes')}")
     expect(tools).not.toContain('.from(')
     expect(tools).not.toContain('fetch(')
   })
 
   it('gates photo and recipe AI actions with capabilities', () => {
     expect(tab).toContain('photoEnabled={capabilities.ai}')
-    expect(tab).toContain('recipesEnabled={capabilities.nutrition}')
+    expect(tab).toContain('{capabilities.nutrition &&')
     expect(tab).toContain('aiAllowed={capabilities.ai}')
     expect(tools).toContain('{photoEnabled &&')
     expect(recipes).toContain('{aiAllowed &&')

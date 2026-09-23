@@ -26,6 +26,7 @@ import TodayMeals from '../nutrition-v2/TodayMeals'
 import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
 import NutritionTools from '../nutrition-v2/NutritionTools'
 import MealContextChooser from '../nutrition-v2/MealContextChooser'
+import MealComposer from '../nutrition-v2/MealComposer'
 
 const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -82,6 +83,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
+  const [composer, setComposer] = useState<{mealType: MealKey; date: string; initialFoods?: Record<string, any>[]} | null>(null)
   const [pendingMealAction, setPendingMealAction] = useState<PendingMealAction | null>(null)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
@@ -271,15 +273,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   }
 
   async function applySavedMeal(meal: any, targetMealType: string) {
-    for (const food of (meal.foods || [])) {
-      await supabase.from('daily_food_logs').insert({
-        user_id: userId, date: today, meal_type: targetMealType,
-        custom_name: food.name, quantity_g: food.quantity || food.quantity_g || 100,
-        calories: food.calories || 0, protein: food.proteins || food.protein || 0,
-        carbs: food.carbs || 0, fat: food.fats || food.fat || 0,
-      })
-    }
-    await refreshNutrition()
+    setComposer({mealType: targetMealType as MealKey, date: selectedDate, initialFoods: meal.foods ?? []})
   }
 
   async function copyMealToDate(foods: any[], targetDate: string, targetMealType: string) {
@@ -335,15 +329,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   function chooseMealContext(mealType: MealKey) {
     const action = pendingMealAction
     setPendingMealAction(null)
-    if (action === 'food') {
-      setShowFoodSearch(mealType)
-      return
-    }
-    if (action === 'photo') {
-      setPhotoMealTarget(mealType)
-      setPhotoError(null)
-      setShowPhotoCapture(true)
-    }
+    if (action) setComposer({mealType, date: selectedDate})
   }
 
 
@@ -383,6 +369,16 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       </div>
 
       {/* Food search modal */}
+      {composer && <MealComposer
+        key={`${userId}-${composer.date}-${composer.mealType}`}
+        supabase={supabase} userId={userId} date={composer.date} mealType={composer.mealType}
+        mealLabel={MEAL_LABELS[composer.mealType]}
+        plannedFoods={composer.date === today && getPlanDayData(todayKey) ? getMealByKey(getPlanDayData(todayKey)!.day, composer.mealType) : []}
+        initialFoods={composer.initialFoods}
+        photoEnabled={capabilities.ai}
+        onSaved={refreshNutrition}
+        onClose={() => { setComposer(null); void refreshNutrition() }}
+      />}
       {showFoodSearch && (
         <FoodSearch
           supabase={supabase}
@@ -460,7 +456,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               actionError={mealActionError}
               onRetry={() => void refreshNutrition()}
               onChooseMeal={() => setPendingMealAction('food')}
-              onAddFood={mealType => setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])}
+              onAddFood={mealType => setComposer({mealType: NUTRITION_MEAL_TO_KEY[mealType], date: selectedDate})}
               onImportPlan={mealType => setImportingMeal({
                 mealType: NUTRITION_MEAL_TO_KEY[mealType],
                 dayKey: getNutritionDayKey(selectedDate) as Day,
@@ -514,14 +510,10 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               </div>
             </div>
 
-            <NutritionTools
-              photoEnabled={capabilities.ai}
-              recipesEnabled={capabilities.nutrition}
-              onAddFood={() => setPendingMealAction('food')}
-              onPhoto={() => setPendingMealAction('photo')}
-              onSavedMeals={() => setSubTab('meals')}
-              onRecipes={() => setSubTab('recipes')}
-            />
+            <div style={{display:'flex',gap:16,padding:16}}>
+              <button type="button" onClick={() => setSubTab('meals')} style={{...mutedStyle,background:'none',border:0,minHeight:44,cursor:'pointer'}}>{nt('v2.tools.savedMeals')}</button>
+              {capabilities.nutrition && <button type="button" onClick={() => setSubTab('recipes')} style={{...mutedStyle,background:'none',border:0,minHeight:44,cursor:'pointer'}}>{nt('v2.tools.recipes')}</button>}
+            </div>
 
           </div>
         )
@@ -532,7 +524,11 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         key={`${nutritionModel.activePlan.id ?? 'none'}-${nutritionModel.activePlan.state}-${nutritionModel.activePlan.updatedAt ?? 'none'}`}
         activePlan={nutritionModel.activePlan}
         todayKey={todayKey}
-        onImportMeal={(mealType, dayKey) => setImportingMeal({ mealType, dayKey })}
+        onImportMeal={(mealType, dayKey) => {
+          if (dayKey !== todayKey) return
+          const planDay = getPlanDayData(dayKey)
+          setComposer({mealType, date: today, initialFoods: planDay ? getMealByKey(planDay.day,mealType) : []})
+        }}
         onOpenShoppingList={() => setShowShoppingModal(true)}
         onConfigurePlan={capabilities.nutrition ? onOpenProgramSettings : undefined}
         onRetry={() => void refreshNutrition()}

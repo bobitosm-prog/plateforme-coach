@@ -540,7 +540,8 @@
 .mealActionBar {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: minmax(44px, auto);
+  justify-content: end;
   gap: 5px;
 }
 

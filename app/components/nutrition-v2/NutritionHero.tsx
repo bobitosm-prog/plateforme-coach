@@ -107,9 +107,6 @@ export default function NutritionHero({
         <h1 id="nutrition-v2-title" className={styles.title}>{t('title')}</h1>
         <p className={styles.dateLabel}>{dateLabel}</p>
       </div>
-      {state !== 'loading' && state !== 'error' && <button type="button" className={styles.primaryButton} onClick={onAddMeal}>
-        <Plus size={17} aria-hidden="true" /> {state === 'empty' ? t('addFirstMeal') : t('addMeal')}
-      </button>}
     </div>
 
     {state === 'loading' && <div className={styles.heroState} aria-live="polite">

@@ -47,8 +47,6 @@ export default function NutritionV2({
         carbs: model.targets.data?.carbs ?? null,
         fat: model.targets.data?.fat ?? null,
       }}
-      onPhoto={model.tools.photoAnalysis ? onPhoto : undefined}
-      onBarcode={model.tools.barcode ? onBarcode : undefined}
     />
     <div className={styles.legacyContent} data-nutrition-legacy-content>
       {children}

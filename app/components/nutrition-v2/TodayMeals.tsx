@@ -118,6 +118,7 @@ export default function TodayMeals({
 }: TodayMealsProps) {
   const t = useTranslations('nutrition_tab.v2.todayMeals')
   const [openMeal, setOpenMeal] = useState<NutritionMealType | null>(null)
+  const [collapsedMeals, setCollapsedMeals] = useState<Partial<Record<NutritionMealType, boolean>>>({})
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
   const [activeLogId, setActiveLogId] = useState<string | null>(null)
   const [moreMenuMeal, setMoreMenuMeal] = useState<NutritionMealType | null>(null)
@@ -198,15 +199,6 @@ export default function TodayMeals({
       <span>{t('count', { count: MEAL_ORDER.length })}</span>
     </div>
 
-    <aside className={styles.nextAction} aria-labelledby="nutrition-next-action-title">
-      <div>
-        <span id="nutrition-next-action-title">{t('nextAction.title')}</span>
-        <strong>{t(`nextAction.${nextAction.kind}`, {
-          meal: nextAction.mealType ? t(`meal.${nextAction.mealType}`) : '',
-        })}</strong>
-      </div>
-      <button type="button" onClick={runNextAction}>{nextAction.kind === 'retry' ? t('retry') : t('open')}</button>
-    </aside>
 
     {actionError && <p className={styles.mealActionError} role="status">{actionError}</p>}
 
@@ -219,7 +211,7 @@ export default function TodayMeals({
     {model.meals.state !== 'loading' && model.meals.state !== 'error' && <div className={styles.mealList}>
       {MEAL_ORDER.map(type => {
         const meal = meals.find(entry => entry.type === type) ?? { type, planned: [], logged: [], completed: false, status: 'empty' as const }
-        const expanded = openMeal === type
+        const expanded = openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
         const primaryAction = getMealPrimaryAction(meal.status)
         const calories = sumLoggedCalories(meal.logged)
         const activeLog = meal.logged.find(log => log.id === activeLogId) ?? meal.logged[0] ?? null
@@ -237,7 +229,7 @@ export default function TodayMeals({
               className={styles.mealToggle}
               aria-expanded={expanded}
               aria-controls={`nutrition-meal-${type}`}
-              onClick={() => setOpenMeal(expanded ? null : type)}
+              onClick={() => { setOpenMeal(expanded ? null : type); setCollapsedMeals(current => ({...current, [type]: expanded})) }}
             >
               <span className={styles.mealText}>
                 <strong>{t(`meal.${type}`)}</strong>
@@ -245,8 +237,8 @@ export default function TodayMeals({
               </span>
               <ChevronDown size={18} aria-hidden="true" />
             </button>
-            <button type="button" className={styles.mealPrimaryAction} onClick={() => openOrAct(meal)}>
-              {t(`action.${primaryAction}`)}
+            <button type="button" className={styles.mealPrimaryAction} aria-label={`${t('food')} — ${t(`meal.${type}`)}`} onClick={() => onAddFood(type)}>
+              <Plus size={18} aria-hidden="true" />
             </button>
           </div>
 
@@ -282,7 +274,7 @@ export default function TodayMeals({
                   type="button"
                   className={styles.foodSelector}
                   aria-pressed={activeLog?.id === log.id}
-                  onClick={() => setActiveLogId(log.id)}
+                  onClick={() => { setActiveLogId(log.id); setEditingLogId(log.id); setQuantity(String(log.quantity_g || 100)) }}
                 >
                   <strong>{log.custom_name || log.food_name || t('foodFallback')}</strong>
                   <span>{log.quantity_g ?? 0} g · {Math.round(Number(log.calories) || 0)} kcal</span>
@@ -292,13 +284,6 @@ export default function TodayMeals({
 
             <div className={styles.mealActionArea} ref={moreMenuMeal === type ? moreMenuRef : undefined}>
               <div className={styles.mealActionBar} aria-label={t('mealActions')}>
-                {activeLog && <button type="button" aria-label={`${t('edit')} — ${activeLog.custom_name || activeLog.food_name || t('foodFallback')}`} onClick={() => {
-                  setEditingLogId(activeLog.id)
-                  setQuantity(String(activeLog.quantity_g || 100))
-                }}><Pencil size={15} aria-hidden="true" /><span>{t('compactEdit')}</span></button>}
-                <button type="button" aria-label={t('savedMeals')} onClick={() => onSavedMeals(type)}><FolderOpen size={15} aria-hidden="true" /><span>{t('savedMeals')}</span></button>
-                {meal.logged.length > 0 && <button type="button" aria-label={t('saveMeal')} onClick={() => onSaveMeal(meal)}><Save size={15} aria-hidden="true" /><span>{t('compactSave')}</span></button>}
-                {meal.logged.length > 0 && <button type="button" aria-label={t('copyMeal')} onClick={() => onCopyMeal(meal)}><Copy size={15} aria-hidden="true" /><span>{t('copyMeal')}</span></button>}
                 <button
                   type="button"
                   aria-label={t('moreActions')}
@@ -313,18 +298,10 @@ export default function TodayMeals({
               </div>
 
               {moreMenuMeal === type && <div id={`nutrition-meal-more-${type}`} className={styles.mealOverflowMenu} role="menu" aria-label={t('moreActions')} onKeyDown={navigateMenu}>
-                <button type="button" role="menuitem" onClick={() => {
-                  onAddFood(type)
-                  setMoreMenuMeal(null)
-                }}><Plus size={16} aria-hidden="true" />{t('food')}</button>
-                {meal.planned.length > 0 && isToday && <button type="button" role="menuitem" onClick={() => {
-                  onImportPlan(type)
-                  setMoreMenuMeal(null)
-                }}><Plus size={16} aria-hidden="true" />{t('fromPlan')}</button>}
-                {model.tools.photoAnalysis && <button type="button" role="menuitem" onClick={() => {
-                  onPhoto(type)
-                  setMoreMenuMeal(null)
-                }}><ImagePlus size={16} aria-hidden="true" />{t('photo')}</button>}
+                {meal.logged.length > 0 && <>
+                  <button type="button" role="menuitem" onClick={() => { onSaveMeal(meal); setMoreMenuMeal(null) }}><Save size={15}/>{t('saveMeal')}</button>
+                  <button type="button" role="menuitem" onClick={() => { onCopyMeal(meal); setMoreMenuMeal(null) }}><Copy size={15}/>{t('copyMeal')}</button>
+                </>}
                 {activeLog && <button type="button" role="menuitem" onClick={() => {
                   onReplaceFood(type, activeLog.id)
                   setMoreMenuMeal(null)
