@@ -126,6 +126,13 @@ try {
     execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
   }
   console.log('Record loads: idempotent migration, legacy values preserved and convention-specific upserts passed.')
+  stage='catalog security and variant review'
+  const catalogLock=readFileSync(new URL('../supabase/migrations/20260923033756_catalog_write_lockdown.sql',import.meta.url))
+  const catalogReview=readFileSync(new URL('../supabase/migrations/20260923033757_catalog_variant_review.sql',import.meta.url))
+  for(const input of [readFileSync(new URL('../tests/integration/catalog-security-fixture.sql',import.meta.url)),catalogLock,catalogLock,catalogReview,catalogReview,readFileSync(new URL('../tests/integration/catalog-security-assert.sql',import.meta.url))]) {
+    execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})
+  }
+  console.log('Catalog: browser writes/view bypass denied, invoker reads and server maintenance preserved, accidental grant defense, non-destructive variant review passed.')
   const editorMigration=readFileSync(new URL('../supabase/migrations/20260921160900_training_program_atomic_editor.sql',import.meta.url))
   for(const input of [readFileSync(new URL('../tests/integration/program-editor-fixture.sql',import.meta.url)),editorMigration,editorMigration]){
     execFileSync('docker',['exec','-i',database,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input,stdio:['pipe','pipe','pipe']})

@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     const rows = (historyRows ?? []) as HistoryRow[]
     const currentMode = rows.find(row => row.session_id === input.sessionId)?.load_mode ?? 'legacy'
-    if (currentMode === 'band') return NextResponse.json({skipped:true, reason:'non_comparable_load'})
+    if ((currentMode === 'band' || currentMode === 'unquantified')) return NextResponse.json({skipped:true, reason:'non_comparable_load'})
     const history = rows.filter(row => (row.load_mode ?? 'legacy') === currentMode).flatMap(row => historySet(row) ?? [])
     const current=history.filter(set=>set.sessionId===input.sessionId)
     if (rows.some(row => row.session_id === input.sessionId && (row.load_mode ?? 'legacy') !== currentMode))

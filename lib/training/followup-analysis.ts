@@ -88,7 +88,7 @@ export function analyzeTrainingContinuity(
         .sort((a, b) => b.created_at.localeCompare(a.created_at));
       const groups = new Map<string, FollowupSet[]>();
       for (const row of history) {
-        if ((row.load_mode ?? 'legacy') !== (history[0]?.load_mode ?? 'legacy') || row.load_mode === 'band') continue;
+        if ((row.load_mode ?? 'legacy') !== (history[0]?.load_mode ?? 'legacy') || (row.load_mode === 'band' || row.load_mode === 'unquantified')) continue;
         const sets = groups.get(row.session_id) ?? [];
         sets.push(row);
         groups.set(row.session_id, sets);

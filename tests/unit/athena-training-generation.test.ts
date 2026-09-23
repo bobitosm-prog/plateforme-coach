@@ -43,6 +43,14 @@ function anthropicResponse() {
 
 describe('Athena training generation contract', () => {
   afterEach(() => vi.unstubAllGlobals())
+  it('rejects ambiguous legacy names even for a gym program without a catalog', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => {
+      const response = await anthropicResponse().json()
+      response.content[0].input.days[0].exercises[0].custom_name = 'Rowing Barre'
+      return new Response(JSON.stringify(response), {status:200})
+    }))
+    await expect(generateProgram({...INPUT,equipment:'salle'},'synthetic-key')).rejects.toThrow(/non conforme/)
+  })
   it('rejects a provider response requiring undeclared equipment', async () => {
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => anthropicResponse()))
     await expect(generateProgram({ ...INPUT, equipment: 'maison : bandes élastiques' }, 'test-key', [

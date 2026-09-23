@@ -24,8 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
-  const ip = req.headers.get('x-forwarded-for') || 'unknown'
-  const rl = checkRateLimit(`exinstr:${ip}`, 2, 60000)
+  const rl = checkRateLimit(`exinstr:${user.id}`, 2, 60000)
   if (!rl.allowed) return NextResponse.json({ error: 'Trop de requetes' }, { status: 429 })
 
   if (!process.env.ANTHROPIC_API_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -35,12 +34,15 @@ export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  const { data: exercises } = await supabase
+  const { data: exercises, error: catalogError } = await supabase
     .from('exercises_db')
     .select('id, name, muscle_group, equipment')
     .is('instructions', null)
+    .is('catalog_review_note', null)
+    .is('canonical_exercise_id', null)
     .limit(20)
 
+  if (catalogError) return NextResponse.json({error:'Catalogue indisponible'}, {status:503})
   if (!exercises?.length) return NextResponse.json({ done: true, count: 0 })
 
   let processed = 0
@@ -63,10 +65,12 @@ Réponds UNIQUEMENT en JSON :
       const text = res.content[0].type === 'text' ? res.content[0].text : ''
       const clean = text.replace(/```json|```/g, '').trim()
       const parsed = JSON.parse(clean)
-      await supabase.from('exercises_db').update({
+      if (typeof parsed.instructions !== 'string' || typeof parsed.tips !== 'string') throw new Error('Invalid instruction format')
+      const {error: writeError} = await supabase.from('exercises_db').update({
         instructions: parsed.instructions,
         tips: parsed.tips,
       }).eq('id', ex.id)
+      if (writeError) throw writeError
       processed++
     } catch (e: any) {
       console.error('[generate-instructions] Failed for', ex.name, e.message)

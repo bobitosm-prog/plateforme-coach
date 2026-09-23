@@ -1,4 +1,5 @@
 import type { Equipment } from './equipment-normalize'
+import { requiresCatalogReview } from './catalog-review'
 
 export interface CatalogExercise { id: string; name: string; equipment?: string | null; equipment_legacy?: string | null }
 const fold = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
@@ -18,6 +19,7 @@ export function availableEquipment(value: string): Set<Equipment> {
  * Check the physical requirements too; "home friendly" is not "equipment available".
  */
 export function isCatalogExerciseCompatible(exercise: CatalogExercise, equipment: string): boolean {
+  if (requiresCatalogReview(exercise.name)) return false
   const available = availableEquipment(equipment)
   if (available.has('machine_gym')) return true
   if (!exercise.equipment || !available.has(exercise.equipment as Equipment)) return false
@@ -42,7 +44,7 @@ const HOME_MOVEMENTS = [
 
 export function generationCatalog(catalog: CatalogExercise[], equipment: string): CatalogExercise[] {
   const allowed = availableEquipment(equipment)
-  if (allowed.has('machine_gym')) return catalog
+  if (allowed.has('machine_gym')) return catalog.filter(ex => !requiresCatalogReview(ex.name))
   const filtered = catalog.filter(exercise => isCatalogExerciseCompatible(exercise, equipment))
   for (const [name, required] of HOME_MOVEMENTS) {
     if (allowed.has(required) && !filtered.some(ex => fold(ex.name) === fold(name))) filtered.push({ id: '', name, equipment: required })

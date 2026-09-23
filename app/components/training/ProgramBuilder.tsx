@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { canonicalExerciseName } from '@/lib/training/exercise-identity'
 import { RailOverlay } from '../ui/RailOverlay'
 import { toDateStr } from '../../../lib/schedule-utils'
 import { useTranslations, useLocale } from 'next-intl'
@@ -366,13 +367,9 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   async function loadVariants(exerciseName: string, dayIdx: number, exIdx: number) {
     const { data: current } = await supabase
       .from('exercises_catalog').select('variant_group')
-      .ilike('name', exerciseName).limit(1).maybeSingle()
+      .ilike('name', canonicalExerciseName(exerciseName)).limit(1).maybeSingle()
     if (!current?.variant_group) {
-      const baseName = exerciseName.split(' ').slice(0, 2).join(' ')
-      const { data: similar } = await supabase
-        .from('exercises_catalog').select('id, name, equipment, equipment_legacy, muscle_group')
-        .ilike('name', `%${baseName}%`).neq('name', exerciseName).limit(8)
-      setVariantPopup({ dayIdx, exIdx, variants: (similar || []).filter((v:any)=>isCatalogExerciseCompatible(v,profileProgramParams?.equipment||'salle')) })
+      setVariantPopup({dayIdx, exIdx, variants:[]})
       return
     }
     const { data: variants } = await supabase

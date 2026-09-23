@@ -489,7 +489,7 @@ function buildExerciseProgress(input: ProgressionViewModelInput, now: Date) {
   const grouped = new Map<string, { id: string | null; name: string; loadMode: string; days: Map<string, { value: number; weight: number; reps: number }> }>()
   for (const set of periodRows(completedSets(input), input.period ?? '30d', now)) {
     if (!set.exercise_name || !finiteNumber(set.weight) || !finiteNumber(set.reps) || set.weight <= 0 || set.reps <= 0) continue
-    if (set.load_mode === 'band' || Number(set.duration_seconds) > 0) continue
+    if ((set.load_mode === 'band' || set.load_mode === 'unquantified') || Number(set.duration_seconds) > 0) continue
     const key = `${set.exercise_id ?? set.exercise_name}:${set.load_mode ?? 'legacy'}`
     const e1rm = round(set.weight * (1 + set.reps / 30))
     if (!grouped.has(key)) grouped.set(key, { id: set.exercise_id ?? null, name: set.exercise_name, loadMode:set.load_mode ?? 'legacy', days: new Map() })
