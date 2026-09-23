@@ -15,10 +15,12 @@ struct PrototypeBrowser: View {
     @StateObject private var state = BrowserState()
 
     var body: some View {
-        NavigationStack {
             VStack(spacing: 0) {
-                Text("PROTOTYPE · SITE DE PRODUCTION").font(.caption.bold())
-                    .frame(maxWidth: .infinity).padding(8).background(.yellow.opacity(0.15))
+                HStack {
+                    Text("MoovX · TEST / PRODUCTION").font(.caption.bold())
+                    Spacer()
+                    Button("Fermer") { dismiss() }.frame(minWidth: 60, minHeight: 44)
+                }.padding(.horizontal, 12).background(.yellow.opacity(0.15))
                 if state.loading { ProgressView("Chargement de MoovX…").padding() }
                 if let error = state.error {
                     ContentUnavailableView {
@@ -34,14 +36,12 @@ struct PrototypeBrowser: View {
                     PrototypeWebView(state: state).id(state.reloadID)
                 }
             }
-            .navigationTitle("MoovX · test").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fermer") { dismiss() } } }
+            .background(Color(red: 0.045, green: 0.04, blue: 0.025))
             .alert("Navigation non disponible", isPresented: $state.blocked) {
                 Button("Compris", role: .cancel) {}
             } message: {
                 Text("Ce prototype reste sur app.moovx.ch. Les paiements et les connexions via un site externe ne sont pas encore intégrés.")
             }
-        }
     }
 }
 
@@ -55,6 +55,9 @@ struct PrototypeWebView: UIViewRepresentable {
         // Separate simulator app sandbox; no import of Safari credentials or JS bridge.
         configuration.websiteDataStore = .default()
         let view = WKWebView(frame: .zero, configuration: configuration)
+        view.isOpaque = false
+        view.backgroundColor = UIColor(red: 0.045, green: 0.04, blue: 0.025, alpha: 1)
+        view.scrollView.backgroundColor = view.backgroundColor
         view.navigationDelegate = context.coordinator
         view.allowsBackForwardNavigationGestures = true
         view.load(URLRequest(url: NavigationPolicy.entryURL))

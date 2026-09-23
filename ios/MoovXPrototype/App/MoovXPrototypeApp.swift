@@ -32,7 +32,7 @@ struct PrototypeHome: View {
             }
             .background(Color(red: 0.045, green: 0.04, blue: 0.025))
             .navigationTitle("Préparation iOS")
-            .sheet(isPresented: $showWeb) { PrototypeBrowser() }
+            .fullScreenCover(isPresented: $showWeb) { PrototypeBrowser() }
         }
         .preferredColorScheme(.dark)
     }

@@ -79,3 +79,26 @@ Référence API : [WKNavigationDelegate](https://developer.apple.com/documentati
 - Session authentifiée, navigation externe bloquée en interaction, erreurs
   réseau, accessibilité VoiceOver et reprise de séance restent à tester.
 - Ce jalon B0 ne ferme ni le lot B (connexion + séance), ni les phases 9/10.
+
+## Retours manuels et corrections d'affichage
+
+Les captures fournies par Marco le 23 septembre montrent la connexion du compte
+de test, la reprise de Full Body C à 0/15 puis 1/15 séries après Stop/Relancer.
+Entre deux captures, séance +44 s et repos -44 s : continuité cohérente à l'écran.
+Une capture ultérieure montre 2/15 séries. Aucune finalisation de séance n'a été
+demandée ; l'écriture finale en base et le mode hors réseau ne sont pas validés.
+Le brouillon reste conservé, aucune suppression de données n'est incluse ici.
+
+Corrections B0.1 : présentation native plein écran, une seule barre compacte
+avec avertissement production et bouton Fermer ; fond WebKit sombre ; storyboard
+de lancement sombre MoovX. Le storyboard traite le flash blanc, **pas la cause
+d'une lenteur de démarrage**. Le temps à froid et les premières images restent
+à mesurer sur appareil réel. Build et lancement simulateur vérifiés, accueil
+authentifié visible après réinstallation sans effacement des données.
+
+Correction web distincte : numéro de série en cours et nombre de séries validées
+séparés ; barre fondée sur `set.done`, pas sur l'index de la série active. Quatre
+tests de rendu React couvrent début, dernière série non validée, fin et libellés
+de techniques. Traductions FR/EN/DE. Ne modifie ni les séries, ni le calcul du
+volume, ni la persistance. Ce code web doit être livré séparément avant d'être
+visible dans le prototype connecté à la production.
