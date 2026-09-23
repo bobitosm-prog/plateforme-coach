@@ -145,3 +145,36 @@ Stripe live, pas de changement de tarif, commits isolés après tests runtime.
 Cet audit n'a ni clos les phases 9/10, ni exécuté leurs observations, ni modifié
 la production. Les tests 1 991/31 de la livraison nutrition précédente restent
 des preuves de ce lot, pas une certification générale App Store.
+
+## 7. Lot A1 — frontière de confiance du checkout plateforme
+
+Correctif du 23 septembre, limité à `/api/stripe/checkout` :
+
+- Session vérifiée par `getUser()` serveur avant tout accès privilégié.
+- Identifiant du bénéficiaire identique à l'utilisateur connecté ; rôles lus
+  en base, pas dans les métadonnées modifiables de l'utilisateur.
+- Offres client réservées au rôle client, offre coach au rôle coach.
+- Attribution coach conforme au repository existant : relation active unique,
+  source invitation/admin, identifiant correspondant. Refus des états ambigus.
+- Limite de cinq tentatives par minute et utilisateur, avec `Retry-After`.
+- Échec de lecture du destinataire : aucun checkout créé. Échec d'enregistrement
+  du paiement : aucune URL retournée et expiration Stripe tentée. Si elle échoue,
+  événement générique distinct dans les logs, sans détails fournisseur sensibles.
+- Tarifs, chemins de retour et destination Connect existants conservés.
+
+Preuves locales : 2 023 tests unitaires/composants passent, dont 32 tests de route
+(Stripe et accès Supabase simulés), TypeScript, parité i18n et build production OK ;
+requête HTTP réelle sans session refusée avec 401 sur Next.js local.
+La suite d'intégration DB existante passe ses 31 tests sur données synthétiques ;
+elle n'est pas un test de paiement Stripe de bout en bout. Aucun achat réel,
+aucun changement de schéma ni écriture dans les comptes de production.
+
+Limites explicites : limite de débit en mémoire par instance (pas distribuée),
+idempotence inter-requêtes à renforcer, checkout coach distinct et webhook à
+qualifier séparément. A1 ne certifie donc pas l'ensemble Billing et ne clôt pas A.
+Retour arrière applicatif : revert du commit A1, sans rollback de données ;
+cela réouvrirait la faille initiale et doit être une décision d'incident explicite.
+
+Compte Apple : capture fournie par Marco avec `Enrollment Pending` ; adhésion
+encore non confirmée. Cela n'empêche pas les travaux locaux, mais aucune
+distribution TestFlight ni signature de livraison n'est revendiquée.

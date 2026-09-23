@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { createSupabaseRouteClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { findActiveCoachForClient, resolveCoachRelationAuthority } from '@/lib/coach-relations/repository'
 
 function getServiceSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -30,12 +33,46 @@ const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: str
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, planId, coachId } = await req.json()
-    if (!clientId || !UUID_RE.test(clientId)) {
+    const auth = await createSupabaseRouteClient()
+    const { data: { user }, error: authError } = await auth.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const limit = checkRateLimit(`platform-checkout:${user.id}`, 5, 60_000)
+    if (!limit.allowed) return NextResponse.json({ error: 'Trop de tentatives. Réessaie plus tard.' }, {
+      status: 429, headers: { 'Retry-After': String(limit.retryAfter ?? 60) },
+    })
+    const body: unknown = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+    }
+    const { clientId, planId, coachId } = body as Record<string, unknown>
+    if (typeof clientId !== 'string' || !UUID_RE.test(clientId)) {
       return NextResponse.json({ error: 'clientId invalide' }, { status: 400 })
     }
+    // Never create a privileged payment for a client selected by the caller.
+    if (clientId !== user.id) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
-    const resolvedPlanId = planId || 'client_monthly'
+    const resolvedPlanId = planId ?? 'client_monthly'
+    if (typeof resolvedPlanId !== 'string' || !Object.hasOwn(PLAN_META, resolvedPlanId)) {
+      return NextResponse.json({ error: 'Offre invalide' }, { status: 400 })
+    }
+    const { data: profile, error: profileError } = await auth.from('profiles').select('role').eq('id', user.id).maybeSingle()
+    if (profileError) return NextResponse.json({ error: 'Vérification indisponible' }, { status: 503 })
+    if (!profile || (resolvedPlanId === 'coach_monthly' ? profile.role !== 'coach' : profile.role !== 'client')) {
+      return NextResponse.json({ error: 'Offre non autorisée' }, { status: 403 })
+    }
+    let verifiedCoachId: string | null = null
+    if (coachId != null && coachId !== 'platform') {
+      if (typeof coachId !== 'string' || !UUID_RE.test(coachId)) return NextResponse.json({ error: 'Coach invalide' }, { status: 400 })
+      const lookup = await findActiveCoachForClient(auth, user.id)
+      if (lookup.kind === 'error' || lookup.kind === 'multiple_active') {
+        return NextResponse.json({ error: 'Vérification indisponible' }, { status: 503 })
+      }
+      const authority = resolveCoachRelationAuthority(lookup)
+      if (!authority.isAuthoritative || authority.relation?.coach_id !== coachId) {
+        return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      }
+      verifiedCoachId = authority.relation.coach_id
+    }
 
     // Check Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -45,7 +82,6 @@ export async function POST(req: NextRequest) {
 
     // Resolve plan
     const plan = PLAN_META[resolvedPlanId]
-    if (!plan) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 })
 
     // Resolve price ID — static access, no dynamic process.env[key]
     const priceId = PRICE_MAP[resolvedPlanId]
@@ -58,11 +94,13 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.moovx.ch'
 
     // Get the platform owner's Stripe Connect account for receiving payments
-    const { data: ownerProfile } = await getServiceSupabase()
+    const admin = getServiceSupabase()
+    const { data: ownerProfile, error: ownerError } = await admin
       .from('profiles')
       .select('stripe_account_id, stripe_onboarding_complete')
       .eq('email', OWNER_EMAIL)
       .maybeSingle()
+    if (ownerError) return NextResponse.json({ error: 'Paiement temporairement indisponible' }, { status: 503 })
     const ownerStripeAccountId = (ownerProfile?.stripe_account_id && ownerProfile?.stripe_onboarding_complete) ? ownerProfile.stripe_account_id : null
 
     // Determine redirect based on role
@@ -76,7 +114,7 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}${successPath}`,
       cancel_url: `${baseUrl}${cancelPath}`,
-      metadata: { clientId, planId: resolvedPlanId, coachId: coachId || 'platform', subType: plan.subType },
+      metadata: { clientId: user.id, planId: resolvedPlanId, coachId: verifiedCoachId || 'platform', subType: plan.subType },
     }
 
     // For subscription mode, set subscription_data
@@ -104,8 +142,8 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey })
 
     // Only insert payment record AFTER Stripe session is successfully created
-    await getServiceSupabase().from('payments').insert({
-      coach_id: coachId && coachId !== 'platform' ? coachId : null,
+    const { error: paymentError } = await admin.from('payments').insert({
+      coach_id: verifiedCoachId,
       client_id: clientId,
       stripe_checkout_session_id: session.id,
       amount: plan.amount,
@@ -113,11 +151,18 @@ export async function POST(req: NextRequest) {
       description: plan.description,
       status: 'pending',
     })
+    if (paymentError) {
+      // No redirect to an untracked checkout. Best-effort expiration, no raw provider errors.
+      await stripe.checkout.sessions.expire(session.id).catch(() => {
+        console.error('[stripe/checkout] UNTRACKED_CHECKOUT_EXPIRATION_FAILED')
+      })
+      console.error('[stripe/checkout] PAYMENT_RECORD_FAILED')
+      return NextResponse.json({ error: 'Paiement temporairement indisponible' }, { status: 503 })
+    }
 
     return NextResponse.json({ url: session.url })
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Checkout error'
-    console.error('[stripe/checkout] ERROR:', { message })
+  } catch {
+    console.error('[stripe/checkout] CHECKOUT_FAILED')
     return NextResponse.json({ error: 'Erreur lors de la création du paiement' }, { status: 500 })
   }
 }
