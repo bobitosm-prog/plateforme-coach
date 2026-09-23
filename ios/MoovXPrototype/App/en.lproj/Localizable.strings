@@ -1,0 +1,4 @@
+"cameraDeniedTitle" = "Camera access disabled";
+"cameraDeniedMessage" = "Allow camera access for MoovX Test in Settings, then try again.";
+"cameraSettings" = "Open Settings";
+"cameraCancel" = "Cancel";
