@@ -79,8 +79,8 @@ export function resolveSessionType(nameOrType: string | null | undefined): Sessi
   }
 
   // Partial match — check if any old key is contained in the input
-  for (const [oldKey, newKey] of Object.entries(OLD_TO_NEW)) {
-    if (norm.includes(oldKey)) {
+  for (const [oldKey, newKey] of Object.entries(OLD_TO_NEW).sort(([a], [b]) => b.length - a.length)) {
+    if (` ${norm.replace(/[^a-z0-9]+/g, ' ')} `.includes(` ${oldKey.replace(/[^a-z0-9]+/g, ' ')} `)) {
       return SESSION_TYPES.find(t => t.key === newKey)!
     }
   }
