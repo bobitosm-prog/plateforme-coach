@@ -12,9 +12,10 @@ interface BarcodeScannerProps {
   onClose: () => void
   defaultMealType?: string
   continuousMode?: boolean // "Scanne ton frigo" — scan multiple items, auto-save to preferences
+  onSelected?: (food: Record<string, any>) => void // Draft-only: never persist before meal confirmation.
 }
 
-export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType, continuousMode }: BarcodeScannerProps) {
+export default function BarcodeScanner({ supabase, userId, onProductAdded, onClose, defaultMealType, continuousMode, onSelected }: BarcodeScannerProps) {
   const scannerRef = useRef<any>(null)
   const [scanning, setScanning] = useState(false)
   const [manualCode, setManualCode] = useState('')
@@ -100,13 +101,19 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   }
 
   async function addToMeal() {
-    if (!product || saving) return
+    if (!product || saving || !Number.isFinite(quantity) || quantity <= 0) return
     setSaving(true)
     const p = product.per_100g
     const cal = Math.round((p.calories / 100) * quantity)
     const prot = Math.round((p.proteins / 100) * quantity * 10) / 10
     const gluc = Math.round((p.carbs / 100) * quantity * 10) / 10
     const lip = Math.round((p.fat / 100) * quantity * 10) / 10
+
+    if (onSelected) {
+      onSelected({name: `${product.name}${product.brand ? ` (${product.brand})` : ''}`, quantity_g: quantity, calories: cal, protein: prot, carbs: gluc, fat: lip})
+      setSaving(false)
+      return
+    }
 
     // Save to custom_foods
     if (!product._existingId) {
@@ -226,7 +233,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
           </div>
 
           {/* Meal type */}
-          <div style={{ display: 'flex', gap: 6 }}>
+          {!onSelected && <div style={{ display: 'flex', gap: 6 }}>
             {[['petit_dejeuner', 'Matin'], ['dejeuner', 'Midi'], ['collation', 'Collation'], ['diner', 'Dîner']].map(([id, label]) => (
               <button key={id} onClick={() => setMealType(id)} style={{
                 flex: 1, padding: '8px 4px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
@@ -238,11 +245,11 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
                 color: mealType === id ? colors.gold : colors.textDim,
               }}>{label}</button>
             ))}
-          </div>
+          </div>}
 
           {/* Actions */}
           <button onClick={addToMeal} disabled={saving} style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${colors.gold}, #D4AF37)`, color: '#000', fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: saving ? 0.6 : 1 }}>
-            {saving ? 'Ajout...' : continuousMode ? '✓ Ajouter et scanner suivant' : 'Ajouter au repas'}
+            {saving ? 'Ajout...' : onSelected ? 'Ajouter à la sélection' : continuousMode ? '✓ Ajouter et scanner suivant' : 'Ajouter au repas'}
           </button>
           <button onClick={() => { setProduct(null); setError(''); startCamera() }} style={{ width: '100%', padding: '12px', borderRadius: 14, border: `1px solid ${colors.divider}`, background: 'transparent', color: colors.textMuted, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
             Scanner un autre produit

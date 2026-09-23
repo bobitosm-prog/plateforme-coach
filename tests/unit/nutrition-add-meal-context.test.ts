@@ -52,7 +52,7 @@ describe('Nutrition global Add Meal context', () => {
   })
 
   it('propagates breakfast, lunch, snack, and dinner to the write path', () => {
-    expect(tab).toContain('setShowFoodSearch(mealType)')
+    expect(tab).toContain('setComposer({mealType, date: selectedDate})')
     expect(foodSearch).toContain('meal_type: mealType')
     for (const value of ['petit_dejeuner', 'dejeuner', 'collation', 'diner']) {
       expect(MEAL_CONTEXT_OPTIONS.some(option => option.value === value)).toBe(true)
@@ -60,8 +60,8 @@ describe('Nutrition global Add Meal context', () => {
   })
 
   it('keeps existing row actions contextual and propagates photo context', () => {
-    expect(tab).toContain('onAddFood={mealType => setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])}')
-    expect(tab).toContain('setPhotoMealTarget(mealType)')
+    expect(tab).toContain('onAddFood={mealType => setComposer({mealType: NUTRITION_MEAL_TO_KEY[mealType], date: selectedDate})}')
+    expect(tab).toContain('date={composer.date}')
     expect(tab).toContain("setPendingMealAction('photo')")
     expect(todayMeals).toContain('onAddFood(type)')
   })

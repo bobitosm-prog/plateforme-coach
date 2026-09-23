@@ -168,11 +168,11 @@ describe('Nutrition V2 compact journal integration', () => {
     expect(styles).not.toContain('.todayMeals { overflow-x: auto')
   })
 
-  it('keeps five visible actions in one fixed row and moves secondary actions into an accessible menu', () => {
+  it('keeps one add action and moves secondary actions into an accessible menu', () => {
     expect(component).toContain('className={styles.mealActionBar}')
-    expect(component).toContain("t('compactEdit')")
-    expect(component).toContain("t('savedMeals')")
-    expect(component).toContain("t('compactSave')")
+    expect(component).toContain('onAddFood(type)')
+    expect(component).not.toContain("t('compactEdit')")
+    expect(component).toContain("t('saveMeal')")
     expect(component).toContain("t('copyMeal')")
     expect(component).toContain("t('more')")
     expect(component).toContain('aria-haspopup="menu"')
@@ -181,7 +181,7 @@ describe('Nutrition V2 compact journal integration', () => {
     expect(component).toContain('role="menuitem"')
     expect(component).toContain("event.key !== 'Escape'")
     expect(component).toContain("document.addEventListener('pointerdown'")
-    expect(styles).toMatch(/\.mealActionBar\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\);/)
+    expect(styles).toMatch(/\.mealActionBar\s*\{[\s\S]*?justify-content:\s*end;/)
     expect(styles.match(/\.mealActionBar\s*\{[\s\S]*?\}/)?.[0]).not.toContain('overflow-x')
     expect(styles).toMatch(/\.mealActionBar button\s*\{[\s\S]*?min-height:\s*44px;/)
     expect(styles).toContain('.mealOverflowMenu')
@@ -193,7 +193,7 @@ describe('Nutrition V2 compact journal integration', () => {
     expect(component).toContain('aria-pressed={activeLog?.id === log.id}')
     expect(component).toContain('onReplaceFood(type, activeLog.id)')
     expect(component).toContain('onDeleteFood(activeLog.id)')
-    for (const label of ['food', 'fromPlan', 'photo', 'replace', 'clearMeal', 'delete']) {
+    for (const label of ['food', 'replace', 'clearMeal', 'delete']) {
       expect(component).toContain(`t('${label}')`)
     }
   })
