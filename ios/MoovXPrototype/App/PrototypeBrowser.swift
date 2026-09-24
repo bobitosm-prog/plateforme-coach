@@ -79,7 +79,9 @@ struct PrototypeWebView: UIViewRepresentable {
         """
         configuration.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         configuration.userContentController.add(context.coordinator, name: "moovxCameraDenied")
-        // Separate app sandbox; no Safari credentials. The bridge only reports a denied camera tap.
+        configuration.userContentController.add(context.coordinator, name: "moovxWorkoutActive")
+        // Separate app sandbox; no Safari credentials. Messages contain only
+        // camera permission or workout visibility state, never workout data.
         configuration.websiteDataStore = .default()
         let view = WKWebView(frame: .zero, configuration: configuration)
         view.isOpaque = false
@@ -98,7 +100,9 @@ struct PrototypeWebView: UIViewRepresentable {
         uiView.stopLoading()
         uiView.navigationDelegate = nil
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxCameraDenied")
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWorkoutActive")
         coordinator.stopObservingCameraPermission()
+        coordinator.stopObservingWorkoutScreenAwake()
     }
 
     private static var cameraAccessDenied: Bool {
@@ -110,12 +114,18 @@ struct PrototypeWebView: UIViewRepresentable {
         let state: BrowserState
         private weak var webView: WKWebView?
         private var cameraObserver: NSObjectProtocol?
+        private var inactiveObserver: NSObjectProtocol?
+        private var workoutActive = false
         init(state: BrowserState) { self.state = state }
 
         func observeCameraPermission(on webView: WKWebView) {
             self.webView = webView
             cameraObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
                 self?.refreshCameraPermission()
+                self?.refreshWorkoutScreenAwake()
+            }
+            inactiveObserver = NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
+                UIApplication.shared.isIdleTimerDisabled = false
             }
         }
 
@@ -125,12 +135,32 @@ struct PrototypeWebView: UIViewRepresentable {
             webView = nil
         }
 
+        func stopObservingWorkoutScreenAwake() {
+            if let inactiveObserver { NotificationCenter.default.removeObserver(inactiveObserver) }
+            inactiveObserver = nil
+            workoutActive = false
+            refreshWorkoutScreenAwake()
+        }
+
+        private func refreshWorkoutScreenAwake() {
+            UIApplication.shared.isIdleTimerDisabled = workoutActive && UIApplication.shared.applicationState == .active
+        }
+
         private func refreshCameraPermission() {
             let denied = PrototypeWebView.cameraAccessDenied
             webView?.evaluateJavaScript("window.__moovxCameraDenied = \(denied ? "true" : "false")")
         }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            if message.name == "moovxWorkoutActive" {
+                guard message.frameInfo.isMainFrame,
+                      message.frameInfo.securityOrigin.protocol == "https",
+                      message.frameInfo.securityOrigin.host == "app.moovx.ch",
+                      let active = message.body as? Bool else { return }
+                workoutActive = active
+                refreshWorkoutScreenAwake()
+                return
+            }
             guard message.name == "moovxCameraDenied", message.frameInfo.isMainFrame,
                   message.frameInfo.securityOrigin.host == "app.moovx.ch",
                   PrototypeWebView.cameraAccessDenied else { return }
@@ -148,6 +178,11 @@ struct PrototypeWebView: UIViewRepresentable {
             decisionHandler(.allow)
         }
 
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            workoutActive = false
+            refreshWorkoutScreenAwake()
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             state.loading = false
             refreshCameraPermission()
@@ -162,6 +197,8 @@ struct PrototypeWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            workoutActive = false
+            refreshWorkoutScreenAwake()
             state.loading = false
             state.error = "Le contenu a été interrompu. Recharge la page ; aucune sauvegarde hors ligne n’est garantie."
         }
