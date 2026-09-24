@@ -47,6 +47,7 @@
     PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype;
     PRODUCT_NAME = "$(TARGET_NAME)";
     GENERATE_INFOPLIST_FILE = YES;
+    ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
     INFOPLIST_KEY_CFBundleDisplayName = "MoovX Test";
     INFOPLIST_KEY_NSCameraUsageDescription = "MoovX utilise la caméra pour photographier un repas et scanner un code-barres quand vous choisissez ces fonctions.";
     INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -66,6 +67,7 @@
     PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype;
     PRODUCT_NAME = "$(TARGET_NAME)";
     GENERATE_INFOPLIST_FILE = YES;
+    ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
     INFOPLIST_KEY_CFBundleDisplayName = "MoovX Test";
     INFOPLIST_KEY_NSCameraUsageDescription = "MoovX utilise la caméra pour photographier un repas et scanner un code-barres quand vous choisissez ces fonctions.";
     INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
