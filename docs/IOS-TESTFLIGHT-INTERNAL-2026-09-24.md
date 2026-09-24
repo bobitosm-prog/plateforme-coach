@@ -62,11 +62,13 @@ archives et `.ipa` générés restent hors du dépôt.
 - Groupe « Marco — bêta interne » créé, distribution automatique désactivée.
   Un seul testeur (Marco), un seul build ; invitation affichée comme envoyée.
   Aucun groupe externe, aucune soumission à l'App Store.
+- Marco confirme avoir installé la version TestFlight sur son iPhone, l'avoir
+  ouverte et être connecté avec son compte de test. Le lancement de la version
+  distribuée est donc validé manuellement ; aucun autre parcours n'est déduit
+  de cette confirmation.
 
 ## Reste à valider
 
-- Marco doit accepter l'invitation dans TestFlight, installer puis lancer cette
-  **version distribuée**, qui n'a pas encore été exécutée sur appareil.
 - Le parcours photo d'un vrai repas est reporté à la disponibilité d'un repas.
   Le retour après réseau ne prouve pas la conservation d'un brouillon non sauvé.
 - La conformité à la règle Apple 4.2, la stratégie d'abonnements iOS, la
