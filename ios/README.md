@@ -1,4 +1,4 @@
-# MoovX — prototype simulateur (B0)
+# MoovX — prototype iOS (B0)
 
 Prototype technique, **pas un candidat App Store**. Aucune modification du site,
 du schéma DB, des contrats API ni des droits d'abonnement. Pas de secret embarqué.
@@ -16,8 +16,10 @@ L'Apple Watch nécessitera sa propre intégration ; rien ici ne l'implémente.
 
 Ouvrir `MoovXPrototype/MoovXPrototype.xcodeproj` dans Xcode, sélectionner le scheme
 MoovXPrototype et un iPhone simulé. Aucun compte Apple n'est nécessaire pour ce
-build simulateur sans signature. La cible ne permet volontairement ni archive
-de distribution ni installation sur appareil physique.
+build Debug simulateur sans signature. La configuration Release permet désormais
+une archive iPhone, mais ce prototype n'est pas un candidat App Store. La
+préparation TestFlight interne est décrite dans
+[`docs/IOS-TESTFLIGHT-INTERNAL-2026-09-24.md`](../docs/IOS-TESTFLIGHT-INTERNAL-2026-09-24.md).
 
 Depuis la racine du dépôt :
 
@@ -41,29 +43,33 @@ contrôle visuel anonyme ; aucun identifiant ni jeton n'est transmis.
 ## Frontières et limites
 
 - Navigation WebKit limitée à HTTPS app.moovx.ch, sans port alternatif,
-  identifiants URL, popup ou pont JavaScript natif. TLS standard, aucune exception ATS.
+  identifiants URL ni popup. Un pont JavaScript natif limité au signal de caméra
+  refusée est présent. TLS standard, aucune exception ATS.
 - Ce filtre de navigation n'est pas un pare-feu : le site conserve ses appels
   réseau et sous-ressources existants. Il ne bloque pas ses requêtes API Stripe.
   Ne pas tester d'achat réel. Aucun flux IAP/StoreKit n'est implémenté.
 - Sessions WebKit dans le sandbox de l'app ; aucun cookie Safari importé.
-  Connexion, reconnexion, déconnexion et isolation entre comptes non qualifiées.
+  Connexion et reprise après coupure réseau vérifiées sur le compte de test ;
+  déconnexion et isolation entre comptes non qualifiées.
 - OAuth externe bloqué explicitement ; retours email et universal links à construire.
-- Aucun droit caméra, santé, microphone, notifications ou stockage partagé ajouté.
+- Le droit caméra est déclaré pour la photo de repas et le code-barres ; aucun
+  accès Santé, microphone, notifications ou stockage partagé n'est ajouté.
 - Chargement, erreur réseau et interruption du processus WebKit présentés dans
   l'interface. Pas de promesse de sauvegarde/reprise ou fonctionnement hors ligne.
-- Pas d'icône définitive, de traductions complètes, de fiche de confidentialité,
+- Icône de test issue de l'artwork web 512 × 512, pas de source native définitive
+  1024 × 1024 ; pas de traductions complètes, de fiche de confidentialité,
   de paiement natif ou de cible Watch. Pas de publication automatique.
 
-## Validation 4 axes et suite
+## Validation initiale B0 (historique) et suite
 
 1. Contrat : cible simulateur et compilation Swift ; API/DB inchangées.
 2. Automatisation : 14 cas de politique URL, dont domaines trompeurs et Stripe.
 3. Runtime : lancer l'accueil puis la page de connexion anonyme sur iOS 27 ;
    les parcours authentifiés/séances et l'appareil réel sont un lot suivant.
-4. Sécurité : pas de secrets, pas d'achat, pas d'accès natif sensible ; retour
+4. Sécurité : pas de secrets, pas d'achat, pas d'accès natif sensible à ce stade ; retour
    arrière par retrait du dossier ios uniquement. Production web non modifiée.
 
-Avant TestFlight : compte Apple actif, architecture décidée, auth + universal
+Avant TestFlight externe ou App Store : compte Apple actif, architecture décidée, auth + universal
 links, tests interruption/réseau/perte de réponse, achats Apple/restauration,
 confidentialité et consentements, caméra et accessibilité sur appareil réel.
 
