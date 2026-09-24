@@ -502,6 +502,15 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     return () => clearTimeout(t)
   }, [restDone])
   useEffect(() => {
+    // The iOS shell owns the system idle timer; the web wake lock below remains
+    // the browser fallback. Only an open workout may keep the screen awake.
+    const handler = (window as Window & { webkit?: { messageHandlers?: { moovxWorkoutActive?: { postMessage: (active: boolean) => void } } } })
+      .webkit?.messageHandlers?.moovxWorkoutActive
+    if (!handler) return
+    try { handler.postMessage(true) } catch { return }
+    return () => { try { handler.postMessage(false) } catch {} }
+  }, [])
+  useEffect(() => {
     let wl: any = null
     let videoEl: HTMLVideoElement | null = null
     const tryWL = async () => {
