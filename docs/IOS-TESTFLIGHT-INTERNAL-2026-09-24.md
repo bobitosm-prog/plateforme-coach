@@ -70,6 +70,10 @@ archives et `.ipa` générés restent hors du dépôt.
   déverrouillage de l'iPhone, l'application s'affiche de nouveau. Cela ne
   démontre pas la conservation d'une saisie non enregistrée ni la reprise d'une
   séance active.
+- Après fermeture complète de l'application depuis le sélecteur iOS et nouveau
+  lancement depuis son icône, Marco confirme que le compte de test est encore
+  connecté. La session authentifiée survit donc à cette fermeture dans le cas
+  testé ; les brouillons non sauvegardés restent hors de cette validation.
 
 ## Reste à valider
 
