@@ -66,6 +66,10 @@ archives et `.ipa` générés restent hors du dépôt.
   ouverte et être connecté avec son compte de test. Le lancement de la version
   distribuée est donc validé manuellement ; aucun autre parcours n'est déduit
   de cette confirmation.
+- Test manuel supplémentaire : depuis Nutrition, après verrouillage puis
+  déverrouillage de l'iPhone, l'application s'affiche de nouveau. Cela ne
+  démontre pas la conservation d'une saisie non enregistrée ni la reprise d'une
+  séance active.
 
 ## Reste à valider
 
