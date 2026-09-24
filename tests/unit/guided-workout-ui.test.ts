@@ -28,6 +28,14 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('keeps the native screen awake only while the workout is open',()=>{
+    const postMessage=vi.fn()
+    vi.stubGlobal('webkit',{messageHandlers:{moovxWorkoutActive:{postMessage}}})
+    const view=start([{name:'Squat',sets:1,reps:10}])
+    expect(postMessage).toHaveBeenCalledWith(true)
+    view.unmount()
+    expect(postMessage).toHaveBeenLastCalledWith(false)
+  })
   it('executes rest-pause only after the final main set, resumes and saves separate mini-sets',async()=>{
     const view=start([{name:'Curl',sets:3,reps:10,rest:90,technique:'restpause',technique_details:'2,15'}])
     await screen.findByRole('region',{name:'REST-PAUSE — après la dernière série uniquement'})
