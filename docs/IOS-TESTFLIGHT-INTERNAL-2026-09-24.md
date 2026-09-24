@@ -45,15 +45,27 @@ archives et `.ipa` générés restent hors du dépôt.
    créée ; export `.ipa` signé avec certificat Apple
    Distribution géré par Apple, profil App Store et droit bêta actif.
 4. Sécurité : `codesign --verify --deep --strict` réussit sur le `.ipa` extrait ;
-   `get-task-allow=false`. L'export est limité à TestFlight interne. Aucun
-   téléversement App Store Connect ni achat de test effectué.
+   `get-task-allow=false`. L'export est limité à TestFlight interne. Aucun achat
+   de test effectué.
 
-## Reste avant une bêta utilisable
+## Distribution interne effective
 
-- Vérifier ou créer la fiche `ch.moovx.app` dans App Store Connect, puis
-  téléverser explicitement le `.ipa` interne et attendre le traitement Apple.
-- Confirmer les informations TestFlight demandées et ajouter seulement Marco
-  au groupe de test interne ; tester l'installation et le lancement de cette
+- Fiche MoovX existante dans App Store Connect, identifiant `ch.moovx.app`
+  vérifié. Téléversement du build `0.1.0 (1)` réussi le 24 septembre ; traitement
+  Apple terminé, indicateur « Internes », état « En cours de test ».
+- Déclaration de chiffrement du build : aucun algorithme propriétaire ou
+  standard supplémentaire au chiffrement fourni par iOS. Le binaire SwiftUI /
+  WKWebView ne lie aucune bibliothèque crypto tierce ; il charge le site en
+  HTTPS via WebKit. Apple indique qu'un usage limité au chiffrement du système
+  ne nécessite pas de documentation d'export dans App Store Connect. Réexaminer
+  cette réponse si le binaire ou ses dépendances changent.
+- Groupe « Marco — bêta interne » créé, distribution automatique désactivée.
+  Un seul testeur (Marco), un seul build ; invitation affichée comme envoyée.
+  Aucun groupe externe, aucune soumission à l'App Store.
+
+## Reste à valider
+
+- Marco doit accepter l'invitation dans TestFlight, installer puis lancer cette
   **version distribuée**, qui n'a pas encore été exécutée sur appareil.
 - Le parcours photo d'un vrai repas est reporté à la disponibilité d'un repas.
   Le retour après réseau ne prouve pas la conservation d'un brouillon non sauvé.
@@ -62,4 +74,5 @@ archives et `.ipa` générés restent hors du dépôt.
   publication App Store. Ce lot ne les déclare pas résolus.
 
 Références : [distribution Xcode](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases),
+[chiffrement et documentation d'export](https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption/),
 [règles App Review](https://developer.apple.com/app-store/review/guidelines/).
