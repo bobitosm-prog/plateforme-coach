@@ -3,16 +3,17 @@ import * as React from 'react'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import messages from '@/messages/fr.json'
+const followupEnabled = vi.hoisted(() => ({ value: false }))
 vi.mock('next-intl',()=>({useLocale:()=> 'fr',useTranslations:(namespace:string)=> (key:string,values:Record<string,unknown>={})=>{
   const obj=namespace.split('.').reduce((o:any,k)=>o?.[k],messages)
   return String(obj?.[key]??key).replace(/\{(\w+)\}/g,(_,k)=>String(values[k]??k))
 }}))
 vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({auth:{getUser:async()=>({data:{user:null}})}})}))
-vi.mock('@/app/hooks/useTrainingFollowup',()=>({useTrainingFollowup:()=>({preferences:{enabled:false,advanced_techniques:false}})}))
+vi.mock('@/app/hooks/useTrainingFollowup',()=>({useTrainingFollowup:()=>({preferences:{enabled:followupEnabled.value,advanced_techniques:followupEnabled.value}})}))
 vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},playBeep:()=>{},playWarningTick:()=>{},vibrateDevice:()=>{},scheduleRestPeriodSounds:()=>[],cancelScheduledSounds:()=>{}}))
 import WorkoutSession from '@/app/components/WorkoutSession'
 import { createActiveWorkoutDraft, type ActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
-beforeEach(()=>{vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
+beforeEach(()=>{followupEnabled.value=false;vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const start=(exercises:unknown[],existing?:ActiveWorkoutDraft)=>{
   const draft=existing??createActiveWorkoutDraft({userId:'synthetic',programSource:'personal',programId:null,sessionName:'Test',sessionKey:'test',exercises})
@@ -100,6 +101,45 @@ describe('real WorkoutSession runtime',()=>{
     expect(view.saved().currentExerciseIndex).toBe(0)
     expect(Date.parse(view.saved().restTimerEndAt!)-Date.now()).toBeGreaterThan(58000)
     expect(view.saved().exercises[1].technique).toBe('superset')
+  })
+  it('starts a biset during the workout and persists its A/B flow',async()=>{
+    followupEnabled.value=true
+    const view=start([{name:'Raise',sets:1,reps:10},{name:'Press',sets:1,reps:10}])
+    fireEvent.click(screen.getByText('Modifier la technique'))
+    fireEvent.change(screen.getByLabelText('Créer un biset pour cette séance'),{target:{value:'1'}})
+    expect(screen.getByText('A · Raise')).toBeTruthy()
+    expect(screen.getByText('B · Press')).toBeTruthy()
+    const saved=view.saved();view.unmount()
+    const resumed=start([],saved)
+    expect(resumed.saved().exercises.map(exercise=>exercise.technique)).toEqual(['superset','superset'])
+    log('20')
+    expect(resumed.saved().currentExerciseIndex).toBe(1)
+    expect(resumed.saved().restTimerEndAt).toBeNull()
+  })
+  it('explains why a single exercise cannot form a biset yet',()=>{
+    followupEnabled.value=true
+    start([{name:'Raise',sets:3,reps:10}])
+    fireEvent.click(screen.getByText('Modifier la technique'))
+    expect((screen.getByLabelText(/Créer un biset pour cette séance/) as HTMLSelectElement).disabled).toBe(true)
+    expect(screen.getByText(/Ajoute d’abord un autre exercice non commencé/)).toBeTruthy()
+  })
+  it('adds an extra set mid-session and keeps it after reopening the draft',async()=>{
+    const view=start([{name:'Raise',sets:1,reps:10}])
+    log('10')
+    fireEvent.click(screen.getByRole('button',{name:'+ Ajouter une série'}))
+    expect(view.saved().exercises[0].sets).toHaveLength(2)
+    expect(view.saved().currentSetIndex).toBe(1)
+    const saved=view.saved();view.unmount()
+    const resumed=start([],saved)
+    expect(screen.getAllByText('Série 2 sur 2').length).toBeGreaterThan(0)
+    log('12')
+    expect(resumed.saved().exercises[0].sets.every(set=>set.done)).toBe(true)
+  })
+  it('adds an extra round to both members of a running biset',async()=>{
+    const view=start([{name:'A',sets:1,reps:10,technique:'superset',technique_details:'B'},{name:'B',sets:1,reps:10}])
+    fireEvent.click(screen.getByRole('button',{name:'+ Ajouter une série aux deux exercices'}))
+    expect(view.saved().exercises.map(exercise=>exercise.sets.length)).toEqual([2,2])
+    expect(view.saved().exercises.map(exercise=>exercise.targetSets)).toEqual([2,2])
   })
   it('shows the selected partner explicitly and repairs an orphaned biset without changing the program',async()=>{
     const view=start([{name:'Élévations frontales poulie',sets:1,reps:10,technique:'superset',technique_details:'Oiseau / Reverse Fly'},{name:'Reverse pec deck',sets:1,reps:10}])

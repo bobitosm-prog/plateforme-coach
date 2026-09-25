@@ -37,6 +37,29 @@ export function bisetFor(exercises: readonly Prescription[], index: number): Bis
   return bisetPairs(exercises).find(pair => pair.a === index || pair.b === index)
 }
 
+/** Pair two unstarted exercises in this workout; the saved program is untouched. */
+export function startWorkoutBiset(
+  exercises: readonly WorkoutDraftExercise[],
+  index: number,
+  partnerIndex: number,
+): WorkoutDraftExercise[] | null {
+  const exercise = exercises[index], partner = exercises[partnerIndex]
+  if (!exercise || !partner || index === partnerIndex || exercise.technique || partner.technique) return null
+  if (exercise.targetDurationSeconds || partner.targetDurationSeconds || exercise.targetSets !== partner.targetSets) return null
+  if (exercise.sets.some(set => set.done) || partner.sets.some(set => set.done)) return null
+  const updated = exercises.map((row, i) => i === index
+    ? { ...row, technique: 'superset', techniqueDetails: partner.name }
+    : i === partnerIndex
+      ? { ...row, technique: 'superset', techniqueDetails: exercise.name }
+      : row)
+  const pair = bisetFor(updated, index)
+  return pair && [pair.a, pair.b].includes(partnerIndex) ? updated : null
+}
+
+export function workoutBisetSetupOptions(exercises: readonly WorkoutDraftExercise[], index: number): number[] {
+  return exercises.flatMap((_, partnerIndex) => startWorkoutBiset(exercises, index, partnerIndex) ? [partnerIndex] : [])
+}
+
 /** A broken historical prescription may be repaired for this workout only. */
 export function relinkWorkoutBiset(
   exercises: readonly WorkoutDraftExercise[],

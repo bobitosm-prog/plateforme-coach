@@ -2,6 +2,58 @@ import {
   normalizeWorkoutDraftExercises,
   type WorkoutDraftExercise,
 } from "./active-workout-draft";
+import { bisetFor } from "./guided-techniques";
+
+const MAX_WORKOUT_SETS = 10;
+
+function canAppendToExercise(exercise: WorkoutDraftExercise): boolean {
+  // FST-7 is exactly seven sets. A finished drop/mini-set cannot be moved
+  // behind a newly inserted main set without rewriting recorded history.
+  return exercise.targetSets < MAX_WORKOUT_SETS
+    && exercise.technique !== "fst7"
+    && !exercise.sets.some(set => set.parentSetNumber && set.done);
+}
+
+export function canAddWorkoutSet(exercises: readonly WorkoutDraftExercise[], index: number): boolean {
+  const exercise = exercises[index];
+  if (!exercise || !canAppendToExercise(exercise)) return false;
+  if (exercise.technique === "superset") {
+    const pair = bisetFor(exercises, index);
+    return Boolean(pair && canAppendToExercise(exercises[pair.a]) && canAppendToExercise(exercises[pair.b]));
+  }
+  return true;
+}
+
+function appendSet(exercise: WorkoutDraftExercise): WorkoutDraftExercise {
+  const mainCount = exercise.sets.filter(set => !set.parentSetNumber).length;
+  const fresh = normalizeWorkoutDraftExercises([{ sets: 1, loadMode: exercise.loadMode ?? 'legacy' }])[0].sets[0];
+  const extra = {
+    ...fresh,
+    num: mainCount + 1,
+    ...(exercise.targetDurationSeconds ? { durationSeconds: '' as const } : {}),
+  };
+  const stages = exercise.sets.filter(set => set.parentSetNumber).map(set => ({
+    ...set,
+    num: set.num + 1,
+    parentSetNumber: set.parentSetNumber! + 1,
+  }));
+  return {
+    ...exercise,
+    targetSets: exercise.targetSets + 1,
+    sets: [...exercise.sets.filter(set => !set.parentSetNumber), extra, ...stages],
+  };
+}
+
+/** An extra round on a biset adds one set to both members, preserving A/B order. */
+export function addWorkoutSet(exercises: readonly WorkoutDraftExercise[], index: number): WorkoutDraftExercise[] | null {
+  if (!canAddWorkoutSet(exercises, index)) return null;
+  const pair = bisetFor(exercises, index);
+  return exercises.map((exercise, exerciseIndex) =>
+    exerciseIndex === index || (pair && (exerciseIndex === pair.a || exerciseIndex === pair.b))
+      ? appendSet(exercise)
+      : exercise,
+  );
+}
 
 /** Explicit user action only. Never invent a working load or discard logged sets. */
 export function addDropStage(
