@@ -47,7 +47,7 @@ import { prescribedDuration } from '../../lib/training/exercise-measurement'
 import { useTrainingFollowup } from '../hooks/useTrainingFollowup'
 import { addDropStage, configureFst7 } from '../../lib/training/technique-execution'
 import { normalizeWorkoutDraftExercises } from '../../lib/training/active-workout-draft'
-import { bisetFor, techniqueIssue, transitionRest } from '../../lib/training/guided-techniques'
+import { bisetFor, relinkWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions } from '../../lib/training/guided-techniques'
 import TechniqueGuidance from './training-v2/TechniqueGuidance'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -261,6 +261,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
 export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
   const {preferences:followup}=useTrainingFollowup()
   const tTechnique=useTranslations('trainingTechnique')
+  const tBisetRecovery=useTranslations('trainingBisetRecovery')
   const guide=useTranslations('techniqueGuide')
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
@@ -991,6 +992,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               ? `${TECHNIQUE_LABELS[exo.technique].emoji} ${TECHNIQUE_LABELS[exo.technique].label}`
               : null,
           ].filter(Boolean).join(' · ') || null
+          const missingBiset = techniqueIssue(exos, idx) === 'invalidBiset'
+          const partnerOptions = missingBiset ? workoutBisetPartnerOptions(exos, idx) : []
+          const namedPartnerPresent = exos.some((member, memberIndex) => memberIndex !== idx && member.name === exo.techniqueDetails)
           return (
             <ActiveExerciseFocus
               stepLabel={stepLabel}
@@ -1007,6 +1011,31 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             >
             <div style={{ marginBottom: 12 }}>
               <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />
+              {missingBiset && <section aria-label={tBisetRecovery('title')} style={{ marginBottom: 12, padding: 12, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, background: GOLD_DIM }}>
+                <strong>{tBisetRecovery('title')}</strong>
+                <p style={{ margin: '8px 0', fontSize: 14 }}>{tBisetRecovery(namedPartnerPresent ? 'configuredPartner' : 'missingPartner', { partner: exo.techniqueDetails || '—' })}</p>
+                {partnerOptions.length > 0 && <label style={{ display: 'grid', gap: 6, marginBottom: 10 }}>
+                  {tBisetRecovery('choosePartner')}
+                  <select value="" onChange={event => {
+                    const partnerIndex = Number(event.target.value)
+                    const repaired = relinkWorkoutBiset(exos, idx, partnerIndex)
+                    if (!repaired) return
+                    setExos(repaired)
+                    setSetStatusMessage('')
+                    setSessionModified(true)
+                  }} style={{ minHeight: 44, padding: 8, fontSize: 16, color: TEXT_PRIMARY, background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: 8 }}>
+                    <option value="" disabled>{tBisetRecovery('selectPartner')}</option>
+                    {partnerOptions.map(partnerIndex => <option key={exos[partnerIndex].id} value={partnerIndex}>{getExerciseName(exos[partnerIndex], locale)}</option>)}
+                  </select>
+                </label>}
+                <button type="button" onClick={() => {
+                  setExos(workoutBisetAsSolo(exos, idx))
+                  setSetStatusMessage('')
+                  setSessionModified(true)
+                }} style={{ minHeight: 44, padding: '8px 12px', color: GOLD, background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: 8 }}>
+                  {tBisetRecovery('continueSolo')}
+                </button>
+              </section>}
               {!exo.targetDurationSeconds && (!exo.technique || exo.technique==='dropset') && ((followup.enabled && followup.advanced_techniques)||exo.technique==='dropset') && <details style={{marginBottom:12}}>
                 <summary style={{minHeight:44,cursor:'pointer'}}>{guide('tools')}</summary>
                 {stageCount<3 && <button type="button" onClick={()=>{
