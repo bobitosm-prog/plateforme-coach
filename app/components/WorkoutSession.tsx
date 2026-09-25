@@ -1085,15 +1085,15 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                   {tBisetRecovery('continueSolo')}
                 </button>
               </section>}
-              {!exo.targetDurationSeconds && (!exo.technique || exo.technique==='dropset') && ((followup.enabled && followup.advanced_techniques)||exo.technique==='dropset') && <details style={{marginBottom:12}}>
+              {!exo.targetDurationSeconds && (!exo.technique || exo.technique==='dropset') && <details style={{marginBottom:12}}>
                 <summary style={{minHeight:44,cursor:'pointer'}}>{guide('tools')}</summary>
-                {stageCount<3 && <button type="button" onClick={()=>{
+                {(exo.technique==='dropset' || (followup.enabled && followup.advanced_techniques)) && stageCount<3 && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? addDropStage(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('addDrop')}</button>}
                 {followup.enabled && followup.advanced_techniques && !exo.technique && exo.sets.length<=7 && !exo.sets.some(set=>set.done||set.parentSetNumber) && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? configureFst7(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('configureFst')}</button>}
-                {followup.enabled && followup.advanced_techniques && !exo.technique && <div style={{ marginTop: 10 }}>
+                {!exo.technique && <div style={{ marginTop: 10 }}>
                   <label style={{ display: 'grid', gap: 6 }}>
                     {tBisetRecovery('startBiset')}
                     <select value="" disabled={setupOptions.length === 0} onChange={event => {

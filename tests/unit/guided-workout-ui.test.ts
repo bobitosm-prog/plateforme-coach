@@ -137,8 +137,15 @@ describe('real WorkoutSession runtime',()=>{
     expect(screen.getByText(/Aucun partenaire compatible dans cette séance/)).toBeTruthy()
     expect(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'})).toBeTruthy()
   })
+  it('offers a manual biset when Athena followup is disabled',()=>{
+    const view=start([{name:'Raise',sets:3,reps:10}])
+    fireEvent.click(screen.getByText('Modifier la technique'))
+    expect(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'})).toBeTruthy()
+    expect(screen.queryByRole('button',{name:'Configurer cet exercice en 7 séries FST-7'})).toBeNull()
+    expect(screen.queryByRole('button',{name:'Ajouter un palier de drop set final'})).toBeNull()
+    expect(view.saved().exercises).toHaveLength(1)
+  })
   it('completes the one-exercise to catalogue partner to biset journey',async()=>{
-    followupEnabled.value=true
     catalogRows.value=[
       {id:'source',name:'Développé couché barre',muscle_group:'Pectoraux'},
       {id:'partner',name:'Écarté poulie',muscle_group:'Pectoraux'},
