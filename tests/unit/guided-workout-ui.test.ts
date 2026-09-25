@@ -4,16 +4,29 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import messages from '@/messages/fr.json'
 const followupEnabled = vi.hoisted(() => ({ value: false }))
+const catalogRows = vi.hoisted(() => ({ value: [] as Array<Record<string, unknown>> }))
 vi.mock('next-intl',()=>({useLocale:()=> 'fr',useTranslations:(namespace:string)=> (key:string,values:Record<string,unknown>={})=>{
   const obj=namespace.split('.').reduce((o:any,k)=>o?.[k],messages)
   return String(obj?.[key]??key).replace(/\{(\w+)\}/g,(_,k)=>String(values[k]??k))
 }}))
-vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({auth:{getUser:async()=>({data:{user:null}})}})}))
+vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({
+  auth:{getUser:async()=>({data:{user:null}})},
+  from:()=>{
+    const query:any={}
+    query.select=()=>query
+    query.ilike=()=>query
+    query.eq=()=>query
+    query.limit=()=>query
+    query.order=()=>query
+    query.then=(resolve:any)=>Promise.resolve({data:catalogRows.value}).then(resolve)
+    return query
+  },
+})}))
 vi.mock('@/app/hooks/useTrainingFollowup',()=>({useTrainingFollowup:()=>({preferences:{enabled:followupEnabled.value,advanced_techniques:followupEnabled.value}})}))
 vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},playBeep:()=>{},playWarningTick:()=>{},vibrateDevice:()=>{},scheduleRestPeriodSounds:()=>[],cancelScheduledSounds:()=>{}}))
 import WorkoutSession from '@/app/components/WorkoutSession'
 import { createActiveWorkoutDraft, type ActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
-beforeEach(()=>{followupEnabled.value=false;vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
+beforeEach(()=>{followupEnabled.value=false;catalogRows.value=[];vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const start=(exercises:unknown[],existing?:ActiveWorkoutDraft)=>{
   const draft=existing??createActiveWorkoutDraft({userId:'synthetic',programSource:'personal',programId:null,sessionName:'Test',sessionKey:'test',exercises})
@@ -121,7 +134,43 @@ describe('real WorkoutSession runtime',()=>{
     start([{name:'Raise',sets:3,reps:10}])
     fireEvent.click(screen.getByText('Modifier la technique'))
     expect((screen.getByLabelText(/Créer un biset pour cette séance/) as HTMLSelectElement).disabled).toBe(true)
-    expect(screen.getByText(/Ajoute d’abord un autre exercice non commencé/)).toBeTruthy()
+    expect(screen.getByText(/Aucun partenaire compatible dans cette séance/)).toBeTruthy()
+    expect(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'})).toBeTruthy()
+  })
+  it('completes the one-exercise to catalogue partner to biset journey',async()=>{
+    followupEnabled.value=true
+    catalogRows.value=[
+      {id:'source',name:'Développé couché barre',muscle_group:'Pectoraux'},
+      {id:'partner',name:'Écarté poulie',muscle_group:'Pectoraux'},
+    ]
+    const view=start([{name:'Développé couché barre',sets:3,reps:10}])
+    fireEvent.click(screen.getByText('Modifier la technique'))
+    fireEvent.click(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'}))
+    expect(await screen.findByText(/Avec Développé Couché Barre · 3 séries chacun/)).toBeTruthy()
+    expect((screen.getByRole('button',{name:/Développé couché barre/i}) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button',{name:/Écarté poulie/i}))
+    fireEvent.click(screen.getByRole('button',{name:'builder.next'}))
+    expect((screen.getByDisplayValue('3') as HTMLInputElement).disabled).toBe(true)
+    fireEvent.click(screen.getAllByRole('button',{name:'Créer le biset'})[0])
+    expect(view.saved().exercises.map(exercise=>exercise.technique)).toEqual(['superset','superset'])
+    expect(screen.getByText(/A · Développé Couché Barre/)).toBeTruthy()
+    expect(screen.getByText(/B · Écarté/i)).toBeTruthy()
+    expect(view.saved().exercises).toHaveLength(2)
+    expect(view.saved().exercises.map(exercise=>exercise.targetSets)).toEqual([3,3])
+    const saved=view.saved();view.unmount()
+    const resumed=start([],saved)
+    expect(screen.getByText(/B · Écarté/i)).toBeTruthy()
+    log('60')
+    expect(resumed.saved().currentExerciseIndex).toBe(1)
+  })
+  it('does not change the workout when the partner picker is cancelled',()=>{
+    followupEnabled.value=true
+    const view=start([{name:'Raise',sets:3,reps:10}])
+    fireEvent.click(screen.getByText('Modifier la technique'))
+    fireEvent.click(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'}))
+    fireEvent.click(screen.getByRole('button',{name:'Retour'}))
+    expect(view.saved().exercises).toHaveLength(1)
+    expect(view.saved().exercises[0].technique).toBeUndefined()
   })
   it('adds an extra set mid-session and keeps it after reopening the draft',async()=>{
     const view=start([{name:'Raise',sets:1,reps:10}])
