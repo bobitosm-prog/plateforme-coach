@@ -22,6 +22,15 @@ export default function TechniqueGuidance({ exercises, index, setIndex }: { exer
       : ex.technique === 'restpause' ? <p>{c('restPauseHelp')}</p>
       : ex.technique === 'fst7' ? <p>{t('fstInstructions',{reps:ex.targetReps,rest:ex.rest})}</p>
       : <p>{c('mechanicalHelp')} {ex.techniqueDetails || t('prescription')}</p>}
+    {pair && <div style={{display:'grid',gap:6,marginBottom:10}}>
+      {[pair.a,pair.b].map((exerciseIndex, side) => {
+        const member=exercises[exerciseIndex]
+        return <div key={member.id} style={{padding:'8px 10px',border:'1px solid #514728',borderRadius:8,background:exerciseIndex===index?'rgba(201,168,76,.16)':undefined}}>
+          <strong>{side===0?'A':'B'} · {member.name}</strong>
+          <span style={{float:'right'}}>{member.sets.filter(row=>row.done).length}/{member.sets.length}</span>
+        </div>
+      })}
+    </div>}
     <details><summary style={{cursor:'pointer',minHeight:44,paddingTop:10}}>{c('table')}</summary>
       <div style={{overflowX:'auto'}} tabIndex={0} role="region" aria-label={c('table')}>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}><caption>{title}</caption>

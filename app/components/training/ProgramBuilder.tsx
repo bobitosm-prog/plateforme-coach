@@ -96,6 +96,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const t = useTranslations('training_tab.builder')
   const tx = useTranslations('programWorkspace')
   const tTechnique = useTranslations('trainingTechnique')
+  const tBisetRecovery = useTranslations('trainingBisetRecovery')
   const guide = useTranslations('techniqueGuide')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const prescriptionContext=editorProgramContext(editProgram)
@@ -1200,7 +1201,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                 return (
                 <details key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
                   <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets||3} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps||10} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
-                  {techniqueError && <p role="alert">{tTechnique(techniqueError)}</p>}
+                  {techniqueError && <p role="alert">{tTechnique(techniqueError)}{techniqueError === 'invalidBiset' && ex.technique_details && <><br />{tBisetRecovery('configuredPartner', { partner: ex.technique_details })}</>}</p>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY }}>{exerciseNameDisplay}</div>

@@ -37,6 +37,34 @@ export function bisetFor(exercises: readonly Prescription[], index: number): Bis
   return bisetPairs(exercises).find(pair => pair.a === index || pair.b === index)
 }
 
+/** A broken historical prescription may be repaired for this workout only. */
+export function relinkWorkoutBiset(
+  exercises: readonly WorkoutDraftExercise[],
+  index: number,
+  partnerIndex: number,
+): WorkoutDraftExercise[] | null {
+  const exercise = exercises[index], partner = exercises[partnerIndex]
+  if (!exercise || !partner || index === partnerIndex || exercise.technique !== 'superset') return null
+  if (exercise.targetDurationSeconds || partner.targetDurationSeconds || exercise.targetSets !== partner.targetSets) return null
+  if (partner.technique && !(partner.technique === 'superset' && partner.techniqueDetails === exercise.name)) return null
+  const updated = exercises.map((row, i) => i === index
+    ? { ...row, techniqueDetails: partner.name }
+    : i === partnerIndex
+      ? { ...row, technique: 'superset', techniqueDetails: exercise.name }
+      : row)
+  const pair = bisetFor(updated, index)
+  return pair && [pair.a, pair.b].includes(partnerIndex) ? updated : null
+}
+
+export function workoutBisetPartnerOptions(exercises: readonly WorkoutDraftExercise[], index: number): number[] {
+  return exercises.flatMap((_, partnerIndex) => relinkWorkoutBiset(exercises, index, partnerIndex) ? [partnerIndex] : [])
+}
+
+/** Explicit solo fallback; never mislabel a logged set as a valid biset. */
+export function workoutBisetAsSolo(exercises: readonly WorkoutDraftExercise[], index: number): WorkoutDraftExercise[] {
+  return exercises.map((row, i) => i === index ? { ...row, technique: undefined, techniqueDetails: undefined } : row)
+}
+
 export function techniqueIssue(exercises: readonly WorkoutDraftExercise[], index: number): 'missingDrops' | 'invalidBiset' | 'invalidRestPause' | null {
   const ex = exercises[index]
   if (ex?.technique === 'dropset' && (ex.targetDurationSeconds || !ex.sets.some(set => set.parentSetNumber))) return 'missingDrops'

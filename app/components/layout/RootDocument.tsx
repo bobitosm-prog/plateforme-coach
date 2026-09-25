@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans, Anton } from "next/font/google";
 import "@/app/globals.css";
 import { Toaster } from "sonner";
@@ -46,6 +46,14 @@ export const rootMetadata: Metadata = {
   description: "Coaching fitness Swiss Made · Swiss Quality",
 };
 
+// Exported by each root layout so Next emits a single viewport tag. The previous
+// manual tag duplicated Next's default and could confuse iOS standalone sizing.
+export const rootViewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootDocument({
   children,
   lang,
@@ -58,7 +66,6 @@ export default function RootDocument({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#D4A843" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MoovX" />

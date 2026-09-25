@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeWorkoutDraftExercises as normalize, findNextWorkoutPosition as next, createActiveWorkoutDraft, readActiveWorkoutDraft, writeActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
-import { bisetPairs, techniqueIssue, transitionRest } from '@/lib/training/guided-techniques'
+import { bisetPairs, relinkWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions } from '@/lib/training/guided-techniques'
 import { editExercise, validateEditorDays, validateProgramEdit } from '@/lib/training/program-editor'
 import { resolveProgramExercise } from '@/lib/training/resolve-program'
 
@@ -33,6 +33,24 @@ describe('prescription to guided workout', () => {
     expect(ex[0].sets).toHaveLength(3)
     expect(techniqueIssue(ex,0)).toBe('missingDrops')
     expect(techniqueIssue(ex,1)).toBe('invalidBiset')
+  })
+  it('repairs a historical missing partner only after an explicit workout choice', () => {
+    const exercises = normalize([
+      {name:'Élévations frontales poulie',sets:3,technique:'superset',technique_details:'Oiseau / Reverse Fly'},
+      {name:'Reverse pec deck',sets:3},
+      {name:'Arnold press',sets:4},
+    ])
+    expect(techniqueIssue(exercises,0)).toBe('invalidBiset')
+    expect(workoutBisetPartnerOptions(exercises,0)).toEqual([1])
+    const repaired = relinkWorkoutBiset(exercises,0,1)!
+    expect(repaired[0].techniqueDetails).toBe('Reverse pec deck')
+    expect(repaired[1].techniqueDetails).toBe('Élévations frontales poulie')
+    expect(bisetPairs(repaired)).toEqual([{a:0,b:1}])
+    expect(techniqueIssue(repaired,0)).toBeNull()
+    expect(exercises[0].techniqueDetails).toBe('Oiseau / Reverse Fly')
+    const solo = workoutBisetAsSolo(exercises,0)
+    expect(solo[0].technique).toBeUndefined()
+    expect(solo[0].techniqueDetails).toBeUndefined()
   })
   it('alternates A1 B1 A2 B2 A3 B3 with rest only after B', () => {
     const ex=pair(); let position={currentExerciseIndex:0,currentSetIndex:0}
