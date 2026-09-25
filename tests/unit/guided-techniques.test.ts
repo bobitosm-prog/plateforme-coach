@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeWorkoutDraftExercises as normalize, findNextWorkoutPosition as next, createActiveWorkoutDraft, readActiveWorkoutDraft, writeActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
-import { bisetPairs, relinkWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions } from '@/lib/training/guided-techniques'
+import { bisetPairs, relinkWorkoutBiset, startWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions, workoutBisetSetupOptions } from '@/lib/training/guided-techniques'
 import { editExercise, validateEditorDays, validateProgramEdit } from '@/lib/training/program-editor'
 import { resolveProgramExercise } from '@/lib/training/resolve-program'
 
@@ -51,6 +51,26 @@ describe('prescription to guided workout', () => {
     const solo = workoutBisetAsSolo(exercises,0)
     expect(solo[0].technique).toBeUndefined()
     expect(solo[0].techniqueDetails).toBeUndefined()
+  })
+  it('creates a biset from two unstarted workout exercises without changing the program', () => {
+    const exercises = normalize([{name:'Raise',sets:3},{name:'Press',sets:3}])
+    expect(workoutBisetSetupOptions(exercises, 0)).toEqual([1])
+    const paired = startWorkoutBiset(exercises, 0, 1)!
+    expect(bisetPairs(paired)).toEqual([{a:0,b:1}])
+    expect(paired.map(exercise => exercise.techniqueDetails)).toEqual(['Press','Raise'])
+    expect(exercises.every(exercise => !exercise.technique)).toBe(true)
+    paired[0].sets[0].done = true
+    expect(startWorkoutBiset(paired, 0, 1)).toBeNull()
+    expect(workoutBisetSetupOptions(paired, 0)).toEqual([])
+  })
+  it('refuses a new biset after logging or with incompatible partners', () => {
+    const logged = normalize([{name:'A',sets:2},{name:'B',sets:2}])
+    logged[1].sets[0].done = true
+    expect(startWorkoutBiset(logged,0,1)).toBeNull()
+    const mismatch = normalize([{name:'A',sets:2},{name:'B',sets:3}])
+    expect(workoutBisetSetupOptions(mismatch,0)).toEqual([])
+    const duplicate = normalize([{name:'A',sets:2},{name:'B',sets:2},{name:'B',sets:2}])
+    expect(workoutBisetSetupOptions(duplicate,0)).toEqual([])
   })
   it('alternates A1 B1 A2 B2 A3 B3 with rest only after B', () => {
     const ex=pair(); let position={currentExerciseIndex:0,currentSetIndex:0}

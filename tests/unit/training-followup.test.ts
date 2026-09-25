@@ -9,6 +9,8 @@ import {
 } from "@/lib/training/followup-preferences";
 import {
   addDropStage,
+  addWorkoutSet,
+  canAddWorkoutSet,
   configureFst7,
 } from "@/lib/training/technique-execution";
 import { normalizeWorkoutDraftExercises } from "@/lib/training/active-workout-draft";
@@ -101,5 +103,38 @@ describe("optional training follow-up", () => {
     expect(addDropStage(fst)).toBe(fst);
     ex.sets[0].done = true;
     expect(configureFst7(ex)).toBe(ex);
+  });
+  it("adds a set to a partly completed exercise and keeps its log intact", () => {
+    const exercise = normalizeWorkoutDraftExercises([{name:"Row",sets:2,reps:10}])[0];
+    exercise.sets[0].done = true;
+    exercise.sets[0].weight = 30;
+    const updated = addWorkoutSet([exercise],0)![0];
+    expect(updated.targetSets).toBe(3);
+    expect(updated.sets.map(set => set.num)).toEqual([1,2,3]);
+    expect(updated.sets[0].weight).toBe(30);
+    expect(updated.sets[0].done).toBe(true);
+    expect(updated.sets[2].done).toBe(false);
+    expect(normalizeWorkoutDraftExercises([updated])).toEqual([updated]);
+  });
+  it("adds a complete extra round to a biset and preserves A/B navigation", () => {
+    const pair = normalizeWorkoutDraftExercises([{name:"A",sets:1,technique:"superset",technique_details:"B"},{name:"B",sets:1}]);
+    const updated = addWorkoutSet(pair,1)!;
+    expect(updated.map(exercise => exercise.targetSets)).toEqual([2,2]);
+    expect(updated.map(exercise => exercise.sets.length)).toEqual([2,2]);
+    expect(pair.map(exercise => exercise.sets.length)).toEqual([1,1]);
+  });
+  it("inserts an extra main set before unlogged drop stages, but never rewrites a logged stage", () => {
+    const exercise = normalizeWorkoutDraftExercises([{name:"Row",sets:2,technique:"dropset",technique_details:"2"}])[0];
+    const updated = addWorkoutSet([exercise],0)![0];
+    expect(updated.sets.map(set => [set.num,set.parentSetNumber])).toEqual([[1,undefined],[2,undefined],[3,undefined],[4,3],[5,4]]);
+    updated.sets[3].done = true;
+    expect(canAddWorkoutSet([updated],0)).toBe(false);
+    expect(addWorkoutSet([updated],0)).toBeNull();
+  });
+  it("keeps FST-7 fixed at seven and caps ordinary sets at ten", () => {
+    const fst = normalizeWorkoutDraftExercises([{name:"A",sets:7,technique:"fst7"}]);
+    expect(canAddWorkoutSet(fst,0)).toBe(false);
+    const full = normalizeWorkoutDraftExercises([{name:"A",sets:10}]);
+    expect(addWorkoutSet(full,0)).toBeNull();
   });
 });

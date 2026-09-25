@@ -45,9 +45,9 @@ import {
 import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/rest-timer'
 import { prescribedDuration } from '../../lib/training/exercise-measurement'
 import { useTrainingFollowup } from '../hooks/useTrainingFollowup'
-import { addDropStage, configureFst7 } from '../../lib/training/technique-execution'
+import { addDropStage, addWorkoutSet, canAddWorkoutSet, configureFst7 } from '../../lib/training/technique-execution'
 import { normalizeWorkoutDraftExercises } from '../../lib/training/active-workout-draft'
-import { bisetFor, relinkWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions } from '../../lib/training/guided-techniques'
+import { bisetFor, relinkWorkoutBiset, startWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions, workoutBisetSetupOptions } from '../../lib/training/guided-techniques'
 import TechniqueGuidance from './training-v2/TechniqueGuidance'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -262,6 +262,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const {preferences:followup}=useTrainingFollowup()
   const tTechnique=useTranslations('trainingTechnique')
   const tBisetRecovery=useTranslations('trainingBisetRecovery')
+  const tExtraSet=useTranslations('trainingExtraSet')
   const guide=useTranslations('techniqueGuide')
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
@@ -994,6 +995,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           ].filter(Boolean).join(' · ') || null
           const missingBiset = techniqueIssue(exos, idx) === 'invalidBiset'
           const partnerOptions = missingBiset ? workoutBisetPartnerOptions(exos, idx) : []
+          const setupOptions = !exo.technique ? workoutBisetSetupOptions(exos, idx) : []
+          const paired = Boolean(bisetFor(exos, idx))
+          const canAddSet = canAddWorkoutSet(exos, idx)
+          const addSetReason = exo.targetSets >= 10 ? 'limit'
+            : exo.technique === 'fst7' ? 'fst7'
+            : exo.sets.some(set => set.parentSetNumber && set.done) ? 'finishedStage'
+            : 'repairBiset'
           const namedPartnerPresent = exos.some((member, memberIndex) => memberIndex !== idx && member.name === exo.techniqueDetails)
           return (
             <ActiveExerciseFocus
@@ -1044,6 +1052,25 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 {followup.enabled && followup.advanced_techniques && !exo.technique && exo.sets.length<=7 && !exo.sets.some(set=>set.done||set.parentSetNumber) && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? configureFst7(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('configureFst')}</button>}
+                {followup.enabled && followup.advanced_techniques && !exo.technique && <div style={{ marginTop: 10 }}>
+                  <label style={{ display: 'grid', gap: 6 }}>
+                    {tBisetRecovery('startBiset')}
+                    <select value="" disabled={setupOptions.length === 0} onChange={event => {
+                    const pairedExercises = startWorkoutBiset(exos, idx, Number(event.target.value))
+                    if (!pairedExercises) return
+                    const first = bisetFor(pairedExercises, idx)!.a
+                    setExos(pairedExercises)
+                    setActiveExerciseIndex(first)
+                    persistDraft({ exercises: pairedExercises, currentExerciseIndex: first, currentSetIndex: 0 })
+                    setSetStatusMessage('')
+                    setSessionModified(true)
+                    }} style={{ minHeight: 44, padding: 8, fontSize: 16, color: TEXT_PRIMARY, background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: 8 }}>
+                      <option value="" disabled>{tBisetRecovery('selectPartner')}</option>
+                      {setupOptions.map(partnerIndex => <option key={exos[partnerIndex].id} value={partnerIndex}>{getExerciseName(exos[partnerIndex], locale)}</option>)}
+                    </select>
+                  </label>
+                  {setupOptions.length === 0 && <p style={{ fontSize: 13, color: TEXT_MUTED }}>{tBisetRecovery('addPartnerHint')}</p>}
+                </div>}
               </details>}
               <div className={trainingV2Styles.focusExecutionLayout}>
                 <div className={trainingV2Styles.focusEditorColumn}>
@@ -1103,6 +1130,21 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       onValidate={() => validate(exo.id, activeSet.id)}
                     />
                   )}
+                  <div style={{ marginTop: 12 }}>
+                    <button type="button" disabled={!canAddSet} onClick={() => {
+                      const updated = addWorkoutSet(exos, idx)
+                      if (!updated) return
+                      const position = findNextWorkoutPosition(updated, idx, -1)
+                      setExos(updated)
+                      setActiveExerciseIndex(position.currentExerciseIndex)
+                      persistDraft({ exercises: updated, ...position })
+                      setSetStatusMessage('')
+                      setSessionModified(true)
+                    }} style={{ minHeight: 44, padding: '9px 14px', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, background: GOLD_DIM, color: GOLD, fontSize: 14, fontWeight: 700, cursor: canAddSet ? 'pointer' : 'not-allowed', opacity: canAddSet ? 1 : .5 }}>
+                      {tExtraSet(paired ? 'addBiset' : 'add')}
+                    </button>
+                    {!canAddSet && <p style={{ margin: '6px 0 0', color: TEXT_MUTED, fontSize: 12 }}>{tExtraSet(addSetReason)}</p>}
+                  </div>
                 </div>
 
                 <aside className={trainingV2Styles.contextRail}>
