@@ -3,9 +3,10 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
 import { routing } from '../../../i18n/routing'
 import CookieConsent from '@/components/CookieConsent'
-import RootDocument, { rootMetadata } from '@/app/components/layout/RootDocument'
+import RootDocument, { rootMetadata, rootViewport } from '@/app/components/layout/RootDocument'
 
 export const metadata = rootMetadata
+export const viewport = rootViewport
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))

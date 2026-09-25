@@ -18,7 +18,7 @@ vi.mock('@/app/components/ui/AppErrorBoundary', () => ({
 }))
 vi.mock('sonner', () => ({ Toaster: () => null }))
 
-import RootDocument, { rootMetadata } from '@/app/components/layout/RootDocument'
+import RootDocument, { rootMetadata, rootViewport } from '@/app/components/layout/RootDocument'
 
 describe('localized root documents', () => {
   it.each(['fr', 'en', 'de'] as const)('renders the initial HTML language for /%s/*', lang => {
@@ -37,6 +37,17 @@ describe('localized root documents', () => {
       title: 'MoovX',
       description: 'Coaching fitness Swiss Made · Swiss Quality',
     })
+  })
+
+  it('defines one zoomable viewport through Next metadata for both root layouts', () => {
+    const document = readFileSync('app/components/layout/RootDocument.tsx', 'utf8')
+    const marketing = readFileSync('app/(marketing)/[locale]/layout.tsx', 'utf8')
+    const application = readFileSync('app/(application)/layout.tsx', 'utf8')
+
+    expect(rootViewport).toEqual({ width: 'device-width', initialScale: 1, viewportFit: 'cover' })
+    expect(document).not.toContain('<meta name="viewport"')
+    expect(marketing).toContain('export const viewport = rootViewport')
+    expect(application).toContain('export const viewport = rootViewport')
   })
 
   it('keeps production fonts and providers centralized exactly once', () => {
