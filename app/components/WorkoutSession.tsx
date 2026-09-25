@@ -79,8 +79,13 @@ const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s 
 
 const WORKOUT_MUSCLE_FILTERS = ['Tous', 'Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Abdos', 'Corps Entier']
 
-function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: any[]) => void; onCancel: () => void }) {
+function CustomBuilder({ onStart, onCancel, bisetPartner }: {
+  onStart: (name: string, exos: any[]) => boolean | void
+  onCancel: () => void
+  bisetPartner?: { name: string; targetSets: number; existingNames: readonly string[] }
+}) {
   const t = useTranslations('training_tab.ws')
+  const tBiset = useTranslations('trainingBisetRecovery')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
@@ -93,6 +98,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
   const [filter, setFilter] = useState(ALL_KEY)
   const [step, setStep] = useState<'build' | 'config'>('build')
   const [cfg, setCfg] = useState<any[]>([])
+  const [error, setError] = useState(false)
   const ref = useRef<any>(null)
 
   useEffect(() => {
@@ -116,9 +122,12 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       })
   }, [])
 
-  const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : [...p, e])
-  const goConfig = () => { setCfg(selected.map(e => ({ ...e, targetSets: 3, targetReps: '10-12', targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e) }))); setStep('config') }
-  const launch = () => onStart(name, cfg.map(e => ({ exercise_id: e.id, equipment: e.equipment, exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
+  const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : bisetPartner ? [e] : [...p, e])
+  const goConfig = () => { setError(false); setCfg(selected.map(e => ({ ...e, targetSets: bisetPartner?.targetSets ?? 3, targetReps: '10-12', targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e) }))); setStep('config') }
+  const launch = () => {
+    const accepted = onStart(name, cfg.map(e => ({ exercise_id: e.id, equipment: e.equipment, exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
+    if (accepted === false) setError(true)
+  }
   const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
 
   if (step === 'config') return (
@@ -128,9 +137,11 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <ArrowLeft size={14} /> {t('back')}
         </button>
         <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.configure')}</span>
-        <button onClick={launch} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.launch')}</button>
+        <button onClick={launch} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{bisetPartner ? tBiset('confirmPartner') : t('builder.launch')}</button>
       </div>
       <div style={{ flex: 1, paddingTop: 16, paddingRight: 16, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {bisetPartner && <p style={{ margin: 0, color: TEXT_MUTED }}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
+        {error && <p role="alert" style={{ color: RED }}>{tBiset('partnerFailed')}</p>}
         {cfg.map((e, i) => (
           <div key={e.id} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -147,7 +158,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
                 <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <input type={type} value={(e as any)[key]}
+                    <input type={type} value={(e as any)[key]} disabled={Boolean(bisetPartner && key === 'targetSets')}
                       onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
                       style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
                     {unit && <span style={{ fontSize: 11, color: TEXT_DIM, fontFamily: FONT_BODY }}>{unit}</span>}
@@ -160,7 +171,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       </div>
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
         <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-          {t('builder.launchSession')}
+          {bisetPartner ? tBiset('confirmPartner') : t('builder.launchSession')}
         </button>
       </div>
     </div>
@@ -174,7 +185,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
             <ArrowLeft size={14} /> {t('back')}
           </button>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.add')}</span>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{bisetPartner ? tBiset('addPartner') : t('builder.add')}</span>
           {selected.length > 0 ? (
             <button onClick={goConfig} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.next', { count: selected.length })}</button>
           ) : <div style={{ width: 60 }} />}
@@ -190,6 +201,8 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
             ))}
           </div>
         )}
+
+        {bisetPartner && <p style={{ margin: '0 0 10px', color: TEXT_MUTED, fontSize: 13 }}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
 
         {/* Search */}
         <div style={{ position: 'relative', marginBottom: 10 }}>
@@ -222,12 +235,13 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingTop: 8, paddingRight: 16, paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16 }}>
         {dbExos.map((e: any) => {
           const sel = !!selected.find(x => x.id === e.id)
+          const unavailable = Boolean(bisetPartner && (prescribedDuration(e) || bisetPartner.existingNames.includes(canonicalExerciseName(e.name))))
           return (
-            <button key={e.id} onClick={() => toggle(e)} style={{
+            <button key={e.id} disabled={unavailable} onClick={() => toggle(e)} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 14,
               padding: '14px 0', borderBottom: `1px solid ${BORDER}`,
               background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
-              opacity: sel ? 0.5 : 1,
+              opacity: unavailable ? 0.35 : sel ? 0.5 : 1,
             }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
@@ -250,7 +264,7 @@ function CustomBuilder({ onStart, onCancel }: { onStart: (name: string, exos: an
       {selected.length > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
           <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-            {t('builder.addExercises', { count: selected.length })}
+            {bisetPartner ? tBiset('confirmPartner') : t('builder.addExercises', { count: selected.length })}
           </button>
         </div>
       )}
@@ -276,6 +290,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   useBeforeUnload(true)
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => normalizeWorkoutDraftExercises(raw))
+  const [bisetSourceId, setBisetSourceId] = useState<string | null>(null)
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => (
     Math.min(Math.max(draft.currentExerciseIndex, 0), Math.max(raw.length - 1, 0))
   ))
@@ -790,7 +805,33 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setVariantPopup(null)
   }
 
-  if (mode === 'custom') return <CustomBuilder onStart={(n, exercises) => { setExos(prev => [...prev, ...normalizeWorkoutDraftExercises(exercises.map(e => ({...e, id:uid()})))]); setSessionModified(true); setMode('session') }} onCancel={() => setMode('session')} />
+  if (mode === 'custom') {
+    const source = exos.find(exercise => exercise.id === bisetSourceId)
+    return <CustomBuilder
+      bisetPartner={source ? { name: getExerciseName(source, locale), targetSets: source.targetSets, existingNames: exos.map(exercise => exercise.name) } : undefined}
+      onStart={(n, exercises) => {
+        const additions = normalizeWorkoutDraftExercises(exercises.map(e => ({ ...e, id: uid() })))
+        if (bisetSourceId) {
+          const sourceIndex = exos.findIndex(exercise => exercise.id === bisetSourceId)
+          if (sourceIndex < 0 || additions.length !== 1) return false
+          const combined = [...exos, ...additions]
+          const pairedExercises = startWorkoutBiset(combined, sourceIndex, combined.length - 1)
+          if (!pairedExercises) return false
+          const first = bisetFor(pairedExercises, sourceIndex)!.a
+          setExos(pairedExercises)
+          setActiveExerciseIndex(first)
+          persistDraft({ exercises: pairedExercises, currentExerciseIndex: first, currentSetIndex: 0 })
+          setBisetSourceId(null)
+        } else {
+          setExos(prev => [...prev, ...additions])
+        }
+        setSessionModified(true)
+        setMode('session')
+        return true
+      }}
+      onCancel={() => { setBisetSourceId(null); setMode('session') }}
+    />
+  }
 
   if (done) {
     return (
@@ -1070,6 +1111,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                     </select>
                   </label>
                   {setupOptions.length === 0 && <p style={{ fontSize: 13, color: TEXT_MUTED }}>{tBisetRecovery('addPartnerHint')}</p>}
+                  <button type="button" disabled={exo.sets.some(set => set.done)} onClick={() => {
+                    setBisetSourceId(exo.id)
+                    setMode('custom')
+                  }} style={{ minHeight: 44, marginTop: 10, padding: '8px 12px', color: GOLD, background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: 8, opacity: exo.sets.some(set => set.done) ? .5 : 1 }}>
+                    {tBisetRecovery('addPartner')}
+                  </button>
+                  {exo.sets.some(set => set.done) && <p style={{ fontSize: 13, color: TEXT_MUTED }}>{tBisetRecovery('beforeFirstSet')}</p>}
                 </div>}
               </details>}
               <div className={trainingV2Styles.focusExecutionLayout}>
@@ -1179,7 +1227,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       {/* FAB ajout exercice — flottant, au-dessus de la barre TERMINER */}
       {!reorderMode && (
         <button
-          onClick={() => setMode('custom')}
+          onClick={() => { setBisetSourceId(null); setMode('custom') }}
           aria-label={t('addExercise')}
           className="active:scale-90"
           style={{
