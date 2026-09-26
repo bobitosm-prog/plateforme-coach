@@ -1,0 +1,82 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1;
+ classes = {};
+ objectVersion = 77;
+ objects = {
+  A00000000000000000000001 = {
+   isa = PBXProject;
+   attributes = { BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2700; };
+   buildConfigurationList = A00000000000000000000002;
+   compatibilityVersion = "Xcode 16.0";
+   developmentRegion = fr;
+   hasScannedForEncodings = 0;
+   knownRegions = (fr, en, Base);
+   mainGroup = A00000000000000000000003;
+   productRefGroup = A00000000000000000000004;
+   projectDirPath = "";
+   projectRoot = "";
+   targets = (A00000000000000000000005);
+  };
+  A00000000000000000000002 = { isa = XCConfigurationList; buildConfigurations = (A00000000000000000000010, A00000000000000000000011); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  A00000000000000000000003 = { isa = PBXGroup; children = (A00000000000000000000006, A00000000000000000000004); sourceTree = "<group>"; };
+  A00000000000000000000004 = { isa = PBXGroup; children = (A00000000000000000000007); name = Products; sourceTree = "<group>"; };
+  A00000000000000000000005 = {
+   isa = PBXNativeTarget;
+   buildConfigurationList = A00000000000000000000008;
+   buildPhases = (A00000000000000000000009, A0000000000000000000000A, A0000000000000000000000B);
+   buildRules = ();
+   dependencies = ();
+   fileSystemSynchronizedGroups = (A00000000000000000000006);
+   name = MoovXPrototype;
+   productName = MoovXPrototype;
+   productReference = A00000000000000000000007;
+   productType = "com.apple.product-type.application";
+  };
+  A00000000000000000000006 = { isa = PBXFileSystemSynchronizedRootGroup; path = App; sourceTree = "<group>"; };
+  A00000000000000000000007 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoovXPrototype.app; sourceTree = BUILT_PRODUCTS_DIR; };
+  A00000000000000000000008 = { isa = XCConfigurationList; buildConfigurations = (A00000000000000000000012, A00000000000000000000013); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  A00000000000000000000009 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A0000000000000000000000A = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A0000000000000000000000B = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000010 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; DEBUG_INFORMATION_FORMAT = dwarf; }; };
+  A00000000000000000000011 = { isa = XCBuildConfiguration; name = Release; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_COMPILATION_MODE = wholemodule; }; };
+  A00000000000000000000012 = {
+   isa = XCBuildConfiguration; name = Debug;
+   buildSettings = {
+    PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype;
+    PRODUCT_NAME = "$(TARGET_NAME)";
+    GENERATE_INFOPLIST_FILE = YES;
+    INFOPLIST_KEY_CFBundleDisplayName = "MoovX Test";
+    INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+    INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+    IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+    TARGETED_DEVICE_FAMILY = 1;
+    SUPPORTED_PLATFORMS = iphonesimulator;
+    CODE_SIGNING_ALLOWED = NO;
+    MARKETING_VERSION = 0.1.0;
+    CURRENT_PROJECT_VERSION = 1;
+   };
+  };
+  A00000000000000000000013 = {
+   isa = XCBuildConfiguration; name = Release;
+   buildSettings = {
+    PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype;
+    PRODUCT_NAME = "$(TARGET_NAME)";
+    GENERATE_INFOPLIST_FILE = YES;
+    INFOPLIST_KEY_CFBundleDisplayName = "MoovX Test";
+    INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+    INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+    IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+    TARGETED_DEVICE_FAMILY = 1;
+    SUPPORTED_PLATFORMS = iphonesimulator;
+    CODE_SIGNING_ALLOWED = NO;
+    MARKETING_VERSION = 0.1.0;
+    CURRENT_PROJECT_VERSION = 1;
+   };
+  };
+ };
+ rootObject = A00000000000000000000001;
+}
