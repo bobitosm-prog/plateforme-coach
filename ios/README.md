@@ -56,14 +56,18 @@ contrôle visuel anonyme ; aucun identifiant ni jeton n'est transmis.
 - Le droit caméra est déclaré pour la photo de repas et le code-barres ; aucun
   accès Santé, microphone ou stockage partagé n'est ajouté.
 - Le repos peut programmer une notification locale unique à son échéance. La
-  première programmation demande l'autorisation système pour alertes et sons ;
+  première séance demande l'autorisation système pour alertes et sons ;
   aucune notification push, serveur ou mode audio d'arrière-plan n'est utilisé.
   Le pont accepte uniquement un délai fini dans les 30 minutes depuis la page
   principale HTTPS app.moovx.ch. Une prolongation remplace l'alerte, « Passer »
   l'annule, et l'alerte native reste silencieuse si la séance est au premier plan
   (le son web joue alors). Le mode silencieux, Concentration et les réglages iOS
-  peuvent empêcher le son. Le test physique écran verrouillé du build 3 reste
-  nécessaire ; le simulateur ne le prouve pas.
+  peuvent empêcher le son. Le build 4 ajoute un bouton de diagnostic (cloche)
+  dans le bandeau du prototype : il programme une alerte distincte 20 secondes
+  plus tard sans remplacer le repos réel. Le bandeau affiche aussi « alerte
+  programmée » uniquement après confirmation du système. Le pont page → iOS
+  et la demande d'autorisation ont été vérifiés dans le simulateur ; la
+  livraison sonore écran verrouillé reste à vérifier sur l'iPhone physique.
 - Chargement, erreur réseau et interruption du processus WebKit présentés dans
   l'interface. Pas de promesse de sauvegarde/reprise ou fonctionnement hors ligne.
 - Icône de test issue de l'artwork web 512 × 512, pas de source native définitive

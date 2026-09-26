@@ -16,7 +16,40 @@ final class RestNotificationManager: NSObject, UNUserNotificationCenterDelegate 
         center.delegate = self
     }
 
-    func schedule(at deadline: Date, onUnavailable: @escaping @MainActor () -> Void) {
+    /// Ask while a workout is visible, before the first rest can be locked.
+    func prepareAuthorization() {
+        Task {
+            let settings = await center.notificationSettings()
+            guard settings.authorizationStatus == .notDetermined else { return }
+            _ = try? await center.requestAuthorization(options: [.alert, .sound])
+        }
+    }
+
+    /// Separate test request so the diagnostic button cannot replace a real rest alert.
+    func scheduleDiagnostic(onScheduled: @escaping @MainActor () -> Void,
+                            onUnavailable: @escaping @MainActor () -> Void) {
+        Task {
+            var settings = await center.notificationSettings()
+            if settings.authorizationStatus == .notDetermined {
+                _ = try? await center.requestAuthorization(options: [.alert, .sound])
+                settings = await center.notificationSettings()
+            }
+            guard settings.authorizationStatus == .authorized,
+                  settings.soundSetting == .enabled else { onUnavailable(); return }
+            let content = UNMutableNotificationContent()
+            content.title = "MoovX"
+            content.body = NSLocalizedString("restNotificationBody", comment: "Rest timer completion")
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: "ch.moovx.rest-diagnostic", content: content,
+                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 20, repeats: false))
+            do { try await center.add(request); onScheduled() }
+            catch { onUnavailable() }
+        }
+    }
+
+    func schedule(at deadline: Date,
+                  onScheduled: @escaping @MainActor () -> Void = {},
+                  onUnavailable: @escaping @MainActor () -> Void) {
         revision += 1
         let currentRevision = revision
         let previous = operation
@@ -24,10 +57,16 @@ final class RestNotificationManager: NSObject, UNUserNotificationCenterDelegate 
             await previous?.value
             guard currentRevision == revision else { return }
             var settings = await center.notificationSettings()
+#if DEBUG
+            print("[RestNotification] initial authorization=\(settings.authorizationStatus.rawValue) sound=\(settings.soundSetting.rawValue)")
+#endif
             if settings.authorizationStatus == .notDetermined {
                 do { _ = try await center.requestAuthorization(options: [.alert, .sound]) }
                 catch { /* Treat a failed permission request as unavailable. */ }
                 settings = await center.notificationSettings()
+#if DEBUG
+                print("[RestNotification] after request authorization=\(settings.authorizationStatus.rawValue) sound=\(settings.soundSetting.rawValue)")
+#endif
             }
             guard currentRevision == revision else { return }
             guard settings.authorizationStatus == .authorized,
@@ -43,8 +82,19 @@ final class RestNotificationManager: NSObject, UNUserNotificationCenterDelegate 
             content.sound = .default
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
             let request = UNNotificationRequest(identifier: Self.requestID, content: content, trigger: trigger)
-            do { try await center.add(request) }
-            catch { if currentRevision == revision { onUnavailable() } }
+            do {
+                try await center.add(request)
+                guard currentRevision == revision else { return }
+                onScheduled()
+#if DEBUG
+                print("[RestNotification] scheduled in \(seconds)s")
+#endif
+            } catch {
+#if DEBUG
+                print("[RestNotification] failed to schedule: \(error)")
+#endif
+                if currentRevision == revision { onUnavailable() }
+            }
         }
     }
 

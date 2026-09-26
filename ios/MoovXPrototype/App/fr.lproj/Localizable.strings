@@ -5,3 +5,6 @@
 "restNotificationBody" = "Repos terminé — reprends ta série.";
 "restNotificationDeniedTitle" = "Alerte de repos désactivée";
 "restNotificationDeniedMessage" = "Autorise les notifications et leur son pour MoovX Test dans Réglages afin d’entendre la fin du repos écran verrouillé.";
+"restAlertTest" = "Tester une alerte dans 20 secondes";
+"restAlertReceived" = "Alerte de repos reçue par iOS";
+"restAlertScheduled" = "Alerte de repos programmée";

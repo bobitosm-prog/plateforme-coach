@@ -10,6 +10,7 @@ final class BrowserState: ObservableObject {
     @Published var blocked = false
     @Published var cameraDenied = false
     @Published var notificationUnavailable = false
+    @Published var restAlertStatus: String?
     @Published var reloadID = 0
 }
 
@@ -22,8 +23,24 @@ struct PrototypeBrowser: View {
                 HStack {
                     Text("MoovX · TEST / PRODUCTION").font(.caption.bold())
                     Spacer()
+                    Button {
+                        state.restAlertStatus = NSLocalizedString("restAlertReceived", comment: "Rest alert accepted")
+                        RestNotificationManager.shared.scheduleDiagnostic(onScheduled: {
+                            state.restAlertStatus = NSLocalizedString("restAlertScheduled", comment: "Rest alert scheduled")
+                        }, onUnavailable: {
+                            state.notificationUnavailable = true
+                        })
+                    } label: {
+                        Image(systemName: "bell.badge")
+                    }
+                    .accessibilityLabel(NSLocalizedString("restAlertTest", comment: "Test rest notification"))
+                    .frame(minWidth: 44, minHeight: 44)
                     Button("Fermer") { dismiss() }.frame(minWidth: 60, minHeight: 44)
                 }.padding(.horizontal, 12).background(.yellow.opacity(0.15))
+                if let restAlertStatus = state.restAlertStatus {
+                    Text(restAlertStatus).font(.caption2).frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12).padding(.vertical, 4)
+                }
                 if state.loading { ProgressView("Chargement de MoovX…").padding() }
                 if let error = state.error {
                     ContentUnavailableView {
@@ -171,6 +188,7 @@ struct PrototypeWebView: UIViewRepresentable {
                       let active = message.body as? Bool else { return }
                 workoutActive = active
                 refreshWorkoutScreenAwake()
+                if active { RestNotificationManager.shared.prepareAuthorization() }
                 return
             }
             if message.name == "moovxRestTimer" {
@@ -180,10 +198,14 @@ struct PrototypeWebView: UIViewRepresentable {
                       let command = RestTimerMessagePolicy.parse(message.body) else { return }
                 switch command {
                 case .schedule(let deadline):
-                    RestNotificationManager.shared.schedule(at: deadline) { [weak self] in
+                    state.restAlertStatus = NSLocalizedString("restAlertReceived", comment: "Rest alert accepted")
+                    RestNotificationManager.shared.schedule(at: deadline, onScheduled: { [weak self] in
+                        self?.state.restAlertStatus = NSLocalizedString("restAlertScheduled", comment: "Rest alert scheduled")
+                    }, onUnavailable: { [weak self] in
                         self?.state.notificationUnavailable = true
-                    }
+                    })
                 case .cancel:
+                    state.restAlertStatus = nil
                     RestNotificationManager.shared.cancel()
                 }
                 return
@@ -213,6 +235,12 @@ struct PrototypeWebView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             state.loading = false
             refreshCameraPermission()
+#if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--rest-bridge-probe") {
+                let deadline = Int(Date().addingTimeInterval(30).timeIntervalSince1970 * 1000)
+                webView.evaluateJavaScript("window.webkit.messageHandlers.moovxRestTimer.postMessage({action:'schedule',deadlineMs:\(deadline)})")
+            }
+#endif
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
