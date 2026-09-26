@@ -7,7 +7,7 @@ import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, btnPrimary } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, finishRestPeriodSounds, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
+import { initAudio, finishRestPeriodSounds, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, scheduleNativeRestNotification, cancelNativeRestNotification, type ScheduledSound } from '../../lib/timer-audio'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
@@ -323,7 +323,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     setDraftPrompt(null)
   }
-  const discardDraft = () => { cleanupDraft(); setDraftPrompt(null) }
+  const discardDraft = () => { cancelNativeRestNotification(); cleanupDraft(); setDraftPrompt(null) }
 
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
@@ -353,6 +353,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       return
     }
     if (snapshot.state !== 'running' || snapshot.endAt === null) return
+    if (restEndsAtRef.current === 0) scheduleNativeRestNotification(snapshot.endAt)
     restEndsAtRef.current = snapshot.endAt
     if (snapshot.remainingSeconds >= 5) restWarningEligibleRef.current = true
     setRestSecs(snapshot.remainingSeconds)
@@ -589,11 +590,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     restEndsAtRef.current = Date.now() + s * 1000
     restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
+    scheduleNativeRestNotification(restEndsAtRef.current)
     setRestSecs(s); setRestOn(true); setRestDone(false)
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
   const skipRest = () => {
     restCompletionHandledRef.current = true
+    cancelNativeRestNotification()
     // Cancel scheduled audio cues so they don't fire after skip
     if (restScheduledSoundsRef.current.length > 0) {
       cancelScheduledSounds(restScheduledSoundsRef.current)
@@ -604,6 +607,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   }
   const addRestTime = () => {
     restEndsAtRef.current = extendRestTimerDeadline(restEndsAtRef.current, 30)
+    cancelScheduledSounds(restScheduledSoundsRef.current)
+    restScheduledSoundsRef.current = scheduleRestPeriodSounds(Math.max(0, (restEndsAtRef.current - Date.now()) / 1000))
+    restWarningPlayedRef.current = false
+    restWarningEligibleRef.current = true
+    scheduleNativeRestNotification(restEndsAtRef.current)
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
   const dismissRestDone = () => { setRestDone(false) }
@@ -744,6 +752,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     setSaveError(false)
     try {
       const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber, loadMode: s.loadMode ?? e.loadMode ?? 'legacy' }) })) }, draftRef.current)
+      cancelNativeRestNotification()
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
       setDone(true)
@@ -1342,7 +1351,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>{t('cancel')}</button>
-              <button onClick={() => { setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
+              <button onClick={() => { cancelNativeRestNotification(); setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,

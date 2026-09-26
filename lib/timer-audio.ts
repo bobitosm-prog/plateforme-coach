@@ -36,7 +36,32 @@ export function isTimerSoundEnabled(): boolean {
 export function setTimerSoundEnabled(enabled: boolean) {
   if (typeof window !== 'undefined') {
     localStorage.setItem('timerSound', enabled ? 'true' : 'false')
+    if (!enabled) cancelNativeRestNotification()
   }
+}
+
+type NativeRestTimerMessage = { action: 'schedule'; deadlineMs: number } | { action: 'cancel' }
+
+function postNativeRestTimer(message: NativeRestTimerMessage): void {
+  if (typeof window === 'undefined') return
+  const handler = (window as Window & {
+    webkit?: { messageHandlers?: { moovxRestTimer?: { postMessage: (message: NativeRestTimerMessage) => void } } }
+  }).webkit?.messageHandlers?.moovxRestTimer
+  try { handler?.postMessage(message) } catch { /* PWA and older iOS builds have no bridge. */ }
+}
+
+/** The iOS shell delivers the completion alert while the screen is locked. */
+export function scheduleNativeRestNotification(deadlineMs: number): void {
+  if (!isTimerSoundEnabled()) {
+    cancelNativeRestNotification()
+    return
+  }
+  if (!Number.isFinite(deadlineMs) || deadlineMs <= Date.now()) return
+  postNativeRestTimer({ action: 'schedule', deadlineMs })
+}
+
+export function cancelNativeRestNotification(): void {
+  postNativeRestTimer({ action: 'cancel' })
 }
 
 export function playBeep() {
