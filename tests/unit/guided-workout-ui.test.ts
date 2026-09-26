@@ -44,14 +44,18 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
-  it('schedules, extends and cancels one native rest completion alert',()=>{
+  it('reconciles one native rest deadline on mount and return, then extends and cancels it',()=>{
     start([{name:'Squat',sets:2,reps:10,rest:10}])
     log('20')
-    expect(nativeRest.schedule).toHaveBeenCalledOnce()
-    const originalDeadline = nativeRest.schedule.mock.calls[0][0] as number
-    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.addRestTime}))
     expect(nativeRest.schedule).toHaveBeenCalledTimes(2)
-    expect(nativeRest.schedule.mock.calls[1][0]).toBeGreaterThan(originalDeadline)
+    const originalDeadline = nativeRest.schedule.mock.calls[0][0] as number
+    expect(nativeRest.schedule.mock.calls[1][0]).toBe(originalDeadline)
+    act(()=>{window.dispatchEvent(new Event('pageshow'))})
+    expect(nativeRest.schedule).toHaveBeenCalledTimes(3)
+    expect(nativeRest.schedule.mock.calls[2][0]).toBe(originalDeadline)
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.addRestTime}))
+    expect(nativeRest.schedule).toHaveBeenCalledTimes(4)
+    expect(nativeRest.schedule.mock.calls[3][0]).toBeGreaterThan(originalDeadline)
     expect(nativeRest.cancelSound).toHaveBeenCalledOnce()
     fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.skipRest}))
     expect(nativeRest.cancel).toHaveBeenCalledOnce()
@@ -61,7 +65,7 @@ describe('real WorkoutSession runtime',()=>{
     start([{name:'Squat',sets:2,reps:10,rest:3}])
     log('20')
     act(()=>{vi.advanceTimersByTime(3200)})
-    expect(nativeRest.schedule).toHaveBeenCalledOnce()
+    expect(nativeRest.schedule).toHaveBeenCalledTimes(2)
     expect(nativeRest.cancel).not.toHaveBeenCalled()
   })
   it('plays the five-second warning once after returning from another app',()=>{
