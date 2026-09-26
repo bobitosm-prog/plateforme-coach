@@ -48,7 +48,7 @@ const itemStyle: React.CSSProperties = {
 }
 
 const divider: React.CSSProperties = {
-  height: 1, background: colors.divider, margin: '0 16px',
+  height: 8, background: 'transparent', margin: '0 16px',
 }
 
 export default function AccountTab({
@@ -113,7 +113,7 @@ export default function AccountTab({
         {isInBeta && (
           <div style={{
             ...cardStyle, padding: '14px 16px',
-            marginBottom: 24, border: `1px solid ${GOLD}`,
+            marginBottom: 24,
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
             <Clock size={18} color={GOLD} />

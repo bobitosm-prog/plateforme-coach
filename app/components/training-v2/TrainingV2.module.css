@@ -1085,6 +1085,13 @@
   text-align: center;
 }
 
+/* Keep controls legible while removing decorative outlines from large surfaces. */
+.hero, .summary, .timeline, .focus, .restTimer, .exerciseTools,
+.completionCard, .metric, .focusStat, .exerciseToolPanel {
+  border-color: transparent;
+}
+.hero::after { border-color: transparent; }
+
 .completionIcon {
   width: 48px;
   height: 48px;
