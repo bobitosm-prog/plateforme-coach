@@ -5,25 +5,27 @@ let audioCtx: AudioContext | null = null
 /** Initialize/unlock AudioContext — MUST be called during a user interaction (click/tap) */
 export function initAudio() {
   if (typeof window === 'undefined') return
-  if (!audioCtx) {
+  if (!audioCtx || audioCtx.state === 'closed') {
     const AC = window.AudioContext || (window as any).webkitAudioContext
     if (!AC) return
     audioCtx = new AC()
   }
-  // Resume if suspended (iOS suspends on background)
-  if (audioCtx.state === 'suspended') audioCtx.resume()
-  // Play silent oscillator to unlock audio on iOS
-  if (audioCtx.state === 'running') {
+  const ctx = audioCtx
+  // Prime the context after resume as well as after first creation on iOS.
+  const prime = () => {
+    if (ctx.state !== 'running') return
     try {
-      const osc = audioCtx.createOscillator()
-      const gain = audioCtx.createGain()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
       osc.connect(gain)
-      gain.connect(audioCtx.destination)
+      gain.connect(ctx.destination)
       gain.gain.value = 0
       osc.start()
-      osc.stop(audioCtx.currentTime + 0.01)
+      osc.stop(ctx.currentTime + 0.01)
     } catch {}
   }
+  if (ctx.state === 'running') prime()
+  else void ctx.resume().then(prime).catch(() => {})
 }
 
 export function isTimerSoundEnabled(): boolean {
@@ -40,41 +42,48 @@ export function setTimerSoundEnabled(enabled: boolean) {
 export function playBeep() {
   if (!isTimerSoundEnabled()) return
   try {
-    if (!audioCtx) initAudio()
+    if (!audioCtx || audioCtx.state === 'closed') initAudio()
     const ctx = audioCtx
     if (!ctx) return
-    if (ctx.state === 'suspended') ctx.resume()
-    const times = [0, 0.15, 0.3]
-    times.forEach(delay => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = 880
-      osc.type = 'sine'
-      gain.gain.value = 0.4
-      osc.start(ctx.currentTime + delay)
-      osc.stop(ctx.currentTime + delay + 0.12)
-    })
+    const sound = () => {
+      if (ctx.state !== 'running') return
+      ;[0, 0.15, 0.3].forEach(delay => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.value = 880
+        osc.type = 'sine'
+        gain.gain.value = 0.4
+        osc.start(ctx.currentTime + delay)
+        osc.stop(ctx.currentTime + delay + 0.12)
+      })
+    }
+    if (ctx.state === 'running') sound()
+    else void ctx.resume().then(sound).catch(() => {})
   } catch {}
 }
 
 export function playWarningTick() {
   if (!isTimerSoundEnabled()) return
   try {
-    if (!audioCtx) initAudio()
+    if (!audioCtx || audioCtx.state === 'closed') initAudio()
     const ctx = audioCtx
     if (!ctx) return
-    if (ctx.state === 'suspended') ctx.resume()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = 440
-    osc.type = 'sine'
-    gain.gain.value = 0.2
-    osc.start()
-    osc.stop(ctx.currentTime + 0.08)
+    const sound = () => {
+      if (ctx.state !== 'running') return
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 440
+      osc.type = 'sine'
+      gain.gain.value = 0.2
+      osc.start()
+      osc.stop(ctx.currentTime + 0.08)
+    }
+    if (ctx.state === 'running') sound()
+    else void ctx.resume().then(sound).catch(() => {})
   } catch {}
 }
 
@@ -134,6 +143,7 @@ export function vibrateRepComplete() {
 export interface ScheduledSound {
   oscillator: OscillatorNode
   gain: GainNode
+  startsAt: number
 }
 
 /**
@@ -172,7 +182,7 @@ export function scheduleBeep(
   oscillator.start(startAt)
   oscillator.stop(startAt + durationMs / 1000 + 0.01)
 
-  return { oscillator, gain: gainNode }
+  return { oscillator, gain: gainNode, startsAt: startAt }
 }
 
 /**
@@ -202,7 +212,7 @@ export function cancelScheduledSounds(sounds: ScheduledSound[]): void {
  * via cancelScheduledSounds() if rest is skipped.
  */
 export function scheduleRestPeriodSounds(restDurationSeconds: number): ScheduledSound[] {
-  if (!audioCtx) return []
+  if (!isTimerSoundEnabled() || !audioCtx || audioCtx.state === 'closed') return []
 
   const scheduled: ScheduledSound[] = []
 
@@ -221,6 +231,19 @@ export function scheduleRestPeriodSounds(restDurationSeconds: number): Scheduled
   if (s3) scheduled.push(s3)
 
   return scheduled
+}
+
+/** Preserve an on-time scheduled cue; replace a delayed or suspended one. */
+export function finishRestPeriodSounds(sounds: ScheduledSound[]): void {
+  if (!isTimerSoundEnabled()) {
+    cancelScheduledSounds(sounds)
+    return
+  }
+  const firstFinal = sounds.at(-3)
+  if (sounds.length >= 3 && firstFinal && audioCtx?.state === 'running'
+    && audioCtx.currentTime >= firstFinal.startsAt - 0.5) return
+  cancelScheduledSounds(sounds)
+  playBeep()
 }
 
 export const MOTIVATIONAL_MESSAGES = [

@@ -7,7 +7,7 @@ import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
 import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, btnPrimary } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
-import { initAudio, playBeep, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
+import { initAudio, finishRestPeriodSounds, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, type ScheduledSound } from '../../lib/timer-audio'
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
@@ -331,16 +331,16 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const restT = useRef<NodeJS.Timeout | null>(null)
   const restEndsAtRef = useRef(0)
   const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
+  const restCompletionHandledRef = useRef(false)
   const completeRestTimer = useCallback(() => {
-    if (restScheduledSoundsRef.current.length > 0) {
-      cancelScheduledSounds(restScheduledSoundsRef.current)
-      restScheduledSoundsRef.current = []
-    }
+    if (restCompletionHandledRef.current) return
+    restCompletionHandledRef.current = true
+    finishRestPeriodSounds(restScheduledSoundsRef.current)
+    restScheduledSoundsRef.current = []
     setRestOn(false)
     setRestSecs(0)
     setRestDone(true)
     persistDraft({ restTimerEndAt: null })
-    playBeep()
     vibrateDevice()
   }, [persistDraft])
   useEffect(() => {
@@ -483,7 +483,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
       const previousRemaining = prevRemaining.current
       setRestSecs(remaining)
-      if (remaining === 5 && previousRemaining > 5) { playWarningTick(); vibrateDevice() }
+      if (remaining === 5 && previousRemaining > 5) {
+        if (restScheduledSoundsRef.current.length === 0) playWarningTick()
+        vibrateDevice()
+      }
       prevRemaining.current = remaining
       if (remaining === 0 && previousRemaining > 0) {
         completeRestTimer()
@@ -567,6 +570,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId, draftRef.current.userId) }
 
   const startRest = (s: number) => {
+    restCompletionHandledRef.current = false
     if (restT.current) clearInterval(restT.current)
     // Cancel any previously scheduled sounds (defensive: shouldn't happen,
     // but if startRest is called while a previous one is still pending
@@ -581,6 +585,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
   }
   const skipRest = () => {
+    restCompletionHandledRef.current = true
     // Cancel scheduled audio cues so they don't fire after skip
     if (restScheduledSoundsRef.current.length > 0) {
       cancelScheduledSounds(restScheduledSoundsRef.current)

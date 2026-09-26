@@ -23,7 +23,7 @@ vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({
   },
 })}))
 vi.mock('@/app/hooks/useTrainingFollowup',()=>({useTrainingFollowup:()=>({preferences:{enabled:followupEnabled.value,advanced_techniques:followupEnabled.value}})}))
-vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},playBeep:()=>{},playWarningTick:()=>{},vibrateDevice:()=>{},scheduleRestPeriodSounds:()=>[],cancelScheduledSounds:()=>{}}))
+vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},finishRestPeriodSounds:()=>{},playWarningTick:()=>{},vibrateDevice:()=>{},scheduleRestPeriodSounds:()=>[],cancelScheduledSounds:()=>{}}))
 import WorkoutSession from '@/app/components/WorkoutSession'
 import { createActiveWorkoutDraft, type ActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 beforeEach(()=>{followupEnabled.value=false;catalogRows.value=[];vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
