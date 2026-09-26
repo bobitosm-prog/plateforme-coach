@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, ChevronRight, Dumbbell, Play } from 'lucide-react'
+import { Check, ChevronRight, Dumbbell, HeartPulse, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { HomeViewModel, HomeTrainingSession } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
@@ -42,9 +42,12 @@ export default function TodayHero({ training, onStartSession, onOpenSession, onO
     {onOpenSession && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.secondary}`} onClick={() => onOpenSession(session)}>{t('viewSession')} <ChevronRight size={16} aria-hidden="true" /></button></div>}
   </section>
 
-  if (viewState === 'rest') return <section className={styles.hero}>
-    <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{t('restTitle')}</h2><p className={styles.heroCopy}>{t('restCopy')}</p></div>
-    {onOpenProgram && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.secondary}`} onClick={onOpenProgram}>{t('openProgram')}</button></div>}
+  if (viewState === 'rest') return <section className={`${styles.hero} ${styles.heroRest}`}>
+    <div className={styles.heroMain}>
+      <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{t('restTitle')}</h2><p className={styles.heroCopy}>{t('restCopy')}</p></div>
+      <span className={styles.restIcon} aria-hidden="true"><HeartPulse size={46} strokeWidth={1.5} /></span>
+    </div>
+    {onOpenProgram && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.primary}`} onClick={onOpenProgram}>{t('openProgram')}</button></div>}
   </section>
 
   if (viewState === 'scheduled' && session) return <section className={styles.hero}>
