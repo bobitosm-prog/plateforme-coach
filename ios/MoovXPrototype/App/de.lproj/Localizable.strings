@@ -5,6 +5,3 @@
 "restNotificationBody" = "Pause beendet — beginne deinen nächsten Satz.";
 "restNotificationDeniedTitle" = "Pausenhinweis deaktiviert";
 "restNotificationDeniedMessage" = "Erlaube Mitteilungen und Töne für MoovX Test in den Einstellungen, um das Pausenende bei gesperrtem Bildschirm zu hören.";
-"restAlertTest" = "Hinweis in 20 Sekunden testen";
-"restAlertReceived" = "Pausenhinweis von iOS empfangen";
-"restAlertScheduled" = "Pausenhinweis geplant";

@@ -5,6 +5,3 @@
 "restNotificationBody" = "Rest is over — start your next set.";
 "restNotificationDeniedTitle" = "Rest alert unavailable";
 "restNotificationDeniedMessage" = "Allow notifications and sounds for MoovX Test in Settings to hear the end of your rest while the screen is locked.";
-"restAlertTest" = "Test an alert in 20 seconds";
-"restAlertReceived" = "Rest alert received by iOS";
-"restAlertScheduled" = "Rest alert scheduled";

@@ -25,28 +25,6 @@ final class RestNotificationManager: NSObject, UNUserNotificationCenterDelegate 
         }
     }
 
-    /// Separate test request so the diagnostic button cannot replace a real rest alert.
-    func scheduleDiagnostic(onScheduled: @escaping @MainActor () -> Void,
-                            onUnavailable: @escaping @MainActor () -> Void) {
-        Task {
-            var settings = await center.notificationSettings()
-            if settings.authorizationStatus == .notDetermined {
-                _ = try? await center.requestAuthorization(options: [.alert, .sound])
-                settings = await center.notificationSettings()
-            }
-            guard settings.authorizationStatus == .authorized,
-                  settings.soundSetting == .enabled else { onUnavailable(); return }
-            let content = UNMutableNotificationContent()
-            content.title = "MoovX"
-            content.body = NSLocalizedString("restNotificationBody", comment: "Rest timer completion")
-            content.sound = .default
-            let request = UNNotificationRequest(identifier: "ch.moovx.rest-diagnostic", content: content,
-                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 20, repeats: false))
-            do { try await center.add(request); onScheduled() }
-            catch { onUnavailable() }
-        }
-    }
-
     func schedule(at deadline: Date,
                   onScheduled: @escaping @MainActor () -> Void = {},
                   onUnavailable: @escaping @MainActor () -> Void) {
