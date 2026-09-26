@@ -503,6 +503,22 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     restT.current = setInterval(tick, 200)
     return () => { if (restT.current) clearInterval(restT.current) }
   }, [completeRestTimer, restOn])
+  useEffect(() => {
+    if (!restOn) return
+    // Reconcile the native alert after the rest UI mounts and whenever iOS
+    // returns to the page. Scheduling uses one stable native identifier.
+    const syncNativeAlert = () => {
+      if (restEndsAtRef.current > Date.now()) scheduleNativeRestNotification(restEndsAtRef.current)
+    }
+    syncNativeAlert()
+    const onVisible = () => { if (document.visibilityState === 'visible') syncNativeAlert() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pageshow', syncNativeAlert)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('pageshow', syncNativeAlert)
+    }
+  }, [restOn])
   // Force recalc when app becomes visible (iOS Safari suspends setInterval)
   useEffect(() => {
     if (!restOn) return
