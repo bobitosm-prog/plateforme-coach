@@ -207,7 +207,8 @@ export function cancelScheduledSounds(sounds: ScheduledSound[]): void {
 }
 
 /**
- * Schedule the full sequence of rest period sounds at once.
+ * Schedule the final rest cue at once; the T-5 warning is played by the
+ * visible countdown in WorkoutSession.
  * Returns the list of scheduled sounds so they can be cancelled
  * via cancelScheduledSounds() if rest is skipped.
  */
@@ -216,12 +217,9 @@ export function scheduleRestPeriodSounds(restDurationSeconds: number): Scheduled
 
   const scheduled: ScheduledSound[] = []
 
-  // Warning tick à T-5s (440Hz, volume 0.2)
-  if (restDurationSeconds > 5) {
-    const s = scheduleBeep(restDurationSeconds - 5, 440, 0.2, 60)
-    if (s) scheduled.push(s)
-  }
-
+  // The warning is driven by the visible countdown. On iOS a pre-scheduled
+  // warning can remain pending if the audio clock pauses during an app switch.
+  // Keep only the final cue scheduled so it can survive a paused JS timer.
   // Beep final : 3 ticks rapides à T=0 (880Hz, volume 0.4)
   const s1 = scheduleBeep(restDurationSeconds, 880, 0.4, 80)
   if (s1) scheduled.push(s1)

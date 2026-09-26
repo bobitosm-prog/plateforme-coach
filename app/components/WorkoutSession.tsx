@@ -332,6 +332,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const restEndsAtRef = useRef(0)
   const restScheduledSoundsRef = useRef<ScheduledSound[]>([])
   const restCompletionHandledRef = useRef(false)
+  const restWarningPlayedRef = useRef(false)
+  const restWarningEligibleRef = useRef(false)
   const completeRestTimer = useCallback(() => {
     if (restCompletionHandledRef.current) return
     restCompletionHandledRef.current = true
@@ -352,6 +354,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     if (snapshot.state !== 'running' || snapshot.endAt === null) return
     restEndsAtRef.current = snapshot.endAt
+    if (snapshot.remainingSeconds >= 5) restWarningEligibleRef.current = true
     setRestSecs(snapshot.remainingSeconds)
     setRestOn(true)
   }, [completeRestTimer, draft.restTimerEndAt])
@@ -483,8 +486,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const remaining = Math.max(0, Math.ceil((restEndsAtRef.current - Date.now()) / 1000))
       const previousRemaining = prevRemaining.current
       setRestSecs(remaining)
-      if (remaining === 5 && previousRemaining > 5) {
-        if (restScheduledSoundsRef.current.length === 0) playWarningTick()
+      // The audio clock may pause while another iOS app is open. Fire the
+      // warning once from the visible countdown, even if JS crossed T-5 hidden.
+      if (remaining > 0 && remaining <= 5 && restWarningEligibleRef.current && !restWarningPlayedRef.current && document.visibilityState === 'visible') {
+        restWarningPlayedRef.current = true
+        playWarningTick()
         vibrateDevice()
       }
       prevRemaining.current = remaining
@@ -571,6 +577,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const startRest = (s: number) => {
     restCompletionHandledRef.current = false
+    restWarningPlayedRef.current = false
+    restWarningEligibleRef.current = s >= 5
     if (restT.current) clearInterval(restT.current)
     // Cancel any previously scheduled sounds (defensive: shouldn't happen,
     // but if startRest is called while a previous one is still pending

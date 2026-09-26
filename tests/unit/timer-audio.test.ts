@@ -49,12 +49,12 @@ describe('rest timer audio', () => {
     audio.initAudio()
     const ctx = lastContext!
     const sounds = audio.scheduleRestPeriodSounds(10)
-    expect(sounds).toHaveLength(4)
+    expect(sounds).toHaveLength(3)
     const originalCount = ctx.oscillators.length
     ctx.currentTime = 10
     audio.finishRestPeriodSounds(sounds)
     expect(ctx.oscillators).toHaveLength(originalCount)
-    expect(ctx.oscillators.slice(-4).every(osc => osc.stop.mock.calls.length === 1)).toBe(true)
+    expect(ctx.oscillators.slice(-3).every(osc => osc.stop.mock.calls.length === 1)).toBe(true)
   })
 
   it('replaces a suspended scheduled cue with an immediate finish cue', async () => {
@@ -68,7 +68,7 @@ describe('rest timer audio', () => {
     audio.finishRestPeriodSounds(sounds)
     await Promise.resolve()
     expect(ctx.oscillators).toHaveLength(originalCount + 3)
-    expect(ctx.oscillators.slice(1, 5).every(osc => osc.stop.mock.calls.length === 2)).toBe(true)
+    expect(ctx.oscillators.slice(1, 4).every(osc => osc.stop.mock.calls.length === 2)).toBe(true)
   })
 
   it('replaces a cue delayed by an interrupted audio clock', async () => {
@@ -113,7 +113,7 @@ describe('rest timer audio', () => {
     ctx.currentTime = 10
     audio.finishRestPeriodSounds(sounds)
     expect(ctx.oscillators).toHaveLength(originalCount)
-    expect(ctx.oscillators.slice(-4).every(osc => osc.stop.mock.calls.length === 2)).toBe(true)
+    expect(ctx.oscillators.slice(-3).every(osc => osc.stop.mock.calls.length === 2)).toBe(true)
   })
 })
 
