@@ -1034,3 +1034,9 @@
   .activePlanMealSummary > button:first-child svg,
   .toolsGrid button { transition: none; }
 }
+
+/* The card background, not a hairline, separates dashboard sections. */
+.hero, .supportingMetric, .macros, .macroCard, .todayMeals, .mealRow,
+.activePlan, .activePlanMeal, .tools, .mealChooser {
+  border-color: transparent;
+}

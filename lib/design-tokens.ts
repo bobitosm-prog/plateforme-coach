@@ -77,7 +77,7 @@ export const spacing = {
 /** Standard card container */
 export const cardStyle: React.CSSProperties = {
   background: colors.surfaceCard,
-  border: '1px solid rgba(255,255,255,0.07)',
+  border: '1px solid transparent',
   borderRadius: radii.card,
   boxShadow:
     '0 1px 0 0 rgba(255,255,255,0.03) inset, 0 6px 24px -4px rgba(0,0,0,0.5)',

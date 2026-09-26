@@ -190,3 +190,16 @@
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
 @media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .statusSummaryCopy small, .statusSignalMain small, .statusPanelTop p { display: none; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }
 @media (max-width: 360px) { .statusSummary { grid-template-columns: auto minmax(0,1fr); padding-inline: 14px; } .statusSummaryMarkers { display: none; } .statusSignal { grid-template-columns: 36px minmax(0,1fr) auto; padding-inline: 11px; } .statusSignalIcon { width: 36px; height: 36px; } .statusPanelTop { display: block; } .statusAction { width: 100%; margin-top: 10px; } }
+
+/* Decorative card strokes are intentionally invisible; surfaces and spacing carry the hierarchy. */
+.header, .hero, .quickCard, .weeklyCard, .statusCockpit, .statusPanel,
+.nba, .progression, .progressionMetric, .intelligenceCard, .coachWeekItem {
+  border-color: transparent;
+}
+.statusSignals, .statusSignal, .statusFact, .statusFacts, .checkInPanel {
+  border-color: transparent;
+}
+.secondary, .compactButton {
+  border-color: transparent;
+  background: rgba(201,168,76,.12);
+}

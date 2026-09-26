@@ -169,3 +169,13 @@
 @media (min-width: 768px) { .page { padding: 34px 28px 120px; } }
 @media (min-width: 768px) and (max-width: 1050px) { .trendGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .trendCard:last-child { grid-column: 1 / -1; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .primaryButton, .secondaryToggle > svg, .compareCanvas img { transition: none; } .primaryButton:hover { transform: none; } }
+
+/* Keep charts and metrics grouped by their tonal surfaces instead of strokes. */
+.hero, .heroPrimaryMetric, .heroSupportingMetrics > div, .trendCard,
+.detailSection, .detailState, .performanceCard, .recordGroup,
+.exerciseFigure, .volumeFigure, .volumeMetrics > div, .sectionNav,
+.secondaryCard, .compactState, .wellbeingGrid article,
+.advancedGrid > section, .weightMetrics > div, .weightFigure,
+.measurementCard {
+  border-color: transparent;
+}
