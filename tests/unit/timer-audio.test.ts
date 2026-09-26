@@ -44,6 +44,21 @@ beforeEach(() => {
 })
 
 describe('rest timer audio', () => {
+  it('sends a native completion deadline only when sound is enabled', async () => {
+    const postMessage = vi.fn()
+    vi.stubGlobal('webkit', { messageHandlers: { moovxRestTimer: { postMessage } } })
+    const audio = await import('@/lib/timer-audio')
+    const deadline = Date.now() + 20_000
+    audio.scheduleNativeRestNotification(deadline)
+    expect(postMessage).toHaveBeenCalledWith({ action: 'schedule', deadlineMs: deadline })
+    audio.setTimerSoundEnabled(false)
+    expect(postMessage).toHaveBeenCalledWith({ action: 'cancel' })
+    postMessage.mockClear()
+    audio.scheduleNativeRestNotification(deadline)
+    expect(postMessage).toHaveBeenCalledOnce()
+    expect(postMessage).toHaveBeenCalledWith({ action: 'cancel' })
+    vi.unstubAllGlobals()
+  })
   it('does not cancel or double-play an on-time scheduled finish cue', async () => {
     const audio = await import('@/lib/timer-audio')
     audio.initAudio()

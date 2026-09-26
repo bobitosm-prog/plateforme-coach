@@ -6,6 +6,7 @@ import messages from '@/messages/fr.json'
 const followupEnabled = vi.hoisted(() => ({ value: false }))
 const catalogRows = vi.hoisted(() => ({ value: [] as Array<Record<string, unknown>> }))
 const warningTick = vi.hoisted(() => vi.fn())
+const nativeRest = vi.hoisted(() => ({ schedule: vi.fn(), cancel: vi.fn(), scheduleSound: vi.fn(() => []), cancelSound: vi.fn() }))
 vi.mock('next-intl',()=>({useLocale:()=> 'fr',useTranslations:(namespace:string)=> (key:string,values:Record<string,unknown>={})=>{
   const obj=namespace.split('.').reduce((o:any,k)=>o?.[k],messages)
   return String(obj?.[key]??key).replace(/\{(\w+)\}/g,(_,k)=>String(values[k]??k))
@@ -24,10 +25,10 @@ vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({
   },
 })}))
 vi.mock('@/app/hooks/useTrainingFollowup',()=>({useTrainingFollowup:()=>({preferences:{enabled:followupEnabled.value,advanced_techniques:followupEnabled.value}})}))
-vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},finishRestPeriodSounds:()=>{},playWarningTick:warningTick,vibrateDevice:()=>{},scheduleRestPeriodSounds:()=>[],cancelScheduledSounds:()=>{}}))
+vi.mock('@/lib/timer-audio',()=>({initAudio:()=>{},finishRestPeriodSounds:()=>{},playWarningTick:warningTick,vibrateDevice:()=>{},scheduleRestPeriodSounds:nativeRest.scheduleSound,cancelScheduledSounds:nativeRest.cancelSound,scheduleNativeRestNotification:nativeRest.schedule,cancelNativeRestNotification:nativeRest.cancel}))
 import WorkoutSession from '@/app/components/WorkoutSession'
 import { createActiveWorkoutDraft, type ActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
-beforeEach(()=>{followupEnabled.value=false;catalogRows.value=[];warningTick.mockClear();vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
+beforeEach(()=>{followupEnabled.value=false;catalogRows.value=[];warningTick.mockClear();Object.values(nativeRest).forEach(mock=>mock.mockClear());vi.stubGlobal('React',React);localStorage.clear();vi.spyOn(HTMLMediaElement.prototype,'play').mockResolvedValue();vi.spyOn(HTMLMediaElement.prototype,'pause').mockImplementation(()=>{})})
 afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const start=(exercises:unknown[],existing?:ActiveWorkoutDraft)=>{
   const draft=existing??createActiveWorkoutDraft({userId:'synthetic',programSource:'personal',programId:null,sessionName:'Test',sessionKey:'test',exercises})
@@ -43,6 +44,26 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('schedules, extends and cancels one native rest completion alert',()=>{
+    start([{name:'Squat',sets:2,reps:10,rest:10}])
+    log('20')
+    expect(nativeRest.schedule).toHaveBeenCalledOnce()
+    const originalDeadline = nativeRest.schedule.mock.calls[0][0] as number
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.addRestTime}))
+    expect(nativeRest.schedule).toHaveBeenCalledTimes(2)
+    expect(nativeRest.schedule.mock.calls[1][0]).toBeGreaterThan(originalDeadline)
+    expect(nativeRest.cancelSound).toHaveBeenCalledOnce()
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.skipRest}))
+    expect(nativeRest.cancel).toHaveBeenCalledOnce()
+  })
+  it('leaves the native alert intact at the deadline for locked-screen delivery',()=>{
+    vi.useFakeTimers()
+    start([{name:'Squat',sets:2,reps:10,rest:3}])
+    log('20')
+    act(()=>{vi.advanceTimersByTime(3200)})
+    expect(nativeRest.schedule).toHaveBeenCalledOnce()
+    expect(nativeRest.cancel).not.toHaveBeenCalled()
+  })
   it('plays the five-second warning once after returning from another app',()=>{
     vi.useFakeTimers()
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
