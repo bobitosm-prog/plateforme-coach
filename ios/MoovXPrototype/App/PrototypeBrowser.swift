@@ -9,6 +9,7 @@ final class BrowserState: ObservableObject {
     @Published var error: String?
     @Published var blocked = false
     @Published var cameraDenied = false
+    @Published var notificationUnavailable = false
     @Published var reloadID = 0
 }
 
@@ -53,6 +54,15 @@ struct PrototypeBrowser: View {
             } message: {
                 Text(NSLocalizedString("cameraDeniedMessage", comment: "How to enable camera access"))
             }
+            .alert(NSLocalizedString("restNotificationDeniedTitle", comment: "Rest notification unavailable"), isPresented: $state.notificationUnavailable) {
+                Button(NSLocalizedString("cameraSettings", comment: "Open app settings")) {
+                    guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(url)
+                }
+                Button(NSLocalizedString("cameraCancel", comment: "Dismiss alert"), role: .cancel) {}
+            } message: {
+                Text(NSLocalizedString("restNotificationDeniedMessage", comment: "How to allow locked-screen rest alerts"))
+            }
     }
 }
 
@@ -80,6 +90,7 @@ struct PrototypeWebView: UIViewRepresentable {
         configuration.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         configuration.userContentController.add(context.coordinator, name: "moovxCameraDenied")
         configuration.userContentController.add(context.coordinator, name: "moovxWorkoutActive")
+        configuration.userContentController.add(context.coordinator, name: "moovxRestTimer")
         // Separate app sandbox; no Safari credentials. Messages contain only
         // camera permission or workout visibility state, never workout data.
         configuration.websiteDataStore = .default()
@@ -101,6 +112,7 @@ struct PrototypeWebView: UIViewRepresentable {
         uiView.navigationDelegate = nil
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxCameraDenied")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWorkoutActive")
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxRestTimer")
         coordinator.stopObservingCameraPermission()
         coordinator.stopObservingWorkoutScreenAwake()
     }
@@ -159,6 +171,21 @@ struct PrototypeWebView: UIViewRepresentable {
                       let active = message.body as? Bool else { return }
                 workoutActive = active
                 refreshWorkoutScreenAwake()
+                return
+            }
+            if message.name == "moovxRestTimer" {
+                guard message.frameInfo.isMainFrame,
+                      message.frameInfo.securityOrigin.protocol == "https",
+                      message.frameInfo.securityOrigin.host == "app.moovx.ch",
+                      let command = RestTimerMessagePolicy.parse(message.body) else { return }
+                switch command {
+                case .schedule(let deadline):
+                    RestNotificationManager.shared.schedule(at: deadline) { [weak self] in
+                        self?.state.notificationUnavailable = true
+                    }
+                case .cancel:
+                    RestNotificationManager.shared.cancel()
+                }
                 return
             }
             guard message.name == "moovxCameraDenied", message.frameInfo.isMainFrame,

@@ -2,3 +2,6 @@
 "cameraDeniedMessage" = "Erlaube MoovX Test den Kamerazugriff in den Einstellungen und versuche es erneut.";
 "cameraSettings" = "Einstellungen öffnen";
 "cameraCancel" = "Abbrechen";
+"restNotificationBody" = "Pause beendet — beginne deinen nächsten Satz.";
+"restNotificationDeniedTitle" = "Pausenhinweis deaktiviert";
+"restNotificationDeniedMessage" = "Erlaube Mitteilungen und Töne für MoovX Test in den Einstellungen, um das Pausenende bei gesperrtem Bildschirm zu hören.";

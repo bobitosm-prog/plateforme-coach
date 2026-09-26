@@ -30,6 +30,7 @@ xcodebuild -project ios/MoovXPrototype/MoovXPrototype.xcodeproj \
   -derivedDataPath ios/DerivedData build
 
 swiftc ios/MoovXPrototype/App/NavigationPolicy.swift \
+  ios/MoovXPrototype/App/RestTimerMessagePolicy.swift \
   ios/MoovXPrototype/Tests/main.swift -o /tmp/moovx-ios-navigation-tests
 /tmp/moovx-ios-navigation-tests
 ```
@@ -53,7 +54,16 @@ contrôle visuel anonyme ; aucun identifiant ni jeton n'est transmis.
   déconnexion et isolation entre comptes non qualifiées.
 - OAuth externe bloqué explicitement ; retours email et universal links à construire.
 - Le droit caméra est déclaré pour la photo de repas et le code-barres ; aucun
-  accès Santé, microphone, notifications ou stockage partagé n'est ajouté.
+  accès Santé, microphone ou stockage partagé n'est ajouté.
+- Le repos peut programmer une notification locale unique à son échéance. La
+  première programmation demande l'autorisation système pour alertes et sons ;
+  aucune notification push, serveur ou mode audio d'arrière-plan n'est utilisé.
+  Le pont accepte uniquement un délai fini dans les 30 minutes depuis la page
+  principale HTTPS app.moovx.ch. Une prolongation remplace l'alerte, « Passer »
+  l'annule, et l'alerte native reste silencieuse si la séance est au premier plan
+  (le son web joue alors). Le mode silencieux, Concentration et les réglages iOS
+  peuvent empêcher le son. Le test physique écran verrouillé du build 3 reste
+  nécessaire ; le simulateur ne le prouve pas.
 - Chargement, erreur réseau et interruption du processus WebKit présentés dans
   l'interface. Pas de promesse de sauvegarde/reprise ou fonctionnement hors ligne.
 - Icône de test issue de l'artwork web 512 × 512, pas de source native définitive

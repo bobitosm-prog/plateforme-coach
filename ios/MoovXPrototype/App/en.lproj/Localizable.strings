@@ -2,3 +2,6 @@
 "cameraDeniedMessage" = "Allow camera access for MoovX Test in Settings, then try again.";
 "cameraSettings" = "Open Settings";
 "cameraCancel" = "Cancel";
+"restNotificationBody" = "Rest is over — start your next set.";
+"restNotificationDeniedTitle" = "Rest alert unavailable";
+"restNotificationDeniedMessage" = "Allow notifications and sounds for MoovX Test in Settings to hear the end of your rest while the screen is locked.";

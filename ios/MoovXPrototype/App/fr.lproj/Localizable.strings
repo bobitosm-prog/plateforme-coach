@@ -2,3 +2,6 @@
 "cameraDeniedMessage" = "Autorise l’accès à la caméra pour MoovX Test dans Réglages, puis réessaie.";
 "cameraSettings" = "Ouvrir Réglages";
 "cameraCancel" = "Annuler";
+"restNotificationBody" = "Repos terminé — reprends ta série.";
+"restNotificationDeniedTitle" = "Alerte de repos désactivée";
+"restNotificationDeniedMessage" = "Autorise les notifications et leur son pour MoovX Test dans Réglages afin d’entendre la fin du repos écran verrouillé.";
