@@ -203,3 +203,102 @@
   border-color: transparent;
   background: rgba(201,168,76,.12);
 }
+
+/* Athlete dashboard: hierarchy comes from typography and distinct tonal surfaces. */
+.shell { padding-top: 20px; }
+.header {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 28px;
+  margin-bottom: 24px;
+  padding: 0 2px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.headerTop { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.wordmark { color: #f7f4ed; font-size: 1.75rem; font-weight: 850; line-height: 1; letter-spacing: -.055em; }
+.wordmark span { color: #e6c364; }
+.headerCopy { display: flex; flex-direction: column; align-items: flex-start; }
+.eyebrow { margin-bottom: 8px; color: #aaa397; font-size: .91rem; }
+.title { font-size: clamp(2.4rem, 9vw, 3.5rem); font-weight: 800; letter-spacing: -.055em; }
+.dateButton { margin: 8px 0 0 -10px; color: #a9a296; font-size: .92rem; }
+.identity { min-width: 0; flex-direction: row; align-items: center; gap: 8px; }
+.brandButton {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  color: #e6c364;
+  background: #242119;
+  box-shadow: none;
+}
+.accountAvatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.metric { border-color: transparent; background: #22201b; }
+.hero {
+  min-height: 0;
+  gap: 22px;
+  padding: 24px;
+  border: 0;
+  border-radius: 22px;
+  background: #211f19;
+  box-shadow: none;
+}
+.heroRest { background: #242118; }
+.heroMain { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 12px; }
+.restIcon { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; color: #e6c364; background: #343022; }
+.heroLabel { margin-bottom: 8px; font-size: .72rem; letter-spacing: .17em; }
+.heroTitle { font-size: clamp(1.75rem, 7vw, 2.7rem); font-weight: 800; letter-spacing: -.04em; }
+.heroCopy { max-width: 46ch; color: #bdb5a8; font-size: .9rem; line-height: 1.5; }
+.actions { margin-top: 0; }
+.button { border: 0; }
+.primary { color: #17130b; background: #e6c364; }
+.secondary { color: #e6c364; background: #343022; }
+.statusSection { margin-top: 28px; }
+.sectionTitle { margin-bottom: 14px; font-size: 1.32rem; font-weight: 750; letter-spacing: -.025em; }
+.statusCockpit { overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.statusSummary { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.statusSignals { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; border: 0; }
+.statusSignal {
+  position: relative;
+  display: flex;
+  min-height: 166px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px;
+  border: 0;
+  border-radius: 18px;
+  background: #1d1c19;
+  box-shadow: none;
+}
+.statusSignal[data-domain='recovery'] { grid-column: 1 / -1; min-height: 84px; flex-direction: row; align-items: center; justify-content: flex-start; }
+.statusSignalIcon { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: #302b1e; }
+.statusSignalMain { width: 100%; }
+.statusSignalLabel { color: #c4b8a2; font-size: .69rem; letter-spacing: .14em; }
+.statusSignalLabel i { display: none; }
+.statusSignalMain strong { margin-top: 5px; overflow: visible; font-size: .99rem; white-space: normal; }
+.statusSignalMain small { display: block; overflow: visible; color: #a9a194; font-size: .76rem; white-space: normal; }
+.statusChevron { position: absolute; top: 20px; right: 16px; color: #928b7d; }
+.statusSignal[data-active='true'] { background: #29251c; box-shadow: 0 8px 24px rgba(0,0,0,.22); }
+.statusSignal[data-active='true'] .statusChevron { color: #e6c364; transform: rotate(90deg); }
+.statusPanel { margin: 10px 0 0; border: 0; border-radius: 18px; background: #242119; }
+.statusPanel[hidden] { display: none; }
+.nba { margin-top: 20px; border: 0; border-radius: 18px; background: #1d1c19; }
+.nbaButton { width: 100%; }
+@media (min-width: 700px) {
+  .statusSignals { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .statusSignal[data-domain='recovery'] { grid-column: auto; min-height: 166px; flex-direction: column; align-items: flex-start; justify-content: space-between; }
+  .nbaButton { width: auto; }
+}
+@media (max-width: 360px) {
+  .hero { padding: 20px; }
+  .restIcon { width: 48px; height: 48px; }
+  .statusSignal { min-height: 154px; padding: 14px; }
+  .statusSignal[data-domain='recovery'] { min-height: 84px; }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarDays, Flame, Sparkles } from 'lucide-react'
+import { CalendarDays, Flame, Sparkles, UserRound } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import Image from 'next/image'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
@@ -27,29 +27,30 @@ export default function HomeV2Header({
   }).format(date)
 
   return <header className={styles.header} data-interactive-header>
-    <div className={styles.headerGlow} aria-hidden="true" />
+    <div className={styles.headerTop}>
+      <span className={styles.wordmark} aria-label="MoovX">Moov<span>X</span></span>
+      <div className={styles.identity}>
+        <div className={styles.metrics} aria-label={t('secondaryMetrics')}>
+          {identity.streak > 0 && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openStreak', { count: identity.streak })}>
+            <Flame size={14} aria-hidden="true" /> {identity.streak}
+          </button>}
+          {identity.xp != null && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openXp', { count: identity.xp })}>
+            <Sparkles size={13} aria-hidden="true" /> {identity.xp} XP
+          </button>}
+        </div>
+        <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>
+          {identity.avatar
+            ? <Image className={styles.accountAvatar} src={identity.avatar} alt="" width={44} height={44} unoptimized />
+            : <UserRound size={22} aria-hidden="true" />}
+        </button>
+      </div>
+    </div>
     <div className={styles.headerCopy}>
       <p className={styles.eyebrow}>{t('hello', { name: identity.firstName })}</p>
       <h1 className={styles.title}>{t('today')}</h1>
       <button type="button" className={styles.dateButton} onClick={onOpenTraining}>
         <CalendarDays size={15} aria-hidden="true" />
         <span>{formattedDate}</span>
-      </button>
-    </div>
-    <div className={styles.identity}>
-      <div className={styles.metrics} aria-label={t('secondaryMetrics')}>
-        {identity.streak > 0 && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openStreak', { count: identity.streak })}>
-          <Flame size={14} aria-hidden="true" /> {identity.streak}
-        </button>}
-        {identity.xp != null && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openXp', { count: identity.xp })}>
-          <Sparkles size={13} aria-hidden="true" /> {identity.xp} XP
-        </button>}
-      </div>
-      <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>
-        <Image className={styles.brandMark} src="/logo-moovx.svg" alt="" width={58} height={58} priority />
-        {identity.avatar
-          ? <Image className={styles.avatarBadge} src={identity.avatar} alt="" width={25} height={25} unoptimized />
-          : <span className={styles.avatarBadgeFallback} aria-hidden="true">{identity.firstName.slice(0, 1).toUpperCase()}</span>}
       </button>
     </div>
   </header>

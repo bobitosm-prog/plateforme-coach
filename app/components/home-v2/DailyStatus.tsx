@@ -124,7 +124,10 @@ export default function DailyStatus({
         })
       : null,
   ].filter((fact): fact is string => Boolean(fact))
-  const trainingDetail = [training.session?.title || null, exerciseCountLabel]
+  const trainingDetail = [
+    presentation.training.status === 'rest' ? null : training.session?.title || null,
+    exerciseCountLabel,
+  ]
     .filter((fact): fact is string => Boolean(fact))
     .join(' · ') || t(`training.detail.${presentation.training.status}`)
   const nutritionDetail = nutrition.caloriesConsumed != null && nutrition.caloriesTarget != null
@@ -184,7 +187,7 @@ export default function DailyStatus({
           status={t(`training.${presentation.training.status}`)}
           detail={trainingDetail}
           tone={presentation.training.tone}
-          selected={selectedDomain === 'training'}
+          selected={userSelectedDomain === 'training'}
           busy={training.state === 'loading'}
           onSelect={setUserSelectedDomain}
         />
@@ -195,7 +198,7 @@ export default function DailyStatus({
           status={t(`nutrition.${presentation.nutrition.status}`)}
           detail={nutritionDetail}
           tone={presentation.nutrition.tone}
-          selected={selectedDomain === 'nutrition'}
+          selected={userSelectedDomain === 'nutrition'}
           busy={nutrition.state === 'loading'}
           onSelect={setUserSelectedDomain}
         />
@@ -206,7 +209,7 @@ export default function DailyStatus({
           status={t(`recovery.${presentation.recovery.status}`)}
           detail={recoveryDetail}
           tone={presentation.recovery.tone}
-          selected={selectedDomain === 'recovery'}
+          selected={userSelectedDomain === 'recovery'}
           busy={recovery.state === 'loading'}
           onSelect={setUserSelectedDomain}
         />
@@ -215,6 +218,7 @@ export default function DailyStatus({
       <div
         id="daily-status-panel"
         className={styles.statusPanel}
+        hidden={!userSelectedDomain}
         data-domain={selectedDomain}
         data-tone={presentation[selectedDomain].tone}
         role={presentation[selectedDomain].status === 'error' ? 'status' : 'region'}
