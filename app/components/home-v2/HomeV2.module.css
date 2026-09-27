@@ -334,3 +334,103 @@
   .statusSignal { min-height: 154px; padding: 14px; }
   .statusSignal[data-domain='recovery'] { min-height: 84px; }
 }
+
+/* The training feature and both status tiles form one factual daily block. */
+.statusSection { margin-top: 0; }
+.statusCockpit { display: grid; gap: 10px; }
+.statusCockpit .hero {
+  min-height: 170px;
+  gap: 16px;
+  padding: 20px;
+  background: #28251d;
+}
+.statusCockpit .hero.success { background: #24281f; }
+.statusCockpit .hero.error { background: #29211e; }
+.heroStatusIcon, .restIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: #e6c364;
+  background: #353023;
+}
+.heroStatusIcon { color: #64d98a; }
+.heroMain > div { min-width: 0; }
+.statusCockpit .heroTitle { font-size: clamp(1.45rem, 5.7vw, 2.15rem); }
+.statusCockpit .heroCopy { margin-top: 7px; }
+.statusCockpit .meta { margin-top: 9px; }
+.statusCockpit .actions { margin-top: auto; }
+.statusCockpit .hero .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: #e6c364;
+  background: transparent;
+  font-size: .84rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.statusCockpit .hero .button:hover { transform: none; color: #f0d27c; }
+.statusSignals { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.statusTile {
+  display: flex;
+  min-width: 0;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #1d1c19;
+}
+.statusTileIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: #e6c364;
+  background: #302b1e;
+}
+.statusTile[data-tone='critical'] .statusTileIcon, .statusTile[data-tone='error'] .statusTileIcon { color: #ff8b90; }
+.statusTile[data-tone='positive'] .statusTileIcon { color: #64d98a; }
+.statusTileCopy { min-width: 0; width: 100%; }
+.statusTileLabel { color: #c4b8a2; font-size: .68rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+.statusTileCopy strong { display: block; margin-top: 5px; overflow-wrap: anywhere; color: #f7f4ed; font-size: 1.02rem; line-height: 1.25; }
+.statusTileCopy p { margin: 5px 0 0; overflow-wrap: anywhere; color: #aaa294; font-size: .78rem; line-height: 1.4; }
+.statusTileFacts { display: flex; flex-wrap: wrap; gap: 3px 8px; margin-top: 8px; color: #c2b9a9; font-size: .72rem; line-height: 1.35; }
+.statusTileActions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 100%; margin-top: auto; }
+.statusTileLink, .statusTileIconAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  color: #e6c364;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.statusTileLink { gap: 4px; padding: 0; font-size: .76rem; font-weight: 750; text-align: left; }
+.statusTileIconAction { width: 44px; padding: 0; background: #2b271e; }
+.statusTileLink:focus-visible, .statusTileIconAction:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .statusTileLink:hover { color: #f0d27c; }
+  .statusTileIconAction:hover { background: #393121; }
+}
+@media (max-width: 520px) {
+  .statusTileActions .statusTileLink { flex-basis: 100%; }
+}
+@media (max-width: 360px) {
+  .statusTile { padding: 13px; }
+  .statusTileCopy strong { font-size: .95rem; }
+  .statusTileLink { font-size: .7rem; }
+}

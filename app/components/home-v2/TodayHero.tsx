@@ -26,41 +26,42 @@ export function getTodayHeroState(training: HomeViewModel['training']): TodayHer
 
 export default function TodayHero({ training, onStartSession, onOpenSession, onOpenProgram, onStartFreeSession }: TodayHeroProps) {
   const t = useTranslations('home.v2.hero')
+  const statusT = useTranslations('home.v2.dailyStatus')
   const viewState = getTodayHeroState(training)
   if (viewState === 'loading') return <section className={styles.hero} aria-busy="true" aria-label={t('loading')}>
     <div><div className={styles.skeletonLine} /><div className={`${styles.skeletonLine} ${styles.skeletonTitle}`} /><div className={styles.skeletonLine} /></div>
   </section>
 
   if (viewState === 'error') return <section className={`${styles.hero} ${styles.error}`} role="status">
-    <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{t('errorTitle')}</h2><p className={styles.heroCopy}>{t('errorCopy')}</p></div>
+    <div><p className={styles.heroLabel}>{statusT('training.label')}</p><h3 className={styles.heroTitle}>{t('errorTitle')}</h3><p className={styles.heroCopy}>{t('errorCopy')}</p></div>
     {onOpenProgram && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.secondary}`} onClick={onOpenProgram}>{t('openProgram')}</button></div>}
   </section>
 
   const session = training.session
   if (viewState === 'completed' && session) return <section className={`${styles.hero} ${styles.success}`}>
-    <div><p className={styles.heroLabel}><Check size={15} aria-hidden="true" /> {t('completedLabel')}</p><h2 className={styles.heroTitle}>{t('completedTitle')}</h2><p className={styles.heroCopy}>{session.title || t('sessionFallback')}</p></div>
+    <div className={styles.heroMain}><div><p className={styles.heroLabel}><Check size={15} aria-hidden="true" /> {statusT('training.label')}</p><h3 className={styles.heroTitle}>{t('completedTitle')}</h3><p className={styles.heroCopy}>{session.title || t('sessionFallback')}{session.exercises.length > 0 ? ` · ${t('exerciseCount', { count: session.exercises.length })}` : ''}</p></div><span className={styles.heroStatusIcon} aria-hidden="true"><Dumbbell size={22} /></span></div>
     {onOpenSession && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.secondary}`} onClick={() => onOpenSession(session)}>{t('viewSession')} <ChevronRight size={16} aria-hidden="true" /></button></div>}
   </section>
 
   if (viewState === 'rest') return <section className={`${styles.hero} ${styles.heroRest}`}>
     <div className={styles.heroMain}>
-      <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{t('restTitle')}</h2><p className={styles.heroCopy}>{t('restCopy')}</p></div>
-      <span className={styles.restIcon} aria-hidden="true"><HeartPulse size={46} strokeWidth={1.5} /></span>
+      <div><p className={styles.heroLabel}>{statusT('training.label')}</p><h3 className={styles.heroTitle}>{t('restTitle')}</h3><p className={styles.heroCopy}>{t('restCopy')}</p></div>
+      <span className={styles.restIcon} aria-hidden="true"><HeartPulse size={26} strokeWidth={1.5} /></span>
     </div>
     {onOpenProgram && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.primary}`} onClick={onOpenProgram}>{t('openProgram')}</button></div>}
   </section>
 
   if (viewState === 'scheduled' && session) return <section className={styles.hero}>
-    <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{session.title || t('sessionFallback')}</h2><div className={styles.meta}>
+    <div className={styles.heroMain}><div><p className={styles.heroLabel}>{statusT('training.label')}</p><h3 className={styles.heroTitle}>{session.title || t('sessionFallback')}</h3><div className={styles.meta}>
       {session.scheduledAt && <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
       {session.exercises.length > 0 && <span>{t('exerciseCount', { count: session.exercises.length })}</span>}
       <span>{t(`source.${training.source}`)}</span>
-    </div></div>
+    </div></div><span className={styles.heroStatusIcon} aria-hidden="true"><Dumbbell size={22} /></span></div>
     {onStartSession && <div className={styles.actions}><button type="button" className={`${styles.button} ${styles.primary}`} onClick={() => onStartSession(session)}><Play size={16} fill="currentColor" aria-hidden="true" /> {t('start')}</button></div>}
   </section>
 
   return <section className={styles.hero}>
-    <div><p className={styles.heroLabel}>{t('label')}</p><h2 className={styles.heroTitle}>{training.hasProgram ? t('emptyTodayTitle') : t('noProgramTitle')}</h2><p className={styles.heroCopy}>{training.hasProgram ? t('emptyTodayCopy') : t('noProgramCopy')}</p></div>
+    <div className={styles.heroMain}><div><p className={styles.heroLabel}>{statusT('training.label')}</p><h3 className={styles.heroTitle}>{training.hasProgram ? t('emptyTodayTitle') : t('noProgramTitle')}</h3><p className={styles.heroCopy}>{training.hasProgram ? t('emptyTodayCopy') : t('noProgramCopy')}</p></div><span className={styles.heroStatusIcon} aria-hidden="true"><Dumbbell size={22} /></span></div>
     <div className={styles.actions}>
       {onStartFreeSession && <button type="button" className={`${styles.button} ${styles.primary}`} onClick={onStartFreeSession}><Dumbbell size={16} aria-hidden="true" /> {t('freeSession')}</button>}
       {onOpenProgram && <button type="button" className={`${styles.button} ${styles.secondary}`} onClick={onOpenProgram}>{t('openProgram')}</button>}

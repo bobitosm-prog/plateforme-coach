@@ -8,7 +8,6 @@ import { describe, expect, it, vi } from 'vitest'
 import fr from '../../messages/fr.json'
 import DailyStatus from '@/app/components/home-v2/DailyStatus'
 import HomeV2Header from '@/app/components/home-v2/HomeV2Header'
-import TodayHero from '@/app/components/home-v2/TodayHero'
 import { buildHomeViewModel } from '@/lib/home/home-dashboard-model'
 import { getHomeDayWindow } from '@/lib/home/home-date'
 
@@ -32,12 +31,12 @@ function renderDashboard(onOpenProgram = vi.fn()) {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
     }, [
       React.createElement(HomeV2Header, { key: 'header', identity: model.identity, today: model.today }),
-      React.createElement(TodayHero, { key: 'hero', training: model.training, onOpenProgram }),
       React.createElement(DailyStatus, {
         key: 'status',
         training: model.training,
         nutrition: model.nutrition,
         recovery: model.recovery,
+        onOpenProgram,
         onOpenRecovery: vi.fn(),
       }),
     ]),
@@ -68,23 +67,69 @@ describe('athlete dashboard home', () => {
 
     expect(screen.getByRole('heading', { name: 'Aujourd’hui' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: /points XP/ })).toBeNull()
-    expect(screen.getByRole('heading', { name: 'Jour de repos' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Entraînement/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Nutrition/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Récupération/ })).toBeTruthy()
+    expect(screen.getAllByRole('heading', { name: 'Jour de repos' })).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: 'Statut du jour' })).toBeTruthy()
+    expect(screen.getByText('Aucun repas enregistré')).toBeTruthy()
+    expect(screen.getByText('Aucune estimation disponible')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Voir le programme' }))
     expect(openProgram).toHaveBeenCalledOnce()
   })
 
-  it('starts with compact tiles and reveals detail only on selection', () => {
+  it('shows details inside the tiles without opening a separate panel', () => {
     renderDashboard()
-    const nutrition = screen.getByRole('button', { name: /Nutrition/ })
-    const panel = document.getElementById('daily-status-panel')
+    expect(document.getElementById('daily-status-panel')).toBeNull()
+    expect(screen.getByText('Aucun repas enregistré')).toBeTruthy()
+    expect(screen.getByText('Aucune estimation disponible')).toBeTruthy()
+  })
 
-    expect(nutrition.getAttribute('aria-expanded')).toBe('false')
-    expect(panel?.hasAttribute('hidden')).toBe(true)
-    fireEvent.click(nutrition)
-    expect(nutrition.getAttribute('aria-expanded')).toBe('true')
-    expect(panel?.hasAttribute('hidden')).toBe(false)
+  it('keeps all direct actions on a scheduled training day', () => {
+    const session = { id: 'session-1', title: 'LEGS QUADS', exercises: [{ name: 'Squat' }], scheduledAt: null, isRest: false }
+    const onStartSession = vi.fn()
+    const onOpenNutrition = vi.fn()
+    const onNutritionPhoto = vi.fn()
+    const onNutritionBarcode = vi.fn()
+    const onOpenRecovery = vi.fn()
+    render(React.createElement(NextIntlClientProvider, {
+      locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
+    }, React.createElement(DailyStatus, {
+      training: { ...model.training, dayStatus: 'scheduled', session },
+      nutrition: model.nutrition,
+      recovery: model.recovery,
+      onStartSession,
+      onOpenNutrition,
+      onNutritionPhoto,
+      onNutritionBarcode,
+      onOpenRecovery,
+    })))
+
+    expect(screen.getAllByText('LEGS QUADS')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer la séance' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir Nutrition' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Analyser un repas avec une photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Scanner le code-barres d’un aliment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Voir la carte' }))
+    expect(onStartSession).toHaveBeenCalledWith(session)
+    expect(onOpenNutrition).toHaveBeenCalledOnce()
+    expect(onNutritionPhoto).toHaveBeenCalledOnce()
+    expect(onNutritionBarcode).toHaveBeenCalledOnce()
+    expect(onOpenRecovery).toHaveBeenCalledOnce()
+  })
+
+  it('opens the completed session from the featured tile', () => {
+    const session = { id: 'session-2', title: 'LEGS QUADS', exercises: [{ name: 'Squat' }], scheduledAt: null, isRest: false }
+    const onOpenSession = vi.fn()
+    render(React.createElement(NextIntlClientProvider, {
+      locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
+    }, React.createElement(DailyStatus, {
+      training: { ...model.training, dayStatus: 'completed', session },
+      nutrition: model.nutrition,
+      recovery: model.recovery,
+      onOpenSession,
+      onOpenRecovery: vi.fn(),
+    })))
+
+    expect(screen.getAllByText(/LEGS QUADS/)).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Voir la séance' }))
+    expect(onOpenSession).toHaveBeenCalledWith(session)
   })
 })

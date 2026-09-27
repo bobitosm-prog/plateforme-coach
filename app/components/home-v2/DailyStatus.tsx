@@ -1,17 +1,12 @@
 'use client'
 
-import { Activity, Apple, ChevronRight, Dumbbell, HeartPulse } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { Apple, ArrowUpRight, Camera, HeartPulse, ScanLine } from 'lucide-react'
+import { useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
-import {
-  deriveDailyStatusPresentation,
-  type DailyStatusDomain,
-  type DailyStatusTone,
-  type DailyTrainingAction,
-} from '../../../lib/home/daily-status-presentation'
+import { deriveDailyStatusPresentation } from '../../../lib/home/daily-status-presentation'
 import type { HomeTrainingSession, HomeViewModel } from '../../../lib/home/home-dashboard-model'
-import NutritionQuickCard from '../nutrition-v2/NutritionQuickCard'
+import TodayHero from './TodayHero'
 import styles from './HomeV2.module.css'
 
 export {
@@ -38,44 +33,6 @@ interface DailyStatusProps extends Pick<HomeViewModel, 'training' | 'nutrition' 
   onOpenRecovery: () => void
 }
 
-interface SignalRowProps {
-  id: DailyStatusDomain
-  icon: ReactNode
-  label: string
-  status: string
-  detail: string
-  tone: DailyStatusTone
-  selected: boolean
-  busy: boolean
-  onSelect: (domain: DailyStatusDomain) => void
-}
-
-function SignalRow({ id, icon, label, status, detail, tone, selected, busy, onSelect }: SignalRowProps) {
-  return <button
-    type="button"
-    className={styles.statusSignal}
-    data-domain={id}
-    data-tone={tone}
-    data-active={selected}
-    aria-expanded={selected}
-    aria-controls="daily-status-panel"
-    aria-busy={busy}
-    onClick={() => onSelect(id)}
-  >
-    <span className={styles.statusSignalIcon}>{icon}</span>
-    <span className={styles.statusSignalMain}>
-      <span className={styles.statusSignalLabel}><i aria-hidden="true" />{label}</span>
-      <strong>{status}</strong>
-      <small>{detail}</small>
-    </span>
-    <ChevronRight className={styles.statusChevron} size={19} aria-hidden="true" />
-  </button>
-}
-
-function SummaryMarker({ label, tone }: { label: string; tone: DailyStatusTone }) {
-  return <span className={styles.statusSummaryMarker} data-tone={tone} title={label} aria-hidden="true" />
-}
-
 export default function DailyStatus({
   training,
   nutrition,
@@ -91,51 +48,31 @@ export default function DailyStatus({
 }: DailyStatusProps) {
   const t = useTranslations('home.v2.dailyStatus')
   const recoveryT = useTranslations('home.v2.recoveryModal.muscles')
+  const nutritionQuickT = useTranslations('nutrition_tab.v2.quickCard')
   const locale = useLocale()
   const presentation = useMemo(
     () => deriveDailyStatusPresentation({ training, nutrition, recovery }),
     [nutrition, recovery, training],
   )
-  const [userSelectedDomain, setUserSelectedDomain] = useState<DailyStatusDomain | null>(null)
-  const selectedDomain = userSelectedDomain ?? presentation.initialDomain
 
   const calorieNumber = createHomeNutritionNumberFormatter(locale, 0)
   const macroNumber = createHomeNutritionNumberFormatter(locale, 1)
   const priorityZoneNames = presentation.recovery.priorityZones.map(zone => recoveryT(zone))
+  const nutritionReady = nutrition.state !== 'loading' && nutrition.state !== 'error'
+  const nutritionDetail = nutritionReady && nutrition.caloriesConsumed != null && nutrition.caloriesTarget != null
+    ? t('nutrition.calories', {
+        consumed: calorieNumber.format(nutrition.caloriesConsumed),
+        target: calorieNumber.format(nutrition.caloriesTarget),
+      })
+    : t(`nutrition.detail.${presentation.nutrition.status}`)
   const macros = [
     ['protein', nutrition.macrosConsumed.protein, nutrition.macrosTarget.protein],
     ['carbs', nutrition.macrosConsumed.carbs, nutrition.macrosTarget.carbs],
     ['fat', nutrition.macrosConsumed.fat, nutrition.macrosTarget.fat],
   ] as const
   const availableMacros = macros.flatMap(([key, consumed, target]) => (
-    consumed != null && target != null ? [[key, consumed, target] as const] : []
+    nutritionReady && consumed != null && target != null ? [[key, consumed, target] as const] : []
   ))
-
-  const exerciseCountLabel = presentation.training.exerciseCount != null && presentation.training.exerciseCount > 0
-    ? t('training.exerciseCount', { count: presentation.training.exerciseCount })
-    : null
-  const trainingFacts = [
-    training.session?.title || null,
-    exerciseCountLabel,
-    presentation.training.weeklyPlanned > 0
-      ? t('training.weekly', {
-          completed: presentation.training.weeklyCompleted,
-          planned: presentation.training.weeklyPlanned,
-        })
-      : null,
-  ].filter((fact): fact is string => Boolean(fact))
-  const trainingDetail = [
-    presentation.training.status === 'rest' ? null : training.session?.title || null,
-    exerciseCountLabel,
-  ]
-    .filter((fact): fact is string => Boolean(fact))
-    .join(' · ') || t(`training.detail.${presentation.training.status}`)
-  const nutritionDetail = nutrition.caloriesConsumed != null && nutrition.caloriesTarget != null
-    ? t('nutrition.calories', {
-        consumed: calorieNumber.format(nutrition.caloriesConsumed),
-        target: calorieNumber.format(nutrition.caloriesTarget),
-      })
-    : t(`nutrition.detail.${presentation.nutrition.status}`)
   const recoveryDetail = priorityZoneNames.length > 0
     ? priorityZoneNames.join(' · ')
     : t(`recovery.detail.${presentation.recovery.status}`)
@@ -144,130 +81,52 @@ export default function DailyStatus({
     return count > 0 ? [t(`recovery.counts.${status}`, { count })] : []
   })
 
-  const trainingActionHandlers: Record<Exclude<DailyTrainingAction, null>, (() => void) | undefined> = {
-    start_session: training.session && onStartSession ? () => onStartSession(training.session!) : undefined,
-    open_session: training.session && onOpenSession ? () => onOpenSession(training.session!) : undefined,
-    open_program: onOpenProgram,
-    start_free_session: onStartFreeSession,
-  }
-  const trainingAction = presentation.training.action
-  const panelAction = selectedDomain === 'training'
-    ? trainingAction ? trainingActionHandlers[trainingAction] : undefined
-    : selectedDomain === 'nutrition'
-      ? onOpenNutrition
-      : onOpenRecovery
-  const actionKey = selectedDomain === 'training'
-    ? trainingAction
-    : selectedDomain === 'nutrition'
-      ? 'open_nutrition'
-      : 'open_recovery'
-
   return <section className={styles.statusSection} aria-labelledby="daily-status-title">
     <h2 id="daily-status-title" className={styles.sectionTitle}>{t('title')}</h2>
     <div className={styles.statusCockpit}>
-      <header className={styles.statusSummary}>
-        <div className={styles.statusSummaryRing} aria-hidden="true"><Activity size={22} /></div>
-        <div className={styles.statusSummaryCopy}>
-          <p>{t('summary.eyebrow')}</p>
-          <strong>{t(`summary.${presentation.summary}.title`)}</strong>
-          <small>{t(`summary.${presentation.summary}.copy`)}</small>
-        </div>
-        <div className={styles.statusSummaryMarkers} aria-label={t('summary.indicators')}>
-          <SummaryMarker label={t('training.label')} tone={presentation.training.tone} />
-          <SummaryMarker label={t('nutrition.label')} tone={presentation.nutrition.tone} />
-          <SummaryMarker label={t('recovery.label')} tone={presentation.recovery.tone} />
-        </div>
-      </header>
-
+      <TodayHero
+        training={training}
+        onStartSession={onStartSession}
+        onOpenSession={onOpenSession}
+        onOpenProgram={onOpenProgram}
+        onStartFreeSession={onStartFreeSession}
+      />
       <div className={styles.statusSignals} aria-label={t('detailsLabel')}>
-        <SignalRow
-          id="training"
-          icon={<Dumbbell size={19} aria-hidden="true" />}
-          label={t('training.label')}
-          status={t(`training.${presentation.training.status}`)}
-          detail={trainingDetail}
-          tone={presentation.training.tone}
-          selected={userSelectedDomain === 'training'}
-          busy={training.state === 'loading'}
-          onSelect={setUserSelectedDomain}
-        />
-        <SignalRow
-          id="nutrition"
-          icon={<Apple size={19} aria-hidden="true" />}
-          label={t('nutrition.label')}
-          status={t(`nutrition.${presentation.nutrition.status}`)}
-          detail={nutritionDetail}
-          tone={presentation.nutrition.tone}
-          selected={userSelectedDomain === 'nutrition'}
-          busy={nutrition.state === 'loading'}
-          onSelect={setUserSelectedDomain}
-        />
-        <SignalRow
-          id="recovery"
-          icon={<HeartPulse size={19} aria-hidden="true" />}
-          label={t('recovery.label')}
-          status={t(`recovery.${presentation.recovery.status}`)}
-          detail={recoveryDetail}
-          tone={presentation.recovery.tone}
-          selected={userSelectedDomain === 'recovery'}
-          busy={recovery.state === 'loading'}
-          onSelect={setUserSelectedDomain}
-        />
-      </div>
-
-      <div
-        id="daily-status-panel"
-        className={styles.statusPanel}
-        hidden={!userSelectedDomain}
-        data-domain={selectedDomain}
-        data-tone={presentation[selectedDomain].tone}
-        role={presentation[selectedDomain].status === 'error' ? 'status' : 'region'}
-        aria-live="polite"
-        aria-labelledby={`daily-status-${selectedDomain}-panel-title`}
-      >
-        <div className={styles.statusPanelTop}>
-          <div>
-            <h3 id={`daily-status-${selectedDomain}-panel-title`}>
-              {t(`${selectedDomain}.panel.${presentation[selectedDomain].status}.title`)}
-            </h3>
-            <p>{t(`${selectedDomain}.panel.${presentation[selectedDomain].status}.copy`)}</p>
+        <article className={styles.statusTile} data-domain="nutrition" data-tone={presentation.nutrition.tone} aria-busy={nutrition.state === 'loading'}>
+          <span className={styles.statusTileIcon} aria-hidden="true"><Apple size={20} /></span>
+          <div className={styles.statusTileCopy}>
+            <span className={styles.statusTileLabel}>{t('nutrition.label')}</span>
+            <strong>{t(`nutrition.${presentation.nutrition.status}`)}</strong>
+            <p>{nutritionDetail}</p>
+            {availableMacros.length > 0 && <div className={styles.statusTileFacts}>
+              {availableMacros.map(([key, consumed, target]) => <span key={key}>
+                {t(`nutrition.${key}`)} {macroNumber.format(consumed)} / {macroNumber.format(target)} g
+              </span>)}
+            </div>}
           </div>
-          {panelAction && actionKey && <button type="button" className={styles.statusAction} onClick={panelAction}>
-            {t(`actions.${actionKey}`)}
-          </button>}
-        </div>
+          <div className={styles.statusTileActions}>
+            {onOpenNutrition && <button type="button" className={styles.statusTileLink} onClick={onOpenNutrition}>
+              {t('actions.open_nutrition')} <ArrowUpRight size={15} aria-hidden="true" />
+            </button>}
+            {onNutritionPhoto && <button type="button" className={styles.statusTileIconAction} onClick={onNutritionPhoto} aria-label={nutritionQuickT('photoLabel')}><Camera size={18} aria-hidden="true" /></button>}
+            {onNutritionBarcode && <button type="button" className={styles.statusTileIconAction} onClick={onNutritionBarcode} aria-label={nutritionQuickT('barcodeLabel')}><ScanLine size={18} aria-hidden="true" /></button>}
+          </div>
+        </article>
 
-        {selectedDomain === 'training' && trainingFacts.length > 0 && <p className={styles.statusFact}>
-          {trainingFacts.join(' · ')}
-        </p>}
-        {selectedDomain === 'nutrition' && <div className={styles.statusNutritionQuick}>
-          <NutritionQuickCard
-            compact
-            state={nutrition.state}
-            consumed={{
-              calories: nutrition.caloriesConsumed,
-              protein: nutrition.macrosConsumed.protein,
-              carbs: nutrition.macrosConsumed.carbs,
-              fat: nutrition.macrosConsumed.fat,
-            }}
-            targets={{
-              calories: nutrition.caloriesTarget,
-              protein: nutrition.macrosTarget.protein,
-              carbs: nutrition.macrosTarget.carbs,
-              fat: nutrition.macrosTarget.fat,
-            }}
-            onPhoto={onNutritionPhoto}
-            onBarcode={onNutritionBarcode}
-          />
-          {availableMacros.length > 0 && <div className={styles.statusNutritionConsumed}>
-            {availableMacros.map(([key, consumed, target]) => <span key={key}>
-              {t(`nutrition.${key}`)} {macroNumber.format(consumed)} / {macroNumber.format(target)} g
-            </span>)}
-          </div>}
-        </div>}
-        {selectedDomain === 'recovery' && recoveryCountParts.length > 0 && <p className={styles.statusFact}>
-          {recoveryCountParts.join(' · ')}
-        </p>}
+        <article className={styles.statusTile} data-domain="recovery" data-tone={presentation.recovery.tone} aria-busy={recovery.state === 'loading'}>
+          <span className={styles.statusTileIcon} aria-hidden="true"><HeartPulse size={20} /></span>
+          <div className={styles.statusTileCopy}>
+            <span className={styles.statusTileLabel}>{t('recovery.label')}</span>
+            <strong>{t(`recovery.${presentation.recovery.status}`)}</strong>
+            <p>{recoveryDetail}</p>
+            {recoveryCountParts.length > 0 && <div className={styles.statusTileFacts}>{recoveryCountParts.join(' · ')}</div>}
+          </div>
+          <div className={styles.statusTileActions}>
+            <button type="button" className={styles.statusTileLink} onClick={onOpenRecovery}>
+              {t('actions.open_recovery')} <ArrowUpRight size={15} aria-hidden="true" />
+            </button>
+          </div>
+        </article>
       </div>
     </div>
   </section>
