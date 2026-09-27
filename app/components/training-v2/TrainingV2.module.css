@@ -1420,6 +1420,32 @@
   letter-spacing: -.055em;
 }
 .overviewTitle span { color: #e6c364; }
+.journeyTimeline {
+  margin-left: 11px;
+  padding-left: 22px;
+  border-left: 1px solid #51472b;
+}
+.journeyTimeline:has(> .journeyStep:only-child) { border-left-color: transparent; }
+.journeyStep { position: relative; margin-bottom: 12px; }
+.journeyStep::before {
+  position: absolute;
+  z-index: 1;
+  top: 19px;
+  left: -29px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #e6c364;
+  content: '';
+}
+.journeyStepCompleted::before { background: #81c58c; }
+.landing .journeyStepCompleted .hero { background: #22271f; }
+.landing .journeyStepCompleted .eyebrow { color: #81c58c; }
+.landing .journeyStepCompleted .emptyTitle { font-size: clamp(1.4rem, 6vw, 1.8rem); }
+.journeyStep .nextSessionCard { width: 100%; margin: 0; }
+.journeyStep .nextSessionActions { margin-top: 12px; }
+.journeyStep .nextSessionEdit { flex: 1 1 100%; }
+.journeyStep .nextSessionView { flex: 1 1 100%; background: transparent; min-height: 40px; }
 .landing .hero {
   min-height: 0;
   padding: 18px;
@@ -1487,6 +1513,7 @@
 .nextSessionListTitle { margin: 20px 0 10px; color: #c4b8a2; font-size: .68rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
 .nextSessionList { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .nextSessionList li { display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 12px; border-radius: 12px; background: #27251f; }
+.nextSessionMore { display: block; min-height: 44px; margin-top: 6px; padding: 8px 0; border: 0; background: transparent; color: #e6c364; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; }
 .nextSessionNumber { display: grid; flex: 0 0 26px; place-items: center; height: 26px; border-radius: 8px; color: #e6c364; background: #393121; font-size: .78rem; font-weight: 750; }
 .nextSessionExercise { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .nextSessionExercise strong { overflow-wrap: anywhere; color: #f7f4ed; font-size: .91rem; font-weight: 650; }
@@ -1494,6 +1521,6 @@
 .nextSessionActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
 .nextSessionView, .nextSessionEdit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 11px; color: #e6c364; background: #2b271e; font: inherit; font-size: .79rem; font-weight: 750; cursor: pointer; }
 .nextSessionEdit { color: #151108; background: #e6c364; }
-.nextSessionView:focus-visible, .nextSessionEdit:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px; }
+.nextSessionView:focus-visible, .nextSessionEdit:focus-visible, .nextSessionMore:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px; }
 .nextSessionReadOnly { margin: 0; color: #918a7e; font-size: .76rem; line-height: 1.4; }
 @media (max-width: 520px) { .nextSessionView, .nextSessionEdit { flex: 1 1 100%; } }

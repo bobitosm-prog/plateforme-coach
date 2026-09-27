@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import type { TrainingProgramSource, TrainingProgramState } from '../../../lib/training/active-program'
 import type { TodayTrainingKind } from '../../../lib/training/today-training-state'
@@ -17,12 +18,11 @@ interface NoActiveSessionProps {
   todayState: TodayTrainingKind | null
   completedSessionName: string | null
   canStart: boolean
-  canViewNext: boolean
   onStart: () => void
-  onViewNext: () => void
   onViewCompleted?: () => void
   onOpenProgramSettings: () => void
   onFreeSession: () => void
+  children?: ReactNode
 }
 
 export default function NoActiveSession({
@@ -38,12 +38,11 @@ export default function NoActiveSession({
   todayState,
   completedSessionName,
   canStart,
-  canViewNext,
   onStart,
-  onViewNext,
   onViewCompleted,
   onOpenProgramSettings,
   onFreeSession,
+  children,
 }: NoActiveSessionProps) {
   const t = useTranslations('training_tab.v2')
   const sourceLabel = programSource === 'coach'
@@ -75,13 +74,15 @@ export default function NoActiveSession({
   return (
     <div className={styles.landing} data-training-v2="no-active-session">
       <header className={styles.overviewHeader}>
-        <h1 className={styles.overviewTitle}>{t('trainingLabel')}<span aria-hidden="true">.</span></h1>
+        <h1 className={styles.overviewTitle}>{t('trainingLabel')}</h1>
       </header>
+      <div className={styles.journeyTimeline} data-training-journey="true">
+      <div className={`${styles.journeyStep} ${completedToday ? styles.journeyStepCompleted : ''}`}>
       {completedToday ? (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-completed-title">
           <div className={styles.eyebrow}>{t('sessionCompletedLabel')}</div>
-          <h2 id="training-completed-title" className={styles.emptyTitle}>{t('sessionCompletedToday')}</h2>
-          {completedSessionName && <p className={styles.emptyDescription}>{completedSessionName}</p>}
+          <h2 id="training-completed-title" className={styles.emptyTitle}>{completedSessionName || t('sessionCompletedToday')}</h2>
+          {completedSessionName && <p className={styles.emptyDescription}>{t('sessionCompletedToday')}</p>}
           {onViewCompleted && <div className={`${styles.emptyActions} ${styles.emptyActionsSingle}`}>
             <button type="button" className={styles.secondaryAction} onClick={onViewCompleted}>{t('viewCompletedSession')}</button>
           </div>}
@@ -98,26 +99,25 @@ export default function NoActiveSession({
         onAction={canStart ? onStart : undefined}
       /> : (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-empty-title">
-          <div className={styles.eyebrow}>{t('trainingLabel')}</div>
+          <div className={styles.eyebrow}>{t('sessionToday')}</div>
           <h2 id="training-empty-title" className={styles.emptyTitle}>{stateTitle}</h2>
           {isSettledEmpty && <p className={styles.emptyDescription}>{t('noSessionDescription')}</p>}
           {isSettledEmpty && (
-            <div className={`${styles.emptyActions} ${canViewNext ? '' : styles.emptyActionsSingle}`}>
-              {canViewNext && (
-                <button type="button" className={styles.secondaryAction} onClick={onViewNext}>{t('viewNextSession')}</button>
-              )}
+            <div className={`${styles.emptyActions} ${styles.emptyActionsSingle}`}>
               <button type="button" className={styles.toolAction} onClick={onFreeSession}>{t('freeSession')}</button>
             </div>
           )}
         </section>
       )}
+      </div>
+      {children && <div className={styles.journeyStep}>{children}</div>}
+      </div>
       <section className={styles.summary} aria-labelledby="active-program-summary">
         <div>
           <div className={styles.sectionLabel}>{t('activeProgram')}</div>
           <h2 id="active-program-summary" className={styles.summaryTitle}>{programName || t('noProgram')}</h2>
           <div className={styles.sourceRow}>
             <span className={styles.sourceBadge}>{sourceLabel}</span>
-            {totalSets > 0 && <span>{t('setCount', { count: totalSets })}</span>}
           </div>
         </div>
         <button type="button" className={styles.tertiaryAction} onClick={onOpenProgramSettings}>{programActionLabel}</button>

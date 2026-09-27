@@ -12,7 +12,7 @@ import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import {
-  ChevronRight, ChevronLeft,
+  ChevronRight, ChevronLeft, CalendarDays, History, HeartPulse,
 } from 'lucide-react'
 import {
   fonts, colors, JS_DAYS_FR,
@@ -37,7 +37,7 @@ type PersonalProgram = NonNullable<Parameters<typeof getEffectiveWeek>[0]> & {
   name?: string
   days?: Parameters<typeof getSessionForDay>[0]
 }
-type CoachProgram = Record<string, { repos?: boolean; exercises?: ReturnType<typeof getSessionForDay>['exercises'] }>
+type CoachProgram = Record<string, { name?: string; day_name?: string; repos?: boolean; exercises?: ReturnType<typeof getSessionForDay>['exercises'] }>
 
 interface TrainingTabProps {
   supabase: any
@@ -68,6 +68,7 @@ export default function TrainingTab({
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [weekOffset, setWeekOffset] = useState(0)
   const [weekDir, setWeekDir] = useState(0)
+  const [exploreOpen, setExploreOpen] = useState<'calendar' | 'history' | 'cardio' | null>(null)
   const calTouchStart = useRef<number | null>(null)
   const activeCustomProgram = activeTrainingProgram.source === 'personal'
     ? activeTrainingProgram.program as PersonalProgram
@@ -86,22 +87,20 @@ export default function TrainingTab({
   // Use local date (not UTC) to avoid timezone issues
   const _now = new Date()
   const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`
-  const trainingIsToday  = weekOffset === 0 && trainingDay === todayKey
 
   // Program choice is owned by ActiveTrainingProgramContext. This component
-  // only renders the already-resolved personal OR coach authority.
-  const customDayData = (() => {
+  // only renders the already-resolved personal OR coach authority. The journey
+  // is anchored to today; calendar selection must not rewrite the first step.
+  const overviewSession = (() => {
     if (!activeCustomProgram?.days?.length) return null
-    const dayIndex = frDayToIndex(trainingDay)
+    const dayIndex = frDayToIndex(todayKey)
     if (dayIndex < 0) return null
-    const session = getSessionForDay(resolvedDays, dayIndex)
-    if (session.type === 'rest') return { repos: true, exercises: [] }
-    return { repos: false, exercises: session.exercises }
+    return getSessionForDay(resolveProgramDays(activeCustomProgram, _now), dayIndex)
   })()
-  const trainingDayData = customDayData || (coachProgram ? (coachProgram[trainingDay] ?? { repos: false, exercises: [] }) : null)
-  const baseExercises: any[] = trainingDayData?.exercises || []
-
-  const trainingExercises: any[] = baseExercises
+  const trainingDayData = overviewSession
+    ? { repos: overviewSession.type === 'rest', exercises: overviewSession.exercises }
+    : (coachProgram ? (coachProgram[todayKey] ?? { repos: false, exercises: [] }) : null)
+  const trainingExercises: any[] = trainingDayData?.exercises || []
 
   const trainingTotalSets = trainingExercises.reduce((sum: number, exercise: any) => sum + (Number(exercise.sets) || 0), 0)
 
@@ -164,13 +163,11 @@ export default function TrainingTab({
   }
 
   const v2SessionName = (() => {
-    if (activeCustomProgram?.days?.length) {
-      const index = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].indexOf(trainingDay)
-      const day = padTo7Days(activeCustomProgram.days)[index]
-      if (day?.name && day.name !== 'Repos') return day.name
-    }
-    const scheduled = weekSessions.find(item => item.scheduled_date === todayStr && item.session_type !== 'rest')
-    return scheduled?.title || trainingDay
+    if (overviewSession?.type === 'workout') return overviewSession.name
+    const coachDay = coachProgram?.[todayKey]
+    if (coachDay?.name || coachDay?.day_name) return coachDay.name || coachDay.day_name || todayKey
+    const scheduled = scheduledSessions.find(item => item.scheduled_date === todayStr && item.session_type !== 'rest')
+    return scheduled?.title || todayKey
   })()
   const v2ProgramName = activeTrainingProgram.source === 'coach'
     ? v2SessionName
@@ -185,7 +182,7 @@ export default function TrainingTab({
     : 0
   const v2CanStart = ['ready', 'partial'].includes(activeTrainingProgram.state)
     && trainingExercises.length > 0
-    && !(todaySessionDone && trainingIsToday)
+    && !todaySessionDone
   const todayTrainingState = deriveTodayTrainingState({
     activeDraft: hasActiveDraft,
     plannedSession: {
@@ -203,11 +200,13 @@ export default function TrainingTab({
       coachProgram,
       today: _now,
       todaySessionDone,
+      startTomorrow: true,
     })
     : null
 
   function showNextPlannedSession() {
     if (!v2NextSession) return
+    setExploreOpen('calendar')
     const now = new Date()
     const monday = new Date(now)
     const dow = now.getDay()
@@ -219,6 +218,7 @@ export default function TrainingTab({
     setTrainingDay(v2NextSession.dayKey)
     setCalendarSelectedDate(selectedDate)
     setWeekOffset(targetWeekOffset)
+    window.requestAnimationFrame(() => document.getElementById('training-calendar-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
 
   // ══════════════════════════════════════════
@@ -249,29 +249,48 @@ export default function TrainingTab({
         totalSets={trainingTotalSets}
         estimatedMinutes={v2EstimatedMinutes}
         muscles={v2Muscles}
-        isToday={trainingIsToday}
+        isToday={true}
         todayState={todayTrainingState.kind}
         completedSessionName={todayTrainingState.completedSession?.name || null}
         canStart={v2CanStart}
-        canViewNext={v2NextSession != null}
-        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName, prescription_date: prescriptionDate.toISOString().slice(0,10) }, trainingExercises, trainingDay)}
-        onViewNext={showNextPlannedSession}
+        onStart={() => startProgramWorkout({ ...trainingDayData, day_name: v2SessionName, prescription_date: todayStr }, trainingExercises, todayKey)}
         onViewCompleted={todayTrainingState.completedSession
           ? () => openWorkoutDetail(todayTrainingState.completedSession)
           : undefined}
         onOpenProgramSettings={onOpenProgramSettings}
-        onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
-      />
-
+        onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], todayKey)}
+      >
       {v2NextSession && <NextPlannedSessionCard
         session={v2NextSession}
         editable={activeTrainingProgram.source === 'personal' && activeTrainingProgram.editable}
         onView={showNextPlannedSession}
         onEdit={() => onEditPlannedSession(v2NextSession.dayIndex)}
       />}
+      </NoActiveSession>
+
+      <section className={overviewStyles.explorer} aria-labelledby="training-explorer-heading">
+        <h2 id="training-explorer-heading" className={overviewStyles.explorerTitle}>{t('v2.explore')}</h2>
+        <div className={overviewStyles.explorerGrid}>
+          <button type="button" className={overviewStyles.explorerTile} aria-controls="training-calendar-panel" aria-expanded={exploreOpen === 'calendar'} onClick={() => setExploreOpen(value => value === 'calendar' ? null : 'calendar')}>
+            <CalendarDays size={20} aria-hidden="true" />
+            <strong>{t('v2.exploreCalendar')}</strong>
+            <span>{t('v2.exploreCalendarHint')}</span>
+          </button>
+          <button type="button" className={overviewStyles.explorerTile} aria-controls="training-history-panel" aria-expanded={exploreOpen === 'history'} onClick={() => setExploreOpen(value => value === 'history' ? null : 'history')}>
+            <History size={20} aria-hidden="true" />
+            <strong>{t('v2.exploreHistory')}</strong>
+            <span>{t('v2.exploreHistoryHint')}</span>
+          </button>
+        </div>
+        <button type="button" className={`${overviewStyles.explorerTile} ${overviewStyles.explorerCardio}`} aria-controls="training-cardio-panel" aria-expanded={exploreOpen === 'cardio'} onClick={() => setExploreOpen(value => value === 'cardio' ? null : 'cardio')}>
+          <HeartPulse size={20} aria-hidden="true" />
+          <span><strong>{t('v2.exploreCardio')}</strong><small>{t('v2.exploreCardioHint')}</small></span>
+          <ChevronRight size={17} aria-hidden="true" />
+        </button>
+      </section>
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
-      {(() => {
+      <div id="training-calendar-panel" hidden={exploreOpen !== 'calendar'}>{exploreOpen === 'calendar' && (() => {
         const today = new Date()
         const dow = today.getDay()
         const baseMonday = new Date(today)
@@ -388,13 +407,13 @@ export default function TrainingTab({
             </div>
           </div>
         )
-      })()}
+      })()}</div>
 
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
-      <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />
+      <div id="training-history-panel" hidden={exploreOpen !== 'history'}>{exploreOpen === 'history' && <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />}</div>
       {/* ═══ SECTION 6 — CARDIO ═══ */}
-      <div className={overviewStyles.cardioWrap}>
-        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />
+      <div id="training-cardio-panel" hidden={exploreOpen !== 'cardio'} className={overviewStyles.cardioWrap}>
+        {exploreOpen === 'cardio' && <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />}
       </div>
 
       {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}

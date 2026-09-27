@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CalendarDays, ChevronRight, Dumbbell, Pencil } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { NextPlannedSession } from '../../../lib/training/next-planned-session'
@@ -24,7 +25,9 @@ export default function NextPlannedSessionCard({
 }) {
   const t = useTranslations('training_tab.v2')
   const locale = useLocale()
+  const [showAllExercises, setShowAllExercises] = useState(false)
   const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(session.date)
+  const visibleExercises = showAllExercises ? session.exercises : session.exercises.slice(0, 4)
 
   return <section className={styles.nextSessionCard} aria-labelledby="training-next-session-title" data-training-section-card="next-session">
     <div className={styles.nextSessionHeading}>
@@ -37,7 +40,7 @@ export default function NextPlannedSessionCard({
     </div>
     <h3 className={styles.nextSessionListTitle}>{t('plannedExercises', { count: session.exercises.length })}</h3>
     <ol className={styles.nextSessionList}>
-      {session.exercises.map((exercise, index) => <li key={`${index}-${exerciseName(exercise)}`}>
+      {visibleExercises.map((exercise, index) => <li key={`${index}-${exerciseName(exercise)}`}>
         <span className={styles.nextSessionNumber}>{index + 1}</span>
         <span className={styles.nextSessionExercise}>
           <strong>{exerciseName(exercise)}</strong>
@@ -45,6 +48,9 @@ export default function NextPlannedSessionCard({
         </span>
       </li>)}
     </ol>
+    {session.exercises.length > 4 && <button type="button" className={styles.nextSessionMore} aria-expanded={showAllExercises} onClick={() => setShowAllExercises(value => !value)}>
+      {showAllExercises ? t('showFewerExercises') : t('showAllExercises', { count: session.exercises.length })}
+    </button>}
     <div className={styles.nextSessionActions}>
       <button type="button" onClick={onView} className={styles.nextSessionView}>
         {t('viewOnCalendar')} <ChevronRight size={16} aria-hidden="true" />

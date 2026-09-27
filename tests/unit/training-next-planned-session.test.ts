@@ -33,14 +33,18 @@ describe('next planned Training session', () => {
     expect(findNextPlannedSession({ coachProgram: { lundi: { repos: true, exercises: [{ name: 'Squat' }] } }, today: sunday })).toBeNull()
   })
 
+  it('does not repeat the current workout as the next journey step', () => {
+    const monday = new Date(2026, 8, 28, 12)
+    expect(findNextPlannedSession({ personalProgram, today: monday, startTomorrow: true })?.date.getDate()).toBe(5)
+  })
+
   it('shows a coach session read-only and sends personal edits to the editor action', () => {
     const session = findNextPlannedSession({ personalProgram, today: sunday })!
     const onView = vi.fn()
     const onEdit = vi.fn()
     const renderCard = (editable: boolean) => React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    } as React.ComponentProps<typeof NextIntlClientProvider>,
-    React.createElement(NextPlannedSessionCard, { session, editable, onView, onEdit }))
+    } as React.ComponentProps<typeof NextIntlClientProvider>, React.createElement(NextPlannedSessionCard, { session, editable, onView, onEdit }))
 
     const view = render(renderCard(true))
     expect(screen.getAllByRole('listitem').map(item => item.textContent)).toEqual([
@@ -51,6 +55,25 @@ describe('next planned Training session', () => {
     view.rerender(renderCard(false))
     expect(screen.queryByRole('button', { name: /Modifier la séance et l’ordre/ })).toBeNull()
     expect(screen.getByText(/lecture seule/)).toBeTruthy()
+  })
+
+  it('keeps a long upcoming session compact while leaving every exercise accessible', () => {
+    const session = findNextPlannedSession({ personalProgram, today: sunday })!
+    const longSession = { ...session, exercises: [
+      ...session.exercises,
+      { name: 'Développé couché' }, { name: 'Élévations latérales' },
+      { name: 'Extension triceps' }, { name: 'Pompes' },
+    ] }
+    render(React.createElement(NextIntlClientProvider, {
+      locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
+    } as React.ComponentProps<typeof NextIntlClientProvider>, React.createElement(NextPlannedSessionCard, {
+      session: longSession, editable: true, onView: vi.fn(), onEdit: vi.fn(),
+    })))
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(4)
+    fireEvent.click(screen.getByRole('button', { name: 'Voir les 6 exercices' }))
+    expect(screen.getAllByRole('listitem')).toHaveLength(6)
+    expect(screen.getByText('Pompes')).toBeTruthy()
   })
 
   it('routes editing to the existing guarded program editor on the selected day', () => {
