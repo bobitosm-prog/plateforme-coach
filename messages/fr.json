@@ -2729,6 +2729,13 @@
     }
   },
   "nutrition_tab": {
+    "quickEntry": {
+      "eyebrow": "Saisie rapide",
+      "title": "Ajouter un repas",
+      "chooseMeal": "Choisir le repas",
+      "changeDate": "Changer de date",
+      "journal": "Repas enregistrés et détails"
+    },
     "composer": {
       "draft": "Sélection à vérifier — rien n’est encore compté",
       "search": "Rechercher un aliment…",

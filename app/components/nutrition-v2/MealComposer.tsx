@@ -14,13 +14,14 @@ interface Props {
   supabase: any; userId: string; date: string; mealType: string; mealLabel: string
   plannedFoods: Record<string, any>[]; initialFoods?: Record<string, any>[]
   photoEnabled: boolean; onClose: () => void; onSaved: () => Promise<void>
+  inline?: boolean
 }
 
 export default function MealComposer(props: Props) {
   return <MealComposerSession key={`${props.userId}:${props.date}:${props.mealType}`} {...props} />
 }
 
-function MealComposerSession({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved}: Props) {
+function MealComposerSession({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved, inline = false}: Props) {
   const t = useTranslations('nutrition_tab.composer')
   const [foods, setFoods] = useState<MealDraftFood[]>([])
   const [query, setQuery] = useState('')
@@ -164,9 +165,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const totals=foods.reduce((sum,food)=> {const n=draftNutrients(food);return {calories:sum.calories+n.calories,protein:sum.protein+n.protein,carbs:sum.carbs+n.carbs,fat:sum.fat+n.fat}}, {calories:0,protein:0,carbs:0,fat:0})
   const valid=foods.length>0 && foods.every(food=>Number.isFinite(food.quantity) && food.quantity>0)
 
-  return <RailOverlay><div className={styles.sheet}>{scanner ? <BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType} onProductAdded={()=>{}} onClose={()=>setScanner(false)} onSelected={food=>{add([food]);setScanner(false)}} /> :
-    <TrainingSheet viewportContained title={mealLabel} description={`${date} · ${t('draft')}`} onClose={close}>
-      <div className={styles.body}>
+  const body = <div className={`${styles.body} ${inline ? styles.inlineBody : ''}`}>
         {discard ? <div role="alert"><p>{t(locked ? 'uncertainRetained' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={discardOrKeep}>{t('close')}</button></div> : <>
         {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
         <div className={styles.search}>
@@ -203,6 +202,13 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
         </div>
         </>}
       </div>
-    </TrainingSheet>}
+
+  if (inline) return <>
+    <section className={styles.inlineCard} aria-label={mealLabel}>{body}</section>
+    {scanner && <RailOverlay><div className={styles.sheet}><BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType} onProductAdded={()=>{}} onClose={()=>setScanner(false)} onSelected={food=>{add([food]);setScanner(false)}} /></div></RailOverlay>}
+  </>
+
+  return <RailOverlay><div className={styles.sheet}>{scanner ? <BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType} onProductAdded={()=>{}} onClose={()=>setScanner(false)} onSelected={food=>{add([food]);setScanner(false)}} /> :
+    <TrainingSheet viewportContained title={mealLabel} description={`${date} · ${t('draft')}`} onClose={close}>{body}</TrainingSheet>}
   </div></RailOverlay>
 }

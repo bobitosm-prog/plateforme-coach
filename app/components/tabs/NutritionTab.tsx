@@ -27,6 +27,7 @@ import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
 import NutritionTools from '../nutrition-v2/NutritionTools'
 import MealContextChooser from '../nutrition-v2/MealContextChooser'
 import MealComposer from '../nutrition-v2/MealComposer'
+import quickEntryStyles from '../nutrition-v2/NutritionQuickEntry.module.css'
 
 const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
 // MEAL_LABELS moved inside component to use translations — see getMealLabel()
@@ -84,6 +85,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
   const [composer, setComposer] = useState<{mealType: MealKey; date: string; initialFoods?: Record<string, any>[]} | null>(null)
+  const [inlineMealType, setInlineMealType] = useState<MealKey>('petit_dejeuner')
+  const [inlineComposerVersion, setInlineComposerVersion] = useState(0)
   const [pendingMealAction, setPendingMealAction] = useState<PendingMealAction | null>(null)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
@@ -345,6 +348,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       onRetry={() => void refreshNutrition()}
       onPhoto={() => setPendingMealAction('photo')}
       onBarcode={onOpenBarcode}
+      compactToday={subTab === 'today'}
     >
 
       {/* PILLS NAVIGATION */}
@@ -413,8 +417,32 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
         return (
           <div style={{ padding: '0 4px' }}>
+            <section className={quickEntryStyles.section} aria-labelledby="quick-meal-title">
+              <div className={quickEntryStyles.heading}>
+                <div>
+                  <span className={quickEntryStyles.eyebrow}>{nt('quickEntry.eyebrow')}</span>
+                  <h2 id="quick-meal-title">{nt('quickEntry.title')}</h2>
+                </div>
+              </div>
+              <div className={quickEntryStyles.mealTabs} role="group" aria-label={nt('quickEntry.chooseMeal')}>
+                {MEAL_ORDER.map(mealType => <button
+                  type="button" key={mealType} aria-pressed={inlineMealType === mealType}
+                  onClick={() => setInlineMealType(mealType)}
+                >{MEAL_LABELS[mealType]}</button>)}
+              </div>
+              <MealComposer
+                key={`${userId}:${selectedDate}:${inlineMealType}:${inlineComposerVersion}`}
+                inline supabase={supabase} userId={userId} date={selectedDate}
+                mealType={inlineMealType} mealLabel={MEAL_LABELS[inlineMealType]}
+                plannedFoods={selectedDate === today && getPlanDayData(todayKey) ? getMealByKey(getPlanDayData(todayKey)!.day, inlineMealType) : []}
+                photoEnabled={capabilities.ai}
+                onSaved={refreshNutrition}
+                onClose={() => setInlineComposerVersion(version => version + 1)}
+              />
+            </section>
             {/* ═══ CALENDAR STRIP ═══ */}
-            <div style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 14, marginBottom: 12 }}>
+            <details className={quickEntryStyles.disclosure}><summary>{nt('quickEntry.changeDate')}</summary>
+            <div style={{ background: colors.surface2, borderRadius: 16, padding: 14, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -445,12 +473,14 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 })}
               </div>
             </div>
+            </details>
             {isViewingPast && (
               <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CalendarDays size={16} color={colors.orange} />
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
+            <details className={quickEntryStyles.disclosure}><summary>{nt('quickEntry.journal')}</summary>
             <TodayMeals
               model={nutritionModel}
               selectedDate={selectedDate}
@@ -492,6 +522,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               onDeleteFood={logId => void deleteDailyLog(logId)}
               onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
             />
+            </details>
             {/* Hydration remains a separate legacy module during the progressive migration. */}
             <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, marginBottom: 12, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
