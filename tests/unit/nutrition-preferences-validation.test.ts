@@ -63,8 +63,29 @@ describe('nutrition preferences runtime validation', () => {
       userId: 'synthetic-user', supabase: {}, onSaved: vi.fn(),
     }))
     fireEvent.click(screen.getByRole('button', { name: /save\.save/ }))
-    expect(screen.getByText(/Objectifs calories\/macros incompatibles/)).toBeDefined()
+    expect(screen.getByRole('alert').textContent).toMatch(/Objectif calorique hors plage|Les calories de tes macros/)
     expect(mocks.updateProfile).not.toHaveBeenCalled()
+  })
+  it('explains a manual macro mismatch and applies only the requested carb adjustment', async () => {
+    vi.stubGlobal('React', React)
+    mocks.updateProfile.mockResolvedValue({ data: {}, error: null })
+    render(React.createElement(NutritionPreferences, {
+      profile: { current_weight: 80, height: 180, gender: 'male', birth_date: '1996-01-01', activity_level: 'moderate', objective: 'cut',
+        calorie_goal: 2109, protein_goal: 150, carbs_goal: 230, fat_goal: 65 },
+      userId: 'synthetic-user', supabase: {}, onSaved: vi.fn(),
+    }))
+    fireEvent.click(screen.getByRole('button', { name: /objectives\.maintain\.label/ }))
+    fireEvent.click(screen.getByRole('button', { name: /save\.save/ }))
+    expect(screen.getByRole('alert').textContent).toMatch(/calories de tes macros/)
+    expect(mocks.updateProfile).not.toHaveBeenCalled()
+    const suggestion = screen.getByRole('button', { name: /Ajuster les glucides à/ })
+    fireEvent.click(suggestion)
+    fireEvent.click(screen.getByRole('button', { name: /save\.save/ }))
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledOnce())
+    const update = mocks.updateProfile.mock.calls[0][1]
+    expect(update.protein_goal).toBe(150)
+    expect(update.fat_goal).toBe(65)
+    expect(update.carbs_goal).not.toBe(230)
   })
   it('still saves coherent targets and offers plan regeneration', async () => {
     vi.stubGlobal('React', React)

@@ -3,19 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
-import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed, Dumbbell } from 'lucide-react'
+import { MessageCircle, MessageSquare, Sparkles, User, Target, Settings, ChevronRight, Clock, UtensilsCrossed, Dumbbell, Shield } from 'lucide-react'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 import BugReport from '../BugReport'
-import { colors, fonts, cardStyle, radii } from '../../../lib/design-tokens'
 import { getLevelFromXP } from '../../../lib/gamification'
-import SectionTitle from '../ui/SectionTitle'
+import styles from './AccountTab.module.css'
 
-const GOLD = colors.gold
-const TEXT_PRIMARY = colors.text
-const TEXT_DIM = colors.textDim
-const FONT_DISPLAY = fonts.headline
-const FONT_ALT = fonts.alt
-const FONT_BODY = fonts.body
+type Destination = 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program' | 'training_program'
 
 interface AccountTabProps {
   firstName: string
@@ -24,7 +18,7 @@ interface AccountTabProps {
   supabase: any
   userId?: string
   session: Session | null
-  onNavigate: (tab: 'messages' | 'coachIA' | 'profil' | 'feedback' | 'preferences' | 'account_section' | 'goals' | 'nutrition_program' | 'training_program') => void
+  onNavigate: (tab: Destination) => void
   isInTrial?: boolean
   trialDaysLeft?: number
   isInBeta?: boolean
@@ -32,210 +26,100 @@ interface AccountTabProps {
   focusPrograms?: boolean
 }
 
-const menuCard: React.CSSProperties = {
-  ...cardStyle,
-  marginBottom: 24,
-  overflow: 'hidden',
-}
-
-const itemStyle: React.CSSProperties = {
-  padding: '14px 16px',
-  display: 'flex', alignItems: 'center', gap: 12,
-  background: 'transparent', border: 'none',
-  width: '100%', cursor: 'pointer',
-  fontFamily: 'inherit', color: 'inherit',
-  textAlign: 'left',
-}
-
-const divider: React.CSSProperties = {
-  height: 8, background: 'transparent', margin: '0 16px',
+function AccountLink({ icon: Icon, title, description, badge, onClick, prominent = false }: {
+  icon: typeof User
+  title: string
+  description?: string
+  badge?: number
+  onClick: () => void
+  prominent?: boolean
+}) {
+  return <button type="button" className={`${styles.link} ${prominent ? styles.prominent : ''}`} onClick={onClick}>
+    <span className={styles.linkIcon}><Icon size={22} strokeWidth={2} aria-hidden="true" /></span>
+    <span className={styles.linkText}><strong>{title}</strong>{description && <small>{description}</small>}</span>
+    {badge !== undefined && badge > 0 && <span className={styles.badge} aria-label={`${badge} non lus`}>{badge}</span>}
+    <ChevronRight size={20} className={styles.chevron} aria-hidden="true" />
+  </button>
 }
 
 export default function AccountTab({
   firstName, displayAvatar, unreadCount, supabase, userId, onNavigate,
-  session, isInTrial, trialDaysLeft, isInBeta, betaDaysLeft,
-  focusPrograms = false,
+  session, isInTrial, trialDaysLeft, isInBeta, betaDaysLeft, focusPrograms = false,
 }: AccountTabProps) {
   const t = useTranslations('account')
   const [xpData, setXpData] = useState<{ total_xp: number } | null>(null)
   const [bugReportOpen, setBugReportOpen] = useState(false)
-  const programsHeadingRef = useRef<HTMLDivElement>(null)
+  const programsHeadingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
     if (!supabase || !userId) return
+    let active = true
     supabase.from('user_xp').select('total_xp').eq('user_id', userId).maybeSingle()
-      .then(({ data }: any) => { if (data) setXpData(data) })
+      .then(({ data }: any) => { if (active && data) setXpData(data) })
+    return () => { active = false }
   }, [supabase, userId])
 
   useEffect(() => {
     if (!focusPrograms) return
-    programsHeadingRef.current?.scrollIntoView({ block: 'start' })
+    programsHeadingRef.current?.scrollIntoView?.({ block: 'start' })
     programsHeadingRef.current?.focus({ preventScroll: true })
   }, [focusPrograms])
 
   const feedbackUnread = useMyFeedbackBadge()
   const xp = xpData?.total_xp || 0
   const { level, xpForNext, xpInLevel } = getLevelFromXP(xp)
+  const progress = xpForNext > 0 ? Math.min(100, xpInLevel / xpForNext * 100) : 0
 
-  return (
-    <div style={{ padding: 16, minHeight: '100vh', background: colors.background }}>
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+  return <div className={styles.page}>
+    <div className={styles.shell}>
+      <header className={styles.header}><h1>{t('accountSection').toLowerCase()}<span>.</span></h1></header>
 
-        {/* ── User card ── */}
-        <div style={{
-          ...cardStyle, padding: 20,
-          marginBottom: 24,
-          display: 'flex', alignItems: 'center', gap: 14,
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: '50%',
-            border: `2px solid ${GOLD}`, overflow: 'hidden', flexShrink: 0,
-            background: colors.surface,
-          }}>
-            {displayAvatar ? (
-              <img src={displayAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_DISPLAY, fontSize: 24, color: GOLD }}>
-                {firstName?.[0]?.toUpperCase() || '?'}
-              </div>
-            )}
-          </div>
-          <div>
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 400, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-              {firstName}
-            </div>
-            <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: TEXT_DIM, textTransform: 'uppercase', marginTop: 4 }}>
-              {t('level', { level })} &bull; {xpInLevel} / {xpForNext} XP
-            </div>
-          </div>
+      <section className={styles.identity} aria-label={t('myProfile')}>
+        <div className={styles.identityTop}>
+          <span className={styles.avatar}>{displayAvatar
+            ? <img src={displayAvatar} alt="" />
+            : firstName?.[0]?.toUpperCase() || '?'}</span>
+          <div className={styles.identityName}><strong>{firstName}</strong><span>{t('level', { level })}</span></div>
+          <button type="button" className={styles.profileShortcut} onClick={() => onNavigate('profil')} aria-label={t('myProfile')}><ChevronRight size={22} aria-hidden="true" /></button>
         </div>
+        <div className={styles.xpLine}><span>{xp.toLocaleString()} XP</span><span>{xpInLevel} / {xpForNext} XP</span></div>
+        <div className={styles.xpTrack} role="progressbar" aria-label="Progression XP" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}><div style={{ width: `${progress}%` }} /></div>
+      </section>
 
-        {isInBeta && (
-          <div style={{
-            ...cardStyle, padding: '14px 16px',
-            marginBottom: 24,
-            display: 'flex', alignItems: 'center', gap: 12,
-          }}>
-            <Clock size={18} color={GOLD} />
-            <div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>
-                {t('betaAccess')}
-              </div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_PRIMARY, marginTop: 2 }}>
-                {t('daysLeft', { count: betaDaysLeft ?? 0 })}
-              </div>
-            </div>
-          </div>
-        )}
+      {(isInBeta || isInTrial) && <div className={styles.accessNotice}><Clock size={18} aria-hidden="true" /><span>{t(isInBeta ? 'betaAccess' : 'trialPeriod')} · {t('daysLeft', { count: isInBeta ? betaDaysLeft ?? 0 : trialDaysLeft ?? 0 })}</span></div>}
 
-        {/* ── COACHING ── */}
-        <SectionTitle noPadding title={t('coaching')} />
-        <div style={menuCard}>
-          <button onClick={() => onNavigate('messages')} style={itemStyle}>
-            <MessageCircle size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('messages')}</span>
-            <span style={{ flex: 1 }} />
-            {unreadCount > 0 && (
-              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
-                {unreadCount}
-              </span>
-            )}
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button onClick={() => onNavigate('coachIA')} style={itemStyle}>
-            <Sparkles size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>Athena</span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
+      <section aria-labelledby="account-programs">
+        <h2 ref={programsHeadingRef} tabIndex={-1} id="account-programs" className={styles.sectionTitle}>{t('programs').toLocaleLowerCase()}</h2>
+        <div className={styles.programGrid}>
+          <AccountLink prominent icon={UtensilsCrossed} title={t('nutritionProgram')} description={t('nutritionProgramDescription')} onClick={() => onNavigate('nutrition_program')} />
+          <AccountLink prominent icon={Dumbbell} title={t('trainingProgram')} description={t('trainingProgramDescription')} onClick={() => onNavigate('training_program')} />
         </div>
+      </section>
 
-        {/* ── PROGRAMMES ── */}
-        <div ref={programsHeadingRef} tabIndex={-1} aria-label={t('programs')}>
-          <SectionTitle noPadding title={t('programs')} />
+      <section aria-labelledby="account-profile">
+        <h2 id="account-profile" className={styles.sectionTitle}>{t('profile').toLocaleLowerCase()}</h2>
+        <div className={styles.linkGrid}>
+          <AccountLink icon={User} title={t('myProfile')} onClick={() => onNavigate('profil')} />
+          <AccountLink icon={Target} title={t('goals')} onClick={() => onNavigate('goals')} />
+          <AccountLink icon={Settings} title={t('preferences')} onClick={() => onNavigate('preferences')} />
+          <AccountLink icon={Shield} title={t('accountSection')} onClick={() => onNavigate('account_section')} />
         </div>
-        <div style={menuCard}>
-          <button onClick={() => onNavigate('nutrition_program')} style={itemStyle}>
-            <UtensilsCrossed size={18} color={GOLD} />
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('nutritionProgram')}</span>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('nutritionProgramDescription')}</span>
-            </span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button onClick={() => onNavigate('training_program')} style={itemStyle}>
-            <Dumbbell size={18} color={GOLD} />
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('trainingProgram')}</span>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('trainingProgramDescription')}</span>
-            </span>
-            <span style={{ flex: 1 }} />
-            <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: TEXT_DIM, textTransform: 'uppercase' }}>{t('open')}</span>
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
+      </section>
+
+      <section aria-labelledby="account-coaching">
+        <h2 id="account-coaching" className={styles.sectionTitle}>{t('coaching').toLocaleLowerCase()}</h2>
+        <div className={styles.linkGrid}>
+          <AccountLink icon={MessageCircle} title={t('messages')} badge={unreadCount} onClick={() => onNavigate('messages')} />
+          <AccountLink icon={Sparkles} title="Athena" onClick={() => onNavigate('coachIA')} />
         </div>
+      </section>
 
-        {/* ── PROFIL ── */}
-        <SectionTitle noPadding title={t('profile')} />
-        <div style={menuCard}>
-          <button onClick={() => onNavigate('profil')} style={itemStyle}>
-            <User size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('myProfile')}</span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button onClick={() => onNavigate('goals')} style={itemStyle}>
-            <Target size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('goals')}</span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button onClick={() => onNavigate('preferences')} style={itemStyle}>
-            <Settings size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('preferences')}</span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-        </div>
+      <section aria-labelledby="account-help">
+        <h2 id="account-help" className={styles.sectionTitle}>{t('reportProblem')}</h2>
+        <AccountLink icon={MessageSquare} title={t('reportProblem')} description={t('reportProblemDescription')} badge={feedbackUnread} onClick={() => setBugReportOpen(true)} />
+      </section>
 
-        {/* ── COMPTE ── */}
-        <SectionTitle noPadding title={t('accountSection')} />
-        <div style={menuCard}>
-          <button onClick={() => onNavigate('account_section')} style={itemStyle}>
-            <Settings size={18} color={GOLD} />
-            <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('accountSection')}</span>
-            <span style={{ flex: 1 }} />
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-          <div style={divider} />
-          <button type="button" onClick={() => setBugReportOpen(true)} style={itemStyle}>
-            <MessageSquare size={18} color={GOLD} />
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{t('reportProblem')}</span>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_DIM }}>{t('reportProblemDescription')}</span>
-            </span>
-            <span style={{ flex: 1 }} />
-            {feedbackUnread > 0 && (
-              <span style={{ background: GOLD, color: colors.onGold, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>
-                {feedbackUnread}
-              </span>
-            )}
-            <ChevronRight size={16} color={TEXT_DIM} />
-          </button>
-        </div>
-
-        <BugReport
-          session={session}
-          open={bugReportOpen}
-          onOpenChange={setBugReportOpen}
-        />
-
-      </div>
+      <BugReport session={session} open={bugReportOpen} onOpenChange={setBugReportOpen} />
     </div>
-  )
+  </div>
 }
