@@ -17,7 +17,7 @@
 .xpTrack { height: 7px; overflow: hidden; border-radius: 99px; background: #353229; }
 .xpTrack div { height: 100%; border-radius: inherit; background: #e6c364; }
 .accessNotice { display: flex; align-items: center; gap: 9px; margin-top: 12px; padding: 12px 16px; border-radius: 14px; background: #27251f; color: #e6c364; font-size: .85rem; }
-.sectionTitle { margin: 32px 0 14px; color: #f5f2ea; font-size: 1.3rem; font-weight: 750; line-height: 1.15; text-transform: none; scroll-margin-top: 24px; }
+.sectionTitle { margin: 32px 0 14px; color: #f5f2ea; font-size: 1.3rem; font-weight: 750; line-height: 1.15; text-transform: capitalize; scroll-margin-top: 24px; }
 .programGrid, .linkGrid { display: grid; gap: 10px; }
 .link { display: flex; width: 100%; min-height: 72px; align-items: center; gap: 14px; padding: 15px 16px; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .prominent { min-height: 96px; }

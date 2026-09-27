@@ -70,7 +70,7 @@ export default function AccountTab({
   const { level, xpForNext, xpInLevel } = getLevelFromXP(xp)
   const progress = xpForNext > 0 ? Math.min(100, xpInLevel / xpForNext * 100) : 0
 
-  return <main className={styles.page}>
+  return <div className={styles.page}>
     <div className={styles.shell}>
       <header className={styles.header}><h1>{t('accountSection').toLowerCase()}<span>.</span></h1></header>
 
@@ -89,7 +89,7 @@ export default function AccountTab({
       {(isInBeta || isInTrial) && <div className={styles.accessNotice}><Clock size={18} aria-hidden="true" /><span>{t(isInBeta ? 'betaAccess' : 'trialPeriod')} · {t('daysLeft', { count: isInBeta ? betaDaysLeft ?? 0 : trialDaysLeft ?? 0 })}</span></div>}
 
       <section aria-labelledby="account-programs">
-        <h2 ref={programsHeadingRef} tabIndex={-1} id="account-programs" className={styles.sectionTitle}>{t('programs')}</h2>
+        <h2 ref={programsHeadingRef} tabIndex={-1} id="account-programs" className={styles.sectionTitle}>{t('programs').toLocaleLowerCase()}</h2>
         <div className={styles.programGrid}>
           <AccountLink prominent icon={UtensilsCrossed} title={t('nutritionProgram')} description={t('nutritionProgramDescription')} onClick={() => onNavigate('nutrition_program')} />
           <AccountLink prominent icon={Dumbbell} title={t('trainingProgram')} description={t('trainingProgramDescription')} onClick={() => onNavigate('training_program')} />
@@ -97,7 +97,7 @@ export default function AccountTab({
       </section>
 
       <section aria-labelledby="account-profile">
-        <h2 id="account-profile" className={styles.sectionTitle}>{t('profile')}</h2>
+        <h2 id="account-profile" className={styles.sectionTitle}>{t('profile').toLocaleLowerCase()}</h2>
         <div className={styles.linkGrid}>
           <AccountLink icon={User} title={t('myProfile')} onClick={() => onNavigate('profil')} />
           <AccountLink icon={Target} title={t('goals')} onClick={() => onNavigate('goals')} />
@@ -107,7 +107,7 @@ export default function AccountTab({
       </section>
 
       <section aria-labelledby="account-coaching">
-        <h2 id="account-coaching" className={styles.sectionTitle}>{t('coaching')}</h2>
+        <h2 id="account-coaching" className={styles.sectionTitle}>{t('coaching').toLocaleLowerCase()}</h2>
         <div className={styles.linkGrid}>
           <AccountLink icon={MessageCircle} title={t('messages')} badge={unreadCount} onClick={() => onNavigate('messages')} />
           <AccountLink icon={Sparkles} title="Athena" onClick={() => onNavigate('coachIA')} />
@@ -121,5 +121,5 @@ export default function AccountTab({
 
       <BugReport session={session} open={bugReportOpen} onOpenChange={setBugReportOpen} />
     </div>
-  </main>
+  </div>
 }
