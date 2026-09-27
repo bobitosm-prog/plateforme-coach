@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, useId, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
-import { Check, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
@@ -105,8 +105,10 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   const t = useTranslations('home.v2.lower')
   const locale = useLocale()
   const panelId = useId()
+  const weekPanelId = useId()
   const checkInCardRef = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [weekExpanded, setWeekExpanded] = useState(false)
   const [savingCheckIn, setSavingCheckIn] = useState(false)
   const [checkInError, setCheckInError] = useState(false)
   const [localCheckIn, setLocalCheckIn] = useState<CheckInDraft | null>(null)
@@ -297,9 +299,22 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
       </div>
     </section>
 
-    <section className={styles.lowerSection} aria-labelledby="home-week-title">
-      <h2 id="home-week-title" className={styles.lowerSectionTitle}>{t('week')}</h2>
-      <div className={`${styles.weeklyGrid} ${showCoachWeek ? '' : styles.weeklyGridSolo}`}>
+    <section className={`${styles.lowerSection} ${styles.weekDisclosure}`} aria-labelledby="home-week-title">
+      <h2 id="home-week-title" className={styles.lowerSectionTitle}>
+        <button
+          type="button"
+          className={styles.weekToggle}
+          aria-label={t('week')}
+          aria-describedby={`${weekPanelId}-summary`}
+          aria-expanded={weekExpanded}
+          aria-controls={weekPanelId}
+          onClick={() => setWeekExpanded(current => !current)}
+        >
+          <span><strong>{t('week')}</strong><small id={`${weekPanelId}-summary`}>{t('diagnostic.label')}{diagnostic ? ` · ${diagnostic.score_semaine}/100` : ''}{showCoachWeek ? ` · ${t('coachWeek.label')}` : ''}</small></span>
+          <ChevronDown size={20} aria-hidden="true" />
+        </button>
+      </h2>
+      <div id={weekPanelId} className={`${styles.weeklyGrid} ${styles.weekPanel} ${showCoachWeek ? '' : styles.weeklyGridSolo}`} hidden={!weekExpanded}>
         <article className={styles.weeklyCard} aria-busy={diagnosticLoading}>
           <div className={styles.quickCardHeader}>
             <div>
