@@ -47,7 +47,6 @@ export default function ProgressionHero({
   return <header className={styles.hero} aria-labelledby="progression-v2-title" aria-busy={state === 'loading'} data-state={state}>
     <div className={styles.heroTop}>
       <div className={styles.heroHeading}>
-        <p className={styles.eyebrow}>{t('eyebrow')}</p>
         <h1 id="progression-v2-title" className={styles.title}>{t('title')}</h1>
         <p className={styles.subtitle}>{t('subtitle')}</p>
       </div>
