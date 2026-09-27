@@ -11,10 +11,10 @@ const styles = read('app/components/tabs/profile/TrainingProgramSection.module.c
 describe('Account training program section', () => {
   it('adds the Training card while preserving the Nutrition card', () => {
     expect(account).toContain("onNavigate('nutrition_program')")
-    expect(account).toContain("onNavigate('training_program')")
+    expect(account).toContain('prominent icon={Dumbbell}')
     expect(account).toContain("t('nutritionProgram')")
     expect(account).toContain("t('trainingProgram')")
-    expect(account).toContain("t('open')")
+    expect(account).toContain("onNavigate('training_program')")
   })
 
   it('extends Account internal navigation without creating a URL route', () => {
