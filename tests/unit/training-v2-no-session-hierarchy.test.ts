@@ -42,11 +42,12 @@ describe('Training V2 no-session hierarchy', () => {
     expect(frenchMessages.training_tab.v2.manageInAccount).toBe('Mon programme')
   })
 
-  it('routes the neutral next-session action to the next non-empty program day', () => {
+  it('routes the next-session card to the matching calendar day', () => {
     expect(trainingTab).toContain('findNextPlannedSession({')
     expect(trainingTab).toContain('<NextPlannedSessionCard')
-    expect(trainingTab).toContain('onViewNext={showNextPlannedSession}')
-    expect(noActiveSession).toContain('onClick={onViewNext}')
+    expect(trainingTab).toContain('onView={showNextPlannedSession}')
+    expect(trainingTab).toContain("setExploreOpen('calendar')")
+    expect(noActiveSession).toContain('{children && <div className={styles.journeyStep}>{children}</div>}')
   })
 
   it('keeps the week calendar structurally compact and accessible', () => {

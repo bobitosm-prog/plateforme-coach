@@ -19,15 +19,17 @@ export function findNextPlannedSession({
   coachProgram,
   today = new Date(),
   todaySessionDone = false,
+  startTomorrow = false,
 }: {
   personalProgram?: unknown | null
   coachProgram?: Record<string, CoachDay> | null
   today?: Date
   todaySessionDone?: boolean
+  startTomorrow?: boolean
 }): NextPlannedSession | null {
   if (!personalProgram && !coachProgram) return null
 
-  for (let offset = todaySessionDone ? 1 : 0; offset < 8; offset += 1) {
+  for (let offset = todaySessionDone || startTomorrow ? 1 : 0; offset < 8; offset += 1) {
     // Local noon avoids crossing a date boundary during daylight-saving changes.
     const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset, 12)
     const dayIndex = (date.getDay() + 6) % 7
