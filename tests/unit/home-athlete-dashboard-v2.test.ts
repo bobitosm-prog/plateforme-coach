@@ -30,27 +30,44 @@ function renderDashboard(onOpenProgram = vi.fn()) {
   return render(
     React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-      children: [
-        React.createElement(HomeV2Header, { key: 'header', identity: model.identity, today: model.today }),
-        React.createElement(TodayHero, { key: 'hero', training: model.training, onOpenProgram }),
-        React.createElement(DailyStatus, {
-          key: 'status',
-          training: model.training,
-          nutrition: model.nutrition,
-          recovery: model.recovery,
-          onOpenRecovery: vi.fn(),
-        }),
-      ],
-    }),
+    }, [
+      React.createElement(HomeV2Header, { key: 'header', identity: model.identity, today: model.today }),
+      React.createElement(TodayHero, { key: 'hero', training: model.training, onOpenProgram }),
+      React.createElement(DailyStatus, {
+        key: 'status',
+        training: model.training,
+        nutrition: model.nutrition,
+        recovery: model.recovery,
+        onOpenRecovery: vi.fn(),
+      }),
+    ]),
   )
 }
 
 describe('athlete dashboard home', () => {
+  it('opens Athena from the header and displays real XP without inventing a value', () => {
+    const onOpenAthena = vi.fn()
+    const onOpenProgression = vi.fn()
+    const identity = { ...model.identity, xp: 1250 }
+    render(React.createElement(NextIntlClientProvider, {
+      locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
+    }, React.createElement(HomeV2Header, {
+      identity, today: model.today, onOpenAthena, onOpenProgression,
+    })))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir Athena' }))
+    expect(onOpenAthena).toHaveBeenCalledOnce()
+    fireEvent.click(screen.getByRole('button', { name: 'Voir mes 1250 points XP' }))
+    expect(onOpenProgression).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'Voir mes 1250 points XP' }).textContent?.replace(/\s/g, '')).toContain('1250XP')
+  })
+
   it('keeps the real rest-day action and the three status domains', () => {
     const openProgram = vi.fn()
     renderDashboard(openProgram)
 
     expect(screen.getByRole('heading', { name: 'Aujourd’hui' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /points XP/ })).toBeNull()
     expect(screen.getByRole('heading', { name: 'Jour de repos' })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Entraînement/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Nutrition/ })).toBeTruthy()

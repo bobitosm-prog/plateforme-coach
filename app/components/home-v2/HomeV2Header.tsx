@@ -7,6 +7,7 @@ import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
 
 export interface HomeV2HeaderActions {
+  onOpenAthena?: () => void
   onOpenTraining?: () => void
   onOpenProgression?: () => void
   onOpenAccount?: () => void
@@ -16,6 +17,7 @@ export default function HomeV2Header({
   identity,
   today,
   onOpenTraining,
+  onOpenAthena,
   onOpenProgression,
   onOpenAccount,
 }: Pick<HomeViewModel, 'identity' | 'today'> & HomeV2HeaderActions) {
@@ -30,12 +32,15 @@ export default function HomeV2Header({
     <div className={styles.headerTop}>
       <span className={styles.wordmark} aria-label="MoovX">Moov<span>X</span></span>
       <div className={styles.identity}>
+        <button type="button" className={styles.athenaButton} onClick={onOpenAthena} aria-label={t('openAthena')}>
+          <span aria-hidden="true">A</span><Sparkles size={11} aria-hidden="true" />
+        </button>
         <div className={styles.metrics} aria-label={t('secondaryMetrics')}>
-          {identity.streak > 0 && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openStreak', { count: identity.streak })}>
+          {identity.streak > 0 && <button type="button" className={`${styles.metric} ${styles.streakMetric}`} onClick={onOpenProgression} aria-label={t('openStreak', { count: identity.streak })}>
             <Flame size={14} aria-hidden="true" /> {identity.streak}
           </button>}
-          {identity.xp != null && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openXp', { count: identity.xp })}>
-            <Sparkles size={13} aria-hidden="true" /> {identity.xp} XP
+          {identity.xp != null && <button type="button" className={`${styles.metric} ${styles.xpMetric}`} onClick={onOpenProgression} aria-label={t('openXp', { count: identity.xp })}>
+            <Sparkles size={13} aria-hidden="true" /> {new Intl.NumberFormat(locale).format(identity.xp)} XP
           </button>}
         </div>
         <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>

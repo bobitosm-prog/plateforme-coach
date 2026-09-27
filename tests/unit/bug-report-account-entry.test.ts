@@ -49,9 +49,9 @@ describe('Bug report account entry', () => {
     expect(messages.account.reportProblemDescription).toBeTruthy()
   })
 
-  it('keeps Athena and removes BugReport from the clearance calculation', () => {
-    expect(clientShell).toContain('className="client-athena-fab"')
-    expect(clientShell).toContain('--mobile-athena-fab-size: 52px')
+  it('keeps floating actions out of the mobile clearance calculation', () => {
+    expect(clientShell).not.toContain('className="client-athena-fab"')
+    expect(clientShell).not.toContain('--mobile-athena-fab-size')
     expect(clientShell).not.toContain('--mobile-chat-fab-size')
   })
 })

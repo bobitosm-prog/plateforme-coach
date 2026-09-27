@@ -3074,6 +3074,7 @@
       "secondaryMetrics": "Progression secondaire",
       "avatarAlt": "Photo de profil",
       "openAccount": "Ouvrir mon compte",
+      "openAthena": "Ouvrir Athena",
       "openStreak": "Voir ma série de {count} jours",
       "openXp": "Voir mes {count} points XP",
       "hero": {
