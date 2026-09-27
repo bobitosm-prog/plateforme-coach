@@ -28,7 +28,10 @@ describe('Home V2 mobile bottom navigation clearance', () => {
   it('uses five flat, accessible destinations with a visible active state', () => {
     expect(navStyles).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
     expect(navStyles).toContain(".item[aria-current='page']")
-    expect(navStyles).not.toContain('backdrop-filter')
+    expect(navStyles).toContain('.dock::before')
+    expect(navStyles).toContain('background: linear-gradient(180deg,')
+    expect(navStyles).toContain('-webkit-backdrop-filter: blur(8px)')
+    expect(navStyles).toContain('pointer-events: none;')
     expect(page).toContain("aria-current={active ? 'page' : undefined}")
     expect(page).toContain('disabled={overlayOpen}')
     expect(page).toContain('h.unreadCount > 0')
