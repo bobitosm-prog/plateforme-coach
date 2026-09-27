@@ -28,6 +28,7 @@ import RecentSessionsList from '../training/RecentSessionsList'
 import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
 import { TrainingV2 } from '../training-v2/TrainingV2'
 import NoActiveSession from '../training-v2/NoActiveSession'
+import overviewStyles from './TrainingOverview.module.css'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
 type PersonalProgram = NonNullable<Parameters<typeof getEffectiveWeek>[0]> & {
@@ -285,19 +286,11 @@ export default function TrainingTab({
 
         const monthLabel = displayDays[3].date.toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()
 
-        const glassBtn: React.CSSProperties = {
-          width: 44, height: 44, borderRadius: 9,
-          background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer',
-        }
-
         return (
           <div
             data-no-tab-swipe="true"
             data-training-calendar="compact"
-            style={{ margin: '0 20px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 12, marginBottom: 16 }}
+            className={overviewStyles.calendar}
             onTouchStart={e => { calTouchStart.current = e.touches[0].clientX }}
             onTouchEnd={e => {
               if (calTouchStart.current === null) return
@@ -308,19 +301,19 @@ export default function TrainingTab({
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{monthLabel}</span>
-              <div style={{ display: 'flex', gap: 8 }}>
+            <div className={overviewStyles.calendarHeader}>
+              <span className={overviewStyles.calendarMonth}>{monthLabel}</span>
+              <div className={overviewStyles.calendarControls}>
                 {weekOffset !== 0 && (
                   <button onClick={() => { setWeekDir(weekOffset > 0 ? -1 : 1); setWeekOffset(0) }} aria-label={t('calendar.backToWeek')}
-                    style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' as const }}>
+                    className={overviewStyles.calendarControl}>
                     AUJOURD&apos;HUI
                   </button>
                 )}
-                <button onClick={() => { setWeekDir(-1); setWeekOffset(o => o - 1) }} aria-label={t('calendar.prevWeek')} style={glassBtn}>
+                <button onClick={() => { setWeekDir(-1); setWeekOffset(o => o - 1) }} aria-label={t('calendar.prevWeek')} className={overviewStyles.calendarControl}>
                   <ChevronLeft size={16} color={colors.gold} />
                 </button>
-                <button onClick={() => { setWeekDir(1); setWeekOffset(o => o + 1) }} aria-label={t('calendar.nextWeek')} style={glassBtn}>
+                <button onClick={() => { setWeekDir(1); setWeekOffset(o => o + 1) }} aria-label={t('calendar.nextWeek')} className={overviewStyles.calendarControl}>
                   <ChevronRight size={16} color={colors.gold} />
                 </button>
               </div>
@@ -334,12 +327,13 @@ export default function TrainingTab({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -weekDir * 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32, mass: 0.7 }}
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}
+              className={overviewStyles.days}
             >
               {displayDays.map(({ date, dateStr, ws, isProgRest }, i) => {
                 const dayNum = date.getDate()
                 const dayName = format(date, 'EEE', { locale: dateLocale }).toUpperCase()
                 const isToday = dateStr === todayStr
+                const isSelected = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i] === trainingDay
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
                 const isDone = (ws?.completed || doneDates.has(dateStr)) && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
@@ -356,22 +350,19 @@ export default function TrainingTab({
                   <button
                     key={i}
                     aria-label={`${dayName} ${dayNum} · ${statusLabel}`}
+                    aria-pressed={isSelected}
+                    data-selected={isSelected}
+                    data-today={isToday}
+                    className={overviewStyles.calendarDay}
                     onClick={() => {
                       const dayKey = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'][i]
                       setTrainingDay(dayKey)
                       setCalendarSelectedDate(date)
                     }}
-                    style={{
-                      background: isToday ? `${colors.gold}12` : 'transparent',
-                      border: isToday ? `2px solid ${colors.gold}` : `1px solid ${colors.divider}`,
-                      borderRadius: 9, padding: '7px 2px', cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
-                      transition: 'all 0.15s ease',
-                    }}
                   >
-                    <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: isToday ? colors.gold : colors.textDim, textTransform: 'uppercase' as const }}>{dayName}</span>
-                    <span style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 400, lineHeight: 1, color: isToday ? colors.gold : colors.text }}>{dayNum}</span>
-                    <div aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                    <span className={overviewStyles.dayName}>{dayName}</span>
+                    <span className={overviewStyles.dayNumber}>{dayNum}</span>
+                    <span aria-hidden="true" className={overviewStyles.dayDot} style={{ background: dotColor }} />
                   </button>
                 )
               })}
@@ -379,15 +370,15 @@ export default function TrainingTab({
             </AnimatePresence>
 
             {/* Legend compact */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 9 }}>
+            <div className={overviewStyles.legend}>
               {[
                 { color: colors.success, label: t('calendar.legendDone') },
                 { color: colors.error, label: t('calendar.legendMissed') },
                 { color: 'rgba(255,255,255,0.2)', label: t('calendar.legendRest') },
               ].map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: l.color }} />
-                  <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim }}>{l.label}</span>
+                <div key={l.label} className={overviewStyles.legendItem}>
+                  <span className={overviewStyles.legendDot} style={{ background: l.color }} />
+                  <span>{l.label}</span>
                 </div>
               ))}
             </div>
@@ -398,7 +389,7 @@ export default function TrainingTab({
       {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
       <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />
       {/* ═══ SECTION 6 — CARDIO ═══ */}
-      <div style={{ padding: '0 24px 16px' }}>
+      <div className={overviewStyles.cardioWrap}>
         <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />
       </div>
 

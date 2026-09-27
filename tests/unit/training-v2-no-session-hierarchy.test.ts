@@ -51,8 +51,9 @@ describe('Training V2 no-session hierarchy', () => {
 
   it('keeps the week calendar structurally compact and accessible', () => {
     expect(trainingTab).toContain('data-training-calendar="compact"')
-    expect(trainingTab).toContain("padding: '7px 2px'")
+    expect(trainingTab).toContain('className={overviewStyles.calendarDay}')
     expect(trainingTab).toContain('aria-label={`${dayName} ${dayNum} · ${statusLabel}`}')
+    expect(trainingTab).toContain('aria-pressed={isSelected}')
     expect(trainingTab).toContain('aria-hidden="true"')
   })
 

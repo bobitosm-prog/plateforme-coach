@@ -48,3 +48,14 @@
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+
+.overviewWrap {
+  width: min(calc(100% - 32px), 1148px);
+  margin: 0 auto 20px;
+}
+
+.overviewCard {
+  padding: 18px;
+  border-radius: 18px;
+  background: #191916;
+}

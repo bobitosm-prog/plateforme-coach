@@ -73,10 +73,14 @@ export default function NoActiveSession({
 
   return (
     <div className={styles.landing} data-training-v2="no-active-session">
+      <header className={styles.overviewHeader}>
+        <span className={styles.overviewKicker}>MOOVX / TRAINING</span>
+        <h1 className={styles.overviewTitle}>{t('trainingLabel')}<span aria-hidden="true">.</span></h1>
+      </header>
       {completedToday ? (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-completed-title">
           <div className={styles.eyebrow}>{t('sessionCompletedLabel')}</div>
-          <h1 id="training-completed-title" className={styles.emptyTitle}>{t('sessionCompletedToday')}</h1>
+          <h2 id="training-completed-title" className={styles.emptyTitle}>{t('sessionCompletedToday')}</h2>
           {completedSessionName && <p className={styles.emptyDescription}>{completedSessionName}</p>}
           {onViewCompleted && <div className={`${styles.emptyActions} ${styles.emptyActionsSingle}`}>
             <button type="button" className={styles.secondaryAction} onClick={onViewCompleted}>{t('viewCompletedSession')}</button>
@@ -95,7 +99,7 @@ export default function NoActiveSession({
       /> : (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-empty-title">
           <div className={styles.eyebrow}>{t('trainingLabel')}</div>
-          <h1 id="training-empty-title" className={styles.emptyTitle}>{stateTitle}</h1>
+          <h2 id="training-empty-title" className={styles.emptyTitle}>{stateTitle}</h2>
           {isSettledEmpty && <p className={styles.emptyDescription}>{t('noSessionDescription')}</p>}
           {isSettledEmpty && (
             <div className={`${styles.emptyActions} ${canViewNext ? '' : styles.emptyActionsSingle}`}>

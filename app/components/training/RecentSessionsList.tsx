@@ -66,7 +66,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
           display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 12,
           minHeight: 58, padding: compact ? '10px 2px' : '10px 12px', background: compact ? 'transparent' : colors.surface2,
           border: compact ? 'none' : `1px solid ${colors.divider}`,
-          borderBottom: compact && index < sessions.length - 1 ? `1px solid ${colors.divider}` : undefined,
+          borderBottom: compact && index < sessions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : undefined,
           borderRadius: compact ? 0 : 13,
           cursor: 'pointer', textAlign: 'left', width: '100%', marginBottom: compact ? 0 : 8,
           fontFamily: 'inherit', color: 'inherit',
@@ -90,10 +90,10 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
   })
 
   return (
-    <div style={{ padding: '0 20px', marginBottom: 24 }}>
+    <div className={styles.overviewWrap}>
       <section
         data-training-section-card="recent-history"
-        style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14 }}
+        className={styles.overviewCard}
       >
         <h2 style={{ margin: '0 0 10px', color: colors.gold, fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
           {t('lastSessions')}
@@ -120,8 +120,8 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
                 onClick={() => setShowFullHistory(true)}
                 style={{
                   width: '100%', minHeight: 44, padding: 12, marginTop: 10,
-                  background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
-                  border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 12,
+                  background: '#29261f',
+                  border: 0, borderRadius: 12,
                   fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
                   letterSpacing: '0.18em', color: colors.gold,
                   textTransform: 'uppercase', cursor: 'pointer',
