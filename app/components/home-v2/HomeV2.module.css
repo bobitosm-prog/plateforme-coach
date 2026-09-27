@@ -444,3 +444,72 @@
   .statusTileCopy strong { font-size: .95rem; }
   .statusTileLink { font-size: .7rem; }
 }
+
+/* Home sections share the same type scale and quiet card surface as daily status. */
+.sectionTitle, .progressionTitle, .intelligenceLabel, .lowerSectionTitle, .nbaTitle {
+  color: #eee9df;
+  font-size: 1.32rem;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -.025em;
+  text-transform: none;
+}
+.lowerSectionTitle { margin: 0 0 14px; }
+.progression {
+  margin-top: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.progressionGrid { margin-top: 14px; }
+.progressionState { min-height: 84px; padding: 16px; border-radius: 18px; background: #1d1c19; }
+.progressionMetric, .nba, .intelligenceCard, .quickCard {
+  border: 0;
+  border-radius: 18px;
+  background: #1d1c19;
+  box-shadow: none;
+}
+.progressionMetric { min-height: 114px; padding: 16px; }
+.nba, .intelligenceCard, .quickCard { padding: 16px; }
+.athenaInsight, .coachCard { background: #1d1c19; }
+.quickEyebrow, .nbaLabel, .progressionMetricLabel {
+  color: #c4b8a2;
+  font-size: .68rem;
+  font-weight: 750;
+  letter-spacing: .13em;
+}
+.progressionCopy, .nbaCopy, .quickCopy, .insightMessage { color: #aaa294; font-size: .82rem; line-height: 1.45; }
+.insightMessage { margin: 18px 0; }
+.intelligenceCard { min-height: 0; }
+.weekDisclosure {
+  padding: 16px;
+  border-radius: 18px;
+  background: #1d1c19;
+}
+.weekDisclosure .lowerSectionTitle { margin: 0; }
+.weekToggle {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.weekToggle span { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.weekToggle strong { font-size: inherit; font-weight: inherit; }
+.weekToggle small { color: #aaa294; font-size: .78rem; font-weight: 400; letter-spacing: 0; }
+.weekToggle svg { flex-shrink: 0; color: #e6c364; transition: transform 160ms ease; }
+.weekToggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+.weekToggle:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; border-radius: 8px; }
+.weekPanel { padding-top: 14px; }
+.weekPanel[hidden] { display: none; }
+.weekPanel .weeklyCard { min-height: 0; padding: 16px; border: 0; background: #27251f; }
+@media (prefers-reduced-motion: reduce) { .weekToggle svg { transition: none; } }

@@ -63,7 +63,6 @@ export default function ProgressionSnapshot({
   return <section className={styles.progression} aria-labelledby="progression-snapshot-title" aria-busy={state === 'loading'} data-state={state}>
     <div className={styles.progressionHeader}>
       <div>
-        <p className={styles.progressionEyebrow}>{t('eyebrow')}</p>
         <h2 id="progression-snapshot-title" className={styles.progressionTitle}>{t('title')}</h2>
         {(state === 'partial' || state === 'complete') && <p className={styles.progressionCopy}>{t(`${state}Copy`)}</p>}
       </div>
