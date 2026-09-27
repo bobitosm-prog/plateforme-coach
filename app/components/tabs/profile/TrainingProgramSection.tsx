@@ -28,6 +28,7 @@ interface TrainingProgramSectionProps {
   onRefresh: (forceRefresh?: boolean) => Promise<void>
   onBack: () => void
   configureOpen: boolean
+  initialEditorDayIndex?: number | null
   onConfigureChange: (open: boolean) => void
 }
 
@@ -41,6 +42,7 @@ export default function TrainingProgramSection({
   onRefresh,
   onBack,
   configureOpen,
+  initialEditorDayIndex,
   onConfigureChange,
 }: TrainingProgramSectionProps) {
   const t = useTranslations('accountPrograms.training')
@@ -149,6 +151,8 @@ export default function TrainingProgramSection({
               profile={profile}
               capabilities={capabilities}
               activeProgramContext={activeProgram}
+              openActiveEditor={configureOpen && initialEditorDayIndex != null}
+              initialEditorDayIndex={initialEditorDayIndex ?? 0}
               onRefresh={onRefresh}
               onClose={() => onConfigureChange(false)}
             />

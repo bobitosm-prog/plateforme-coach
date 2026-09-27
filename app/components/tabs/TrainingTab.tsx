@@ -22,12 +22,14 @@ import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-u
 import { getEffectiveWeek } from '../../../lib/training/program-week'
 import { resolveProgramDays, trainingMonday } from '../../../lib/training/resolve-program'
 import { deriveTodayTrainingState } from '../../../lib/training/today-training-state'
+import { findNextPlannedSession } from '../../../lib/training/next-planned-session'
 
 import VideoFeedbackHistory from '../VideoFeedbackHistory'
 import RecentSessionsList from '../training/RecentSessionsList'
 import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../lib/training/active-program'
 import { TrainingV2 } from '../training-v2/TrainingV2'
 import NoActiveSession from '../training-v2/NoActiveSession'
+import NextPlannedSessionCard from '../training-v2/NextPlannedSessionCard'
 import overviewStyles from './TrainingOverview.module.css'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -49,13 +51,14 @@ interface TrainingTabProps {
   workoutHistoryState: TrainingReadState
   startProgramWorkout: (day: any, exercises: any[], weekdayKey?: string) => void
   onOpenProgramSettings: () => void
+  onEditPlannedSession: (dayIndex: number) => void
   scheduledSessions: ScheduledSession[]
   setCalendarSelectedDate: (d: Date) => void
   setModal: (m: string | null) => void
 }
 
 export default function TrainingTab({
-  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, hasActiveDraft, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings,
+  supabase, session, profile, activeTrainingProgram, todayKey, todaySessionDone, hasActiveDraft, workoutHistory, workoutHistoryState, startProgramWorkout, onOpenProgramSettings, onEditPlannedSession,
   scheduledSessions, setCalendarSelectedDate, setModal,
 }: TrainingTabProps) {
   const t = useTranslations('training_tab')
@@ -194,21 +197,14 @@ export default function TrainingTab({
     scheduledCompleted: todaySessionDone,
     workoutSessions: workoutHistory,
   })
-  const v2NextSession = (() => {
-    const dayKeys = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
-    const currentIndex = Math.max(0, dayKeys.indexOf(trainingDay))
-    for (let offset = 1; offset <= 7; offset += 1) {
-      const dayIndex = (currentIndex + offset) % 7
-      const dayKey = dayKeys[dayIndex]
-      const exercises = activeCustomProgram?.days?.length
-        ? getSessionForDay(resolvedDays, dayIndex).exercises
-        : coachProgram?.[dayKey]?.exercises || []
-      if (exercises.length > 0) {
-        return { dayKey, dayIndex, weekOffset: currentIndex + offset > 6 ? 1 : 0 }
-      }
-    }
-    return null
-  })()
+  const v2NextSession = ['ready', 'partial'].includes(activeTrainingProgram.state)
+    ? findNextPlannedSession({
+      personalProgram: activeCustomProgram,
+      coachProgram,
+      today: _now,
+      todaySessionDone,
+    })
+    : null
 
   function showNextPlannedSession() {
     if (!v2NextSession) return
@@ -217,11 +213,12 @@ export default function TrainingTab({
     const dow = now.getDay()
     monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
     monday.setHours(0, 0, 0, 0)
-    const selectedDate = new Date(monday)
-    selectedDate.setDate(monday.getDate() + v2NextSession.dayIndex + v2NextSession.weekOffset * 7)
+    const selectedDate = v2NextSession.date
+    const targetWeekOffset = Math.round((new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 12).getTime()
+      - new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 12).getTime()) / (7 * 86400000))
     setTrainingDay(v2NextSession.dayKey)
     setCalendarSelectedDate(selectedDate)
-    setWeekOffset(v2NextSession.weekOffset)
+    setWeekOffset(targetWeekOffset)
   }
 
   // ══════════════════════════════════════════
@@ -265,6 +262,13 @@ export default function TrainingTab({
         onOpenProgramSettings={onOpenProgramSettings}
         onFreeSession={() => startProgramWorkout({ day_name: t('session.freeSession') }, [], trainingDay)}
       />
+
+      {v2NextSession && <NextPlannedSessionCard
+        session={v2NextSession}
+        editable={activeTrainingProgram.source === 'personal' && activeTrainingProgram.editable}
+        onView={showNextPlannedSession}
+        onEdit={() => onEditPlannedSession(v2NextSession.dayIndex)}
+      />}
 
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
       {(() => {

@@ -43,8 +43,8 @@ describe('Training V2 no-session hierarchy', () => {
   })
 
   it('routes the neutral next-session action to the next non-empty program day', () => {
-    expect(trainingTab).toContain('const v2NextSession = (() => {')
-    expect(trainingTab).toContain('if (exercises.length > 0)')
+    expect(trainingTab).toContain('findNextPlannedSession({')
+    expect(trainingTab).toContain('<NextPlannedSessionCard')
     expect(trainingTab).toContain('onViewNext={showNextPlannedSession}')
     expect(noActiveSession).toContain('onClick={onViewNext}')
   })

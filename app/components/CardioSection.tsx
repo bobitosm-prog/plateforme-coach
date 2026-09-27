@@ -49,10 +49,10 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
   return (
     <section
       data-training-section-card="cardio"
-      style={{ background: '#191916', border: 0, borderRadius: 18, padding: 18 }}
+      style={{ background: '#1d1c19', border: 0, borderRadius: 18, padding: 18 }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
-        <h2 style={{ margin: 0, color: colors.gold, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
+        <h2 style={{ margin: 0, color: '#eee9df', fontFamily: FONT_BODY, fontSize: '1.32rem', fontWeight: 750, letterSpacing: '-.025em', lineHeight: 1.25 }}>
           {t('ui.title')}
         </h2>
         <span style={{ color: colors.textDim, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
@@ -116,7 +116,7 @@ function WorkoutCard({ workout, weight, weightIsReal, setModal, onStart }: { wor
   const cal = estimateCalories(workout, weight)
   const isHiit = workout.type === 'hiit'
   return (
-    <div role="button" tabIndex={0} onClick={onStart} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart() } }} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div role="button" tabIndex={0} onClick={onStart} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart() } }} style={{ background: '#27251f', border: 0, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
         <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} {t('ui.minShort')}</span>

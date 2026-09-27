@@ -73,7 +73,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
         }}
       >
         <span style={{ minWidth: 0 }}>
-          <span style={{ display: 'block', overflow: 'hidden', color: colors.text, fontFamily: fonts.headline, fontSize: 15, textOverflow: 'ellipsis', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          <span style={{ display: 'block', overflow: 'hidden', color: colors.text, fontFamily: fonts.body, fontSize: 15, fontWeight: 700, textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {session.name || t('sessionFallback')}
           </span>
           <span style={{ display: 'block', marginTop: 3, color: colors.textDim, fontFamily: fonts.body, fontSize: 11 }}>
@@ -95,7 +95,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
         data-training-section-card="recent-history"
         className={styles.overviewCard}
       >
-        <h2 style={{ margin: '0 0 10px', color: colors.gold, fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
+        <h2 style={{ margin: '0 0 14px', color: '#eee9df', fontFamily: fonts.body, fontSize: '1.32rem', fontWeight: 750, letterSpacing: '-.025em', lineHeight: 1.25 }}>
           {t('lastSessions')}
         </h2>
 

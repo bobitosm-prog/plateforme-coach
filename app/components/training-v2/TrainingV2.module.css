@@ -1427,15 +1427,15 @@
 }
 .overviewTitle span { color: #e6c364; }
 .landing .hero {
-  min-height: 220px;
-  padding: 24px;
+  min-height: 0;
+  padding: 18px;
   border: 0;
-  border-radius: 22px;
-  background: #211f19;
+  border-radius: 18px;
+  background: #1d1c19;
   box-shadow: none;
 }
 .landing .hero::after { display: none; }
-.landing .emptyHero { min-height: 0; background: #1d1c18; }
+.landing .emptyHero { min-height: 0; background: #1d1c19; }
 .landing .heroTitle {
   max-width: 100%;
   margin: 13px 0 11px;
@@ -1456,13 +1456,13 @@
 }
 .landing .summary {
   margin-top: 12px;
-  padding: 19px 20px;
+  padding: 18px;
   border: 0;
   border-radius: 18px;
-  background: #191916;
+  background: #1d1c19;
 }
 .landing .sectionLabel { color: #a69d8d; }
-.landing .summaryTitle { margin-top: 6px; color: #f7f4ed; font-size: 1rem; }
+.landing .summaryTitle { margin-top: 6px; color: #f7f4ed; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; }
 .landing .sourceBadge { background: #2b281f; }
 .landing .tertiaryAction { color: #e6c364; text-decoration: none; }
 .landing .secondaryAction, .landing .toolAction {
@@ -1474,3 +1474,32 @@
   .landing .summary { grid-template-columns: minmax(0, 1fr); gap: 5px; }
   .landing .tertiaryAction { justify-self: start; padding-left: 0; }
 }
+
+/* Overview cards use the same quiet, content-sized surface as Home. */
+.nextSessionCard {
+  width: min(calc(100% - 32px), 1148px);
+  margin: 0 auto 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #1d1c19;
+  box-sizing: border-box;
+}
+.nextSessionHeading { display: flex; justify-content: space-between; gap: 14px; }
+.nextSessionHeading > div { min-width: 0; }
+.nextSessionEyebrow { margin: 0 0 8px; color: #c4b8a2; font-size: .68rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+.nextSessionTitle { margin: 0; overflow-wrap: anywhere; color: #f7f4ed; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; }
+.nextSessionDate { display: flex; align-items: center; gap: 7px; margin: 9px 0 0; color: #aaa294; font-size: .82rem; text-transform: capitalize; }
+.nextSessionIcon { display: grid; flex: 0 0 44px; place-items: center; height: 44px; border-radius: 13px; color: #e6c364; background: #2b271e; }
+.nextSessionListTitle { margin: 20px 0 10px; color: #c4b8a2; font-size: .68rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+.nextSessionList { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.nextSessionList li { display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 12px; border-radius: 12px; background: #27251f; }
+.nextSessionNumber { display: grid; flex: 0 0 26px; place-items: center; height: 26px; border-radius: 8px; color: #e6c364; background: #393121; font-size: .78rem; font-weight: 750; }
+.nextSessionExercise { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.nextSessionExercise strong { overflow-wrap: anywhere; color: #f7f4ed; font-size: .91rem; font-weight: 650; }
+.nextSessionExercise small { color: #aaa294; font-size: .76rem; }
+.nextSessionActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.nextSessionView, .nextSessionEdit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 11px; color: #e6c364; background: #2b271e; font: inherit; font-size: .79rem; font-weight: 750; cursor: pointer; }
+.nextSessionEdit { color: #151108; background: #e6c364; }
+.nextSessionView:focus-visible, .nextSessionEdit:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px; }
+.nextSessionReadOnly { margin: 0; color: #918a7e; font-size: .76rem; line-height: 1.4; }
+@media (max-width: 520px) { .nextSessionView, .nextSessionEdit { flex: 1 1 100%; } }
