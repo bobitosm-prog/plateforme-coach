@@ -337,7 +337,11 @@
 
 /* The training feature and both status tiles form one factual daily block. */
 .statusSection { margin-top: 0; }
-.statusCockpit { display: grid; gap: 10px; }
+.statusCockpit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .statusCockpit .hero {
   min-height: 170px;
   gap: 16px;
@@ -377,11 +381,17 @@
   white-space: nowrap;
 }
 .statusCockpit .hero .button:hover { transform: none; color: #f0d27c; }
-.statusSignals { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.statusSignals {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
 .statusTile {
   display: flex;
+  flex: 1 1 0;
   min-width: 0;
   min-height: 190px;
+  height: auto;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
