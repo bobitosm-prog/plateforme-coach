@@ -3240,7 +3240,7 @@
         "cta": "Ouvrir les messages"
       },
       "lower": {
-        "today": "Aujourd’hui",
+        "dailyHabits": "Suivi quotidien",
         "week": "Cette semaine",
         "checkIn": {
           "label": "Check-in",

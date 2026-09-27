@@ -3240,7 +3240,7 @@
         "cta": "Nachrichten öffnen"
       },
       "lower": {
-        "today": "Heute",
+        "dailyHabits": "Tägliche Routinen",
         "week": "Diese Woche",
         "checkIn": {
           "label": "Check-in",

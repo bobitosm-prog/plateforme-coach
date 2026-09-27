@@ -190,8 +190,8 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   const diagnosticUnavailable = model.diagnostic.state === 'error'
 
   return <div className={styles.lowerSections} data-home-v2-lower>
-    <section className={styles.lowerSection} aria-labelledby="home-today-actions-title">
-      <h2 id="home-today-actions-title" className={styles.lowerSectionTitle}>{t('today')}</h2>
+    <section className={styles.lowerSection} aria-labelledby="home-daily-habits-title">
+      <h2 id="home-daily-habits-title" className={styles.lowerSectionTitle}>{t('dailyHabits')}</h2>
       <div className={styles.lowerGrid}>
         <article ref={checkInCardRef} tabIndex={-1} className={styles.quickCard} data-check-in-card aria-busy={checkInLoading}>
           <div className={styles.quickCardHeader}>

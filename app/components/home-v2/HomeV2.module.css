@@ -154,12 +154,12 @@
 .progressionState { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; margin-top: 18px; color: #9f978a; font-size: .84rem; line-height: 1.45; }
 .progressionState strong { color: #ece6da; font-size: .95rem; }
 .progressionSkeleton { width: min(100%,320px); margin: 0 0 4px; }
-.progressionGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 20px; }
-.progressionMetric { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 2px 10px; align-items: center; min-width: 0; padding: 14px; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.018); }
+.progressionGrid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-top: 20px; }
+.progressionMetric { display: grid; flex: 0 0 calc((100% - 10px) / 2); grid-template-columns: 32px minmax(0,1fr); grid-auto-rows: min-content; align-content: center; align-items: center; gap: 2px 10px; box-sizing: border-box; height: auto; min-width: 0; padding: 14px; border: 1px solid rgba(255,255,255,.055); border-radius: 15px; background: rgba(255,255,255,.018); }
 .progressionIcon { grid-row: 1 / span 3; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: #d9b85d; background: rgba(201,168,76,.09); }
 .progressionMetricLabel { overflow: hidden; color: #8f887b; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .progressionMetricValue { overflow-wrap: anywhere; color: #f7f4ed; font-size: 1rem; line-height: 1.25; }
-.progressionMetricMeta { display: inline-flex; align-items: center; gap: 4px; color: #918a7e; font-size: .75rem; line-height: 1.35; }
+.progressionMetricMeta { display: inline-flex; grid-column: 2; align-items: center; gap: 4px; color: #918a7e; font-size: .75rem; line-height: 1.35; }
 .progressionMetricMeta[data-trend='up'] { color: #d9b85d; }
 .progressionMetricMeta[data-trend='down'] { color: #a9cba4; }
 .intelligenceGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,340px),1fr)); gap: 12px; margin-top: 24px; }
@@ -186,9 +186,9 @@
 @media (prefers-reduced-motion: reduce) { .skeletonLine, .spinner, .statusPanel { animation: none; } .button, .hydrationTrack span, .statusSignal, .statusChevron { transition: none; } .button:hover { transform: none; } }
 @media (hover: none) and (pointer: coarse) { .intelligenceGrid { align-items: start; } .intelligenceCard { height: auto; min-height: 0; align-self: start; } }
 @media (max-width: 699px) { .intelligenceGrid { grid-template-columns: minmax(0,1fr); grid-auto-rows: max-content; align-items: start; } .intelligenceCard { height: auto; min-height: 0; align-self: start; } }
-@media (min-width: 700px) { .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionGrid { grid-template-columns: repeat(4,minmax(0,1fr)); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
+@media (min-width: 700px) { .nba { flex-direction: row; align-items: center; justify-content: space-between; } .progressionMetric { flex-basis: calc((100% - 30px) / 4); } .lowerGrid, .weeklyGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .weeklyGridSolo { grid-template-columns: minmax(0,570px); } }
 @media (min-width: 768px) { .shell { padding: 34px 28px 14px; } .hero { min-height: 300px; } }
-@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .statusSummaryCopy small, .statusSignalMain small, .statusPanelTop p { display: none; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionGrid { grid-template-columns: 1fr; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .metrics { display: none; } .hero { min-height: 230px; } .actions, .button { width: 100%; } .statusSummaryCopy small, .statusSignalMain small, .statusPanelTop p { display: none; } .progressionHeader { flex-direction: column; gap: 5px; } .progressionMetric { flex-basis: 100%; } .intelligenceCard { min-height: 0; } .intelligenceCta { width: 100%; justify-content: space-between; } .quickCard, .weeklyCard { padding: 16px; } .quickCardHeader { align-items: center; } .moodGrid { gap: 4px; } .moodButton { min-height: 60px; } .coachWeekList { grid-template-columns: 1fr; } }
 @media (max-width: 360px) { .statusSummary { grid-template-columns: auto minmax(0,1fr); padding-inline: 14px; } .statusSummaryMarkers { display: none; } .statusSignal { grid-template-columns: 36px minmax(0,1fr) auto; padding-inline: 11px; } .statusSignalIcon { width: 36px; height: 36px; } .statusPanelTop { display: block; } .statusAction { width: 100%; margin-top: 10px; } }
 
 /* Decorative card strokes are intentionally invisible; surfaces and spacing carry the hierarchy. */
