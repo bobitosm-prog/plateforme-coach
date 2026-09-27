@@ -81,6 +81,16 @@ describe('Home V2 lower sections', () => {
     expect(lower).not.toMatch(/supabase|\.from\(|fetch\(|axios/i)
   })
 
+  it('names the check-in and hydration section without repeating the Home heading', () => {
+    expect(lower).toContain("{t('dailyHabits')}")
+    expect(lower).not.toContain("{t('today')}")
+    for (const locale of ['fr', 'en', 'de']) {
+      const messages = JSON.parse(read(`messages/${locale}.json`))
+      expect(messages.home.v2.lower.dailyHabits).toBeTruthy()
+      expect(messages.home.v2.lower.dailyHabits).not.toBe(messages.home.v2.today)
+    }
+  })
+
   it('uses responsive Home V2 grids and accessible mobile-sized controls', () => {
     expect(css).toMatch(/\.lowerGrid, \.weeklyGrid\s*\{[^}]*grid-template-columns:\s*minmax\(0,1fr\)/)
     expect(css).toMatch(/@media \(min-width: 700px\)[\s\S]*\.lowerGrid, \.weeklyGrid\s*\{[^}]*repeat\(2,minmax\(0,1fr\)\)/)

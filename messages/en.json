@@ -3240,7 +3240,7 @@
         "cta": "Open messages"
       },
       "lower": {
-        "today": "Today",
+        "dailyHabits": "Daily habits",
         "week": "This week",
         "checkIn": {
           "label": "Check-in",

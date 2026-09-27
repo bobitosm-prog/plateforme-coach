@@ -105,8 +105,9 @@ describe('Wave 1E architecture guards', () => {
 
   it('keeps one Progression CTA and responsive layouts', () => {
     expect(snapshot).toContain('onOpenProgression')
-    expect(css).toContain('.progressionGrid')
-    expect(css).toMatch(/@media \(max-width: 520px\)[\s\S]*\.progressionGrid/)
+    expect(css).toMatch(/\.progressionGrid \{ display: flex; flex-wrap: wrap; align-items: flex-start;/)
+    expect(css).toMatch(/\.progressionMetric \{[^}]*height: auto;/)
+    expect(css).toMatch(/@media \(max-width: 520px\)[^\n]*\.progressionMetric \{ flex-basis: 100%; \}/)
   })
 
   it('provides the snapshot copy in French, English and German', () => {
