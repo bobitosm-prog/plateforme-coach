@@ -30,7 +30,7 @@ export default function NutritionV2({
   compactToday = false,
   children,
 }: NutritionV2Props) {
-  return <section className={styles.shell} data-nutrition-v2>
+  return <section className={`${styles.shell} ${styles.athleteLayout}`} data-nutrition-v2>
     <NutritionHero
       model={model}
       selectedDate={selectedDate}

@@ -352,21 +352,13 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     >
 
       {/* PILLS NAVIGATION */}
-      <div style={{ display: 'flex', gap: 6, padding: '12px 20px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div className={quickEntryStyles.pageTabs} role="group" aria-label={nt('v2.title')}>
         {([
           { id: 'today' as SubTab, label: nt('tabs.journal') },
           { id: 'plan' as SubTab, label: nt('tabs.plan') },
         ]).map(({ id, label }) => {
-          const active = subTab === id
           return (
-            <button key={id} onClick={() => setSubTab(id)} style={{
-              padding: '6px 12px', cursor: 'pointer', whiteSpace: 'nowrap',
-              fontFamily: fonts.body, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-              borderRadius: 12,
-              background: active ? colors.goldBorder : 'transparent',
-              border: active ? `1px solid ${colors.goldContainer}66` : `1px solid ${colors.goldBorder}`,
-              color: active ? colors.gold : 'rgba(255,255,255,0.4)',
-            }}>
+            <button type="button" key={id} onClick={() => setSubTab(id)} aria-pressed={subTab === id}>
               {label}
             </button>
           )
@@ -413,7 +405,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         const waterGoal = profile?.water_goal || 3000
         const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
         const canAddWater = selectedDate === today
-        const glassBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
+        const glassBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 10, background: '#393121', border: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
           <div style={{ padding: '0 4px' }}>
@@ -441,8 +433,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               />
             </section>
             {/* ═══ CALENDAR STRIP ═══ */}
-            <details className={quickEntryStyles.disclosure}><summary>{nt('quickEntry.changeDate')}</summary>
-            <div style={{ background: colors.surface2, borderRadius: 16, padding: 14, marginBottom: 12 }}>
+            <details className={quickEntryStyles.disclosure}><summary><span>{nt('quickEntry.changeDate')}</span><ChevronRight size={20} aria-hidden="true" /></summary>
+            <div style={{ background: '#27251f', borderRadius: 14, padding: 14, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -464,7 +456,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                   const d = new Date(dt + 'T12:00:00')
                   const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
                   return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: sel ? `2px solid ${colors.gold}` : isTd ? `1px solid ${colors.goldRule}` : `1px solid ${colors.divider}`, background: sel ? `${colors.gold}12` : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
+                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: 0, background: sel ? '#393121' : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
                       <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
                       <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
@@ -480,7 +472,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
-            <details className={quickEntryStyles.disclosure}><summary>{nt('quickEntry.journal')}</summary>
+            <details className={quickEntryStyles.disclosure}><summary><span>{nt('quickEntry.journal')}</span><ChevronRight size={20} aria-hidden="true" /></summary>
             <TodayMeals
               model={nutritionModel}
               selectedDate={selectedDate}
@@ -524,27 +516,27 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
             />
             </details>
             {/* Hydration remains a separate legacy module during the progressive migration. */}
-            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div className={quickEntryStyles.hydrationCard}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ display: 'grid', width: 38, height: 38, placeItems: 'center', borderRadius: 12, background: 'rgba(111,183,232,0.12)' }}>
-                  <Droplets size={18} color="#6FB7E8" aria-hidden="true" />
+                <div style={{ display: 'grid', width: 38, height: 38, placeItems: 'center', borderRadius: 12, background: '#2b271e' }}>
+                  <Droplets size={18} color="#e6c364" aria-hidden="true" />
                 </div>
                 <div>
                   <span style={{ ...subtitleStyle, display: 'block', fontSize: 10, letterSpacing: '0.12em' }}>{nt('chrome.hydration')}</span>
-                  <strong style={{ fontFamily: fonts.headline, fontSize: 17, color: '#6FB7E8', fontWeight: 500 }}>
+                  <strong style={{ fontFamily: fonts.body, fontSize: 17, color: '#f7f4ed', fontWeight: 750 }}>
                     {(waterToday / 1000).toFixed(1)}L <span style={{ ...mutedStyle, fontSize: 11 }}>/ {(waterGoal / 1000).toFixed(1)}L · {pctWater}%</span>
                   </strong>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flex: '1 1 170px', maxWidth: 240 }}>
-                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater250')}</button>
-                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: 'rgba(111,183,232,0.12)', border: 'none', color: '#6FB7E8', fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater500')}</button>
+                <button onClick={() => canAddWater && addWater(250)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: '#2b271e', border: 'none', color: '#e6c364', fontFamily: fonts.body, fontSize: 12, fontWeight: 750, cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater250')}</button>
+                <button onClick={() => canAddWater && addWater(500)} disabled={!canAddWater} style={{ minHeight: 44, flex: 1, padding: '8px 10px', borderRadius: 10, background: '#2b271e', border: 'none', color: '#e6c364', fontFamily: fonts.body, fontSize: 12, fontWeight: 750, cursor: canAddWater ? 'pointer' : 'not-allowed', opacity: canAddWater ? 1 : 0.4 }}>{nt('chrome.addWater500')}</button>
               </div>
             </div>
 
-            <div style={{display:'flex',gap:16,padding:16}}>
-              <button type="button" onClick={() => setSubTab('meals')} style={{...mutedStyle,background:'none',border:0,minHeight:44,cursor:'pointer'}}>{nt('v2.tools.savedMeals')}</button>
-              {capabilities.nutrition && <button type="button" onClick={() => setSubTab('recipes')} style={{...mutedStyle,background:'none',border:0,minHeight:44,cursor:'pointer'}}>{nt('v2.tools.recipes')}</button>}
+            <div className={quickEntryStyles.utilityLinks}>
+              <button type="button" onClick={() => setSubTab('meals')}>{nt('v2.tools.savedMeals')}</button>
+              {capabilities.nutrition && <button type="button" onClick={() => setSubTab('recipes')}>{nt('v2.tools.recipes')}</button>}
             </div>
 
           </div>

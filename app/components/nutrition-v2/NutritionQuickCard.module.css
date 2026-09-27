@@ -113,3 +113,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .actions button { transition: none; } }
+
+/* Align the plan summary with the same flat card hierarchy as Home and Training. */
+.card { border: 0; border-radius: 18px; background: #1d1c19; box-shadow: none; }
+.displayToggle { gap: 6px; padding: 0; border: 0; }
+.displayToggle button { background: #2b271e; }
+.displayToggle button[aria-pressed='true'] { color: #e6c364; background: #393121; }
+.actions button { border: 0; border-radius: 12px; background: #2b271e; }
