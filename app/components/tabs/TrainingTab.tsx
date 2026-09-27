@@ -250,7 +250,7 @@ export default function TrainingTab({
         estimatedMinutes={v2EstimatedMinutes}
         muscles={v2Muscles}
         isToday={trainingIsToday}
-        todayState={trainingIsToday ? todayTrainingState.kind : null}
+        todayState={todayTrainingState.kind}
         completedSessionName={todayTrainingState.completedSession?.name || null}
         canStart={v2CanStart}
         canViewNext={v2NextSession != null}
