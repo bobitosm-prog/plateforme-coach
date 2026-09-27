@@ -27,6 +27,17 @@ describe('Home V2 responsive and accessibility guard', () => {
     expect(heroRule).not.toMatch(/(?:^|;)\s*width:\s*\d+px/)
   })
 
+  it('keeps daily status cards content-sized instead of stretching grid rows on iPhone', () => {
+    const lastRule = (className: string) => [...css.matchAll(new RegExp(`\\.${className}\\s*\\{([^}]*)\\}`, 'g'))].at(-1)?.[1] ?? ''
+    expect(lastRule('statusCockpit')).toMatch(/display:\s*flex/)
+    expect(lastRule('statusCockpit')).toMatch(/flex-direction:\s*column/)
+    expect(lastRule('statusSignals')).toMatch(/display:\s*flex/)
+    const tileHeightRules = [...css.matchAll(/\.statusTile\s*\{([^}]*)\}/g)]
+      .map(([, rule]) => rule)
+      .filter(rule => /(?:^|;)\s*height:/.test(rule))
+    expect(tileHeightRules.at(-1)).toMatch(/(?:^|;)\s*height:\s*auto/)
+  })
+
   it('preserves visible keyboard focus, touch targets and reduced motion', () => {
     expect(css).toMatch(/\.button:focus-visible/)
     expect(css).toMatch(/\.progressionLink:focus-visible/)
