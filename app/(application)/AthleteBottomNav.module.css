@@ -1,0 +1,94 @@
+.dock {
+  position: fixed;
+  z-index: 100;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 16px));
+  pointer-events: none;
+}
+
+.rail {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  max-width: 512px;
+  padding: 7px;
+  border-radius: 20px;
+  background: #1b1a17;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .42);
+  pointer-events: auto;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 62px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #a8a093;
+  font: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.item[aria-current='page'] {
+  background: #343022;
+  color: #e6c364;
+}
+
+.item:disabled { cursor: default; opacity: .42; }
+.item:focus-visible { outline: 3px solid #e6c364; outline-offset: 2px; }
+
+.iconWrap { position: relative; display: grid; place-items: center; width: 24px; height: 24px; }
+.label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-alt), 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .075em;
+  line-height: 1;
+  text-overflow: clip;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge {
+  position: absolute;
+  top: -8px;
+  right: -13px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  padding: 0 3px;
+  border: 2px solid #1b1a17;
+  border-radius: 999px;
+  background: #d2635d;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 359px) {
+  .dock { padding-right: 7px; padding-left: 7px; }
+  .rail { gap: 2px; padding: 6px 4px; }
+  .label { font-size: 9px; letter-spacing: .04em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item { transition: none; }
+}
