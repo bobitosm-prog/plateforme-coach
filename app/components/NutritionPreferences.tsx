@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
 import { ACTIVITY_LEVELS, colors, fonts } from '../../lib/design-tokens'
 import { updateProfile } from '../../lib/profile-service'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS } from '../../lib/meal-plan/meal-suggestions'
-import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS } from '../../lib/nutrition/calorie-macro-targets'
+import { calculateAutomaticCalorieMacroTargets, DEFAULT_CALORIE_ADJUSTMENTS, suggestCompatibleCarbs } from '../../lib/nutrition/calorie-macro-targets'
 import { buildMealPlanParams } from '../../lib/meal-plan/build-generation-params'
 import { athenaNutritionRequestSchema } from '../../lib/athena/nutrition-input'
 import { getNutritionPreferencesInitialState, type NutritionPreferenceSettings } from '../../lib/nutrition/preferences-initial-state'
@@ -99,6 +99,8 @@ export default function NutritionPreferences({
   // ─── UI State ───
   const [saving, setSaving] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
+  const [targetError, setTargetError] = useState('')
+  const macrosRef = useRef<HTMLDivElement>(null)
   const [showRegenCard, setShowRegenCard] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
 
@@ -143,6 +145,9 @@ export default function NutritionPreferences({
   const finalMacros = macroMode === 'auto' ? autoMacros : macroMode === 'ratio' ? ratioMacros : { protein: manualProtein, carbs: manualCarbs, fat: manualFat }
   const manualTotalKcal = finalMacros.protein * 4 + finalMacros.carbs * 4 + finalMacros.fat * 9
   const kcalDiff = Math.abs(manualTotalKcal - objectiveKcal)
+  const suggestedCarbs = macroMode === 'manual'
+    ? suggestCompatibleCarbs(objectiveKcal, manualProtein, manualFat)
+    : null
 
   // ─── Handlers ───
   function handleObjectiveChange(obj: ObjectiveType) {
@@ -231,9 +236,13 @@ export default function NutritionPreferences({
       fat_goal: finalMacros.fat,
     })
     if (!result.success) {
-      setToastMsg('Objectifs calories/macros incompatibles. Ajustez vos réglages avant de sauvegarder ou générer.')
+      setTargetError(objectiveKcal < 1000 || objectiveKcal > 6000
+        ? 'Objectif calorique hors plage (1 000 à 6 000 kcal). Vérifie tes données et ton activité.'
+        : 'Les calories de tes macros ne correspondent pas à ton objectif. Ajuste-les ci-dessous avant de continuer.')
+      macrosRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
       return false
     }
+    setTargetError('')
     return true
   }
 
@@ -358,8 +367,8 @@ export default function NutritionPreferences({
   }
 
   // ─── Styles ───
-  const sectionTitle: React.CSSProperties = { fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: colors.gold, marginBottom: 14 }
-  const cardStyle: React.CSSProperties = { background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 16, padding: 16, marginBottom: 16 }
+  const sectionTitle: React.CSSProperties = { fontFamily: fonts.body, fontSize: '1.12rem', fontWeight: 750, letterSpacing: '-0.02em', color: colors.text, marginBottom: 14 }
+  const cardStyle: React.CSSProperties = { background: '#27251f', border: 'none', borderRadius: 18, padding: 16, marginBottom: 12 }
   const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 14px', background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, color: colors.text, fontSize: '0.88rem', fontFamily: fonts.body, outline: 'none' }
   const sliderThumbGold = `
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: ${colors.gold}; cursor: pointer; border: 2px solid #080808; }
@@ -469,8 +478,9 @@ export default function NutritionPreferences({
       </div>
 
       {/* ═══ SECTION 2 — REPARTITION DES MACROS ═══ */}
-      <div style={cardStyle}>
+      <div ref={macrosRef} style={cardStyle}>
         <div style={sectionTitle}>{t('sections.macros')}</div>
+        {targetError && <p role="alert" style={{ color: colors.orange, fontFamily: fonts.body, fontSize: '0.86rem', lineHeight: 1.5, margin: '0 0 14px' }}>{targetError}</p>}
 
         {/* Mode Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 16, border: `1px solid ${colors.divider}` }}>
@@ -503,12 +513,17 @@ export default function NutritionPreferences({
             <div style={{ marginTop: 12 }}>
               <MacroDisplay protein={manualProtein} carbs={manualCarbs} fat={manualFat} targetKcal={objectiveKcal} />
             </div>
-            {macroMode === 'manual' && kcalDiff > 50 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 10px', background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)` }}>
-                <AlertTriangle size={14} color={colors.orange} />
-                <span style={{ fontSize: '0.72rem', fontFamily: fonts.body, color: colors.orange }}>
-                  Total macros : {fmtNum(manualTotalKcal)} kcal ({manualTotalKcal > objectiveKcal ? '+' : ''}{manualTotalKcal - objectiveKcal} vs objectif)
-                </span>
+            {kcalDiff > Math.max(100, objectiveKcal * 0.08) && (
+              <div role="status" style={{ marginTop: 10, padding: '12px 14px', background: 'rgba(249,115,22,0.1)', borderRadius: 12, color: colors.orange, fontFamily: fonts.body, fontSize: '0.8rem', lineHeight: 1.45 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}><AlertTriangle size={16} aria-hidden="true" />
+                  Total macros : {fmtNum(manualTotalKcal)} kcal · Objectif : {fmtNum(objectiveKcal)} kcal
+                </div>
+                <p style={{ margin: '8px 0' }}>Tes macros manuelles sont conservées, mais cet écart bloque la génération.</p>
+                {suggestedCarbs !== null ? (
+                  <button type="button" onClick={() => { setManualCarbs(suggestedCarbs); setTargetError('') }} style={{ minHeight: 44, border: 0, borderRadius: 10, padding: '8px 12px', background: colors.gold, color: colors.onGold, fontWeight: 750, cursor: 'pointer' }}>
+                    Ajuster les glucides à {suggestedCarbs} g
+                  </button>
+                ) : <button type="button" onClick={() => { setMacroMode('auto'); setTargetError('') }} style={{ minHeight: 44, border: 0, borderRadius: 10, padding: '8px 12px', background: colors.gold, color: colors.onGold, fontWeight: 750, cursor: 'pointer' }}>Passer en calcul automatique</button>}
               </div>
             )}
           </div>
@@ -748,7 +763,7 @@ export default function NutritionPreferences({
 
       {/* Toast */}
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: colors.success, color: colors.onGold, padding: '10px 24px', borderRadius: 12, fontFamily: fonts.alt, fontSize: '0.9rem', fontWeight: 800, zIndex: 999, letterSpacing: '1px' }}>
+        <div role="status" style={{ position: 'fixed', bottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', left: '50%', transform: 'translateX(-50%)', width: 'min(90vw, 420px)', background: colors.surfaceHigh, color: colors.text, padding: '12px 16px', borderRadius: 12, fontFamily: fonts.body, fontSize: '0.86rem', fontWeight: 600, zIndex: 999, boxShadow: '0 12px 36px rgba(0,0,0,.35)' }}>
           {toastMsg}
         </div>
       )}

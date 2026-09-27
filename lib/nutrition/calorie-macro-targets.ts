@@ -19,6 +19,14 @@ export function areCalorieMacroTargetsCoherent(calories: number, protein: number
   return Math.abs(protein * 4 + carbs * 4 + fat * 9 - calories) <= Math.max(100, calories * 0.08)
 }
 
+/** Suggest a manual-carb adjustment without changing the user's protein or fat choices. */
+export function suggestCompatibleCarbs(calories: number, protein: number, fat: number): number | null {
+  if (![calories, protein, fat].every(Number.isFinite)) return null
+  const carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
+  if (carbs < 50 || carbs > 500 || !areCalorieMacroTargetsCoherent(calories, protein, carbs, fat)) return null
+  return carbs
+}
+
 export const DEFAULT_CALORIE_ADJUSTMENTS = {
   cut: -400,
   maintain: 0,
