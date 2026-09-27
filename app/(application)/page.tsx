@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import {
-  Home, Dumbbell, UtensilsCrossed, TrendingUp, Sparkles,
+  Home, Dumbbell, UtensilsCrossed, TrendingUp,
   User, Plus, ChevronRight, Search, X,
 } from 'lucide-react'
 
@@ -51,7 +51,7 @@ import { buildHomeWeeklyProgress } from '../../lib/home/home-weekly-progress'
 import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
-  MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL,
+  MEAL_TYPES, Z_NAV, Z_MODAL,
 } from '../../lib/design-tokens'
 import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
@@ -557,8 +557,6 @@ function CoachAppContent() {
         .app-shell {
           --mobile-bottom-nav-height: 100px;
           --mobile-bottom-visual-gap: 20px;
-          --mobile-floating-action-gap: 12px;
-          --mobile-athena-fab-size: 52px;
         }
         .client-main-scroll {
           padding-bottom: calc(
@@ -570,16 +568,9 @@ function CoachAppContent() {
         .client-main-scroll-home {
           padding-bottom: calc(
             var(--mobile-bottom-nav-height)
-            + var(--mobile-floating-action-gap)
-            + var(--mobile-athena-fab-size)
             + var(--mobile-bottom-visual-gap)
             + env(safe-area-inset-bottom, 0px)
           );
-        }
-        @media (max-width: 767px) {
-          .client-athena-fab {
-            bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-floating-action-gap) + env(safe-area-inset-bottom, 0px)) !important;
-          }
         }
         @media (min-width: 768px) {
           .client-main-scroll,
@@ -810,13 +801,6 @@ function CoachAppContent() {
 
       </div>{/* end main-content-area */}
 
-      {!h.workoutSession && h.activeTab !== 'coachIA' && (
-        <button className="client-athena-fab" onClick={() => h.setActiveTab('coachIA')} aria-label="Athena"
-          style={{ position: 'fixed', bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))', right: 16, width: 52, height: 52, borderRadius: 12, background: GOLD, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px ${GOLD_RULE}`, zIndex: Z_FAB }}>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 700, color: '#0D0B08', lineHeight: 1, letterSpacing: '0.02em' }}>A</span>
-          <Sparkles size={11} color="#0D0B08" style={{ position: 'absolute', top: 8, right: 9 }} />
-        </button>
-      )}
       {celebrateBadge && <BadgeCelebration badge={celebrateBadge} xp={celebrateBadge.xp_reward} onClose={handleBadgeClose} />}
       {perms.canUseAI && (
           <ChatAI

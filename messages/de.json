@@ -3074,6 +3074,7 @@
       "secondaryMetrics": "Weitere Fortschrittswerte",
       "avatarAlt": "Profilbild",
       "openAccount": "Mein Konto öffnen",
+      "openAthena": "Athena öffnen",
       "openStreak": "Meine Serie von {count} Tagen ansehen",
       "openXp": "Meine {count} XP ansehen",
       "hero": {

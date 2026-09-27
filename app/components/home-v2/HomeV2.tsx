@@ -37,6 +37,7 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
     <HomeV2Header
       identity={model.identity}
       today={model.today}
+      onOpenAthena={actions.onOpenAthena}
       onOpenTraining={actions.onOpenTraining}
       onOpenProgression={actions.onOpenProgression}
       onOpenAccount={actions.onOpenAccount}

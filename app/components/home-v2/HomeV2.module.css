@@ -228,6 +228,28 @@
 .title { font-size: clamp(2.4rem, 9vw, 3.5rem); font-weight: 800; letter-spacing: -.055em; }
 .dateButton { margin: 8px 0 0 -10px; color: #a9a296; font-size: .92rem; }
 .identity { min-width: 0; flex-direction: row; align-items: center; gap: 8px; }
+.athenaButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  color: #141009;
+  background: #e6c364;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+.athenaButton span { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.athenaButton svg { position: absolute; top: 7px; right: 6px; }
+.athenaButton:focus-visible { outline: 3px solid rgba(230,195,100,.55); outline-offset: 3px; }
+.xpMetric { min-height: 44px; padding-inline: 10px; white-space: nowrap; font-size: .76rem; }
+@media (hover: hover) and (pointer: fine) { .athenaButton:hover { background: #f0d27c; transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .athenaButton { transition: none; } }
 .brandButton {
   width: 44px;
   height: 44px;
@@ -239,6 +261,16 @@
 }
 .accountAvatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .metric { border-color: transparent; background: #22201b; }
+@media (max-width: 520px) {
+  .metrics { display: flex; max-width: none; }
+  .streakMetric { display: none; }
+}
+@media (max-width: 360px) {
+  .headerTop { gap: 8px; }
+  .wordmark { font-size: 1.45rem; }
+  .identity { gap: 6px; }
+  .xpMetric { padding-inline: 7px; font-size: .68rem; }
+}
 .hero {
   min-height: 0;
   gap: 22px;

@@ -7,13 +7,13 @@ const navStyles = readFileSync('app/(application)/AthleteBottomNav.module.css', 
 const lowerHome = readFileSync('app/components/home-v2/HomeV2LowerSections.tsx', 'utf8')
 
 describe('Home V2 mobile bottom navigation clearance', () => {
-  it('reserves nav, floating action and iOS safe-area space on the Home scroller', () => {
+  it('reserves nav and iOS safe-area space on the Home scroller', () => {
     expect(page).toContain(".app-shell {\n          --mobile-bottom-nav-height: 100px")
     expect(page).toContain('--mobile-bottom-visual-gap: 20px')
-    expect(page).toContain('--mobile-floating-action-gap: 12px')
-    expect(page).toContain('--mobile-athena-fab-size: 52px')
+    expect(page).not.toContain('--mobile-floating-action-gap')
+    expect(page).not.toContain('--mobile-athena-fab-size')
     expect(page).toContain('className="client-main-scroll client-main-scroll-home"')
-    expect(page).toMatch(/\.client-main-scroll-home\s*\{[\s\S]*?var\(--mobile-bottom-nav-height\)[\s\S]*?var\(--mobile-floating-action-gap\)[\s\S]*?var\(--mobile-athena-fab-size\)[\s\S]*?var\(--mobile-bottom-visual-gap\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)/)
+    expect(page).toMatch(/\.client-main-scroll-home\s*\{[\s\S]*?var\(--mobile-bottom-nav-height\)[\s\S]*?var\(--mobile-bottom-visual-gap\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)/)
     expect(page).not.toContain('padding-bottom: calc(240px')
   })
 
@@ -37,12 +37,11 @@ describe('Home V2 mobile bottom navigation clearance', () => {
     expect(page).toContain('h.unreadCount > 0')
   })
 
-  it('keeps Athena above the nav while Home can scroll clear of it', () => {
-    expect(page).toContain('className="client-athena-fab"')
-    expect(page).toMatch(/\.client-athena-fab\s*\{[\s\S]*?bottom: calc\(var\(--mobile-bottom-nav-height\) \+ var\(--mobile-floating-action-gap\) \+ env\(safe-area-inset-bottom, 0px\)\)/)
+  it('removes the floating Athena shortcut and its reserved scroll space', () => {
+    expect(page).not.toContain('className="client-athena-fab"')
     expect(page).not.toContain('--mobile-chat-fab-size')
     expect(page).not.toContain('.bug-report-fab')
-    expect(page).toContain("bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))'")
+    expect(page).not.toContain("bottom: 'calc(136px + env(safe-area-inset-bottom, 0px))'")
   })
 
   it('removes the extra mobile clearance at tablet and desktop widths', () => {
