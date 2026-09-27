@@ -6,7 +6,8 @@
   left: 0;
   display: flex;
   justify-content: center;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 16px));
+  /* Keep the rail above the home indicator without lifting it high into the viewport. */
+  padding: 8px 12px clamp(8px, env(safe-area-inset-bottom, 0px), 34px);
   pointer-events: none;
   isolation: isolate;
 }
