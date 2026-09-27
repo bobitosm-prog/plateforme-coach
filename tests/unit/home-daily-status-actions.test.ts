@@ -12,15 +12,17 @@ describe('daily status action wiring', () => {
     expect(home).toContain('onOpenSession={actions.onOpenSession}')
     expect(home).toContain('onOpenProgram={actions.onOpenProgram}')
     expect(home).toContain('onStartFreeSession={actions.onStartFreeSession}')
-    expect(dailyStatus).toContain('start_session: training.session && onStartSession')
-    expect(dailyStatus).toContain('open_session: training.session && onOpenSession')
+    expect(dailyStatus).toContain('onStartSession={onStartSession}')
+    expect(dailyStatus).toContain('onOpenSession={onOpenSession}')
+    expect(dailyStatus).toContain('onOpenProgram={onOpenProgram}')
+    expect(dailyStatus).toContain('onStartFreeSession={onStartFreeSession}')
   })
 
   it('routes Nutrition through the existing application tab only', () => {
     expect(home).toContain('onOpenNutrition?: () => void')
     expect(home).toContain('onOpenNutrition={actions.onOpenNutrition}')
     expect(homeTab).toContain("onOpenNutrition: () => setActiveTab('nutrition')")
-    expect(dailyStatus).toContain("? onOpenNutrition")
+    expect(dailyStatus).toContain('onClick={onOpenNutrition}')
     expect(`${dailyStatus}\n${home}`).not.toMatch(/meal|supabase|\.from\(|\.insert\(/i)
   })
 
@@ -29,5 +31,6 @@ describe('daily status action wiring', () => {
     expect(homeTab).toContain('onOpenRecovery: () => setShowRecoveryModal(true)')
     expect(homeTab).toContain('{showRecoveryModal && (')
     expect(homeTab).toContain('<RecoveryModal')
+    expect(dailyStatus).toContain('onClick={onOpenRecovery}')
   })
 })

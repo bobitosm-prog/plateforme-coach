@@ -140,11 +140,14 @@ describe('Nutrition V2 responsive and accessible structure', () => {
     expect(quickCard).toContain('aria-label={t(\'barcodeLabel\')}')
   })
 
-  it('uses the shared card for Home and Nutrition and wires both capture actions', () => {
+  it('keeps the shared card in Nutrition and direct capture shortcuts in Home', () => {
     const home = readFileSync('app/components/home-v2/DailyStatus.tsx', 'utf8')
     const page = readFileSync('app/(application)/page.tsx', 'utf8')
     expect(shell).toContain('<NutritionQuickCard')
-    expect(home).toContain('<NutritionQuickCard')
+    expect(home).toContain('onClick={onNutritionPhoto}')
+    expect(home).toContain('onClick={onNutritionBarcode}')
+    expect(home).toContain("nutritionQuickT('photoLabel')")
+    expect(home).toContain("nutritionQuickT('barcodeLabel')")
     expect(page).toContain("setNutritionQuickAction('photo')")
     expect(page).toContain("h.setModal('scan')")
     expect(quickCard).toContain('getNutritionRemaining')

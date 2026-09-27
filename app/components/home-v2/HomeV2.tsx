@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react'
 import type { HomeViewModel, HomeTrainingSession } from '../../../lib/home/home-dashboard-model'
 import HomeV2Header from './HomeV2Header'
-import TodayHero from './TodayHero'
 import DailyStatus from './DailyStatus'
 import NextBestActionCard from './NextBestActionCard'
 import ProgressionSnapshot from './ProgressionSnapshot'
@@ -42,7 +41,6 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       onOpenProgression={actions.onOpenProgression}
       onOpenAccount={actions.onOpenAccount}
     />
-    <TodayHero training={model.training} {...actions} />
     <DailyStatus
       training={model.training}
       nutrition={model.nutrition}
@@ -56,7 +54,8 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       onNutritionBarcode={actions.onNutritionBarcode}
       onOpenRecovery={() => actions.onOpenRecovery?.()}
     />
-    <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />
+    {!['start_training', 'open_nutrition', 'open_recovery', 'open_program'].includes(recommendation.type) &&
+      <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />}
     <ProgressionSnapshot progression={model.progression} onOpenProgression={actions.onOpenProgression} />
     <div className={styles.intelligenceGrid}>
       <AthenaInsightCard insight={athenaInsight} onOpenAthena={actions.onOpenAthena} />
