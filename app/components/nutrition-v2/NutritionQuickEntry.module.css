@@ -1,12 +1,22 @@
-.section { display: grid; gap: 12px; min-width: 0; margin-bottom: 18px; }
-.heading { display: flex; align-items: end; justify-content: space-between; padding: 2px 4px; }
-.heading h2 { margin: 4px 0 0; color: #f5f0e8; font-size: clamp(1.35rem, 4vw, 1.8rem); line-height: 1.1; }
-.eyebrow { color: #e6c364; font-size: .7rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.pageTabs { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 6px; scrollbar-width: none; }
+.pageTabs button { flex: 0 0 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 13px; background: #1d1c19; color: #aaa294; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.pageTabs button[aria-pressed='true'] { background: #353024; color: #e6c364; }
+.section { display: grid; gap: 12px; min-width: 0; margin: 12px 0 18px; }
+.heading { padding: 0 2px; }
+.heading h2 { margin: 0; color: #eee9df; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; }
+.eyebrow { display: none; }
 .mealTabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
-.mealTabs button { flex: 0 0 auto; min-height: 44px; padding: 0 14px; border: 0; border-radius: 14px; background: #22211e; color: #aaa294; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
-.mealTabs button[aria-pressed="true"] { background: #e6c364; color: #171208; }
-.mealTabs button:focus-visible, .disclosure summary:focus-visible { outline: 2px solid #e6c364; outline-offset: 3px; }
-.disclosure { margin: 12px 0; border-radius: 18px; background: #1d1c19; color: #f5f0e8; }
-.disclosure summary { min-height: 52px; padding: 15px 18px; color: #e6c364; font-weight: 700; cursor: pointer; }
+.mealTabs button { flex: 0 0 auto; min-height: 44px; padding: 0 14px; border: 0; border-radius: 13px; background: #1d1c19; color: #aaa294; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.mealTabs button[aria-pressed='true'] { background: #353024; color: #e6c364; }
+.pageTabs button:focus-visible, .mealTabs button:focus-visible, .disclosure summary:focus-visible, .utilityLinks button:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; }
+.disclosure { margin: 12px 0; overflow: hidden; border-radius: 18px; background: #1d1c19; color: #f5f0e8; }
+.disclosure summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 16px 18px; color: #eee9df; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; cursor: pointer; list-style: none; }
+.disclosure summary::-webkit-details-marker { display: none; }
+.disclosure summary svg { flex: 0 0 auto; color: #e6c364; transition: transform 160ms ease; }
+.disclosure[open] summary svg { transform: rotate(90deg); }
 .disclosure[open] { padding-bottom: 8px; }
 .disclosure > div { margin: 0 8px; }
+.hydrationCard { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 12px 0; padding: 16px; border-radius: 18px; background: #1d1c19; }
+.utilityLinks { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.utilityLinks button { min-height: 44px; padding: 0 15px; border: 0; border-radius: 12px; color: #e6c364; background: #2b271e; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .disclosure summary svg { transition: none; } }

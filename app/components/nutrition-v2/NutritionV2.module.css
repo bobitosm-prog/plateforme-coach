@@ -1040,3 +1040,23 @@
 .activePlan, .activePlanMeal, .tools, .mealChooser {
   border-color: transparent;
 }
+
+/* Shared athlete dashboard language: Home and Training use quiet, flat surfaces. */
+.athleteLayout { gap: 16px; padding-top: 22px; }
+.athleteLayout .hero { padding: 0 2px; overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.athleteLayout .eyebrow { display: none; }
+.athleteLayout .title { font-size: clamp(2.35rem, 9vw, 3.5rem); font-weight: 800; line-height: 1.04; letter-spacing: -.055em; }
+.athleteLayout .title::after { color: #e6c364; content: '.'; }
+.athleteLayout .dateLabel { margin-top: 10px; color: #aaa294; font-size: .85rem; }
+.athleteLayout .heroSummary, .athleteLayout .heroState { margin-top: 22px; padding: 18px; border-radius: 18px; background: #1d1c19; }
+.athleteLayout .heroSummary { gap: 10px; }
+.athleteLayout .heroState { min-height: 76px; }
+.athleteLayout .primaryMetric, .athleteLayout .supportingMetric { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.athleteLayout .primaryMetric > span, .athleteLayout .supportingMetric > span { color: #c4b8a2; font-size: .68rem; letter-spacing: .13em; }
+.athleteLayout .primaryMetric strong, .athleteLayout .supportingMetric strong { color: #f7f4ed; font-weight: 750; }
+.athleteLayout .primaryMetric p, .athleteLayout .supportingMetric p { color: #aaa294; }
+.athleteLayout .todayMeals, .athleteLayout .activePlan, .athleteLayout .tools, .athleteLayout .macros { border: 0; border-radius: 18px; background: #1d1c19; box-shadow: none; }
+.athleteLayout .mealRow, .athleteLayout .activePlanMeal, .athleteLayout .macroCard { border: 0; border-radius: 13px; background: #27251f; }
+.athleteLayout .mealRow[data-status] { border-color: transparent; }
+.athleteLayout .todayMealsHeading h2, .athleteLayout .activePlanHeader h2 { color: #eee9df; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; }
+@media (max-width: 767px) { .athleteLayout { padding: 22px 16px calc(150px + env(safe-area-inset-bottom, 0px)); } }

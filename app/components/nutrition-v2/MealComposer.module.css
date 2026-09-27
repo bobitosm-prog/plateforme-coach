@@ -29,3 +29,17 @@
 .inlineBody .footer { position: static; background: transparent; border-top: 0; padding: 0; }
 .inlineBody .footer button { border: 0; min-height: 52px; }
 @media (max-width: 380px) { .inlineCard { padding: 14px; } .draft li { grid-template-columns: minmax(0,1fr) 72px 44px; } }
+
+/* Match the flat, content-sized Home and Training cards in the inline flow. */
+.inlineCard { background: #1d1c19; box-shadow: none; }
+.inlineBody { color: #f7f4ed; }
+.inlineBody input { border: 0; background: #27251f; }
+.inlineBody button { border: 0; background: #2b271e; }
+.inlineBody .sources button { color: #aaa294; }
+.inlineBody .sources button[aria-pressed='true'] { color: #e6c364; background: #393121; }
+.inlineBody .choices button { background: #27251f; color: #eee9df; }
+.inlineBody .choices button span { color: #e6c364; }
+.inlineBody h3 { color: #eee9df; font-size: 1.1rem; font-weight: 750; }
+.inlineBody .draft li { padding: 10px; border-radius: 12px; background: #27251f; }
+.inlineBody .draft input { background: #1d1c19; }
+.inlineBody .footer button { background: #e6c364; color: #17130b; }
