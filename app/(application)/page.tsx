@@ -49,13 +49,14 @@ import { resolveProgramDays } from '../../lib/training/resolve-program'
 import { buildHomeWeeklyProgress } from '../../lib/home/home-weekly-progress'
 
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED,
   FONT_DISPLAY, FONT_ALT, FONT_BODY,
   MEAL_TYPES, Z_FAB, Z_NAV, Z_MODAL,
 } from '../../lib/design-tokens'
 import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
+import navStyles from './AthleteBottomNav.module.css'
 import {
   appNavigationHref,
   normalizeAppNavigationQuery,
@@ -828,21 +829,9 @@ function CoachAppContent() {
           />
       )}
 
-      {/* ── SVG filter for liquid glass effect (rendered once) ── */}
-      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-        <defs>
-          <filter id="liquid-glass" x="-50%" y="-50%" width="200%" height="200%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.012" numOctaves="2" seed="4" result="noise" />
-            <feGaussianBlur in="noise" stdDeviation="2" result="blurredNoise" />
-            <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="18" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="0.4" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* ── BOTTOM NAV — 3 centered tabs ── */}
-      {!h.workoutSession && <nav className="mobile-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '8px 20px', paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)', zIndex: Z_NAV, display: 'flex', justifyContent: 'center' }}>
-        <div className="stitch-card-nav" style={{ display: 'flex', justifyContent: 'center', gap: 0, padding: '10px 8px', borderRadius: 18, maxWidth: 360, width: '100%' }}>
+      {/* ── ATHLETE V2 BOTTOM NAV ── */}
+      {!h.workoutSession && <nav className={`mobile-nav ${navStyles.dock}`} style={{ zIndex: Z_NAV }} aria-label="Navigation principale">
+        <div className={navStyles.rail}>
         {([
           { id: 'home' as Tab, Icon: Home, label: 'Home' },
           { id: 'training' as Tab, Icon: Dumbbell, label: 'Training' },
@@ -852,23 +841,16 @@ function CoachAppContent() {
         ]).map(({ id, Icon, label }) => {
           const active = h.activeTab === id || (id === 'compte' && navigation.tab === 'account')
           return (
-            <button key={id} aria-current={active ? 'page' : undefined} onClick={() => { if (overlayOpen) return; navigateTo(id) }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: overlayOpen ? 'default' : 'pointer', padding: '0 4px', opacity: overlayOpen ? 0.4 : 1, transition: 'opacity 0.2s ease' }}>
-              <div
-                className={active ? 'nav-glass-active' : undefined}
-                style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 14, transition: 'all 0.3s ease' }}
-              >
-                <Icon size={20} color={active ? GOLD : TEXT_DIM} strokeWidth={active ? 2.5 : 1.5} style={{ transition: 'all 0.3s ease' }} />
+            <button key={id} className={navStyles.item} aria-current={active ? 'page' : undefined} disabled={overlayOpen} onClick={() => navigateTo(id)}>
+              <span className={navStyles.iconWrap}>
+                <Icon size={21} strokeWidth={active ? 2.25 : 1.8} aria-hidden="true" />
                 {id === 'compte' && h.unreadCount > 0 && (
-                  <span style={{ position: 'absolute', top: -6, right: -8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 999, background: RED, opacity: 0.5, animation: 'badge-pulse 1.5s ease-in-out infinite', pointerEvents: 'none' }} />
-                    <span style={{ position: 'relative', background: RED, color: '#fff', fontSize: '0.6rem', fontFamily: FONT_DISPLAY, fontWeight: 700, borderRadius: 999, minWidth: 16, height: 16, padding: '0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
-                      {h.unreadCount > 99 ? '99+' : h.unreadCount}
-                    </span>
+                  <span className={navStyles.badge}>
+                    {h.unreadCount > 99 ? '99+' : h.unreadCount}
                   </span>
                 )}
-              </div>
-              <span style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: active ? GOLD : TEXT_DIM, transition: 'color 0.3s ease' }}>{id === 'compte' ? <NavAccountLabel /> : label}</span>
-              {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, boxShadow: '0 0 8px rgba(212,168,67,0.5)' }} />}
+              </span>
+              <span className={navStyles.label}>{id === 'compte' ? <NavAccountLabel /> : label}</span>
             </button>
           )
         })}

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const page = readFileSync('app/(application)/page.tsx', 'utf8')
+const navStyles = readFileSync('app/(application)/AthleteBottomNav.module.css', 'utf8')
 const lowerHome = readFileSync('app/components/home-v2/HomeV2LowerSections.tsx', 'utf8')
 
 describe('Home V2 mobile bottom navigation clearance', () => {
@@ -17,9 +18,20 @@ describe('Home V2 mobile bottom navigation clearance', () => {
   })
 
   it('keeps the bottom navigation fixed and safe-area aware', () => {
-    expect(page).toContain("className=\"mobile-nav\" style={{ position: 'fixed', bottom: 0")
-    expect(page).toContain("paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 8px)'")
+    expect(page).toContain('className={`mobile-nav ${navStyles.dock}`}')
+    expect(navStyles).toContain('position: fixed;')
+    expect(navStyles).toContain('bottom: 0;')
+    expect(navStyles).toContain('env(safe-area-inset-bottom, 16px)')
     expect(page).toContain('zIndex: Z_NAV')
+  })
+
+  it('uses five flat, accessible destinations with a visible active state', () => {
+    expect(navStyles).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+    expect(navStyles).toContain(".item[aria-current='page']")
+    expect(navStyles).not.toContain('backdrop-filter')
+    expect(page).toContain("aria-current={active ? 'page' : undefined}")
+    expect(page).toContain('disabled={overlayOpen}')
+    expect(page).toContain('h.unreadCount > 0')
   })
 
   it('keeps Athena above the nav while Home can scroll clear of it', () => {
