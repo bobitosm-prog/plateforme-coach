@@ -2738,6 +2738,13 @@
     }
   },
   "nutrition_tab": {
+    "quickEntry": {
+      "eyebrow": "Schneller Eintrag",
+      "title": "Mahlzeit hinzufügen",
+      "chooseMeal": "Mahlzeit auswählen",
+      "changeDate": "Datum ändern",
+      "journal": "Erfasste Mahlzeiten und Details"
+    },
     "composer": {
       "draft": "Auswahl prüfen — noch nicht erfasst",
       "search": "Lebensmittel suchen…",

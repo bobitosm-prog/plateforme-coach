@@ -1,0 +1,12 @@
+.section { display: grid; gap: 12px; min-width: 0; margin-bottom: 18px; }
+.heading { display: flex; align-items: end; justify-content: space-between; padding: 2px 4px; }
+.heading h2 { margin: 4px 0 0; color: #f5f0e8; font-size: clamp(1.35rem, 4vw, 1.8rem); line-height: 1.1; }
+.eyebrow { color: #e6c364; font-size: .7rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.mealTabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
+.mealTabs button { flex: 0 0 auto; min-height: 44px; padding: 0 14px; border: 0; border-radius: 14px; background: #22211e; color: #aaa294; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.mealTabs button[aria-pressed="true"] { background: #e6c364; color: #171208; }
+.mealTabs button:focus-visible, .disclosure summary:focus-visible { outline: 2px solid #e6c364; outline-offset: 3px; }
+.disclosure { margin: 12px 0; border-radius: 18px; background: #1d1c19; color: #f5f0e8; }
+.disclosure summary { min-height: 52px; padding: 15px 18px; color: #e6c364; font-weight: 700; cursor: pointer; }
+.disclosure[open] { padding-bottom: 8px; }
+.disclosure > div { margin: 0 8px; }

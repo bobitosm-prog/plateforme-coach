@@ -15,6 +15,7 @@ interface NutritionV2Props {
   onRetry: () => void
   onPhoto?: () => void
   onBarcode?: () => void
+  compactToday?: boolean
   children: ReactNode
 }
 
@@ -26,6 +27,7 @@ export default function NutritionV2({
   onRetry,
   onPhoto,
   onBarcode,
+  compactToday = false,
   children,
 }: NutritionV2Props) {
   return <section className={styles.shell} data-nutrition-v2>
@@ -35,7 +37,7 @@ export default function NutritionV2({
       onAddMeal={onAddMeal}
       onRetry={onRetry}
     />
-    <NutritionQuickCard
+    {!compactToday && <NutritionQuickCard
       key={userId}
       userId={userId}
       state={model.summary.state}
@@ -51,7 +53,7 @@ export default function NutritionV2({
         carbs: model.targets.data?.carbs ?? null,
         fat: model.targets.data?.fat ?? null,
       }}
-    />
+    />}
     <div className={styles.legacyContent} data-nutrition-legacy-content>
       {children}
     </div>

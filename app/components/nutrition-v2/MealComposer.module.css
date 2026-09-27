@@ -21,3 +21,11 @@
 .muted { color: #beb6a7; font-size: 13px; margin: 0; line-height: 1.5; }
 .error { color: #ffb4b4; }
 .body h3 { font-size: 16px; margin: 0; }
+.inlineCard { min-width: 0; padding: 18px; border-radius: 24px; background: #1d1c19; }
+.inlineBody { gap: 14px; }
+.inlineBody .sources { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.inlineBody .sources button { flex: 0 0 auto; padding-inline: 11px; font-size: 12px; }
+.inlineBody .choices { max-height: 165px; }
+.inlineBody .footer { position: static; background: transparent; border-top: 0; padding: 0; }
+.inlineBody .footer button { border: 0; min-height: 52px; }
+@media (max-width: 380px) { .inlineCard { padding: 14px; } .draft li { grid-template-columns: minmax(0,1fr) 72px 44px; } }

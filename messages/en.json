@@ -2738,6 +2738,13 @@
     }
   },
   "nutrition_tab": {
+    "quickEntry": {
+      "eyebrow": "Quick entry",
+      "title": "Add a meal",
+      "chooseMeal": "Choose a meal",
+      "changeDate": "Change date",
+      "journal": "Logged meals and details"
+    },
     "composer": {
       "draft": "Review your selection — not counted yet",
       "search": "Search for food…",

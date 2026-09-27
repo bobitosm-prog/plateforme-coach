@@ -9,7 +9,7 @@ vi.mock('@/app/components/BarcodeScanner',()=>({default:({onSelected}:any)=>Reac
 beforeEach(()=>{localStorage.clear();vi.stubGlobal('React',React)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const food={name:'Rice',qty:200,kcal:260,prot:5.4,carb:56,fat:0.6}
-function setup(initialFoods:any[]=[],photoEnabled=false) {
+function setup(initialFoods:any[]=[],photoEnabled=false,inline=false) {
   const upsert=vi.fn().mockResolvedValue({error:null})
   const supabase={from:vi.fn((table:string)=>{
     const chain:any={upsert}
@@ -18,10 +18,22 @@ function setup(initialFoods:any[]=[],photoEnabled=false) {
     return chain
   })}
   const onSaved=vi.fn().mockResolvedValue(undefined),onClose=vi.fn()
-  const view=render(React.createElement(React.StrictMode,null,React.createElement(MealComposer,{supabase,userId:'owner',date:'2026-09-20',mealType:'diner',mealLabel:'Dinner',plannedFoods:[food],initialFoods,photoEnabled,onSaved,onClose})))
+  const view=render(React.createElement(React.StrictMode,null,React.createElement(MealComposer,{supabase,userId:'owner',date:'2026-09-20',mealType:'diner',mealLabel:'Dinner',plannedFoods:[food],initialFoods,photoEnabled,onSaved,onClose,inline})))
   return {upsert,onSaved,onClose,view}
 }
 describe('meal composer runtime',()=>{
+  it('keeps inline meal entry on the page and confirms only after explicit save',async()=>{
+    const {upsert,onSaved,onClose}=setup([],true,true)
+    expect(screen.getByRole('region',{name:'Dinner'})).toBeTruthy()
+    expect(screen.queryByRole('button',{name:'closeTools'})).toBeNull()
+    fireEvent.click(screen.getByRole('button',{name:'plan'}))
+    fireEvent.click(screen.getByRole('button',{name:/usePlan/}))
+    expect(upsert).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button',{name:'confirm'}))
+    await waitFor(()=>expect(onSaved).toHaveBeenCalledTimes(1))
+    expect(upsert).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
   it('sends the complete data URL required by the photo API and keeps its result in draft',async()=>{
     const fetchMock=vi.fn().mockResolvedValue({ok:true,json:async()=>({foods:[{name:'Photo food',quantity_g:100,calories:100,proteins:10,carbs:10,fats:2}]})})
     vi.stubGlobal('fetch',fetchMock)
