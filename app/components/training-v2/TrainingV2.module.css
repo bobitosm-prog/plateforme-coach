@@ -1401,3 +1401,76 @@
     margin-top: 16px;
   }
 }
+
+/* Athlete dashboard V2 — the overview shares Home's flat tonal hierarchy. */
+.landing {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 22px 16px 16px;
+  box-sizing: border-box;
+}
+.landing::before { display: none; }
+.overviewHeader { margin: 0 2px 22px; }
+.overviewKicker {
+  color: #aaa397;
+  font-size: .72rem;
+  font-weight: 750;
+  letter-spacing: .16em;
+}
+.overviewTitle {
+  margin: 5px 0 0;
+  color: #f7f4ed;
+  font-size: clamp(2.35rem, 9vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -.055em;
+}
+.overviewTitle span { color: #e6c364; }
+.landing .hero {
+  min-height: 220px;
+  padding: 24px;
+  border: 0;
+  border-radius: 22px;
+  background: #211f19;
+  box-shadow: none;
+}
+.landing .hero::after { display: none; }
+.landing .emptyHero { min-height: 0; background: #1d1c18; }
+.landing .heroTitle {
+  max-width: 100%;
+  margin: 13px 0 11px;
+  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+.landing .emptyTitle { font-weight: 800; letter-spacing: -.035em; }
+.landing .heroMeta { gap: 8px 15px; color: #c7c0b3; font-size: .85rem; }
+.landing .heroMuscles { margin-top: 8px; color: #9f988b; font-size: .8rem; }
+.landing .primaryAction {
+  min-height: 50px;
+  margin-top: 24px;
+  border-radius: 13px;
+  background: #e6c364;
+  color: #17130b;
+}
+.landing .summary {
+  margin-top: 12px;
+  padding: 19px 20px;
+  border: 0;
+  border-radius: 18px;
+  background: #191916;
+}
+.landing .sectionLabel { color: #a69d8d; }
+.landing .summaryTitle { margin-top: 6px; color: #f7f4ed; font-size: 1rem; }
+.landing .sourceBadge { background: #2b281f; }
+.landing .tertiaryAction { color: #e6c364; text-decoration: none; }
+.landing .secondaryAction, .landing .toolAction {
+  border: 0;
+  background: #2b281f;
+  color: #e6c364;
+}
+@media (max-width: 420px) {
+  .landing .summary { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .landing .tertiaryAction { justify-self: start; padding-left: 0; }
+}

@@ -43,7 +43,9 @@ export default function TrainingSessionHero({
             ? plannedToday ? t('sessionToday') : t('nextSession')
             : t('trainingLabel')}
       </div>
-      <h1 id={`training-${mode}-title`} className={styles.heroTitle}>{title}</h1>
+      {mode === 'active'
+        ? <h1 id={`training-${mode}-title`} className={styles.heroTitle}>{title}</h1>
+        : <h2 id={`training-${mode}-title`} className={styles.heroTitle}>{title}</h2>}
       {hasPlannedExercises && <div className={styles.heroMeta} aria-label={t('sessionSummary')}>
         {mode === 'active' ? (
           <>

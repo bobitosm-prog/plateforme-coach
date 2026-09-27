@@ -49,7 +49,7 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
   return (
     <section
       data-training-section-card="cardio"
-      style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 14 }}
+      style={{ background: '#191916', border: 0, borderRadius: 18, padding: 18 }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
         <h2 style={{ margin: 0, color: colors.gold, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', lineHeight: 1.2, textTransform: 'uppercase' }}>
@@ -69,9 +69,9 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
         onClick={() => setExpanded(current => !current)}
         style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', minHeight: 56, marginBottom: expanded ? 12 : 0, padding: '4px 0 0', background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}
       >
-        <span style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>HIIT</span>
-        <span style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>LISS</span>
-        <span aria-hidden="true" style={{ width: 44, height: 44, marginLeft: 'auto', display: 'grid', placeItems: 'center', borderRadius: 12, border: `1px solid ${colors.divider}`, background: 'rgba(255,255,255,0.03)', flexShrink: 0 }}>
+        <span style={{ padding: '4px 8px', borderRadius: 8, background: '#29261f', border: 0, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>HIIT</span>
+        <span style={{ padding: '4px 8px', borderRadius: 8, background: '#29261f', border: 0, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: colors.textDim }}>LISS</span>
+        <span aria-hidden="true" style={{ width: 44, height: 44, marginLeft: 'auto', display: 'grid', placeItems: 'center', borderRadius: 12, border: 0, background: '#29261f', flexShrink: 0 }}>
           <ChevronDown size={18} color={TEXT_MUTED} style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
         </span>
       </button>
