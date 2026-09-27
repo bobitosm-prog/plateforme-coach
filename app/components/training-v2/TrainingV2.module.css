@@ -1411,14 +1411,8 @@
 }
 .landing::before { display: none; }
 .overviewHeader { margin: 0 2px 22px; }
-.overviewKicker {
-  color: #aaa397;
-  font-size: .72rem;
-  font-weight: 750;
-  letter-spacing: .16em;
-}
 .overviewTitle {
-  margin: 5px 0 0;
+  margin: 0;
   color: #f7f4ed;
   font-size: clamp(2.35rem, 9vw, 3.5rem);
   font-weight: 800;

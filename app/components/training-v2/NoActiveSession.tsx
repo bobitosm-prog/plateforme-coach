@@ -69,12 +69,12 @@ export default function NoActiveSession({
         : hasPlannedSession
           ? sessionName
           : t('noSessionToday')
-  const completedToday = isToday && todayState === 'completed'
+  // The overview always describes today, even when the calendar is browsing another day.
+  const completedToday = todayState === 'completed'
 
   return (
     <div className={styles.landing} data-training-v2="no-active-session">
       <header className={styles.overviewHeader}>
-        <span className={styles.overviewKicker}>MOOVX / TRAINING</span>
         <h1 className={styles.overviewTitle}>{t('trainingLabel')}<span aria-hidden="true">.</span></h1>
       </header>
       {completedToday ? (
