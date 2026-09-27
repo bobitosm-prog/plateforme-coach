@@ -42,6 +42,7 @@ interface ProgramBuilderProps {
   onClose: () => void
   onSave: () => void
   editProgram?: any
+  initialDayIndex?: number
   profile?: Profile | null
 }
 
@@ -92,7 +93,7 @@ const DAY_NAMES = DAY_NAMES_FR
 const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
 /* ─── Component ─── */
-export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram, profile }: ProgramBuilderProps) {
+export default function ProgramBuilder({ supabase, session, aiAllowed = true, canMutate = true, onAiQuotaChange, onClose, onSave, editProgram, profile, initialDayIndex = 0 }: ProgramBuilderProps) {
   const t = useTranslations('training_tab.builder')
   const tx = useTranslations('programWorkspace')
   const tTechnique = useTranslations('trainingTechnique')
@@ -180,7 +181,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const [showExerciseSearch, setShowExerciseSearch] = useState(false)
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('')
   const [exerciseSearchFilter, setExerciseSearchFilter] = useState('')
-  const [editingDayIndex, setEditingDayIndex] = useState(0)
+  const [editingDayIndex, setEditingDayIndex] = useState(() => Math.max(0, Math.min(6, initialDayIndex)))
   const [exerciseToDelete, setExerciseToDelete] = useState<{ dayIdx: number; exIdx: number; name: string } | null>(null)
   const [swapMode, setSwapMode] = useState(false)
   const [swapFirst, setSwapFirst] = useState<number | null>(null)

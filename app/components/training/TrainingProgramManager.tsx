@@ -42,6 +42,8 @@ interface Props {
   onRefresh: (force?: boolean) => Promise<void>;
   onClose: () => void;
   embedded?: boolean;
+  openActiveEditor?: boolean;
+  initialEditorDayIndex?: number;
 }
 
 export default function TrainingProgramManager({
@@ -53,6 +55,8 @@ export default function TrainingProgramManager({
   onRefresh,
   onClose,
   embedded = false,
+  openActiveEditor = false,
+  initialEditorDayIndex = 0,
 }: Props) {
   const t = useTranslations('accountPrograms.training.management');
   const tx = useTranslations('programWorkspace');
@@ -109,6 +113,20 @@ export default function TrainingProgramManager({
     void load();
   }, [supabase, userId]);
   const active = programs.find((p) => p.is_active);
+  const autoOpenedEditor = useRef(false);
+  useEffect(() => {
+    if (!openActiveEditor) {
+      autoOpenedEditor.current = false;
+      return;
+    }
+    if (autoOpenedEditor.current || state !== 'ready' || !active || !access.canConfigure) return;
+    autoOpenedEditor.current = true;
+    if (typeof window === 'undefined' || !readActiveWorkoutDraft(localStorage, userId)) {
+      setBuilder({ program: active });
+    } else {
+      toast.error(tx('finishWorkout'));
+    }
+  }, [openActiveEditor, state, active, access.canConfigure, userId, tx]);
   function workoutOpen() {
     return typeof window !== 'undefined' && Boolean(readActiveWorkoutDraft(localStorage, userId));
   }
@@ -410,6 +428,7 @@ export default function TrainingProgramManager({
           aiAllowed={access.canGenerateWithAI}
           onAiQuotaChange={quota.refresh}
           editProgram={builder.program}
+          initialDayIndex={initialEditorDayIndex}
           onSave={() => {
             quota.refresh();
             void load();
