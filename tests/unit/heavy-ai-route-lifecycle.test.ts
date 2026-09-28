@@ -85,3 +85,17 @@ describe.each(routes)('$name quota lifecycle',({name,post,input})=>{
    else expect(r.status).toBe(503)
  })
 })
+
+describe('custom program advanced technique opt-in',()=>{
+ it('passes an explicit opt-in only for an experienced level',async()=>{
+   const advanced={objective:'muscle',level:'avance',daysPerWeek:3,duration:45,equipment:'salle',allowAdvancedTechniques:true}
+   await (await program(request(advanced))).text()
+   expect(m.generate).toHaveBeenCalledWith(expect.objectContaining({allowAdvancedTechniques:true}),'synthetic-key',[])
+   m.generate.mockClear()
+   await (await program(request({...advanced,level:'debutant'}))).text()
+   expect(m.generate).toHaveBeenCalledWith(expect.objectContaining({allowAdvancedTechniques:false}),'synthetic-key',[])
+   m.generate.mockClear()
+   await (await program(request({objective:'muscle',level:'avance',daysPerWeek:3,duration:45,equipment:'salle'}))).text()
+   expect(m.generate).toHaveBeenCalledWith(expect.objectContaining({allowAdvancedTechniques:false}),'synthetic-key',[])
+ })
+})

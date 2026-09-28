@@ -94,6 +94,39 @@ describe('Athena training output validation', () => {
     expect(() => validateAthenaTrainingOutput(beginnerProgram, beginnerRequest)).toThrow(/non conforme/)
   })
 
+  it('requires executable drop-set and rest-pause prescriptions', () => {
+    const program = validProgram()
+    program.days[0].exercises[0] = exercise(1, { technique: 'dropset', technique_details: 'deux paliers' })
+    expect(() => validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+    program.days[0].exercises[0] = exercise(1, { technique: 'restpause', technique_details: '3,45' })
+    expect(() => validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+    program.days[0].exercises[0] = exercise(1, { technique: 'dropset', technique_details: '2' })
+    expect(validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true }).days[0].exercises[0].technique).toBe('dropset')
+  })
+
+  it('accepts a biset only when a separate compatible partner is in the same session', () => {
+    const program = validProgram()
+    program.days[0].exercises[0] = exercise(1, { technique: 'superset', technique_details: 'Exercice 2' })
+    expect(validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true }).days[0].exercises[0].technique).toBe('superset')
+    program.days[0].exercises[0].technique_details = 'Exercice absent'
+    expect(() => validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+    program.days[0].exercises[0].technique_details = 'Exercice 2'
+    program.days[0].exercises[1].sets = 4
+    expect(() => validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+  })
+
+  it('reserves FST-7 for the final exercise of an explicitly opted-in advanced program', () => {
+    const program = validProgram()
+    program.days[0].exercises[2] = exercise(3, { sets: 7, reps: 10, rest_seconds: 40, technique: 'fst7', technique_details: 'Sept séries contrôlées' })
+    const advancedRequest = { ...REQUEST, level: 'avance' as const }
+    expect(validateAthenaTrainingOutput(program, advancedRequest, { allowAdvancedTechniques: true }).days[0].exercises[2].sets).toBe(7)
+    expect(() => validateAthenaTrainingOutput(program, REQUEST, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+    expect(() => validateAthenaTrainingOutput(program, advancedRequest, { allowAdvancedTechniques: false })).toThrow(AthenaTrainingOutputError)
+    program.days[0].exercises[2] = exercise(3)
+    program.days[0].exercises[0] = exercise(1, { sets: 7, reps: 10, rest_seconds: 40, technique: 'fst7', technique_details: 'Sept séries contrôlées' })
+    expect(() => validateAthenaTrainingOutput(program, advancedRequest, { allowAdvancedTechniques: true })).toThrow(AthenaTrainingOutputError)
+  })
+
   it('removes unknown output fields rather than persisting them', () => {
     const program = validProgram() as ReturnType<typeof validProgram> & { injected?: string }
     program.injected = 'ignore me'

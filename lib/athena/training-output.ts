@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { NormalizedAthenaTrainingRequest } from './training-policy'
 import { isTimedHold } from '../training/exercise-measurement'
+import { bisetFor, dropCount, restPausePrescription } from '../training/guided-techniques'
 
 const MUSCLE_GROUP_IDS = [
   'chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads',
@@ -101,10 +102,32 @@ export function validateAthenaTrainingOutput(
       if(exercise.technique && options?.allowAdvancedTechniques===false) reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique`,'techniques désactivées'))
       if(exercise.technique==='fst7' && (options?.allowAdvancedTechniques!==true || request.level!=='avance' || exerciseIndex!==day.exercises.length-1)) reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique`,'FST-7 réservé à une proposition avancée explicitement autorisée en fin de séance'))
       if(exercise.technique && !exercise.technique_details.trim()) reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique_details`,'consignes explicites requises'))
+      if (exercise.technique === 'dropset' && (exercise.duration_seconds != null || !dropCount(exercise.technique_details))) {
+        reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique_details`, 'drop set : 1 à 3 paliers sur un exercice à répétitions'))
+      }
+      if (exercise.technique === 'restpause' && (exercise.duration_seconds != null || !restPausePrescription(exercise.technique_details))) {
+        reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique_details`, 'rest-pause : 2 ou 3 mini-séries, pause de 10, 15 ou 20 s'))
+      }
+      if (exercise.technique === 'mechanical') {
+        reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique`, 'variante mécanique non exécutable par le parcours guidé'))
+      }
       if (!exercise.technique && exercise.technique_details.trim()) {
         reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique_details`, 'doit être vide sans technique'))
       }
     }
+
+    const prescriptions = day.exercises.map(exercise => ({
+      name: exercise.custom_name,
+      technique: exercise.technique ?? undefined,
+      techniqueDetails: exercise.technique_details,
+      targetSets: exercise.sets,
+      targetDurationSeconds: exercise.duration_seconds ?? undefined,
+    }))
+    day.exercises.forEach((exercise, exerciseIndex) => {
+      if (exercise.technique === 'superset' && !bisetFor(prescriptions, exerciseIndex)) {
+        reasons.push(issue(`days.${dayIndex}.exercises.${exerciseIndex}.technique_details`, 'biset : partenaire présent une seule fois dans la séance, avec le même nombre de séries et sans autre technique'))
+      }
+    })
 
     const maximumTechniques = request.level === 'debutant' ? 0 : request.level === 'intermediaire' ? 1 : 2
     if (advancedTechniques > maximumTechniques) {

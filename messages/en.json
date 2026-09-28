@@ -2146,6 +2146,8 @@
         "lvlDebutant": "BEGINNER",
         "lvlIntermediaire": "INTERMEDIATE",
         "lvlAvance": "ADVANCED",
+        "advancedTechniques": "Allow advanced techniques",
+        "advancedTechniquesHelp": "Optional: Athena may suggest drop sets, supersets, rest-pause or FST-7 for your level. None is required.",
         "daysPerWeek": "Days / week",
         "duration": "Duration (min)",
         "equipment": "Equipment",

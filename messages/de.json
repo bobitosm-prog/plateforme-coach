@@ -2146,6 +2146,8 @@
         "lvlDebutant": "ANFÄNGER",
         "lvlIntermediaire": "MITTEL",
         "lvlAvance": "FORTGESCHRITTEN",
+        "advancedTechniques": "Fortgeschrittene Techniken erlauben",
+        "advancedTechniquesHelp": "Optional: Athena kann Drop-Sätze, Supersätze, Rest-Pause oder FST-7 passend zum Niveau vorschlagen. Keine Technik ist Pflicht.",
         "daysPerWeek": "Tage / Woche",
         "duration": "Dauer (Min.)",
         "equipment": "Ausrüstung",

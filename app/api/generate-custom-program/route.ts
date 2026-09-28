@@ -16,6 +16,7 @@ const schema = z.object({
   daysPerWeek: z.number().int().min(2).max(6), duration: z.number().int().min(20).max(120),
   equipment: z.string().trim().max(500), priorities: z.array(z.string().trim().max(120)).max(12).default([]),
   notes: z.string().trim().max(500).default(''), gender: z.string().trim().max(30).default(''),
+  allowAdvancedTechniques: z.boolean().default(false),
 }).strict()
 
 export async function POST(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = schema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
-    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender } = parsed.data
+    const { objective, level, daysPerWeek, duration, equipment, priorities, notes, gender: bodyGender, allowAdvancedTechniques } = parsed.data
     const userId = user.id
 
     // Coach-managed capabilities do not include AI program generation.
@@ -74,6 +75,7 @@ export async function POST(req: NextRequest) {
           const catalog = await loadExerciseCatalog(supabaseAuth)
           const program = await generateProgram({
             objective, level, daysPerWeek: days, duration, equipment, priorities, notes, gender: bodyGender,
+            allowAdvancedTechniques: allowAdvancedTechniques && !/^d[eé]butant$/i.test(level),
             clientContext: clientContext.prompt,
           }, apiKey, catalog)
           if (!await reservation.settle(true)) throw new Error('Quota settlement unavailable')
