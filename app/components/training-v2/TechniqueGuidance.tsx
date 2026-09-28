@@ -1,57 +1,69 @@
 import { useTranslations } from 'next-intl'
 import type { WorkoutDraftExercise } from '@/lib/training/active-workout-draft'
-import { bisetFor, techniqueIssue, restPausePrescription } from '@/lib/training/guided-techniques'
+import { bisetFor, techniqueIssue } from '@/lib/training/guided-techniques'
+import { buildTechniqueBoard, type TechniqueBoardStep } from '@/lib/training/technique-board'
+import styles from './TechniqueGuidance.module.css'
 
 export default function TechniqueGuidance({ exercises, index, setIndex }: { exercises: WorkoutDraftExercise[]; index: number; setIndex: number }) {
   const t = useTranslations('trainingTechnique')
   const c = useTranslations('techniqueGuide')
-  const ex = exercises[index], set = ex.sets[setIndex]
+  const exercise = exercises[index]
   const pair = bisetFor(exercises, index)
   const issue = techniqueIssue(exercises, index)
   if (issue) return <p role="alert">{issue === 'invalidRestPause' ? c('invalid') : t(issue)}</p>
-  if (!ex.technique) return null
-  const count = ex.sets.filter(s => s.parentSetNumber).length
-  const stage = ex.sets.slice(0, setIndex + 1).filter(s => s.parentSetNumber).length
-  const title = pair ? c('biset') : ex.technique === 'restpause' ? c('restPause') : ex.technique === 'fst7' ? 'FST-7' : ex.technique === 'mechanical' ? c('mechanical') : 'DROP SET'
-  const rows = pair ? exercises[pair.a].sets.flatMap((_, si) => [pair.a, pair.b].map(ei => ({ei, si}))) : ex.sets.map((_, si) => ({ei:index, si}))
-  const endsSession = !exercises.some((other, i) => i !== index && i !== pair?.a && i !== pair?.b && other.sets.some(s => !s.done))
-  return <section aria-label={title} style={{border:'1px solid #C9A84C',borderRadius:12,padding:12,marginBottom:12,fontSize:14}}>
-    <strong>{title}</strong>
-    {pair ? <p>{t('bisetInstructions', {a:exercises[pair.a].name,b:exercises[pair.b].name,rest:exercises[pair.b].rest})}</p>
-      : ex.technique === 'dropset' ? <p>{set?.parentSetNumber ? t('dropNow',{stage,count}) : t(count===1?'dropPreparedOne':'dropPrepared',{count,sets:ex.sets.length-count})}</p>
-      : ex.technique === 'restpause' ? <p>{c('restPauseHelp')}</p>
-      : ex.technique === 'fst7' ? <p>{t('fstInstructions',{reps:ex.targetReps,rest:ex.rest})}</p>
-      : <p>{c('mechanicalHelp')} {ex.techniqueDetails || t('prescription')}</p>}
-    {pair && <div style={{display:'grid',gap:6,marginBottom:10}}>
-      {[pair.a,pair.b].map((exerciseIndex, side) => {
-        const member=exercises[exerciseIndex]
-        return <div key={member.id} style={{padding:'8px 10px',border:'1px solid #514728',borderRadius:8,background:exerciseIndex===index?'rgba(201,168,76,.16)':undefined}}>
-          <strong>{side===0?'A':'B'} · {member.name}</strong>
-          <span style={{float:'right'}}>{member.sets.filter(row=>row.done).length}/{member.sets.length}</span>
-        </div>
-      })}
-    </div>}
-    <details><summary style={{cursor:'pointer',minHeight:44,paddingTop:10}}>{c('table')}</summary>
-      <div style={{overflowX:'auto'}} tabIndex={0} role="region" aria-label={c('table')}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}><caption>{title}</caption>
-          <thead><tr>{[c('step'),c('exercise'),c('reps'),c('load'),c('rest')].map(h=><th key={h} scope="col" style={{padding:8,textAlign:'left'}}>{h}</th>)}</tr></thead>
-          <tbody>{rows.map(({ei,si},ri)=>{
-            const e=exercises[ei], s=e.sets[si], child=!!s.parentSetNumber
-            const childNumber=e.sets.slice(0,si+1).filter(s=>s.parentSetNumber).length
-            const label=child ? `${e.technique==='restpause'?c('mini'):c('drop')} ${childNumber}/${count}` : `${e.technique==='fst7'?'FST-7':c('main')} ${si+1}/${e.sets.filter(s=>!s.parentSetNumber).length}`
-            const next=e.sets[si+1]
-            const rest=pair ? ei===pair.a?0:e.rest : next?.parentSetNumber ? e.technique==='restpause'?restPausePrescription(e.techniqueDetails)?.rest??0:0 : e.rest
-            const isCurrent=ei===index&&si===setIndex&&!s.done
-            return <tr key={`${ei}-${si}`} aria-current={isCurrent?'step':undefined} style={{background:isCurrent?'rgba(201,168,76,.16)':undefined,borderTop:'1px solid #514728'}}>
-              <th scope="row" style={{padding:8,textAlign:'left'}}>{label}<br/>{s.done?c('done'):isCurrent?c('now'):c('next')}</th>
-              <td style={{padding:8}}>{pair?`${ei===pair.a?'A':'B'} → `:''}{e.name}</td>
-              <td style={{padding:8}}>{s.done?s.reps:child?c('logReps'):e.targetReps}</td>
-              <td style={{padding:8}}>{s.weight!==''?`${s.weight} kg`:child?e.technique==='restpause'?c('same'):c('reduced'):e.prescribedWeight?`${e.prescribedWeight} kg`:c('enter')}</td>
-              <td style={{padding:8}}>{ri===rows.length-1&&endsSession?'—':`${rest} s`}</td>
-            </tr>
-          })}</tbody>
-        </table>
-      </div>
-    </details>
+  const board = buildTechniqueBoard(exercises, index, setIndex)
+  if (!board) return null
+
+  const stageCount = exercise.sets.filter(set => set.parentSetNumber).length
+  const activeStage = exercise.sets.slice(0, setIndex + 1).filter(set => set.parentSetNumber).length
+  const title = pair ? c('biset') : exercise.technique === 'restpause' ? c('restPause')
+    : exercise.technique === 'fst7' ? 'FST-7'
+      : exercise.technique === 'mechanical' ? c('mechanical') : 'DROP SET'
+
+  function stepTitle(step: TechniqueBoardStep) {
+    if (step.kind === 'fst7') return `FST-7 ${step.number}/${step.total}`
+    const label = step.kind === 'mini' ? c('mini') : step.kind === 'drop' ? c('drop') : c('main')
+    return `${label} ${step.number}/${step.total}`
+  }
+
+  function stepDetail(step: TechniqueBoardStep) {
+    if (step.done) {
+      const load = step.weight !== '' ? `${step.weight} kg` : null
+      const reps = step.reps !== '' ? `${step.reps} ${c('reps').toLocaleLowerCase()}` : null
+      return [load, reps].filter(Boolean).join(' · ') || c('done')
+    }
+    if (step.current) return c('now')
+    return step.kind === 'drop' ? c('reduced') : `${step.targetReps} ${c('reps').toLocaleLowerCase()}`
+  }
+
+  return <section className={styles.board} aria-label={title}>
+    <header className={styles.header}>
+      <strong>{title}</strong>
+      <span aria-label={`${board.completed}/${board.total}`}>{board.completed}/{board.total}</span>
+    </header>
+    {pair ? <p className={styles.instructions}>{t('bisetInstructions', { a: exercises[pair.a].name, b: exercises[pair.b].name, rest: exercises[pair.b].rest })}</p>
+      : exercise.technique === 'dropset' ? <p className={styles.instructions}>{exercise.sets[setIndex]?.parentSetNumber
+        ? t('dropNow', { stage: activeStage, count: stageCount })
+        : t(stageCount === 1 ? 'dropPreparedOne' : 'dropPrepared', { count: stageCount, sets: exercise.sets.length - stageCount })}</p>
+        : exercise.technique === 'restpause' ? <p className={styles.instructions}>{c('restPauseHelp')}</p>
+          : exercise.technique === 'fst7' ? <p className={styles.instructions}>{t('fstInstructions', { reps: exercise.targetReps, rest: exercise.rest })}</p>
+            : <p className={styles.instructions}>{c('mechanicalHelp')} {exercise.techniqueDetails || t('prescription')}</p>}
+
+    <div className={styles.groups}>
+      {board.groups.map(group => <article className={styles.group} key={group.exerciseIndex}>
+        {group.side && <h3 className={styles.groupTitle}>{group.side} · {group.name}<span>{[...group.earlierMain, ...group.steps].filter(step => step.done).length}/{group.earlierMain.length + group.steps.length}</span></h3>}
+        {group.earlierMain.length > 0 && <div className={styles.earlier} aria-label={c('main')}>
+          <span>{c('main')}</span>
+          <div>{group.earlierMain.map(step => <span key={step.key} className={styles.chip} data-state={step.done ? 'done' : step.current ? 'current' : 'upcoming'} aria-label={`${stepTitle(step)} · ${step.done ? c('done') : step.current ? c('now') : c('next')}`}>{step.number}</span>)}</div>
+        </div>}
+        <ol className={styles.steps} aria-label={group.side ? `${group.side} · ${group.name}` : title}>
+          {group.steps.map(step => <li key={step.key} className={styles.step} data-state={step.done ? 'done' : step.current ? 'current' : 'upcoming'} aria-current={step.current ? 'step' : undefined}>
+            <span className={styles.marker}>{step.done ? '✓' : step.number}</span>
+            <span className={styles.stepText}><strong>{stepTitle(step)}</strong><small>{stepDetail(step)}</small></span>
+            <span className={styles.state}>{step.done ? c('done') : step.current ? c('now') : c('next')}</span>
+          </li>)}
+        </ol>
+      </article>)}
+    </div>
   </section>
 }

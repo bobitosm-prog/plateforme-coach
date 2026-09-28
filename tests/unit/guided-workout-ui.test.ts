@@ -120,16 +120,20 @@ describe('real WorkoutSession runtime',()=>{
     await waitFor(()=>expect(resumed.finish).toHaveBeenCalledOnce())
     expect(resumed.finish.mock.calls[0][0].exercises[0].sets.map((s:any)=>s.parentSetNumber)).toEqual([undefined,undefined,undefined,3,4])
   })
-  it('renders seven explicit FST-7 table rows and no incompatible controls',async()=>{
+  it('renders all seven FST-7 stages immediately and no incompatible controls',async()=>{
     start([{name:'Raise',sets:7,reps:'8-12',rest:45,technique:'fst7'}])
-    fireEvent.click(await screen.findByText('Voir le déroulé précis'))
-    expect(screen.getAllByRole('row')).toHaveLength(8)
-    expect(screen.getByRole('rowheader',{name:/FST-7 7\/7/})).toBeTruthy()
+    expect(screen.getByRole('list',{name:'FST-7'}).children).toHaveLength(7)
+    expect(screen.getByText('FST-7 7/7')).toBeTruthy()
+    expect(screen.getByRole('listitem',{current:'step'})).toBeTruthy()
     expect(screen.queryByRole('button',{name:messages.trainingTechnique.addDrop})).toBeNull()
   })
   it('shows prepared drops, transitions immediately, refuses a non-reduced load and resumes the stage',async()=>{
     const view=start([{name:'Row',sets:1,reps:10,technique:'dropset',technique_details:'2'}])
     await screen.findByText(/2 paliers dégressifs préparés/)
+    expect(screen.getByRole('list',{name:'DROP SET'}).children).toHaveLength(3)
+    expect(screen.getByText('Palier dégressif 1/2')).toBeTruthy()
+    expect(screen.getByText('Palier dégressif 2/2')).toBeTruthy()
+    expect(screen.getByRole('button',{name:'+ Ajouter une série principale'})).toBeTruthy()
     log('40')
     expect(screen.getByText(/Maintenant : palier dégressif 1\/2/)).toBeTruthy()
     expect(view.saved().restTimerEndAt).toBeNull()
@@ -153,6 +157,8 @@ describe('real WorkoutSession runtime',()=>{
   it('shows both biset members and alternates the actual focus with rest after B',async()=>{
     const view=start([{name:'A',sets:2,reps:10,technique:'superset',technique_details:'B'},{name:'B',sets:2,reps:10,rest:60}])
     await screen.findByText(/Alterner A \(A\) puis B \(B\)/)
+    expect(screen.getByRole('list',{name:'A · A'}).children).toHaveLength(2)
+    expect(screen.getByRole('list',{name:'B · B'}).children).toHaveLength(2)
     log('20')
     expect(view.saved().currentExerciseIndex).toBe(1)
     expect(view.saved().restTimerEndAt).toBeNull()

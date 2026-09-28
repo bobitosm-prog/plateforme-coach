@@ -1227,7 +1227,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       setSetStatusMessage('')
                       setSessionModified(true)
                     }} style={{ minHeight: 44, padding: '9px 14px', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, background: GOLD_DIM, color: GOLD, fontSize: 14, fontWeight: 700, cursor: canAddSet ? 'pointer' : 'not-allowed', opacity: canAddSet ? 1 : .5 }}>
-                      {tExtraSet(paired ? 'addBiset' : 'add')}
+                      {tExtraSet(paired ? 'addBiset' : exo.technique === 'dropset' ? 'addMain' : 'add')}
                     </button>
                     {!canAddSet && <p style={{ margin: '6px 0 0', color: TEXT_MUTED, fontSize: 12 }}>{tExtraSet(addSetReason)}</p>}
                   </div>

@@ -1,0 +1,28 @@
+.board { margin-bottom: 14px; padding: 16px; border-radius: 18px; background: #27251f; color: #f5f2ea; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.header strong { color: #e6c364; font-size: .9rem; font-weight: 800; line-height: 1.25; }
+.header > span { flex: 0 0 auto; color: #aaa294; font-size: .83rem; font-weight: 700; }
+.instructions { margin: 10px 0 14px; color: #bdb5a8; font-size: .82rem; line-height: 1.45; }
+.groups { display: grid; gap: 10px; }
+.group { min-width: 0; padding: 10px; border-radius: 13px; background: #1d1c19; }
+.groupTitle { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 10px; color: #f5f2ea; font-size: .88rem; font-weight: 750; }
+.groupTitle span { color: #aaa294; white-space: nowrap; }
+.earlier { margin-bottom: 10px; }
+.earlier > span { display: block; margin-bottom: 7px; color: #aaa294; font-size: .74rem; }
+.earlier > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: #34312b; color: #aaa294; font-size: .76rem; font-weight: 700; }
+.chip[data-state='done'] { background: #25392c; color: #8bd49b; }
+.chip[data-state='current'] { background: #e6c364; color: #15120a; }
+.steps { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.step { display: flex; min-width: 0; min-height: 52px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: #292722; }
+.step[data-state='current'] { background: #3a321e; box-shadow: inset 0 0 0 1px #e6c364; }
+.marker { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 8px; background: #3b382f; color: #c4bcad; font-size: .8rem; font-weight: 800; }
+.step[data-state='current'] .marker { background: #e6c364; color: #15120a; }
+.step[data-state='done'] .marker { background: #25392c; color: #8bd49b; }
+.stepText { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.stepText strong { font-size: .8rem; font-weight: 700; }
+.stepText small { overflow: hidden; color: #aaa294; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.state { color: #aaa294; font-size: .72rem; white-space: nowrap; }
+.step[data-state='current'] .state { color: #e6c364; font-weight: 750; }
+.step[data-state='done'] .state { color: #8bd49b; }
+@media (max-width: 400px) { .board { padding: 12px; } .state { display: none; } }
