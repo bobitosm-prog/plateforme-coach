@@ -74,7 +74,12 @@ ${buildAthenaTrainingPolicyPrompt({
 
 ${input.clientContext || ''}
 
-${input.allowAdvancedTechniques ? 'Techniques avancées autorisées selon le niveau, jamais obligatoires. FST-7 uniquement niveau avancé, dernier exercice : 7 séries de 8–12 répétitions, repos 30–45 s, consignes explicites. Ne cumule pas des techniques sur un même exercice.' : 'Techniques avancées désactivées : technique=null et technique_details="" pour chaque exercice.'}
+${input.allowAdvancedTechniques ? `Techniques avancées autorisées selon le niveau, jamais obligatoires. Ne les utilise que pour un intérêt concret (par exemple gagner du temps), sans promettre un meilleur résultat qu'avec des séries classiques. Si tu en proposes, explique brièvement leur intérêt dans la description du programme. Préserve le volume et la récupération ; évite les exercices techniquement risqués sous forte fatigue.
+- Drop set : plutôt sur un mouvement stable et simple, 1 à 3 réductions de charge après la dernière série principale ; technique_details est exactement "1", "2" ou "3".
+- Rest-pause : 2 ou 3 mini-séries après la dernière série, pauses de 10, 15 ou 20 s ; technique_details est exactement "2,15" par exemple.
+- Biset : crée DEUX exercices distincts dans la même séance, avec le même nombre de séries. Sur le premier, technique="superset" et technique_details est le nom EXACT du second. Le second garde technique=null et technique_details="". N'associe aucun des deux à une autre technique. Préfère des mouvements complémentaires pour limiter la baisse de performance.
+- FST-7 : seulement si le niveau est avancé et que cette méthode est utile dans le contexte ; dernier exercice, 7 séries de 8–12 répétitions, repos 30–45 s. Ne la présente pas comme supérieure aux séries classiques. Consignes explicites dans technique_details.
+- N'utilise pas mechanical : cette variante n'est pas entièrement guidée pendant la séance. Ne cumule pas des techniques sur un même exercice.` : 'Techniques avancées désactivées : technique=null et technique_details="" pour chaque exercice.'}
 
 ${catalog.length > 0 ? `
 RÉFÉRENTIEL D'EXERCICES (${catalog.length} exercices) :
@@ -122,7 +127,7 @@ IMPORTANT :
 - Chaque exercice a un order (1, 2, 3...), sets, reps, rest_seconds
 - Pour un maintien statique (planche, gainage, chaise) : duration_seconds de 5 à 180 et reps=0. Pour les mouvements répétés : reps de 1 à 30 et duration_seconds=null.
 - muscle_groups utilise des IDs anglais : chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, core, abs
-- Chaque exercice a un tempo (format "X-X-X"), technique (null ou "dropset"/"restpause"/"superset"/"mechanical"), et technique_details
+- Chaque exercice a un tempo (format "X-X-X"), technique (null ou "dropset"/"restpause"/"superset"/"fst7" si autorisé), et technique_details
 - Pour les debutants : pas de techniques avancees, tempo "2-0-2" partout
 - Pour les intermediaires : max 1 technique optionnelle par jour
 - Pour les avances : max 2 techniques optionnelles par jour`
@@ -182,7 +187,7 @@ IMPORTANT :
                         rest_seconds: { type: 'integer', minimum: 30, maximum: 300, description: 'Temps de repos en secondes' },
                         order: { type: 'integer', description: 'Ordre de l\'exercice dans la seance (1, 2, 3...)' },
                         tempo: { type: 'string', description: 'Tempo format X-X-X (ex: 2-0-2)' },
-                        technique: { type: ['string', 'null'], enum: input.allowAdvancedTechniques ? ['dropset', 'restpause', 'superset', 'mechanical', 'fst7', null] : [null], description: 'Technique avancee autorisée ou null' },
+                        technique: { type: ['string', 'null'], enum: input.allowAdvancedTechniques ? ['dropset', 'restpause', 'superset', 'fst7', null] : [null], description: 'Technique avancee autorisée ou null' },
                         technique_details: { type: 'string', description: 'Details de la technique ou chaine vide' },
                       },
                     },
@@ -219,7 +224,9 @@ IMPORTANT :
   // Post-process: resolve exercise names against catalog + set exercise_id
   if (catalog.length > 0 && program?.days) {
     for (const day of program.days) {
+      const canonicalNames = new Map<string, string>()
       for (const ex of (day.exercises || [])) {
+        const originalName = ex.custom_name
         const match = exactEquipmentMatch(catalog, ex.custom_name)
         if (restrictedEquipment && !match) throw new AthenaTrainingOutputError(['equipment: mouvement hors du référentiel autorisé'])
         if (match) {
@@ -228,9 +235,18 @@ IMPORTANT :
         } else {
           ex.exercise_id = null
         }
+        canonicalNames.set(originalName, ex.custom_name)
+      }
+      for (const ex of day.exercises) {
+        if (ex.technique === 'superset') {
+          ex.technique_details = canonicalNames.get(ex.technique_details) ?? ex.technique_details
+        }
       }
     }
   }
+
+  // Catalog normalization must not break exact partner names or create duplicate exercises.
+  validateAthenaTrainingOutput(program, request, { allowAdvancedTechniques: input.allowAdvancedTechniques === true })
 
   return program
 }

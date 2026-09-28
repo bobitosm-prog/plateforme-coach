@@ -2146,6 +2146,8 @@
         "lvlDebutant": "DÉBUTANT",
         "lvlIntermediaire": "INTERMÉDIAIRE",
         "lvlAvance": "AVANCÉ",
+        "advancedTechniques": "Autoriser les techniques avancées",
+        "advancedTechniquesHelp": "Optionnel : Athena peut proposer drop set, biset, rest-pause ou FST-7 selon ton niveau. Aucun n'est obligatoire.",
         "daysPerWeek": "Jours / semaine",
         "duration": "Durée (min)",
         "equipment": "Équipement",

@@ -145,6 +145,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const [aiEquipment, setAiEquipment] = useState(() => profileProgramParams ? '__profile__' : 'salle')
   const [aiPriorities, setAiPriorities] = useState<string[]>(() => profileProgramParams?.priorities ?? [])
   const [aiNotes, setAiNotes] = useState('')
+  const [aiAdvancedTechniques, setAiAdvancedTechniques] = useState(false)
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiResult, setAiResult] = useState<any>(null)
 
@@ -251,6 +252,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           equipment: aiEquipment === '__profile__' ? profileProgramParams?.equipment ?? 'salle' : aiEquipment,
           priorities: aiPriorities,
           notes: aiNotes, gender: userGender,
+          allowAdvancedTechniques: aiAdvancedTechniques && aiLevel !== 'debutant',
         }),
       })
       const program = await consumeProgramStream(res)
@@ -635,6 +637,22 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                 })}
               </div>
             </div>
+
+            {/* Advanced methods are opt-in for experienced trainees. */}
+            {aiLevel !== 'debutant' && (
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 20, color: TEXT_PRIMARY, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={aiAdvancedTechniques}
+                  onChange={event => setAiAdvancedTechniques(event.target.checked)}
+                  style={{ marginTop: 3, accentColor: GOLD }}
+                />
+                <span>
+                  <strong>{t('config.advancedTechniques')}</strong>
+                  <span style={{ display: 'block', color: TEXT_MUTED, fontSize: 13, marginTop: 4 }}>{t('config.advancedTechniquesHelp')}</span>
+                </span>
+              </label>
+            )}
 
             {/* Notes */}
             <div style={{ marginBottom: 24 }}>

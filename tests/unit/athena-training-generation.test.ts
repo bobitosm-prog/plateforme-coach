@@ -92,4 +92,29 @@ describe('Athena training generation contract', () => {
     expect(firstBody.system).toBe(secondBody.system)
     expect(firstBody.messages).toEqual(secondBody.messages)
   })
+
+  it('keeps an opted-in biset linked to its real catalog partner after name normalization', async () => {
+    const response = await anthropicResponse().json()
+    const firstDay = response.content[0].input.days[0]
+    firstDay.exercises[0].technique = 'superset'
+    firstDay.exercises[0].technique_details = 'squat au poids du corps'
+    firstDay.exercises[1].custom_name = 'squat au poids du corps'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(response), { status: 200 })))
+
+    const program = await generateProgram({ ...INPUT, level: 'intermediaire', equipment: 'salle', allowAdvancedTechniques: true }, 'test-key', [
+      { id: 'row', name: 'Rowing haltères', equipment: 'dumbbell' },
+      { id: 'squat', name: 'Squat au poids du corps', equipment: 'bodyweight' },
+      { id: 'push', name: 'Pompes au sol', equipment: 'bodyweight' },
+    ])
+    expect(program.days[0].exercises[0].technique_details).toBe('Squat au poids du corps')
+    expect(program.days[0].exercises[1]).toMatchObject({ custom_name: 'Squat au poids du corps', exercise_id: 'squat' })
+  })
+
+  it('rejects an AI biset that names a partner missing from the session', async () => {
+    const response = await anthropicResponse().json()
+    response.content[0].input.days[0].exercises[0].technique = 'superset'
+    response.content[0].input.days[0].exercises[0].technique_details = 'Exercice absent'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(response), { status: 200 })))
+    await expect(generateProgram({ ...INPUT, level: 'intermediaire', allowAdvancedTechniques: true }, 'test-key')).rejects.toThrow(/non conforme/)
+  })
 })
