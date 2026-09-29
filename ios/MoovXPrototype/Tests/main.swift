@@ -35,3 +35,21 @@ for body: [String: Any] in [
     precondition(RestTimerMessagePolicy.parse(body, now: now) == nil, "Invalid rest timer command accepted")
 }
 print("Rest timer message policy: 7 checks passed")
+
+let appleNonce = String(repeating: "a", count: 64)
+let appleURL = URL(string: "https://app.moovx.ch/login")!
+precondition(AppleSignInPolicy.allows(isMainFrame: true, scheme: "https", host: "app.moovx.ch", port: 0, currentURL: appleURL, nonce: appleNonce))
+precondition(AppleSignInPolicy.allows(isMainFrame: true, scheme: "https", host: "app.moovx.ch", port: 443, currentURL: appleURL, nonce: appleNonce))
+for nonce in [nil, "", String(repeating: "a", count: 63), String(repeating: "a", count: 65), String(repeating: "z", count: 64)] as [String?] {
+    precondition(!AppleSignInPolicy.allows(isMainFrame: true, scheme: "https", host: "app.moovx.ch", port: 0, currentURL: appleURL, nonce: nonce))
+}
+for (main, scheme, host, port, url) in [
+    (false, "https", "app.moovx.ch", 0, appleURL),
+    (true, "http", "app.moovx.ch", 0, appleURL),
+    (true, "https", "app.moovx.ch.evil.invalid", 0, appleURL),
+    (true, "https", "app.moovx.ch", 8443, appleURL),
+    (true, "https", "app.moovx.ch", 0, URL(string: "https://external.invalid")!),
+] {
+    precondition(!AppleSignInPolicy.allows(isMainFrame: main, scheme: scheme, host: host, port: port, currentURL: url, nonce: appleNonce))
+}
+print("Apple bridge policy: 12 checks passed")

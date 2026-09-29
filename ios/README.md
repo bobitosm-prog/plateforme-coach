@@ -30,6 +30,7 @@ xcodebuild -project ios/MoovXPrototype/MoovXPrototype.xcodeproj \
   -derivedDataPath ios/DerivedData build
 
 swiftc ios/MoovXPrototype/App/NavigationPolicy.swift \
+  ios/MoovXPrototype/App/AppleSignInPolicy.swift \
   ios/MoovXPrototype/App/RestTimerMessagePolicy.swift \
   ios/MoovXPrototype/Tests/main.swift -o /tmp/moovx-ios-navigation-tests
 /tmp/moovx-ios-navigation-tests

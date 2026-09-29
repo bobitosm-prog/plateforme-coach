@@ -95,8 +95,8 @@ struct PrototypeWebView: UIViewRepresentable {
         configuration.userContentController.add(context.coordinator, name: "moovxCameraDenied")
         configuration.userContentController.add(context.coordinator, name: "moovxWorkoutActive")
         configuration.userContentController.add(context.coordinator, name: "moovxRestTimer")
-        // Separate app sandbox; no Safari credentials. Messages contain only
-        // camera permission or workout visibility state, never workout data.
+        configuration.userContentController.addScriptMessageHandler(context.coordinator.appleAuth, contentWorld: .page, name: "moovxAppleAuth")
+        // Separate app sandbox; Apple credentials return only to their requesting document.
         configuration.websiteDataStore = .default()
         let view = WKWebView(frame: .zero, configuration: configuration)
         view.isOpaque = false
@@ -117,6 +117,8 @@ struct PrototypeWebView: UIViewRepresentable {
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxCameraDenied")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWorkoutActive")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxRestTimer")
+        coordinator.appleAuth.cancel()
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxAppleAuth", contentWorld: .page)
         coordinator.stopObservingCameraPermission()
         coordinator.stopObservingWorkoutScreenAwake()
     }
@@ -128,6 +130,7 @@ struct PrototypeWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         let state: BrowserState
+        let appleAuth = AppleSignInBridge()
         private weak var webView: WKWebView?
         private var cameraObserver: NSObjectProtocol?
         private var inactiveObserver: NSObjectProtocol?
@@ -227,6 +230,7 @@ struct PrototypeWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            appleAuth.cancel()
             workoutActive = false
             refreshWorkoutScreenAwake()
         }
@@ -251,6 +255,7 @@ struct PrototypeWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            appleAuth.cancel()
             workoutActive = false
             refreshWorkoutScreenAwake()
             if UIApplication.shared.applicationState != .active && !automaticRecoveryUsed {
