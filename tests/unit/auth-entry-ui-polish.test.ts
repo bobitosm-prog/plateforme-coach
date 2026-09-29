@@ -13,7 +13,8 @@ describe('Wave 6F auth entry UI contracts', () => {
 
   it('keeps the complete login and recovery entry points', () => {
     expect(login).toContain("provider: 'google'")
-    expect(login).toContain("provider: 'apple'")
+    expect(login).toContain('onClick={handleAppleLogin}')
+    expect(read('lib/auth/apple-sign-in.ts')).toContain("provider: 'apple'")
     expect(login).toContain('handleResetPassword')
     expect(login).toContain('resolveClientPostAuth')
   })
