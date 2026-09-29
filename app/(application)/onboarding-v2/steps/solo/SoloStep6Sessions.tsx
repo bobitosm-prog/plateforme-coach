@@ -34,6 +34,7 @@ export default function SoloStep6Sessions({ sessions, setSessions }: SoloStep6Se
       {/* Slider */}
       <input
         type="range"
+        aria-label={t('solo.step6.title')}
         min={1}
         max={6}
         value={sessions}
