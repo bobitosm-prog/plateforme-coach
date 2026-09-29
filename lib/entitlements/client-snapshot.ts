@@ -1,9 +1,11 @@
+import { isActiveAppleEntitlement, type AppleEntitlement } from './apple-entitlement'
 import type { UserCapabilities } from './capabilities'
 import type { EffectiveEntitlement } from './effective-entitlement'
 
 export type EffectiveEntitlementSnapshot = {
   capabilities: UserCapabilities
   effectiveEntitlement: EffectiveEntitlement
+  appleEntitlement?: AppleEntitlement | null
 }
 
 export const DENIED_ENTITLEMENT_SNAPSHOT: EffectiveEntitlementSnapshot = {
@@ -21,6 +23,8 @@ export const DENIED_ENTITLEMENT_SNAPSHOT: EffectiveEntitlementSnapshot = {
 
 function isSnapshot(value: unknown): value is EffectiveEntitlementSnapshot {
   if (typeof value !== 'object' || value === null) return false
+  const apple = Reflect.get(value, 'appleEntitlement')
+  if (apple != null && (typeof apple !== 'object' || !isActiveAppleEntitlement(apple as AppleEntitlement, 0))) return false
   const capabilities = Reflect.get(value, 'capabilities')
   const effectiveEntitlement = Reflect.get(value, 'effectiveEntitlement')
   if (typeof capabilities !== 'object' || capabilities === null) return false

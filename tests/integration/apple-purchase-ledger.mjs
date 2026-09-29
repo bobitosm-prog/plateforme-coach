@@ -198,6 +198,22 @@ try {
   console.log('PASS simultaneous workers claim distinct events with SKIP LOCKED')
 
 
+  const readerMigration = readFileSync(resolve('supabase/migrations/20260929160913_apple_entitlement_reader.sql'), 'utf8')
+  sql(readerMigration)
+  sql(readerMigration)
+  const readRights = user => service(`SELECT count(*) FROM public.read_apple_entitlement_states('${user}');`)
+  assert.equal(readRights(b), '0') // Sandbox never grants Production access.
+  const prodTokenB = service(`SELECT public.prepare_apple_account_binding('${b}','Production');`)
+  service(record({ user: b, token: prodTokenB, env: 'Production', transaction: '900', original: '900' }))
+  service(`INSERT INTO public.apple_purchase_state(environment,original_transaction_id,transaction_id,signed_ms,checked_ms,state,access_until_ms)
+    VALUES ('Production','900','900',2000,2500,'active',3000);`)
+  assert.equal(readRights(b), '1')
+  assert.equal(readRights(a), '0')
+  for (const role of ['anon', 'authenticated']) {
+    fail(`SET ROLE ${role}; SELECT * FROM public.read_apple_entitlement_states('${b}');`, 'permission denied')
+  }
+  console.log('PASS entitlement reader is idempotent, Production-only, account-isolated and denied to browser roles')
+
   if (process.argv.includes('--advisors')) {
     const localUrl = `postgresql://postgres@localhost:55439/postgres?host=${encodeURIComponent(socket)}&sslmode=disable`
     const output = execFileSync('npx', ['--yes', 'supabase', 'db', 'advisors', '--db-url', localUrl,

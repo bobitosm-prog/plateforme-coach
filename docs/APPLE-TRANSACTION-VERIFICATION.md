@@ -2,9 +2,9 @@
 
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
 avant toute future attribution de droits. Un adaptateur et une migration de
-registre sont préparés et testés localement (détails en fin de document). Aucun
-raccordement aux droits ou au pont iOS ; une route de réception de notifications
-est maintenant préparée mais désactivée (voir dernier sous-lot). Aucune
+registre sont préparés et testés localement (détails en fin de document). Le raccordement aux droits serveur et au verrou d’abonnement du tableau de bord
+est préparé derrière un drapeau désactivé. Le pont d’achat iOS reste à raccorder ;
+la réception des notifications est également désactivée. Aucune
 modification en base de production, aucun achat réel ni changement des accès Stripe.
 
 ## Contrat de sécurité
@@ -260,3 +260,32 @@ fraîcheur, planification authentifiée du worker et récupération de l'histori
 reprise des quarantaines, limites réseau/distribuées, migrations et configuration
 sur l'environnement de test, puis notification TEST réellement livrée par Apple.
 La simple existence d'un état Apple en base ne donne encore aucun accès à l'app.
+
+
+## Lecture des droits Apple — 29 septembre 2026
+
+La fonction SQL `read_apple_entitlement_states` lit uniquement les achats Production
+rattachés au compte authentifié, avec preuves et état courant concordants. Elle
+est inaccessible aux rôles navigateur ; aucune écriture du profil Stripe.
+
+Le serveur accepte les états active/grace jusqu’à l’échéance Apple, ou lifetime.
+Les preuves remboursées, remplacées, expirées et les contrôles vieux de 24 heures
+ne donnent pas d’accès. Même le lifetime doit être revérifié périodiquement pour
+prendre en compte les remboursements. Plusieurs achats sont combinés sans qu’un
+achat révoqué annule un autre achat valide. Le DTO public ne contient aucun
+identifiant de transaction ni token Apple.
+
+`APPLE_IAP_ENTITLEMENTS_ENABLED=true` activera la lecture après déploiement des
+migrations et mise en place de la réconciliation périodique. Il reste désactivé.
+Les droits Stripe, les accès historiques et les 14 jours d’essai conservent leurs
+règles. Une panne de lecture Apple n’accorde aucun droit Apple et n’efface pas un
+accès indépendant. Le dashboard reconnaît le droit Apple, rafraîchit au retour
+au premier plan et chaque minute visible, et recalcule à son échéance. Changer
+de compte efface le snapshot ; les réponses de l’ancien compte sont ignorées.
+
+Validation locale : 175 tests ciblés passés, TypeScript sans erreur ; PostgreSQL
+réel avec application répétée des migrations, isolation compte/environnement,
+refus aux rôles navigateur et aucun avertissement des advisors. Aucun achat réel,
+aucun déploiement ni activation en production dans ce sous-lot. Le libellé de
+facturation de la page Compte et le parcours natif achat/restauration restent
+à raccorder avec le prochain lot iOS.
