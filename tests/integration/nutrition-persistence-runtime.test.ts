@@ -10,6 +10,7 @@ import { getNutritionPlanConsistency } from '@/lib/nutrition/plan-context'
 import { loadActivationSnapshot } from '@/lib/meal-plan/activation-snapshot'
 import { replacePersonalMealPlan } from '@/lib/meal-plan/replace-personal-plan'
 import { draftFood, mealDraftRows, persistMealDraft } from '@/lib/nutrition/meal-draft'
+import { mealDraftKey, readMealDraft, writeMealDraft } from '@/lib/nutrition/meal-draft-storage'
 
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
@@ -82,6 +83,58 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 
 describe('journal composer real persistence', () => {
+  it('retries after a committed write loses its response and the draft is reopened', async () => {
+    const owner = randomUUID()
+    const food = {name:'Synthetic lost-response meal',qty:100,kcal:100,prot:10,carb:10,fat:2}
+    const draft = {version:1 as const,userId:owner,date:'2026-09-29',mealType:'dejeuner',
+      submitted:true,foods:[draftFood(food),draftFood({...food,name:'Synthetic second food'})]}
+    // Persist exactly what the composer saves before sending; reopening must
+    // preserve the same row IDs even when the server has already committed.
+    const storage = new Map<string,string>()
+    const durable: Storage = {get length(){return storage.size},clear:()=>storage.clear(),
+      key:(index:number)=>Array.from(storage.keys())[index] ?? null,
+      getItem:(key:string)=>storage.get(key) ?? null,
+      setItem:(key:string,value:string)=>{storage.set(key,value)},removeItem:(key:string)=>{storage.delete(key)}}
+    const key = mealDraftKey(owner,draft.date,draft.mealType)
+    writeMealDraft(durable,key,null,draft)
+    const rows = mealDraftRows(draft.foods,owner,draft.date,draft.mealType)
+    const fixtureFetch = globalThis.fetch
+    let committed = false
+    let writeAttempts = 0
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const response = await fixtureFetch(input,init)
+      const path = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).pathname
+      if (init?.method === 'POST' && path.endsWith('/daily_food_logs')) {
+        writeAttempts++
+        if (!committed && response.ok) {
+          committed = true
+          // Real Postgres has acknowledged the write. Only its reply is lost.
+          await response.arrayBuffer()
+          throw new TypeError('Synthetic connection lost after commit')
+        }
+      }
+      return response
+    })
+    await expect(persistMealDraft(clientFor(owner,'public'),rows)).rejects.toThrow('MEAL_SAVE_FAILED')
+    expect(committed).toBe(true)
+    const check = clientFor(owner,'public')
+    const beforeRetry = await check.from('daily_food_logs').select('id').eq('user_id',owner)
+    expect(beforeRetry.error).toBeNull()
+    expect(beforeRetry.data).toHaveLength(2)
+    const restored = readMealDraft(durable.getItem(key),owner,draft.date,draft.mealType)!
+    const retried = mealDraftRows(restored.foods,owner,restored.date,restored.mealType)
+    expect(retried).toEqual(rows)
+    await persistMealDraft(clientFor(owner,'public'),retried)
+    const afterRetry = await check.from('daily_food_logs').select('id,custom_name,quantity_g,calories').eq('user_id',owner)
+    expect(afterRetry.error).toBeNull()
+    expect(afterRetry.data).toHaveLength(2)
+    expect(afterRetry.data?.map(row=>row.id).sort()).toEqual(rows.map(row=>row.id).sort())
+    expect(writeAttempts).toBe(2)
+    const foreign = await clientFor(randomUUID(),'public').from('daily_food_logs').select('id').eq('user_id',owner)
+    expect(foreign.error).toBeNull()
+    expect(foreign.data).toEqual([])
+  })
+
   it('atomically inserts a meal, retries without duplicates and isolates owners', async () => {
     const owner = randomUUID(), other = randomUUID()
     const client = clientFor(owner, 'public')
