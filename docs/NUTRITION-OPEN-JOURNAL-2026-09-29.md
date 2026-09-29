@@ -38,3 +38,18 @@ restent accessibles en touchant l'aliment pour modifier sa quantité.
 Livrable : commit UI/tests/docs cohérent, PR et déploiement après les contrôles.
 Contraintes : préserver les patterns et la persistance ; aucune donnée réelle
 créée pendant les tests, aucune nouvelle dépendance ni exposition de secret.
+
+## Retour appareil et reprise réseau
+
+Le 29 septembre, après déploiement de la PR 79, Marco confirme : « caméra et
+scan opérationnel ». Ces deux contrôles matériels sont donc validés par retour
+utilisateur pour le build 6 et cette interface. Aucun résultat de coupure réseau
+sur iPhone n'est déduit de cette confirmation.
+
+Le suivi ajoute un test runtime du composant NutritionTab complet : ajout d'un
+repas enregistré au dîner, réponse perdue après écriture simulée, fermeture,
+réouverture par le choix Code-barres, restauration de la tentative verrouillée,
+puis retry avec les mêmes IDs. Le scanner ne remplace pas une tentative en
+attente ; un seul aliment est conservé et le brouillon est retiré après succès.
+Ce test complète l'intégration PostgreSQL existante sans remplacer le contrôle
+radio sur appareil. Aucun changement produit ni donnée réelle.
