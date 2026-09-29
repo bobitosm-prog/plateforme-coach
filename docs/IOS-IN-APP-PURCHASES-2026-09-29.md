@@ -2,7 +2,9 @@
 
 Audit du 29 septembre 2026. Base web : main 6596fda1 ; binaire iOS : build 7,
 branche codex/ios-apple-sign-in. Ce document prépare l'intégration ; aucun achat
-Apple ni produit App Store Connect n'a été créé ou activé pendant cet audit.
+Apple ni produit payant App Store Connect n’a été activé pendant cet audit.
+Groupe MoovX Athena créé dans App Store Connect (22425039), état « Finaliser
+avant soumission ». Produits et tarifs en attente de confirmation.
 
 ## Conditions Apple vérifiées
 
@@ -46,7 +48,7 @@ Sources officielles :
   pour Athena, 50 CHF/mois pour Coach Pro. Ce script ne prouve PAS les tarifs
   commerciaux actuels ; les prix iOS et produits inclus restent à confirmer.
 
-## Choix produit demandé à Marco
+## Choix produit confirmé par Marco
 
 A. Conserver l'essai MoovX actuel : 14 jours sans confirmation d'abonnement,
    puis achat Apple au tarif normal. Pas d'offre introductive Apple ajoutée.
@@ -55,7 +57,11 @@ B. Utiliser l'essai Apple : confirmation initiale, 2 semaines gratuites pour les
    côté serveur pour ne pas accorder en plus un essai MoovX aux nouveaux comptes
    iOS ; décider explicitement du traitement des comptes web existants.
 
-Ne pas modifier les droits ou le parcours de production avant cette décision.
+Décision reçue : option A. Conserver les 14 jours sans engagement, puis demander
+un achat Apple explicite. Aucun renouvellement automatique au terme de l’essai
+MoovX ; aucun essai introductif Apple supplémentaire. Les abonnements achetés
+ensuite sont renouvelables selon la formule choisie. Les tarifs iOS ont été
+demandés séparément et ne sont pas encore confirmés.
 Un simple indicateur envoyé par le navigateur ne doit jamais accorder un droit.
 
 ## Sous-lots d'implémentation
