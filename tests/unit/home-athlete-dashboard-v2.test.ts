@@ -29,17 +29,18 @@ function renderDashboard(onOpenProgram = vi.fn()) {
   return render(
     React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    }, [
-      React.createElement(HomeV2Header, { key: 'header', identity: model.identity, today: model.today }),
-      React.createElement(DailyStatus, {
-        key: 'status',
-        training: model.training,
-        nutrition: model.nutrition,
-        recovery: model.recovery,
-        onOpenProgram,
-        onOpenRecovery: vi.fn(),
-      }),
-    ]),
+      children: [
+        React.createElement(HomeV2Header, { key: 'header', identity: model.identity, today: model.today }),
+        React.createElement(DailyStatus, {
+          key: 'status',
+          training: model.training,
+          nutrition: model.nutrition,
+          recovery: model.recovery,
+          onOpenProgram,
+          onOpenRecovery: vi.fn(),
+        }),
+      ],
+    }),
   )
 }
 
@@ -50,9 +51,10 @@ describe('athlete dashboard home', () => {
     const identity = { ...model.identity, xp: 1250 }
     render(React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    }, React.createElement(HomeV2Header, {
-      identity, today: model.today, onOpenAthena, onOpenProgression,
-    })))
+      children: React.createElement(HomeV2Header, {
+        identity, today: model.today, onOpenAthena, onOpenProgression,
+    }),
+    }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir Athena' }))
     expect(onOpenAthena).toHaveBeenCalledOnce()
@@ -91,16 +93,17 @@ describe('athlete dashboard home', () => {
     const onOpenRecovery = vi.fn()
     render(React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    }, React.createElement(DailyStatus, {
-      training: { ...model.training, dayStatus: 'scheduled', session },
-      nutrition: model.nutrition,
-      recovery: model.recovery,
-      onStartSession,
-      onOpenNutrition,
-      onNutritionPhoto,
-      onNutritionBarcode,
-      onOpenRecovery,
-    })))
+      children: React.createElement(DailyStatus, {
+        training: { ...model.training, dayStatus: 'scheduled', session },
+        nutrition: model.nutrition,
+        recovery: model.recovery,
+        onStartSession,
+        onOpenNutrition,
+        onNutritionPhoto,
+        onNutritionBarcode,
+        onOpenRecovery,
+    }),
+    }))
 
     expect(screen.getAllByText('LEGS QUADS')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Commencer la séance' }))
@@ -120,13 +123,14 @@ describe('athlete dashboard home', () => {
     const onOpenSession = vi.fn()
     render(React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    }, React.createElement(DailyStatus, {
-      training: { ...model.training, dayStatus: 'completed', session },
-      nutrition: model.nutrition,
-      recovery: model.recovery,
-      onOpenSession,
-      onOpenRecovery: vi.fn(),
-    })))
+      children: React.createElement(DailyStatus, {
+        training: { ...model.training, dayStatus: 'completed', session },
+        nutrition: model.nutrition,
+        recovery: model.recovery,
+        onOpenSession,
+        onOpenRecovery: vi.fn(),
+    }),
+    }))
 
     expect(screen.getAllByText(/LEGS QUADS/)).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Voir la séance' }))

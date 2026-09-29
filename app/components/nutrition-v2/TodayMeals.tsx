@@ -84,6 +84,7 @@ function foodName(food: unknown): string {
 interface TodayMealsProps {
   model: NutritionViewModel
   selectedDate: string
+  selectedMeal?: NutritionMealType
   actionError: string | null
   onRetry: () => void
   onChooseMeal: () => void
@@ -102,6 +103,7 @@ interface TodayMealsProps {
 export default function TodayMeals({
   model,
   selectedDate,
+  selectedMeal,
   actionError,
   onRetry,
   onChooseMeal,
@@ -120,7 +122,7 @@ export default function TodayMeals({
   const locale = useLocale()
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
   const macroValue = (value: number | null | undefined) => value == null || !Number.isFinite(value) ? '—' : number.format(value)
-  const [openMeal, setOpenMeal] = useState<NutritionMealType | null>(null)
+  const [openMeal, setOpenMeal] = useState<NutritionMealType | null>(selectedMeal ?? null)
   const [collapsedMeals, setCollapsedMeals] = useState<Partial<Record<NutritionMealType, boolean>>>({})
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
   const [activeLogId, setActiveLogId] = useState<string | null>(null)
@@ -197,9 +199,9 @@ export default function TodayMeals({
     <div className={styles.todayMealsHeading}>
       <div>
         <p className={styles.eyebrow}>{t('eyebrow')}</p>
-        <h2 id="today-meals-title">{t('title')}</h2>
+        <h2 id="today-meals-title">{selectedMeal ? t('logged') : t('title')}</h2>
       </div>
-      <span>{t('count', { count: MEAL_ORDER.length })}</span>
+      {!selectedMeal && <span>{t('count', { count: MEAL_ORDER.length })}</span>}
     </div>
 
 
@@ -212,7 +214,7 @@ export default function TodayMeals({
     </div>}
 
     {model.meals.state !== 'loading' && model.meals.state !== 'error' && <div className={styles.mealList}>
-      {MEAL_ORDER.map(type => {
+      {(selectedMeal ? [selectedMeal] : MEAL_ORDER).map(type => {
         const meal = meals.find(entry => entry.type === type) ?? { type, planned: [], logged: [], completed: false, status: 'empty' as const }
         const expanded = openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
         const primaryAction = getMealPrimaryAction(meal.status)

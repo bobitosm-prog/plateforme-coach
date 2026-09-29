@@ -422,6 +422,49 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                   onClick={() => setInlineMealType(mealType)}
                 >{MEAL_LABELS[mealType]}</button>)}
               </div>
+              <TodayMeals
+                key={`journal:${userId}:${selectedDate}:${inlineMealType}`}
+                selectedMeal={normalizeNutritionMealType(inlineMealType) ?? undefined}
+                model={nutritionModel}
+                selectedDate={selectedDate}
+                actionError={mealActionError}
+                onRetry={() => void refreshNutrition()}
+                onChooseMeal={() => setPendingMealAction('food')}
+                onAddFood={mealType => setComposer({mealType: NUTRITION_MEAL_TO_KEY[mealType], date: selectedDate})}
+                onImportPlan={mealType => setImportingMeal({
+                  mealType: NUTRITION_MEAL_TO_KEY[mealType],
+                  dayKey: getNutritionDayKey(selectedDate) as Day,
+                })}
+                onPhoto={mealType => {
+                  setPhotoMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
+                  setPhotoError(null)
+                  setShowPhotoCapture(true)
+                }}
+                onSavedMeals={mealType => {
+                  void loadSavedMeals(NUTRITION_MEAL_TO_KEY[mealType])
+                }}
+                onSaveMeal={meal => {
+                  const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                  setSaveMealData({ mealType, foods: meal.logged.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) })
+                  setSaveMealName('')
+                  setSaveMealType(mealType)
+                  setShowSaveMealPopup(true)
+                }}
+                onCopyMeal={meal => {
+                  const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
+                  setCopyMealData({ mealType, foods: meal.logged })
+                  setCopyTargetDate('')
+                  setCopyTargetMealType(mealType)
+                  setShowCopyMealPopup(true)
+                }}
+                onClearMeal={mealType => void clearMeal(NUTRITION_MEAL_TO_KEY[mealType])}
+                onReplaceFood={(mealType, logId) => {
+                  setSwappingFoodId(logId)
+                  setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])
+                }}
+                onDeleteFood={logId => void deleteDailyLog(logId)}
+                onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
+              />
               <MealComposer
                 key={`${userId}:${selectedDate}:${inlineMealType}:${inlineComposerVersion}`}
                 inline supabase={supabase} userId={userId} date={selectedDate}
@@ -472,49 +515,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               </div>
             )}
-            <details className={quickEntryStyles.disclosure}><summary><span>{nt('quickEntry.journal')}</span><ChevronRight size={20} aria-hidden="true" /></summary>
-            <TodayMeals
-              model={nutritionModel}
-              selectedDate={selectedDate}
-              actionError={mealActionError}
-              onRetry={() => void refreshNutrition()}
-              onChooseMeal={() => setPendingMealAction('food')}
-              onAddFood={mealType => setComposer({mealType: NUTRITION_MEAL_TO_KEY[mealType], date: selectedDate})}
-              onImportPlan={mealType => setImportingMeal({
-                mealType: NUTRITION_MEAL_TO_KEY[mealType],
-                dayKey: getNutritionDayKey(selectedDate) as Day,
-              })}
-              onPhoto={mealType => {
-                setPhotoMealTarget(NUTRITION_MEAL_TO_KEY[mealType])
-                setPhotoError(null)
-                setShowPhotoCapture(true)
-              }}
-              onSavedMeals={mealType => {
-                void loadSavedMeals(NUTRITION_MEAL_TO_KEY[mealType])
-              }}
-              onSaveMeal={meal => {
-                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
-                setSaveMealData({ mealType, foods: meal.logged.map(log => ({ name: log.custom_name || log.food_name, quantity: log.quantity_g, calories: log.calories, proteins: log.protein, carbs: log.carbs, fats: log.fat })) })
-                setSaveMealName('')
-                setSaveMealType(mealType)
-                setShowSaveMealPopup(true)
-              }}
-              onCopyMeal={meal => {
-                const mealType = NUTRITION_MEAL_TO_KEY[meal.type]
-                setCopyMealData({ mealType, foods: meal.logged })
-                setCopyTargetDate('')
-                setCopyTargetMealType(mealType)
-                setShowCopyMealPopup(true)
-              }}
-              onClearMeal={mealType => void clearMeal(NUTRITION_MEAL_TO_KEY[mealType])}
-              onReplaceFood={(mealType, logId) => {
-                setSwappingFoodId(logId)
-                setShowFoodSearch(NUTRITION_MEAL_TO_KEY[mealType])
-              }}
-              onDeleteFood={logId => void deleteDailyLog(logId)}
-              onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
-            />
-            </details>
+
             {/* Hydration remains a separate legacy module during the progressive migration. */}
             <div className={quickEntryStyles.hydrationCard}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
