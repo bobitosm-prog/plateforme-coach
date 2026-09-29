@@ -18,7 +18,7 @@ avant soumission ». Produits et tarifs confirmés puis préparés (détails ci-
 - Prévoir restauration des achats et gestion de l'abonnement, ainsi que les
   liens vers confidentialité et conditions d'utilisation.
 - Vérifier le contrat Paid Apps, les données fiscales et bancaires dans App
-  Store Connect avant distribution. Leur état n'a pas été contrôlé ici.
+  Store Connect avant distribution. État de préparation consigné en fin de document.
 - L'accès numérique MoovX doit avoir son parcours StoreKit sur iPhone. Le
   coaching individuel en direct et le logiciel Coach Pro sont des offres
   distinctes : ne pas appliquer automatiquement une exception à toute l'app.
@@ -46,7 +46,7 @@ Sources officielles :
   n'est pas un pont de paiement.
 - Le script historique Stripe contient 10 CHF/mois, 80 CHF/an et 150 CHF à vie
   pour Athena, 50 CHF/mois pour Coach Pro. Ce script ne prouve PAS les tarifs
-  commerciaux actuels ; les prix iOS et produits inclus restent à confirmer.
+  commerciaux actuels ; Marco a ensuite confirmé les trois tarifs Athena ci-dessous.
 
 ## Choix produit confirmé par Marco
 
@@ -130,12 +130,14 @@ un parcours explicite de gestion pour éviter des renouvellements en parallèle.
 
 ## Prérequis commercial constaté
 
-Page Business consultée : contrat applications gratuites Actif, contrat
-applications payantes Nouveau. Apple exige la mise à jour de l'entité juridique
-avant signature du contrat payant. Statut de commerçant DSA demandé pour l'UE.
-Informations légales à compléter par Marco ; aucune signature ni modification
-juridique effectuée. Informations bancaires/fiscales non vérifiées. Ces étapes
-bloquent la commercialisation ; le développement local peut continuer.
+Dernier état consulté le 29 septembre : contrat applications payantes accepté
+sur instruction de Marco, statut « En attente d'infos de l'utilisateur ».
+Coordonnées bancaires saisies par Marco, traitement Apple annoncé sous 24 h ;
+statut de commerçant DSA en cours de vérification. Le formulaire W-8BEN présente
+une nationalité incorrecte et non modifiable : demande de correction envoyée
+par Marco au support Apple, accusé de réception reçu. Ne pas soumettre le
+formulaire incorrect ni considérer le contrat comme actif avant relecture.
+Ces étapes bloquent la commercialisation ; le développement local continue.
 
 Référence du produit à vie :
 https://developer.apple.com/help/app-store-connect/reference/in-app-purchases-and-subscriptions/in-app-purchase-types
