@@ -3,7 +3,8 @@
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
 avant toute future attribution de droits. Un adaptateur et une migration de
 registre sont préparés et testés localement (détails en fin de document). Aucun
-raccordement à une route, au résolveur des droits ou au pont iOS ; aucune
+raccordement aux droits ou au pont iOS ; une route de réception de notifications
+est maintenant préparée mais désactivée (voir dernier sous-lot). Aucune
 modification en base de production, aucun achat réel ni changement des accès Stripe.
 
 ## Contrat de sécurité
@@ -170,3 +171,49 @@ l'émetteur et l'accès API pour cette application ; cela ne valide PAS encore
 un achat, un remboursement, une notification reçue ou le parcours iPhone.
 Aucun achat effectué, aucune clé ajoutée au déploiement, aucune migration
 appliquée en production. Le raccordement serveur/iOS reste à terminer.
+
+## Réception durable des notifications V2 — préparée, désactivée
+
+Deux chemins explicites : `/api/apple/notifications/sandbox` et
+`/api/apple/notifications/production`. Le chemin impose l'environnement vérifié,
+jamais un champ du corps. La signature Apple remplace l'authentification par
+session navigateur. Le proxy existant laisse passer les routes `/api/`.
+
+Les flags serveur `APPLE_IAP_SANDBOX_NOTIFICATIONS_ENABLED` et
+`APPLE_IAP_PRODUCTION_NOTIFICATIONS_ENABLED` valent faux par défaut. Aucun flag
+activé, aucune URL de notification configurée dans App Store Connect et aucune
+migration exécutée en production dans ce sous-lot.
+
+Le handler borne le corps réellement lu (même sans Content-Length), impose JSON,
+vérifie la signature/chaîne Apple, le bundle, l'environnement, la version 2.0,
+l'identifiant de notification, la date et l'ID d'app en production. Les anciennes
+dates sont acceptées pour les réessais. Les payloads de notification sont limités
+à 128 Kio ; une limite de 300 requêtes/minute par environnement et par processus
+utilise le pattern existant. Une limitation distribuée/au niveau de la plateforme
+et les délais réseau devront être vérifiés avant exposition commerciale.
+
+La migration `20260929154935_apple_notification_inbox.sql` ajoute une boîte de
+réception RLS, sans grants/politiques navigateur, avec une RPC invoker réservée
+au service et des droits SELECT/INSERT uniquement. Clé unique : environnement
+et UUID de notification. Un contenu signé différent sous la même clé est rejeté
+pour analyse, jamais écrasé. Aucune donnée du payload n'est journalisée ou renvoyée
+au demandeur ; le JWS conservé en base doit rester traité comme donnée privée.
+
+HTTP 200 signifie uniquement « stocké durablement », y compris un doublon exact.
+Une panne de base ou de vérification temporaire donne 503 ; une signature invalide
+400, un corps trop volumineux 413, un dépassement de débit 429. Les événements
+TEST sont marqués `test_received`, les autres `pending`. Le worker devra vérifier
+les JWS imbriqués, résoudre le propriétaire, relire Apple et enregistrer les droits
+courants atomiquement AVANT de considérer un événement traité. Il n'est pas encore
+implémenté : **ne pas activer ces endpoints pour les achats réels**.
+
+Validations : 124 tests Vitest (dont 28 pour signatures de notification et handler
+HTTP) ; TypeScript et ESLint ciblé ; PostgreSQL éphémère avec les deux migrations
+appliquées deux fois, 12 enregistrements concurrents, conflits, isolation des
+environnements, contrôle des permissions et advisors sans warning/erreur.
+Le transport HTTP Apple vers un déploiement n'a pas encore été testé.
+
+Apple réessaie les notifications V2 en production, mais une seule livraison a
+lieu en sandbox. Prévoir récupération de l'historique et demande explicite de
+notification TEST lors du raccordement.
+Source : https://developer.apple.com/documentation/appstoreservernotifications/responding-to-app-store-server-notifications

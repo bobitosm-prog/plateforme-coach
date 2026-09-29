@@ -44,7 +44,10 @@ try {
   const migration = readFileSync(resolve('supabase/migrations/20260929153040_apple_purchase_evidence_ledger.sql'), 'utf8')
   sql(migration)
   sql(migration)
-  console.log('PASS migration applies twice with default Supabase-style grants')
+  const inboxMigration = readFileSync(resolve('supabase/migrations/20260929154935_apple_notification_inbox.sql'), 'utf8')
+  sql(inboxMigration)
+  sql(inboxMigration)
+  console.log('PASS migrations apply twice with default Supabase-style grants')
 
   tokenA = service(`SELECT public.prepare_apple_account_binding('${a}','Sandbox');`)
   tokenB = service(`SELECT public.prepare_apple_account_binding('${b}','Sandbox');`)
@@ -89,7 +92,7 @@ try {
   console.log('PASS concurrent retries insert once; competing accounts cannot steal ownership')
 
   for (const role of ['anon', 'authenticated']) {
-    for (const table of ['apple_account_bindings', 'apple_purchase_owners', 'apple_transaction_evidence']) {
+    for (const table of ['apple_account_bindings', 'apple_purchase_owners', 'apple_transaction_evidence', 'apple_notification_inbox']) {
       fail(`SET ROLE ${role}; SELECT * FROM public.${table};`, 'permission denied')
       assert.equal(sql(`SELECT has_table_privilege('${role}', 'public.${table}', 'INSERT,UPDATE,DELETE,TRUNCATE');`), 'f')
     }
@@ -110,6 +113,23 @@ try {
   fail('SET ROLE service_role; ' + record({ user: b, token: tokenB }), 'APPLE_OWNERSHIP_CONFLICT')
   fail('SET ROLE service_role; ' + record(), 'APPLE_ACCOUNT_MISMATCH')
   console.log('PASS deleting an account preserves ownership tombstones and prevents reassignment')
+
+  const notification = (payload = 'signed.test.payload', env = 'Sandbox', type = 'DID_RENEW') =>
+    `SELECT public.enqueue_apple_notification('${env}','00000000-0000-4000-8000-000000000090','${type}',NULL,2000,'${payload}');`
+  const notificationRetries = await Promise.all(Array.from({ length: 12 }, () => parallel(notification())))
+  assert.ok(notificationRetries.every(result => result.code === 0))
+  assert.equal(notificationRetries.filter(result => result.output === 'inserted').length, 1)
+  assert.equal(notificationRetries.filter(result => result.output === 'duplicate').length, 11)
+  assert.equal(sql("SELECT processing_status FROM public.apple_notification_inbox WHERE environment='Sandbox';"), 'pending')
+  assert.equal(service(notification('signed.test.payload', 'Production', 'TEST')), 'inserted')
+  assert.equal(sql("SELECT processing_status FROM public.apple_notification_inbox WHERE environment='Production';"), 'test_received')
+  fail('SET ROLE service_role; ' + notification('different.signed.payload'), 'APPLE_NOTIFICATION_CONFLICT')
+  for (const role of ['anon', 'authenticated']) fail(`SET ROLE ${role}; ${notification()}`, 'permission denied')
+  fail('SET ROLE service_role; DELETE FROM public.apple_notification_inbox;', 'permission denied')
+  assert.equal(sql("SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid='public.apple_notification_inbox'::regclass;"), 't')
+  assert.equal(sql("SELECT NOT prosecdef FROM pg_proc WHERE proname='enqueue_apple_notification';"), 't')
+  console.log('PASS notification inbox deduplicates concurrent receipt, rejects conflicts, isolates environments and denies browser access')
+
   if (process.argv.includes('--advisors')) {
     const localUrl = `postgresql://postgres@localhost:55439/postgres?host=${encodeURIComponent(socket)}&sslmode=disable`
     const output = execFileSync('npx', ['--yes', 'supabase', 'db', 'advisors', '--db-url', localUrl,
