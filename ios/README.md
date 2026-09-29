@@ -150,3 +150,16 @@ Validation locale :
 Limites : test par interruption forcée, pas diagnostic de la cause des arrêts
 iOS réels. Conservation de session authentifiée et de brouillon de séance à
 valider sur appareil physique. Le build 5 distribué reste inchangé.
+
+## Suivi de fiabilité actuel
+
+Voir [le suivi du 29 septembre](../docs/IOS-RELIABILITY-2026-09-29.md) pour le
+retour manuel du build 6, les limites des preuves et les parcours restant à
+qualifier. La sonde synthétique se relance avec :
+
+```sh
+python3 ios/scripts/check-storage.py --device <SIMULATOR_UUID>
+```
+
+Elle compile deux builds distincts et vérifie quatre étapes de persistance
+sans compte ni connexion au site de production.
