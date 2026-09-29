@@ -71,10 +71,20 @@ modification du binaire distribué ni des données utilisateur.
 |---|---|
 | Séance réelle après retour d'app | Même séance, même nombre de séries validées, dernière saisie vérifiée |
 | Notification de repos sur build 6 | Alerte à échéance, pas de doublon après retour |
-| Nutrition après photo réelle | Résultat visible et enregistrement unique |
-| Coupure réseau pendant enregistrement | Erreur explicite puis reprise sans doublon |
-| Changement de compte | Brouillons isolés et aucune donnée de l'autre compte affichée |
 | Inscription/retour email/OAuth | Parcours complet à qualifier ; navigation externe encore limitée par le prototype |
 
 Les achats/restaurations, confidentialité et choix d'architecture final restent
 des lots distincts avant App Store. Aucun de ces sujets n'est validé par C1.
+
+## Retours nutrition actualisés — 29 septembre
+
+- Caméra et scan déclarés opérationnels par Marco.
+- Captures 10:57:33 puis 10:58:19 : sélection conservée en mode avion,
+  retour réseau et une seule occurrence visible dans le journal.
+- Changement A → B → A déclaré validé : brouillon isolé sur A et retrouvé au retour.
+
+Ces retours clôturent les scénarios nutrition concernés sur appareil ; ils ne
+constituent pas une recherche exhaustive de doublons en base. Les preuves web
+et les tests de retour d'authentification sont suivis sur main dans
+`docs/NUTRITION-OPEN-JOURNAL-2026-09-29.md` et
+`docs/IOS-AUTH-RUNTIME-2026-09-29.md` (PR 81).
