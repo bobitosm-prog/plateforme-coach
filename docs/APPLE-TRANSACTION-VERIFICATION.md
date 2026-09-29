@@ -1,11 +1,13 @@
 # Vérification des transactions Apple — sous-lot serveur
 
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
-avant toute future attribution de droits. Un adaptateur et une migration de
-registre sont préparés et testés localement (détails en fin de document). Le raccordement aux droits serveur et au verrou d’abonnement du tableau de bord
-est préparé derrière un drapeau désactivé. Le pont d’achat/restauration iOS et le planificateur sont préparés ;
-la réception des notifications est également désactivée. Aucune
-modification en base de production, aucun achat réel ni changement des accès Stripe.
+avant attribution de droits. Le registre et les routes sont déployés ; le parcours
+Sandbox est activé pour le compte QA et le build 8 est distribué en TestFlight
+interne. Les notifications TEST Apple et le planificateur ont été vérifiés sur le
+déploiement. Les achats et notifications Production restent désactivés, sans
+changement des accès Stripe. La recette achat/restauration iPhone reste à réaliser.
+Les sections de sous-lots ci-dessous conservent leur état historique ; l'état du
+déploiement courant figure en fin de document.
 
 ## Contrat de sécurité
 
@@ -373,9 +375,11 @@ le 29 septembre à 18:47, pour TestFlight interne uniquement. Le numéro Release
 projet source reste 7 ; le prochain archivage doit utiliser un numéro supérieur à 8.
 
 Points restant à valider avant de considérer le raccordement terminé :
-- Créer manuellement le secret Vault `moovx_apple_iap_cron_secret`, puis exécuter
-  `scripts/sql/enable-apple-sync.sql` et vérifier un appel pg_net 200. La route
-  fonctionne, mais le planificateur n'est pas encore installé.
+- Secret Vault créé manuellement par l'utilisateur, puis planificateur activé
+  toutes les minutes (`moovx-apple-sync`, job 11). Première exécution automatique
+  le 29 septembre à 17:01 UTC : cron `succeeded`, réponse pg_net 3125 HTTP 200,
+  sans timeout. Résultats Sandbox et Production : notification/reconciliation
+  `idle` (aucun achat en file). Aucun secret n'a été lu dans les sorties.
 - Build 8 traité par Apple et attribué au groupe « Marco — bêta interne »
   (un testeur), après déclaration de chiffrement système uniquement. Attribution
   confirmée dans App Store Connect ; installation iPhone encore à valider.
