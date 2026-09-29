@@ -26,11 +26,14 @@ Supabase a été confiée à Marco ; confirmation encore attendue.
   bundle ch.moovx.app, droit Apple Sign In présent, get-task-allow désactivé.
 - Build simulateur Release installé et processus lancé avec succès. Le contrôle
   du dialogue Apple et la connexion complète ne sont pas validés par ce lancement.
+- Envoi App Store Connect réussi et traitement terminé. Déclaration de chiffrement
+  renseignée (cryptographie fournie par le système). Build 0.1.0 (7) attribué au
+  groupe « Marco — bêta interne » ; groupe et son testeur visibles sur le build.
+  Consignes de test Apple enregistrées dans TestFlight.
 
 ## À clôturer
 
 - Confirmation de saisie du secret web, puis parcours OAuth web réel.
-- Fin d'envoi/traitement App Store Connect et attribution au groupe interne.
 - Test iPhone Apple : annuler, se connecter, retrouver le bon compte et sa session
   après fermeture. Une adresse Apple masquée peut désigner un nouveau compte ;
   aucune fusion automatique supplémentaire ni copie de données ajoutée ici.
