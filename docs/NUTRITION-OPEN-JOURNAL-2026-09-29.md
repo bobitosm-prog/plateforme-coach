@@ -63,3 +63,15 @@ Le total du repas correspond à la somme des deux lignes visibles. Le scénario
 coupure avant confirmation puis retry est validé sur appareil pour ce test.
 Cela ne constitue pas une vérification exhaustive des doublons en base ni un
 test de perte de réponse après commit serveur (couvert séparément en local).
+
+### Fiabilité du contrôle d'intégration
+
+Deux exécutions CI ont échoué avant les tests sur le téléchargement PostgREST
+(ECR public : `toomanyrequests`). Le runner utilise désormais la publication
+GHCR officielle Supabase v14.14, figée par empreinte multi-architecture. Le pull
+GHCR a retourné exactement la même empreinte que l'image ECR utilisée jusque-là.
+La version et le contenu du service de test restent donc identiques.
+
+Validation locale avant commit : runner complet exécuté avec la référence GHCR
+figée, 32 tests d'intégration réussis, contrôles SQL et restauration de sauvegarde
+synthétique réussis, nettoyage des conteneurs/volumes/réseau confirmé.
