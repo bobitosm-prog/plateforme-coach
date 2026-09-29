@@ -2740,6 +2740,7 @@
     }
   },
   "nutrition_tab": {
+    "journal": {"addTitle": "Que veux-tu ajouter ?", "food": "Un aliment", "saved": "Un repas enregistré", "photo": "Une photo", "barcode": "Un code-barres"},
     "quickEntry": {
       "eyebrow": "Saisie rapide",
       "title": "Ajouter un repas",
@@ -2901,6 +2902,7 @@
       "usedCount": "{count}x utilise"
     },
     "v2": {
+      "journalDate": "Date du journal",
       "eyebrow": "Suivi quotidien",
       "title": "Nutrition",
       "today": "Aujourd’hui",

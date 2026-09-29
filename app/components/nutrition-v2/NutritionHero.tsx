@@ -60,9 +60,13 @@ export default function NutritionHero({
   selectedDate,
   onAddMeal,
   onRetry,
+  compact = false,
+  onDateChange,
 }: {
   model: NutritionViewModel
   selectedDate: string
+  compact?: boolean
+  onDateChange?: (date: string) => void
   onAddMeal: () => void
   onRetry: () => void
 }) {
@@ -96,7 +100,7 @@ export default function NutritionHero({
         : t('targetMissing')
 
   return <header
-    className={styles.hero}
+    className={`${styles.hero} ${compact ? styles.compactHero : ''}`}
     aria-labelledby="nutrition-v2-title"
     aria-busy={state === 'loading'}
     data-state={state}
@@ -105,7 +109,11 @@ export default function NutritionHero({
       <div>
         <p className={styles.eyebrow}>{t('eyebrow')}</p>
         <h1 id="nutrition-v2-title" className={styles.title}>{t('title')}</h1>
-        <p className={styles.dateLabel}>{dateLabel}</p>
+        {compact && onDateChange ? <label className={styles.journalDate}>
+          <span>{dateLabel}</span>
+          <input type="date" aria-label={t('journalDate')} value={selectedDate} max={model.day.localDateKey}
+            onChange={event => { const value = event.target.value; if (/^\d{4}-\d{2}-\d{2}$/.test(value) && value <= model.day.localDateKey) onDateChange(value) }} />
+        </label> : <p className={styles.dateLabel}>{dateLabel}</p>}
       </div>
     </div>
 

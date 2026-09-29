@@ -43,3 +43,11 @@
 .inlineBody .draft li { padding: 10px; border-radius: 12px; background: #27251f; }
 .inlineBody .draft input { background: #1d1c19; }
 .inlineBody .footer button { background: #e6c364; color: #17130b; }
+
+/* Shared flat surfaces and gold actions with Home and Training. */
+.body input { background: #27251f; border-color: transparent; }
+.body button { border: 0; background: #2b271e; }
+.choices button { background: #27251f; color: #eee9df; }
+.sources button[aria-pressed='true'] { background: #393121; color: #e6c364; }
+.footer { background: #1d1c19; border-color: #393121; }
+.footer button { background: #e6c364; color: #17130b; }

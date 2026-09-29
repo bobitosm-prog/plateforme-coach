@@ -2740,6 +2740,7 @@
     }
   },
   "nutrition_tab": {
+    "journal": {"addTitle": "What would you like to add?", "food": "A food", "saved": "A saved meal", "photo": "A photo", "barcode": "A barcode"},
     "quickEntry": {
       "eyebrow": "Quick entry",
       "title": "Add a meal",
@@ -2901,6 +2902,7 @@
       "usedCount": "{count}x used"
     },
     "v2": {
+      "journalDate": "Diary date",
       "eyebrow": "Daily tracking",
       "title": "Nutrition",
       "today": "Today",
