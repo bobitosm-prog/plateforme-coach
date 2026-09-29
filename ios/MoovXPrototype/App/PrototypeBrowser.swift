@@ -11,6 +11,7 @@ final class BrowserState: ObservableObject {
     @Published var cameraDenied = false
     @Published var notificationUnavailable = false
     @Published var reloadID = 0
+    @Published var recovered = false
 }
 
 struct PrototypeBrowser: View {
@@ -24,6 +25,9 @@ struct PrototypeBrowser: View {
                     Spacer()
                     Button("Fermer") { dismiss() }.frame(minWidth: 60, minHeight: 44)
                 }.padding(.horizontal, 12).background(.yellow.opacity(0.15))
+                if state.recovered {
+                    Text("Page relancée après une interruption iOS. Vérifie tes dernières saisies.").font(.caption).padding(8)
+                }
                 if state.loading { ProgressView("Chargement de MoovX…").padding() }
                 if let error = state.error {
                     ContentUnavailableView {
@@ -128,11 +132,14 @@ struct PrototypeWebView: UIViewRepresentable {
         private var cameraObserver: NSObjectProtocol?
         private var inactiveObserver: NSObjectProtocol?
         private var workoutActive = false
+        private var recoveryPending = false
+        private var automaticRecoveryUsed = false
         init(state: BrowserState) { self.state = state }
 
         func observeCameraPermission(on webView: WKWebView) {
             self.webView = webView
             cameraObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+                self?.recoverIfNeeded()
                 self?.refreshCameraPermission()
                 self?.refreshWorkoutScreenAwake()
             }
@@ -152,6 +159,19 @@ struct PrototypeWebView: UIViewRepresentable {
             inactiveObserver = nil
             workoutActive = false
             refreshWorkoutScreenAwake()
+        }
+
+        private func recoverIfNeeded() {
+            guard recoveryPending, let webView,
+                  UIApplication.shared.applicationState == .active else { return }
+            recoveryPending = false
+            automaticRecoveryUsed = true
+            state.loading = true
+            state.recovered = true
+            // Reload the existing view to retain its URL and persistent data store.
+            if webView.reload() == nil {
+                webView.load(URLRequest(url: NavigationPolicy.entryURL))
+            }
         }
 
         private func refreshWorkoutScreenAwake() {
@@ -233,8 +253,14 @@ struct PrototypeWebView: UIViewRepresentable {
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
             workoutActive = false
             refreshWorkoutScreenAwake()
+            if UIApplication.shared.applicationState != .active && !automaticRecoveryUsed {
+                recoveryPending = true
+                state.loading = true
+                return
+            }
+            recoveryPending = false
             state.loading = false
-            state.error = "Le contenu a été interrompu. Recharge la page ; aucune sauvegarde hors ligne n’est garantie."
+            state.error = "Le contenu a été interrompu. Recharge la page puis vérifie tes dernières saisies ; aucune sauvegarde hors ligne n’est garantie."
         }
 
         private func showFailure(_ error: Error) {

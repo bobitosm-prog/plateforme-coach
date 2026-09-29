@@ -125,3 +125,28 @@ Les 2 027 tests, TypeScript, traductions et le build standard passent.
 La vérification visuelle de ce nouvel affichage dans la séance en production
 reste à effectuer après rechargement ; le brouillon de test n'a pas été modifié.
 Le prototype natif de cette PR reste en brouillon et n'a pas été publié.
+
+## Reprise WebKit — 29 septembre 2026
+
+Correctif récupéré et réappliqué sur la base du build 5 (`34e60122`), dans un
+worktree permanent, branche `codex/ios-webview-recovery`.
+
+Une interruption hors premier plan attend le retour actif puis recharge la
+WKWebView existante (URL et magasin persistant conservés). Une seule tentative
+automatique par instance du navigateur ; toute interruption suivante ou au
+premier plan affiche Réessayer. Un rappel demande de vérifier les saisies.
+
+Validation locale :
+1. Contrat : build Debug simulateur réussi ; aucun changement API/DB.
+2. Automatisation : 14 contrôles URL et 7 contrôles du pont repos passent.
+3. Runtime : iPhone 17 / iOS 27, page login anonyme chargée ; arrêt ciblé du
+   processus WebContent pendant que Réglages est au premier plan, puis retour
+   dans MoovX : login rechargé automatiquement avec rappel. Deuxième arrêt
+   en arrière-plan : Réessayer affiché. Après relancement de l'app, arrêt
+   WebContent au premier plan : Réessayer affiché sans reprise automatique.
+4. Sécurité : aucun compte connecté, aucune saisie ni achat ; aucune donnée
+   de production modifiée. Aucun build envoyé à TestFlight.
+
+Limites : test par interruption forcée, pas diagnostic de la cause des arrêts
+iOS réels. Conservation de session authentifiée et de brouillon de séance à
+valider sur appareil physique. Le build 5 distribué reste inchangé.
