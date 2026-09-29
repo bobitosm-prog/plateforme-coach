@@ -376,7 +376,9 @@ Points restant à valider avant de considérer le raccordement terminé :
 - Créer manuellement le secret Vault `moovx_apple_iap_cron_secret`, puis exécuter
   `scripts/sql/enable-apple-sync.sql` et vérifier un appel pg_net 200. La route
   fonctionne, mais le planificateur n'est pas encore installé.
-- Attendre le traitement du build 8 par Apple et l'attribuer au groupe interne.
+- Build 8 traité par Apple et attribué au groupe « Marco — bêta interne »
+  (un testeur), après déclaration de chiffrement système uniquement. Attribution
+  confirmée dans App Store Connect ; installation iPhone encore à valider.
 - Réaliser achat, restauration, renouvellement et révocation Sandbox sur iPhone ;
   la notification TEST ne constitue pas une validation d'achat de bout en bout.
 - Finaliser le contrat payant : App Store Connect indique encore des informations
