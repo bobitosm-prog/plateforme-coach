@@ -113,3 +113,45 @@ Le raccordement aux droits reste bloqué techniquement tant que l'état actuel
 Apple n'est pas réconcilié : enregistrer une preuve signée ne démontre pas
 l'absence d'un remboursement ultérieur. Prochaine étape : API serveur Apple,
 notifications V2 puis résolution des droits, avant achat/restauration iOS.
+
+## Rapprochement de l'état Apple — sous-lot préparé
+
+`server-api.ts` construit le client officiel avec une clé In-App Purchase EC
+P-256 dédiée. Variables serveur uniquement : `APPLE_IAP_PRIVATE_KEY`,
+`APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`. Aucune valeur de clé dans le dépôt,
+aucun repli vers les identifiants Apple Sign In. Ces variables sont absentes
+du shell local vérifié ; les secrets du déploiement n'ont pas été inspectés.
+
+`reconciliation.ts` reçoit une preuve déjà vérifiée et le rattachement du compte.
+Il relit la transaction via Get Transaction Info ; pour un abonnement, il demande
+ensuite Get All Subscription Statuses et vérifie la dernière transaction du même
+achat d'origine. Les réponses sont contrôlées (signature, compte, application,
+environnement, produit, dates) ; absence, ambiguïté ou échec ne donne aucun droit.
+
+États distingués : actif jusqu'à la date Apple, délai de grâce jusqu'à une date
+issue d'un renouvellement signé et concordant, à vie, expiré, relance de paiement,
+révoqué, remplacé. Désactiver le renouvellement automatique ne coupe pas une
+période déjà payée. Le statut d'un ancien achat ne masque pas un renouvellement
+ultérieur. Un remboursement signé prend priorité sur un statut actif.
+
+La sortie est une observation datée, pas un droit persistant : aucun appel depuis
+une route, aucune écriture ni intégration au résolveur dans ce sous-lot. Elle ne
+doit pas être mise en cache indéfiniment. Une indisponibilité Apple ne doit pas
+être convertie en preuve de révocation d'un abonnement précédemment confirmé.
+Avant raccordement : persistance atomique de l'état courant, notifications V2,
+politique explicite de fraîcheur/reprise et validation sandbox.
+
+Validation : 96 tests applicatifs passés, TypeScript et ESLint ciblé. Les tests
+utilisent de vraies signatures/certificats éphémères, mais le transport Apple est
+simulé. Ils couvrent les renouvellements, remboursements, grâce, délais réseau,
+réponses incohérentes et clés absentes/invalides. Aucun achat Apple réel testé.
+
+Chaque attente d'API est bornée à 15 secondes. La bibliothèque officielle n'expose
+pas d'annulation sur ces méthodes ; le délai arrête le rapprochement, mais ne
+termine pas la requête HTTP sous-jacente. Prévoir un transport annulable ou un
+budget d'exécution réseau approprié avant de raccorder un endpoint public.
+
+Sources consultées le 29 septembre 2026 :
+- https://developer.apple.com/documentation/appstoreserverapi/get-transaction-info
+- https://developer.apple.com/documentation/appstoreserverapi/get-all-subscription-statuses
+- https://developer.apple.com/documentation/appstoreserverapi/status

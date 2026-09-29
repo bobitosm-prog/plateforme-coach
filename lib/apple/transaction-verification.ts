@@ -51,7 +51,8 @@ export interface VerifiedAppleTransaction {
 }
 
 const verifiers = new Map<AppleEnvironment, SignedDataVerifier>()
-function getVerifier(environment: AppleEnvironment): SignedDataVerifier {
+export function getAppleSignedDataVerifier(environment: AppleEnvironment): SignedDataVerifier {
+  if (environment !== Environment.PRODUCTION && environment !== Environment.SANDBOX) invalid()
   let verifier = verifiers.get(environment)
   if (!verifier) {
     // Official public Apple roots bundled for server deployments. Always check OCSP.
@@ -91,7 +92,7 @@ export async function verifyAppleTransaction(
 
   let payload: JWSTransactionDecodedPayload
   try {
-    payload = await (verifier ?? getVerifier(environment)).verifyAndDecodeTransaction(signedTransaction)
+    payload = await (verifier ?? getAppleSignedDataVerifier(environment)).verifyAndDecodeTransaction(signedTransaction)
   } catch (error) {
     if (error instanceof VerificationException && error.status === VerificationStatus.RETRYABLE_VERIFICATION_FAILURE) {
       throw new AppleTransactionVerificationError('APPLE_VERIFICATION_UNAVAILABLE')
