@@ -1,9 +1,10 @@
 # Vérification des transactions Apple — sous-lot serveur
 
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
-avant toute future attribution de droits. Il n'est pas encore raccordé à une
-route, au journal des achats, au résolveur des droits ou au pont iOS. Aucun
-changement en base, aucun achat réel et aucun changement des accès Stripe.
+avant toute future attribution de droits. Un adaptateur et une migration de
+registre sont préparés et testés localement (détails en fin de document). Aucun
+raccordement à une route, au résolveur des droits ou au pont iOS ; aucune
+modification en base de production, aucun achat réel ni changement des accès Stripe.
 
 ## Contrat de sécurité
 
@@ -65,3 +66,50 @@ npx eslint lib/apple/transaction-verification.ts tests/unit/apple-transaction-ve
    de bout en bout avant un nouveau candidat App Store.
 
 Référence officielle : https://github.com/apple/app-store-server-library-node
+
+## Registre d'évidence ajouté — 29 septembre
+
+Migration `20260929153040_apple_purchase_evidence_ledger.sql`, créée avec la CLI
+Supabase. Validée deux fois sur un cluster PostgreSQL 16.14 éphémère local ;
+**non appliquée en production**. Aucune route n'appelle encore ce registre.
+
+- `apple_account_bindings` : token aléatoire stable par compte/environnement.
+- `apple_purchase_owners` : rattachement immuable par transaction d'origine.
+- `apple_transaction_evidence` : versions signées en ajout uniquement, clé
+  environnement/transaction/date de signature. Un même événement est sans effet
+  supplémentaire ; une version conflictuelle est rejetée. La lecture de l'état
+  devra utiliser la version signée la plus récente, jamais l'ordre d'arrivée.
+- RPC `SECURITY INVOKER`, `search_path` vide, réservées à `service_role`, accès
+  SELECT/INSERT uniquement. RLS activée et forcée sur les trois tables, aucune
+  politique navigateur, aucune autorisation publique de lecture/écriture/RPC.
+- Verrou transactionnel par transaction Apple ; rattachement et événement
+  enregistrés atomiquement. Les échecs ne laissent pas de rattachement partiel.
+- Suppression du compte : utilisateur mis à NULL dans le rattachement, token
+  et propriété conservés pour empêcher de réattribuer les mêmes achats. La
+  politique de conservation et le parcours de suppression devront être revus
+  avant activation commerciale ; aucune donnée réelle stockée à ce stade.
+- Adaptateur serveur `purchase-ledger.ts` : erreurs de base masquées ; aucun
+  changement des profils Stripe ni du résolveur d'accès. Les appelants devront
+  authentifier/limiter les requêtes et passer uniquement des preuves vérifiées.
+
+Runtime SQL (nécessite les binaires PostgreSQL via `pg_config`, ne lit aucune
+configuration distante, démarre uniquement un socket Unix privé) :
+
+```sh
+node tests/integration/apple-purchase-ledger.mjs --advisors
+npx vitest run tests/unit/apple-purchase-ledger.test.ts
+```
+
+Scénarios validés : migration répétable, réessai exact, 12 écritures concurrentes,
+concurrence entre comptes, renouvellement/à vie, séparation Sandbox/Production,
+remboursement reçu avant une ancienne preuve, refus des conflits, rollback,
+suppression du compte, permissions et RLS même après un grant SELECT accidentel.
+L'audit des catalogues locaux vérifie aussi les fonctions invoker et search_path.
+Les advisors Supabase exécutés sur ce cluster local (sécurité et performance,
+niveau warning ou supérieur) ne remontent aucun résultat. Ce test ne remplace
+pas Supabase Auth/PostgREST ni les contrôles du projet cible lors du déploiement.
+
+Le raccordement aux droits reste bloqué techniquement tant que l'état actuel
+Apple n'est pas réconcilié : enregistrer une preuve signée ne démontre pas
+l'absence d'un remboursement ultérieur. Prochaine étape : API serveur Apple,
+notifications V2 puis résolution des droits, avant achat/restauration iOS.
