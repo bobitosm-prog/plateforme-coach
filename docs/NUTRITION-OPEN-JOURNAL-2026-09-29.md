@@ -75,3 +75,12 @@ La version et le contenu du service de test restent donc identiques.
 Validation locale avant commit : runner complet exécuté avec la référence GHCR
 figée, 32 tests d'intégration réussis, contrôles SQL et restauration de sauvegarde
 synthétique réussis, nettoyage des conteneurs/volumes/réseau confirmé.
+
+### Changement de compte sur iPhone — validé le 29 septembre
+
+Marco confirme : « le test du changement de compte est validé ». Ce retour
+valide le scénario demandé A → B → A : une tentative de repas conservée sur A
+n'apparaît pas sur B, puis est retrouvée en revenant sur A, pour la même date
+et le même repas. Validation sur appareil rapportée par l'utilisateur, en
+complément des tests automatisés d'isolation des brouillons et du cache profil.
+Le contrôle physique de ce scénario n'est donc plus en attente.
