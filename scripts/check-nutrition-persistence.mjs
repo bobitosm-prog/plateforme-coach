@@ -3,6 +3,9 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 
+// Official Supabase v14.14 multi-platform image; identical to the ECR publication.
+// Pin its digest so registry/tag changes cannot silently change the test runtime.
+const postgrestImage = 'ghcr.io/supabase/postgrest@sha256:d2009b5c9deffc210c8a5592698472fede14fd9f6ca89823c8474ca54d58c012'
 const suffix = randomBytes(5).toString('hex')
 const network = `moovx-nutrition-test-${suffix}`
 const database = `${network}-db`
@@ -145,13 +148,13 @@ try {
   })
   // Separate image retrieval from runtime failures; neither command contains credentials.
   stage = 'postgrest image pull'
-  docker('pull', 'public.ecr.aws/supabase/postgrest:v14.14')
+  docker('pull', postgrestImage)
   // Secret is generated per run, passed in process environment, never printed.
   stage = 'rest'
   execFileSync('docker', ['run', '-d', '--name', rest, '--network', network,
     '-p', '127.0.0.1:56431:3000', '-e', `PGRST_DB_URI=postgres://authenticator@${database}:5432/postgres`,
     '-e', 'PGRST_DB_SCHEMAS=public,canonical', '-e', 'PGRST_JWT_SECRET',
-    'public.ecr.aws/supabase/postgrest:v14.14'], {
+    postgrestImage], {
     env: { ...process.env, PGRST_JWT_SECRET: secret }, stdio: ['pipe', 'pipe', 'pipe'],
   })
   created.push(rest)
