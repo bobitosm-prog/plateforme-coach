@@ -155,3 +155,18 @@ Sources consultées le 29 septembre 2026 :
 - https://developer.apple.com/documentation/appstoreserverapi/get-transaction-info
 - https://developer.apple.com/documentation/appstoreserverapi/get-all-subscription-statuses
 - https://developer.apple.com/documentation/appstoreserverapi/status
+
+## Clé Apple et premier échange réel validés
+
+Après confirmation explicite de Marco, la clé dédiée « MoovX Server Purchases »
+a été générée dans App Store Connect et téléchargée le 29 septembre 2026.
+La clé privée et ses métadonnées sont conservées localement hors du dépôt,
+avec répertoire 0700 et fichiers 0600 ; aucun secret dans ce document ou Git.
+
+Un appel réel de lecture `getNotificationHistory` en Sandbox, limité à la
+dernière heure, a réussi avec la bibliothèque officielle : authentification
+acceptée, zéro notification, aucune page supplémentaire. Cela valide la clé,
+l'émetteur et l'accès API pour cette application ; cela ne valide PAS encore
+un achat, un remboursement, une notification reçue ou le parcours iPhone.
+Aucun achat effectué, aucune clé ajoutée au déploiement, aucune migration
+appliquée en production. Le raccordement serveur/iOS reste à terminer.
