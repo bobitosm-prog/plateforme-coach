@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
+import { signInWithApple } from '@/lib/auth/apple-sign-in'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
 
 const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
@@ -70,6 +71,24 @@ export default function LoginPageContent() {
   const recoveryRedirectUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/auth/callback?type=recovery`
     : '/auth/callback?type=recovery'
+
+  async function handleAppleLogin() {
+    if (submitting) return
+    setSubmitting(true)
+    setError('')
+    try {
+      const result = await signInWithApple(supabase, redirectUrl)
+      if (result.kind === 'signed-in') {
+        const resolved = await resolveClientPostAuth({ supabase, user: result.user, joinIntent: Boolean(nextTarget) })
+        if (resolved.decision.route) router.replace(resolved.decision.route)
+        else setError(t('errors.profileUnavailable'))
+      }
+    } catch {
+      setError(t('callbackErrors.oauth_error'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   async function handleEmailLogin() {
     if (!email.trim()) { setError(t('errors.emailRequired')); return }
@@ -226,7 +245,7 @@ export default function LoginPageContent() {
                   <GoogleIcon /> {t('continueGoogle')}
                 </button>
 
-                <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: redirectUrl } })}
+                <button className="oauth-btn" disabled={submitting} aria-busy={submitting} onClick={handleAppleLogin}
                   style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <AppleIcon /> {t('continueApple')}
                 </button>
