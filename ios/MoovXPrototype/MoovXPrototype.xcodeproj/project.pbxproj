@@ -4,6 +4,18 @@
  classes = {};
  objectVersion = 77;
  objects = {
+  B00000000000000000000001 = { isa = PBXNativeTarget; buildConfigurationList = B00000000000000000000004; buildPhases = (B00000000000000000000005, B00000000000000000000006, B00000000000000000000007); buildRules = (); dependencies = (B00000000000000000000008); fileSystemSynchronizedGroups = (B00000000000000000000002); name = AthenaStoreKitTests; productName = AthenaStoreKitTests; productReference = B00000000000000000000003; productType = "com.apple.product-type.bundle.unit-test"; };
+  B00000000000000000000002 = { isa = PBXFileSystemSynchronizedRootGroup; path = StoreKitTests; sourceTree = "<group>"; };
+  B00000000000000000000003 = { isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AthenaStoreKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+  B00000000000000000000004 = { isa = XCConfigurationList; buildConfigurations = (B00000000000000000000010, B00000000000000000000011); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  B00000000000000000000005 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  B00000000000000000000006 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  B00000000000000000000007 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  B00000000000000000000008 = { isa = PBXTargetDependency; target = A00000000000000000000005; targetProxy = B00000000000000000000009; };
+  B00000000000000000000009 = { isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = A00000000000000000000005; remoteInfo = MoovXPrototype; };
+  B00000000000000000000010 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype.storekit-tests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = iphonesimulator; CODE_SIGNING_ALLOWED = NO; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoovXPrototype.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoovXPrototype"; BUNDLE_LOADER = "$(TEST_HOST)"; }; };
+  B00000000000000000000011 = { isa = XCBuildConfiguration; name = Release; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype.storekit-tests; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; TARGETED_DEVICE_FAMILY = 1; SUPPORTED_PLATFORMS = iphonesimulator; CODE_SIGNING_ALLOWED = NO; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MoovXPrototype.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MoovXPrototype"; BUNDLE_LOADER = "$(TEST_HOST)"; }; };
+
   A00000000000000000000001 = {
    isa = PBXProject;
    attributes = { BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2700; };
@@ -16,11 +28,11 @@
    productRefGroup = A00000000000000000000004;
    projectDirPath = "";
    projectRoot = "";
-   targets = (A00000000000000000000005);
+   targets = (A00000000000000000000005, B00000000000000000000001);
   };
   A00000000000000000000002 = { isa = XCConfigurationList; buildConfigurations = (A00000000000000000000010, A00000000000000000000011); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-  A00000000000000000000003 = { isa = PBXGroup; children = (A00000000000000000000006, A00000000000000000000004); sourceTree = "<group>"; };
-  A00000000000000000000004 = { isa = PBXGroup; children = (A00000000000000000000007); name = Products; sourceTree = "<group>"; };
+  A00000000000000000000003 = { isa = PBXGroup; children = (A00000000000000000000006, B00000000000000000000002, A00000000000000000000004); sourceTree = "<group>"; };
+  A00000000000000000000004 = { isa = PBXGroup; children = (A00000000000000000000007, B00000000000000000000003); name = Products; sourceTree = "<group>"; };
   A00000000000000000000005 = {
    isa = PBXNativeTarget;
    buildConfigurationList = A00000000000000000000008;
@@ -59,6 +71,7 @@
     SUPPORTED_PLATFORMS = iphonesimulator;
     CODE_SIGNING_ALLOWED = NO;
     SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+    ENABLE_TESTABILITY = YES;
     MARKETING_VERSION = 0.1.0;
     CURRENT_PROJECT_VERSION = 1;
    };

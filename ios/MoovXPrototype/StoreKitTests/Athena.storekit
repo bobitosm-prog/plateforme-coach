@@ -1,0 +1,82 @@
+{
+  "identifier": "B522D814-6C9A-4904-A6A4-D0DAFE25AC70",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "150.00",
+      "familyShareable": false,
+      "internalID": "lifetime",
+      "localizations": [
+        {
+          "description": "Accès Athena MoovX",
+          "displayName": "Athena à vie",
+          "locale": "fr_FR"
+        }
+      ],
+      "productID": "ch.moovx.app.athena.lifetime",
+      "referenceName": "Athena à vie",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "fr_FR",
+    "_storefront": "CHE",
+    "_timeRate": 0
+  },
+  "subscriptionGroups": [
+    {
+      "id": "22425039",
+      "localizations": [],
+      "name": "MoovX Athena",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "10.00",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "monthly",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Accès Athena MoovX",
+              "displayName": "Athena Mensuel",
+              "locale": "fr_FR"
+            }
+          ],
+          "productID": "ch.moovx.app.athena.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Athena Mensuel",
+          "subscriptionGroupID": "22425039",
+          "type": "RecurringSubscription"
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "80.00",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "yearly",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Accès Athena MoovX",
+              "displayName": "Athena Annuel",
+              "locale": "fr_FR"
+            }
+          ],
+          "productID": "ch.moovx.app.athena.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Athena Annuel",
+          "subscriptionGroupID": "22425039",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}
