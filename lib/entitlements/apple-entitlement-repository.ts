@@ -1,4 +1,5 @@
 import 'server-only'
+import { purchaseEnvironment } from '@/lib/apple/environment'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { AppleEntitlement } from './apple-entitlement'
 
@@ -33,7 +34,8 @@ export function selectAppleEntitlement(rows: unknown, now = Date.now()): AppleEn
 }
 export async function getActiveAppleEntitlement(userId: string): Promise<AppleEntitlement | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) return null
-  const { data, error } = await supabaseAdmin.rpc('read_apple_entitlement_states', { p_user_id: userId })
+  const { data, error } = await supabaseAdmin.rpc(purchaseEnvironment(userId) === 'Sandbox'
+    ? 'read_apple_sandbox_entitlement_states' : 'read_apple_entitlement_states', { p_user_id: userId })
   if (error) throw new Error('APPLE_ENTITLEMENT_UNAVAILABLE')
   return selectAppleEntitlement(data)
 }

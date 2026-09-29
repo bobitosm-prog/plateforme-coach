@@ -214,6 +214,46 @@ try {
   }
   console.log('PASS entitlement reader is idempotent, Production-only, account-isolated and denied to browser roles')
 
+  const syncMigration = readFileSync(resolve('supabase/migrations/20260929161920_apple_purchase_sync.sql'), 'utf8')
+  sql(syncMigration); sql(syncMigration)
+  assert.equal(service(`SELECT count(*) FROM public.read_apple_sandbox_entitlement_states('${b}');`), '1')
+  assert.equal(readRights(b), '1')
+  fail(`SET ROLE authenticated; SELECT * FROM public.read_apple_sandbox_entitlement_states('${b}');`, 'permission denied')
+  const refresh = JSON.parse(service("SELECT public.claim_apple_reconciliation('Production');"))
+  assert.equal(refresh.userId, b)
+  assert.equal(refresh.transaction.originalTransactionId, '900')
+  assert.equal(service("SELECT public.claim_apple_reconciliation('Production') IS NULL;"), 't')
+  const refreshedObservation = { state: 'active', accessUntil: Date.now()+3600000, checkedAt: Date.now(),
+    transaction: { ...refresh.transaction, expiresDate: Date.now()+3600000, signedDate: Date.now() } }
+  refreshedObservation.transaction.expiresDate = refreshedObservation.accessUntil
+  const finishRefresh = (lease, value) => `SELECT public.finish_apple_reconciliation('Production','900','${lease}',${value === null ? 'NULL' : "'"+JSON.stringify(value)+"'::jsonb"});`
+  fail(`SET ROLE service_role; ${finishRefresh('00000000-0000-4000-8000-000000000099', refreshedObservation)}`, 'APPLE_LEASE_LOST')
+  assert.equal(service(finishRefresh(refresh.leaseToken, refreshedObservation)), 'processed')
+  assert.equal(service("SELECT public.claim_apple_reconciliation('Production') IS NULL;"), 't')
+  sql("UPDATE public.apple_reconciliation_jobs SET next_attempt_at=now()-interval '1 second';")
+  const retryRefresh = JSON.parse(service("SELECT public.claim_apple_reconciliation('Production');"))
+  assert.equal(service(finishRefresh(retryRefresh.leaseToken, null)), 'retry')
+  assert.equal(service("SELECT public.claim_apple_reconciliation('Production') IS NULL;"), 't')
+  for (const role of ['anon','authenticated']) {
+    fail(`SET ROLE ${role}; SELECT * FROM public.apple_reconciliation_jobs;`, 'permission denied')
+    fail(`SET ROLE ${role}; SELECT public.claim_apple_reconciliation('Production');`, 'permission denied')
+    fail(`SET ROLE ${role}; SELECT public.apply_apple_purchase_observation('Production','${b}','{}');`, 'permission denied')
+  }
+  enqueueId('00000000-0000-4000-8000-000000000096')
+  const afterRefactor = claim()[0]
+  const nextObservation = { ...observation, checkedAt: Date.now(), transaction: { ...observation.transaction, transactionId: '500', originalTransactionId: '500' } }
+  nextObservation.accessUntil = Date.now()+3600000
+  nextObservation.transaction.expiresDate = nextObservation.accessUntil
+  assert.equal(service(complete(afterRefactor, nextObservation)), 'processed')
+  sql("UPDATE public.apple_reconciliation_jobs SET next_attempt_at=now()-interval '1 second' WHERE environment='Production';")
+  const abandoned = JSON.parse(service("SELECT public.claim_apple_reconciliation('Production');"))
+  sql("UPDATE public.apple_reconciliation_jobs SET lease_until=now()-interval '1 second' WHERE environment='Production';")
+  const recoveredRefresh = JSON.parse(service("SELECT public.claim_apple_reconciliation('Production');"))
+  assert.notEqual(recoveredRefresh.leaseToken, abandoned.leaseToken)
+  fail(`SET ROLE service_role; ${finishRefresh(abandoned.leaseToken, refreshedObservation)}`, 'APPLE_LEASE_LOST')
+  assert.equal(service(finishRefresh(recoveredRefresh.leaseToken, null)), 'retry')
+  console.log('PASS periodic refresh ownership, lease fencing, successful reschedule, retry delay and browser denial')
+
   if (process.argv.includes('--advisors')) {
     const localUrl = `postgresql://postgres@localhost:55439/postgres?host=${encodeURIComponent(socket)}&sslmode=disable`
     const output = execFileSync('npx', ['--yes', 'supabase', 'db', 'advisors', '--db-url', localUrl,

@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
-vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { rpc: vi.fn() } }))
-import { selectAppleEntitlement, APPLE_ENTITLEMENT_FRESHNESS_MS } from '@/lib/entitlements/apple-entitlement-repository'
+const rpc = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { rpc } }))
+afterEach(() => { vi.unstubAllEnvs(); rpc.mockReset() })
+import { selectAppleEntitlement, APPLE_ENTITLEMENT_FRESHNESS_MS, getActiveAppleEntitlement } from '@/lib/entitlements/apple-entitlement-repository'
 import { isActiveAppleEntitlement } from '@/lib/entitlements/apple-entitlement'
 import { resolveEffectiveEntitlement } from '@/lib/entitlements/effective-entitlement'
 import { loadEffectiveEntitlementContext } from '@/lib/entitlements/server-context'
@@ -10,6 +12,16 @@ const now = Date.now()
 const row = { state: 'active', checked_ms: now, access_until_ms: now + 3600000,
   product_id: 'ch.moovx.app.athena.monthly', revoked_ms: null, is_upgraded: false }
 describe('Apple access authority', () => {
+  it('uses the sandbox reader only for an explicit server-owned QA allowlist', async () => {
+    const tester = '00000000-0000-4000-8000-000000000001'
+    const regular = '00000000-0000-4000-8000-000000000002'
+    vi.stubEnv('APPLE_IAP_SANDBOX_USER_IDS', tester)
+    rpc.mockResolvedValue({ data: [], error: null })
+    await getActiveAppleEntitlement(regular)
+    expect(rpc).toHaveBeenLastCalledWith('read_apple_entitlement_states', { p_user_id: regular })
+    await getActiveAppleEntitlement(tester)
+    expect(rpc).toHaveBeenLastCalledWith('read_apple_sandbox_entitlement_states', { p_user_id: tester })
+  })
   it.each(['active', 'grace'])('grants a current %s subscription', state => {
     expect(selectAppleEntitlement([{ ...row, state }], now)).toEqual({ type: 'paid', plan: 'monthly', accessUntil: row.access_until_ms, validUntil: row.access_until_ms })
   })

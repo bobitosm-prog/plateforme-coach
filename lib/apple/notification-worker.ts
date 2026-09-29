@@ -33,7 +33,7 @@ class Quarantine extends Error {
   constructor(public readonly code: string) { super(code) }
 }
 
-/** One leased event. No scheduler/public endpoint yet; callers must retain server-only control. */
+/** One leased event, invoked by the authenticated server scheduler. */
 export async function processOneAppleNotification(environment: AppleEnvironment,
   dependencies: AppleWorkerDependencies = defaults): Promise<'idle' | 'processed' | 'stale' | 'retry' | 'quarantined'> {
   if (environment !== Environment.SANDBOX && environment !== Environment.PRODUCTION) throw new Error('APPLE_INVALID_ENVIRONMENT')

@@ -1,4 +1,5 @@
 import 'server-only'
+import { BoundedAppleAPIClient } from './bounded-api-client'
 import { createPrivateKey } from 'node:crypto'
 import { AppStoreServerAPIClient, Environment } from '@apple/app-store-server-library'
 import type { AppleEnvironment } from './transaction-verification'
@@ -20,7 +21,7 @@ export function createAppleServerAPIClient(environment: AppleEnvironment): AppSt
     if (parsed.asymmetricKeyType !== 'ec' || parsed.asymmetricKeyDetails?.namedCurve !== 'prime256v1') {
       throw new Error('INVALID_KEY')
     }
-    return new AppStoreServerAPIClient(key, keyId, issuerId, 'ch.moovx.app', environment)
+    return new BoundedAppleAPIClient(key, keyId, issuerId, 'ch.moovx.app', environment)
   } catch {
     throw new Error('APPLE_API_NOT_CONFIGURED')
   }
