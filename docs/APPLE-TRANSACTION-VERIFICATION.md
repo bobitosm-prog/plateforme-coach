@@ -217,3 +217,46 @@ Apple réessaie les notifications V2 en production, mais une seule livraison a
 lieu en sandbox. Prévoir récupération de l'historique et demande explicite de
 notification TEST lors du raccordement.
 Source : https://developer.apple.com/documentation/appstoreservernotifications/responding-to-app-store-server-notifications
+
+## Traitement des notifications et état Apple courant — préparés
+
+Le worker `processOneAppleNotification` traite un événement par appel. Il reste
+serveur uniquement, sans endpoint de déclenchement ni planification active.
+La migration `20260929155616_apple_notification_processing.sql` ajoute les baux
+et l'état courant `apple_purchase_state`, sans modifier les profils Stripe ni
+le résolveur de droits. Toutes les migrations restent locales/non déployées.
+
+- Réservation avec `FOR UPDATE SKIP LOCKED`, bail de cinq minutes, jeton unique.
+  Après interruption, un nouveau worker reprend avec un nouveau jeton ; les
+  écritures tardives de l'ancien worker sont refusées.
+- Revalidation de l'enveloppe et de la transaction imbriquée. Le token signé
+  sert uniquement à chercher le compte dans le rattachement serveur existant.
+  Aucun compte n'est créé ou transféré à partir d'une notification.
+- Relecture API Apple avant toute observation courante. Une étiquette REFUND
+  ancienne n'est pas appliquée aveuglément si Apple confirme un état ultérieur.
+- Une RPC atomique enregistre preuve/propriétaire/état et marque l'événement
+  traité. Si elle échoue, toutes les écritures sont annulées. Les observations
+  plus anciennes (date de signature ou début de consultation) ne remplacent
+  pas les plus récentes. L'heure de contrôle est maintenant capturée au début
+  du rapprochement pour qu'une requête lente ne paraisse pas plus récente.
+- Les pannes laissent le dernier état confirmé intact et programment un réessai
+  progressif jusqu'à une heure. Signature invalide, compte sans rattachement et
+  événements non pris en charge sont mis en quarantaine avec un code sans
+  données privées. Aucune réponse automatique aux demandes de consommation,
+  qui nécessitent un parcours distinct et une revue des données transmises.
+- Les RPC de traitement sont invoker/service-only. Les droits UPDATE de l'inbox
+  sont limités aux colonnes de traitement : le contenu signé reste immuable.
+  La table d'état force RLS sans accès navigateur. Les notifications TEST
+  restent `test_received` et ne sont pas réclamées par le worker.
+
+Validation : 136 tests Vitest ; PostgreSQL local avec troisième migration
+réappliquée, bail expiré/reprise, rejet de l'ancien bail, mise à jour atomique,
+remboursement puis ancienne observation active, échec/rollback, réessai différé,
+quarantaine, workers concurrents distincts et refus d'accès navigateur. Advisors
+locaux sans warning/erreur ; TypeScript et ESLint ciblé validés.
+
+Reste avant activation : lecteur des droits par source avec politique de
+fraîcheur, planification authentifiée du worker et récupération de l'historique,
+reprise des quarantaines, limites réseau/distribuées, migrations et configuration
+sur l'environnement de test, puis notification TEST réellement livrée par Apple.
+La simple existence d'un état Apple en base ne donne encore aucun accès à l'app.

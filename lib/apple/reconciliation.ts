@@ -44,6 +44,8 @@ export async function reconcileApplePurchase(
   if ((context.environment !== Environment.SANDBOX && context.environment !== Environment.PRODUCTION) ||
       seed.environment !== context.environment || seed.appAccountToken !== context.expectedAccountToken.toLowerCase() ||
       !/^\d{1,40}$/.test(seed.transactionId)) invalid()
+  // Timestamp the beginning, so a slow old request cannot replace a newer observation.
+  const checkedAt = Date.now()
   const api = dependencies?.api ?? createAppleServerAPIClient(context.environment)
   const verifier = dependencies?.verifier ?? getAppleSignedDataVerifier(context.environment)
   const info = await request(() => api.getTransactionInfo(seed.transactionId))
@@ -54,7 +56,7 @@ export async function reconcileApplePurchase(
       transaction.signedDate < seed.signedDate) invalid()
 
   const result = (state: AppleReconciliation['state'], accessUntil: number | null = null): AppleReconciliation =>
-    ({ state, accessUntil, checkedAt: Date.now(), transaction })
+    ({ state, accessUntil, checkedAt, transaction })
   if (transaction.productId === 'ch.moovx.app.athena.lifetime') {
     return result(transaction.revocationDate === null ? 'lifetime' : 'revoked')
   }

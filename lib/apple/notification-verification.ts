@@ -15,6 +15,7 @@ export interface VerifiedAppleNotification {
   subtype: string | null
   signedDate: number
   signedPayload: string
+  signedTransactionInfo: string | null
 }
 
 /** Verifies the envelope only. The worker must separately verify nested evidence. */
@@ -47,5 +48,6 @@ export async function verifyAppleNotification(
       (environment === Environment.PRODUCTION && scope.appAppleId !== 6815356426)) invalid()
   // The official verifier checks environment for every scope, including external tokens.
   return { environment, notificationId: notificationUUID!.toLowerCase(), notificationType: notificationType!,
-    subtype: subtype ?? null, signedDate: signedDate!, signedPayload }
+    subtype: subtype ?? null, signedDate: signedDate!, signedPayload,
+    signedTransactionInfo: payload.data?.signedTransactionInfo ?? null }
 }

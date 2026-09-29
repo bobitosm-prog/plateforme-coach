@@ -130,6 +130,74 @@ try {
   assert.equal(sql("SELECT NOT prosecdef FROM pg_proc WHERE proname='enqueue_apple_notification';"), 't')
   console.log('PASS notification inbox deduplicates concurrent receipt, rejects conflicts, isolates environments and denies browser access')
 
+
+  const processingMigration = readFileSync(resolve('supabase/migrations/20260929155616_apple_notification_processing.sql'), 'utf8')
+  sql(processingMigration); sql(processingMigration)
+  const claim = () => JSON.parse(service("SELECT coalesce(json_agg(t),'[]'::json) FROM public.claim_apple_notification('Sandbox') t;"))
+  const firstClaim = claim()[0]
+  assert.ok(firstClaim.lease_token)
+  assert.equal(claim().length, 0)
+  const claimedId = firstClaim.notification_id
+  sql(`UPDATE public.apple_notification_inbox SET lease_until=now()-interval '1 second' WHERE environment='Sandbox' AND notification_id='${claimedId}';`)
+  const recovered = claim()[0]
+  assert.notEqual(recovered.lease_token, firstClaim.lease_token)
+  assert.equal(recovered.attempts, 2)
+  const at = Date.now()
+  const observation = { state: 'active', accessUntil: at + 3600000, checkedAt: at,
+    transaction: { environment: 'Sandbox', transactionId: '400', originalTransactionId: '400',
+      productId: product, appAccountToken: tokenB, purchaseDate: at - 1000,
+      signedDate: at - 100, expiresDate: at + 3600000, revocationDate: null, isUpgraded: false } }
+  const complete = (event, value = observation) => `SELECT public.complete_apple_notification('Sandbox','${event.notification_id}','${event.lease_token}','${b}','${JSON.stringify(value)}'::jsonb);`
+  fail('SET ROLE service_role; ' + complete(firstClaim), 'APPLE_LEASE_LOST')
+  assert.equal(service(complete(recovered)), 'processed')
+  assert.equal(sql("SELECT state FROM public.apple_purchase_state WHERE original_transaction_id='400';"), 'active')
+  assert.equal(sql(`SELECT processing_status FROM public.apple_notification_inbox WHERE environment='Sandbox' AND notification_id='${claimedId}';`), 'processed')
+  console.log('PASS lease recovery fences off crashed worker; completion atomically records current state and event')
+
+  const enqueueId = id => service(`SELECT public.enqueue_apple_notification('Sandbox','${id}','REFUND',NULL,2000,'signed.${id}.payload');`)
+  enqueueId('00000000-0000-4000-8000-000000000091')
+  const refundEvent = claim()[0]
+  const refund = { ...observation, state: 'revoked', accessUntil: null, checkedAt: at + 100,
+    transaction: { ...observation.transaction, signedDate: at + 50, revocationDate: at + 25 } }
+  assert.equal(service(complete(refundEvent, refund)), 'processed')
+  enqueueId('00000000-0000-4000-8000-000000000092')
+  assert.equal(service(complete(claim()[0], observation)), 'stale')
+  assert.equal(sql("SELECT state FROM public.apple_purchase_state WHERE original_transaction_id='400';"), 'revoked')
+  console.log('PASS late active observation cannot overwrite newer refund')
+
+  enqueueId('00000000-0000-4000-8000-000000000093')
+  const retryEvent = claim()[0]
+  const invalidObservation = { ...observation, transaction: { ...observation.transaction, appAccountToken: tokenA } }
+  fail('SET ROLE service_role; ' + complete(retryEvent, invalidObservation), 'APPLE_ACCOUNT_MISMATCH')
+  assert.equal(sql(`SELECT processing_status FROM public.apple_notification_inbox WHERE notification_id='${retryEvent.notification_id}';`), 'processing')
+  assert.equal(service(`SELECT public.fail_apple_notification('Sandbox','${retryEvent.notification_id}','${retryEvent.lease_token}',true,'APPLE_PROCESSING_UNAVAILABLE');`), 't')
+  assert.equal(claim().length, 0)
+  sql(`UPDATE public.apple_notification_inbox SET next_attempt_at=now()-interval '1 second' WHERE notification_id='${retryEvent.notification_id}';`)
+  const retryClaim = claim()[0]
+  assert.equal(service(`SELECT public.fail_apple_notification('Sandbox','${retryClaim.notification_id}','${retryClaim.lease_token}',false,'APPLE_UNBOUND_ACCOUNT');`), 't')
+  assert.equal(claim().length, 0)
+  assert.equal(sql("SELECT state FROM public.apple_purchase_state WHERE original_transaction_id='400';"), 'revoked')
+  console.log('PASS failed completion rolls back; retry is delayed; quarantine preserves last confirmed state')
+
+  for (const role of ['anon','authenticated']) {
+    fail(`SET ROLE ${role}; SELECT * FROM public.apple_purchase_state;`, 'permission denied')
+    fail(`SET ROLE ${role}; SELECT * FROM public.claim_apple_notification('Sandbox');`, 'permission denied')
+    fail(`SET ROLE ${role}; ${complete(retryClaim)}`, 'permission denied')
+    fail(`SET ROLE ${role}; SELECT public.fail_apple_notification('Sandbox','${retryClaim.notification_id}','${retryClaim.lease_token}',true,'APPLE_PROCESSING_UNAVAILABLE');`, 'permission denied')
+  }
+  assert.equal(sql("SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid='public.apple_purchase_state'::regclass;"), 't')
+  fail("SET ROLE service_role; UPDATE public.apple_notification_inbox SET signed_payload='replacement';", 'permission denied')
+  console.log('PASS processing RPCs/state denied to browser; signed evidence remains immutable')
+  enqueueId('00000000-0000-4000-8000-000000000094')
+  enqueueId('00000000-0000-4000-8000-000000000095')
+  const simultaneousClaims = await Promise.all([1,2,3].map(() => parallel("SELECT notification_id FROM public.claim_apple_notification('Sandbox');")))
+  assert.ok(simultaneousClaims.every(result => result.code === 0))
+  const claimedIds = simultaneousClaims.map(result => result.output).filter(Boolean)
+  assert.equal(claimedIds.length, 2)
+  assert.equal(new Set(claimedIds).size, 2)
+  console.log('PASS simultaneous workers claim distinct events with SKIP LOCKED')
+
+
   if (process.argv.includes('--advisors')) {
     const localUrl = `postgresql://postgres@localhost:55439/postgres?host=${encodeURIComponent(socket)}&sslmode=disable`
     const output = execFileSync('npx', ['--yes', 'supabase', 'db', 'advisors', '--db-url', localUrl,
