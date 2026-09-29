@@ -53,3 +53,13 @@ puis retry avec les mêmes IDs. Le scanner ne remplace pas une tentative en
 attente ; un seul aliment est conservé et le brouillon est retiré après succès.
 Ce test complète l'intégration PostgreSQL existante sans remplacer le contrôle
 radio sur appareil. Aucun changement produit ni donnée réelle.
+
+### Contrôle réseau sur iPhone — retour du 29 septembre
+
+Les captures utilisateur de 10:57:33 puis 10:58:19 montrent successivement
+le mode avion, une sélection conservée avec erreur explicite, puis le retour du
+réseau et une seule occurrence visible de l'aliment dans le petit-déjeuner.
+Le total du repas correspond à la somme des deux lignes visibles. Le scénario
+coupure avant confirmation puis retry est validé sur appareil pour ce test.
+Cela ne constitue pas une vérification exhaustive des doublons en base ni un
+test de perte de réponse après commit serveur (couvert séparément en local).
