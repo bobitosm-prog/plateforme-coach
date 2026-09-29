@@ -1060,3 +1060,38 @@
 .athleteLayout .mealRow[data-status] { border-color: transparent; }
 .athleteLayout .todayMealsHeading h2, .athleteLayout .activePlanHeader h2 { color: #eee9df; font-size: 1.32rem; font-weight: 750; line-height: 1.25; letter-spacing: -.025em; }
 @media (max-width: 767px) { .athleteLayout { padding: 22px 16px calc(150px + env(safe-area-inset-bottom, 0px)); } }
+
+/* The journal is the landing content; entry forms live in Training-style sheets. */
+.athleteLayout .compactHero .heroSummary { margin-top: 12px; padding: 12px 16px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.compactHero .primaryMetric strong { font-size: 1.2rem; }
+.compactHero .supportingMetric strong { font-size: 1rem; }
+.compactHero .primaryMetric p { margin: 5px 0 0; font-size: .75rem; }
+.compactHero .supportingMetric p, .compactHero .progressTrack { display: none; }
+.journalDate { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; color: #aaa294; font-size: .82rem; }
+.journalDate input { min-width: 0; max-width: 100%; min-height: 44px; padding: 8px; border: 0; border-radius: 10px; background: #1d1c19; color: #e6c364; color-scheme: dark; font: inherit; }
+.journalDate input:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; }
+.athleteLayout .openJournal { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.openJournal .todayMealsHeading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.openJournal .mealList { margin-top: 0; gap: 12px; }
+.athleteLayout .openJournal .mealRow { border-radius: 18px; background: #1d1c19; }
+.openJournal .mealRowMain { min-height: 60px; padding: 12px 14px 6px; align-items: center; }
+.journalMealHeading { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: baseline; justify-content: space-between; min-width: 0; }
+.journalMealHeading h3 { margin: 0; color: #eee9df; font-size: 1.05rem; font-weight: 750; letter-spacing: -.025em; }
+.journalMealHeading span { color: #aaa294; font-size: .8rem; }
+.openJournal .mealPrimaryAction { min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 13px; color: #e6c364; background: #2b271e; }
+.openJournal .mealDetail { padding: 0 14px 10px; border: 0; }
+.openJournal .mealDetailGroup { padding-top: 0; }
+.openJournal .mealDetailGroup > p { padding: 4px 0 6px; color: #aaa294; }
+.openJournal .loggedFood { padding: 2px 0; gap: 4px; min-height: 44px; align-items: stretch; }
+.openJournal .foodSelector { padding: 8px 0; border: 0; border-radius: 0; background: transparent; }
+.openJournal .foodSelector strong { font-size: .86rem; overflow-wrap: anywhere; font-weight: 500; }
+.openJournal .foodSelector span { color: #aaa294; font-size: .76rem; }
+.openJournal .mealActionBar { margin-top: 0; }
+.openJournal .quantityEditor { flex-wrap: wrap; }
+.openJournal .mealRow { position: relative; }
+.openJournal .mealRow:has(.mealActionArea) .journalMealHeading { padding-right: 48px; }
+.openJournal .mealActionArea { position: static; margin: 0; }
+.openJournal .mealActionBar { position: absolute; top: 12px; right: 64px; width: 44px; }
+.openJournal .mealActionBar button { border: 0; background: transparent; color: #aaa294; }
+.openJournal .mealOverflowMenu { right: 14px; top: 60px; bottom: auto; }
+.openJournal .mealActionBar button svg { display: block; }

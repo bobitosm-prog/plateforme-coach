@@ -10,10 +10,13 @@ import { draftFood, draftNutrients, mealDraftRows, persistMealDraft, type MealDr
 import { mealDraftKey, readMealDraft, writeMealDraft } from '../../../lib/nutrition/meal-draft-storage'
 import styles from './MealComposer.module.css'
 
+export type MealComposerSource = 'recent' | 'saved' | 'photo' | 'barcode'
+
 interface Props {
   supabase: any; userId: string; date: string; mealType: string; mealLabel: string
   plannedFoods: Record<string, any>[]; initialFoods?: Record<string, any>[]
   photoEnabled: boolean; onClose: () => void; onSaved: () => Promise<void>
+  initialSource?: MealComposerSource
   inline?: boolean
 }
 
@@ -21,11 +24,11 @@ export default function MealComposer(props: Props) {
   return <MealComposerSession key={`${props.userId}:${props.date}:${props.mealType}`} {...props} />
 }
 
-function MealComposerSession({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved, inline = false}: Props) {
+function MealComposerSession({supabase, userId, date, mealType, mealLabel, plannedFoods, initialFoods, photoEnabled, onClose, onSaved, inline = false, initialSource}: Props) {
   const t = useTranslations('nutrition_tab.composer')
   const [foods, setFoods] = useState<MealDraftFood[]>([])
   const [query, setQuery] = useState('')
-  const [source, setSource] = useState('recent')
+  const [source, setSource] = useState(initialSource === 'saved' ? 'saved' : 'recent')
   const [recent, setRecent] = useState<any[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
   const [saved, setSaved] = useState<any[]>([])
@@ -37,7 +40,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const [saving, setSaving] = useState(false)
   const [locked, setLocked] = useState(false)
   const [retry, setRetry] = useState(0)
-  const [scanner, setScanner] = useState(false)
+  const [scanner, setScanner] = useState(initialSource === 'barcode')
   const [analyzing, setAnalyzing] = useState(false)
   const [discard, setDiscard] = useState(false)
   const submission = useRef<ReturnType<typeof mealDraftRows> | null>(null)
@@ -59,7 +62,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
       const saved = readMealDraft(snapshot.current,userId,date,mealType)
       if (saved) {
         foodRef.current = saved.foods; setFoods(saved.foods); setRestored(true)
-        if (saved.submitted) { submission.current = mealDraftRows(saved.foods,userId,date,mealType); setLocked(true) }
+        if (saved.submitted) { submission.current = mealDraftRows(saved.foods,userId,date,mealType); setLocked(true); setScanner(false) }
       } else if (initialFoods?.length) add(initialFoods)
     } catch { storageBlocked.current = true; setError(t('storageError')) }
   }, [])
@@ -168,18 +171,20 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const body = <div className={`${styles.body} ${inline ? styles.inlineBody : ''}`}>
         {discard ? <div role="alert"><p>{t(locked ? 'uncertainRetained' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={discardOrKeep}>{t('close')}</button></div> : <>
         {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
-        <div className={styles.search}>
+        {(!initialSource || initialSource === 'recent') && <div className={styles.search}>
           <input aria-label={t('search')} placeholder={t('search')} value={query} disabled={locked} onChange={event=>setQuery(event.target.value)} />
           <button type="button" disabled={locked || analyzing} aria-label={t('barcode')} onClick={()=>setScanner(true)}><ScanBarcode size={18}/></button>
           {photoEnabled && <button type="button" disabled={locked || analyzing} aria-label={t('photo')} onClick={()=>photoInput.current?.click()}><Camera size={18}/></button>}
-          <input ref={photoInput} hidden type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={event=>{void analyze(event.target.files?.[0]);event.target.value=''}} />
-        </div>
+        </div>}
+        <input ref={photoInput} hidden type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={event=>{void analyze(event.target.files?.[0]);event.target.value=''}} />
+        {initialSource === 'photo' && photoEnabled && <button type="button" disabled={locked || analyzing} onClick={()=>photoInput.current?.click()}><Camera size={18} aria-hidden="true"/> {t('photo')}</button>}
+        {initialSource === 'barcode' && <button type="button" disabled={locked || analyzing} onClick={()=>setScanner(true)}><ScanBarcode size={18} aria-hidden="true"/> {t('barcode')}</button>}
         {analyzing && <p role="status">{t('analyzing')}</p>}
-        {photoEnabled && <p className={styles.muted}>{t('photoHint')}</p>}
-        {query.trim().length < 2 && <div className={styles.sources}>{['recent','favorites','saved','plan'].map(key=><button key={key} disabled={locked} aria-pressed={source===key} onClick={()=>setSource(key)}>{t(key)}</button>)}</div>}
+        {photoEnabled && (!initialSource || initialSource === 'photo') && <p className={styles.muted}>{t('photoHint')}</p>}
+        {(!initialSource || initialSource === 'recent') && query.trim().length < 2 && <div className={styles.sources}>{(initialSource ? ['recent','favorites'] : ['recent','favorites','saved','plan']).map(key=><button key={key} disabled={locked} aria-pressed={source===key} onClick={()=>setSource(key)}>{t(key)}</button>)}</div>}
         {loading && <p role="status">{t('loading')}</p>}
         {readError && <p role="status">{t('readError')} <button onClick={()=>setRetry(value=>value+1)}>{t('retry')}</button></p>}
-        <div className={styles.choices}>
+        {initialSource !== 'photo' && initialSource !== 'barcode' && <div className={styles.choices}>
           {searching && <p role="status">{t('loading')}</p>}
           {!searching && query.trim().length >= 2 && !results.length && <p role="status">{t('emptySource')}</p>}
           {query.trim().length>=2 ? results.map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>add([food])}>{food.name}<span>+</span></button>) :
@@ -188,6 +193,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
             (source==='recent' ? recent : favorites).map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>add([food])}>{food.custom_name ?? food.name}<span>+</span></button>)}
           {!loading && !query && ((source==='recent'&&!recent.length)||(source==='favorites'&&!favorites.length)||(source==='saved'&&!saved.length)) && <p className={styles.muted}>{t('emptySource')}</p>}
         </div>
+        }
         <h3>{t('selection',{count:foods.length})}</h3>
         {!foods.length && <p className={styles.muted}>{t('empty')}</p>}
         <ul className={styles.draft}>{foods.map(food=><li key={food.id}>

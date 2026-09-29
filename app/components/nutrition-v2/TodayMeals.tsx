@@ -84,6 +84,7 @@ function foodName(food: unknown): string {
 interface TodayMealsProps {
   model: NutritionViewModel
   selectedDate: string
+  journalMode?: boolean
   selectedMeal?: NutritionMealType
   actionError: string | null
   onRetry: () => void
@@ -104,6 +105,7 @@ export default function TodayMeals({
   model,
   selectedDate,
   selectedMeal,
+  journalMode = false,
   actionError,
   onRetry,
   onChooseMeal,
@@ -195,13 +197,13 @@ export default function TodayMeals({
     setOpenMeal(nextAction.mealType)
   }
 
-  return <section className={styles.todayMeals} aria-labelledby="today-meals-title">
+  return <section className={`${styles.todayMeals} ${journalMode ? styles.openJournal : ''}`} aria-labelledby="today-meals-title">
     <div className={styles.todayMealsHeading}>
       <div>
         <p className={styles.eyebrow}>{t('eyebrow')}</p>
         <h2 id="today-meals-title">{selectedMeal ? t('logged') : t('title')}</h2>
       </div>
-      {!selectedMeal && <span>{t('count', { count: MEAL_ORDER.length })}</span>}
+      {!selectedMeal && !journalMode && <span>{t('count', { count: MEAL_ORDER.length })}</span>}
     </div>
 
 
@@ -216,7 +218,7 @@ export default function TodayMeals({
     {model.meals.state !== 'loading' && model.meals.state !== 'error' && <div className={styles.mealList}>
       {(selectedMeal ? [selectedMeal] : MEAL_ORDER).map(type => {
         const meal = meals.find(entry => entry.type === type) ?? { type, planned: [], logged: [], completed: false, status: 'empty' as const }
-        const expanded = openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
+        const expanded = journalMode || openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
         const primaryAction = getMealPrimaryAction(meal.status)
         const calories = sumLoggedCalories(meal.logged)
         const activeLog = meal.logged.find(log => log.id === activeLogId) ?? meal.logged[0] ?? null
@@ -229,7 +231,10 @@ export default function TodayMeals({
 
         return <article key={type} className={styles.mealRow} data-status={meal.status}>
           <div className={styles.mealRowMain}>
-            <button
+            {journalMode ? <div className={styles.journalMealHeading}>
+              <h3>{t(`meal.${type}`)}</h3>
+              <span>{Math.round(calories)} kcal</span>
+            </div> : <button
               type="button"
               className={styles.mealToggle}
               aria-expanded={expanded}
@@ -241,8 +246,8 @@ export default function TodayMeals({
                 <span><b>{t(`status.${meal.status}`)}</b> · {summary}</span>
               </span>
               <ChevronDown size={18} aria-hidden="true" />
-            </button>
-            <button type="button" className={styles.mealPrimaryAction} aria-label={`${t('food')} — ${t(`meal.${type}`)}`} onClick={() => onAddFood(type)}>
+            </button>}
+            <button type="button" className={styles.mealPrimaryAction} aria-label={`${journalMode ? t('action.add') : t('food')} — ${t(`meal.${type}`)}`} onClick={() => onAddFood(type)}>
               <Plus size={18} aria-hidden="true" />
             </button>
           </div>
@@ -250,13 +255,13 @@ export default function TodayMeals({
           {expanded && <div id={`nutrition-meal-${type}`} className={styles.mealDetail}>
             {model.meals.state === 'partial' && <p className={styles.partialNotice}>{t('partial')}</p>}
 
-            {plannedNames.length > 0 && <div className={styles.mealDetailGroup}>
+            {!journalMode && plannedNames.length > 0 && <div className={styles.mealDetailGroup}>
               <h3>{t('planned')}</h3>
               <ul>{plannedNames.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}</ul>
             </div>}
 
             <div className={styles.mealDetailGroup}>
-              <h3>{t('logged')}</h3>
+              {!journalMode && <h3>{t('logged')}</h3>}
               {meal.logged.length === 0 && <p>{t('noLoggedFoods')}</p>}
               {meal.logged.map(log => <div key={log.id} className={styles.loggedFood}>
                 {editingLogId === log.id ? <div>
@@ -284,18 +289,18 @@ export default function TodayMeals({
                   <strong>{log.custom_name || log.food_name || t('foodFallback')}</strong>
                   <span>{log.quantity_g ?? 0} g · {Math.round(Number(log.calories) || 0)} kcal</span>
                 </button>}
-                <p className={styles.loggedFoodMacros}>
+                {(!journalMode || editingLogId === log.id) && <p className={styles.loggedFoodMacros}>
                   {t('loggedMacros', {
                     quantity: macroValue(log.quantity_g),
                     protein: macroValue(log.protein),
                     carbs: macroValue(log.carbs),
                     fat: macroValue(log.fat),
                   })}
-                </p>
+                </p>}
               </div>)}
             </div>
 
-            <div className={styles.mealActionArea} ref={moreMenuMeal === type ? moreMenuRef : undefined}>
+            {(!journalMode || meal.logged.length > 0) && <div className={styles.mealActionArea} ref={moreMenuMeal === type ? moreMenuRef : undefined}>
               <div className={styles.mealActionBar} aria-label={t('mealActions')}>
                 <button
                   type="button"
@@ -307,7 +312,7 @@ export default function TodayMeals({
                     moreButtonRef.current = event.currentTarget
                     setMoreMenuMeal(current => current === type ? null : type)
                   }}
-                ><MoreHorizontal size={16} aria-hidden="true" /><span>{t('more')}</span></button>
+                ><MoreHorizontal size={16} aria-hidden="true" />{!journalMode && <span>{t('more')}</span>}</button>
               </div>
 
               {moreMenuMeal === type && <div id={`nutrition-meal-more-${type}`} className={styles.mealOverflowMenu} role="menu" aria-label={t('moreActions')} onKeyDown={navigateMenu}>
@@ -329,7 +334,7 @@ export default function TodayMeals({
                   setMoreMenuMeal(null)
                 }}><Trash2 size={16} aria-hidden="true" />{t('delete')}</button>}
               </div>}
-            </div>
+            </div>}
           </div>}
         </article>
       })}

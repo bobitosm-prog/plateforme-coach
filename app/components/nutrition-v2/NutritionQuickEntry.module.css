@@ -20,3 +20,8 @@
 .utilityLinks { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
 .utilityLinks button { min-height: 44px; padding: 0 15px; border: 0; border-radius: 12px; color: #e6c364; background: #2b271e; font: inherit; font-size: .8rem; font-weight: 750; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .disclosure summary svg { transition: none; } }
+
+.addOptions { display: grid; gap: 10px; }
+.addOptions button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 16px; border: 0; border-radius: 13px; background: #27251f; color: #f7f4ed; font: inherit; font-size: .95rem; font-weight: 650; text-align: left; cursor: pointer; }
+.addOptions svg { flex-shrink: 0; color: #e6c364; }
+.addOptions button:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; }

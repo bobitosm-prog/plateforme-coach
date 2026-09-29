@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { ChevronLeft, ChevronRight, Trash2, Camera, Pencil, CalendarDays, Droplets } from 'lucide-react'
+import { Trash2, Camera, Pencil, Droplets } from 'lucide-react'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { normalizeFoodItem } from '../../../lib/utils/food'
@@ -19,14 +19,15 @@ import { parseMealPlan, getMealByKey, type Day, type DayPlan, type MealKey } fro
 import type { UserCapabilities } from '../../../lib/entitlements/capabilities'
 import type { ActiveCoachResolutionState } from '../../../lib/coach-relations/repository'
 import useNutritionDashboardModel from '../../hooks/useNutritionDashboardModel'
-import { addNutritionDays, getNutritionDayKey } from '../../../lib/nutrition/nutrition-date'
+import { getNutritionDayKey } from '../../../lib/nutrition/nutrition-date'
 import { normalizeNutritionMealType, type NutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
 import NutritionV2 from '../nutrition-v2/NutritionV2'
 import TodayMeals from '../nutrition-v2/TodayMeals'
 import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
 import NutritionTools from '../nutrition-v2/NutritionTools'
 import MealContextChooser from '../nutrition-v2/MealContextChooser'
-import MealComposer from '../nutrition-v2/MealComposer'
+import MealComposer, { type MealComposerSource } from '../nutrition-v2/MealComposer'
+import MealAddSheet from '../nutrition-v2/MealAddSheet'
 import quickEntryStyles from '../nutrition-v2/NutritionQuickEntry.module.css'
 
 const RecipesSection = dynamic(() => import('../RecipesSection'), { ssr: false })
@@ -84,9 +85,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const getMealLabel = (key: string) => nt(`meals.${MEAL_LABEL_MAP[key] || key}`)
   const MEAL_LABELS: Record<string, string> = { petit_dejeuner: getMealLabel('petit_dejeuner'), dejeuner: getMealLabel('dejeuner'), collation: getMealLabel('collation'), diner: getMealLabel('diner') }
   const [showFoodSearch, setShowFoodSearch] = useState<string | null>(null) // meal_type or null
-  const [composer, setComposer] = useState<{mealType: MealKey; date: string; initialFoods?: Record<string, any>[]} | null>(null)
-  const [inlineMealType, setInlineMealType] = useState<MealKey>('petit_dejeuner')
-  const [inlineComposerVersion, setInlineComposerVersion] = useState(0)
+  const [composer, setComposer] = useState<{mealType: MealKey; date: string; initialFoods?: Record<string, any>[]; initialSource?: MealComposerSource} | null>(null)
+  const [addingMeal, setAddingMeal] = useState<MealKey | null>(null)
   const [pendingMealAction, setPendingMealAction] = useState<PendingMealAction | null>(null)
   const [showShoppingModal, setShowShoppingModal] = useState(false)
   const [importingMeal, setImportingMeal] = useState<{ mealType: MealKey; dayKey: Day } | null>(null)
@@ -122,7 +122,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const [editAddFoodQuery, setEditAddFoodQuery] = useState('')
   const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
   const photoInputRef = React.useRef<HTMLInputElement>(null)
-  const calScrollRef = React.useRef<HTMLDivElement>(null)
   const nutritionDashboard = useNutritionDashboardModel({
     supabase,
     userId,
@@ -130,24 +129,11 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     capabilities,
     coachRelation: { status: coachRelationStatus, coachId, isAuthoritative: coachRelationIsAuthoritative },
   })
-  const { model: nutritionModel, selectedDate, setSelectedDate, dailyLogs, daysWithMeals, refresh: refreshNutrition } = nutritionDashboard
+  const { model: nutritionModel, selectedDate, setSelectedDate, dailyLogs, refresh: refreshNutrition } = nutritionDashboard
   const today = nutritionModel.day.localDateKey
   const todayKey = nutritionModel.day.dayKey
   const waterToday = nutritionModel.hydration.data?.consumedMl ?? 0
-  const calendarDays = React.useMemo(() => {
-    const dates: string[] = []
-    for (let i = -30; i <= 7; i += 1) dates.push(addNutritionDays(today, i))
-    return dates
-  }, [today])
-
   const [subTab, setSubTab] = useState<SubTab>('today')
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      document.getElementById(`cal-${today}`)?.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' })
-    }, 100)
-    return () => window.clearTimeout(timer)
-  }, [today])
 
   async function addWater(ml: number) {
     if (!userId) return
@@ -332,7 +318,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   function chooseMealContext(mealType: MealKey) {
     const action = pendingMealAction
     setPendingMealAction(null)
-    if (action) setComposer({mealType, date: selectedDate})
+    if (action === 'photo') setComposer({mealType, date: selectedDate, initialSource: 'photo'})
+    else if (action) setAddingMeal(mealType)
   }
 
 
@@ -348,6 +335,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       onRetry={() => void refreshNutrition()}
       onPhoto={() => setPendingMealAction('photo')}
       onBarcode={onOpenBarcode}
+      onDateChange={setSelectedDate}
       compactToday={subTab === 'today'}
     >
 
@@ -365,6 +353,16 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         })}
       </div>
 
+      {addingMeal && <MealAddSheet
+        mealLabel={MEAL_LABELS[addingMeal]}
+        photoEnabled={capabilities.ai}
+        onClose={() => setAddingMeal(null)}
+        onSelect={initialSource => {
+          setComposer({mealType: addingMeal, date: selectedDate, initialSource})
+          setAddingMeal(null)
+        }}
+      />}
+
       {/* Food search modal */}
       {composer && <MealComposer
         key={`${userId}-${composer.date}-${composer.mealType}`}
@@ -372,6 +370,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         mealLabel={MEAL_LABELS[composer.mealType]}
         plannedFoods={composer.date === today && getPlanDayData(todayKey) ? getMealByKey(getPlanDayData(todayKey)!.day, composer.mealType) : []}
         initialFoods={composer.initialFoods}
+        initialSource={composer.initialSource ?? 'recent'}
         photoEnabled={capabilities.ai}
         onSaved={refreshNutrition}
         onClose={() => { setComposer(null); void refreshNutrition() }}
@@ -397,40 +396,26 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       />}
 
       {/* MON PLAN TAB — daily logs as source of truth */}
-      {(subTab === 'today' || subTab === 'plan') && nutritionModel.activePlan.state === 'ready' && <NutritionPlanConsistencyNotice
+      {subTab === 'plan' && nutritionModel.activePlan.state === 'ready' && <NutritionPlanConsistencyNotice
         plan={nutritionModel.activePlan.plan} profile={profile} source={nutritionModel.activePlan.source}
       />}
       {subTab === 'today' && ((): React.ReactNode => {
-        const isViewingPast = selectedDate < today
         const waterGoal = profile?.water_goal || 3000
         const pctWater = Math.min(100, Math.round((waterToday / waterGoal) * 100))
         const canAddWater = selectedDate === today
-        const glassBtn: React.CSSProperties = { width: 44, height: 44, borderRadius: 10, background: '#393121', border: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 
         return (
           <div style={{ padding: '0 4px' }}>
-            <section className={quickEntryStyles.section} aria-labelledby="quick-meal-title">
-              <div className={quickEntryStyles.heading}>
-                <div>
-                  <span className={quickEntryStyles.eyebrow}>{nt('quickEntry.eyebrow')}</span>
-                  <h2 id="quick-meal-title">{nt('quickEntry.title')}</h2>
-                </div>
-              </div>
-              <div className={quickEntryStyles.mealTabs} role="group" aria-label={nt('quickEntry.chooseMeal')}>
-                {MEAL_ORDER.map(mealType => <button
-                  type="button" key={mealType} aria-pressed={inlineMealType === mealType}
-                  onClick={() => setInlineMealType(mealType)}
-                >{MEAL_LABELS[mealType]}</button>)}
-              </div>
+            <section className={quickEntryStyles.section}>
               <TodayMeals
-                key={`journal:${userId}:${selectedDate}:${inlineMealType}`}
-                selectedMeal={normalizeNutritionMealType(inlineMealType) ?? undefined}
+                key={`journal:${userId}:${selectedDate}`}
+                journalMode
                 model={nutritionModel}
                 selectedDate={selectedDate}
                 actionError={mealActionError}
                 onRetry={() => void refreshNutrition()}
                 onChooseMeal={() => setPendingMealAction('food')}
-                onAddFood={mealType => setComposer({mealType: NUTRITION_MEAL_TO_KEY[mealType], date: selectedDate})}
+                onAddFood={mealType => setAddingMeal(NUTRITION_MEAL_TO_KEY[mealType])}
                 onImportPlan={mealType => setImportingMeal({
                   mealType: NUTRITION_MEAL_TO_KEY[mealType],
                   dayKey: getNutritionDayKey(selectedDate) as Day,
@@ -465,56 +450,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 onDeleteFood={logId => void deleteDailyLog(logId)}
                 onUpdateFood={(logId, quantity) => void updateFoodQuantity(logId, quantity)}
               />
-              <MealComposer
-                key={`${userId}:${selectedDate}:${inlineMealType}:${inlineComposerVersion}`}
-                inline supabase={supabase} userId={userId} date={selectedDate}
-                mealType={inlineMealType} mealLabel={MEAL_LABELS[inlineMealType]}
-                plannedFoods={selectedDate === today && getPlanDayData(todayKey) ? getMealByKey(getPlanDayData(todayKey)!.day, inlineMealType) : []}
-                photoEnabled={capabilities.ai}
-                onSaved={refreshNutrition}
-                onClose={() => setInlineComposerVersion(version => version + 1)}
-              />
             </section>
-            {/* ═══ CALENDAR STRIP ═══ */}
-            <details className={quickEntryStyles.disclosure}><summary><span>{nt('quickEntry.changeDate')}</span><ChevronRight size={20} aria-hidden="true" /></summary>
-            <div style={{ background: '#27251f', borderRadius: 14, padding: 14, marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', color: colors.textDim }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase()}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {selectedDate !== today && (
-                    <button onClick={() => setSelectedDate(today)} style={{ ...glassBtn, width: 'auto', padding: '6px 12px', fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: colors.gold, textTransform: 'uppercase' }}>
-                      {nt('chrome.today')}
-                    </button>
-                  )}
-                  <button onClick={() => calScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} aria-label="Précédent" style={glassBtn}>
-                    <ChevronLeft size={16} color={colors.gold} />
-                  </button>
-                  <button onClick={() => calScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} aria-label="Suivant" style={glassBtn}>
-                    <ChevronRight size={16} color={colors.gold} />
-                  </button>
-                </div>
-              </div>
-              <div ref={calScrollRef} style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
-                {calendarDays.map(dt => {
-                  const d = new Date(dt + 'T12:00:00')
-                  const sel = dt === selectedDate, isTd = dt === today, hasMl = daysWithMeals.has(dt), fut = dt > today
-                  return (
-                    <button key={dt} id={`cal-${dt}`} onClick={() => !fut && setSelectedDate(dt)} disabled={fut} title={fut ? nt('chrome.futureDate') : undefined} aria-disabled={fut} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 8px', minWidth: 44, borderRadius: 12, border: 0, background: sel ? '#393121' : 'transparent', cursor: fut ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: fut ? 0.35 : 1, scrollSnapAlign: 'center', flexShrink: 0 }}>
-                      <span style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: sel ? colors.gold : colors.textDim }}>{d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '').toUpperCase()}</span>
-                      <span style={{ fontFamily: fonts.headline, fontSize: 20, fontWeight: 400, lineHeight: 1, color: sel ? colors.gold : isTd ? colors.gold : colors.text }}>{d.getDate()}</span>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasMl ? colors.gold : 'transparent' }} />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            </details>
-            {isViewingPast && (
-              <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldRule}`, borderRadius: 12, padding: '10px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CalendarDays size={16} color={colors.orange} />
-                <span style={{ ...bodyStyle, fontSize: 13, color: colors.gold }}>{new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-              </div>
-            )}
 
             {/* Hydration remains a separate legacy module during the progressive migration. */}
             <div className={quickEntryStyles.hydrationCard}>

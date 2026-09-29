@@ -15,6 +15,7 @@ interface NutritionV2Props {
   onRetry: () => void
   onPhoto?: () => void
   onBarcode?: () => void
+  onDateChange?: (date: string) => void
   compactToday?: boolean
   children: ReactNode
 }
@@ -28,12 +29,15 @@ export default function NutritionV2({
   onPhoto,
   onBarcode,
   compactToday = false,
+  onDateChange,
   children,
 }: NutritionV2Props) {
   return <section className={`${styles.shell} ${styles.athleteLayout}`} data-nutrition-v2>
     <NutritionHero
       model={model}
       selectedDate={selectedDate}
+      compact={compactToday}
+      onDateChange={onDateChange}
       onAddMeal={onAddMeal}
       onRetry={onRetry}
     />
