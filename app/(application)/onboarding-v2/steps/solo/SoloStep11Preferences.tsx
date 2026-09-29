@@ -40,6 +40,23 @@ export default function SoloStep11Preferences({
 }: SoloStep11PreferencesProps) {
   const [activeMeal, setActiveMeal] = useState<MealKey>('breakfast')
   const [dislikedInput, setDislikedInput] = useState('')
+  const [foodInput, setFoodInput] = useState('')
+  const foodKey = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('fr')
+  const selectedFoods = mealPrefs[activeMeal] || []
+  // Include persisted custom preferences, not just the suggested foods.
+  const availableFoods = [...MEAL_DEFAULTS[activeMeal], ...selectedFoods]
+    .filter((food, index, foods) => foods.findIndex(item => foodKey(item) === foodKey(food)) === index)
+
+  function handleAddFood() {
+    const value = foodInput.trim().replace(/\s+/g, ' ')
+    if (!value) return
+    const existing = availableFoods.find(food => foodKey(food) === foodKey(value))
+    if (!selectedFoods.some(food => foodKey(food) === foodKey(value))) {
+      onToggleFood(activeMeal, existing || value)
+    }
+    setFoodInput('')
+  }
+
 
   function handleAddDisliked() {
     const v = dislikedInput.trim()
@@ -65,7 +82,7 @@ export default function SoloStep11Preferences({
               <button
                 key={key}
                 aria-pressed={active}
-                onClick={() => setActiveMeal(key)}
+                onClick={() => { setActiveMeal(key); setFoodInput('') }}
                 style={{
                   flex: 1,
                   display: 'flex',
@@ -88,15 +105,35 @@ export default function SoloStep11Preferences({
           })}
         </div>
 
+        <label htmlFor="onboarding-meal-food" style={{ display: 'block', color: colors.text, fontSize: 16, marginBottom: 8 }}>
+          Ajouter un aliment · {MEAL_LABELS[activeMeal]}
+        </label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <input
+            id="onboarding-meal-food"
+            value={foodInput}
+            maxLength={100}
+            onChange={event => setFoodInput(event.target.value)}
+            onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); handleAddFood() } }}
+            placeholder="Ex. : lait, pain, fraises…"
+            style={{ flex: 1, minWidth: 0, minHeight: 48, padding: '10px 12px', borderRadius: 12, border: `1px solid ${colors.goldBorder}`, background: colors.surface, color: colors.text, font: 'inherit' }}
+          />
+          <button type="button" onClick={handleAddFood} disabled={!foodInput.trim()}
+            style={{ minHeight: 48, padding: '10px 16px', borderRadius: 12, border: 0, background: colors.gold, color: colors.onGold, font: 'inherit', fontWeight: 700, opacity: foodInput.trim() ? 1 : 0.45 }}>
+            Ajouter
+          </button>
+        </div>
+
         {/* Food grid for active meal */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 8 }}>
-          {MEAL_DEFAULTS[activeMeal].map((food) => {
-            const active = (mealPrefs[activeMeal] || []).includes(food)
+          {availableFoods.map((food) => {
+            const selectedFood = selectedFoods.find(item => foodKey(item) === foodKey(food))
+            const active = selectedFood !== undefined
             return (
               <button
                 key={food}
                 aria-pressed={active}
-                onClick={() => onToggleFood(activeMeal, food)}
+                onClick={() => onToggleFood(activeMeal, selectedFood ?? food)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
