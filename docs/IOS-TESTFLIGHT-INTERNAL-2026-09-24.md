@@ -86,3 +86,20 @@ archives et `.ipa` générés restent hors du dépôt.
 Références : [distribution Xcode](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases),
 [chiffrement et documentation d'export](https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption/),
 [règles App Review](https://developer.apple.com/app-store/review/guidelines/).
+
+## Build 6 — 29 septembre 2026
+
+- Version 0.1.0 (6), bundle `ch.moovx.app`, correctif `1357dfad`,
+  préparation du build `9bf4fa63`, branche `codex/ios-webview-recovery`.
+- Reprise WebKit testée en exécution sur simulateur : interruption en
+  arrière-plan, limite à une tentative, interruption au premier plan.
+- Archive Release iPhone créée et export App Store Connect signé vérifié :
+  `codesign --verify --deep --strict` OK, `get-task-allow=false`,
+  `beta-reports-active=true`, distribution TestFlight interne uniquement.
+- Envoi Xcode réussi à 09:12 (Europe/Zurich), traitement Apple terminé.
+- Déclaration de chiffrement système inchangée ; notes de test enregistrées.
+- Build attribué au groupe existant « Marco — bêta interne » (1 testeur).
+  État vérifié : « En cours de test », expiration dans 90 jours.
+- Sources et numéro de build sauvegardés sur GitHub.
+- Installation du build 6 sur iPhone, session authentifiée, brouillon de
+  séance et notification de repos restent à vérifier par Marco.
