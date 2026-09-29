@@ -1,4 +1,5 @@
 'use client'
+import { applePurchaseBridge, nativeApplePurchase, isNativeMoovx } from '../../lib/apple/native-purchases'
 import { isActiveAppleEntitlement } from '../../lib/entitlements/apple-entitlement'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { resolveProgramDays, resolveProgramExercise } from '@/lib/training/resolve-program'
@@ -106,6 +107,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     DENIED_ENTITLEMENT_SNAPSHOT,
   )
 
+  const [nativePurchaseOpen, setNativePurchaseOpen] = useState(false)
   const entitlementOwner = useRef<string | null>(null)
   const [entitlementNow, setEntitlementNow] = useState(Date.now)
 
@@ -224,11 +226,13 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     }
     const timer = window.setInterval(refresh, 60_000)
     window.addEventListener('focus', refresh)
+    window.addEventListener('moovx:apple-purchase-updated', refresh)
     document.addEventListener('visibilitychange', refresh)
     return () => {
       alive = false
       window.clearInterval(timer)
       window.removeEventListener('focus', refresh)
+      window.removeEventListener('moovx:apple-purchase-updated', refresh)
       document.removeEventListener('visibilitychange', refresh)
     }
   }, [session?.user?.id])
@@ -240,6 +244,29 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       Math.min(deadline - Date.now() + 1, 2_147_483_647))
     return () => window.clearTimeout(timer)
   }, [entitlementSnapshot.appleEntitlement?.validUntil, entitlementNow])
+
+  useEffect(() => {
+    const owner = session?.user?.id
+    if (!owner || !applePurchaseBridge()) return
+    let pending = false
+    const sync = async () => {
+      if (entitlementOwner.current !== owner || pending || document.visibilityState !== 'visible') return
+      pending = true
+      try { await nativeApplePurchase(owner, 'pending') } catch { /* StoreKit retains unfinished transactions. */ }
+      finally { pending = false }
+    }
+    void sync()
+    window.addEventListener('moovx:apple-transactions-available', sync)
+    window.addEventListener('focus', sync)
+    document.addEventListener('visibilitychange', sync)
+    const timer = window.setInterval(sync, 60_000)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('moovx:apple-transactions-available', sync)
+      window.removeEventListener('focus', sync)
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [session?.user?.id])
 
   // Scroll-to-top disabled: each tab slide now has its own scroll container
   // (rail architecture, S1 swipe nav). Slides keep their position on tab switch.
@@ -918,6 +945,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const isSubActive = hasPaidSub || isExempt || coachManaged || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
+    if (isNativeMoovx()) { setNativePurchaseOpen(true); return }
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -993,7 +1021,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     displayAvatar, fullName, firstName,
     // Subscription & trial
     isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe,
-    aiAllowed: capabilities.ai, capabilities,
+    aiAllowed: capabilities.ai, capabilities, appleEntitlement, nativePurchaseOpen, setNativePurchaseOpen,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

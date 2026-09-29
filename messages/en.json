@@ -3679,5 +3679,31 @@
       "natation": { "name": "Swimming", "notes": "Freestyle or breaststroke at moderate pace." },
       "velo_incline_walk": { "name": "Bike + Incline Walk", "notes": "20 min bike + 20 min incline walk 10-12% at 5 km/h." }
     }
+  },
+  "applePurchases": {
+    "title": "Athena with Apple",
+    "trial": "Your 14 free days remain commitment-free. A purchase starts only when you confirm it with Apple.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "lifetime": "Lifetime",
+    "perMonth": "/ month",
+    "perYear": "/ year",
+    "oneTime": "· one-time payment",
+    "buy": "Continue with Apple",
+    "restore": "Restore purchases",
+    "processing": "Verifying…",
+    "unavailable": "Apple purchases are not available yet. Try later or update the app.",
+    "retry": "Unable to confirm your purchase. Try Restore purchases using the MoovX account that made the purchase.",
+    "pending": "Waiting for Apple approval.",
+    "cancelled": "Purchase cancelled.",
+    "empty": "No purchases to restore for this MoovX account.",
+    "sandbox": "Apple test purchase confirmed. Your test account access has been refreshed.",
+    "success": "Purchase confirmed. Your access has been refreshed.",
+    "renewal": "Monthly and yearly subscriptions renew automatically unless cancelled in Apple settings. Lifetime access is a one-time purchase.",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "close": "Close",
+    "signOut": "Sign out",
+    "manage": "Manage Apple subscription"
   }
 }

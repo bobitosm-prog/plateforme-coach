@@ -1,4 +1,6 @@
 'use client'
+import ApplePaywall from './ApplePaywall'
+import { isNativeMoovx } from '@/lib/apple/native-purchases'
 import { useState, useEffect } from 'react'
 import { Check, Crown, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
@@ -9,15 +11,19 @@ interface PaywallProps {
   role: 'client' | 'coach'
   userId: string
   coachId?: string | null
+  dismissible?: boolean
   onSignOut: () => void
 }
 
-export default function Paywall({ role, userId, coachId, onSignOut }: PaywallProps) {
+export default function Paywall({ role, userId, coachId, onSignOut, dismissible }: PaywallProps) {
   const t = useTranslations('paywall')
+  const [native, setNative] = useState<boolean | null>(null)
+  useEffect(() => setNative(isNativeMoovx()), [])
   const [loading, setLoading] = useState<string | null>(null)
   const [coachData, setCoachData] = useState<{ name: string; rate: number; id: string } | null>(null)
 
   useEffect(() => {
+    if (isNativeMoovx()) return
     if (role !== 'client' || !coachId || coachId === 'platform') return
     fetch('/api/stripe/coach-checkout', { method: 'OPTIONS' }).catch(() => {})
     import('@supabase/ssr').then(({ createBrowserClient }) => {
@@ -51,6 +57,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
   const plans = role === 'coach' ? COACH_PLANS : CLIENT_PLANS
 
   async function handleSelect(planId: string) {
+    if (isNativeMoovx()) return
     setLoading(planId)
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -72,6 +79,7 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
   }
 
   async function handleCoachCheckout() {
+    if (isNativeMoovx()) return
     if (!coachData) return
     setLoading('coach')
     try {
@@ -101,6 +109,9 @@ export default function Paywall({ role, userId, coachId, onSignOut }: PaywallPro
     if (plan.id === 'coach_monthly') return t('cta.startMonthly', { price: plan.price })
     return t('cta.redirecting')
   }
+
+  if (native === null) return null
+  if (native) return <ApplePaywall key={userId} userId={userId} onSignOut={onSignOut} dismissible={dismissible} supported={role === 'client'} />
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: BG_BASE, padding: '2rem 1rem', fontFamily: FONT_BODY }}>

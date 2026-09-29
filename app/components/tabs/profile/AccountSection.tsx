@@ -1,5 +1,7 @@
 'use client'
-import React, { useState } from 'react'
+import { isActiveAppleEntitlement, type AppleEntitlement } from '@/lib/entitlements/apple-entitlement'
+import { applePurchaseBridge, isNativeMoovx } from '@/lib/apple/native-purchases'
+import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { LogOut, X, ArrowLeft } from 'lucide-react'
 import { RailOverlay } from '../../ui/RailOverlay'
@@ -12,6 +14,7 @@ import PaymentHistory from './PaymentHistory'
 import DeleteAccountSection from './DeleteAccountSection'
 
 interface AccountSectionProps {
+  appleEntitlement?: AppleEntitlement | null
   supabase: any
   session: any
   profile: any
@@ -21,9 +24,13 @@ interface AccountSectionProps {
 }
 
 export default function AccountSection({
-  supabase, session, profile, coachId, onBack,
+  supabase, session, profile, coachId, onBack, appleEntitlement,
 }: AccountSectionProps) {
   const t = useTranslations('profile')
+  const appleText = useTranslations('applePurchases')
+  const [native, setNative] = useState(false)
+  const [appleMessage, setAppleMessage] = useState('')
+  useEffect(() => setNative(isNativeMoovx()), [])
   const locale = useLocale()
   const [showPaywall, setShowPaywall] = useState(false)
 
@@ -44,6 +51,14 @@ export default function AccountSection({
         <SectionTitle noPadding title={t('sections.subscription')} />
         <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
           {(() => {
+            if (isActiveAppleEntitlement(appleEntitlement)) return <>
+              <p style={{ color: colors.gold, fontWeight: 700 }}>Apple · {appleText(appleEntitlement!.plan)}</p>
+              {appleEntitlement?.accessUntil && <p style={mutedStyle}>{new Date(appleEntitlement.accessUntil).toLocaleDateString(locale)}</p>}
+              {native && appleEntitlement?.type !== 'lifetime' && <button onClick={async () => {
+                try { await applePurchaseBridge()?.postMessage({ action: 'manage' }) }
+                catch { setAppleMessage(appleText('unavailable')) }
+              }} style={{ color: colors.gold, minHeight: 44 }}>{appleText('manage')}</button>}
+            </>
             const st = profile?.subscription_status
             const subType = profile?.subscription_type
             const hasHistoricalCoachAccess = (
@@ -104,6 +119,8 @@ export default function AccountSection({
           })()}
         </div>
 
+        {native && <button onClick={() => setShowPaywall(true)} style={{ minHeight: 48, color: colors.gold, marginBottom: 16 }}>{appleText('restore')}</button>}
+        <p role="status">{appleMessage}</p>
         {/* Paywall modal */}
         {showPaywall && (<RailOverlay>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, overflowY: 'auto' }}>
@@ -111,7 +128,7 @@ export default function AccountSection({
               <X size={16} color={colors.textMuted} />
             </button>
             <ClientIntlProvider>
-              <Paywall role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
+              <Paywall dismissible role="client" userId={session?.user?.id} coachId={coachId} onSignOut={() => setShowPaywall(false)} />
             </ClientIntlProvider>
           </div>
         </RailOverlay>)}

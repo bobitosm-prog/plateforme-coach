@@ -3,7 +3,7 @@
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
 avant toute future attribution de droits. Un adaptateur et une migration de
 registre sont préparés et testés localement (détails en fin de document). Le raccordement aux droits serveur et au verrou d’abonnement du tableau de bord
-est préparé derrière un drapeau désactivé. Le pont d’achat iOS reste à raccorder ;
+est préparé derrière un drapeau désactivé. Le pont d’achat/restauration iOS et le planificateur sont préparés ;
 la réception des notifications est également désactivée. Aucune
 modification en base de production, aucun achat réel ni changement des accès Stripe.
 
@@ -289,3 +289,59 @@ refus aux rôles navigateur et aucun avertissement des advisors. Aucun achat ré
 aucun déploiement ni activation en production dans ce sous-lot. Le libellé de
 facturation de la page Compte et le parcours natif achat/restauration restent
 à raccorder avec le prochain lot iOS.
+
+
+## Suivi automatique et parcours iPhone — 29 septembre 2026
+
+Routes `GET/POST /api/apple/purchases` : session Supabase vérifiée, origine POST
+contrôlée, limites utilisateur/IP, corps borné, compte attendu contrôlé après un
+changement de session. GET fournit le token généré côté serveur ; POST vérifie
+la preuve, consulte Apple puis persiste l’observation atomiquement avant tout
+accusé de réception. Un achat n’est pas confirmé sur la seule parole du client.
+
+`POST /api/apple/sync` utilise un secret dédié comparé en temps constant. À chaque
+invocation, il traite une notification et une réconciliation due par environnement
+activé. Les achats déjà connus, y compris à vie, sont recontrôlés toutes les six
+heures ; échec : réessai après dix minutes. Les baux de cinq minutes permettent
+la reprise après crash et refusent la validation par un ancien worker. La limite
+de fraîcheur des droits reste 24 heures. Les requêtes HTTP Apple sont désormais
+réellement interrompues après 12 secondes et limitées à 1 Mio, redirections refusées.
+
+Le script `scripts/sql/enable-apple-sync.sql` configure pg_cron chaque minute et
+lit son secret dans Supabase Vault. Il n’a pas été exécuté en production. Un lot
+traite un achat périodique par environnement : surveiller l’ancienneté et le nombre
+de tâches dues, et augmenter la capacité avant que la file dépasse ce débit.
+Les notifications non prises en charge restent en quarantaine pour revue ; aucun
+historique inconnu ni transfert de propriété n’est inventé par le worker.
+
+### Activation progressive
+
+1. Déployer les migrations et les routes ; renseigner les identifiants/clé IAP
+   serveur par le gestionnaire de secrets, jamais dans Git ou le navigateur.
+2. Renseigner `APPLE_IAP_CRON_SECRET` et le même secret dans Vault ; activer
+   `APPLE_IAP_SYNC_ENABLED`, puis exécuter le script du planificateur. Vérifier
+   les résultats pg_net, la file et les notifications Apple TEST réelles.
+3. QA uniquement : renseigner `APPLE_IAP_SANDBOX_USER_IDS` avec les comptes de
+   test autorisés ; activer `APPLE_IAP_PURCHASES_ENABLED`,
+   `APPLE_IAP_ENTITLEMENTS_ENABLED` et la réception des notifications sandbox.
+   Le lecteur sandbox séparé est réservé au serveur et n’est choisi que pour
+   cette liste de comptes. Tous les autres comptes lisent uniquement Production.
+4. Après recette TestFlight et validation des produits/contrats, activer séparément
+   `APPLE_IAP_PRODUCTION_PURCHASES_ENABLED` et les notifications Production.
+   Sans ce drapeau, préparer un achat réel renvoie 503 avant la fenêtre de paiement.
+
+L’iPhone présente les prix StoreKit, l’achat explicite, la restauration et la gestion
+de l’abonnement Apple. L’essai sans engagement de 14 jours reste inchangé. Les
+transactions en attente/annulées n’accordent aucun accès ; une panne serveur laisse
+la transaction inachevée et récupérable. L’écoute StoreKit démarre avec l’app, et
+la page traite la file au retour au premier plan. Les messages natifs sont limités
+à la page principale HTTPS app.moovx.ch et les réponses ne traversent pas une
+navigation. Les boutons iPhone n’ouvrent plus Stripe. Le catalogue Athena concerne
+les clients ; l’offre Coach native n’est pas vendue par ce lot.
+
+Validation : 201 tests web/serveur ciblés (dont rendu réel React de l’écran d’achat),
+PostgreSQL local réel avec migrations rejouées, reprise de bail et lecteurs QA,
+advisors sans avertissement. Côté iOS : cinq tests StoreKit locaux, 33 assertions
+de politique et build Release iPhone sans signature. Aucun achat réel, aucune
+migration distante, aucun planificateur activé, aucun nouveau build TestFlight
+dans ce sous-lot. Il reste la recette sandbox Apple de bout en bout après déploiement.
