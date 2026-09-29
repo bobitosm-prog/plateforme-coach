@@ -58,12 +58,13 @@ export default function SoloStep11Preferences({
         </div>
 
         {/* Meal tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginBottom: 14 }}>
           {MEAL_KEYS.map((key) => {
             const active = activeMeal === key
             return (
               <button
                 key={key}
+                aria-pressed={active}
                 onClick={() => setActiveMeal(key)}
                 style={{
                   flex: 1,
@@ -81,19 +82,20 @@ export default function SoloStep11Preferences({
                 }}
               >
                 <span style={{ fontSize: 20 }}>{MEAL_EMOJIS[key]}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: active ? colors.gold : colors.text }}>{MEAL_LABELS[key]}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: active ? colors.gold : colors.text }}>{MEAL_LABELS[key]}</span>
               </button>
             )
           })}
         </div>
 
         {/* Food grid for active meal */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 8 }}>
           {MEAL_DEFAULTS[activeMeal].map((food) => {
             const active = (mealPrefs[activeMeal] || []).includes(food)
             return (
               <button
                 key={food}
+                aria-pressed={active}
                 onClick={() => onToggleFood(activeMeal, food)}
                 style={{
                   display: 'flex',
@@ -117,7 +119,7 @@ export default function SoloStep11Preferences({
                 }}>
                   {active && <span style={{ color: colors.background, fontSize: 11, fontWeight: 700 }}>✓</span>}
                 </div>
-                <span style={{ fontSize: 13, color: active ? colors.gold : colors.text }}>{food}</span>
+                <span style={{ fontSize: 16, lineHeight: 1.45, overflowWrap: 'anywhere', color: active ? colors.gold : colors.text }}>{food}</span>
               </button>
             )
           })}
@@ -131,12 +133,13 @@ export default function SoloStep11Preferences({
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           <input
+            aria-label="Aliments que tu n’aimes pas"
             value={dislikedInput}
             onChange={(e) => setDislikedInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDisliked() } }}
             placeholder="Ex : champignons, fromage de chèvre..."
             style={{
-              flex: 1, padding: '10px 14px', background: colors.surface,
+              flex: 1, minWidth: 0, padding: '10px 14px', background: colors.surface,
               border: `1.5px solid ${colors.goldBorder}`, borderRadius: 12,
               color: colors.text, fontSize: 14, outline: 'none', fontFamily: fonts.body,
             }}
