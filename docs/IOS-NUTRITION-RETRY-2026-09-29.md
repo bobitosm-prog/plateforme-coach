@@ -32,10 +32,13 @@ réseau. Le scénario complet sur iPhone reste à qualifier.
 
 ## Validations 4 axes
 
-- Contrat : aucun contrat applicatif modifié. TypeScript global reste bloqué
-  par 9 diagnostics dans 4 tests Home/Training non modifiés ; comparaison
-  exacte des diagnostics avec le commit de base effectuée, aucune différence.
-- Automatisation : 20 tests ciblés formulaire/brouillon passent.
+- Contrat : aucun contrat applicatif modifié. Les 9 diagnostics TypeScript
+  préexistants ont été isolés par comparaison avec la base, puis corrigés dans
+  un commit distinct limité à 4 tests Home/Training : enfants du provider
+  fournis dans les props, assertions de type retirées et garde DOM explicite.
+  `tsc --noEmit --incremental false` passe désormais.
+- Automatisation : 20 tests ciblés formulaire/brouillon, 14 tests de rendu
+  Home/Training, puis la suite complète de 2 126 tests passent. Parité i18n OK.
 - Runtime : 32 tests d'intégration passent, dont le nouveau cas sur PostgreSQL
   et PostgREST. La restauration de sauvegarde synthétique passe également.
 - Isolation : serveur local uniquement, fournisseur IA simulé, aucune donnée

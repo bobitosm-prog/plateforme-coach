@@ -44,7 +44,8 @@ describe('next planned Training session', () => {
     const onEdit = vi.fn()
     const renderCard = (editable: boolean) => React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    } as React.ComponentProps<typeof NextIntlClientProvider>, React.createElement(NextPlannedSessionCard, { session, editable, onView, onEdit }))
+      children: React.createElement(NextPlannedSessionCard, { session, editable, onView, onEdit }),
+    })
 
     const view = render(renderCard(true))
     expect(screen.getAllByRole('listitem').map(item => item.textContent)).toEqual([
@@ -66,9 +67,10 @@ describe('next planned Training session', () => {
     ] }
     render(React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    } as React.ComponentProps<typeof NextIntlClientProvider>, React.createElement(NextPlannedSessionCard, {
-      session: longSession, editable: true, onView: vi.fn(), onEdit: vi.fn(),
-    })))
+      children: React.createElement(NextPlannedSessionCard, {
+        session: longSession, editable: true, onView: vi.fn(), onEdit: vi.fn(),
+    }),
+    }))
 
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
     fireEvent.click(screen.getByRole('button', { name: 'Voir les 6 exercices' }))

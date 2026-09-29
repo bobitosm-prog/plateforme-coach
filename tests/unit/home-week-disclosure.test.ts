@@ -25,27 +25,28 @@ describe('Home weekly disclosure', () => {
   it('shows one weekly title and keeps diagnostic controls available on expansion', () => {
     render(React.createElement(NextIntlClientProvider, {
       locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    }, [
-      React.createElement(ProgressionSnapshot, { key: 'progression', progression: model.progression }),
-      React.createElement(HomeV2LowerSections, {
-        key: 'lower',
-        model,
-        waterToday: 0,
-        waterTarget: 3000,
-        diagnostic: null,
-        diagnosticControls: React.createElement('button', { type: 'button' }, 'Diagnostic controls'),
-        generatingDiagnostic: false,
-        diagnosticGenerationError: false,
-        coachProgram: null,
-        nextSession: null,
-        todayKey: 'dimanche',
-        onSaveCheckIn: vi.fn().mockResolvedValue(true),
-        onAddWater: vi.fn().mockResolvedValue(true),
-        onGenerateDiagnostic: vi.fn(),
-        onViewDiagnostic: vi.fn(),
-        onOpenTraining: vi.fn(),
-      }),
-    ]))
+      children: [
+        React.createElement(ProgressionSnapshot, { key: 'progression', progression: model.progression }),
+        React.createElement(HomeV2LowerSections, {
+          key: 'lower',
+          model,
+          waterToday: 0,
+          waterTarget: 3000,
+          diagnostic: null,
+          diagnosticControls: React.createElement('button', { type: 'button' }, 'Diagnostic controls'),
+          generatingDiagnostic: false,
+          diagnosticGenerationError: false,
+          coachProgram: null,
+          nextSession: null,
+          todayKey: 'dimanche',
+          onSaveCheckIn: vi.fn().mockResolvedValue(true),
+          onAddWater: vi.fn().mockResolvedValue(true),
+          onGenerateDiagnostic: vi.fn(),
+          onViewDiagnostic: vi.fn(),
+          onOpenTraining: vi.fn(),
+        }),
+      ],
+    }))
 
     expect(screen.getAllByText('Cette semaine')).toHaveLength(1)
     const toggle = screen.getByRole('button', { name: /Cette semaine/ })
