@@ -3679,5 +3679,31 @@
       "natation": { "name": "Schwimmen", "notes": "Kraulen oder Brustschwimmen in moderatem Tempo." },
       "velo_incline_walk": { "name": "Rad + Steigungslaufband", "notes": "20 Min Rad + 20 Min Steigungslaufband 10-12% bei 5 km/h." }
     }
+  },
+  "applePurchases": {
+    "title": "Athena mit Apple",
+    "trial": "Deine 14 kostenlosen Tage bleiben unverbindlich. Ein Kauf beginnt erst nach deiner Bestätigung bei Apple.",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "lifetime": "Lebenslang",
+    "perMonth": "/ Monat",
+    "perYear": "/ Jahr",
+    "oneTime": "· einmalige Zahlung",
+    "buy": "Mit Apple fortfahren",
+    "restore": "Käufe wiederherstellen",
+    "processing": "Wird überprüft…",
+    "unavailable": "Apple-Käufe sind noch nicht verfügbar. Versuche es später oder aktualisiere die App.",
+    "retry": "Dein Kauf konnte nicht bestätigt werden. Stelle die Käufe mit dem ursprünglichen MoovX-Konto wieder her.",
+    "pending": "Warten auf die Bestätigung von Apple.",
+    "cancelled": "Kauf abgebrochen.",
+    "empty": "Keine Käufe für dieses MoovX-Konto gefunden.",
+    "sandbox": "Apple-Testkauf bestätigt. Der Zugang deines Testkontos wurde aktualisiert.",
+    "success": "Kauf bestätigt. Dein Zugang wurde aktualisiert.",
+    "renewal": "Monats- und Jahresabonnements verlängern sich automatisch, sofern sie nicht in den Apple-Einstellungen gekündigt werden. Lebenslanger Zugang ist ein einmaliger Kauf.",
+    "terms": "Bedingungen",
+    "privacy": "Datenschutz",
+    "close": "Schließen",
+    "signOut": "Abmelden",
+    "manage": "Apple-Abonnement verwalten"
   }
 }

@@ -1,4 +1,6 @@
 'use client'
+import { applePurchaseBridge, nativeApplePurchase, isNativeMoovx } from '../../lib/apple/native-purchases'
+import { isActiveAppleEntitlement } from '../../lib/entitlements/apple-entitlement'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { resolveProgramDays, resolveProgramExercise } from '@/lib/training/resolve-program'
 import { createBrowserClient } from '@supabase/ssr'
@@ -105,6 +107,10 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     DENIED_ENTITLEMENT_SNAPSHOT,
   )
 
+  const [nativePurchaseOpen, setNativePurchaseOpen] = useState(false)
+  const entitlementOwner = useRef<string | null>(null)
+  const [entitlementNow, setEntitlementNow] = useState(Date.now)
+
   const [workoutSession, setWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
   const [pausedWorkoutSession, setPausedWorkoutSession] = useState<ActiveWorkoutDraft | null>(null)
   const [modal, setModal] = useState<string | null>(null)
@@ -160,15 +166,22 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   useEffect(() => {
     setMounted(true)
     let alive = true
+    const acceptSession = (s: any) => {
+      const owner = s?.user?.id ?? null
+      if (entitlementOwner.current !== owner) setEntitlementSnapshot(DENIED_ENTITLEMENT_SNAPSHOT)
+      entitlementOwner.current = owner
+      setSession(s)
+      setLoading(false)
+    }
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_SESSION', details: { hasSession: !!s, userId: s?.user?.id, url: typeof window !== 'undefined' ? window.location.href : '' }, page_url: '/' })
-      if (alive) { setSession(s); setLoading(false) }
+      if (alive) acceptSession(s)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       supabase.from('app_logs').insert({ level: 'info', message: 'CLIENT_DASH_AUTH_CHANGE', details: { event: _event, hasSession: !!s, userId: s?.user?.id }, page_url: '/' })
       if (!alive) return
-      if (_event === 'SIGNED_OUT') { setSession(null); setLoading(false); return }
-      if (s) { setSession(s); setLoading(false) }
+      if (_event === 'SIGNED_OUT') { acceptSession(null); return }
+      if (s) acceptSession(s)
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [])
@@ -194,6 +207,67 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     fetchAll()
   }, [session])
 
+  // Refresh verified rights on return to the app and while it remains visible.
+  useEffect(() => {
+    const owner = session?.user?.id
+    if (!owner) return
+    let alive = true
+    let pending = false
+    const refresh = async () => {
+      setEntitlementNow(Date.now())
+      if (document.visibilityState !== 'visible' || pending) return
+      pending = true
+      try {
+        const snapshot = await fetchEffectiveEntitlementSnapshot()
+        if (alive && entitlementOwner.current === owner) setEntitlementSnapshot(snapshot)
+      } catch {
+        // A cached Apple grant still expires at its server-issued deadline.
+      } finally { pending = false }
+    }
+    const timer = window.setInterval(refresh, 60_000)
+    window.addEventListener('focus', refresh)
+    window.addEventListener('moovx:apple-purchase-updated', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      alive = false
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('moovx:apple-purchase-updated', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [session?.user?.id])
+
+  useEffect(() => {
+    const deadline = entitlementSnapshot.appleEntitlement?.validUntil
+    if (!deadline || deadline <= Date.now()) return
+    const timer = window.setTimeout(() => setEntitlementNow(Date.now()),
+      Math.min(deadline - Date.now() + 1, 2_147_483_647))
+    return () => window.clearTimeout(timer)
+  }, [entitlementSnapshot.appleEntitlement?.validUntil, entitlementNow])
+
+  useEffect(() => {
+    const owner = session?.user?.id
+    if (!owner || !applePurchaseBridge()) return
+    let pending = false
+    const sync = async () => {
+      if (entitlementOwner.current !== owner || pending || document.visibilityState !== 'visible') return
+      pending = true
+      try { await nativeApplePurchase(owner, 'pending') } catch { /* StoreKit retains unfinished transactions. */ }
+      finally { pending = false }
+    }
+    void sync()
+    window.addEventListener('moovx:apple-transactions-available', sync)
+    window.addEventListener('focus', sync)
+    document.addEventListener('visibilitychange', sync)
+    const timer = window.setInterval(sync, 60_000)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('moovx:apple-transactions-available', sync)
+      window.removeEventListener('focus', sync)
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [session?.user?.id])
+
   // Scroll-to-top disabled: each tab slide now has its own scroll container
   // (rail architecture, S1 swipe nav). Slides keep their position on tab switch.
   // useEffect(() => {
@@ -210,8 +284,11 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     let resolvedEntitlementSnapshot = entitlementSnapshot
     try {
       resolvedEntitlementSnapshot = await fetchEffectiveEntitlementSnapshot()
+      if (entitlementOwner.current !== uid) return
       setEntitlementSnapshot(resolvedEntitlementSnapshot)
     } catch {
+      if (entitlementOwner.current !== uid) return
+      resolvedEntitlementSnapshot = DENIED_ENTITLEMENT_SNAPSHOT
       setEntitlementSnapshot(DENIED_ENTITLEMENT_SNAPSHOT)
       console.error('[client-dashboard] Effective entitlement unavailable')
     }
@@ -821,14 +898,15 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   // Subscription
   const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bobitosm@gmail.com'
-  const { effectiveEntitlement, capabilities } = entitlementSnapshot
+  const { effectiveEntitlement, capabilities, appleEntitlement } = entitlementSnapshot
 
   const hasPaidSub = (() => {
     if (!profile) return false
 
     // Product authority is centralized; subscription_status remains only the
     // billing lifecycle fallback for older or temporarily desynced profiles.
-    if (effectiveEntitlement.type === 'lifetime') return true
+    if (isActiveAppleEntitlement(appleEntitlement, Math.max(entitlementNow, Date.now()))) return true
+    if (effectiveEntitlement.type === 'lifetime' && effectiveEntitlement.source !== 'apple') return true
     if (capabilities.coachManaged) return true
 
     // Beta : accès gratuit limité dans le temps (campagne). REQUIERT une date de fin.
@@ -857,14 +935,17 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const now = new Date()
   const isInTrial = !hasPaidSub && !isExempt && !!trialEndsAt && trialEndsAt > now
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const trialExpired = !hasPaidSub && !isExempt && !coachManaged && !!trialEndsAt && trialEndsAt <= now
+  const trialExpired = !hasPaidSub && !isExempt && !coachManaged && !isInTrial && (
+    (!!trialEndsAt && trialEndsAt <= now) || effectiveEntitlement.source === 'apple'
+  )
   const subEndsAt = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null
   const isInBeta = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt > now
   const betaDaysLeft = subEndsAt ? Math.max(0, Math.ceil((subEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
-  const betaExpired = effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt <= now
+  const betaExpired = !hasPaidSub && effectiveEntitlement.type === 'beta' && !!subEndsAt && subEndsAt <= now
   const isSubActive = hasPaidSub || isExempt || coachManaged || isInTrial
 
   const handleSubscribe = async (planId?: string) => {
+    if (isNativeMoovx()) { setNativePurchaseOpen(true); return }
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -940,7 +1021,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     displayAvatar, fullName, firstName,
     // Subscription & trial
     isSubActive, isInTrial, trialDaysLeft, trialExpired, isInBeta, betaDaysLeft, betaExpired, handleSubscribe,
-    aiAllowed: capabilities.ai, capabilities,
+    aiAllowed: capabilities.ai, capabilities, appleEntitlement, nativePurchaseOpen, setNativePurchaseOpen,
     // Handlers
     fetchAll, startProgramWorkout, onFinishWorkout, saveWeight, saveMeasurements,
     // Calendar / scheduled sessions (from sub-hook)

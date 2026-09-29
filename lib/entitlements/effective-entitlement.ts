@@ -1,3 +1,4 @@
+import { isActiveAppleEntitlement, type AppleEntitlement } from './apple-entitlement'
 import type { LegacyEntitlement } from './legacy-entitlements'
 
 export type EffectiveEntitlementType =
@@ -11,6 +12,7 @@ export type EffectiveEntitlementType =
 export type EffectiveEntitlementSource =
   | 'subscription'
   | 'legacy_entitlement'
+  | 'apple'
   | 'beta'
 
 export type EffectiveEntitlement = {
@@ -21,6 +23,7 @@ export type EffectiveEntitlement = {
 export type EffectiveEntitlementInput = {
   subscriptionType: string | null | undefined
   legacyEntitlements?: readonly LegacyEntitlement[]
+  appleEntitlement?: AppleEntitlement | null
   now?: Date
 }
 
@@ -67,6 +70,7 @@ function isActiveLegacyEntitlement(
 export function resolveEffectiveEntitlement({
   subscriptionType,
   legacyEntitlements = [],
+  appleEntitlement,
   now = new Date(),
 }: EffectiveEntitlementInput): EffectiveEntitlement {
   if (subscriptionType && PAID_SUBSCRIPTION_TYPES.has(subscriptionType)) {
@@ -75,6 +79,10 @@ export function resolveEffectiveEntitlement({
 
   if (subscriptionType && LIFETIME_SUBSCRIPTION_TYPES.has(subscriptionType)) {
     return { type: 'lifetime', source: 'subscription' }
+  }
+
+  if (isActiveAppleEntitlement(appleEntitlement, now.getTime())) {
+    return { type: appleEntitlement!.type, source: 'apple' }
   }
 
   if (subscriptionType === 'beta') {

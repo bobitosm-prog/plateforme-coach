@@ -1,4 +1,5 @@
 'use client'
+import { RailOverlay } from '../components/ui/RailOverlay'
 import React from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -507,6 +508,7 @@ function CoachAppContent() {
   ══════════════════════════════════════════════════════════════ */
   return (
     <ClientIntlProvider>
+    {h.nativePurchaseOpen && <RailOverlay><Paywall dismissible role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => h.setNativePurchaseOpen(false)} /></RailOverlay>}
     <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: Z_NAV, padding: '24px 0' }}>
@@ -764,7 +766,7 @@ function CoachAppContent() {
               {h.activeTab === 'messages' && <MessagesTab session={h.session} coachId={h.coachId} supabase={h.supabase} messages={h.messages} msgInput={h.msgInput} setMsgInput={h.setMsgInput} sendMessage={h.sendMessage} msgEndRef={h.msgEndRef} isCoachManaged={perms.isCoachManaged} onBack={() => navigateTo('compte')} />}
               {h.activeTab === 'feedback' && <FeedbackTab onBack={() => navigateTo('compte')} />}
               {h.activeTab === 'preferences' && <PreferencesSection supabase={h.supabase} session={h.session} profile={h.profile} updateReminderSettings={h.updateReminderSettings} updateRirSettings={h.updateRirSettings} onBack={() => navigateTo('compte')} />}
-              {h.activeTab === 'account_section' && <AccountSection supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => navigateTo('compte')} />}
+              {h.activeTab === 'account_section' && <AccountSection appleEntitlement={h.appleEntitlement} supabase={h.supabase} session={h.session} profile={h.profile} coachId={h.coachId} onBack={() => navigateTo('compte')} />}
               {h.activeTab === 'goals' && <GoalsSection supabase={h.supabase} session={h.session} profile={h.profile} goalWeight={h.goalWeight} setModal={h.setModal} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
               {h.activeTab === 'nutrition_program' && <NutritionProgramSection profile={h.profile} capabilities={h.capabilities} coachRelationStatus={h.coachRelationStatus} coachRelationIsAuthoritative={h.coachRelationIsAuthoritative} coachId={h.coachId} supabase={h.supabase} userId={h.session?.user?.id || ''} fetchAll={h.fetchAll} onBack={() => navigateTo('compte')} />}
 {h.activeTab === 'training_program' && <TrainingProgramSection activeProgram={h.activeTrainingProgram} capabilities={h.capabilities} profileObjective={h.profile?.objective} profile={h.profile} supabase={h.supabase} session={h.session} onRefresh={h.fetchAll} onBack={() => { setTrainingEditorDay(null); navigateTo('training') }} configureOpen={navigation.section === 'training-program' && navigation.mode === 'configure'} initialEditorDayIndex={trainingEditorDay} onConfigureChange={(open) => { if (!open) setTrainingEditorDay(null); navigateApp({ tab: 'account', section: 'training-program', mode: open ? 'configure' : undefined }) }} />}

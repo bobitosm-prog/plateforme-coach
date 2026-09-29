@@ -1,3 +1,4 @@
+import type { AppleEntitlement } from './apple-entitlement'
 import type { LegacyEntitlement } from './legacy-entitlements'
 import { resolveEffectiveEntitlement } from './effective-entitlement'
 
@@ -11,6 +12,7 @@ export type UserCapabilities = {
 type CapabilitySource = {
   subscriptionType: string | null | undefined
   legacyEntitlements?: readonly LegacyEntitlement[]
+  appleEntitlement?: AppleEntitlement | null
   now?: Date
 }
 
@@ -21,11 +23,13 @@ type CapabilitySource = {
 export function resolveUserCapabilities({
   subscriptionType,
   legacyEntitlements = [],
+  appleEntitlement,
   now,
 }: CapabilitySource): UserCapabilities {
   const entitlement = resolveEffectiveEntitlement({
     subscriptionType,
     legacyEntitlements,
+    appleEntitlement,
     now,
   })
   const coachManaged = entitlement.type === 'legacy_invited'

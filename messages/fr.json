@@ -3679,5 +3679,31 @@
       "natation": { "name": "Natation", "notes": "Crawl ou brasse à rythme modéré." },
       "velo_incline_walk": { "name": "Vélo + Incline Walk", "notes": "20 min vélo + 20 min marche inclinée 10-12% à 5 km/h." }
     }
+  },
+  "applePurchases": {
+    "title": "Athena avec Apple",
+    "trial": "Tes 14 jours gratuits restent sans engagement. Un achat ne démarre que si tu le confirmes avec Apple.",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "lifetime": "À vie",
+    "perMonth": "/ mois",
+    "perYear": "/ an",
+    "oneTime": "· paiement unique",
+    "buy": "Continuer avec Apple",
+    "restore": "Restaurer mes achats",
+    "processing": "Vérification en cours…",
+    "unavailable": "Les achats Apple ne sont pas encore disponibles. Réessaie plus tard ou mets l’app à jour.",
+    "retry": "Impossible de confirmer ton achat. Réessaie « Restaurer mes achats » avec le compte MoovX utilisé lors de l’achat.",
+    "pending": "Achat en attente de validation Apple.",
+    "cancelled": "Achat annulé.",
+    "empty": "Aucun achat à restaurer pour ce compte MoovX.",
+    "sandbox": "Achat de test Apple confirmé. Les droits de ton compte de test sont actualisés.",
+    "success": "Achat confirmé, tes droits ont été actualisés.",
+    "renewal": "Les abonnements mensuel et annuel se renouvellent automatiquement, sauf annulation dans les réglages Apple. L’accès à vie est un paiement unique.",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "close": "Fermer",
+    "signOut": "Se déconnecter",
+    "manage": "Gérer mon abonnement Apple"
   }
 }

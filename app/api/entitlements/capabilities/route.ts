@@ -39,12 +39,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Autorisation impossible' }, { status: 403 })
     }
 
-    const { capabilities, effectiveEntitlement } = await loadEffectiveEntitlementContext(
+    const { capabilities, effectiveEntitlement, appleEntitlement } = await loadEffectiveEntitlementContext(
       user.id,
       profile.subscription_type,
     )
     return NextResponse.json(
-      { capabilities, effectiveEntitlement },
+      { capabilities, effectiveEntitlement, appleEntitlement },
       { headers: { 'Cache-Control': 'private, no-store' } },
     )
   } catch {
