@@ -4,7 +4,7 @@ Audit du 29 septembre 2026. Base web : main 6596fda1 ; binaire iOS : build 7,
 branche codex/ios-apple-sign-in. Ce document prépare l'intégration ; aucun achat
 Apple ni produit payant App Store Connect n’a été activé pendant cet audit.
 Groupe MoovX Athena créé dans App Store Connect (22425039), état « Finaliser
-avant soumission ». Produits et tarifs en attente de confirmation.
+avant soumission ». Produits et tarifs confirmés puis préparés (détails ci-dessous).
 
 ## Conditions Apple vérifiées
 
@@ -60,15 +60,14 @@ B. Utiliser l'essai Apple : confirmation initiale, 2 semaines gratuites pour les
 Décision reçue : option A. Conserver les 14 jours sans engagement, puis demander
 un achat Apple explicite. Aucun renouvellement automatique au terme de l’essai
 MoovX ; aucun essai introductif Apple supplémentaire. Les abonnements achetés
-ensuite sont renouvelables selon la formule choisie. Les tarifs iOS ont été
-demandés séparément et ne sont pas encore confirmés.
+ensuite sont renouvelables selon la formule choisie. Tarifs confirmés ensuite : 10 CHF/mois, 80 CHF/an, 150 CHF à vie.
 Un simple indicateur envoyé par le navigateur ne doit jamais accorder un droit.
 
 ## Sous-lots d'implémentation
 
 1. Catalogue : groupe d'abonnements et produits mensuel/annuel selon validation
    commerciale, prix remontés par StoreKit, essai choisi ci-dessus, configuration
-   locale de test. Offre à vie et offre coach à qualifier séparément.
+   locale de test. Offre à vie non consommable confirmée ; offre coach hors de ce lot.
 2. Serveur : transactions Apple signées vérifiées côté serveur, rattachement
    au compte authentifié (appAccountToken), unicité de la transaction d'origine,
    séparation sandbox/production, dates d'expiration fournies par Apple,
@@ -109,3 +108,34 @@ restauration liée au bon compte, résolution indépendante des sources Stripe/A
 Livrable : commits séparés par sous-lot, migrations SQL idempotentes, tests runtime
 et preuve des validations 4/4. Contraintes : aucun secret exposé, aucun prix inventé,
 aucun achat réel, aucun changement destructif des droits existants.
+
+
+## Configuration effectuée dans App Store Connect
+
+| Offre | Identifiant de produit | ID Apple | Type | Prix suisse |
+|---|---|---|---|---|
+| Mensuel | ch.moovx.app.athena.monthly | 6817374325 | Renouvelable, 1 mois | 10 CHF |
+| Annuel | ch.moovx.app.athena.yearly | 6817374523 | Renouvelable, 1 an | 80 CHF |
+| À vie | ch.moovx.app.athena.lifetime | 6817374844 | Non consommable | 150 CHF |
+
+Groupe des abonnements : 22425039. Prix exacts sélectionnés et confirmés dans
+l'interface Apple, avec équivalences proposées par Apple pour les autres régions.
+Aucune disponibilité commerciale sélectionnée, aucune offre introductive créée,
+aucun produit soumis en revue. Ils ne sont pas encore achetables dans MoovX.
+Reste à compléter : noms/descriptions localisés, disponibilités, même niveau de
+service mensuel/annuel dans le groupe, captures et notes de revue, intégration
+StoreKit/serveur et tests. Ne pas considérer le passage au produit à vie comme
+une annulation automatique d'un abonnement renouvelable existant : prévoir
+un parcours explicite de gestion pour éviter des renouvellements en parallèle.
+
+## Prérequis commercial constaté
+
+Page Business consultée : contrat applications gratuites Actif, contrat
+applications payantes Nouveau. Apple exige la mise à jour de l'entité juridique
+avant signature du contrat payant. Statut de commerçant DSA demandé pour l'UE.
+Informations légales à compléter par Marco ; aucune signature ni modification
+juridique effectuée. Informations bancaires/fiscales non vérifiées. Ces étapes
+bloquent la commercialisation ; le développement local peut continuer.
+
+Référence du produit à vie :
+https://developer.apple.com/help/app-store-connect/reference/in-app-purchases-and-subscriptions/in-app-purchase-types
