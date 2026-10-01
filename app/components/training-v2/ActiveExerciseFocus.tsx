@@ -10,6 +10,7 @@ interface ActiveExerciseFocusProps {
   activeSet: number
   totalSets: number
   completedSets: number
+  history?: ReactNode
   previous: string | null
   previousError: boolean
   target: string
@@ -24,6 +25,7 @@ export default function ActiveExerciseFocus({
   activeSet,
   totalSets,
   completedSets,
+  history,
   previous,
   previousError,
   target,
@@ -41,11 +43,12 @@ export default function ActiveExerciseFocus({
         <span>{stepLabel || t('currentSet', { current: activeSet, total: totalSets })}</span>
         <span>{t('completedSetProgress', { current: completedSets, total: totalSets })}</span>
       </div>
+      {history}
       <div className={styles.focusStats}>
-        <div className={styles.focusStat}>
+        {!history && <div className={styles.focusStat}>
           <span className={styles.metricLabel}>{t('previous')}</span>
           <strong>{previousLabel}</strong>
-        </div>
+        </div>}
         <div className={styles.focusStat}>
           <span className={styles.metricLabel}>{t('target')}</span>
           <strong>{target}</strong>

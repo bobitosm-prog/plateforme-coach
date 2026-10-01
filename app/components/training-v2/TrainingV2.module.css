@@ -1524,3 +1524,9 @@
 .nextSessionView:focus-visible, .nextSessionEdit:focus-visible, .nextSessionMore:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px; }
 .nextSessionReadOnly { margin: 0; color: #918a7e; font-size: .76rem; line-height: 1.4; }
 @media (max-width: 520px) { .nextSessionView, .nextSessionEdit { flex: 1 1 100%; } }
+
+.previousSession { margin: 12px 0; padding: 14px; border-radius: 14px; background: rgba(230,195,100,.07); color: #f5f1e8; }
+.previousSets { padding: 0; margin: 10px 0 0; list-style: none; display: grid; gap: 8px; }
+.previousSets li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 14px; }
+.previousSets small { grid-column: 1 / -1; color: #c9c3b6; font-size: 12px; }
+.previousSession button { min-height: 44px; padding: 8px 16px; border-radius: 10px; background: #e6c364; color: #121212; }

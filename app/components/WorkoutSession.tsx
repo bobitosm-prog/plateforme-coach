@@ -1,4 +1,5 @@
 'use client'
+import PreviousExerciseSession from './training-v2/PreviousExerciseSession'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Check, Plus, ArrowLeft, Search, X, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
@@ -1092,6 +1093,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               activeSet={activeSetNumber}
               totalSets={exo.sets.length}
               completedSets={exo.sets.filter(set => set.done).length}
+              history={<PreviousExerciseSession key={`${draft.userId}:${exo.exerciseId}:${exo.name}`} db={supabase} userId={draft.userId} exerciseId={exo.exerciseId ?? null} name={exo.name} />}
               previous={previousLabel}
               previousError={previousState === null}
               target={targetLabel}
