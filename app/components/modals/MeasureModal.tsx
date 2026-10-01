@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { X } from 'lucide-react'
 import { format, type Locale } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
@@ -22,6 +22,7 @@ const MEASURE_KEYS = ['waist', 'hips', 'chest', 'biceps', 'thighs', 'calves'] as
 export default function MeasureModal({ measurements, onSave, onClose }: MeasureModalProps) {
   const t = useTranslations('progress')
   const locale = useLocale()
+  const dateInputId = useId()
   const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = DATE_LOCALES[locale] || frLocale
   const MEASURE_FIELDS = MEASURE_KEYS.map(key => ({
@@ -73,12 +74,14 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
 
         {/* Date */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>{t('measureModal.date')}</label>
+          <label htmlFor={dateInputId} style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>{t('measureModal.date')}</label>
           <input
+            id={dateInputId}
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.95rem', outline: 'none', colorScheme: 'dark', fontFamily: FONT_BODY }}
+            // Bound the intrinsic width of the native iOS date control without replacing its picker.
+            style={{ display: 'block', width: '100%', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.95rem', outline: 'none', colorScheme: 'dark', fontFamily: FONT_BODY }}
           />
         </div>
 
