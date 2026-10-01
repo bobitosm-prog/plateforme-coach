@@ -284,6 +284,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const raw = draft.exercises
   const t = useTranslations('training_tab.ws')
   const tv2 = useTranslations('training_tab.v2')
+  const tResume = useTranslations('workoutResume')
   const tLoad = useTranslations('trainingLoad')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -759,6 +760,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (!exercise) return
     const currentSetIndex = Math.max(exercise.sets.findIndex(set => !set.done), 0)
     setActiveExerciseIndex(index)
+    setSetStatusMessage('')
     persistDraft({ currentExerciseIndex: index, currentSetIndex })
   }
 
@@ -996,7 +998,17 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>{t('reorder.title')}</div>
               <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>{t('reorder.hint')}</div>
             </div>
-            <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => { setExos(newOrder); setSessionModified(true) }} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => {
+              // Track the exercise identity across list moves, not its old position.
+              const activeId = exos[activeExerciseIndex]?.id
+              const index = Math.max(0, newOrder.findIndex(exercise => exercise.id === activeId))
+              const setIndex = Math.max(0, newOrder[index]?.sets.findIndex(set => !set.done) ?? 0)
+              setExos(newOrder)
+              setActiveExerciseIndex(index)
+              persistDraft({ exercises: newOrder, currentExerciseIndex: index, currentSetIndex: setIndex })
+              setSetStatusMessage('')
+              setSessionModified(true)
+            }} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {exos.map((exo, idx) => (
                 <Reorder.Item
                   key={exo.id}
@@ -1171,7 +1183,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       onDismissFinished={dismissRestDone}
                     />
                   )}
-                  {activeSet && (
+                  {firstUndone < 0 && <section role="status" style={{ padding: 16, background: GOLD_DIM, borderRadius: 14, color: TEXT_PRIMARY }}>
+                    <p>{tResume('completed')}</p>
+                    <ol>{exo.sets.map(set => <li key={set.id}>{tResume('set', { number: set.num })} · {exo.targetDurationSeconds ? `${set.durationSeconds} s` : `${set.weightRaw || set.weight || 0} kg × ${set.reps}`} ✓</li>)}</ol>
+                    {exos.some(exercise => exercise.sets.some(set => !set.done)) && <button type="button" onClick={() => selectExercise(exos.findIndex(exercise => exercise.sets.some(set => !set.done)))} style={{ minHeight: 44, padding: '10px 14px', border: 'none', borderRadius: 10, background: GOLD, color: BG_BASE, fontWeight: 700 }}>{tResume('continue')}</button>}
+                  </section>}
+                  {activeSet && firstUndone >= 0 && (
                     <CurrentSetEditor
                       loadMode={exo.loadMode ?? 'legacy'}
                       loadModeLocked={exo.sets.some(set => set.done)}

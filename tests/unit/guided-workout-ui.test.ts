@@ -3,6 +3,11 @@ import * as React from 'react'
 import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react'
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 import messages from '@/messages/fr.json'
+const reorderHarness = vi.hoisted(() => ({ values: [] as any[], change: (_: any[]) => {} }))
+vi.mock('framer-motion', () => ({ Reorder: {
+  Group: (props: any) => { reorderHarness.values = props.values; reorderHarness.change = props.onReorder; return React.createElement('div', null, props.children) },
+  Item: (props: any) => React.createElement('div', null, props.children),
+} }))
 const followupEnabled = vi.hoisted(() => ({ value: false }))
 const catalogRows = vi.hoisted(() => ({ value: [] as Array<Record<string, unknown>> }))
 const warningTick = vi.hoisted(() => vi.fn())
@@ -44,6 +49,57 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('keeps the same unfinished exercise after reordering past a completed exercise',()=>{
+    const view=start([{name:'Squat',sets:1,reps:10},{name:'Rowing',sets:2,reps:10}])
+    log('40')
+    fireEvent.change(screen.getByLabelText('Charge'),{target:{value:'25'}})
+    fireEvent.change(screen.getByLabelText('Répétitions'),{target:{value:'10'}})
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.reorderLink}))
+    act(()=>reorderHarness.change([...reorderHarness.values].reverse()))
+    fireEvent.click(screen.getByRole('button',{name:'reorder.done'}))
+    expect(screen.getByRole('heading',{name:'Rowing'})).toBeTruthy()
+    expect((screen.getByRole('button',{name:'Valider la série'}) as HTMLButtonElement).disabled).toBe(false)
+    expect(view.saved().currentExerciseIndex).toBe(0)
+    fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
+    expect(view.saved().exercises.find(e=>e.name==='Rowing')?.sets[0].done).toBe(true)
+  })
+  it('explains a completed exercise instead of showing an editable set with disabled validation',()=>{
+    const view=start([{name:'Squat',sets:1,reps:10},{name:'Rowing',sets:2,reps:10}])
+    log('40')
+    fireEvent.click(screen.getByRole('button',{name:/^Squat Barre,/}))
+    expect(screen.queryByRole('button',{name:'Valider la série'})).toBeNull()
+    expect(screen.getByText('Toutes les séries de cet exercice sont validées.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button',{name:'Reprendre un exercice à terminer'}))
+    expect(screen.getByRole('heading',{name:'Rowing'})).toBeTruthy()
+    expect(view.saved().exercises[0].sets[0].weight).toBe(40)
+  })
+  it.each(['dropset','restpause'])('resumes unfinished %s stages after another exercise and reload',technique=>{
+    const view=start([{name:'Curl',sets:1,reps:10,technique,technique_details:technique==='dropset'?'1':'2,15'},{name:'Rowing',sets:2,reps:10}])
+    log('20')
+    fireEvent.click(screen.getByRole('button',{name:/^Rowing,/}))
+    log('25')
+    const draft=view.saved();view.unmount()
+    const resumed=start([],draft)
+    fireEvent.click(screen.getByRole('button',{name:/^Curl,/}))
+    log(technique==='dropset'?'15':'20')
+    expect(resumed.saved().exercises[0].sets[1].done).toBe(true)
+    expect(resumed.saved().exercises[1].sets[0].done).toBe(true)
+  })
+
+  it('allows skipping an exercise and returning with its entered values intact',()=>{
+    const view=start([{name:'Squat',sets:2,reps:10},{name:'Rowing',sets:2,reps:10}])
+    fireEvent.change(screen.getByLabelText('Charge'),{target:{value:'40'}})
+    fireEvent.change(screen.getByLabelText('Répétitions'),{target:{value:'10'}})
+    fireEvent.click(screen.getByRole('button',{name:/^Rowing,/}))
+    log('25')
+    fireEvent.click(screen.getByRole('button',{name:/^Squat Barre,/}))
+    expect((screen.getByLabelText('Charge') as HTMLInputElement).value).toBe('40')
+    expect((screen.getByRole('button',{name:'Valider la série'}) as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
+    expect(view.saved().exercises[0].sets[0].done).toBe(true)
+    expect(view.saved().exercises[1].sets[0].done).toBe(true)
+  })
+
   it('reconciles one native rest deadline on mount and return, then extends and cancels it',()=>{
     start([{name:'Squat',sets:2,reps:10,rest:10}])
     log('20')
