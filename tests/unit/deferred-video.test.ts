@@ -102,7 +102,7 @@ describe('exercise video posters', () => {
   })
 
   it('maps each verified local exercise video to one existing WebP poster', () => {
-    expect(Object.keys(LOCAL_EXERCISE_VIDEO_POSTERS)).toHaveLength(17)
+    expect(Object.keys(LOCAL_EXERCISE_VIDEO_POSTERS)).toHaveLength(18)
     for (const [video, poster] of Object.entries(LOCAL_EXERCISE_VIDEO_POSTERS)) {
       expect(resolveLocalExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toBe(poster)
       expect(resolveExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toMatch(

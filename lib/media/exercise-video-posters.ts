@@ -1,6 +1,7 @@
 import { createMediaUrlResolver, PUBLIC_POSTER_MANIFEST } from './delivery'
 
 const LOCAL_EXERCISE_POSTERS = Object.freeze<Record<string, string>>({
+  'ab-roller.mp4': '/images/video-posters/ab-roller.webp',
   'arnold-press.mp4': '/images/video-posters/arnold-press.webp',
   'developpe-militaire-barre-debout.mp4': '/images/video-posters/developpe-militaire-barre-debout.webp',
   'developpe-militaire-barre.mp4': '/images/video-posters/developpe-militaire-barre.webp',

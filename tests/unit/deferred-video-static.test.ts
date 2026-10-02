@@ -38,7 +38,7 @@ describe('deferred video architecture', () => {
   it('keeps every generated poster bounded and metadata-free', () => {
     const registry = read('lib/media/exercise-video-posters.ts')
     const matches = [...registry.matchAll(/'[^']+\.mp4': '([^']+\.webp)'/g)]
-    expect(matches).toHaveLength(17)
+    expect(matches).toHaveLength(18)
     expect(registry).not.toContain('developpe-couche-barre')
     for (const match of matches) {
       const path = `public${match[1]}`

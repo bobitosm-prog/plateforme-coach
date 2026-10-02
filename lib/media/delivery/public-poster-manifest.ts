@@ -1,6 +1,7 @@
 import { createMediaDeliveryManifest } from './manifest'
 
 export const PUBLIC_POSTER_MANIFEST = createMediaDeliveryManifest([
+  ['ab-roller.webp', '139f54315bfcddbb1c267933d0837a7f83d8d1384ad5140973757c59c24fe311', 6760],
   ['arnold-press.webp', '300ca0d1781536a346c926519c113a6e7e54c500667eac6e8905b64dbf1d28ff', 14316],
   ['developpe-militaire-barre-debout.webp', 'dc2b52aeb16e16b9455a2de5f162880c7cd0cd87b26dc0e3aee00bff79aa1e25', 8448],
   ['developpe-militaire-barre.webp', '0a13b452acdf36309131fe36c83e67430aef4ccd63cc475af2dab7a493bd7d60', 8800],

@@ -98,9 +98,9 @@ describe('media delivery contract', () => {
     }])[0].kind).toBe('conflict')
   })
 
-  it('bounds the deployed public poster manifest to 17 files and 216510 bytes', () => {
-    expect(PUBLIC_POSTER_MANIFEST).toHaveLength(17)
-    expect(PUBLIC_POSTER_MANIFEST.reduce((total, entry) => total + entry.bytes, 0)).toBe(216510)
+  it('bounds the deployed public poster manifest to 18 files and 223270 bytes', () => {
+    expect(PUBLIC_POSTER_MANIFEST).toHaveLength(18)
+    expect(PUBLIC_POSTER_MANIFEST.reduce((total, entry) => total + entry.bytes, 0)).toBe(223270)
     expect(PUBLIC_POSTER_MANIFEST.every(entry => entry.visibility === 'public-versioned')).toBe(true)
   })
 })
