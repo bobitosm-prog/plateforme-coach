@@ -73,7 +73,10 @@ interface WorkoutSessionProps {
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
 function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null): string | null {
-  return videoUrl?.includes('ab-roller.mp4') ? '/images/video-posters/ab-roller.webp' : fallback || null
+  if (videoUrl?.includes('ab-roller.mp4')) return '/images/video-posters/ab-roller.webp'
+  if (videoUrl?.includes('abduction-machine.mp4')) return '/images/video-posters/abduction-machine.webp'
+  if (videoUrl?.includes('adduction-machine.mp4')) return '/images/video-posters/adduction-machine.webp'
+  return fallback || null
 }
 
 const uid = () => Math.random().toString(36).slice(2)
