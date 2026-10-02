@@ -60,4 +60,21 @@ describe('Ab Roller video pilot', () => {
     expect(operation).toContain('/videos/exercises/box-jump.mp4?v=1')
     expect(operation.match(/is distinct from/g)).toHaveLength(2)
   })
+
+  it('uses local posters for the validated Burpees and Cable Crunch videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    expect(session).toContain("videoUrl?.includes('burpees.mp4')")
+    expect(session).toContain("'/images/video-posters/burpees.webp'")
+    expect(session).toContain("videoUrl?.includes('cable-crunch.mp4')")
+    expect(session).toContain("'/images/video-posters/cable-crunch.webp'")
+  })
+
+  it('publishes only the canonical Burpees and Cable Crunch rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_burpees_cable_crunch_videos.sql')
+    expect(operation).toContain('11c7bf0e-26b1-48cc-b699-96093c05fcc8')
+    expect(operation).toContain('/videos/exercises/burpees.mp4?v=1')
+    expect(operation).toContain('cd519c55-db25-43f8-b548-dcc47905a83f')
+    expect(operation).toContain('/videos/exercises/cable-crunch.mp4?v=1')
+    expect(operation.match(/is distinct from/g)).toHaveLength(2)
+  })
 })
