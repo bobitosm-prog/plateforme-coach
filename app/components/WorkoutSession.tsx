@@ -80,6 +80,8 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('box-jump.mp4')) return '/images/video-posters/box-jump.webp'
   if (videoUrl?.includes('burpees.mp4')) return '/images/video-posters/burpees.webp'
   if (videoUrl?.includes('cable-crunch.mp4')) return '/images/video-posters/cable-crunch.webp'
+  if (videoUrl?.includes('/crunch.mp4')) return '/images/video-posters/crunch.webp'
+  if (videoUrl?.includes('curl-barre-droite.mp4')) return '/images/video-posters/curl-barre-droite.webp'
   return fallback || null
 }
 

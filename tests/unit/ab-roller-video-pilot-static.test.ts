@@ -77,4 +77,21 @@ describe('Ab Roller video pilot', () => {
     expect(operation).toContain('/videos/exercises/cable-crunch.mp4?v=1')
     expect(operation.match(/is distinct from/g)).toHaveLength(2)
   })
+
+  it('uses local posters for the validated Crunch and Curl Barre Droite videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    expect(session).toContain("videoUrl?.includes('/crunch.mp4')")
+    expect(session).toContain("'/images/video-posters/crunch.webp'")
+    expect(session).toContain("videoUrl?.includes('curl-barre-droite.mp4')")
+    expect(session).toContain("'/images/video-posters/curl-barre-droite.webp'")
+  })
+
+  it('publishes only the canonical Crunch and Curl Barre Droite rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_crunch_curl_barre_droite_videos.sql')
+    expect(operation).toContain('25235bd5-a710-4d00-b200-d0e3588f7d23')
+    expect(operation).toContain('/videos/exercises/crunch.mp4?v=1')
+    expect(operation).toContain('99c3d411-0252-4135-ad68-25d420497fc6')
+    expect(operation).toContain('/videos/exercises/curl-barre-droite.mp4?v=1')
+    expect(operation.match(/is distinct from/g)).toHaveLength(2)
+  })
 })
