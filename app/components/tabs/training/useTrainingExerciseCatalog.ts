@@ -23,12 +23,12 @@ export function useTrainingExerciseCatalog(supabase: TrainingTabProps['supabase'
   useEffect(() => {
     if (!showAddExercise) return
     if (exerciseSearchQ.length < 1) {
-      supabase.from('exercises_db').select('id, name, muscle_group').order('name').limit(50)
+      supabase.from('exercises_db').select('id, name, muscle_group, video_url, gif_url').order('name').limit(50)
         .then(({ data }: { data?: LegacyTrainingExercise[] | null }) => setExerciseSearchResults(data || []))
       return
     }
     const timeout = setTimeout(async () => {
-      const { data } = await supabase.from('exercises_db').select('id, name, muscle_group').ilike('name', `%${exerciseSearchQ}%`).limit(30)
+      const { data } = await supabase.from('exercises_db').select('id, name, muscle_group, video_url, gif_url').ilike('name', `%${exerciseSearchQ}%`).limit(30)
       setExerciseSearchResults(data || [])
     }, 200)
     return () => clearTimeout(timeout)

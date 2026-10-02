@@ -11,6 +11,7 @@ import {
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, MUSCLE_COLORS, colors,
 } from '../../../../lib/design-tokens'
 import ExercisePreview from '../../ExercisePreview'
+import ExerciseMovementVideo from '../../media/ExerciseMovementVideo'
 import { getRestSeconds } from '../../../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../../../lib/technique-labels'
 import { computeProgression, parseRepsTarget, type PrevSessionSet } from '../../../../lib/training/compute-progression'
@@ -303,6 +304,17 @@ export default function TrainingExerciseCard({
           </div>
         </div>
       </div>
+
+      {ex.video_url && (
+        <div style={{ padding: '10px 14px 12px', borderBottom: `1px solid ${BORDER}` }}>
+          <ExerciseMovementVideo
+            name={getExerciseName(ex, locale)}
+            videoUrl={ex.video_url}
+            posterUrl={ex.gif_url}
+            compact
+          />
+        </div>
+      )}
 
       {/* ── Table Header ── */}
       <div className="set-grid" style={{

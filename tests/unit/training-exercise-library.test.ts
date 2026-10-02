@@ -100,11 +100,12 @@ describe('Training exercise selection', () => {
 
   it('resolves the modal add payload with its existing numeric fallbacks', () => {
     expect(resolveAddedExercise(
-      { custom_name: 'Mobilité', muscle_group: null },
+      { id: 'mobility-id', custom_name: 'Mobilité', muscle_group: null, video_url: '/mobility.mp4', gif_url: '/mobility.jpg' },
       { sets: '0', reps: '12', restSeconds: 'invalid' },
     )).toEqual({
-      name: 'Mobilité', exercise_name: 'Mobilité', muscle_group: '',
+      id: 'mobility-id', name: 'Mobilité', exercise_name: 'Mobilité', muscle_group: '',
       sets: 3, reps: 12, rest_seconds: 60,
+      video_url: '/mobility.mp4', gif_url: '/mobility.jpg',
     })
   })
 

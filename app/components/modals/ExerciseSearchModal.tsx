@@ -5,6 +5,7 @@ import { X, Search, Dumbbell } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
 import DeferredVideo from '../media/DeferredVideo'
+import ExerciseMovementVideo from '../media/ExerciseMovementVideo'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -34,6 +35,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
   const [exDbAddSets, setExDbAddSets] = useState('3')
   const [exDbAddReps, setExDbAddReps] = useState('10')
   const [exDbAddRest, setExDbAddRest] = useState('60')
+  const [previewExerciseId, setPreviewExerciseId] = useState<string | null>(null)
   const exSearchRef = useRef<any>(null)
 
   // Load all exercises on mount
@@ -132,23 +134,9 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                   const mgColor = MUSCLE_COLORS[ex.muscle_group] || TEXT_MUTED
                   const diffColor = ex.difficulty === 'Avance' ? '#EF4444' : ex.difficulty === 'Intermediaire' ? '#F97316' : '#22C55E'
                   return (
-                    <motion.button
+                    <motion.div
                       key={ex.id}
                       whileTap={{ scale: 0.96 }}
-                      onClick={async () => {
-                        let selected = { ...ex }
-                        // If no video_url but has variant_group, try siblings
-                        if (!selected.video_url && selected.variant_group) {
-                          const { data: sibling } = await supabase.from('exercises_db')
-                            .select('video_url').eq('variant_group', selected.variant_group)
-                            .not('video_url', 'is', null).limit(1).maybeSingle()
-                          if (sibling?.video_url) selected.video_url = sibling.video_url
-                        }
-                        setSelectedExDb(selected)
-                        setExDbAddSets('3')
-                        setExDbAddReps(ex.reps ? String(ex.reps) : '10')
-                        setExDbAddRest(ex.rest ? String(ex.rest) : '60')
-                      }}
                       style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '0', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                     >
                       {/* Exercise image: gif_url > GitHub > color bar */}
@@ -162,7 +150,28 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                           <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />
                         )
                       })()}
-                      <div style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                      {previewExerciseId === ex.id && ex.video_url && (
+                        <div style={{ padding: '8px 8px 0', width: '100%', boxSizing: 'border-box' }}>
+                          <ExerciseMovementVideo name={getExerciseName(ex, locale)} videoUrl={ex.video_url} posterUrl={ex.gif_url} compact />
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          let selected = { ...ex }
+                          if (!selected.video_url && selected.variant_group) {
+                            const { data: sibling } = await supabase.from('exercises_db')
+                              .select('video_url').eq('variant_group', selected.variant_group)
+                              .not('video_url', 'is', null).limit(1).maybeSingle()
+                            if (sibling?.video_url) selected.video_url = sibling.video_url
+                          }
+                          setSelectedExDb(selected)
+                          setExDbAddSets('3')
+                          setExDbAddReps(ex.reps ? String(ex.reps) : '10')
+                          setExDbAddRest(ex.rest ? String(ex.rest) : '60')
+                        }}
+                        style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1, width: '100%', background: 'transparent', border: 0, textAlign: 'left', cursor: 'pointer' }}
+                      >
                         <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>
                           {getExerciseName(ex, locale)}
                         </div>
@@ -183,8 +192,17 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                             </span>
                           )}
                         </div>
-                      </div>
-                    </motion.button>
+                      </button>
+                      {ex.video_url && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewExerciseId(previewExerciseId === ex.id ? null : ex.id)}
+                          style={{ margin: '0 10px 10px', padding: '8px 10px', borderRadius: 10, border: `1px solid ${GOLD}55`, background: `${GOLD}12`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}
+                        >
+                          {previewExerciseId === ex.id ? 'FERMER LA VIDÉO' : '▶ VOIR LE MOUVEMENT'}
+                        </button>
+                      )}
+                    </motion.div>
                   )
                 })}
               </div>

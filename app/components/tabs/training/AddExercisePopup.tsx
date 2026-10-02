@@ -1,6 +1,8 @@
 'use client'
+import { useState } from 'react'
 import { RailOverlay } from '../../ui/RailOverlay'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_BODY } from '../../../../lib/design-tokens'
+import ExerciseMovementVideo from '../../media/ExerciseMovementVideo'
 
 interface Props {
   searchQ: string
@@ -11,6 +13,8 @@ interface Props {
 }
 
 export default function AddExercisePopup({ searchQ, onSearchChange, results, onSelect, onClose }: Props) {
+  const [previewId, setPreviewId] = useState<string | null>(null)
+
   return (<RailOverlay>
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1100 }} />
@@ -23,15 +27,35 @@ export default function AddExercisePopup({ searchQ, onSearchChange, results, onS
           <input type="text" placeholder="Rechercher..." value={searchQ} onChange={e => onSearchChange(e.target.value)} autoFocus style={{ width: '100%', padding: '12px 14px', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontSize: 14, outline: 'none' }} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '4px 20px 20px' }}>
-          {results.map((ex: any) => (
-            <button key={ex.id} onClick={() => onSelect(ex)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${GOLD_DIM}`, cursor: 'pointer', textAlign: 'left' }}>
-              <div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{ex.name}</div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{ex.muscle_group || ''}</div>
+          {results.map((ex: any) => {
+            const isPreviewing = previewId === ex.id
+            return (
+              <div key={ex.id} style={{ padding: '12px 0', borderBottom: `1px solid ${GOLD_DIM}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {ex.video_url && (
+                    <button
+                      type="button"
+                      aria-label={`Voir la vidéo de ${ex.name}`}
+                      onClick={() => setPreviewId(isPreviewing ? null : ex.id)}
+                      style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, border: `1px solid ${GOLD_DIM}`, background: BG_BASE, color: GOLD, cursor: 'pointer', fontSize: 18 }}
+                    >▶</button>
+                  )}
+                  <button type="button" onClick={() => onSelect(ex)} style={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY }}>{ex.name}</div>
+                      <div style={{ fontFamily: FONT_BODY, fontSize: 11, color: TEXT_MUTED }}>{ex.muscle_group || ''}</div>
+                    </div>
+                    <span style={{ color: GOLD, fontSize: 22 }}>+</span>
+                  </button>
+                </div>
+                {isPreviewing && (
+                  <div style={{ marginTop: 10 }}>
+                    <ExerciseMovementVideo name={ex.name} videoUrl={ex.video_url} posterUrl={ex.gif_url} compact />
+                  </div>
+                )}
               </div>
-              <span style={{ color: GOLD, fontSize: 22 }}>+</span>
-            </button>
-          ))}
+            )
+          })}
         </div>
       </div>
     </>

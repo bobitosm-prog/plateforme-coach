@@ -131,12 +131,15 @@ export function resolveAddedExercise(
   const name = resolveLegacyExerciseName(exercise)
   if (!name) return null
   return {
+    id: exercise.id,
     name,
     exercise_name: name,
     muscle_group: exercise.muscle_group || '',
     sets: Number.parseInt(prescription.sets, 10) || 3,
     reps: Number.parseInt(prescription.reps, 10) || 10,
     rest_seconds: Number.parseInt(prescription.restSeconds, 10) || 60,
+    video_url: exercise.video_url,
+    gif_url: exercise.gif_url,
   }
 }
 

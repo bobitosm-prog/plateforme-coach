@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import DeferredVideo from '../../app/components/media/DeferredVideo'
+import ExerciseMovementVideo from '../../app/components/media/ExerciseMovementVideo'
 import {
   attachDeferredVideoSource,
   DEFERRED_VIDEO_ERROR_MESSAGE,
@@ -86,6 +87,20 @@ describe('deferred video lifecycle', () => {
 })
 
 describe('exercise video posters', () => {
+  it('renders a titled, user-activated movement preview without loading the video eagerly', () => {
+    const html = renderToStaticMarkup(createElement(ExerciseMovementVideo, {
+      name: 'Développé assis haltères',
+      posterUrl: '/poster.jpg',
+      videoUrl: 'https://media.example/exercise.mp4',
+      compact: true,
+    }))
+
+    expect(html).toContain('Lire la démonstration de Développé assis haltères')
+    expect(html).toContain('/poster.jpg')
+    expect(html).toContain('data-video-state="idle"')
+    expect(html).not.toContain('media.example')
+  })
+
   it('maps each verified local exercise video to one existing WebP poster', () => {
     expect(Object.keys(LOCAL_EXERCISE_VIDEO_POSTERS)).toHaveLength(17)
     for (const [video, poster] of Object.entries(LOCAL_EXERCISE_VIDEO_POSTERS)) {
