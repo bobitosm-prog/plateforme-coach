@@ -72,6 +72,10 @@ interface WorkoutSessionProps {
 
 function fmtStep(n: number): string { return n.toString().replace('.', ',') }
 
+function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null): string | null {
+  return videoUrl?.includes('ab-roller.mp4') ? '/images/video-posters/ab-roller.webp' : fallback || null
+}
+
 const uid = () => Math.random().toString(36).slice(2)
 const makeSets = (n: number): ExSet[] => Array.from({ length: n }, (_, i) => ({ id: uid(), num: i + 1, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null }))
 const dur = (ms: number) => { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; if (h > 0) return `${h}h ${m}min`; if (m > 0) return `${m}min ${sec}s`; return `${sec}s` }
@@ -100,13 +104,14 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
   const [error, setError] = useState(false)
   const launched = useRef(false)
   const [configError, setConfigError] = useState(false)
+  const [previewExercise, setPreviewExercise] = useState<any | null>(null)
   const mobile = useTranslations('workoutMobile')
 
   useEffect(() => {
     let alive = true
     const timer = setTimeout(async () => {
       try {
-        let q = supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description')
+        let q = supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description, video_url, gif_url')
         if (search.length >= 2) q = q.ilike('name', `%${search}%`)
         if (filter && filter !== ALL_KEY) q = q.eq('muscle_group', filter)
         const { data, error } = await q.limit(60).order('name')
@@ -181,6 +186,21 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
 
   return (
     <div data-no-tab-swipe="true" className={trainingV2Styles.workoutBuilder} style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
+      {previewExercise && (
+        <TrainingSheet title={getExerciseName(previewExercise, locale)} onClose={() => setPreviewExercise(null)} viewportContained>
+          <video
+            src={previewExercise.video_url}
+            poster={exerciseVideoPoster(previewExercise.video_url, previewExercise.gif_url) || undefined}
+            autoPlay
+            controls
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className={trainingV2Styles.exerciseVideo}
+          />
+        </TrainingSheet>
+      )}
       {/* Header */}
       <div style={{ flexShrink: 0, background: BG_BASE, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 10, paddingLeft: 16, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -239,24 +259,30 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
           const sel = !!selected.find(x => x.id === e.id)
           const unavailable = Boolean(bisetPartner && (prescribedDuration(e) || bisetPartner.existingNames.includes(canonicalExerciseName(e.name))))
           return (
-            <button key={e.id} disabled={unavailable} onClick={() => toggle(e)} style={{
+            <div key={e.id} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 14,
               padding: '14px 0', borderBottom: `1px solid ${BORDER}`,
-              background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
               opacity: unavailable ? 0.35 : sel ? 0.5 : 1,
             }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              {e.video_url ? (
+                <button type="button" disabled={unavailable} aria-label={`Agrandir la vidéo de ${getExerciseName(e, locale)}`} onClick={() => setPreviewExercise(e)} style={{ position: 'relative', width: 64, height: 64, padding: 0, overflow: 'hidden', borderRadius: 12, flexShrink: 0, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, cursor: 'pointer' }}>
+                  {exerciseVideoPoster(e.video_url, e.gif_url) && <img src={exerciseVideoPoster(e.video_url, e.gif_url) || ''} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#fff', background: 'rgba(0,0,0,.24)', textShadow: '0 2px 8px #000', fontSize: 20 }}>▶</span>
+                </button>
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
+                </div>
+              )}
+              <button type="button" disabled={unavailable} onClick={() => toggle(e)} style={{ flex: 1, minWidth: 0, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                   {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</span>}
                   {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{t(`difficulty.${e.difficulty}`)}</span>}
                   {e.equipment && <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM }}>{e.equipment}</span>}
                 </div>
-              </div>
-            </button>
+              </button>
+            </div>
           )
         })}
         {error && <p role="alert">{mobile('catalogError')}</p>}
@@ -829,6 +855,31 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       setExerciseInfoLoading(false)
     }
   }
+  async function openExerciseVideo(exo: Exo) {
+    setVideoError(false)
+    try {
+      const byId = exo.exerciseId
+        ? await supabase.from('exercises_catalog').select('video_url').eq('id', exo.exerciseId).maybeSingle()
+        : { data: null, error: null }
+      if (byId.error) throw byId.error
+      const byName = byId.data?.video_url
+        ? byId
+        : await supabase.from('exercises_catalog').select('video_url').ilike('name', canonicalExerciseName(exo.name)).limit(1).maybeSingle()
+      if (byName.error) throw byName.error
+      const videoUrl = byName.data?.video_url || exo.videoUrl
+      if (videoUrl) {
+        setExos(previous => previous.map(candidate => candidate.id === exo.id ? { ...candidate, videoUrl } : candidate))
+        setShowVideo(videoUrl)
+        return
+      }
+    } catch {
+      if (exo.videoUrl) {
+        setShowVideo(exo.videoUrl)
+        return
+      }
+    }
+    await openExerciseInfo(exo)
+  }
   function selectSessionVariant(v: ExerciseVariant) {
     if (!variantPopup) return
     const replacedExercise = exos[variantPopup.exIdx]
@@ -1084,7 +1135,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           const namedPartnerPresent = exos.some((member, memberIndex) => memberIndex !== idx && member.name === exo.techniqueDetails)
           return (
             <section key={exo.id} id={`ledger-${exo.id}`} className={ledgerStyles.exercise} data-paired={paired}>
-              <div className={ledgerStyles.title}><h2>{getExerciseName(exo, locale)}</h2><button type="button" aria-label={`${exo.name}, ${tLedger('select')}`} aria-expanded={menuExerciseId===exo.id} aria-controls={`options-${exo.id}`} onClick={()=>{selectExercise(idx);setMenuExerciseId(current=>current===exo.id?null:exo.id)}}>···</button></div>
+              <div className={ledgerStyles.title}><h2><button type="button" className={ledgerStyles.exerciseNameButton} aria-label={`Lire la vidéo de ${getExerciseName(exo, locale)}`} onClick={() => void openExerciseVideo(exo)}>{getExerciseName(exo, locale)}</button></h2><button type="button" aria-label={`${exo.name}, ${tLedger('select')}`} aria-expanded={menuExerciseId===exo.id} aria-controls={`options-${exo.id}`} onClick={()=>{selectExercise(idx);setMenuExerciseId(current=>current===exo.id?null:exo.id)}}>···</button></div>
               {paired && <div className={ledgerStyles.pair}>{tLedger('biset', {side:bisetFor(exos,idx)!.a===idx?'A1':'A2',partner:exos[bisetFor(exos,idx)!.a===idx?bisetFor(exos,idx)!.b:bisetFor(exos,idx)!.a].name})}</div>}
               <div className={ledgerStyles.meta}>{[techniqueSummary,!exo.targetDurationSeconds?tLoad(exo.loadMode??'legacy'):null,exo.rir!=null?`RIR ${exo.rir}`:null,targetLabel,selected&&firstUndone>=0?tv2('currentSet',{current:activeSetNumber,total:exo.sets.length}):null].filter(Boolean).join(' · ')}</div>
               <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
