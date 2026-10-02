@@ -1,28 +1,28 @@
-.board { margin-bottom: 14px; padding: 16px; border-radius: 18px; background: #2b3235; color: #f6f7f7; }
+.board { margin-bottom: 14px; padding: 16px; border-radius: 18px; background: #131313; color: #e5e2e1; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .header strong { color: #e6c364; font-size: .9rem; font-weight: 800; line-height: 1.25; }
-.header > span { flex: 0 0 auto; color: #b5babc; font-size: .83rem; font-weight: 700; }
-.instructions { margin: 10px 0 14px; color: #b5babc; font-size: .82rem; line-height: 1.45; }
+.header > span { flex: 0 0 auto; color: #d0c5b2; font-size: .83rem; font-weight: 700; }
+.instructions { margin: 10px 0 14px; color: #d0c5b2; font-size: .82rem; line-height: 1.45; }
 .groups { display: grid; gap: 10px; }
-.group { min-width: 0; padding: 10px; border-radius: 13px; background: #141819; }
-.groupTitle { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 10px; color: #f6f7f7; font-size: .88rem; font-weight: 750; }
-.groupTitle span { color: #b5babc; white-space: nowrap; }
+.group { min-width: 0; padding: 10px; border-radius: 13px; background: #181818; }
+.groupTitle { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 10px; color: #e5e2e1; font-size: .88rem; font-weight: 750; }
+.groupTitle span { color: #d0c5b2; white-space: nowrap; }
 .earlier { margin-bottom: 10px; }
-.earlier > span { display: block; margin-bottom: 7px; color: #b5babc; font-size: .74rem; }
+.earlier > span { display: block; margin-bottom: 7px; color: #d0c5b2; font-size: .74rem; }
 .earlier > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: #2b3235; color: #b5babc; font-size: .76rem; font-weight: 700; }
-.chip[data-state='done'] { background: #e6c364; color: #141819; }
+.chip { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 8px; background: #131313; color: #d0c5b2; font-size: .76rem; font-weight: 700; }
+.chip[data-state='done'] { background: #e6c364; color: #181818; }
 .chip[data-state='current'] { background: #e6c364; color: #15120a; }
 .steps { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.step { display: flex; min-width: 0; min-height: 52px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: #202628; }
-.step[data-state='current'] { background: #2b3235; box-shadow: inset 0 0 0 1px #e6c364; }
-.marker { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 8px; background: #2b3235; color: #b5babc; font-size: .8rem; font-weight: 800; }
+.step { display: flex; min-width: 0; min-height: 52px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: #1a1817; }
+.step[data-state='current'] { background: #131313; box-shadow: inset 0 0 0 1px #e6c364; }
+.marker { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 8px; background: #131313; color: #d0c5b2; font-size: .8rem; font-weight: 800; }
 .step[data-state='current'] .marker { background: #e6c364; color: #15120a; }
-.step[data-state='done'] .marker { background: #e6c364; color: #141819; }
+.step[data-state='done'] .marker { background: #e6c364; color: #181818; }
 .stepText { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
 .stepText strong { font-size: .8rem; font-weight: 700; }
-.stepText small { overflow: hidden; color: #b5babc; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
-.state { color: #b5babc; font-size: .72rem; white-space: nowrap; }
+.stepText small { overflow: hidden; color: #d0c5b2; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.state { color: #d0c5b2; font-size: .72rem; white-space: nowrap; }
 .step[data-state='current'] .state { color: #e6c364; font-weight: 750; }
 .step[data-state='done'] .state { color: #e6c364; }
 @media (max-width: 400px) { .board { padding: 12px; } .state { display: none; } }
