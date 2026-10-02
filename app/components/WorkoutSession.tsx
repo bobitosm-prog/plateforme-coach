@@ -86,6 +86,11 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('curl-halteres-simultane.mp4')) return '/images/video-posters/curl-halteres-simultane.webp'
   if (videoUrl?.includes('curl-incline.mp4')) return '/images/video-posters/curl-incline.webp'
   if (videoUrl?.includes('curl-machine.mp4')) return '/images/video-posters/curl-machine.webp'
+  if (videoUrl?.includes('curl-poulie-basse.mp4')) return '/images/video-posters/curl-poulie-basse.webp'
+  if (videoUrl?.includes('curl-pupitre.mp4')) return '/images/video-posters/curl-pupitre.webp'
+  if (videoUrl?.includes('curl-spider.mp4')) return '/images/video-posters/curl-spider.webp'
+  if (videoUrl?.includes('developpe-couche-barre.mp4')) return '/images/video-posters/developpe-couche-barre.webp'
+  if (videoUrl?.includes('developpe-couche-machine.mp4')) return '/images/video-posters/developpe-couche-machine.webp'
   return fallback || null
 }
 

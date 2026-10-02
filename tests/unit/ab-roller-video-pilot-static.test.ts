@@ -116,4 +116,27 @@ describe('Ab Roller video pilot', () => {
     }
     expect(operation.match(/is distinct from/g)).toHaveLength(4)
   })
+
+  it('uses local posters for the five newly validated exercise videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    for (const slug of ['curl-poulie-basse', 'curl-pupitre', 'curl-spider', 'developpe-couche-barre', 'developpe-couche-machine']) {
+      expect(session).toContain(`videoUrl?.includes('${slug}.mp4')`)
+      expect(session).toContain(`'/images/video-posters/${slug}.webp'`)
+    }
+  })
+
+  it('publishes only the five canonical rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_five_validated_videos.sql')
+    for (const id of [
+      '00dbdad6-b94d-43a5-8463-6b2ba849cc18',
+      'b3a84e09-ed26-43f8-b17f-4b8ab4f7c23f',
+      'b2eaccb5-9b91-475e-aeba-9d081709d54d',
+      '9a14c0cd-a9db-48f0-9016-ee59a1e096db',
+      '8afa0acd-d198-47b6-b0b1-de10abfb27fb',
+    ]) expect(operation).toContain(id)
+    for (const slug of ['curl-poulie-basse', 'curl-pupitre', 'curl-spider', 'developpe-couche-barre', 'developpe-couche-machine']) {
+      expect(operation).toContain(`/videos/exercises/${slug}.mp4?v=1`)
+    }
+    expect(operation.match(/is distinct from/g)).toHaveLength(5)
+  })
 })
