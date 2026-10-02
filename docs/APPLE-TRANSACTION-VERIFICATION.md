@@ -1,11 +1,13 @@
 # Vérification des transactions Apple — sous-lot serveur
 
 Le module `lib/apple/transaction-verification.ts` vérifie les preuves signées
-avant toute future attribution de droits. Un adaptateur et une migration de
-registre sont préparés et testés localement (détails en fin de document). Le raccordement aux droits serveur et au verrou d’abonnement du tableau de bord
-est préparé derrière un drapeau désactivé. Le pont d’achat/restauration iOS et le planificateur sont préparés ;
-la réception des notifications est également désactivée. Aucune
-modification en base de production, aucun achat réel ni changement des accès Stripe.
+avant attribution de droits. Le registre et les routes sont déployés ; le parcours
+Sandbox est activé pour le compte QA et le build 8 est distribué en TestFlight
+interne. Les notifications TEST Apple et le planificateur ont été vérifiés sur le
+déploiement. Les achats et notifications Production restent désactivés, sans
+changement des accès Stripe. La recette achat/restauration iPhone reste à réaliser.
+Les sections de sous-lots ci-dessous conservent leur état historique ; l'état du
+déploiement courant figure en fin de document.
 
 ## Contrat de sécurité
 
@@ -345,3 +347,44 @@ advisors sans avertissement. Côté iOS : cinq tests StoreKit locaux, 33 asserti
 de politique et build Release iPhone sans signature. Aucun achat réel, aucune
 migration distante, aucun planificateur activé, aucun nouveau build TestFlight
 dans ce sous-lot. Il reste la recette sandbox Apple de bout en bout après déploiement.
+
+## Déploiement QA — 29 septembre 2026
+
+La PR #85 est fusionnée, commit `3e844ccb462f00864a107a27d3b37e119e6bd168`.
+Les cinq migrations Apple sont appliquées au projet Supabase de l'app. Les six
+tables Apple ont RLS et FORCE RLS ; aucun accès SELECT au rôle authenticated.
+Les remarques INFO « RLS enabled, no policy » sont attendues pour ce registre
+réservé au serveur. Les advisors distants n'indiquent aucun WARN/ERROR Apple.
+
+Le serveur est déployé sur `app.moovx.ch` (déploiement Vercel
+`dpl_UERdyeT3D6udUD2ojUmVjH9deV8a`). Achat, lecteur de droits, synchronisation et
+notifications Sandbox sont activés pour le seul compte QA configuré côté serveur.
+Achats et notifications Production restent désactivés. L'essai de 14 jours sans
+engagement ne change pas.
+
+Vérifications sur le déploiement : achats anonymes 401, synchronisation GET 405,
+synchronisation POST authentifiée 200, notification Sandbox invalide 400 et
+notification Production 503. Une notification TEST réelle demandée à Apple a
+obtenu `SUCCESS` et est enregistrée avec le statut `test_received`. Le premier
+essai retournait `SERVER_NOTIFICATION_URL_NOT_FOUND` ; après propagation de l'URL
+Sandbox enregistrée dans App Store Connect, le test a réussi.
+
+Build iOS 0.1.0 (8) : archive Release signée depuis ce même commit, numéro 8 passé
+explicitement à xcodebuild, aucune fixture StoreKit embarquée. Upload Apple réussi
+le 29 septembre à 18:47, pour TestFlight interne uniquement. Le numéro Release du
+projet source reste 7 ; le prochain archivage doit utiliser un numéro supérieur à 8.
+
+Points restant à valider avant de considérer le raccordement terminé :
+- Secret Vault créé manuellement par l'utilisateur, puis planificateur activé
+  toutes les minutes (`moovx-apple-sync`, job 11). Première exécution automatique
+  le 29 septembre à 17:01 UTC : cron `succeeded`, réponse pg_net 3125 HTTP 200,
+  sans timeout. Résultats Sandbox et Production : notification/reconciliation
+  `idle` (aucun achat en file). Aucun secret n'a été lu dans les sorties.
+- Build 8 traité par Apple et attribué au groupe « Marco — bêta interne »
+  (un testeur), après déclaration de chiffrement système uniquement. Attribution
+  confirmée dans App Store Connect ; installation iPhone encore à valider.
+- Réaliser achat, restauration, renouvellement et révocation Sandbox sur iPhone ;
+  la notification TEST ne constitue pas une validation d'achat de bout en bout.
+- Finaliser le contrat payant : App Store Connect indique encore des informations
+  fiscales manquantes et le traitement des coordonnées bancaires. Ne pas activer
+  les achats Production avant finalisation et recette complète.
