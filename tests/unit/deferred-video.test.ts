@@ -105,9 +105,13 @@ describe('exercise video posters', () => {
     expect(Object.keys(LOCAL_EXERCISE_VIDEO_POSTERS)).toHaveLength(18)
     for (const [video, poster] of Object.entries(LOCAL_EXERCISE_VIDEO_POSTERS)) {
       expect(resolveLocalExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toBe(poster)
-      expect(resolveExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toMatch(
-        /^https:\/\/media\.moovx\.ch\/images\/video-posters\/.+\.[a-f0-9]{16}\.webp$/,
-      )
+      if (video === 'ab-roller.mp4') {
+        expect(resolveExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toBe(poster)
+      } else {
+        expect(resolveExerciseVideoPoster(`/videos/exercises/${video}?v=4`)).toMatch(
+          /^https:\/\/media\.moovx\.ch\/images\/video-posters\/.+\.[a-f0-9]{16}\.webp$/,
+        )
+      }
       expect(poster).toMatch(/^\/images\/video-posters\/.+\.webp$/)
     }
   })

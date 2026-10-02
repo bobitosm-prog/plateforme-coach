@@ -154,7 +154,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       {/* Video thumbnail when available; otherwise keep the existing image fallback. */}
                       {(() => {
                         const videoPoster = ex.video_url
-                          ? (ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url))
+                          ? (resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ex.gif_url)
                           : null
                         const imgUrl = videoPoster || ex.gif_url || getExerciseImage(ex.name)
                         return imgUrl ? (

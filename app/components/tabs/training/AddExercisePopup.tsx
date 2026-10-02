@@ -40,8 +40,8 @@ export default function AddExercisePopup({ searchQ, onSearchChange, results, onS
                       onClick={() => setPreviewId(isPreviewing ? null : ex.id)}
                       style={{ position: 'relative', width: 48, height: 48, padding: 0, overflow: 'hidden', flexShrink: 0, borderRadius: 10, border: `1px solid ${GOLD_DIM}`, background: BG_BASE, color: '#fff', cursor: 'pointer', fontSize: 18 }}
                     >
-                      {(ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url)) && (
-                        <img src={ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ''} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {(resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ex.gif_url) && (
+                        <img src={resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ex.gif_url || ''} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       )}
                       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.28)', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>▶</span>
                     </button>
@@ -56,7 +56,7 @@ export default function AddExercisePopup({ searchQ, onSearchChange, results, onS
                 </div>
                 {isPreviewing && (
                   <div style={{ marginTop: 10 }}>
-                    <ExerciseMovementVideo name={ex.name} videoUrl={ex.video_url} posterUrl={ex.gif_url} compact />
+                    <ExerciseMovementVideo name={ex.name} videoUrl={ex.video_url} posterUrl={resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ex.gif_url} compact />
                   </div>
                 )}
               </div>
