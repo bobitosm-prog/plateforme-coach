@@ -96,6 +96,14 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('developpe-assis-halteres.mp4')) return '/images/video-posters/developpe-assis-halteres.webp'
   if (videoUrl?.includes('arnold-press.mp4')) return '/images/video-posters/arnold-press.webp'
   if (videoUrl?.includes('curl-concentre.mp4')) return '/images/video-posters/curl-concentre.webp'
+  if (videoUrl?.includes('curl-halteres.mp4')) return '/images/video-posters/curl-halteres.webp'
+  if (videoUrl?.includes('developpe-couche-halteres.mp4')) return '/images/video-posters/developpe-couche-halteres.webp'
+  if (videoUrl?.includes('developpe-incline-barre.mp4')) return '/images/video-posters/developpe-incline-barre.webp'
+  if (videoUrl?.includes('developpe-incline-halteres.mp4')) return '/images/video-posters/developpe-incline-halteres.webp'
+  if (videoUrl?.includes('/dips.mp4')) return '/images/video-posters/dips.webp'
+  if (videoUrl?.includes('dips-pectoraux.mp4')) return '/images/video-posters/dips-pectoraux.webp'
+  if (videoUrl?.includes('dips-triceps.mp4')) return '/images/video-posters/dips-triceps.webp'
+  if (videoUrl?.includes('donkey-calf-raise.mp4')) return '/images/video-posters/donkey-calf-raise.webp'
   return fallback || null
 }
 

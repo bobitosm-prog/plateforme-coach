@@ -162,4 +162,32 @@ describe('Ab Roller video pilot', () => {
     }
     expect(operation.match(/is distinct from/g)).toHaveLength(5)
   })
+
+  it('uses local posters for the eight newly validated exercise videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    for (const slug of ['curl-halteres', 'developpe-couche-halteres', 'developpe-incline-barre', 'developpe-incline-halteres', 'dips-pectoraux', 'dips-triceps', 'donkey-calf-raise']) {
+      expect(session).toContain(`videoUrl?.includes('${slug}.mp4')`)
+      expect(session).toContain(`'/images/video-posters/${slug}.webp'`)
+    }
+    expect(session).toContain("videoUrl?.includes('/dips.mp4')")
+    expect(session).toContain("'/images/video-posters/dips.webp'")
+  })
+
+  it('publishes only the eight canonical exercise rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_eight_validated_videos.sql')
+    for (const id of [
+      '21c4f23d-9de8-46ac-8b01-288770114156',
+      '6d1481f8-1268-4904-8813-f1489995de77',
+      '16fe52fe-eb99-4c38-81c9-e4a2952db88f',
+      'c7cc2bc5-5fd9-4abb-9b44-4f90e8181174',
+      'd4ed9190-3ea8-4408-9b53-81c52a2cfaba',
+      'fdda49d3-d68b-431b-a3ef-8e970323d9b6',
+      '57a8eb7d-3bf6-48bb-9b61-62761403f647',
+      '6459ea74-cea8-480a-8f6f-463545d9ca2d',
+    ]) expect(operation).toContain(id)
+    for (const slug of ['curl-halteres', 'developpe-couche-halteres', 'developpe-incline-barre', 'developpe-incline-halteres', 'dips', 'dips-pectoraux', 'dips-triceps', 'donkey-calf-raise']) {
+      expect(operation).toContain(`/videos/exercises/${slug}.mp4?v=1`)
+    }
+    expect(operation.match(/is distinct from/g)).toHaveLength(8)
+  })
 })
