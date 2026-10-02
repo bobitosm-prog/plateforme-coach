@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { RailOverlay } from '../../ui/RailOverlay'
 import { BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_BODY } from '../../../../lib/design-tokens'
 import ExerciseMovementVideo from '../../media/ExerciseMovementVideo'
+import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../../lib/media/exercise-video-posters'
 
 interface Props {
   searchQ: string
@@ -35,10 +36,15 @@ export default function AddExercisePopup({ searchQ, onSearchChange, results, onS
                   {ex.video_url && (
                     <button
                       type="button"
-                      aria-label={`Voir la vidéo de ${ex.name}`}
+                      aria-label={`Agrandir la vidéo de ${ex.name}`}
                       onClick={() => setPreviewId(isPreviewing ? null : ex.id)}
-                      style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, border: `1px solid ${GOLD_DIM}`, background: BG_BASE, color: GOLD, cursor: 'pointer', fontSize: 18 }}
-                    >▶</button>
+                      style={{ position: 'relative', width: 48, height: 48, padding: 0, overflow: 'hidden', flexShrink: 0, borderRadius: 10, border: `1px solid ${GOLD_DIM}`, background: BG_BASE, color: '#fff', cursor: 'pointer', fontSize: 18 }}
+                    >
+                      {(ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url)) && (
+                        <img src={ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url) || ''} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      )}
+                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.28)', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>▶</span>
+                    </button>
                   )}
                   <button type="button" onClick={() => onSelect(ex)} style={{ minWidth: 0, flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ minWidth: 0 }}>

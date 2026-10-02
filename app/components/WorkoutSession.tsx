@@ -387,6 +387,28 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
     console.log('[ExerciseInfo]', exo.name, '→ video_url:', data?.video_url, '| matched:', data?.name)
     setExerciseInfo(data || { name: exo.name })
   }
+  async function openExerciseVideo(exo: Exo) {
+    if (exo.videoUrl) {
+      setShowVideo(exo.videoUrl)
+      return
+    }
+
+    const byId = exo.exerciseId
+      ? await supabase.from('exercises_db').select('video_url').eq('id', exo.exerciseId).maybeSingle()
+      : { data: null }
+    const byName = byId.data?.video_url
+      ? byId
+      : await supabase.from('exercises_db').select('video_url').ilike('name', exo.name).limit(1).maybeSingle()
+    const data = byName.data
+
+    if (data?.video_url) {
+      setExos(previous => previous.map(candidate => candidate.id === exo.id ? { ...candidate, videoUrl: data.video_url } : candidate))
+      setShowVideo(data.video_url)
+      return
+    }
+
+    await openExerciseInfo(exo)
+  }
   function selectSessionVariant(v: WorkoutExerciseVariant) {
     if (!variantPopup) return
     setExos(prev => prev.map((e, i) => i === variantPopup.exIdx ? { ...e, name: v.name, muscle: v.muscle_group || e.muscle } : e))
@@ -463,7 +485,7 @@ export default function WorkoutSession({ sessionName, exercises: raw, startedAt,
         restOn={restOn} restExoId={restExoId} restSetId={restSetId} restSecs={restSecs} restMax={restMax}
         rirTrackingEnabled={rirTrackingEnabled} rirScaleAdvanced={rirScaleAdvanced}
         onMoveExercise={moveExercise} onRemoveExercise={removeExerciseDuringSession} onLoadVariants={loadVariantsForSession}
-        onOpenExerciseInfo={openExerciseInfo} onOpenTempo={(tempo, name) => setTempoModal({ tempo, name })}
+        onOpenExerciseInfo={openExerciseInfo} onOpenExerciseVideo={openExerciseVideo} onOpenTempo={(tempo, name) => setTempoModal({ tempo, name })}
         onStartTempo={(exercise, setIndex) => { initAudio(); setTempoExecutor({ exoId: exercise.id, setIdx: setIndex, tempo: exercise.tempo!, name: exercise.name, targetReps: parseTargetRepsForTempo(exercise.targetReps) }) }}
         onSetField={setField} onCommitWeight={commitWeight} onValidate={validate} onUnvalidate={unvalidate}
         onSetRir={setRir} onAddRestTime={addRestTime} onSkipRest={skipRest} onAddSet={addSet}

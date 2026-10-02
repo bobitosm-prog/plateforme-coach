@@ -36,6 +36,7 @@ export interface WorkoutExerciseEditorProps {
   onRemoveExercise(index: number): void
   onLoadVariants(exercise: WorkoutSessionExercise, index: number): void
   onOpenExerciseInfo(exercise: WorkoutSessionExercise): void
+  onOpenExerciseVideo(exercise: WorkoutSessionExercise): void
   onOpenTempo(tempo: string, name: string): void
   onStartTempo(exercise: WorkoutSessionExercise, setIndex: number): void
   onSetField(exerciseId: string, setId: string, field: 'weight' | 'reps', value: string): void
@@ -57,7 +58,7 @@ const isTempoValid = (tempo?: string) => {
 }
 
 export function WorkoutExerciseEditor(props: WorkoutExerciseEditorProps) {
-  const { exos, setExos, reorderMode, setReorderMode, locale, t, tMuscle, previousData, progressionByExo, exerciseMenu, setExerciseMenu, restOn, restExoId, restSetId, restSecs, restMax, rirTrackingEnabled, rirScaleAdvanced, onMoveExercise: moveExercise, onRemoveExercise: removeExerciseDuringSession, onLoadVariants: loadVariantsForSession, onOpenExerciseInfo: openExerciseInfo, onOpenTempo, onStartTempo, onSetField: setField, onCommitWeight: commitWeight, onValidate: validate, onUnvalidate: unvalidate, onSetRir: setRir, onAddRestTime: addRestTime, onSkipRest: skipRest, onAddSet: addSet, onAddExercise } = props
+  const { exos, setExos, reorderMode, setReorderMode, locale, t, tMuscle, previousData, progressionByExo, exerciseMenu, setExerciseMenu, restOn, restExoId, restSetId, restSecs, restMax, rirTrackingEnabled, rirScaleAdvanced, onMoveExercise: moveExercise, onRemoveExercise: removeExerciseDuringSession, onLoadVariants: loadVariantsForSession, onOpenExerciseInfo: openExerciseInfo, onOpenExerciseVideo: openExerciseVideo, onOpenTempo, onStartTempo, onSetField: setField, onCommitWeight: commitWeight, onValidate: validate, onUnvalidate: unvalidate, onSetRir: setRir, onAddRestTime: addRestTime, onSkipRest: skipRest, onAddSet: addSet, onAddExercise } = props
   return <>
       {/* EXERCICES */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
@@ -159,7 +160,14 @@ export function WorkoutExerciseEditor(props: WorkoutExerciseEditorProps) {
                 <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, zIndex: 1 }}>
                   {exo.muscle && <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, opacity: 0.85, textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: FONT_ALT }}>{getMuscleLabel(exo.muscle, locale, tMuscle)}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</span>
+                    <button
+                      type="button"
+                      aria-label={`Lire la vidéo de ${getExerciseName(exo, locale)}`}
+                      onClick={(event) => { event.stopPropagation(); openExerciseVideo(exo) }}
+                      style={{ padding: 0, background: 'transparent', border: 0, fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' as const, fontFamily: FONT_BODY, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline', textDecorationColor: GOLD_RULE, textUnderlineOffset: 5 }}
+                    >
+                      {getExerciseName(exo, locale)}
+                    </button>
                     {progressBadge !== null && (
                       <span style={{ fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 8, fontFamily: FONT_ALT, background: progressBadge > 0 ? 'rgba(34,197,94,0.20)' : progressBadge < 0 ? 'rgba(239,68,68,0.20)' : 'rgba(255,255,255,0.12)', color: progressBadge > 0 ? colors.success : progressBadge < 0 ? colors.error : 'rgba(255,255,255,0.5)' }}>
                         {progressBadge > 0 ? '+' : ''}{progressBadge}%

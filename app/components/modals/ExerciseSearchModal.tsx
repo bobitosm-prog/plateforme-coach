@@ -5,7 +5,6 @@ import { X, Search, Dumbbell } from 'lucide-react'
 import { getExerciseName } from '../../../lib/i18n-exercise'
 import { resolveExerciseVideoPoster, resolveLocalExerciseVideoPoster } from '../../../lib/media/exercise-video-posters'
 import DeferredVideo from '../media/DeferredVideo'
-import ExerciseMovementVideo from '../media/ExerciseMovementVideo'
 import { getMuscleLabel } from '../../../lib/i18n-muscle'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -35,7 +34,6 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
   const [exDbAddSets, setExDbAddSets] = useState('3')
   const [exDbAddReps, setExDbAddReps] = useState('10')
   const [exDbAddRest, setExDbAddRest] = useState('60')
-  const [previewExerciseId, setPreviewExerciseId] = useState<string | null>(null)
   const exSearchRef = useRef<any>(null)
 
   // Load all exercises on mount
@@ -63,6 +61,20 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
       muscleMatch: 'exact',
     }).results
   })()
+
+  const openExercise = async (exercise: any) => {
+    const selected = { ...exercise }
+    if (!selected.video_url && selected.variant_group) {
+      const { data: sibling } = await supabase.from('exercises_db')
+        .select('video_url').eq('variant_group', selected.variant_group)
+        .not('video_url', 'is', null).limit(1).maybeSingle()
+      if (sibling?.video_url) selected.video_url = sibling.video_url
+    }
+    setSelectedExDb(selected)
+    setExDbAddSets('3')
+    setExDbAddReps(exercise.reps ? String(exercise.reps) : '10')
+    setExDbAddRest(exercise.rest ? String(exercise.rest) : '60')
+  }
 
   return (<RailOverlay>
     <>
@@ -139,37 +151,29 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       whileTap={{ scale: 0.96 }}
                       style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: '0', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                     >
-                      {/* Exercise image: gif_url > GitHub > color bar */}
+                      {/* Video thumbnail when available; otherwise keep the existing image fallback. */}
                       {(() => {
-                        const imgUrl = ex.gif_url || getExerciseImage(ex.name)
+                        const videoPoster = ex.video_url
+                          ? (ex.gif_url || resolveExerciseVideoPoster(ex.video_url) || resolveLocalExerciseVideoPoster(ex.video_url))
+                          : null
+                        const imgUrl = videoPoster || ex.gif_url || getExerciseImage(ex.name)
                         return imgUrl ? (
-                          <div style={{ height: 80, overflow: 'hidden', flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            aria-label={ex.video_url ? `Agrandir la vidéo de ${getExerciseName(ex, locale)}` : `Voir ${getExerciseName(ex, locale)}`}
+                            onClick={() => openExercise(ex)}
+                            style={{ position: 'relative', height: 80, overflow: 'hidden', flexShrink: 0, padding: 0, border: 0, width: '100%', background: BG_BASE, cursor: 'pointer' }}
+                          >
                             <img src={imgUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { const p = (e.target as HTMLImageElement).parentElement!; p.style.height = '4px'; p.style.background = mgColor; (e.target as HTMLImageElement).style.display = 'none' }} />
-                          </div>
+                            {ex.video_url && <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.16)', color: '#fff', fontSize: 24, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>▶</span>}
+                          </button>
                         ) : (
                           <div style={{ height: 4, background: mgColor, width: '100%', flexShrink: 0 }} />
                         )
                       })()}
-                      {previewExerciseId === ex.id && ex.video_url && (
-                        <div style={{ padding: '8px 8px 0', width: '100%', boxSizing: 'border-box' }}>
-                          <ExerciseMovementVideo name={getExerciseName(ex, locale)} videoUrl={ex.video_url} posterUrl={ex.gif_url} compact />
-                        </div>
-                      )}
                       <button
                         type="button"
-                        onClick={async () => {
-                          let selected = { ...ex }
-                          if (!selected.video_url && selected.variant_group) {
-                            const { data: sibling } = await supabase.from('exercises_db')
-                              .select('video_url').eq('variant_group', selected.variant_group)
-                              .not('video_url', 'is', null).limit(1).maybeSingle()
-                            if (sibling?.video_url) selected.video_url = sibling.video_url
-                          }
-                          setSelectedExDb(selected)
-                          setExDbAddSets('3')
-                          setExDbAddReps(ex.reps ? String(ex.reps) : '10')
-                          setExDbAddRest(ex.rest ? String(ex.rest) : '60')
-                        }}
+                        onClick={() => openExercise(ex)}
                         style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1, width: '100%', background: 'transparent', border: 0, textAlign: 'left', cursor: 'pointer' }}
                       >
                         <div style={{ fontFamily: FONT_ALT, fontWeight: 700, fontSize: '0.88rem', color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>
@@ -193,15 +197,6 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                           )}
                         </div>
                       </button>
-                      {ex.video_url && (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewExerciseId(previewExerciseId === ex.id ? null : ex.id)}
-                          style={{ margin: '0 10px 10px', padding: '8px 10px', borderRadius: 10, border: `1px solid ${GOLD}55`, background: `${GOLD}12`, color: GOLD, fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}
-                        >
-                          {previewExerciseId === ex.id ? 'FERMER LA VIDÉO' : '▶ VOIR LE MOUVEMENT'}
-                        </button>
-                      )}
                     </motion.div>
                   )
                 })}
@@ -276,7 +271,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                     muted
                     poster={resolveExerciseVideoPoster(selectedExDb.video_url)}
                     posterFallback={resolveLocalExerciseVideoPoster(selectedExDb.video_url)}
-                    src={`${selectedExDb.video_url}?v=2`}
+                    src={`${selectedExDb.video_url}${selectedExDb.video_url.includes('?') ? '&' : '?'}v=2`}
                     style={{ width: '100%', height: 'auto', display: 'block' }}
                   />
                 </div>

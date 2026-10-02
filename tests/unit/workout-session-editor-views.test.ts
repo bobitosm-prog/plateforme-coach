@@ -21,7 +21,7 @@ function editorProps(exos: WorkoutSessionExercise[]): WorkoutExerciseEditorProps
     setExerciseMenu: callback, restOn: false, restExoId: null, restSetId: null, restSecs: 0,
     restMax: 90, rirTrackingEnabled: true, rirScaleAdvanced: true,
     onMoveExercise: callback, onRemoveExercise: callback, onLoadVariants: callback,
-    onOpenExerciseInfo: callback, onOpenTempo: callback, onStartTempo: callback,
+    onOpenExerciseInfo: callback, onOpenExerciseVideo: callback, onOpenTempo: callback, onStartTempo: callback,
     onSetField: callback, onCommitWeight: callback, onValidate: callback, onUnvalidate: callback,
     onSetRir: callback, onAddRestTime: callback, onSkipRest: callback, onAddSet: callback,
     onAddExercise: callback,
@@ -47,6 +47,7 @@ describe('WorkoutSession extracted editor views', () => {
     expect(html).toContain('value="8"')
     expect(html).toContain('3-1-1-0')
     expect(html).toContain('R2')
+    expect(html).toContain('aria-label="Lire la vidéo de Squat"')
   })
 
   it('renders active rest under the matching set only', () => {

@@ -49,7 +49,7 @@ export function WorkoutSessionOverlays(props: WorkoutSessionOverlaysProps) {
             <div style={{flex:1,overflowY:'auto',padding:'16px 20px 32px',WebkitOverflowScrolling:'touch'}}>
               {exerciseInfo.video_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                  <DeferredVideo activation="mount" ariaLabel={`${getExerciseName(exerciseInfo, locale)} — démonstration`} autoPlay controls={false} loop muted poster={resolveExerciseVideoPoster(exerciseInfo.video_url)} posterFallback={resolveLocalExerciseVideoPoster(exerciseInfo.video_url)} src={`${exerciseInfo.video_url}?v=2`} style={{width:'100%',height:'auto',display:'block'}}/>
+                  <DeferredVideo activation="mount" ariaLabel={`${getExerciseName(exerciseInfo, locale)} — démonstration`} autoPlay controls={false} loop muted poster={resolveExerciseVideoPoster(exerciseInfo.video_url)} posterFallback={resolveLocalExerciseVideoPoster(exerciseInfo.video_url)} src={`${exerciseInfo.video_url}${exerciseInfo.video_url.includes('?') ? '&' : '?'}v=2`} style={{width:'100%',height:'auto',display:'block'}}/>
                 </div>
               ):exerciseInfo.gif_url?(
                 <div style={{marginBottom:20,borderRadius:14,overflow:'hidden',border:`1px solid ${BORDER}`}}>
