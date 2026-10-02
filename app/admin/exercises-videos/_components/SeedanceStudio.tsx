@@ -29,9 +29,9 @@ export function SeedanceStudio() {
   const [prompt, setPrompt] = useState('')
   const [referenceImageUrl, setReferenceImageUrl] = useState('')
   const [model, setModel] = useState('seedance-2-0')
-  const [resolution, setResolution] = useState('1080p')
+  const [resolution, setResolution] = useState('720p')
   const [aspectRatio, setAspectRatio] = useState('9:16')
-  const [duration, setDuration] = useState(5)
+  const [duration, setDuration] = useState(8)
   const [promptLoading, setPromptLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [imagePrompt, setImagePrompt] = useState('')
@@ -109,7 +109,7 @@ export function SeedanceStudio() {
   return (
     <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
       <div>
-        <label style={labelStyle}>Exercice sans vidéo ({exercises.length})</label>
+        <label style={labelStyle}>Exercice sans vidéo ({exercises.length}) · validation unitaire avant publication</label>
         <select value={selectedId} onChange={(e) => onSelect(e.target.value)} style={fieldStyle}>
           <option value="">— Choisir un exercice —</option>
           {exercises.map((ex) => (
