@@ -18,14 +18,17 @@ vi.mock('next-intl',()=>({useLocale:()=> 'fr',useTranslations:(namespace:string)
 }}))
 vi.mock('@supabase/ssr',()=>({createBrowserClient:()=>({
   auth:{getUser:async()=>({data:{user:null}})},
-  from:()=>{
+  from:(table:string)=>{
     const query:any={}
     query.select=()=>query
     query.ilike=()=>query
     query.eq=()=>query
+    query.abortSignal=()=>query
+    query.or=()=>query
+    query.range=()=>query
     query.limit=()=>query
     query.order=()=>query
-    query.then=(resolve:any)=>Promise.resolve({data:catalogRows.value}).then(resolve)
+    query.then=(resolve:any)=>Promise.resolve({data:table==='exercises_catalog'?catalogRows.value:[]}).then(resolve)
     return query
   },
 })}))
@@ -49,6 +52,68 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('opens and closes the exercise options without changing entered sets',()=>{
+    const view=start([{name:'Rowing',sets:2,reps:10}])
+    const menu=screen.getByRole('button',{name:'Rowing, Options de l’exercice'})
+    expect(menu.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(menu)
+    expect(menu.getAttribute('aria-expanded')).toBe('true')
+    const panel=document.getElementById(menu.getAttribute('aria-controls')!) as HTMLDetailsElement
+    expect(panel.open).toBe(true)
+    fireEvent.change(screen.getByLabelText('Charge'),{target:{value:'28'}})
+    fireEvent.click(menu)
+    expect(panel.open).toBe(false)
+    expect(view.saved().exercises[0].sets[0].weightRaw).toBe('28')
+  })
+  it('explains an out-of-order biset validation and keeps both sets unvalidated',()=>{
+    const view=start([{name:'A',sets:1,reps:10,technique:'superset',technique_details:'B'},{name:'B',sets:1,reps:10}])
+    fireEvent.click(screen.getByRole('button',{name:'B · Série 1 · Valider la série'}))
+    expect(view.saved().currentExerciseIndex).toBe(0)
+    expect(view.saved().exercises.every(e=>e.sets.every(s=>!s.done))).toBe(true)
+    expect(screen.getByText(messages.trainingTechnique.bisetOrder)).toBeTruthy()
+  })
+
+  it('shows every exercise and preserves future-row edits when changing exercise order',()=>{
+    const view=start([{name:'Squat',sets:2,reps:10},{name:'Rowing',sets:2,reps:10}])
+    expect(screen.getByRole('heading',{name:'Squat Barre'})).toBeTruthy()
+    expect(screen.getByRole('heading',{name:'Rowing'})).toBeTruthy()
+    fireEvent.change(screen.getByLabelText('Rowing · Série 2 · Charge'),{target:{value:'28'}})
+    fireEvent.change(screen.getByLabelText('Rowing · Série 2 · Répétitions'),{target:{value:'12'}})
+    expect((screen.getByRole('button',{name:'Rowing · Série 2 · Valider la série'}) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button',{name:'Rowing, Options de l’exercice'}))
+    log('26')
+    expect((screen.getByLabelText('Charge') as HTMLInputElement).value).toBe('28')
+    expect((screen.getByLabelText('Répétitions') as HTMLInputElement).value).toBe('12')
+    fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
+    expect(view.saved().exercises[1].sets.map(s=>s.weight)).toEqual([26,28])
+    expect(view.saved().exercises[0].sets.every(s=>!s.done)).toBe(true)
+  })
+  it('rejects empty set values and keeps zero load valid',()=>{
+    const view=start([{name:'Pompes',sets:1,reps:10}])
+    fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
+    expect(view.saved().exercises[0].sets[0].done).toBe(false)
+    expect(screen.getByText(/Renseigne une charge valide/)).toBeTruthy()
+    log('0')
+    expect(view.saved().exercises[0].sets[0].done).toBe(true)
+    expect(view.saved().exercises[0].sets[0].weight).toBe(0)
+  })
+  it('keeps paired exercises adjacent even when another exercise lies between them',()=>{
+    start([{name:'A',sets:2,reps:10,technique:'superset',technique_details:'B'},{name:'Solo',sets:1,reps:10},{name:'B',sets:2,reps:10}])
+    expect(screen.getAllByRole('heading',{level:2}).map(e=>e.textContent)).toEqual(['A','B','Solo'])
+    expect(screen.getByText('Biset · A1 avec B')).toBeTruthy()
+    expect(screen.getByText('Biset · A2 avec A')).toBeTruthy()
+  })
+  it('logs a timed set from the ledger and preserves it across reload',()=>{
+    const view=start([{name:'Gainage',sets:2,duration_seconds:45}])
+    fireEvent.change(screen.getByLabelText(messages.training_tab.v2.durationSeconds),{target:{value:'45'}})
+    fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
+    const draft=view.saved();view.unmount()
+    const next=start([],draft)
+    expect(next.saved().exercises[0].sets[0].durationSeconds).toBe(45)
+    expect(next.saved().exercises[0].sets[0].done).toBe(true)
+    expect(screen.queryByLabelText('Charge')).toBeNull()
+  })
+
   it('adds an exercise after finishing the current one, focuses it and validates without reopening',async()=>{
     catalogRows.value=[{id:'new-exercise',name:'Rowing',muscle_group:'Dos'}]
     const view=start([{name:'Squat',sets:1,reps:10}])
@@ -334,7 +399,7 @@ describe('real WorkoutSession runtime',()=>{
     expect(view.saved().currentSetIndex).toBe(1)
     const saved=view.saved();view.unmount()
     const resumed=start([],saved)
-    expect(screen.getAllByText('Série 2 sur 2').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Série 2 sur 2/).length).toBeGreaterThan(0)
     log('12')
     expect(resumed.saved().exercises[0].sets.every(set=>set.done)).toBe(true)
   })

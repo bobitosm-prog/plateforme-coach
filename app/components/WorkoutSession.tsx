@@ -1,5 +1,6 @@
 'use client'
-import PreviousExerciseSession from './training-v2/PreviousExerciseSession'
+import WorkoutLedgerTable from './training-v2/WorkoutLedgerTable'
+import ledgerStyles from './training-v2/WorkoutLedger.module.css'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Check, Plus, ArrowLeft, Search, X, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
@@ -12,7 +13,7 @@ import { initAudio, finishRestPeriodSounds, playWarningTick, vibrateDevice, sche
 import { getRestSeconds } from '../../lib/utils/exercise'
 import { TECHNIQUE_LABELS } from '../../lib/technique-labels'
 import { useBeforeUnload } from '../hooks/useBeforeUnload'
-import { computeProgression, getIncrementForExercise, parseRepsTarget, type PrevSessionSet } from '../../lib/training/compute-progression'
+import { computeProgression, getIncrementForExercise, parseRepsTarget } from '../../lib/training/compute-progression'
 import {
   findNextWorkoutPosition,
   removeActiveWorkoutDraft,
@@ -22,9 +23,6 @@ import {
 } from '../../lib/training/active-workout-draft'
 import type { CompletedWorkoutData } from '../../lib/training/session-persistence'
 import { TrainingV2 } from './training-v2/TrainingV2'
-import TrainingSessionHero from './training-v2/TrainingSessionHero'
-import SessionTimeline from './training-v2/SessionTimeline'
-import ActiveExerciseFocus from './training-v2/ActiveExerciseFocus'
 import CurrentSetEditor from './training-v2/CurrentSetEditor'
 import { defaultLoadMode, setTonnage, type LoadMode } from '../../lib/training/load-volume'
 import { canonicalExerciseName } from '../../lib/training/exercise-identity'
@@ -289,6 +287,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const t = useTranslations('training_tab.ws')
   const tv2 = useTranslations('training_tab.v2')
   const tResume = useTranslations('workoutResume')
+  const tLedger = useTranslations('workoutLedger')
   const tLoad = useTranslations('trainingLoad')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -300,6 +299,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     return () => { document.body.style.overflow = overflow }
   }, [])
   const [mode, setMode] = useState<'session' | 'custom'>('session')
+  const pickerReturnId = useRef<string|null>(null)
+  useEffect(()=>{
+    if(mode!=='session'||!pickerReturnId.current)return
+    document.getElementById(`ledger-${pickerReturnId.current}`)?.scrollIntoView?.({block:'start'})
+    pickerReturnId.current=null
+  },[mode])
   const [exos, setExos] = useState<Exo[]>(() => normalizeWorkoutDraftExercises(raw))
   const [bisetSourceId, setBisetSourceId] = useState<string | null>(null)
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => (
@@ -382,6 +387,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const [exerciseInfoLoading, setExerciseInfoLoading] = useState(false)
   const [exerciseInfoError, setExerciseInfoError] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [menuExerciseId, setMenuExerciseId] = useState<string|null>(null)
   const [reorderMode, setReorderMode] = useState(false)
   const [previousPerformance, setPreviousPerformance] = useState<Record<string, PreviousPerformance>>({})
   const previousLoadStartedRef = useRef(false)
@@ -404,14 +410,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     }
     return map
   }, [exos, previousPerformance, followup.enabled])
-
-  // Compatibility adapter for the existing progression helper.
-  const prevSessionsByExo = useMemo<Record<string, PrevSessionSet[][] | null>>(() => Object.fromEntries(
-    exos.map(exercise => {
-      const performance = previousPerformance[exercise.id]
-      return [exercise.name, performance?.state === 'error' ? null : performance?.sessions ?? []]
-    }),
-  ), [exos, previousPerformance])
 
   const previousReferences = useMemo<PreviousExerciseReference[]>(() => exos.map(exercise => ({
     key: exercise.id,
@@ -722,10 +720,14 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (pair) {
       const next = findNextWorkoutPosition(exos, exerciseIndex, -1)
       if (next.currentExerciseIndex !== exerciseIndex) {
-        setSetStatusMessage(tTechnique('bisetOrder')); selectExercise(next.currentExerciseIndex); return
+        selectExercise(next.currentExerciseIndex); setSetStatusMessage(tTechnique('bisetOrder')); return
       }
     }
     const set = exo?.sets.find(s => s.id === sid)
+    if (!set || set.done || exo?.sets.find(s=>!s.done)?.id !== sid) return
+    if (!exo.targetDurationSeconds && (set.weightRaw.trim()==='' || !Number.isFinite(Number(set.weightRaw.replace(',', '.'))) || Number(set.weightRaw.replace(',', '.'))<0 || !Number.isInteger(Number(set.reps)) || Number(set.reps)<1)) {
+      setSetStatusMessage(tLedger('invalidSet')); setActiveExerciseIndex(exerciseIndex); return
+    }
     if (exo?.targetDurationSeconds) {
       const seconds = Number(set?.durationSeconds)
       if (!Number.isInteger(seconds) || seconds < 1 || seconds > 600) return
@@ -753,17 +755,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const total = exos.reduce((s, e) => s + e.sets.length, 0)
   const completed = exos.reduce((s, e) => s + e.sets.filter(s => s.done).length, 0)
   const volume = exos.reduce((v, e) => v + (e.targetDurationSeconds ? 0 : e.sets.filter(s => s.done && s.weight && s.reps).reduce((sv, s) => sv + setTonnage(s), 0)), 0)
-  const completedExercises = exos.filter(exercise => (
-    exercise.sets.length > 0 && exercise.sets.every(set => set.done)
-  )).length
-  const timelineExercises = exos.map((exercise, index) => ({
-    id: exercise.id,
-    name: getExerciseName(exercise, locale),
-    completedSets: exercise.sets.filter(set => set.done).length,
-    totalSets: exercise.sets.length,
-    technique: bisetFor(exos, index) ? tTechnique('bisetTitle', {side: bisetFor(exos, index)!.a === index ? 'A' : 'B'}) : TECHNIQUE_LABELS[exercise.technique || '']?.label,
-  }))
-
+  const completedExercises = exos.filter(exercise=>exercise.sets.length>0 && exercise.sets.every(set=>set.done)).length
   const selectExercise = (index: number) => {
     const exercise = exos[index]
     if (!exercise) return
@@ -871,10 +863,12 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           setExos(pairedExercises)
           setActiveExerciseIndex(first)
           persistDraft({ exercises: pairedExercises, currentExerciseIndex: first, currentSetIndex: 0 })
+          pickerReturnId.current = pairedExercises[first].id
           setBisetSourceId(null)
         } else {
           const combined = [...exos, ...additions]
           const index = exos.length
+          pickerReturnId.current = additions[0]?.id ?? null
           setExos(combined)
           setActiveExerciseIndex(index)
           persistDraft({ exercises: combined, currentExerciseIndex: index, currentSetIndex: 0 })
@@ -904,7 +898,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   return (
     <TrainingV2 session>
-    <div data-no-tab-swipe="true" className={`${trainingV2Styles.sessionShell} ${trainingV2Styles.workoutViewport} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
+    <div data-no-tab-swipe="true" className={`${trainingV2Styles.sessionShell} ${trainingV2Styles.workoutViewport} ${ledgerStyles.shell} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
       <style>{`
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
@@ -972,31 +966,14 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         </TrainingSheet>
       )}
 
-      {/* Compact safe exit; application bottom navigation remains behind this fullscreen shell. */}
-      <div style={{ width: 'min(100%, 1180px)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px 12px' }}>
-        <button aria-label={t('back')} onClick={onClose} style={{ width: 44, height: 44, display: 'grid', placeItems: 'center', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14, cursor: 'pointer' }}>
-          <ArrowLeft size={20} color={TEXT_PRIMARY} />
-        </button>
-        <span style={{ fontSize: 11, color: TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{draft.programSource === 'coach' ? tv2('coachPlan') : tv2('personalProgram')}</span>
-      </div>
-
-      <div style={{ width: 'min(100%, 1180px)', margin: '0 auto' }}>
-        <TrainingSessionHero
-          mode="active"
-          title={sessionName || t('freeSession')}
-          exerciseCount={exos.length}
-          completedExercises={completedExercises}
-          totalSets={total}
-          completedSets={completed}
-          elapsed={dur(elapsed)}
-        />
-      </div>
-
-      <div className={trainingV2Styles.sessionGrid}>
-      <SessionTimeline exercises={timelineExercises} activeIndex={activeExerciseIndex} onSelect={selectExercise} />
-
-      {/* EXERCICES */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, padding: '16px 12px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+      <header className={ledgerStyles.header}>
+        <button className={ledgerStyles.back} aria-label={t('back')} onClick={onClose}><ArrowLeft size={20}/></button>
+        <div className={ledgerStyles.clock}><small>MOOVX</small>{dur(elapsed)}</div>
+        <button onClick={() => setShowEndModal(true)}>{t('finish')}</button>
+      </header>
+      <div className={ledgerStyles.timer}>{(restOn || restDone) && <RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/>}</div>
+      <div className={ledgerStyles.content}>
+        <div className={ledgerStyles.intro}><h1>{sessionName || t('freeSession')}</h1><p>{tv2('completedSetProgress', {current:completed,total})}</p></div>
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
@@ -1061,17 +1038,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         )}
 
         {/* ── Normal exercise list ── */}
-        {!reorderMode && exos.map((exo, idx) => {
-          if (idx !== activeExerciseIndex) return null
+        {!reorderMode && exos.flatMap((_,idx)=>{const pair=bisetFor(exos,idx);return pair ? pair.a===idx?[pair.a,pair.b]:[] : [idx]}).map(idx => {
+          const exo = exos[idx]
+          const selected = idx === activeExerciseIndex
           const firstUndone = exo.sets.findIndex(set => !set.done)
           const activeSetIndex = firstUndone >= 0 ? firstUndone : Math.max(exo.sets.length - 1, 0)
           const activeSet = exo.sets[activeSetIndex]
           const activeSetNumber = activeSet?.num ?? 1
-          const previousState = prevSessionsByExo[exo.name]
-          const previousSet = previousPerformance[exo.id]?.latestSets[activeSetIndex]
-          const previousLabel = exo.targetDurationSeconds ? null : previousSet
-            ? `${previousSet.weight} kg × ${previousSet.reps}${previousSet.rir != null ? ` · RIR ${previousSet.rir === 4 ? '4+' : previousSet.rir}` : ''}`
-            : null
           const progression = progressionByExo[exo.id]
           const stageCount = exo.sets.filter(s=>s.parentSetNumber).length
           const mainCount = exo.sets.length-stageCount
@@ -1096,7 +1069,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           const techniqueSummary = [
             exo.tempo ? `Tempo ${exo.tempo}` : null,
             exo.technique && TECHNIQUE_LABELS[exo.technique]
-              ? `${TECHNIQUE_LABELS[exo.technique].emoji} ${TECHNIQUE_LABELS[exo.technique].label}`
+              ? TECHNIQUE_LABELS[exo.technique].label
               : null,
           ].filter(Boolean).join(' · ') || null
           const missingBiset = techniqueIssue(exos, idx) === 'invalidBiset'
@@ -1110,22 +1083,19 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             : 'repairBiset'
           const namedPartnerPresent = exos.some((member, memberIndex) => memberIndex !== idx && member.name === exo.techniqueDetails)
           return (
-            <ActiveExerciseFocus
-              stepLabel={stepLabel}
-              key={exo.id}
-              name={getExerciseName(exo, locale)}
-              exerciseIndex={idx}
-              exerciseCount={exos.length}
-              activeSet={activeSetNumber}
-              totalSets={exo.sets.length}
-              completedSets={exo.sets.filter(set => set.done).length}
-              history={<PreviousExerciseSession key={`${draft.userId}:${exo.exerciseId}:${exo.name}`} db={supabase} userId={draft.userId} exerciseId={exo.exerciseId ?? null} name={exo.name} />}
-              previous={previousLabel}
-              previousError={previousState === null}
-              target={targetLabel}
-            >
-            <div style={{ marginBottom: 12 }}>
-              <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />
+            <section key={exo.id} id={`ledger-${exo.id}`} className={ledgerStyles.exercise} data-paired={paired}>
+              <div className={ledgerStyles.title}><h2>{getExerciseName(exo, locale)}</h2><button type="button" aria-label={`${exo.name}, ${tLedger('select')}`} aria-expanded={menuExerciseId===exo.id} aria-controls={`options-${exo.id}`} onClick={()=>{selectExercise(idx);setMenuExerciseId(current=>current===exo.id?null:exo.id)}}>···</button></div>
+              {paired && <div className={ledgerStyles.pair}>{tLedger('biset', {side:bisetFor(exos,idx)!.a===idx?'A1':'A2',partner:exos[bisetFor(exos,idx)!.a===idx?bisetFor(exos,idx)!.b:bisetFor(exos,idx)!.a].name})}</div>}
+              <div className={ledgerStyles.meta}>{[techniqueSummary,!exo.targetDurationSeconds?tLoad(exo.loadMode??'legacy'):null,exo.rir!=null?`RIR ${exo.rir}`:null,targetLabel,selected&&firstUndone>=0?tv2('currentSet',{current:activeSetNumber,total:exo.sets.length}):null].filter(Boolean).join(' · ')}</div>
+              <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
+                onSelect={()=>{if(!selected)selectExercise(idx)}}
+                onChange={(sid,field,value)=>{setSetStatusMessage('');setField(exo.id,sid,field,value)}}
+                onWeightFocus={sid=>beginWeightInput(exo.id,sid)} onWeightBlur={sid=>commitWeight(exo.id,sid)} onValidate={sid=>{if(!selected)selectExercise(idx);validate(exo.id,sid)}}/>
+              <div className={ledgerStyles.rest}>{paired ? tLedger(bisetFor(exos,idx)!.a===idx?'chain':'pairRest',{seconds:exo.rest}) : exo.technique==='restpause' ? tLedger('miniRest') : exo.technique==='dropset'?tLedger('dropRest',{seconds:exo.rest}):tLedger('rest',{seconds:exo.rest})}</div>
+              {selected && <div className={ledgerStyles.status} role="status">{setStatusMessage}</div>}
+              {selected && <details id={`options-${exo.id}`} className={ledgerStyles.menu} open={menuExerciseId===exo.id || missingBiset}><summary>{tLedger('select')}</summary><div className={ledgerStyles.options}>
+              {missingBiset && <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />}
+              {!missingBiset && (exo.technique || paired) && <details className={ledgerStyles.tools}><summary>{tLedger('techniqueDetails')}</summary><TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} /></details>}
               {missingBiset && <section aria-label={tBisetRecovery('title')} style={{ marginBottom: 12, padding: 12, border: `1px solid ${GOLD_RULE}`, borderRadius: 12, background: GOLD_DIM }}>
                 <strong>{tBisetRecovery('title')}</strong>
                 <p style={{ margin: '8px 0', fontSize: 14 }}>{tBisetRecovery(namedPartnerPresent ? 'configuredPartner' : 'missingPartner', { partner: exo.techniqueDetails || '—' })}</p>
@@ -1188,22 +1158,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               </details>}
               <div className={trainingV2Styles.focusExecutionLayout}>
                 <div className={trainingV2Styles.focusEditorColumn}>
-                  {(restOn || restDone) && (
-                    <RestTimerCompact
-                      state={restDone ? 'finished' : 'running'}
-                      remainingSeconds={restSecs}
-                      onSkip={skipRest}
-                      onAddThirtySeconds={addRestTime}
-                      onDismissFinished={dismissRestDone}
-                    />
-                  )}
                   {firstUndone < 0 && <section role="status" style={{ padding: 16, background: GOLD_DIM, borderRadius: 14, color: TEXT_PRIMARY }}>
                     <p>{tResume('completed')}</p>
-                    <ol>{exo.sets.map(set => <li key={set.id}>{tResume('set', { number: set.num })} · {exo.targetDurationSeconds ? `${set.durationSeconds} s` : `${set.weightRaw || set.weight || 0} kg × ${set.reps}`} ✓</li>)}</ol>
+
                     {exos.some(exercise => exercise.sets.some(set => !set.done)) && <button type="button" onClick={() => selectExercise(exos.findIndex(exercise => exercise.sets.some(set => !set.done)))} style={{ minHeight: 44, padding: '10px 14px', border: 'none', borderRadius: 10, background: GOLD, color: BG_BASE, fontWeight: 700 }}>{tResume('continue')}</button>}
                   </section>}
                   {activeSet && firstUndone >= 0 && (
-                    <CurrentSetEditor
+                    <details className={ledgerStyles.tools}><summary>{tLedger('setOptions')}</summary><CurrentSetEditor optionsOnly
                       loadMode={exo.loadMode ?? 'legacy'}
                       loadModeLocked={exo.sets.some(set => set.done)}
                       onLoadModeChange={loadMode => {
@@ -1247,10 +1208,19 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                         setField(exo.id, activeSet.id, 'weight', fmtStep(suggestion.weight))
                       }}
                       onValidate={() => validate(exo.id, activeSet.id)}
-                    />
+                    /></details>
                   )}
+                  </div></div>                <details className={ledgerStyles.tools}><summary>{tLedger('exerciseTools')}</summary><ExerciseTools
+                    notes={exo.notes?.trim() || null}
+                    technique={techniqueSummary}
+                    videoAvailable={Boolean(exo.videoUrl)}
+                    onOpenDetails={() => void openExerciseInfo(exo)}
+                    onOpenVideo={() => { if (exo.videoUrl) { setVideoError(false); setShowVideo(exo.videoUrl) } }}
+                    onReplace={() => void loadVariantsForSession(exo, idx)}
+                  />
+                </details></div></details>}
                   <div style={{ marginTop: 12 }}>
-                    <button type="button" disabled={!canAddSet} onClick={() => {
+                    <button type="button" className={ledgerStyles.add} aria-label={selected ? undefined : `${tLedger('set')} · ${exo.name} · ${tExtraSet(paired ? 'addBiset' : exo.technique === 'dropset' ? 'addMain' : 'add')}`} disabled={!canAddSet} onClick={() => {
                       const updated = addWorkoutSet(exos, idx)
                       if (!updated) return
                       const position = findNextWorkoutPosition(updated, idx, -1)
@@ -1259,27 +1229,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       persistDraft({ exercises: updated, ...position })
                       setSetStatusMessage('')
                       setSessionModified(true)
-                    }} style={{ minHeight: 44, padding: '9px 14px', border: `1px solid ${GOLD_RULE}`, borderRadius: 10, background: GOLD_DIM, color: GOLD, fontSize: 14, fontWeight: 700, cursor: canAddSet ? 'pointer' : 'not-allowed', opacity: canAddSet ? 1 : .5 }}>
+                    }} style={{ opacity: canAddSet ? 1 : .5 }}>
                       {tExtraSet(paired ? 'addBiset' : exo.technique === 'dropset' ? 'addMain' : 'add')}
                     </button>
                     {!canAddSet && <p style={{ margin: '6px 0 0', color: TEXT_MUTED, fontSize: 12 }}>{tExtraSet(addSetReason)}</p>}
                   </div>
-                </div>
 
-                <aside className={trainingV2Styles.contextRail}>
-                  <ExerciseTools
-                    notes={exo.notes?.trim() || null}
-                    technique={techniqueSummary}
-                    videoAvailable={Boolean(exo.videoUrl)}
-                    onOpenDetails={() => void openExerciseInfo(exo)}
-                    onOpenVideo={() => { if (exo.videoUrl) { setVideoError(false); setShowVideo(exo.videoUrl) } }}
-                    onReplace={() => void loadVariantsForSession(exo, idx)}
-                  />
-                </aside>
-              </div>
-
-            </div>
-            </ActiveExerciseFocus>
+            </section>
           )
         })}
 
@@ -1293,7 +1249,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         {/* Spacer to keep scroll above bottom bar */}
         <div style={{ height: 8 }} />
       </div>
-      </div>
 
       {/* FAB ajout exercice — flottant, au-dessus de la barre TERMINER */}
       {!reorderMode && (
@@ -1303,7 +1258,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           className="active:scale-90"
           style={{
             position: 'relative',
-            margin: '12px auto 140px',
+            margin: '12px auto calc(32px + env(safe-area-inset-bottom, 0px))',
             minWidth: 160, minHeight: 44, borderRadius: 12,
             background: 'transparent', color: GOLD, border: `1px solid ${GOLD_RULE}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1315,17 +1270,6 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           {t('addExercise')}
         </button>
       )}
-
-      {/* BARRE BAS — centered TERMINER — hidden in reorder mode */}
-      {!reorderMode && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: '#0D0B08', borderTop: `1px solid ${BORDER}`, padding: '10px 16px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 16px))' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, maxWidth:600, margin:'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, color: GOLD, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{t('time')}</span>
-            <span style={{ fontSize: 18, color: TEXT_PRIMARY, fontFamily: FONT_DISPLAY, letterSpacing: '2px', lineHeight: 1 }}>{dur(elapsed)}</span>
-          </div>
-          <button onClick={() => setShowEndModal(true)} className="active:scale-95" style={{ minHeight: 44, background: 'transparent', border: `1px solid ${GOLD_RULE}`, borderRadius: 12, padding: '8px 16px', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase' as const }}>{t('finish')}</button>
-        </div>
-      </div>}
 
       {/* END SESSION MODAL — slide up sheet */}
       {showEndModal && !showDeleteConfirm && (
