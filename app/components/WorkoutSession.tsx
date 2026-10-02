@@ -82,6 +82,10 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('cable-crunch.mp4')) return '/images/video-posters/cable-crunch.webp'
   if (videoUrl?.includes('/crunch.mp4')) return '/images/video-posters/crunch.webp'
   if (videoUrl?.includes('curl-barre-droite.mp4')) return '/images/video-posters/curl-barre-droite.webp'
+  if (videoUrl?.includes('curl-barre-ez.mp4')) return '/images/video-posters/curl-barre-ez.webp'
+  if (videoUrl?.includes('curl-halteres-simultane.mp4')) return '/images/video-posters/curl-halteres-simultane.webp'
+  if (videoUrl?.includes('curl-incline.mp4')) return '/images/video-posters/curl-incline.webp'
+  if (videoUrl?.includes('curl-machine.mp4')) return '/images/video-posters/curl-machine.webp'
   return fallback || null
 }
 

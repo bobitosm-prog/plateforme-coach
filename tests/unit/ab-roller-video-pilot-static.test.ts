@@ -94,4 +94,26 @@ describe('Ab Roller video pilot', () => {
     expect(operation).toContain('/videos/exercises/curl-barre-droite.mp4?v=1')
     expect(operation.match(/is distinct from/g)).toHaveLength(2)
   })
+
+  it('uses local posters for the four newly validated curl videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    for (const slug of ['curl-barre-ez', 'curl-halteres-simultane', 'curl-incline', 'curl-machine']) {
+      expect(session).toContain(`videoUrl?.includes('${slug}.mp4')`)
+      expect(session).toContain(`'/images/video-posters/${slug}.webp'`)
+    }
+  })
+
+  it('publishes only the four canonical curl rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_four_curl_videos.sql')
+    for (const id of [
+      '15e5650c-a821-46a9-bf28-f1cfd859da38',
+      '9be17796-5c34-4a82-bd91-7959f6350848',
+      '78f75306-d2b9-4457-8f1f-b2d45209ba67',
+      '88f3b1be-0a5e-4bf0-b501-8f42f3d85a3e',
+    ]) expect(operation).toContain(id)
+    for (const slug of ['curl-barre-ez', 'curl-halteres-simultane', 'curl-incline', 'curl-machine']) {
+      expect(operation).toContain(`/videos/exercises/${slug}.mp4?v=1`)
+    }
+    expect(operation.match(/is distinct from/g)).toHaveLength(4)
+  })
 })
