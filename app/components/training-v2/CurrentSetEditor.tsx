@@ -3,6 +3,7 @@ import styles from './TrainingV2.module.css'
 import { LOAD_MODES, type LoadMode } from '@/lib/training/load-volume'
 
 interface CurrentSetEditorProps {
+  optionsOnly?: boolean
   loadMode?: LoadMode
   loadModeLocked?: boolean
   onLoadModeChange?: (mode: LoadMode) => void
@@ -31,7 +32,7 @@ interface CurrentSetEditorProps {
 }
 
 export default function CurrentSetEditor({
-  loadMode, loadModeLocked, onLoadModeChange,
+  optionsOnly = false, loadMode, loadModeLocked, onLoadModeChange,
   stepLabel,
   timed = false,
   setNumber,
@@ -61,8 +62,8 @@ export default function CurrentSetEditor({
   const setProgress = totalSets > 0 ? (doneCount / totalSets) * 100 : 0
 
   return (
-    <section className={styles.setEditor} aria-labelledby="current-set-title">
-      <div className={styles.setEditorHeader}>
+    <section className={styles.setEditor} aria-labelledby={optionsOnly?undefined:"current-set-title"} aria-label={optionsOnly?t('currentSet',{current:setNumber,total:totalSets}):undefined}>
+      {!optionsOnly && <><div className={styles.setEditorHeader}>
         <div id="current-set-title" className={styles.setEditorTitle}>{stepLabel || t('currentSet', { current: setNumber, total: totalSets })}</div>
         <div
           className={styles.setProgress}
@@ -117,6 +118,7 @@ export default function CurrentSetEditor({
         </div>
       </div>
 
+      </>}
       {!timed && loadMode && onLoadModeChange && <div style={{marginBlock:12}}>
         <label htmlFor="training-load-mode">{load('convention')}</label>
         <select id="training-load-mode" disabled={loadModeLocked} value={loadMode} onChange={event=>onLoadModeChange(event.target.value as LoadMode)} style={{display:'block',width:'100%',minHeight:44,background:'#18150e',color:'#fff',padding:8,border:'1px solid #C9A84C',borderRadius:8}}>
@@ -149,10 +151,10 @@ export default function CurrentSetEditor({
         <button type="button" onClick={onUseSuggestion}>{t('useSuggestion')}</button>
       </div>}
 
-      <button type="button" className={styles.validateSetButton} disabled={!canValidate} onClick={onValidate}>
+      {!optionsOnly && <><button type="button" className={styles.validateSetButton} disabled={!canValidate} onClick={onValidate}>
         {t('validateSet')}
       </button>
-      <div className={styles.setStatus} aria-live="polite">{statusMessage}</div>
+      <div className={styles.setStatus} aria-live="polite">{statusMessage}</div></>}
     </section>
   )
 }
