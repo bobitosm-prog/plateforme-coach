@@ -49,6 +49,45 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('adds an exercise after finishing the current one, focuses it and validates without reopening',async()=>{
+    catalogRows.value=[{id:'new-exercise',name:'Rowing',muscle_group:'Dos'}]
+    const view=start([{name:'Squat',sets:1,reps:10}])
+    log('40')
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.addExercise}))
+    await screen.findByRole('button',{name:/Rowing/})
+    fireEvent.click(screen.getByRole('button',{name:/Rowing/}))
+    fireEvent.click(screen.getByRole('button',{name:'builder.next'}))
+    fireEvent.click(screen.getByRole('button',{name:'builder.launchSession'}))
+    expect(screen.getByRole('heading',{name:'Rowing'})).toBeTruthy()
+    expect(view.saved().exercises).toHaveLength(2)
+    expect(view.saved().currentExerciseIndex).toBe(1)
+    log('25')
+    expect(view.saved().exercises[1].sets[0].done).toBe(true)
+    expect(view.saved().exercises[0].sets[0].weight).toBe(40)
+  })
+  it('rejects an oversized set count before constructing the workout',async()=>{
+    catalogRows.value=[{id:'new-exercise',name:'Rowing',muscle_group:'Dos'}]
+    const view=start([{name:'Squat',sets:1,reps:10}])
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.addExercise}))
+    fireEvent.click(await screen.findByRole('button',{name:/Rowing/}))
+    fireEvent.click(screen.getByRole('button',{name:'builder.next'}))
+    fireEvent.change(screen.getByLabelText('builder.sets'),{target:{value:'1000000'}})
+    fireEvent.click(screen.getByRole('button',{name:'builder.launchSession'}))
+    expect(screen.getByRole('alert').textContent).toContain('entre 1 et 10 séries')
+    expect(view.saved().exercises).toHaveLength(1)
+  })
+  it('keeps background scroll locked while adding or cancelling and restores it on exit',()=>{
+    document.body.style.overflow='auto'
+    const view=start([{name:'Squat',sets:1,reps:10}])
+    expect(document.body.style.overflow).toBe('hidden')
+    fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.addExercise}))
+    expect(document.body.style.overflow).toBe('hidden')
+    fireEvent.click(screen.getByRole('button',{name:'Retour'}))
+    expect(document.body.style.overflow).toBe('hidden')
+    view.unmount();expect(document.body.style.overflow).toBe('auto')
+    document.body.style.overflow=''
+  })
+
   it('keeps the same unfinished exercise after reordering past a completed exercise',()=>{
     const view=start([{name:'Squat',sets:1,reps:10},{name:'Rowing',sets:2,reps:10}])
     log('40')
@@ -262,7 +301,7 @@ describe('real WorkoutSession runtime',()=>{
     fireEvent.click(screen.getByText('Modifier la technique'))
     fireEvent.click(screen.getByRole('button',{name:'+ Ajouter un exercice au biset'}))
     expect(await screen.findByText(/Avec Développé Couché Barre · 3 séries chacun/)).toBeTruthy()
-    expect((screen.getByRole('button',{name:/Développé couché barre/i}) as HTMLButtonElement).disabled).toBe(true)
+    expect((await screen.findByRole('button',{name:/Développé couché barre/i}) as HTMLButtonElement).disabled).toBe(true)
     fireEvent.click(screen.getByRole('button',{name:/Écarté poulie/i}))
     fireEvent.click(screen.getByRole('button',{name:'builder.next'}))
     expect((screen.getByDisplayValue('3') as HTMLInputElement).disabled).toBe(true)

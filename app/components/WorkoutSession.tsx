@@ -89,7 +89,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
   const tBiset = useTranslations('trainingBisetRecovery')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
-  const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
+  const supabase = useMemo(() => createBrowserClient(SUPABASE_URL, SUPABASE_KEY), [])
   const ALL_KEY = '__all__'
   const muscleFilters = [{ key: ALL_KEY, label: tMuscle('all') }, ...WORKOUT_MUSCLE_FILTERS.slice(1).map(m => ({ key: m, label: getMuscleLabel(m, locale, tMuscle) }))]
   const name = t('builder.defaultName')
@@ -100,49 +100,52 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
   const [step, setStep] = useState<'build' | 'config'>('build')
   const [cfg, setCfg] = useState<any[]>([])
   const [error, setError] = useState(false)
-  const ref = useRef<any>(null)
+  const launched = useRef(false)
+  const [configError, setConfigError] = useState(false)
+  const mobile = useTranslations('workoutMobile')
 
   useEffect(() => {
-    clearTimeout(ref.current)
-    ref.current = setTimeout(async () => {
-      let q = supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description')
-      if (search.length >= 2) q = q.ilike('name', `%${search}%`)
-      if (filter && filter !== ALL_KEY) q = q.eq('muscle_group', filter)
-      const { data } = await q.limit(60).order('name')
-      // Deduplicate by name
-      const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
-      setDbExos(unique)
+    let alive = true
+    const timer = setTimeout(async () => {
+      try {
+        let q = supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description')
+        if (search.length >= 2) q = q.ilike('name', `%${search}%`)
+        if (filter && filter !== ALL_KEY) q = q.eq('muscle_group', filter)
+        const { data, error } = await q.limit(60).order('name')
+        if (!alive) return
+        setError(Boolean(error))
+        setDbExos((data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex(e => e.name.toLowerCase() === ex.name.toLowerCase()) === i))
+      } catch { if (alive) { setError(true); setDbExos([]) } }
     }, 250)
-  }, [search, filter])
-
-  useEffect(() => {
-    supabase.from('exercises_catalog').select('id, name, muscle_group, equipment, difficulty, description').order('name').limit(60)
-      .then(({ data }: any) => {
-        const unique = (data || []).filter((ex: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.name.toLowerCase() === ex.name.toLowerCase()) === i)
-        setDbExos(unique)
-      })
-  }, [])
+    return () => { alive = false; clearTimeout(timer) }
+  }, [search, filter, supabase])
 
   const toggle = (e: any) => setSelected(p => p.find(x => x.id === e.id) ? p.filter(x => x.id !== e.id) : bisetPartner ? [e] : [...p, e])
   const goConfig = () => { setError(false); setCfg(selected.map(e => ({ ...e, targetSets: bisetPartner?.targetSets ?? 3, targetReps: '10-12', targetDurationSeconds: prescribedDuration(e), rest: getRestSeconds(e) }))); setStep('config') }
   const launch = () => {
+    if (launched.current) return
+    if (!cfg.length || cfg.some(e => !Number.isInteger(Number(e.targetSets)) || Number(e.targetSets) < 1 || Number(e.targetSets) > 10 || !Number.isInteger(Number(e.rest)) || Number(e.rest) < 0 || Number(e.rest) > 600 || (e.targetDurationSeconds && (!Number.isInteger(Number(e.targetDurationSeconds)) || Number(e.targetDurationSeconds) < 1 || Number(e.targetDurationSeconds) > 600)))) {
+      setConfigError(true); return
+    }
+    launched.current = true
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
     const accepted = onStart(name, cfg.map(e => ({ exercise_id: e.id, equipment: e.equipment, exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
-    if (accepted === false) setError(true)
+    if (accepted === false) { launched.current = false; setError(true) }
   }
   const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
 
   if (step === 'config') return (
-    <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+    <div data-no-tab-swipe="true" className={trainingV2Styles.workoutBuilder} style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
       <div style={{ flexShrink: 0, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 16, paddingLeft: 16, borderBottom: `1px solid ${BORDER}`, background: BG_BASE, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => setStep('build')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
           <ArrowLeft size={14} /> {t('back')}
         </button>
         <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.configure')}</span>
-        <button onClick={launch} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{bisetPartner ? tBiset('confirmPartner') : t('builder.launch')}</button>
       </div>
-      <div style={{ flex: 1, paddingTop: 16, paddingRight: 16, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className={trainingV2Styles.builderScroll} style={{ flex: 1, paddingTop: 16, paddingRight: 16, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {bisetPartner && <p style={{ margin: 0, color: TEXT_MUTED }}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
         {error && <p role="alert" style={{ color: RED }}>{tBiset('partnerFailed')}</p>}
+        {configError && <p role="alert">{mobile('invalidConfig')}</p>}
         {cfg.map((e, i) => (
           <div key={e.id} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -154,12 +157,12 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
                 {e.muscle_group && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</div>}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
               {[[t('builder.sets'), 'targetSets', 'number', ''], [e.targetDurationSeconds ? t('builder.duration') : t('builder.reps'), e.targetDurationSeconds ? 'targetDurationSeconds' : 'targetReps', 'text', e.targetDurationSeconds ? 's' : ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
                 <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <input type={type} value={(e as any)[key]} disabled={Boolean(bisetPartner && key === 'targetSets')}
+                    <input aria-label={String(label)} min={key === 'rest' ? 0 : 1} max={key === 'targetSets' ? 10 : 600} type={type} value={(e as any)[key]} disabled={Boolean(bisetPartner && key === 'targetSets')}
                       onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
                       style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
                     {unit && <span style={{ fontSize: 11, color: TEXT_DIM, fontFamily: FONT_BODY }}>{unit}</span>}
@@ -170,7 +173,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
           </div>
         ))}
       </div>
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
+      <div className={trainingV2Styles.builderFooter} style={{ paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
         <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
           {bisetPartner ? tBiset('confirmPartner') : t('builder.launchSession')}
         </button>
@@ -179,7 +182,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
   )
 
   return (
-    <div data-no-tab-swipe="true" style={{ position: 'fixed', inset: 0, zIndex: 50, background: BG_BASE, display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div data-no-tab-swipe="true" className={trainingV2Styles.workoutBuilder} style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
       {/* Header */}
       <div style={{ flexShrink: 0, background: BG_BASE, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 10, paddingLeft: 16, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -208,7 +211,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
         {/* Search */}
         <div style={{ position: 'relative', marginBottom: 10 }}>
           <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
-          <input autoFocus autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
+          <input autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
             value={search} onChange={e => setSearch(e.target.value)} placeholder={t('builder.searchPlaceholder')}
             style={{ width: '100%', padding: '14px 44px 14px 36px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
           {search && (
@@ -233,7 +236,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
       </div>
 
       {/* Exercise list */}
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingTop: 8, paddingRight: 16, paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16 }}>
+      <div className={trainingV2Styles.builderScroll} style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingTop: 8, paddingRight: 16, paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16 }}>
         {dbExos.map((e: any) => {
           const sel = !!selected.find(x => x.id === e.id)
           const unavailable = Boolean(bisetPartner && (prescribedDuration(e) || bisetPartner.existingNames.includes(canonicalExerciseName(e.name))))
@@ -258,12 +261,13 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
             </button>
           )
         })}
-        {dbExos.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>{t('builder.noResults')}</div>}
+        {error && <p role="alert">{mobile('catalogError')}</p>}
+        {dbExos.length === 0 && !error && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>{t('builder.noResults')}</div>}
       </div>
 
       {/* Bottom button */}
       {selected.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
+        <div className={trainingV2Styles.builderFooter} style={{ paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
           <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
             {bisetPartner ? tBiset('confirmPartner') : t('builder.addExercises', { count: selected.length })}
           </button>
@@ -288,8 +292,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const tLoad = useTranslations('trainingLoad')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
-  const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY)
+  const supabase = useMemo(() => createBrowserClient(SUPABASE_URL, SUPABASE_KEY), [])
   useBeforeUnload(true)
+  useEffect(() => {
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = overflow }
+  }, [])
   const [mode, setMode] = useState<'session' | 'custom'>('session')
   const [exos, setExos] = useState<Exo[]>(() => normalizeWorkoutDraftExercises(raw))
   const [bisetSourceId, setBisetSourceId] = useState<string | null>(null)
@@ -864,8 +873,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           persistDraft({ exercises: pairedExercises, currentExerciseIndex: first, currentSetIndex: 0 })
           setBisetSourceId(null)
         } else {
-          setExos(prev => [...prev, ...additions])
+          const combined = [...exos, ...additions]
+          const index = exos.length
+          setExos(combined)
+          setActiveExerciseIndex(index)
+          persistDraft({ exercises: combined, currentExerciseIndex: index, currentSetIndex: 0 })
         }
+        setSetStatusMessage('')
         setSessionModified(true)
         setMode('session')
         return true
@@ -890,7 +904,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   return (
     <TrainingV2 session>
-    <div className={`${trainingV2Styles.sessionShell} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
+    <div data-no-tab-swipe="true" className={`${trainingV2Styles.sessionShell} ${trainingV2Styles.workoutViewport} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
       <style>{`
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
