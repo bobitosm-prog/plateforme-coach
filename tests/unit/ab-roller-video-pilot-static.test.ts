@@ -139,4 +139,27 @@ describe('Ab Roller video pilot', () => {
     }
     expect(operation.match(/is distinct from/g)).toHaveLength(5)
   })
+
+  it('uses local posters for the five validated shoulder, leg and curl videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    for (const slug of ['developpe-militaire', 'squat-barre', 'developpe-assis-halteres', 'arnold-press', 'curl-concentre']) {
+      expect(session).toContain(`videoUrl?.includes('${slug}.mp4')`)
+      expect(session).toContain(`'/images/video-posters/${slug}.webp'`)
+    }
+  })
+
+  it('publishes only the five matching exercise rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_shoulder_legs_curl_videos.sql')
+    for (const id of [
+      'e38482e6-f20a-4552-b307-ceb60d974e3a',
+      '7691cf60-503b-402d-a2c2-149f6112c542',
+      '1031f4de-c6b2-4fe2-8b3f-d396b8ef4224',
+      '4b420e0b-08aa-441b-94ea-43de1031e7ac',
+      '1843e6ea-e387-4cde-84de-25d7db2b2e40',
+    ]) expect(operation).toContain(id)
+    for (const slug of ['developpe-militaire', 'squat-barre', 'developpe-assis-halteres', 'arnold-press', 'curl-concentre']) {
+      expect(operation).toContain(`/videos/exercises/${slug}.mp4?v=1`)
+    }
+    expect(operation.match(/is distinct from/g)).toHaveLength(5)
+  })
 })
