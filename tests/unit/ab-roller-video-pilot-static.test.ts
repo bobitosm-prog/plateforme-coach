@@ -43,4 +43,21 @@ describe('Ab Roller video pilot', () => {
     expect(operation).toContain('/videos/exercises/adduction-machine.mp4?v=1')
     expect(operation.match(/is distinct from/g)).toHaveLength(2)
   })
+
+  it('uses local posters for the validated Battle Ropes and Box Jump videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    expect(session).toContain("videoUrl?.includes('battle-ropes.mp4')")
+    expect(session).toContain("'/images/video-posters/battle-ropes.webp'")
+    expect(session).toContain("videoUrl?.includes('box-jump.mp4')")
+    expect(session).toContain("'/images/video-posters/box-jump.webp'")
+  })
+
+  it('publishes only the canonical Battle Ropes and Box Jump rows through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_battle_ropes_box_jump_videos.sql')
+    expect(operation).toContain('d97e1cbe-2e68-4969-b610-6d7278f1c742')
+    expect(operation).toContain('/videos/exercises/battle-ropes.mp4?v=1')
+    expect(operation).toContain('38923678-4a81-40a7-8555-565eb1cac5a6')
+    expect(operation).toContain('/videos/exercises/box-jump.mp4?v=1')
+    expect(operation.match(/is distinct from/g)).toHaveLength(2)
+  })
 })

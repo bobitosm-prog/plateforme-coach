@@ -76,6 +76,8 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('ab-roller.mp4')) return '/images/video-posters/ab-roller.webp'
   if (videoUrl?.includes('abduction-machine.mp4')) return '/images/video-posters/abduction-machine.webp'
   if (videoUrl?.includes('adduction-machine.mp4')) return '/images/video-posters/adduction-machine.webp'
+  if (videoUrl?.includes('battle-ropes.mp4')) return '/images/video-posters/battle-ropes.webp'
+  if (videoUrl?.includes('box-jump.mp4')) return '/images/video-posters/box-jump.webp'
   return fallback || null
 }
 
