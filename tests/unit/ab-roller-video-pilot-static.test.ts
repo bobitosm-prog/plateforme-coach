@@ -190,4 +190,28 @@ describe('Ab Roller video pilot', () => {
     }
     expect(operation.match(/is distinct from/g)).toHaveLength(8)
   })
+
+  it('uses local posters for the five newly validated elevation, cardio and extension videos', () => {
+    const session = source('app/components/WorkoutSession.tsx')
+    for (const slug of ['elevations-frontales-disque', 'elevations-laterales-halteres', 'elliptique', 'extension-jambes-machine', 'extension-nuque-haltere']) {
+      expect(session).toContain(`videoUrl?.includes('${slug}.mp4')`)
+      expect(session).toContain(`'/images/video-posters/${slug}.webp'`)
+    }
+  })
+
+  it('publishes the five exercises and the Leg extension alias through idempotent SQL', () => {
+    const operation = source('supabase/operations/publish_elevations_elliptique_extensions_videos.sql')
+    for (const id of [
+      'de4666ec-b699-4836-8788-37452d64caac',
+      '42858a6c-b6b2-4797-976d-11942d57c78f',
+      '7c4a85df-d287-42f1-8876-c9a0371c0666',
+      '95063cbd-ca22-4ec4-b2f5-49c32d0ecbfd',
+      '3a2df83f-7a09-4379-8cc1-4728e713abb8',
+      'a5b3962a-d0f1-4c93-88e0-573474700521',
+    ]) expect(operation).toContain(id)
+    for (const slug of ['elevations-frontales-disque', 'elevations-laterales-halteres', 'elliptique', 'extension-jambes-machine', 'extension-nuque-haltere']) {
+      expect(operation).toContain(`/videos/exercises/${slug}.mp4?v=1`)
+    }
+    expect(operation.match(/is distinct from/g)).toHaveLength(6)
+  })
 })

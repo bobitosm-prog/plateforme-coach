@@ -104,6 +104,11 @@ function exerciseVideoPoster(videoUrl?: string | null, fallback?: string | null)
   if (videoUrl?.includes('dips-pectoraux.mp4')) return '/images/video-posters/dips-pectoraux.webp'
   if (videoUrl?.includes('dips-triceps.mp4')) return '/images/video-posters/dips-triceps.webp'
   if (videoUrl?.includes('donkey-calf-raise.mp4')) return '/images/video-posters/donkey-calf-raise.webp'
+  if (videoUrl?.includes('elevations-frontales-disque.mp4')) return '/images/video-posters/elevations-frontales-disque.webp'
+  if (videoUrl?.includes('elevations-laterales-halteres.mp4')) return '/images/video-posters/elevations-laterales-halteres.webp'
+  if (videoUrl?.includes('elliptique.mp4')) return '/images/video-posters/elliptique.webp'
+  if (videoUrl?.includes('extension-jambes-machine.mp4')) return '/images/video-posters/extension-jambes-machine.webp'
+  if (videoUrl?.includes('extension-nuque-haltere.mp4')) return '/images/video-posters/extension-nuque-haltere.webp'
   return fallback || null
 }
 
