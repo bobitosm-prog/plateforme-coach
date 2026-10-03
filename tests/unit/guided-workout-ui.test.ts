@@ -52,6 +52,19 @@ const log=(weight:string)=>{
   fireEvent.click(screen.getByRole('button',{name:'Valider la série'}))
 }
 describe('real WorkoutSession runtime',()=>{
+  it('validates a repeated exercise independently after completing the earlier occurrence and reopening',()=>{
+    const view=start([{id:'same-catalog-id',name:'Pull-over',sets:1,reps:10},{id:'middle',name:'Rowing',sets:1,reps:10},{id:'same-catalog-id',name:'Pull-over',sets:1,reps:10}])
+    log('30');log('25');
+    const draft=view.saved();view.unmount()
+    // Simulate a persisted draft written before occurrence IDs were repaired.
+    draft.exercises[2].id=draft.exercises[0].id
+    const next=start([],draft)
+    log('20')
+    expect(next.saved().exercises.map(e=>e.sets[0].done)).toEqual([true,true,true])
+    expect(next.saved().exercises.map(e=>e.sets[0].weight)).toEqual([30,25,20])
+    expect(new Set(next.saved().exercises.map(e=>e.id)).size).toBe(3)
+  })
+
   it('opens and closes the exercise options without changing entered sets',()=>{
     const view=start([{name:'Rowing',sets:2,reps:10}])
     const menu=screen.getByRole('button',{name:'Rowing, Options de l’exercice'})
