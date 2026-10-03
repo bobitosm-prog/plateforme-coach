@@ -12,6 +12,26 @@ const props={supabase:{from:()=>chain},session:{user:{id:'synthetic-owner'}},edi
 beforeEach(()=>{vi.stubGlobal('React',React);localStorage.clear();vi.clearAllMocks();vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({program}),{status:200})));vi.spyOn(window,'confirm').mockReturnValue(true)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 describe('actual editor interactions',()=>{
+ it('renames a generated session, resumes its draft and saves only that title change',async()=>{
+  const generated={...program,source:'ai',days:[{name:'UPPER A — Haut du corps',exercises:[{name:'Row',sets:3,reps:10}]},{name:'LOWER A',exercises:[{name:'Squat',sets:3,reps:10}]}]}
+  const view=render(React.createElement(ProgramBuilder,{...props,editProgram:generated}))
+  const title=await screen.findByLabelText('sessionTitle')
+  expect((title as HTMLInputElement).value).toBe('UPPER A — Haut du corps')
+  fireEvent.change(title,{target:{value:'Fessiers'}})
+  view.unmount();render(React.createElement(ProgramBuilder,{...props,editProgram:generated}))
+  fireEvent.click(await screen.findByRole('button',{name:'resume'}))
+  expect((screen.getByLabelText('sessionTitle') as HTMLInputElement).value).toBe('Fessiers')
+  fireEvent.click(screen.getByRole('button',{name:'review'}))
+  expect(screen.getByText(/before.*UPPER A/)).toBeTruthy()
+  expect(screen.getByText(/after.*Fessiers/)).toBeTruthy()
+  fireEvent.click(screen.getByRole('button',{name:'apply'}))
+  await waitFor(()=>expect(props.onSave).toHaveBeenCalledOnce())
+  const body=JSON.parse((fetch as any).mock.calls[0][1].body)
+  expect(body.candidate.days[0]).toEqual({...generated.days[0],name:'Fessiers',is_rest:false,weekday:'Lundi'})
+  expect(body.candidate.days[1].name).toBe('LOWER A')
+  expect(body.candidate.days[1].exercises).toEqual(generated.days[1].exercises)
+ })
+
  it('shows a stored zero, locates both blockers and saves corrections without losing the draft',async()=>{
   const legacy={...program,days:[{name:'Legs',exercises:[{name:'Curl',sets:3,reps:10},{name:'Curl',sets:0,reps:12}]},{name:'Cardio',is_rest:false,exercises:[]}]}
   const view=render(React.createElement(ProgramBuilder,{...props,editProgram:legacy}))

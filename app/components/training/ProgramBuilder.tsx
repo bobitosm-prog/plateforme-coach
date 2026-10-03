@@ -497,7 +497,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           <strong>{tx('review')}</strong><p>{programName} · {tx('sessionCount',{count:programSessionCount(programDays)})}</p>
           {programDays.map((day,index)=>{
             if(JSON.stringify(day)===JSON.stringify(initialDays[index]))return null
-            const describe=(value:any)=>!value||value.is_rest||value.repos?tx('rest'):(value.exercises||[]).map((raw:any)=>{
+            const describe=(value:any)=>!value||value.is_rest||value.repos?tx('rest'):`${value.name || tx('session')} — `+(value.exercises||[]).map((raw:any)=>{
               const ex=resolveProgramExercise(raw,prescriptionContext)
               return `${ex.name||ex.exercise_name} : ${ex.sets} × ${prescribedDuration(ex)?prescribedDuration(ex)+' s':ex.reps} · ${getRestSeconds(ex)} s${ex.technique?' · '+ex.technique:''}`
             }).join(' ; ')
@@ -1211,6 +1211,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
             </div>
 
             {programDays[editingDayIndex]?.is_rest&&programDays[editingDayIndex]?.exercises?.length>0&&<p>{tx('parked')}</p>}
+            {!programDays[editingDayIndex]?.is_rest && (
+              <label style={{display:'block',marginBottom:16}}>
+                <span style={{...labelStyle,display:'block',marginBottom:8}}>{tx('sessionTitle')}</span>
+                <input type="text" value={programDays[editingDayIndex]?.name ?? ''}
+                  onChange={event => updateDayName(editingDayIndex, event.target.value)}
+                  placeholder={tx('sessionTitlePlaceholder')}
+                  style={{...inputStyle,borderRadius:12,minHeight:48}} />
+              </label>
+            )}
             {!programDays[editingDayIndex]?.is_rest && (
             <details style={{ marginBottom: 16 }}>
               <summary style={{...labelStyle,minHeight:44,cursor:'pointer'}}>{t('day.sessionType')} · {programDays[editingDayIndex]?.name||tx('session')}</summary>
