@@ -114,8 +114,14 @@ function exerciseId(): string {
 }
 
 export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): WorkoutDraftExercise[] {
+  // A catalog exercise can appear more than once in the same workout. Keep
+  // each occurrence addressable without changing its sets or catalog reference.
+  const occurrenceIds = new Set<string>()
   const exercises: WorkoutDraftExercise[] = rows.map((value) => {
     const row = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+    let occurrenceId = typeof row.id === 'string' && row.id ? row.id : exerciseId()
+    while (occurrenceIds.has(occurrenceId)) occurrenceId = exerciseId()
+    occurrenceIds.add(occurrenceId)
     const targetSets = positiveInteger(row.targetSets ?? row.sets, 3)
     const existingSets = Array.isArray(row.sets) ? row.sets : null
     const loadMode = isLoadMode(row.loadMode) ? row.loadMode : existingSets?.some((s:any)=>s.done || Number(s.weight)>0 || s.weightRaw) || Number(row.prescribedWeight)>0 ? 'legacy' : defaultLoadMode(row)
@@ -164,7 +170,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
     }
     return {
       loadMode,
-      id: typeof row.id === 'string' ? row.id : exerciseId(),
+      id: occurrenceId,
       name: canonicalExerciseName(String(row.name ?? row.exercise_name ?? row.custom_name ?? 'Exercice')),
       muscle: String(row.muscle ?? row.muscle_group ?? ''),
       targetSets,
