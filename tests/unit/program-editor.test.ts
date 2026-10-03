@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest'
-import {editorDays,setDayRest,resizeTrainingDays,editExercise,validateEditorDays,programSessionCount,programSource,readEditorDraft,editorDraftKey,editorProgramContext} from '@/lib/training/program-editor'
+import {editorDays,setDayRest,resizeTrainingDays,editExercise,validateEditorDays,programSessionCount,programSource,readEditorDraft,editorDraftKey,editorProgramContext,programFieldIssues} from '@/lib/training/program-editor'
 import {resolveProgramExercise} from '@/lib/training/resolve-program'
 import {getRestSeconds} from '@/lib/utils/exercise'
 const now=new Date('2026-09-21T12:00:00Z')
@@ -58,5 +58,28 @@ describe('program editor preservation',()=>{
   expect(readEditorDraft(JSON.stringify({...value,savedAt:undefined}),'old',now.getTime())).toBeNull()
   expect(readEditorDraft(JSON.stringify(value),'old',now.getTime()+8*86400000)).toBeNull()
   expect(programSource('athena_monthly')).toBe('sourceAi')
+ })
+})
+
+describe('save diagnostics share the validator',()=>{
+ it('locates simultaneous errors without mutating prescriptions',()=>{
+  const days=[{exercises:[{...ex,sets:0},{...ex,reps:0,rest_seconds:-1,phases:{p2:{duration_seconds:0}}}]},{name:'Cardio',is_rest:false,exercises:[]}]
+  const before=JSON.stringify(days)
+  const issues=programFieldIssues(days)
+  expect(issues).toEqual(expect.arrayContaining([
+   expect.objectContaining({day:0,exercise:0,phase:null,code:'sets'}),
+   expect.objectContaining({day:0,exercise:1,phase:null,code:'reps'}),
+   expect.objectContaining({day:0,exercise:1,phase:null,code:'rest'}),
+   expect.objectContaining({day:0,exercise:1,phase:'p2',code:'duration'}),
+   expect.objectContaining({day:1,exercise:null,code:'emptyDay'}),
+  ]))
+  expect(validateEditorDays(days,true)).toBe(false)
+  expect(JSON.stringify(days)).toBe(before)
+ })
+ it('keeps malformed structures, empty weeks and invalid FST-7 blocked',()=>{
+  for(const days of [[],[null],[{exercises:[null]}],[{exercises:[{...ex,phases:{p1:null}}]}],[{is_rest:true,exercises:[]}],[{exercises:[{...ex,technique:'fst7'}]}]]) {
+   expect(programFieldIssues(days as any).length).toBeGreaterThan(0)
+   expect(validateEditorDays(days as any,true)).toBe(false)
+  }
  })
 })
