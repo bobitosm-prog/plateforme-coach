@@ -81,108 +81,63 @@ export function editExercise(
   }
   return result;
 }
+export interface ProgramFieldIssue {
+  day: number
+  exercise: number | null
+  phase: string | null
+  name: string
+  code: 'structure' | 'noSession' | 'emptyDay' | 'name' | 'sets' | 'reps' | 'rest' | 'duration' | 'fst7'
+}
+
+/** The same diagnostics drive both save validation and the editor's correction links. */
+export function programFieldIssues(days: Row[]): ProgramFieldIssue[] {
+  const issues: ProgramFieldIssue[] = []
+  const add = (day: number, code: ProgramFieldIssue['code'], exercise: number | null = null, phase: string | null = null, name = '') => {
+    issues.push({day, exercise, phase, name, code})
+  }
+  if (!Array.isArray(days) || !days.length || days.length > 7) {
+    add(0, 'structure'); return issues
+  }
+  days.forEach((day, dayIndex) => {
+    if (!day || typeof day !== 'object' || Array.isArray(day) ||
+      (day.is_rest !== undefined && typeof day.is_rest !== 'boolean') ||
+      (day.repos !== undefined && typeof day.repos !== 'boolean') ||
+      (day.exercises !== undefined && (!Array.isArray(day.exercises) || day.exercises.length > 30))) {
+      add(dayIndex, 'structure'); return
+    }
+    if (day.is_rest || day.repos) return
+    if (!day.exercises?.length) { add(dayIndex, 'emptyDay'); return }
+    day.exercises.forEach((ex: Row, exercise: number) => {
+      if (!ex || typeof ex !== 'object' || Array.isArray(ex) ||
+        (ex.phases && (typeof ex.phases !== 'object' || Array.isArray(ex.phases) ||
+          Object.values(ex.phases).some(p => !p || typeof p !== 'object' || Array.isArray(p))))) {
+        add(dayIndex, 'structure', exercise); return
+      }
+      const prescriptions: [string | null, Row][] = [[null, ex], ...Object.entries(ex.phases || {}).map(([key, p]): [string, Row] => [key, {...ex, ...(p as Row)}])]
+      prescriptions.forEach(([phase, p]) => {
+        const name = String(p.name || p.exercise_name || p.custom_name || '').trim()
+        const report = (code: ProgramFieldIssue['code']) => add(dayIndex, code, exercise, phase, name)
+        if (!name) report('name')
+        const sets = Number(p.sets)
+        const duration = prescribedDuration(p)
+        const rawRest = p.rest_seconds ?? p.rest ?? 90
+        const rawDuration = p.targetDurationSeconds ?? p.duration_seconds
+        if (!Number.isInteger(sets) || sets < 1 || sets > 10) report('sets')
+        if (!Number.isFinite(Number(rawRest)) || Number(rawRest) < 1 || Number(rawRest) > 600 || getRestSeconds(p) < 1 || getRestSeconds(p) > 600) report('rest')
+        if (rawDuration != null && (!Number.isInteger(Number(rawDuration)) || Number(rawDuration) < 1 || Number(rawDuration) > 600)) report('duration')
+        const match = String(p.reps ?? '').match(/^(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?$/)
+        const min = Number(match?.[1]), max = Number(match?.[2] ?? min)
+        if (!duration && !(match && min >= 1 && max >= min && max <= 100)) report('reps')
+        if (p.technique === 'fst7' && (duration || sets !== 7 || min < 8 || max > 12 || getRestSeconds(p) < 30 || getRestSeconds(p) > 45)) report('fst7')
+      })
+    })
+  })
+  if (!issues.length && !days.some(d => !d.is_rest && !d.repos && d.exercises?.length)) add(0, 'noSession')
+  return issues
+}
+
 export function validateEditorDays(days: Row[], structureOnly = false): boolean {
-  if (
-    !Array.isArray(days) ||
-    days.some((day) => !day || typeof day !== "object" || Array.isArray(day))
-  )
-    return false;
-  if (
-    days.some(
-      (day) =>
-        (day.is_rest !== undefined && typeof day.is_rest !== "boolean") ||
-        (day.repos !== undefined && typeof day.repos !== "boolean") ||
-        (day.exercises !== undefined &&
-          (!Array.isArray(day.exercises) || day.exercises.length > 30)),
-    )
-  )
-    return false;
-  if (
-    !days.length ||
-    days.length > 7 ||
-    !days.some((d) => !d.is_rest && !d.repos && d.exercises?.length)
-  )
-    return false;
-  return days.every(
-    (day) =>
-      day.is_rest ||
-      day.repos ||
-      (Array.isArray(day.exercises) &&
-        day.exercises.length > 0 &&
-        day.exercises.length <= 30 &&
-        // Validate each phase as a complete day, not isolated partner text.
-        (structureOnly || [null, ...new Set(day.exercises.flatMap((ex: Row) => Object.keys(ex?.phases || {})))].every(phase => {
-          const rows = day.exercises.map((ex: Row) => ({ ...ex, ...(phase ? ex?.phases?.[String(phase)] : {}) }));
-          const prescriptions = rows.map((ex: Row) => ({ name: String(ex.name || ex.exercise_name || ex.custom_name || ''), technique: ex.technique, techniqueDetails: ex.technique_details, targetSets: Number(ex.sets), targetDurationSeconds: prescribedDuration(ex) || undefined }));
-          return prescriptions.every((ex: any, i: number) => (ex.technique !== 'dropset' || (!ex.targetDurationSeconds && dropCount(ex.techniqueDetails) !== null)) && (ex.technique !== 'restpause' || (!ex.targetDurationSeconds && restPausePrescription(ex.techniqueDetails) !== null)) && (ex.technique !== 'superset' || Boolean(bisetFor(prescriptions, i))));
-        })) &&
-        day.exercises.every((ex: Row) => {
-          if (!ex || typeof ex !== "object" || Array.isArray(ex)) return false;
-          if (
-            ex.phases &&
-            (typeof ex.phases !== "object" ||
-              Array.isArray(ex.phases) ||
-              Object.values(ex.phases).some(
-                (p) => !p || typeof p !== "object" || Array.isArray(p),
-              ))
-          )
-            return false;
-          const prescriptions = [
-            ex,
-            ...Object.values(ex.phases || {}).map((p) => ({
-              ...ex,
-              ...(p as Row),
-            })),
-          ];
-          return prescriptions.every((p) => {
-            if (
-              !p ||
-              typeof p !== "object" ||
-              !String(p.name || p.exercise_name || p.custom_name || "").trim()
-            )
-              return false;
-            const sets = Number(p.sets);
-            const duration = prescribedDuration(p);
-            const rawRest = p.rest_seconds ?? p.rest ?? 90;
-            const rawDuration = p.targetDurationSeconds ?? p.duration_seconds;
-            if (
-              !Number.isFinite(Number(rawRest)) ||
-              Number(rawRest) < 1 ||
-              Number(rawRest) > 600
-            )
-              return false;
-            if (
-              rawDuration != null &&
-              (!Number.isInteger(Number(rawDuration)) ||
-                Number(rawDuration) < 1 ||
-                Number(rawDuration) > 600)
-            )
-              return false;
-            const match = String(p.reps ?? "").match(
-              /^(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?$/,
-            );
-            const min = Number(match?.[1]);
-            const max = Number(match?.[2] ?? min);
-            return (
-              Number.isInteger(sets) &&
-              sets >= 1 &&
-              sets <= 10 &&
-              getRestSeconds(p) >= 1 &&
-              getRestSeconds(p) <= 600 &&
-              Boolean(
-                duration || (match && min >= 1 && max >= min && max <= 100),
-              ) &&
-              (p.technique !== "fst7" ||
-                (!duration &&
-                  sets === 7 &&
-                  min >= 8 &&
-                  max <= 12 &&
-                  getRestSeconds(p) >= 30 &&
-                  getRestSeconds(p) <= 45))
-            );
-          });
-        })),
-  );
+  return programFieldIssues(days).length === 0 && (structureOnly || programTechniqueIssues(days).length === 0)
 }
 
 export interface ProgramTechniqueIssue {

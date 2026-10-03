@@ -12,6 +12,30 @@ const props={supabase:{from:()=>chain},session:{user:{id:'synthetic-owner'}},edi
 beforeEach(()=>{vi.stubGlobal('React',React);localStorage.clear();vi.clearAllMocks();vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({program}),{status:200})));vi.spyOn(window,'confirm').mockReturnValue(true)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 describe('actual editor interactions',()=>{
+ it('shows a stored zero, locates both blockers and saves corrections without losing the draft',async()=>{
+  const legacy={...program,days:[{name:'Legs',exercises:[{name:'Curl',sets:3,reps:10},{name:'Curl',sets:0,reps:12}]},{name:'Cardio',is_rest:false,exercises:[]}]}
+  const view=render(React.createElement(ProgramBuilder,{...props,editProgram:legacy}))
+  await screen.findByRole('complementary',{name:'validationTitle'})
+  const sets=screen.getAllByLabelText('day.setsLabel — Curl') as HTMLInputElement[]
+  expect(sets.map(input=>input.value)).toEqual(['3','0'])
+  fireEvent.click(screen.getByRole('button',{name:'review'}))
+  expect(fetch).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button',{name:/#2 Curl.*validation.sets/}))
+  expect((sets[1].closest('details') as HTMLDetailsElement).open).toBe(true)
+  fireEvent.change(sets[1],{target:{value:'3'}})
+  fireEvent.click(screen.getByRole('button',{name:/validation.emptyDay/}))
+  fireEvent.click(screen.getByRole('button',{name:'day.trainingToggle'}))
+  expect(screen.queryByRole('complementary',{name:'validationTitle'})).toBeNull()
+  view.unmount();render(React.createElement(ProgramBuilder,{...props,editProgram:legacy}))
+  fireEvent.click(await screen.findByRole('button',{name:'resume'}))
+  fireEvent.click(screen.getByRole('button',{name:'review'}))
+  fireEvent.click(screen.getByRole('button',{name:'apply'}))
+  await waitFor(()=>expect(props.onSave).toHaveBeenCalledOnce())
+  const body=JSON.parse((fetch as any).mock.calls[0][1].body)
+  expect(body.candidate.days[0].exercises.map((ex:any)=>ex.sets)).toEqual([3,3])
+  expect(body.candidate.days[1].is_rest).toBe(true)
+ })
+
  it('saves one repaired day while warning about an unchanged issue in another day',async()=>{
   const legacy={...program,days:[{name:'Pull',exercises:[{name:'Face Pulls',sets:3,reps:15,technique:'dropset',technique_details:''}]},{name:'Upper',exercises:[{name:'Raise',sets:3,reps:12,technique:'superset',technique_details:'Absent'}]}]}
   render(React.createElement(ProgramBuilder,{...props,editProgram:legacy}))

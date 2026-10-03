@@ -30,7 +30,7 @@ import { mutateProgram } from '@/lib/training/program-mutation'
 import { readActiveWorkoutDraft } from '@/lib/training/active-workout-draft'
 import { isCatalogExerciseCompatible } from '@/lib/training/equipment-contract'
 import { bisetFor, dropCount, restPausePrescription } from '@/lib/training/guided-techniques'
-import { programTechniqueIssues, validateProgramEdit } from '@/lib/training/program-editor'
+import { programFieldIssues, programTechniqueIssues, validateProgramEdit } from '@/lib/training/program-editor'
 
 /* ─── Types ─── */
 interface ProgramBuilderProps {
@@ -201,6 +201,24 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   const [exerciseCatalogError, setExerciseCatalogError] = useState(false)
   const [customExercisesError, setCustomExercisesError] = useState(false)
   const builderRef = useRef<HTMLDivElement>(null)
+  const validationRef = useRef<HTMLElement>(null)
+  const fieldIssues = programDays.length ? programFieldIssues(programDays) : []
+  const [correctionTarget, setCorrectionTarget] = useState<{day: number; exercise: number | null} | null>(null)
+  function showCorrection(issue: {day: number; exercise: number | null}) {
+    setEditingDayIndex(issue.day); setMode('manual'); setManualStep(1); setCorrectionTarget(issue)
+  }
+  useEffect(() => {
+    if (!correctionTarget) return
+    const target = builderRef.current?.querySelector<HTMLElement>(correctionTarget.exercise === null
+      ? '[data-program-day-controls]'
+      : `[data-program-exercise="${correctionTarget.exercise}"]`)
+    if (target) {
+      if (target instanceof HTMLDetailsElement) target.open = true
+      target.scrollIntoView?.({block:'center'})
+      target.focus()
+    }
+    setCorrectionTarget(null)
+  }, [correctionTarget])
 
   useFocusTrap({
     active: true,
@@ -297,6 +315,11 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
   async function saveProgram() {
     if (!canMutate || saving || !programName.trim()) return
     if (!validateProgramEdit(programDays, initialDays)) {
+      if (fieldIssues.length) {
+        validationRef.current?.scrollIntoView?.({block:'start'})
+        validationRef.current?.focus()
+        return
+      }
       const issue = programTechniqueIssues(programDays, initialDays).find(issue=>!issue.inherited)
       if (issue) {
         setEditingDayIndex(issue.day)
@@ -452,6 +475,15 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         </header>
         <p>{editProgram?tx('futureOnly'):tx('draftOnly')}</p>
         {dirty&&<p role="status">{tx('dirty')}</p>}
+        {fieldIssues.length > 0 && <aside ref={validationRef} tabIndex={-1} aria-label={tx('validationTitle')} style={{padding:12,border:`1px solid ${RED}`,borderRadius:12,marginBottom:12}}>
+          <strong>{tx('validationTitle')}</strong>
+          {fieldIssues.map(issue => <div key={`${issue.day}:${issue.exercise}:${issue.phase}:${issue.code}`} style={{marginTop:8}}>
+            <button type="button" onClick={() => showCorrection(issue)} style={{...selBtn(false),minHeight:44,textAlign:'left'}}>
+              {DAY_NAMES[issue.day]}{issue.exercise !== null ? ` — #${issue.exercise + 1} ${issue.name}` : ''}{issue.phase ? ` · ${issue.phase}` : ''}
+              <br />{tx(`validation.${issue.code}`)}
+            </button>
+          </div>)}
+        </aside>}
         {programTechniqueIssues(programDays, initialDays).length > 0 && <aside aria-label={tx('techniqueReview')} style={{padding:12,border:`1px solid ${GOLD}`,marginBottom:12}}>
           <strong>{tx('techniqueReview')}</strong><p>{tx('legacyTechniqueHelp')}</p>
           {programTechniqueIssues(programDays, initialDays).map(issue=><div key={`${issue.day}:${issue.exercise}:${issue.phase}`} style={{marginBottom:10}}>
@@ -1156,7 +1188,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
 
         {/* Active day */}
         {programDays[editingDayIndex] && (
-          <div>
+          <div data-program-day-controls tabIndex={-1}>
             {/* Rest toggle */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, color: TEXT_PRIMARY, letterSpacing: 1 }}>
@@ -1218,8 +1250,8 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                 })
                 const techniqueError = ex.technique === 'dropset' && !dropCount(ex.technique_details) ? 'missingDrops' : ex.technique === 'superset' && !bisetFor(dayPrescriptions, exIdx) ? 'invalidBiset' : ex.technique === 'restpause' && !restPausePrescription(ex.technique_details) ? 'invalidRestPause' : null
                 return (
-                <details key={exIdx} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
-                  <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets||3} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps||10} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
+                <details key={exIdx} data-program-exercise={exIdx} tabIndex={-1} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, padding: 16 }}>
+                  <summary style={{cursor:'pointer',minHeight:44,lineHeight:1.6}}><strong>{exerciseNameDisplay}</strong><br/>{ex.sets ?? '—'} × {prescribedDuration(ex)?`${prescribedDuration(ex)} s`:ex.reps ?? '—'} · {getRestSeconds(ex)} s {ex.technique?`· ${ex.technique}`:''}</summary>
                   {techniqueError && <p role="alert">{tTechnique(techniqueError)}{techniqueError === 'invalidBiset' && ex.technique_details && <><br />{tBisetRecovery('configuredPartner', { partner: ex.technique_details })}</>}</p>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
                     <div>
@@ -1248,7 +1280,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       <input
                         type="number" min={1} max={10}
                         aria-label={`${t('day.setsLabel')} — ${exerciseNameDisplay}`}
-                        value={ex.sets || 3}
+                        value={ex.sets ?? ''}
                         onChange={e => updateExerciseField(editingDayIndex, exIdx, 'sets', Number(e.target.value))}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
@@ -1258,7 +1290,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
                       <input
                         type={prescribedDuration(ex)?'number':'text'} inputMode={prescribedDuration(ex)?'numeric':'text'}
                         aria-label={`${prescribedDuration(ex)?t('day.durationLabel'):t('day.repsLabel')} — ${exerciseNameDisplay}`}
-                        value={prescribedDuration(ex) ?? (ex.reps || 10)}
+                        value={prescribedDuration(ex) ?? (ex.reps ?? '')}
                         onChange={e => updateExerciseField(editingDayIndex, exIdx, prescribedDuration(ex) ? 'duration_seconds' : 'reps', prescribedDuration(ex)?Number(e.target.value):e.target.value)}
                         style={{ ...inputStyle, width: 60, padding: '8px', textAlign: 'center' }}
                       />
