@@ -1,7 +1,7 @@
 # Politique de Confidentialité — MoovX
 
 **Dernière mise à jour : 4 octobre 2026**
-**Version : 1.1**
+**Version : 1.2**
 
 ---
 
@@ -162,7 +162,7 @@ Le Prestataire **ne vend, ne loue, ni ne cède** les données personnelles des U
 | Données sensibles (santé, photos, mensurations) | Tant que le compte est actif + suppression immédiate à la fermeture du compte |
 | Données de paiement (factures, transactions) | 10 ans (obligation légale comptabilité suisse — art. 958f CO) |
 | Logs techniques, IPs | 12 mois maximum |
-| Conversations Athena | 90 jours (à des fins de support et debug) puis suppression / anonymisation |
+| Historique des conversations Athena dans la base active MoovX | Suppression quotidienne des messages de plus de 30 jours ; la conservation chez Anthropic est décrite en section 5.3 |
 | Cookies | Voir Politique de Cookies (durée variable selon le type) |
 | Emails support | 3 ans après la dernière interaction |
 

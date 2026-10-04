@@ -1,7 +1,7 @@
 # Datenschutzerklärung — MoovX
 
 **Letzte Aktualisierung: 4. Oktober 2026**
-**Version: 1.1**
+**Version: 1.2**
 
 ---
 
@@ -162,7 +162,7 @@ Der Anbieter **verkauft, vermietet oder überträgt** personenbezogene Daten der
 | Besonders schützenswerte Daten (Gesundheit, Fotos, Masse) | Solange das Konto aktiv ist + sofortige Löschung bei Kontoschliessung |
 | Zahlungsdaten (Rechnungen, Transaktionen) | 10 Jahre (gesetzliche Pflicht Schweizer Buchhaltung — Art. 958f OR) |
 | Technische Logs, IPs | Maximal 12 Monate |
-| Athena-Gespräche | 90 Tage (für Support- und Debugging-Zwecke), dann Löschung / Anonymisierung |
+| Athena-Gesprächsverlauf in der aktiven MoovX-Datenbank | Tägliche Löschung von Nachrichten, die älter als 30 Tage sind; die Speicherung bei Anthropic ist in Abschnitt 5.3 beschrieben |
 | Cookies | Siehe Cookie-Richtlinie (variable Dauer je nach Typ) |
 | Support-E-Mails | 3 Jahre nach der letzten Interaktion |
 

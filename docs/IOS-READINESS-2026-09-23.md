@@ -232,3 +232,55 @@ Références Apple consultées le 4 octobre 2026 :
 - https://developer.apple.com/app-store/app-privacy-details/
 - https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/
 - https://www.apple.com/legal/privacy/data/en/app-store/
+
+### Fiche de confidentialité préparée — 4 octobre 2026
+
+Les 14 catégories initiales ont été configurées dans App Store Connect. Deux
+catégories supplémentaires ont été ajoutées après lecture du code et des SDK :
+numéro de téléphone (`ProfileTab` et fiche client) et emplacement approximatif
+(pays/région/ville des statistiques Vercel, sans permission GPS).
+
+| Catégories | Finalités déclarées |
+|---|---|
+| Nom, email, téléphone, assistance, identifiant utilisateur, achats | Fonctionnalité de l'app |
+| Santé, activité physique, messages, photos/vidéos, autre contenu, autres données | Fonctionnalité et personnalisation |
+| Interaction produit, performance | Fonctionnalité et analyses |
+| Autres diagnostics | Fonctionnalité |
+| Emplacement approximatif | Analyses |
+
+Les 16 catégories sont déclarées liées à l'identité, sans suivi publicitaire.
+Ne pas présenter la télémétrie comme anonymisée : `AnalyticsGate` utilise
+`@vercel/analytics/react` sans filtrage `beforeSend`, et les routes client peuvent
+contenir des identifiants. Une réduction des URL collectées mérite un lot séparé.
+Référence fournisseur : https://vercel.com/docs/analytics/privacy-policy.
+
+L'aperçu Apple affiche les 16 catégories et le bouton Publier est devenu actif.
+La publication finale reste en attente de confirmation de Marco : le dialogue
+Apple atteste l'exactitude, la conformité et l'engagement de mise à jour.
+Ce paramétrage n'est ni une soumission du build ni une validation juridique complète.
+
+Conservation vérifiée en lecture seule sur la production : le job
+`purge-chat-ai-messages` est actif à 03:00 UTC et supprime les messages de plus
+de 30 jours. Ses exécutions des 2, 3 et 4 octobre ont réussi. La politique 1.2
+remplace donc l'ancienne mention de 90 jours par une description exacte de la
+purge quotidienne dans la base active, distincte de la conservation Anthropic.
+Aucun message utilisateur n'a été consulté et aucune donnée n'a été modifiée.
+La conservation des autres journaux et sauvegardes reste à rapprocher.
+
+### Captures App Store — préparation, images encore à produire
+
+Le code natif actuel ouvre encore `PrototypeHome`, puis `PrototypeBrowser`
+avec le bandeau TEST / PRODUCTION et le bouton Fermer. Ces éléments font partie
+de l'interface livrée : ne pas les masquer artificiellement sur les captures.
+Préparer d'abord le shell natif candidat, le tester, puis capturer cette version.
+
+Séquence prévue, avec compte dédié et données fictives :
+1. Accueil : statut du jour, entraînement, nutrition et progression.
+2. Séance : colonnes Précédent / kg / répétitions, validation, biset visible.
+3. Nutrition : aliments directement visibles dans les cartes de repas.
+4. Progression : courbe et historique réellement calculés sur les données fictives.
+5. Athena : conversation de démonstration après consentement explicite.
+
+Dimensions acceptées observées sur la fiche iPhone 6,5 pouces : 1242 × 2688
+ou 1284 × 2778 en portrait. Aucun screenshot final n'est encore produit ou uploadé.
+Ne pas utiliser les données personnelles de Marco ou de Mia pour ces visuels.
