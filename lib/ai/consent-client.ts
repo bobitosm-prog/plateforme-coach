@@ -1,5 +1,5 @@
 'use client'
-import { AI_ACCOUNT_HEADER, AI_CONSENT_VERSION, AiConsentDeclinedError, type AiConsentStatus } from './consent-policy'
+import { AI_SUBJECT_HEADER, AI_ACCOUNT_HEADER, AI_CONSENT_VERSION, AiConsentDeclinedError, type AiConsentStatus } from './consent-policy'
 import { aiConsentCopy, aiLocale } from './consent-copy'
 import { showAiConsentDialog } from './consent-dialog'
 
@@ -55,9 +55,24 @@ export async function aiFetch(input: string, init: RequestInit = {}, expectedUse
   return fetch(input, { ...init, headers })
 }
 
-/** A coach cannot provide a client's personal consent on their behalf. */
-export async function clientSubjectAiFetch(input: string, init: RequestInit, subjectId: string): Promise<Response> {
+/**
+ * The server verifies the client relationship and consent.
+ * No dialog allows the coach to grant permission on the client's behalf.
+ */
+export async function clientSubjectAiFetch(input: string, init: RequestInit, subjectId: string, expectedCoachId?: string): Promise<Response> {
   const status = await getAiConsent()
-  if (subjectId !== status.userId) throw new Error(copy().subject)
-  return aiFetch(input, init, subjectId)
+  if (expectedCoachId && status.userId !== expectedCoachId) throw new Error(copy().account)
+  if (subjectId === status.userId) return aiFetch(input, init, subjectId)
+  if (init.signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+  const headers = new Headers(init.headers)
+  headers.set(AI_ACCOUNT_HEADER, status.userId)
+  headers.set(AI_SUBJECT_HEADER, subjectId)
+  const response = await fetch(input, { ...init, headers })
+  if (!response.ok) {
+    const body = await response.clone().json().catch(() => ({}))
+    if (body.code === 'ai_consent_required') throw new Error(copy().subject)
+    if (body.code === 'ai_subject_forbidden') throw new Error(copy().relation)
+    if (body.code === 'ai_account_changed') throw new Error(copy().account)
+  }
+  return response
 }

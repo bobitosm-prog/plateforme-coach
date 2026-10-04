@@ -18,6 +18,7 @@ const state = vi.hoisted(() => ({ client: null as SupabaseClient | null, userId:
 // This suite exercises nutrition persistence after permission. The real consent
 // transport is covered in ai-consent-runtime; this runner also executes its RLS SQL.
 vi.mock('@/lib/ai/consent-server', () => ({
+  aiDataSubject: (actorId: string) => actorId,
   withAiConsent: (handler: unknown) => handler,
   consentedAnthropicFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
 }))

@@ -227,7 +227,7 @@ export default function useClientDetail() {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ objective, weight, targetWeight, level: aiLevel, equipment, trainingDays: aiTrainingDays }),
-      }, String(id))
+      }, String(id), coachId ?? undefined)
 
       if (!res.ok) {
         const err = await res.text()
@@ -332,7 +332,7 @@ export default function useClientDetail() {
           tdee: profile.tdee,
           activity_level: profile.activity_level,
         }),
-      }, String(id))
+      }, String(id), coachId ?? undefined)
 
       if (!res.ok) throw new Error(`Erreur ${res.status}`)
 

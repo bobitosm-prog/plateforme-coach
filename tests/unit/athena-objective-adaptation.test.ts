@@ -95,9 +95,9 @@ describe('Athena objective adaptation', () => {
     }
     expect(single).toHaveBeenCalledOnce()
 
-    for (const route of ['app/api/generate-custom-program/route.ts', 'app/api/generate-meal-plan/route.ts']) {
-      expect(readFileSync(route, 'utf8')).toContain('loadAthenaGenerationContext(supabaseAuth, userId)')
-    }
+    expect(readFileSync('app/api/generate-custom-program/route.ts', 'utf8')).toContain('loadAthenaGenerationContext(supabaseAuth, userId)')
+    // Nutrition supports delegation: context must follow the verified data subject.
+    expect(readFileSync('app/api/generate-meal-plan/route.ts', 'utf8')).toContain('loadAthenaGenerationContext(supabaseAuth, subjectId)')
   })
 
   it('connects the profile objective flow and account generators to the adaptation contract', () => {

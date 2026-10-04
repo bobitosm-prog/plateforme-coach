@@ -1,4 +1,4 @@
-import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
+import { withAiConsent, consentedAnthropicFetch, aiDataSubject } from '@/lib/ai/consent-server'
 /* eslint-disable @typescript-eslint/no-explicit-any -- Legacy AI JSON boundary is normalized and validated below. */
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -390,19 +390,25 @@ async function handlePost(req: NextRequest) {
     }
     let params = parsedRequest.data
 
-    // Coach-managed capabilities do not include AI meal-plan generation.
+    // Quota belongs to the actor; profile and consent belong to the data subject.
     const userId = user.id
     const blocked = await guardCoachManagedCapabilities(userId)
     if (blocked) return blocked
-    const clientContext = await loadAthenaGenerationContext(supabaseAuth, userId)
+    const subjectId = aiDataSubject(userId)
+    const delegated = subjectId !== userId
+    // Coach generation stays a preview, accepted through the existing coach-plan flow.
+    if (delegated && params.persist_generated_plan) {
+      return Response.json({ error: 'La génération coach doit être vérifiée avant sauvegarde.' }, { status: 400 })
+    }
+    const clientContext = await loadAthenaGenerationContext(supabaseAuth, subjectId)
     if (!clientContext.ok) {
       return new Response(JSON.stringify({ error: 'Profil temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
     }
-    const activation = await loadActivationSnapshot(supabaseAuth, userId)
-    if (!activation) {
+    const activation = delegated ? null : await loadActivationSnapshot(supabaseAuth, userId)
+    if (!delegated && !activation) {
       return Response.json({ error: 'État du plan temporairement indisponible' }, { status: 503 })
     }
-    const authority = await applySavedNutritionAuthority(supabaseAuth, userId, params)
+    const authority = await applySavedNutritionAuthority(supabaseAuth, subjectId, params)
     if (!authority.ok) {
       return Response.json({ error: authority.status === 409 ? 'Enregistrez vos objectifs avant de générer le plan.' : authority.status === 422 ? 'Vos exclusions nécessitent une vérification avant la génération.' : 'Profil temporairement indisponible' }, { status: authority.status })
     }
@@ -451,7 +457,7 @@ async function handlePost(req: NextRequest) {
         plan[NUTRITION_PLAN_CONTEXT_KEY] = createNutritionPlanContext(params)
         // Client-side initial/diagnostic activation keeps the same pre-generation
         // snapshot instead of checking only after the provider has finished.
-        plan[ACTIVATION_CONTEXT_KEY] = activation
+        if (activation) plan[ACTIVATION_CONTEXT_KEY] = activation
         if (params.persist_generated_plan) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'status', phase: 'saving' })}\n\n`))
           const replacement = await replacePersonalMealPlan(supabaseAuth, user.id, plan, activation!)
@@ -486,4 +492,4 @@ async function handlePost(req: NextRequest) {
   }
 }
 
-export const POST = withAiConsent(handlePost)
+export const POST = withAiConsent(handlePost, undefined, true)
