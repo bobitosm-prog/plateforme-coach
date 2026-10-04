@@ -1,7 +1,7 @@
 # Privacy Policy — MoovX
 
 **Last updated: 4 October 2026**
-**Version: 1.1**
+**Version: 1.2**
 
 ---
 
@@ -162,7 +162,7 @@ The Provider **does not sell, rent, or transfer** Users' personal data to third 
 | Sensitive data (health, photos, measurements) | As long as the account is active + immediate deletion upon account closure |
 | Payment data (invoices, transactions) | 10 years (Swiss accounting legal obligation — Art. 958f CO) |
 | Technical logs, IPs | 12 months maximum |
-| Athena conversations | 90 days (for support and debugging purposes) then deletion / anonymization |
+| Athena conversation history in the active MoovX database | Daily deletion of messages older than 30 days; retention by Anthropic is described in section 5.3 |
 | Cookies | See Cookie Policy (variable duration by type) |
 | Support emails | 3 years after last interaction |
 
