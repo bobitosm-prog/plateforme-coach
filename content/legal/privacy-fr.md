@@ -1,7 +1,7 @@
 # Politique de Confidentialité — MoovX
 
-**Dernière mise à jour : 17 mai 2026**
-**Version : 1.0**
+**Dernière mise à jour : 4 octobre 2026**
+**Version : 1.1**
 
 ---
 
@@ -73,9 +73,9 @@ Le traitement des données personnelles repose sur les principes suivants :
 - Historique d'entraînement et de nutrition
 
 #### d) Données de paiement
-- *Ces données sont collectées et traitées exclusivement par notre prestataire Stripe Payments Europe Ltd.*
-- Le Prestataire MoovX ne stocke aucune donnée bancaire.
-- Sont conservés en interne uniquement : montant payé, date du paiement, identifiant Stripe de la transaction, type d'abonnement.
+- Les achats intégrés sur iPhone sont traités par Apple. Les paiements proposés sur le web sont traités par Stripe.
+- MoovX ne reçoit pas le numéro de carte ni les identifiants du compte Apple utilisés pour confirmer un achat intégré.
+- Pour vérifier les achats, restaurer l’accès et suivre les renouvellements, expirations ou remboursements, MoovX conserve les identifiants de transaction et de produit Apple, les justificatifs de transaction signés, les dates et états associés, ainsi qu’un identifiant technique reliant l’achat au compte MoovX. Pour les paiements Stripe, MoovX conserve les références de transaction et d’abonnement, le montant et la date du paiement.
 
 #### e) Données d'interaction avec Athena
 - Contenu des conversations avec l'assistant IA Athena
@@ -129,6 +129,8 @@ MoovX fait appel à plusieurs prestataires techniques agissant en qualité de so
 | **Stripe Payments Europe Ltd.** | Traitement des paiements | Irlande (UE) / États-Unis | CCT + EU-US Data Privacy Framework |
 | **Anthropic PBC** | Technologie IA pour Athena | États-Unis | Voir les conditions de traitement et de transfert applicables au fournisseur |
 | **Resend Inc.** *(le cas échéant)* | Envoi d'emails transactionnels | États-Unis | EU-US Data Privacy Framework |
+
+Pour les achats intégrés iPhone, Apple traite les informations de paiement selon sa propre [notice App Store et confidentialité](https://www.apple.com/legal/privacy/data/en/app-store/). MoovX reçoit les informations de transaction nécessaires à la gestion de l’accès ; Apple n’est pas destinataire des conversations Athena dans ce parcours d’achat.
 
 ### 5.2 Transferts hors Suisse / UE
 
@@ -282,7 +284,7 @@ Le Prestataire se réserve le droit de modifier la présente Politique à tout m
 Pour toute question relative à la présente Politique ou à l'exercice de vos droits :
 
 **Marco Ferreira / MoovX**
-[Adresse à compléter]
+Chemin Clair Val 2
 1226 Thônex, Canton de Genève, Suisse
 **Email : contact@moovx.ch**
 

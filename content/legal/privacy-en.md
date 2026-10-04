@@ -1,7 +1,7 @@
 # Privacy Policy — MoovX
 
-**Last updated: 17 May 2026**
-**Version: 1.0**
+**Last updated: 4 October 2026**
+**Version: 1.1**
 
 ---
 
@@ -73,9 +73,9 @@ The processing of personal data is based on the following principles:
 - Training and nutrition history
 
 #### d) Payment data
-- *This data is collected and processed exclusively by our service provider Stripe Payments Europe Ltd.*
-- The MoovX Provider does not store any banking data.
-- Stored internally only: amount paid, payment date, Stripe transaction ID, subscription type.
+- In-app purchases on iPhone are processed by Apple. Payments offered on the web are processed by Stripe.
+- MoovX does not receive the card number or Apple Account credentials used to confirm an in-app purchase.
+- To verify purchases, restore access and handle renewals, expirations or refunds, MoovX stores Apple transaction and product identifiers, signed transaction evidence, associated dates and statuses, and a technical identifier linking the purchase to the MoovX account. For Stripe payments, MoovX stores transaction and subscription references, the payment amount and date.
 
 #### e) Interaction data with Athena
 - Content of conversations with the AI assistant Athena
@@ -129,6 +129,8 @@ MoovX uses several technical service providers acting as processors within the m
 | **Stripe Payments Europe Ltd.** | Payment processing | Ireland (EU) / United States | SCCs + EU-US Data Privacy Framework |
 | **Anthropic PBC** | AI technology for Athena | United States | See the provider’s applicable processing and transfer terms |
 | **Resend Inc.** *(if applicable)* | Transactional email sending | United States | EU-US Data Privacy Framework |
+
+For iPhone in-app purchases, Apple processes payment information under its own [App Store & Privacy notice](https://www.apple.com/legal/privacy/data/en/app-store/). MoovX receives the transaction information needed to manage access; Apple does not receive Athena conversations through this purchase flow.
 
 ### 5.2 Transfers outside Switzerland / EU
 
@@ -282,7 +284,7 @@ The Provider reserves the right to modify this Policy at any time to reflect cha
 For any question concerning this Policy or the exercise of your rights:
 
 **Marco Ferreira / MoovX**
-[Address to be completed]
+Chemin Clair Val 2
 1226 Thônex, Canton of Geneva, Switzerland
 **Email: contact@moovx.ch**
 
