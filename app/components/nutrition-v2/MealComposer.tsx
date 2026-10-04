@@ -52,6 +52,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const storageBlocked = useRef(false)
   const foodRef = useRef<MealDraftFood[]>([])
   const [restored, setRestored] = useState(false)
+  const [selectedMealAdded, setSelectedMealAdded] = useState(false)
   const storageKey = mealDraftKey(userId,date,mealType)
   const photoInput = useRef<HTMLInputElement>(null)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
@@ -77,7 +78,8 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   function changeFoods(next: MealDraftFood[]) {
     if (!alive.current || busy.current || submission.current) return
     try { store(next,false); foodRef.current=next; setFoods(next); setError(null) }
-    catch { setError(t('storageError')) }
+    catch { setError(t('storageError')); return false }
+    return true
   }
 
   function discardOrKeep() {
@@ -88,7 +90,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
 
   function add(items: Record<string, any>[]) {
     if (locked || busy.current) return
-    try { const next = items.map(draftFood); changeFoods([...foodRef.current, ...next]) }
+    try { const next = items.map(draftFood); return changeFoods([...foodRef.current, ...next]) }
     catch { setError(t('invalid')) }
   }
 
@@ -173,6 +175,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const body = <div className={`${styles.body} ${inline ? styles.inlineBody : ''}`}>
         {discard ? <div role="alert"><p>{t(locked ? 'uncertainRetained' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={discardOrKeep}>{t('close')}</button></div> : <>
         {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
+        {restored && initialFoods?.length && !selectedMealAdded ? <button type="button" disabled={locked || analyzing} onClick={() => { if (add(initialFoods)) setSelectedMealAdded(true) }}>{t('addSelectedMeal')}</button> : null}
         {(!initialSource || initialSource === 'recent') && <div className={styles.search}>
           <input aria-label={t('search')} placeholder={t('search')} value={query} disabled={locked} onChange={event=>setQuery(event.target.value)} />
           <button type="button" disabled={locked || analyzing} aria-label={t('barcode')} onClick={()=>setScanner(true)}><ScanBarcode size={18}/></button>

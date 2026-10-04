@@ -155,6 +155,16 @@ describe('meal composer runtime',()=>{
     expect((screen.getByLabelText('quantity — Rice') as HTMLInputElement).value).toBe('50')
     expect(next.upsert).not.toHaveBeenCalled()
   })
+  it('lets the user add a selected saved meal to an existing draft without discarding it or writing early',()=>{
+    const first=setup([food]);first.view.unmount()
+    const next=setup([{name:'Egg',quantity_g:100,calories:155,protein:13,carbs:1,fat:11}])
+    expect(screen.queryByLabelText('quantity — Egg')).toBeNull()
+    fireEvent.click(screen.getByRole('button',{name:'addSelectedMeal'}))
+    expect(screen.getAllByLabelText('quantity — Rice')).toHaveLength(1)
+    expect(screen.getAllByLabelText('quantity — Egg')).toHaveLength(1)
+    expect(screen.queryByRole('button',{name:'addSelectedMeal'})).toBeNull()
+    expect(next.upsert).not.toHaveBeenCalled()
+  })
   it('blocks a network write if durable storage becomes unavailable',()=>{
     const current=setup([food])
     vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('Quota')})

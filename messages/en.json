@@ -2745,6 +2745,14 @@
     }
   },
   "nutrition_tab": {
+    "editor": {
+      "name": "Meal name",
+      "type": "Meal type",
+      "grams": "Quantity in grams",
+      "edit": "Edit meal",
+      "addToJournal": "Add to diary",
+      "saveError": "Could not save. Your changes are kept: please try again."
+    },
     "journal": {"addTitle": "What would you like to add?", "food": "A food", "saved": "A saved meal", "photo": "A photo", "barcode": "A barcode"},
     "quickEntry": {
       "eyebrow": "Quick entry",
@@ -2785,6 +2793,7 @@
       "discard": "Leave without saving this selection?",
       "uncertainClose": "Uncertain result: retry here without duplicates, or close and check your diary before adding again.",
       "uncertainRetained": "The result is uncertain. Closing keeps this attempt on this device. Reopen the same meal on the same date to retry without recreating the foods.",
+      "addSelectedMeal": "Add the selected meal to this draft",
       "restoredDraft": "Selection restored on this device. Check quantities before confirming.",
       "restoredPending": "Unconfirmed submission restored. Retry this attempt; do not recreate the foods elsewhere.",
       "storageError": "The draft could not be stored or changed in another window. No new submission was sent. Close and reopen this meal before retrying.",
