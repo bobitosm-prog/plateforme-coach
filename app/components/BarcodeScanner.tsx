@@ -28,6 +28,18 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
   const [saving, setSaving] = useState(false)
   const mountedRef = useRef(true)
 
+  // Cached foods can have been edited: credit the lookup catalogue without
+  // claiming that every saved value is an unchanged Open Food Facts record.
+  const catalogueCredit = (
+    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: colors.textMuted, overflowWrap: 'anywhere' }}>
+      Catalogue de référence :{' '}
+      <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer" style={{ color: colors.gold, textDecoration: 'underline' }}>Open Food Facts</a>
+      {' '}et ses contributeurs. Données sous ODbL, photos sous CC BY-SA.{' '}
+      <a href="https://world.openfoodfacts.org/terms-of-use" target="_blank" rel="noopener noreferrer" style={{ color: colors.gold, textDecoration: 'underline' }}>Licences et réutilisation</a>
+      {product && !product._existingId && /^\d+$/.test(product.barcode) && <>{' · '}<a href={`https://world.openfoodfacts.org/product/${product.barcode}`} target="_blank" rel="noopener noreferrer" style={{ color: colors.gold, textDecoration: 'underline' }}>Fiche source du produit</a></>}
+    </p>
+  )
+
   // Auto-start on mount
   useEffect(() => {
     mountedRef.current = true
@@ -196,6 +208,8 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
             )}
           </div>
 
+          {catalogueCredit}
+
           {/* Macros per 100g */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
@@ -318,6 +332,7 @@ export default function BarcodeScanner({ supabase, userId, onProductAdded, onClo
             </button>
           </div>
         </div>
+        {catalogueCredit}
       </div>
 
       <style>{`
