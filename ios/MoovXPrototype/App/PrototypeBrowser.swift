@@ -15,25 +15,19 @@ final class BrowserState: ObservableObject {
 }
 
 struct PrototypeBrowser: View {
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var state = BrowserState()
 
     var body: some View {
             VStack(spacing: 0) {
-                HStack {
-                    Text("MoovX · TEST / PRODUCTION").font(.caption.bold())
-                    Spacer()
-                    Button("Fermer") { dismiss() }.frame(minWidth: 60, minHeight: 44)
-                }.padding(.horizontal, 12).background(.yellow.opacity(0.15))
                 if state.recovered {
-                    Text("Page relancée après une interruption iOS. Vérifie tes dernières saisies.").font(.caption).padding(8)
+                    Text(NSLocalizedString("browserRecovered", comment: "Recovery notice")).font(.caption).padding(8)
                 }
-                if state.loading { ProgressView("Chargement de MoovX…").padding() }
+                if state.loading { ProgressView(NSLocalizedString("browserLoading", comment: "Loading state")).padding() }
                 if let error = state.error {
                     ContentUnavailableView {
-                        Label("Chargement interrompu", systemImage: "wifi.exclamationmark")
+                        Label(NSLocalizedString("browserInterrupted", comment: "Loading error"), systemImage: "wifi.exclamationmark")
                     } description: { Text(error) } actions: {
-                        Button("Réessayer") {
+                        Button(NSLocalizedString("browserRetry", comment: "Retry loading")) {
                             state.error = nil
                             state.loading = true
                             state.reloadID += 1
@@ -41,10 +35,10 @@ struct PrototypeBrowser: View {
                     }
                 } else {
                     PrototypeWebView(state: state).id(state.reloadID)
-                        .alert("Navigation non disponible", isPresented: $state.blocked) {
-                            Button("Compris", role: .cancel) {}
+                        .alert(NSLocalizedString("browserNavigationBlocked", comment: "Blocked external navigation"), isPresented: $state.blocked) {
+                            Button(NSLocalizedString("browserUnderstood", comment: "Dismiss navigation alert"), role: .cancel) {}
                         } message: {
-                            Text("Ce prototype reste sur app.moovx.ch. Les paiements et les connexions via un site externe ne sont pas encore intégrés.")
+                            Text(NSLocalizedString("browserNavigationMessage", comment: "External navigation explanation"))
                         }
                 }
             }

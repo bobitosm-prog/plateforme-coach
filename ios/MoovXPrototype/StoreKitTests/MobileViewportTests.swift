@@ -1,9 +1,53 @@
 import XCTest
 import WebKit
+import SwiftUI
 @testable import MoovXPrototype
 
 @MainActor
 final class MobileViewportTests: XCTestCase {
+    func testDirectBrowserFillsSafeAreaWithoutPrototypeHeader() async throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
+        let controller = UIHostingController(rootView: PrototypeBrowser().preferredColorScheme(.dark))
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+
+        func findWebView(_ view: UIView) -> WKWebView? {
+            if let web = view as? WKWebView { return web }
+            return view.subviews.lazy.compactMap { findWebView($0) }.first
+        }
+        controller.view.layoutIfNeeded()
+        var browser: WKWebView?
+        for _ in 0..<100 {
+            browser = findWebView(controller.view)
+            if browser != nil { break }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let web = try XCTUnwrap(browser)
+        // Exercise the real SwiftUI shell without signing into a production account.
+        web.stopLoading()
+        web.loadHTMLString("<meta name='viewport' content='width=device-width,initial-scale=1'><body>MoovX layout fixture</body>", baseURL: NavigationPolicy.entryURL)
+        for _ in 0..<100 {
+            if (try? await web.evaluateJavaScript("document.readyState === 'complete' && document.body.textContent === 'MoovX layout fixture'")) as? Bool == true { break }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        let body = try await web.evaluateJavaScript("document.body.textContent") as? String
+        XCTAssertEqual(body, "MoovX layout fixture")
+        for width in [320, 393, 440] {
+            window.frame = CGRect(x: 0, y: 0, width: width, height: 852)
+            controller.view.frame = window.bounds
+            controller.view.setNeedsLayout()
+            controller.view.layoutIfNeeded()
+            try await Task.sleep(for: .milliseconds(200))
+            let expected = controller.view.bounds.inset(by: controller.view.safeAreaInsets)
+            let actual = web.convert(web.bounds, to: controller.view)
+            XCTAssertEqual(actual.minX, expected.minX, accuracy: 1)
+            XCTAssertEqual(actual.minY, expected.minY, accuracy: 1)
+            XCTAssertEqual(actual.width, expected.width, accuracy: 1)
+            XCTAssertEqual(actual.height, expected.height, accuracy: 1)
+        }
+    }
+
     func testDeviceWidthAcrossAnalyticsHomeKeyboardAndNavigation() async throws {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()

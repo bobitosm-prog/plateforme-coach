@@ -84,7 +84,7 @@
     GENERATE_INFOPLIST_FILE = YES;
     CODE_SIGN_ENTITLEMENTS = MoovXPrototype.entitlements;
     ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-    INFOPLIST_KEY_CFBundleDisplayName = "MoovX Test";
+    INFOPLIST_KEY_CFBundleDisplayName = MoovX;
     INFOPLIST_KEY_NSCameraUsageDescription = "MoovX utilise la caméra pour photographier un repas et scanner un code-barres quand vous choisissez ces fonctions.";
     INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
     INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

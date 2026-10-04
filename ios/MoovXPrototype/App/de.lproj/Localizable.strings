@@ -1,7 +1,15 @@
 "cameraDeniedTitle" = "Kamerazugriff deaktiviert";
-"cameraDeniedMessage" = "Erlaube MoovX Test den Kamerazugriff in den Einstellungen und versuche es erneut.";
+"cameraDeniedMessage" = "Erlaube MoovX den Kamerazugriff in den Einstellungen und versuche es erneut.";
 "cameraSettings" = "Einstellungen öffnen";
 "cameraCancel" = "Abbrechen";
 "restNotificationBody" = "Pause beendet — beginne deinen nächsten Satz.";
 "restNotificationDeniedTitle" = "Pausenhinweis deaktiviert";
-"restNotificationDeniedMessage" = "Erlaube Mitteilungen und Töne für MoovX Test in den Einstellungen, um das Pausenende bei gesperrtem Bildschirm zu hören.";
+"restNotificationDeniedMessage" = "Erlaube Mitteilungen und Töne für MoovX in den Einstellungen, um das Pausenende bei gesperrtem Bildschirm zu hören.";
+
+"browserRecovered" = "Seite nach einer iOS-Unterbrechung neu geladen. Prüfe deine letzten Eingaben.";
+"browserLoading" = "MoovX wird geladen…";
+"browserInterrupted" = "Laden unterbrochen";
+"browserRetry" = "Erneut versuchen";
+"browserNavigationBlocked" = "Navigation nicht verfügbar";
+"browserUnderstood" = "Verstanden";
+"browserNavigationMessage" = "Dieser Link kann in MoovX nicht geöffnet werden. Nutze die Anmelde- und Kaufoptionen in der App.";
