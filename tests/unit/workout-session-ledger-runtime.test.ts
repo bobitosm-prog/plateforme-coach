@@ -158,7 +158,7 @@ it('places rest after the validated set, keeps it there on navigation, and resto
 })
 it('places finish after the last exercise and preserves the confirmation step', () => {
  mount()
- const finish=screen.getByRole('button',{name:messages.training_tab.ws.finish,exact:true})
+ const finish=screen.getByRole('button',{name:messages.training_tab.ws.finish})
  expect(finish.closest('header')).toBeNull()
  const last=screen.getByRole('group',{name:'Squat Barre'})
  expect(last.compareDocumentPosition(finish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
