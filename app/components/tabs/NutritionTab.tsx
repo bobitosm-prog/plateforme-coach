@@ -8,6 +8,7 @@ import { Trash2, Camera, Pencil, Droplets } from 'lucide-react'
 import ImportPlanSheet from './nutrition/ImportPlanSheet'
 import FoodSearch from '../FoodSearch'
 import { prepareSavedFood, resizeSavedFood, savedMealTotals, validSavedMeal } from '../../../lib/nutrition/saved-meal-editor'
+import { searchFoodCatalog } from '../../../lib/nutrition/food-search'
 import { normalizeFoodItem } from '../../../lib/utils/food'
 import ShoppingList from '../ShoppingList'
 import NutritionPlanConsistencyNotice from '../nutrition-v2/NutritionPlanConsistencyNotice'
@@ -125,6 +126,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
   const [confirmDeleteMeal, setConfirmDeleteMeal] = useState<string | null>(null)
   const [editMealSaving, setEditMealSaving] = useState(false)
   const [editMealSaved, setEditMealSaved] = useState(false)
+  const editFoodRequest = React.useRef(0)
   const [editAddFoodQuery, setEditAddFoodQuery] = useState('')
   const [editAddFoodResults, setEditAddFoodResults] = useState<any[]>([])
   const photoInputRef = React.useRef<HTMLInputElement>(null)
@@ -640,19 +642,17 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
             {/* Inline food search — adds directly to editingMeal.foods */}
             <div style={{ marginBottom: 12 }}>
               <input value={editAddFoodQuery} onChange={async (e) => {
-                setEditAddFoodQuery(e.target.value)
-                if (e.target.value.length >= 2) {
-                  const q = `%${e.target.value}%`
-                  const [fitRes, ansesRes] = await Promise.all([
-                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', q).limit(8),
-                    supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', q).limit(6),
-                  ])
-                  const results = [
-                    ...(fitRes.data || []).map((f: any) => normalizeFoodItem(f)),
-                    ...(ansesRes.data || []).map((f: any) => normalizeFoodItem(f)),
-                  ]
-                  setEditAddFoodResults(results)
-                } else { setEditAddFoodResults([]) }
+                const query = e.target.value
+                setEditAddFoodQuery(query)
+                const request = ++editFoodRequest.current
+                setEditAddFoodResults([])
+                if (query.trim().length < 2) return
+                try {
+                  const results = await searchFoodCatalog(supabase, query)
+                  if (request === editFoodRequest.current) setEditAddFoodResults(results.map(normalizeFoodItem))
+                } catch {
+                  if (request === editFoodRequest.current) setEditMealError(nt('composer.searchError'))
+                }
               }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none' }} />
               {editAddFoodResults.length > 0 && (
                 <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: colors.surface, marginTop: 4 }}>
@@ -663,7 +663,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                       setEditAddFoodQuery('')
                       setEditAddFoodResults([])
                     }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>CIQUAL</span>}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>{f.source === 'ANSES' ? 'CIQUAL' : f.source}</span>}</div>
                       <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
                     </button>
                   ))}
