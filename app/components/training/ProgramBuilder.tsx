@@ -274,7 +274,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           notes: aiNotes, gender: userGender,
           allowAdvancedTechniques: aiAdvancedTechniques && aiLevel !== 'debutant',
         }),
-      })
+      }, session?.user?.id)
       const program = await consumeProgramStream(res)
       if (program) {
         setAiResult(program)

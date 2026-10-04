@@ -2,7 +2,7 @@
 import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 import { aiFetch } from '@/lib/ai/consent-client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
 const supabase = createBrowserClient(
@@ -18,6 +18,7 @@ export type ChatMessage = {
 }
 
 export function useChatAI() {
+  const historyOwnerId = useRef<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -26,7 +27,8 @@ export function useChatAI() {
   const loadHistory = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
+      if (!user) { historyOwnerId.current = null; setLoading(false); return }
+      historyOwnerId.current = user.id
 
       const { data, error: fetchErr } = await supabase
         .from('chat_ai_messages')
@@ -65,11 +67,12 @@ export function useChatAI() {
     setMessages(prev => [...prev, optimisticMsg])
 
     try {
+      if (!historyOwnerId.current) throw new Error('Compte indisponible')
       const res = await aiFetch('/api/chat-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmed }),
-      })
+      }, historyOwnerId.current)
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))

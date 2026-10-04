@@ -199,7 +199,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1]
       try {
-        const res = await aiFetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) })
+        const res = await aiFetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) }, userId)
         if (!res.ok) throw new Error('PHOTO_ANALYSIS_FAILED')
         const data = await res.json() as PhotoAnalysisResult
         if (!Array.isArray(data.foods)) throw new Error('PHOTO_ANALYSIS_INVALID')

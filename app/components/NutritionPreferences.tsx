@@ -321,7 +321,7 @@ export default function NutritionPreferences({
           ...buildMealPlanParams(generationProfile),
           persist_generated_plan: true,
         }),
-      })
+      }, userId)
       if (!res.ok) {
         const errText = await res.text()
         console.error('generate-meal-plan HTTP error:', res.status, errText)

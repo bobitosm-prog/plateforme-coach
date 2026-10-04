@@ -80,7 +80,7 @@ export default function OnboardingPhotoContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photoUrl: signedUrl, profileData }),
-      })
+      }, userId ?? undefined)
       const data = await res.json()
       setAnalysisText(data.analysis || t('results.analysisUnavailable'))
     } catch (error) {
@@ -123,7 +123,7 @@ export default function OnboardingPhotoContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
-      })
+      }, userId ?? undefined)
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
       let plan: any = null

@@ -78,7 +78,7 @@ export default function HomeTab({
     setDiagnosticGenerationError(false)
     setGeneratingDiag(true)
     try {
-      const res = await aiFetch('/api/weekly-diagnostic', { method: 'POST' })
+      const res = await aiFetch('/api/weekly-diagnostic', { method: 'POST' }, session?.user?.id)
       const data = await res.json()
       if (!res.ok || !data.diagnostic) throw new Error('Diagnostic generation failed')
       if (data.diagnostic && setLatestDiagnostic) {
