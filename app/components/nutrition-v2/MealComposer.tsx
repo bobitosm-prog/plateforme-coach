@@ -7,6 +7,7 @@ import { Camera, ScanBarcode, Trash2 } from 'lucide-react'
 import { RailOverlay } from '../ui/RailOverlay'
 import TrainingSheet from '../training-v2/TrainingSheet'
 import BarcodeScanner from '../BarcodeScanner'
+import { searchFoodCatalog } from '../../../lib/nutrition/food-search'
 import { normalizeFoodItem } from '../../../lib/utils/food'
 import { draftFood, draftNutrients, mealDraftRows, persistMealDraft, type MealDraftFood } from '../../../lib/nutrition/meal-draft'
 import { mealDraftKey, readMealDraft, writeMealDraft } from '../../../lib/nutrition/meal-draft-storage'
@@ -126,9 +127,8 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
     if (query.trim().length < 2) return
     const timer = setTimeout(async()=> {
       try {
-      const {data,error} = await supabase.from('food_items').select('id,name,energy_kcal,proteins,carbohydrates,fat,source')
-        .ilike('name',`%${query.trim().replace(/[%_]/g,'')}%`).order('name').limit(30).abortSignal(controller.signal)
-      if (!controller.signal.aborted) { setResults((data ?? []).map(fromCatalog)); if (error) setError(t('searchError')) }
+      const data = await searchFoodCatalog(supabase, query, controller.signal)
+      if (!controller.signal.aborted) setResults(data.map(fromCatalog))
       } catch { if (!controller.signal.aborted) setError(t('searchError')) }
       finally { if (!controller.signal.aborted) setSearching(false) }
     },300)
