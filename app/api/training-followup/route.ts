@@ -1,3 +1,4 @@
+import { withAiConsent } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeExerciseName } from '@/lib/exercise-matching';
 import { z } from "zod";
@@ -92,7 +93,7 @@ const actionSchema = z.discriminatedUnion("action", [
     .object({ action: z.enum(["apply", "decline"]), id: z.string().uuid() })
     .strict(),
 ]);
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
     const auth = await authorize(5);
     if (auth.response) return auth.response;
@@ -455,3 +456,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ code: "unavailable" }, { status: 503 });
   }
 }
+
+export const POST = withAiConsent(handlePost, async req => (await req.clone().json().catch(() => null))?.action === 'monthly')

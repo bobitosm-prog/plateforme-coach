@@ -1,3 +1,4 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -17,7 +18,7 @@ const requestSchema = z.object({
   excludeIngredients: z.array(text).max(20).default([]),
 })
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -108,7 +109,7 @@ Réponds UNIQUEMENT en JSON (pas de backticks, pas de texte) :
   "fat_per_serving": 12
 }`
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
@@ -136,3 +137,5 @@ Réponds UNIQUEMENT en JSON (pas de backticks, pas de texte) :
     return NextResponse.json({ error: 'Recette temporairement indisponible' }, { status: 500 })
   }
 }
+
+export const POST = withAiConsent(handlePost)

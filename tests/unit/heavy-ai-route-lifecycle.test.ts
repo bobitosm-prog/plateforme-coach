@@ -1,3 +1,12 @@
+
+// This suite exercises business behaviour after consent. The real privacy gate is
+// covered separately by ai-consent-runtime.test.ts (no provider traffic on denial).
+vi.mock('@/lib/ai/consent-server', () => ({
+  withAiConsent: (handler: unknown) => handler,
+  consentedAnthropicFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
+  withAiUser: (_db: unknown, _id: string, action: () => unknown) => action(),
+  assertAiConsent: async () => {},
+}))
 import { afterEach,beforeEach,describe,expect,it,vi } from 'vitest'
 import sharp from 'sharp'
 import type { NextRequest } from 'next/server'

@@ -1,3 +1,4 @@
+import { consentedAnthropicFetch } from '@/lib/ai/consent-server'
 /**
  * Core program generation logic — pure function, no auth/request dependency.
  * Used by the API endpoint (generate-custom-program) and the cron (F6.B.6).
@@ -132,7 +133,7 @@ IMPORTANT :
 - Pour les intermediaires : max 1 technique optionnelle par jour
 - Pour les avances : max 2 techniques optionnelles par jour`
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { withAiConsent } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -14,7 +15,7 @@ import {
   SessionAdaptationError,
 } from '../../../lib/athena/session-adaptation'
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,3 +52,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 502 })
   }
 }
+
+export const POST = withAiConsent(handlePost)

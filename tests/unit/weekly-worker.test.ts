@@ -1,3 +1,12 @@
+
+// This suite exercises business behaviour after consent. The real privacy gate is
+// covered separately by ai-consent-runtime.test.ts (no provider traffic on denial).
+vi.mock('@/lib/ai/consent-server', () => ({
+  withAiConsent: (handler: unknown) => handler,
+  consentedAnthropicFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
+  withAiUser: (_db: unknown, _id: string, action: () => unknown) => action(),
+  assertAiConsent: async () => {},
+}))
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { runWeeklyGeneration } from '@/lib/weekly-diagnostic/worker'

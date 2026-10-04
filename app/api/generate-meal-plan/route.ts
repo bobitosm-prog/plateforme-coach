@@ -1,3 +1,4 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 /* eslint-disable @typescript-eslint/no-explicit-any -- Legacy AI JSON boundary is normalized and validated below. */
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -312,7 +313,7 @@ Déjeuner et dîner : inclure une source protéique compatible avec le régime d
 Aliments féculents (riz, pâtes, légumineuses) : TOUJOURS pesés et calculés CUITS (~130 kcal/100g pour riz/pâtes), jamais crus.
 TOTAL KCAL de ce jour : entre ${kcal - 50} et ${kcal + 50}. Réponds UNIQUEMENT en JSON.`
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
     signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(45_000)]) : AbortSignal.timeout(45_000),
     method: 'POST',
     headers: {
@@ -360,7 +361,7 @@ function generationFailureCode(error: unknown): string {
   return 'unknown'
 }
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
@@ -484,3 +485,5 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: 'Service temporairement indisponible' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
   }
 }
+
+export const POST = withAiConsent(handlePost)
