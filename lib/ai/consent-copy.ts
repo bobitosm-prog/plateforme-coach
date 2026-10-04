@@ -1,5 +1,6 @@
 export const aiConsentCopy = {
   fr: {
+    relation: 'Ce client ne fait plus partie de ton suivi actif. Recharge son dossier.',
     title: 'Athena et tes données',
     intro: 'Athena utilise Claude, le service d’intelligence artificielle d’Anthropic.',
     data: 'Selon la fonction utilisée, MoovX transmet à Anthropic les informations utiles de ton profil (prénom, âge, mensurations, objectifs), tes entraînements et bilans, tes préférences et restrictions alimentaires, tes messages, et les photos que tu choisis d’analyser. Ces informations peuvent concerner ta santé.',
@@ -9,9 +10,10 @@ export const aiConsentCopy = {
     settings: 'Intelligence artificielle · Anthropic', active: 'Partage autorisé pour Athena', inactive: 'Partage non autorisé', loading: 'Vérification…',
     revoke: 'Retirer mon accord', enable: 'Examiner et autoriser', error: 'Impossible de vérifier ou de modifier ton accord. Réessaie.',
     declined: 'Génération reportée. Tu peux continuer sans IA.', account: 'Le compte a changé. Relance cette action depuis le compte concerné.',
-    subject: 'L’accord du client doit venir de son propre compte. La génération depuis cet espace coach reste désactivée ; la modification manuelle reste disponible.',
+    subject: 'Le client doit autoriser Athena dans son compte → Préférences avant cette génération. Tu peux continuer les modifications manuelles.',
   },
   en: {
+    relation: 'This client is no longer under your active coaching. Reload their profile.',
     title: 'Athena and your data', intro: 'Athena uses Claude, Anthropic’s artificial intelligence service.',
     data: 'Depending on the feature, MoovX sends Anthropic relevant profile details (first name, age, body measurements, goals), workouts and check-ins, food preferences and restrictions, messages, and photos you choose to analyse. This may include health information.',
     purpose: 'This is used to create programmes and recipes, answer questions, analyse photos and prepare reviews, including enabled automatic reviews.',
@@ -20,9 +22,10 @@ export const aiConsentCopy = {
     settings: 'Artificial intelligence · Anthropic', active: 'Sharing with Athena allowed', inactive: 'Sharing not allowed', loading: 'Checking…',
     revoke: 'Withdraw permission', enable: 'Review and allow', error: 'Unable to check or update your permission. Please try again.',
     declined: 'Generation postponed. You can continue without AI.', account: 'Your account changed. Restart this action from the correct account.',
-    subject: 'Clients must give permission from their own account. Generation from this coach space is disabled; manual editing remains available.',
+    subject: 'The client must allow Athena in Account → Preferences before generation. You can continue editing manually.',
   },
   de: {
+    relation: 'Dieser Kunde wird nicht mehr aktiv von dir betreut. Lade das Profil neu.',
     title: 'Athena und deine Daten', intro: 'Athena verwendet Claude, den KI-Dienst von Anthropic.',
     data: 'Je nach Funktion übermittelt MoovX relevante Profildaten (Vorname, Alter, Körpermasse, Ziele), Trainings und Check-ins, Ernährungsvorlieben und Einschränkungen, Nachrichten sowie Fotos, die du analysieren lassen möchtest, an Anthropic. Dazu können Gesundheitsdaten gehören.',
     purpose: 'Damit werden Programme und Rezepte erstellt, Fragen beantwortet, Fotos analysiert und Auswertungen vorbereitet – auch aktivierte automatische Auswertungen.',
@@ -31,7 +34,7 @@ export const aiConsentCopy = {
     settings: 'Künstliche Intelligenz · Anthropic', active: 'Datenübermittlung für Athena erlaubt', inactive: 'Datenübermittlung nicht erlaubt', loading: 'Wird geprüft…',
     revoke: 'Zustimmung widerrufen', enable: 'Prüfen und erlauben', error: 'Die Zustimmung konnte nicht geprüft oder geändert werden. Bitte erneut versuchen.',
     declined: 'Generierung verschoben. Du kannst ohne KI fortfahren.', account: 'Das Konto wurde gewechselt. Starte diese Aktion im richtigen Konto neu.',
-    subject: 'Kunden müssen in ihrem eigenen Konto zustimmen. Die Generierung im Coach-Bereich ist deaktiviert; manuelle Bearbeitung bleibt möglich.',
+    subject: 'Der Kunde muss Athena unter Konto → Einstellungen erlauben. Manuelle Bearbeitung bleibt möglich.',
   },
 } as const
 export type AiConsentLocale = keyof typeof aiConsentCopy

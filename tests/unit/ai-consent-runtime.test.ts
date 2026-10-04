@@ -4,8 +4,8 @@ vi.mock('server-only', () => ({}))
 const mocks = vi.hoisted(() => ({ create: vi.fn() }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseRouteClient: mocks.create }))
 vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: () => ({ allowed: true }) }))
-import { AI_ACCOUNT_HEADER, AI_CONSENT_VERSION } from '@/lib/ai/consent-policy'
-import { consentedAnthropicFetch, withAiConsent, withAiUser } from '@/lib/ai/consent-server'
+import { AI_SUBJECT_HEADER, AI_ACCOUNT_HEADER, AI_CONSENT_VERSION } from '@/lib/ai/consent-policy'
+import { aiDataSubject, consentedAnthropicFetch, withAiConsent, withAiUser } from '@/lib/ai/consent-server'
 import { GET, POST } from '@/app/api/ai-consent/route'
 
 const A = '00000000-0000-4000-8000-000000000001'
@@ -111,5 +111,64 @@ describe('actual consent transport and public route runtime', () => {
     foreign.headers.set('origin', 'https://untrusted.example')
     expect((await POST(foreign)).status).toBe(403)
     expect(rpc).not.toHaveBeenCalled()
+  })
+})
+
+describe('delegated coach generation uses the client consent only', () => {
+  let relation: { status: string; source: string } | null
+  beforeEach(() => {
+    relation = { status: 'active', source: 'invitation' }
+    const originalFrom = db.from
+    db.from = (table: string) => {
+      if (table !== 'coach_clients') return originalFrom(table)
+      const query = { select: () => query, eq: () => query, limit: async () => ({
+        data: relation?.status === 'active' ? [{ id: 'relation', coach_id: A, client_id: B, ...relation }] : [],
+        error: unavailable ? { code: 'offline' } : null,
+      }) }
+      return query
+    }
+  })
+  const delegated = () => {
+    const req = request()
+    req.headers.set(AI_SUBJECT_HEADER, B)
+    return req
+  }
+  it('requires explicit route opt-in, an active authoritative relationship and client agreement', async () => {
+    rows.set(A, { granted: true, version: AI_CONSENT_VERSION })
+    expect((await withAiConsent(send, undefined, true)(delegated())).status).toBe(403)
+    rows.set(B, { granted: true, version: AI_CONSENT_VERSION })
+    expect((await withAiConsent(send)(delegated())).status).toBe(403)
+    for (const source of ['default', 'legacy']) {
+      relation = { status: 'active', source }
+      expect((await withAiConsent(send, undefined, true)(delegated())).status).toBe(403)
+    }
+    relation = null
+    expect((await withAiConsent(send, undefined, true)(delegated())).status).toBe(403)
+    expect(outbound).not.toHaveBeenCalled()
+  })
+  it('isolates the client subject and rechecks ended coaching before a second provider send', async () => {
+    rows.set(B, { granted: true, version: AI_CONSENT_VERSION })
+    const route = withAiConsent(async () => {
+      expect(aiDataSubject(A)).toBe(B)
+      await send()
+      relation = null
+      await expect(send()).rejects.toMatchObject({ code: 'ai_subject_forbidden' })
+      return Response.json({ ok: true })
+    }, undefined, true)
+    expect((await route(delegated())).status).toBe(200)
+    expect(outbound).toHaveBeenCalledOnce()
+  })
+  it('blocks withdrawal mid-generation and an unavailable relationship lookup', async () => {
+    rows.set(B, { granted: true, version: AI_CONSENT_VERSION })
+    const route = withAiConsent(async () => {
+      await send()
+      rows.set(B, { granted: false, version: AI_CONSENT_VERSION })
+      await expect(send()).rejects.toMatchObject({ code: 'ai_consent_required' })
+      return Response.json({})
+    }, undefined, true)
+    expect((await route(delegated())).status).toBe(200)
+    unavailable = true
+    expect((await route(delegated())).status).toBe(503)
+    expect(outbound).toHaveBeenCalledOnce()
   })
 })

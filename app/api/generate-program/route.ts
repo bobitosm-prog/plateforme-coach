@@ -1,4 +1,5 @@
-import { withAiConsent } from '@/lib/ai/consent-server'
+import { loadAthenaGenerationContext } from '@/lib/athena/generation-context'
+import { withAiConsent, aiDataSubject } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -37,6 +38,9 @@ async function handlePost(req: NextRequest) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
     if (!apiKey) return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
+    const subjectId = aiDataSubject(user.id)
+    const context = subjectId !== user.id ? await loadAthenaGenerationContext(supabase, subjectId) : null
+    if (context && !context.ok) return NextResponse.json({ error: 'Profil temporairement indisponible' }, { status: 503 })
     const input = parsed.data
     const catalog = await loadExerciseCatalog(supabase)
     const generated = await generateProgram({
@@ -45,6 +49,7 @@ async function handlePost(req: NextRequest) {
       daysPerWeek: input.trainingDays,
       duration: 60,
       equipment: Array.isArray(input.equipment) ? input.equipment.join(', ') : input.equipment,
+      clientContext: context?.ok ? context.prompt : undefined,
       priorities: [], notes: '', gender: '',
     }, apiKey, catalog)
     await logAiUsage(supabase, user.id, 'generate-program')
@@ -69,4 +74,4 @@ async function handlePost(req: NextRequest) {
   }
 }
 
-export const POST = withAiConsent(handlePost)
+export const POST = withAiConsent(handlePost, undefined, true)

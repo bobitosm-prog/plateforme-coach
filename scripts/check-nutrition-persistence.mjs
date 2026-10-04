@@ -153,6 +153,13 @@ try {
     execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
   }
   console.log('Anthropic consent: account isolation, explicit grant/withdrawal, anonymous denial, worker read-only access and idempotency passed.')
+  stage = 'coach consent RLS and idempotency'
+  const coachConsentMigration = readFileSync(new URL('../supabase/migrations/20261004102837_coach_ai_consent_read.sql', import.meta.url))
+  for (const input of [coachConsentMigration, coachConsentMigration,
+    readFileSync(new URL('../tests/sql/coach-ai-consent-rls.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
+  }
+  console.log('Coach consent: authorized read only, refused writes, withdrawal, unrelated/default/legacy/ended relationship denial passed.')
   // Separate image retrieval from runtime failures; neither command contains credentials.
   stage = 'postgrest image pull'
   docker('pull', postgrestImage)

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const dialog = vi.hoisted(() => ({ show: vi.fn() }))
 vi.mock('@/lib/ai/consent-dialog', () => ({ showAiConsentDialog: dialog.show }))
 import { aiFetch, AiConsentDeclinedError, clientSubjectAiFetch, setAiConsent } from '@/lib/ai/consent-client'
-import { AI_ACCOUNT_HEADER, AI_CONSENT_VERSION } from '@/lib/ai/consent-policy'
+import { AI_SUBJECT_HEADER, AI_ACCOUNT_HEADER, AI_CONSENT_VERSION } from '@/lib/ai/consent-policy'
 import { EMPTY_INITIAL_GENERATION_SNAPSHOT, runInitialGenerationAttempt } from '@/lib/initial-generation/engine'
 let userId: string, granted: boolean, decided: boolean
 let network: ReturnType<typeof vi.fn>
@@ -67,11 +67,14 @@ describe('first use, later, account changes and withdrawal', () => {
     await expect(aiFetch('/api/chat-ai')).rejects.toBeInstanceOf(AiConsentDeclinedError)
     expect(network.mock.calls.filter(([url]) => url === '/api/chat-ai')).toHaveLength(1)
   })
-  it('refuses stale data ownership and a coach trying to consent for a client', async () => {
+  it('refuses stale data ownership and never grants a client consent', async () => {
     await expect(aiFetch('/api/chat-ai', {}, 'account-b')).rejects.toThrow('compte')
+    network.mockImplementation(async (url) => url === '/api/ai-consent'
+      ? Response.json({ userId, granted: true, decided: true, version: AI_CONSENT_VERSION })
+      : Response.json({ code: 'ai_consent_required' }, { status: 403 }))
     await expect(clientSubjectAiFetch('/api/generate-program', {}, 'client-b')).rejects.toThrow('client')
     expect(dialog.show).not.toHaveBeenCalled()
-    expect(network.mock.calls.every(([url]) => url === '/api/ai-consent')).toBe(true)
+    expect(network.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0)
   })
   it('does not upload when the permission store fails', async () => {
     network.mockResolvedValue(Response.json({}, { status: 503 }))
@@ -90,4 +93,14 @@ describe('first use, later, account changes and withdrawal', () => {
     expect(nutrition.generate).not.toHaveBeenCalled(); expect(clearFlag).not.toHaveBeenCalled()
     expect(dialog.show).toHaveBeenCalledOnce()
   })
+})
+
+it('binds coach and client separately without requiring the coach personal consent', async () => {
+  const response = await clientSubjectAiFetch('/api/generate-program', { method: 'POST' }, 'client-b', 'account-a')
+  expect(response.ok).toBe(true)
+  expect(dialog.show).not.toHaveBeenCalled()
+  const headers = new Headers(network.mock.calls.at(-1)?.[1]?.headers)
+  expect(headers.get(AI_ACCOUNT_HEADER)).toBe('account-a')
+  expect(headers.get(AI_SUBJECT_HEADER)).toBe('client-b')
+  await expect(clientSubjectAiFetch('/api/generate-program', {}, 'client-b', 'old-coach')).rejects.toThrow('compte')
 })

@@ -2,6 +2,7 @@
 // This suite exercises business behaviour after consent. The real privacy gate is
 // covered separately by ai-consent-runtime.test.ts (no provider traffic on denial).
 vi.mock('@/lib/ai/consent-server', () => ({
+  aiDataSubject: (actorId: string) => mocks.subject || actorId,
   withAiConsent: (handler: unknown) => handler,
   consentedAnthropicFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   withAiUser: (_db: unknown, _id: string, action: () => unknown) => action(),
@@ -11,15 +12,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 
 const mocks = vi.hoisted(() => ({
-  user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(), snapshot: vi.fn(), reserve: vi.fn(), settle: vi.fn(),
+  subject: '', context: vi.fn(), authority: vi.fn(), user: vi.fn(), guard: vi.fn(), persist: vi.fn(), usage: vi.fn(), snapshot: vi.fn(), reserve: vi.fn(), settle: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => ({ auth: { getUser: mocks.user } }) }))
 vi.mock('@/lib/api-guard', () => ({ guardCoachManagedCapabilities: mocks.guard }))
-vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext: async () => ({ ok: true, prompt: 'Synthetic test profile' }) }))
+vi.mock('@/lib/athena/generation-context', () => ({ loadAthenaGenerationContext: mocks.context }))
 vi.mock('@/lib/meal-plan/replace-personal-plan', () => ({ replacePersonalMealPlan: mocks.persist }))
 vi.mock('@/lib/meal-plan/activation-snapshot', () => ({ loadActivationSnapshot: mocks.snapshot, ACTIVATION_CONTEXT_KEY: '_activation_context' }))
-vi.mock('@/lib/nutrition/server-authority', () => ({ applySavedNutritionAuthority: async (_client: unknown, _user: unknown, params: unknown) => ({ ok: true, params }) }))
+vi.mock('@/lib/nutrition/server-authority', () => ({ applySavedNutritionAuthority: mocks.authority }))
 vi.mock('@/lib/ai/heavy-reservation', () => ({ reserveHeavyAi: mocks.reserve }))
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: () => ({ allowed: true }),
@@ -58,6 +59,9 @@ async function run() {
 beforeEach(() => {
   vi.stubEnv('ANTHROPIC_API_KEY', 'synthetic-test-key')
   mocks.user.mockResolvedValue({ data: { user: { id: 'synthetic-user' } } })
+  mocks.subject = ''
+  mocks.context.mockResolvedValue({ ok: true, prompt: 'Synthetic CLIENT profile' })
+  mocks.authority.mockImplementation(async (_db, _user, params) => ({ ok: true, params }))
   mocks.guard.mockResolvedValue(null)
   mocks.persist.mockResolvedValue({ ok: true, id: 'synthetic-plan' })
   mocks.usage.mockResolvedValue(undefined)
@@ -233,4 +237,25 @@ describe('nutrition POST runtime with synthetic provider and persistence', () =>
     expect((await POST(request())).status).toBe(403)
     expect(fetch).not.toHaveBeenCalled()
   })
+})
+
+it('uses the client nutrition context and restrictions while keeping quota with the coach and no personal activation', async () => {
+  mocks.subject = 'synthetic-client'
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => provider()))
+  const response = await POST(request({ persist_generated_plan: false }))
+  const events = (await response.text()).split('\n').filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)))
+  expect(events.at(-1).type).toBe('done')
+  expect(mocks.context).toHaveBeenCalledWith(expect.anything(), 'synthetic-client')
+  expect(mocks.authority).toHaveBeenCalledWith(expect.anything(), 'synthetic-client', expect.anything())
+  expect(mocks.reserve).toHaveBeenCalledWith('synthetic-user', 'generate-meal-plan')
+  expect(mocks.snapshot).not.toHaveBeenCalled()
+  expect(mocks.persist).not.toHaveBeenCalled()
+  expect(JSON.stringify(events)).not.toContain('_activation_context')
+})
+it('rejects delegated personal activation before provider requests or quota reservation', async () => {
+  mocks.subject = 'synthetic-client'
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch)
+  expect((await POST(request())).status).toBe(400)
+  expect(fetch).not.toHaveBeenCalled()
+  expect(mocks.reserve).not.toHaveBeenCalled()
 })
