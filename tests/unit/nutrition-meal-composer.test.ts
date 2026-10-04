@@ -8,6 +8,10 @@ import MealComposer from '@/app/components/nutrition-v2/MealComposer'
 
 vi.mock('next-intl',()=>{ const translate=(key:string)=>key; return {useTranslations:()=>translate} })
 vi.mock('@/app/components/BarcodeScanner',()=>({default:({onSelected}:any)=>React.createElement('button',{onClick:()=>onSelected({name:'Scanned',quantity_g:100,calories:100,protein:10,carbs:10,fat:2})},'scan result')}))
+vi.mock('@/lib/nutrition/food-search',()=>({searchFoodCatalog:async()=>[
+  {id:'egg',name:'Oeuf entier',energy_kcal:155,proteins:13,carbohydrates:1,fat:11,source:'fitness'},
+  {id:'white',name:"Blanc d'oeuf",energy_kcal:52,proteins:11,carbohydrates:0.7,fat:0.2,source:'fitness'},
+]}))
 beforeEach(()=>{localStorage.clear();vi.stubGlobal('React',React)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const food={name:'Rice',qty:200,kcal:260,prot:5.4,carb:56,fat:0.6}
@@ -164,6 +168,33 @@ describe('meal composer runtime',()=>{
     expect(screen.getAllByLabelText('quantity — Egg')).toHaveLength(1)
     expect(screen.queryByRole('button',{name:'addSelectedMeal'})).toBeNull()
     expect(next.upsert).not.toHaveBeenCalled()
+  })
+  it('closes search results and focuses the added quantity, then permits another search',async()=>{
+    const {upsert}=setup()
+    fireEvent.change(screen.getByRole('textbox',{name:'search'}),{target:{value:'oeuf'}})
+    fireEvent.click(await screen.findByRole('button',{name:/Oeuf entier/}))
+    const quantity=screen.getByLabelText('quantity — Oeuf entier')
+    expect(document.activeElement).toBe(quantity)
+    expect((screen.getByRole('textbox',{name:'search'}) as HTMLInputElement).value).toBe('')
+    expect(screen.queryByRole('button',{name:/Blanc d'oeuf/})).toBeNull()
+    fireEvent.change(quantity,{target:{value:'150'}})
+    expect(upsert).not.toHaveBeenCalled()
+    fireEvent.focus(screen.getByRole('textbox',{name:'search'}))
+    fireEvent.change(screen.getByRole('textbox',{name:'search'}),{target:{value:'blanc'}})
+    fireEvent.click(await screen.findByRole('button',{name:/Blanc d'oeuf/}))
+    expect(document.activeElement).toBe(screen.getByLabelText("quantity — Blanc d'oeuf"))
+    expect((screen.getByLabelText('quantity — Oeuf entier') as HTMLInputElement).value).toBe('150')
+    expect(upsert).not.toHaveBeenCalled()
+  })
+  it('keeps the results open when adding fails to preserve the draft',async()=>{
+    setup()
+    fireEvent.change(screen.getByRole('textbox',{name:'search'}),{target:{value:'oeuf'}})
+    const result=await screen.findByRole('button',{name:/Oeuf entier/})
+    vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('Quota')})
+    fireEvent.click(result)
+    expect(screen.getByRole('button',{name:/Oeuf entier/})).toBeTruthy()
+    expect(screen.queryByLabelText('quantity — Oeuf entier')).toBeNull()
+    expect(screen.getByText('storageError')).toBeTruthy()
   })
   it('blocks a network write if durable storage becomes unavailable',()=>{
     const current=setup([food])
