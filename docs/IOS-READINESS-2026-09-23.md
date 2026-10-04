@@ -178,3 +178,57 @@ cela réouvrirait la faille initiale et doit être une décision d'incident expl
 Compte Apple : capture fournie par Marco avec `Enrollment Pending` ; adhésion
 encore non confirmée. Cela n'empêche pas les travaux locaux, mais aucune
 distribution TestFlight ni signature de livraison n'est revendiquée.
+
+## Actualisation terrain — 4 octobre 2026
+
+Vérification directe dans App Store Connect, après livraison des correctifs
+consentement Anthropic et séance (PR97–99). La version 1.0 est toujours
+« À finaliser avant soumission » ; elle n'est pas en cours d'examen Apple.
+
+| Élément | État observé |
+|---|---|
+| Contrat gratuit | Actif |
+| Contrat payant | En attente d’infos de l’utilisateur |
+| W-8BEN | Informations fiscales manquantes |
+| Compte bancaire | Traitement en cours ; bannière de délai 24 heures toujours affichée |
+| Statut DSA | En cours de vérification |
+| Confidentialité App Store | 14 catégories sélectionnées, finalités/liens/suivi à configurer ; bouton Publier désactivé |
+| Captures iPhone 6,5 pouces | 0/10 |
+| Version 1.0 — build | Aucun build sélectionné |
+| Informations de revue | Connexion requise cochée ; identifiants, coordonnées et remarques vides |
+| Métadonnées FR | Description, promotion, mots-clés et URLs support/marketing renseignés |
+| Publication après approbation | Automatique, configuration existante non modifiée |
+
+Le dossier Finance 22552312 reste la référence fournie par Marco. L'absence de
+changement dans App Store Connect ne prouve pas l'absence d'une réponse par email.
+
+### Correction documentaire de ce lot
+
+La politique publiée disait encore « exclusivement Stripe » et gardait un
+placeholder d'adresse dans sa dernière section. Le texte décrit désormais les
+achats intégrés Apple et les paiements web Stripe, les références/états de
+transaction associés au compte MoovX et le rôle d'Apple avec sa notice officielle.
+L'adresse finale reprend celle déjà présente dans l'en-tête de la politique.
+Date/version synchronisées : 4 octobre 2026, 1.1, dans les trois langues.
+
+Cette correction factuelle ne vaut pas audit juridique exhaustif. Les affirmations
+anciennes de conservation (notamment conversations Athena 90 jours et logs 12 mois)
+et leurs mécanismes effectifs de purge doivent encore être rapprochés avant de
+déclarer la fiche App Store définitivement vérifiée.
+
+### Suite de préparation
+
+1. Finaliser les 14 catégories de confidentialité à partir d'un inventaire des
+   flux réels, partenaires compris. Le consentement Anthropic ne dispense pas
+   de déclarer les données collectées.
+2. Préparer les captures à partir de l'app réelle avec données de démonstration,
+   puis fournir un compte de revue dédié et ses consignes.
+3. Rattacher le build candidat après recette achats Apple sandbox complète.
+4. Vérifier la correction fiscale, la banque, le DSA et les produits avant
+   toute soumission/commercialisation. Aucun formulaire fiscal ni accord
+   contractuel n'a été soumis pendant cet audit.
+
+Références Apple consultées le 4 octobre 2026 :
+- https://developer.apple.com/app-store/app-privacy-details/
+- https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/
+- https://www.apple.com/legal/privacy/data/en/app-store/
