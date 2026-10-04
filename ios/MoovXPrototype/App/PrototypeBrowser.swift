@@ -77,6 +77,7 @@ struct PrototypeWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
+        MobileViewport.configure(configuration)
         let denied = Self.cameraAccessDenied
         let script = """
         (() => {
