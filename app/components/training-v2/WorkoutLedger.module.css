@@ -24,3 +24,8 @@
 
 .menu > summary{display:none;}.menu{background:#1a1817;border-radius:12px;padding:0 12px;} .menu:not([open]){padding:0;} .options{margin:0;} .menu .tools{margin:0;}
 .timer>section{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;margin-top:10px;} .timer>section>div{min-width:0;} .timer strong{font-size:22px;} .timer button{min-height:44px;}
+
+.finishArea { width:100%; max-width:620px; margin:0 auto; padding:0 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+.finishArea button { width:100%; min-height:44px; border:0; border-radius:10px; padding:10px 14px; background:#e6c364; color:#181818; font-weight:700; }
+/* The exercise container already supplies the timer's original horizontal inset. */
+.timer { padding:0; }

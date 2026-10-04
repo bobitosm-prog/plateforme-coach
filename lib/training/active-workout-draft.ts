@@ -72,6 +72,8 @@ export interface ActiveWorkoutDraft {
   currentSetIndex: number
   exercises: WorkoutDraftExercise[]
   restTimerEndAt: string | null
+  /** Set that started the timer; optional for older saved drafts. */
+  restTimerSetId?: string | null
   status: ActiveWorkoutStatus
   remoteSessionId: string | null
   errorCode?: string

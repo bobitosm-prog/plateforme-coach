@@ -341,6 +341,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   }
   const discardDraft = () => { cancelNativeRestNotification(); cleanupDraft(); setDraftPrompt(null) }
 
+  const [restSetId, setRestSetId] = useState<string | null>(draft.restTimerSetId ?? null)
   const [restOn, setRestOn] = useState(false)
   const [restSecs, setRestSecs] = useState(0)
   const [restDone, setRestDone] = useState(false)
@@ -601,7 +602,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   const cleanupDraft = () => { removeActiveWorkoutDraft(localStorage, draftRef.current.draftId, draftRef.current.userId) }
 
-  const startRest = (s: number) => {
+  const startRest = (s: number, setId: string) => {
     restCompletionHandledRef.current = false
     restWarningPlayedRef.current = false
     restWarningEligibleRef.current = s >= 5
@@ -616,8 +617,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     restEndsAtRef.current = Date.now() + s * 1000
     restScheduledSoundsRef.current = scheduleRestPeriodSounds(s)
     scheduleNativeRestNotification(restEndsAtRef.current)
+    setRestSetId(setId)
     setRestSecs(s); setRestOn(true); setRestDone(false)
-    persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString() })
+    persistDraft({ restTimerEndAt: new Date(restEndsAtRef.current).toISOString(), restTimerSetId: setId })
   }
   const skipRest = () => {
     restCompletionHandledRef.current = true
@@ -709,7 +711,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     // A drop stage follows immediately; the ordinary rest starts afterwards.
     const rest = transitionRest(updatedExercises, exerciseIndex, nextPosition)
     if (rest === 0) skipRest()
-    else startRest(rest)
+    else startRest(rest, sid)
   }
   const validate = (eid: string, sid: string) => {
     const exo = exos.find(e => e.id === eid)
@@ -969,9 +971,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       <header className={ledgerStyles.header}>
         <button className={ledgerStyles.back} aria-label={t('back')} onClick={onClose}><ArrowLeft size={20}/></button>
         <div className={ledgerStyles.clock}><small>MOOVX</small>{dur(elapsed)}</div>
-        <button onClick={() => setShowEndModal(true)}>{t('finish')}</button>
       </header>
-      <div className={ledgerStyles.timer}>{(restOn || restDone) && <RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/>}</div>
       <div className={ledgerStyles.content}>
         <div className={ledgerStyles.intro}>
           <h1>{sessionName || t('freeSession')}</h1>
@@ -1092,6 +1092,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               {paired && <div className={ledgerStyles.pair}>{tLedger('biset', {side:bisetFor(exos,idx)!.a===idx?'A1':'A2',partner:exos[bisetFor(exos,idx)!.a===idx?bisetFor(exos,idx)!.b:bisetFor(exos,idx)!.a].name})}</div>}
               <div className={ledgerStyles.meta}>{[techniqueSummary,!exo.targetDurationSeconds?tLoad(exo.loadMode??'legacy'):null,exo.rir!=null?`RIR ${exo.rir}`:null,targetLabel,selected&&firstUndone>=0?tv2('currentSet',{current:activeSetNumber,total:exo.sets.length}):null].filter(Boolean).join(' · ')}</div>
               <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
+                restSetId={exos.some(item=>item.sets.some(set=>set.id===restSetId)) ? restSetId : exos.flatMap(item=>item.sets).filter(set=>set.done).at(-1)?.id ?? exos[0]?.sets[0]?.id}
+                restTimer={(restOn || restDone) ? <div className={ledgerStyles.timer}><RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/></div> : null}
                 onSelect={()=>{if(!selected)selectExercise(idx)}}
                 onChange={(sid,field,value)=>{setSetStatusMessage('');setField(exo.id,sid,field,value)}}
                 onWeightFocus={sid=>beginWeightInput(exo.id,sid)} onWeightBlur={sid=>commitWeight(exo.id,sid)} onValidate={sid=>{if(!selected)selectExercise(idx);validate(exo.id,sid)}}/>
@@ -1274,6 +1276,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           {t('addExercise')}
         </button>
       )}
+
+      {!reorderMode && <div className={ledgerStyles.finishArea}><button type="button" onClick={() => setShowEndModal(true)}>{t('finish')}</button></div>}
 
       {/* END SESSION MODAL — slide up sheet */}
       {showEndModal && !showDeleteConfirm && (

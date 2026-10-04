@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { WorkoutDraftExercise } from '@/lib/training/active-workout-draft'
@@ -13,10 +13,12 @@ interface Props {
   onChange: (id: string, field: 'weight' | 'reps' | 'durationSeconds', value: string) => void
   onWeightFocus: (id: string) => void; onWeightBlur: (id: string) => void
   onValidate: (id: string) => void
+  restSetId?: string | null
+  restTimer?: ReactNode
 }
 
 /** Historical values stay evidence-only; editing and validation use the existing draft engine. */
-export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,onSelect,onChange,onWeightFocus,onWeightBlur,onValidate}: Props) {
+export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,onSelect,onChange,onWeightFocus,onWeightBlur,onValidate,restSetId,restTimer}: Props) {
   const t=useTranslations('workoutLedger'), v=useTranslations('training_tab.v2'), h=useTranslations('previousWorkout'), load=useTranslations('trainingLoad')
   const [history,setHistory]=useState<HistoricalSet[]|null>(null),[error,setError]=useState(false),[retry,setRetry]=useState(0)
   useEffect(()=>{
@@ -35,7 +37,7 @@ export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,
       const stage=exercise.sets.slice(0,index+1).filter(s=>s.parentSetNumber).length
       const label=set.parentSetNumber?`${exercise.technique==='restpause'?'M':'D'}${stage}`:String(set.num)
       const aria=(name:string)=>active?name:`${exercise.name} · ${t('set')} ${label} · ${name}`
-      return <div className={styles.row} data-done={set.done} data-current={active} key={set.id}>
+      return <Fragment key={set.id}><div className={styles.row} data-done={set.done} data-current={active} key={set.id}>
         <span className={styles.number}>{label}</span>
         <span className={styles.previous}>{previous ? previous.duration_seconds ? `${previous.duration_seconds} s` : `${previous.weight??'—'} × ${previous.reps??'—'}` : history===null&&!error?'…':'—'}
         </span>
@@ -43,6 +45,8 @@ export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,
         <input aria-label={aria(v(timed?'durationSeconds':'repetitions'))} inputMode="numeric" value={timed?set.durationSeconds??'':set.reps} readOnly={set.done} onFocus={onSelect} onChange={e=>onChange(set.id,timed?'durationSeconds':'reps',e.target.value.replace(/\D/g,''))} />
         <button type="button" className={styles.check} aria-label={set.done?aria(t('done')):aria(v('validateSet'))} aria-pressed={set.done} disabled={set.done||!current||blocked} onClick={()=>onValidate(set.id)}>{set.done?'✓':current?'✓':'·'}</button>
       </div>
+      {set.id === restSetId && restTimer}
+      </Fragment>
     })}
     {!!history?.length && <p className={styles.historyStatus}>{v('previous')} · {Array.from(new Set(history.filter(row=>!row.duration_seconds).map(row=>load(isLoadMode(row.load_mode)?row.load_mode:'legacy')))).join(' / ')}</p>}
     {error?<div className={styles.historyStatus} role="status">{h('error')} <button type="button" onClick={()=>setRetry(n=>n+1)}>{h('retry')}</button></div>:history?.length===0?<p className={styles.historyStatus}>{h('empty')}</p>:null}
