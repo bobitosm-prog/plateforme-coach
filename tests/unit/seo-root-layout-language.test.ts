@@ -44,7 +44,9 @@ describe('localized root documents', () => {
     const marketing = readFileSync('app/(marketing)/[locale]/layout.tsx', 'utf8')
     const application = readFileSync('app/(application)/layout.tsx', 'utf8')
 
-    expect(rootViewport).toEqual({ width: 'device-width', initialScale: 1, viewportFit: 'cover' })
+    expect(rootViewport).toEqual({ width: 'device-width', initialScale: 1, minimumScale: 1, viewportFit: 'cover' })
+    expect(rootViewport.maximumScale).toBeUndefined()
+    expect(rootViewport.userScalable).not.toBe(false)
     expect(document).not.toContain('<meta name="viewport"')
     expect(marketing).toContain('export const viewport = rootViewport')
     expect(application).toContain('export const viewport = rootViewport')
