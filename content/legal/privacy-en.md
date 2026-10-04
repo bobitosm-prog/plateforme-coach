@@ -140,6 +140,8 @@ For Swiss users, Switzerland published its own adequacy decision for the DPF in 
 
 ### 5.3 Special case of Athena (Anthropic)
 
+Before the first transmission to Anthropic, MoovX asks for explicit permission, recorded per account. Depending on the selected feature, shared data includes relevant profile details (first name, age, body measurements, goals), workouts and check-ins, food preferences and restrictions, messages and selected photos. This is used to generate programmes and recipes, answer questions, analyse photos and prepare enabled automatic reviews. Manual features remain available without permission. Permission can be withdrawn in **Account → Preferences → Artificial intelligence · Anthropic**: future transmissions, including subsequent generation steps, are then blocked. Withdrawal cannot cancel a request already sent.
+
 Athena conversations are sent to Anthropic for AI processing. Not using data for training does not mean no retention. Anthropic states that API inputs and outputs are deleted within 30 days, subject to contractual, legal or safety exceptions. MoovX does not guarantee zero retention. [Provider policy](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data).
 
 Users are advised **not to communicate sensitive medical data** in their exchanges with Athena (e.g., medical diagnosis, treatment, health identifiers).

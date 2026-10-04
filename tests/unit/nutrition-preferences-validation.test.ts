@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+// Exercise this workflow after permission; denial is tested in ai-consent-client.
+vi.mock('@/lib/ai/consent-client', () => ({ aiFetch: (...args: [string, RequestInit?]) => fetch(...args) }))
 import * as React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'

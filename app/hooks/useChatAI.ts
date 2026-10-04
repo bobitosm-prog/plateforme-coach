@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
@@ -63,7 +65,7 @@ export function useChatAI() {
     setMessages(prev => [...prev, optimisticMsg])
 
     try {
-      const res = await fetch('/api/chat-ai', {
+      const res = await aiFetch('/api/chat-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmed }),
@@ -85,8 +87,10 @@ export function useChatAI() {
       }
       setMessages(prev => [...prev, assistantMsg])
     } catch (e: any) {
-      console.error('[useChatAI] send error:', e)
-      setError(e.message || 'Erreur d\'envoi')
+      if (!(e instanceof AiConsentDeclinedError)) {
+        console.error('[useChatAI] send error:', e)
+        setError(e.message || 'Erreur d\'envoi')
+      }
       // Rollback optimistic message
       setMessages(prev => prev.filter(m => m.id !== tempId))
     } finally {

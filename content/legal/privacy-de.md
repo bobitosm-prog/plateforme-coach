@@ -140,6 +140,8 @@ Für Schweizer Nutzer hat die Schweiz im September 2024 ihren eigenen Angemessen
 
 ### 5.3 Sonderfall Athena (Anthropic)
 
+Vor der ersten Übermittlung an Anthropic bittet MoovX um eine ausdrückliche, pro Konto gespeicherte Zustimmung. Je nach gewählter Funktion werden relevante Profildaten (Vorname, Alter, Körpermasse, Ziele), Trainings und Check-ins, Ernährungsvorlieben und Einschränkungen, Nachrichten und ausgewählte Fotos übermittelt. Damit werden Programme und Rezepte erstellt, Fragen beantwortet, Fotos analysiert und aktivierte automatische Auswertungen vorbereitet. Manuelle Funktionen bleiben ohne Zustimmung verfügbar. Die Zustimmung kann unter **Konto → Einstellungen → Künstliche Intelligenz · Anthropic** widerrufen werden: Künftige Übermittlungen, auch nachfolgende Generierungsschritte, werden dann gesperrt. Bereits gesendete Anfragen lassen sich nicht zurückrufen.
+
 Athena-Gespräche werden zur KI-Verarbeitung an Anthropic übermittelt. Keine Nutzung für das Training bedeutet nicht, dass keine Speicherung erfolgt. Anthropic nennt eine Löschung der API-Eingaben und -Ausgaben innerhalb von 30 Tagen, mit vertraglichen, rechtlichen oder sicherheitsbedingten Ausnahmen. MoovX garantiert keine Nullspeicherung. [Anbieterrichtlinie](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data).
 
 Die Nutzer werden gebeten, **keine sensiblen medizinischen Daten** in ihren Gesprächen mit Athena mitzuteilen (z. B. medizinische Diagnose, Behandlung, Gesundheitsdaten).

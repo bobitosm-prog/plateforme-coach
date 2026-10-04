@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { X, Heart, Clock, Sparkles, ChefHat } from 'lucide-react'
@@ -54,7 +56,7 @@ export default function RecipesSection({ supabase, userId, aiAllowed }: RecipesS
   async function generateRecipe() {
     setGenerating(true)
     try {
-      const res = await fetch('/api/generate-recipe', {
+      const res = await aiFetch('/api/generate-recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: genCategory }),
@@ -72,8 +74,8 @@ export default function RecipesSection({ supabase, userId, aiAllowed }: RecipesS
       setSelected(saved)
       setShowGenerate(false)
       toast.success(t('generated'))
-    } catch {
-      toast.error(t('genError'))
+    } catch (error) {
+      if (!(error instanceof AiConsentDeclinedError)) toast.error(t('genError'))
     }
     setGenerating(false)
   }

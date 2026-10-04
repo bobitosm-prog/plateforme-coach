@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, ScanBarcode, Trash2 } from 'lucide-react'
@@ -137,12 +139,12 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
     setAnalyzing(true);setError(null)
     try {
       const image = await new Promise<string>((resolve,reject)=> {const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file)})
-      const response = await fetch('/api/analyze-meal-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image})})
+      const response = await aiFetch('/api/analyze-meal-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image})},userId)
       if (!response.ok) throw new Error('PHOTO_FAILED')
       const result=await response.json()
       if (!Array.isArray(result.foods) || !result.foods.length) throw new Error('PHOTO_INVALID')
       if (alive.current) add(result.foods)
-    } catch {if (alive.current) setError(t('photoError'))}
+    } catch (error) {if (alive.current && !(error instanceof AiConsentDeclinedError)) setError(t('photoError'))}
     finally {if (alive.current) setAnalyzing(false)}
   }
 

@@ -71,6 +71,7 @@
     "retryDomain": "{domain} erneut versuchen",
     "finalizationError": "Die Ressourcen sind bereit, aber der Abschluss muss erneut versucht werden.",
     "status": {
+      "consentDeferred": "Pausiert — manuelle Funktionen bleiben verfügbar",
       "ready": "Bereit",
       "generating": "Wird vorbereitet…",
       "missing": "Vorbereitung ausstehend",

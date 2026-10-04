@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
@@ -74,15 +76,15 @@ export default function OnboardingPhotoContent() {
     setUploading(false)
     setPhase('analyzing')
     try {
-      const res = await fetch('/api/analyze-progress-photo', {
+      const res = await aiFetch('/api/analyze-progress-photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photoUrl: signedUrl, profileData }),
       })
       const data = await res.json()
       setAnalysisText(data.analysis || t('results.analysisUnavailable'))
-    } catch {
-      setAnalysisText(t('results.analysisError'))
+    } catch (error) {
+      setAnalysisText(error instanceof AiConsentDeclinedError ? error.message : t('results.analysisError'))
     }
     setPhase('results')
   }, [userId, supabase, profileData, t])
@@ -117,7 +119,7 @@ export default function OnboardingPhotoContent() {
       activity_level: profileData.activity_level,
     }
     try {
-      const res = await fetch('/api/generate-meal-plan', {
+      const res = await aiFetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
