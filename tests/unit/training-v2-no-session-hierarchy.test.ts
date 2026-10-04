@@ -68,8 +68,8 @@ describe('Training V2 no-session hierarchy', () => {
     expect(frenchMessages.training_tab.recent.viewAll).toBe('Voir l’historique ›')
   })
 
-  it('leaves active-session Focus Mode on the single selected logger', () => {
-    expect(workoutSession).toContain('if (idx !== activeExerciseIndex) return null')
-    expect(workoutSession).toContain('<ActiveExerciseFocus')
+  it('keeps the full active-session ledger available when leaving the overview', () => {
+    expect(workoutSession).not.toContain('if (idx !== activeExerciseIndex) return null')
+    expect(workoutSession).toContain('<WorkoutLedgerTable')
   })
 })

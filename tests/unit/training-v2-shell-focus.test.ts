@@ -13,10 +13,11 @@ const focus = readFileSync('app/components/training-v2/ActiveExerciseFocus.tsx',
 const v2Sources = [noActiveSession, sessionHero, timeline, focus].join('\n')
 
 describe('Training V2 shell and focus mode', () => {
-  it('renders distinct no-session and active-session heroes from existing inputs', () => {
+  it('keeps the planned hero separate from the compact active-session ledger', () => {
     expect(trainingTab).toContain('<NoActiveSession')
     expect(noActiveSession).toContain('mode="planned"')
-    expect(workoutSession).toContain('mode="active"')
+    expect(workoutSession).toContain('className={ledgerStyles.header}')
+    expect(workoutSession).toContain("tv2('completedSetProgress', {current:completed,total})")
     expect(sessionHero).toContain("mode: 'planned' | 'active'")
     expect(sessionHero).toContain('completedExercises')
     expect(sessionHero).toContain('completedSets')
@@ -34,10 +35,10 @@ describe('Training V2 shell and focus mode', () => {
     expect(timeline).toContain('onClick={() => onSelect(index)}')
   })
 
-  it('shows only the selected exercise through the single reliable logger path', () => {
-    expect(workoutSession).toContain('if (idx !== activeExerciseIndex) return null')
-    expect(workoutSession).toContain('<ActiveExerciseFocus')
-    expect(focus).toContain('data-training-v2-logger="primary"')
+  it('uses the ledger for all exercises without restoring the obsolete focus logger', () => {
+    expect(workoutSession).not.toContain('if (idx !== activeExerciseIndex) return null')
+    expect(workoutSession).toContain('<WorkoutLedgerTable')
+    expect(workoutSession).not.toContain('<ActiveExerciseFocus')
     expect(trainingTab).not.toContain('legacyLoggerHidden')
     expect(workoutSession).not.toContain('legacyLoggerHidden')
     expect(trainingTab).not.toContain("from('workout_sessions').insert")
@@ -53,8 +54,8 @@ describe('Training V2 shell and focus mode', () => {
   it('keeps save errors retryable and previous-performance errors distinct from no history', () => {
     expect(workoutSession).toContain("draft.status === 'save_error'")
     expect(workoutSession).toContain('onClick={() => void finish()}')
-    expect(workoutSession).toContain('previousError={previousState === null}')
-    expect(focus).toContain("previousError ? t('previousError') : previous || t('noPrevious')")
+    expect(workoutSession).toContain('<WorkoutLedgerTable')
+    expect(readFileSync('app/components/training-v2/WorkoutLedgerTable.tsx', 'utf8')).toContain("h('error')")
   })
 
   it('keeps generation secondary and out of visual V2 components', () => {

@@ -108,7 +108,7 @@ describe('Training V2 rest timer', () => {
 
   it('restores after refresh and finishes without a blocking full-screen popup', () => {
     expect(workoutSession).toContain('resolveRestTimer(draft.restTimerEndAt)')
-    expect(workoutSession).toContain("state={restDone ? 'finished' : 'running'}")
+    expect(workoutSession).toMatch(/state=\{restDone\s*\?\s*'finished'\s*:\s*'running'\}/)
     expect(workoutSession).not.toContain('REST DONE POPUP')
     expect(restTimer).toContain('role="status" aria-live="assertive"')
     expect(restTimer).not.toMatch(/\bRIR\b/i)
