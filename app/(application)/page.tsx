@@ -776,7 +776,7 @@ function CoachAppContent() {
       )}
 
       {/* Rail horizontal — 5 onglets racine (lazy keep-alive) */}
-      <main ref={measureMainRef} style={{ flex: 1, overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals' || h.activeTab === 'nutrition_program' || h.activeTab === 'training_program') ? 'none' : 'flex' }}>
+      <main ref={measureMainRef} style={{ flex: 1, minWidth: 0, minHeight: 0, contain: 'size layout paint', overflow: 'clip', display: (h.activeTab === 'profil' || h.activeTab === 'messages' || h.activeTab === 'feedback' || h.activeTab === 'preferences' || h.activeTab === 'account_section' || h.activeTab === 'goals' || h.activeTab === 'nutrition_program' || h.activeTab === 'training_program') ? 'none' : 'flex' }}>
         <motion.div
           ref={railDivRef}
           style={{ display: 'flex', width: mainSize.w * 5, height: mainSize.h, flexShrink: 0, visibility: mainSize.w === 0 ? 'hidden' : 'visible', x: railX, touchAction: 'pan-y' }}
