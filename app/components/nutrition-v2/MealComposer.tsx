@@ -31,6 +31,9 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const t = useTranslations('nutrition_tab.composer')
   const [foods, setFoods] = useState<MealDraftFood[]>([])
   const [query, setQuery] = useState('')
+  const [choicesOpen, setChoicesOpen] = useState(true)
+  const quantityTarget = useRef<string | null>(null)
+  const quantityInputs = useRef(new Map<string, HTMLInputElement>())
   const [source, setSource] = useState(initialSource === 'saved' ? 'saved' : 'recent')
   const [recent, setRecent] = useState<any[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
@@ -94,6 +97,20 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
     try { const next = items.map(draftFood); return changeFoods([...foodRef.current, ...next]) }
     catch { setError(t('invalid')) }
   }
+
+  function selectFoods(items: Record<string, any>[]) {
+    if (!add(items)) return
+    quantityTarget.current = foodRef.current.at(-1)?.id ?? null
+    setQuery(''); setResults([]); setChoicesOpen(false)
+  }
+
+  useEffect(() => {
+    const input = quantityTarget.current ? quantityInputs.current.get(quantityTarget.current) : null
+    if (!input) return
+    quantityTarget.current = null
+    input.focus({ preventScroll: true })
+    input.scrollIntoView?.({ block: 'nearest' })
+  }, [foods])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -177,7 +194,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
         {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
         {restored && initialFoods?.length && !selectedMealAdded ? <button type="button" disabled={locked || analyzing} onClick={() => { if (add(initialFoods)) setSelectedMealAdded(true) }}>{t('addSelectedMeal')}</button> : null}
         {(!initialSource || initialSource === 'recent') && <div className={styles.search}>
-          <input aria-label={t('search')} placeholder={t('search')} value={query} disabled={locked} onChange={event=>setQuery(event.target.value)} />
+          <input aria-label={t('search')} placeholder={t('search')} value={query} disabled={locked} onFocus={()=>setChoicesOpen(true)} onChange={event=>{setChoicesOpen(true);setQuery(event.target.value)}} />
           <button type="button" disabled={locked || analyzing} aria-label={t('barcode')} onClick={()=>setScanner(true)}><ScanBarcode size={18}/></button>
           {photoEnabled && <button type="button" disabled={locked || analyzing} aria-label={t('photo')} onClick={()=>photoInput.current?.click()}><Camera size={18}/></button>}
         </div>}
@@ -186,16 +203,17 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
         {initialSource === 'barcode' && <button type="button" disabled={locked || analyzing} onClick={()=>setScanner(true)}><ScanBarcode size={18} aria-hidden="true"/> {t('barcode')}</button>}
         {analyzing && <p role="status">{t('analyzing')}</p>}
         {photoEnabled && (!initialSource || initialSource === 'photo') && <p className={styles.muted}>{t('photoHint')}</p>}
-        {(!initialSource || initialSource === 'recent') && query.trim().length < 2 && <div className={styles.sources}>{(initialSource ? ['recent','favorites'] : ['recent','favorites','saved','plan']).map(key=><button key={key} disabled={locked} aria-pressed={source===key} onClick={()=>setSource(key)}>{t(key)}</button>)}</div>}
-        {loading && <p role="status">{t('loading')}</p>}
+        {(!initialSource || initialSource === 'recent') && query.trim().length < 2 && <div className={styles.sources}>{(initialSource ? ['recent','favorites'] : ['recent','favorites','saved','plan']).map(key=><button key={key} disabled={locked} aria-pressed={source===key} onClick={()=>{setSource(key);setChoicesOpen(true)}}>{t(key)}</button>)}</div>}
+        {initialSource === 'saved' && !choicesOpen && <button type="button" disabled={locked} onClick={()=>setChoicesOpen(true)}>{t('saved')}</button>}
+        {choicesOpen && loading && <p role="status">{t('loading')}</p>}
         {readError && <p role="status">{t('readError')} <button onClick={()=>setRetry(value=>value+1)}>{t('retry')}</button></p>}
-        {initialSource !== 'photo' && initialSource !== 'barcode' && <div className={styles.choices}>
+        {choicesOpen && initialSource !== 'photo' && initialSource !== 'barcode' && <div className={styles.choices}>
           {searching && <p role="status">{t('loading')}</p>}
           {!searching && query.trim().length >= 2 && !results.length && <p role="status">{t('emptySource')}</p>}
-          {query.trim().length>=2 ? results.map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>add([food])}>{food.name}<span>+</span></button>) :
-            source==='plan' ? (plannedFoods.length ? <button disabled={locked || analyzing} onClick={()=>add(plannedFoods)}>{t('usePlan')}<span>+</span></button> : <p className={styles.muted}>{t('noPlan')}</p>) :
-            source==='saved' ? saved.map(meal=><button key={meal.id} disabled={locked || analyzing} onClick={()=>add(meal.foods ?? [])}>{meal.name}<span>+</span></button>) :
-            (source==='recent' ? recent : favorites).map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>add([food])}>{food.custom_name ?? food.name}<span>+</span></button>)}
+          {query.trim().length>=2 ? results.map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>selectFoods([food])}>{food.name}<span>+</span></button>) :
+            source==='plan' ? (plannedFoods.length ? <button disabled={locked || analyzing} onClick={()=>selectFoods(plannedFoods)}>{t('usePlan')}<span>+</span></button> : <p className={styles.muted}>{t('noPlan')}</p>) :
+            source==='saved' ? saved.map(meal=><button key={meal.id} disabled={locked || analyzing} onClick={()=>selectFoods(meal.foods ?? [])}>{meal.name}<span>+</span></button>) :
+            (source==='recent' ? recent : favorites).map((food,index)=><button key={index} disabled={locked || analyzing} onClick={()=>selectFoods([food])}>{food.custom_name ?? food.name}<span>+</span></button>)}
           {!loading && !query && ((source==='recent'&&!recent.length)||(source==='favorites'&&!favorites.length)||(source==='saved'&&!saved.length)) && <p className={styles.muted}>{t('emptySource')}</p>}
         </div>
         }
@@ -203,7 +221,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
         {!foods.length && <p className={styles.muted}>{t('empty')}</p>}
         <ul className={styles.draft}>{foods.map(food=><li key={food.id}>
           <div>{food.name}<small>{Number.isFinite(food.quantity) ? draftNutrients(food).calories : '—'} kcal</small></div>
-          <label>{t('grams')}<input aria-label={`${t('quantity')} — ${food.name}`} type="number" min="0.1" step="0.1" value={Number.isFinite(food.quantity)?food.quantity:''} disabled={locked || analyzing} onChange={event=>changeFoods(foodRef.current.map(item=>item.id===food.id ? {...item,quantity:event.target.value===''?NaN:Number(event.target.value)} : item))}/></label>
+          <label>{t('grams')}<input ref={input=>{if(input)quantityInputs.current.set(food.id,input);else quantityInputs.current.delete(food.id)}} aria-label={`${t('quantity')} — ${food.name}`} type="number" min="0.1" step="0.1" value={Number.isFinite(food.quantity)?food.quantity:''} disabled={locked || analyzing} onChange={event=>changeFoods(foodRef.current.map(item=>item.id===food.id ? {...item,quantity:event.target.value===''?NaN:Number(event.target.value)} : item))}/></label>
           <button disabled={locked || analyzing} aria-label={`${t('remove')} — ${food.name}`} onClick={()=>changeFoods(foodRef.current.filter(item=>item.id!==food.id))}><Trash2 size={16}/></button>
         </li>)}</ul>
         {error && <p className={styles.error} role="alert">{error}</p>}
