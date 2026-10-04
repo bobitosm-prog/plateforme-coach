@@ -1,3 +1,4 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -6,7 +7,7 @@ import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
 import { unwrapToolInput } from '../../../lib/anthropic/unwrap-tool-input'
 import { fetchOwnProgressPhoto, safePhotoError } from '@/lib/photos/secure-progress-photo'
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     // System prompt unique (structure définie par le tool schema, pas dans le texte)
     const systemPrompt = `Tu es un expert en analyse corporelle fitness. Tu analyses 3 photos (face, dos, profil) pour estimer la composition corporelle visuellement. Tes estimations sont visuelles et non médicales.`
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
       headers: {
@@ -109,3 +110,5 @@ export async function POST(req: NextRequest) {
     await reservation.settle(false)
   }
 }
+
+export const POST = withAiConsent(handlePost)

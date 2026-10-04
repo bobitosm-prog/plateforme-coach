@@ -1,3 +1,4 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -13,7 +14,7 @@ const chatRequestSchema = z.object({
   message: z.string().trim().min(1).max(500),
 }).strict()
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -105,7 +106,7 @@ REGLES : personnalise seulement avec les données disponibles, sois concis (max 
       { role: 'user' as const, content: trimmedMessage },
     ]
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -147,3 +148,5 @@ REGLES : personnalise seulement avec les données disponibles, sois concis (max 
     return NextResponse.json({ error: 'Erreur inattendue' }, { status: 500 })
   }
 }
+
+export const POST = withAiConsent(handlePost)

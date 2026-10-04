@@ -24,7 +24,7 @@ describe('simplified training program management boundaries', () => {
     expect(builder).toContain('if (!canMutate || saving || !programName.trim())')
   })
   it('retains generation via the existing SSE endpoint', () => {
-    expect(builder).toContain("fetch('/api/generate-custom-program'")
+    expect(builder).toContain("aiFetch('/api/generate-custom-program'")
     expect(builder).toContain('consumeProgramStream(res)')
     expect(builder).toContain("equipment: aiEquipment === '__profile__'")
   })

@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 
 import { useState, useEffect, useRef } from 'react'
 import { canonicalExerciseName } from '@/lib/training/exercise-identity'
@@ -261,7 +263,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
     setAiGenerating(true)
     const tid = toast.loading(t('toast.generating'))
     try {
-      const res = await fetch('/api/generate-custom-program', {
+      const res = await aiFetch('/api/generate-custom-program', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -272,7 +274,7 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
           notes: aiNotes, gender: userGender,
           allowAdvancedTechniques: aiAdvancedTechniques && aiLevel !== 'debutant',
         }),
-      })
+      }, session?.user?.id)
       const program = await consumeProgramStream(res)
       if (program) {
         setAiResult(program)
@@ -283,8 +285,10 @@ export default function ProgramBuilder({ supabase, session, aiAllowed = true, ca
         toast.error(t('toast.generationError'))
       }
     } catch (e: any) {
-      console.error('[ProgramBuilder] Fetch error:', e)
-      toast.error(t('toast.networkError') + ': ' + (e.message || ''))
+      if (!(e instanceof AiConsentDeclinedError)) {
+        console.error('[ProgramBuilder] Fetch error:', e)
+        toast.error(t('toast.networkError') + ': ' + (e.message || ''))
+      }
     }
     toast.dismiss(tid)
     setAiGenerating(false)

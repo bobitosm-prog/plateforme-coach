@@ -1,10 +1,11 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { validateAthenaMealPhoto } from '../../../lib/athena/meal-photo-output'
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Image trop volumineuse (max 5 MB)' }, { status: 413 })
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
@@ -86,3 +87,5 @@ Reponds UNIQUEMENT en JSON valide, sans markdown :
     return NextResponse.json({ error: 'Analyse temporairement indisponible' }, { status: 500 })
   }
 }
+
+export const POST = withAiConsent(handlePost)

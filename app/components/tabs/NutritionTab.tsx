@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 import dynamic from 'next/dynamic'
 import React, { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
@@ -197,14 +199,14 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1]
       try {
-        const res = await fetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) })
+        const res = await aiFetch('/api/analyze-meal-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64 }) }, userId)
         if (!res.ok) throw new Error('PHOTO_ANALYSIS_FAILED')
         const data = await res.json() as PhotoAnalysisResult
         if (!Array.isArray(data.foods)) throw new Error('PHOTO_ANALYSIS_INVALID')
         setPhotoResults(data)
-      } catch {
+      } catch (error) {
         setPhotoResults(null)
-        setPhotoError(nt('chrome.photoError'))
+        if (!(error instanceof AiConsentDeclinedError)) setPhotoError(nt('chrome.photoError'))
       }
       finally { setAnalyzingPhoto(false) }
     }

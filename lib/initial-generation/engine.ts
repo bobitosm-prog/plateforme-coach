@@ -1,3 +1,4 @@
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 export type InitialGenerationDomain = 'training' | 'nutrition'
 // Same-runtime and supported cross-tab races are serialized, but the database
 // has no unique active-resource key. Cross-device idempotency remains partial.
@@ -16,7 +17,7 @@ export type InitialGenerationError =
 
 export interface InitialGenerationDomainState {
   phase: InitialGenerationPhase
-  reason?: InitialGenerationError | 'coach_managed'
+  reason?: InitialGenerationError | 'coach_managed' | 'consent_declined'
 }
 
 export interface InitialGenerationSnapshot {
@@ -176,6 +177,13 @@ export async function runInitialGenerationAttempt({
       if (confirmation.kind !== 'ready') throw new InitialGenerationFailure('confirmation')
       emit(domain, { phase: 'ready' })
     } catch (error) {
+      if (error instanceof AiConsentDeclinedError) {
+        // One refusal covers the entire attempt, not just the first of two domains.
+        for (const pending of domains) {
+          if (snapshot[pending].phase !== 'ready') emit(pending, { phase: 'missing', reason: 'consent_declined' })
+        }
+        break
+      }
       const reason = error instanceof InitialGenerationFailure ? error.reason : 'generation'
       emit(domain, { phase: 'error', reason })
     }

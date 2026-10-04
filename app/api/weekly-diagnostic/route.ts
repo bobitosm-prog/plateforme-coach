@@ -1,3 +1,4 @@
+import { withAiConsent } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
@@ -70,4 +71,4 @@ async function handle(req: NextRequest) {
 }
 
 export const GET = handle
-export const POST = handle
+export const POST = withAiConsent(handle, async req => (await req.clone().json().catch(() => null))?.action !== 'complete-week')

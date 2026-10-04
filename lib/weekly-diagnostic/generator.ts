@@ -1,3 +1,4 @@
+import { withAiUser, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 /**
  * Weekly Diagnostic Generator — shared business logic.
  * Called by both:
@@ -237,7 +238,7 @@ Objectif S-1: ${prevDiagRes.data.objectif_semaine_prochaine}
 Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_output. Retourne seulement un résumé factuel, les limites de couverture et au maximum deux actions observables. N'expose aucun raisonnement interne.`
 
     // 8. CALL OPUS 4.7 WITH TOOL_USE
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await withAiUser(supabase, userId, () => consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       signal: AbortSignal.timeout(35000),
       method: 'POST',
       headers: {
@@ -277,7 +278,7 @@ Analyse cette semaine et produis un diagnostic via l'outil weekly_diagnostic_out
         }],
         messages: [{ role: 'user', content: userPrompt }],
       }),
-    })
+    }))
 
     if (!res.ok) {
       console.error('[generateWeeklyDiagnostic] provider failure:', res.status)

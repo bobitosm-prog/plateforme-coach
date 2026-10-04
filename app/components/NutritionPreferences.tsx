@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Flame, Beef, Wheat, Droplets, X, AlertTriangle, Zap, Search, Plus } from 'lucide-react'
@@ -312,14 +314,14 @@ export default function NutritionPreferences({
         allergies,
         meal_preferences: { ...mealPrefs, disliked_foods: dislikedFoods },
       } as Profile
-      const res = await fetch('/api/generate-meal-plan', {
+      const res = await aiFetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...buildMealPlanParams(generationProfile),
           persist_generated_plan: true,
         }),
-      })
+      }, userId)
       if (!res.ok) {
         const errText = await res.text()
         console.error('generate-meal-plan HTTP error:', res.status, errText)
@@ -358,9 +360,11 @@ export default function NutritionPreferences({
         onPlanRegenerated?.()
       }
     } catch (err) {
-      console.error('Regen error:', err)
-      setToastMsg('Erreur lors de la generation')
-      setTimeout(() => setToastMsg(''), 3000)
+      if (!(err instanceof AiConsentDeclinedError)) {
+        console.error('Regen error:', err)
+        setToastMsg('Erreur lors de la generation')
+        setTimeout(() => setToastMsg(''), 3000)
+      }
     }
     setRegenerating(false)
     setShowRegenCard(false)

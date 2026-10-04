@@ -1,4 +1,6 @@
 'use client'
+import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
+import { aiFetch } from '@/lib/ai/consent-client'
 /* eslint-disable @typescript-eslint/no-explicit-any -- Legacy HomeTab contract; recovery changes preserve it without an out-of-scope refactor. */
 import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -76,15 +78,17 @@ export default function HomeTab({
     setDiagnosticGenerationError(false)
     setGeneratingDiag(true)
     try {
-      const res = await fetch('/api/weekly-diagnostic', { method: 'POST' })
+      const res = await aiFetch('/api/weekly-diagnostic', { method: 'POST' }, session?.user?.id)
       const data = await res.json()
       if (!res.ok || !data.diagnostic) throw new Error('Diagnostic generation failed')
       if (data.diagnostic && setLatestDiagnostic) {
         setLatestDiagnostic(data.diagnostic)
       }
     } catch (e) {
-      console.error('Generate diagnostic failed:', e)
-      setDiagnosticGenerationError(true)
+      if (!(e instanceof AiConsentDeclinedError)) {
+        console.error('Generate diagnostic failed:', e)
+        setDiagnosticGenerationError(true)
+      }
     } finally {
       setGeneratingDiag(false)
     }

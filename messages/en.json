@@ -71,6 +71,7 @@
     "retryDomain": "Try {domain} again",
     "finalizationError": "Your resources are ready, but finalization needs to be retried.",
     "status": {
+      "consentDeferred": "Paused — manual features remain available",
       "ready": "Ready",
       "generating": "Preparing…",
       "missing": "To prepare",

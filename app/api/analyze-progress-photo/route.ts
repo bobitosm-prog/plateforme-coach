@@ -1,3 +1,4 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -5,7 +6,7 @@ import { checkRateLimit } from '../../../lib/rate-limit'
 import { reserveHeavyAi, quotaUnavailable } from '@/lib/ai/heavy-reservation'
 import { fetchOwnProgressPhoto, safePhotoError } from '@/lib/photos/secure-progress-photo'
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -101,7 +102,7 @@ Maximum 500 mots. Sois un vrai coach, pas un chatbot générique.`
         { type: 'text', text: assessmentPrompt },
       ]
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
         headers: {
@@ -296,7 +297,7 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
       ]
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: AbortSignal.any([req.signal,AbortSignal.timeout(45_000)]),
       headers: {
@@ -330,3 +331,5 @@ Maximum 400 mots. Sois un vrai coach, pas un chatbot générique.`
     await reservation.settle(false)
   }
 }
+
+export const POST = withAiConsent(handlePost)

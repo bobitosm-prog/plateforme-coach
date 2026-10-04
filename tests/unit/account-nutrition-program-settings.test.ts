@@ -58,7 +58,7 @@ describe('Nutrition generation relocation', () => {
   })
 
   it('reuses the exact API and seven-day payload flow without a multi-week control', () => {
-    expect(preferences).toContain("fetch('/api/generate-meal-plan'")
+    expect(preferences).toContain("aiFetch('/api/generate-meal-plan'")
     for (const field of [
       'calorie_goal',
       'protein_goal',

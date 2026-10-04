@@ -1,4 +1,5 @@
 'use client'
+import { clientSubjectAiFetch } from '@/lib/ai/consent-client'
 import { createBrowserClient } from '@supabase/ssr'
 import { canonicalExerciseName } from '@/lib/training/exercise-identity'
 import { useEffect, useState, useCallback, useRef } from 'react'
@@ -222,11 +223,11 @@ export default function useClientDetail() {
       const targetWeight = profile?.target_weight ?? '?'
       const equipment = aiEquipment.length > 0 ? aiEquipment : ['Poids du corps']
 
-      const res = await fetch('/api/generate-program', {
+      const res = await clientSubjectAiFetch('/api/generate-program', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ objective, weight, targetWeight, level: aiLevel, equipment, trainingDays: aiTrainingDays }),
-      })
+      }, String(id))
 
       if (!res.ok) {
         const err = await res.text()
@@ -245,8 +246,8 @@ export default function useClientDetail() {
         }
       })
       setAiPreview(mapped)
-    } catch {
-      showToast('Erreur lors de la génération IA')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Erreur lors de la génération IA')
     } finally {
       setAiGenerating(false)
     }
@@ -314,7 +315,7 @@ export default function useClientDetail() {
       }
 
       setAiMealStreamStatus("Connexion à l'IA...")
-      const res = await fetch('/api/generate-meal-plan', {
+      const res = await clientSubjectAiFetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +332,7 @@ export default function useClientDetail() {
           tdee: profile.tdee,
           activity_level: profile.activity_level,
         }),
-      })
+      }, String(id))
 
       if (!res.ok) throw new Error(`Erreur ${res.status}`)
 
@@ -362,8 +363,8 @@ export default function useClientDetail() {
       }
       setAiMealPreview(plan)
       setAiMealPreviewDay('lundi')
-    } catch {
-      showToast('Erreur lors de la génération du plan alimentaire')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Erreur lors de la génération du plan alimentaire')
     } finally {
       setAiMealGenerating(false)
       setAiMealStreamStatus('')

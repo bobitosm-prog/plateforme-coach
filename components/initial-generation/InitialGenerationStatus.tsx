@@ -20,7 +20,7 @@ function DomainRow({
   const failed = state.phase === 'error'
   const waitingForCoach = state.phase === 'missing' && state.reason === 'coach_managed'
   const canRetry = failed || state.phase === 'missing'
-  const statusKey = state.phase === 'ready'
+  const statusKey = state.reason === 'consent_declined' ? 'consentDeferred' : state.phase === 'ready'
     ? 'ready'
     : working
       ? 'generating'
@@ -59,6 +59,8 @@ function DomainRow({
 export default function InitialGenerationStatus({ generation }: { generation: UseInitialGenerationResult }) {
   const t = useTranslations('initialGeneration')
   if (!generation.visible) return null
+  // A deliberate postponement must not leave a fixed warning over manual features.
+  if (!generation.generating && [generation.training, generation.nutrition].some(state => state.reason === 'consent_declined')) return null
 
   return (
     <aside

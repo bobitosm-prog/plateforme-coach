@@ -1,4 +1,5 @@
 'use client'
+import { aiFetch } from '@/lib/ai/consent-client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -177,7 +178,7 @@ export default function useInitialGeneration(
 
   useEffect(() => () => { mountedRef.current = false }, [])
 
-  const execute = useCallback((domains: readonly InitialGenerationDomain[]) => {
+  const execute = useCallback((domains: readonly InitialGenerationDomain[], askAfterDecline = true) => {
     if (!userId || !profile || !profile.needs_initial_generation) return
 
     const { relationUncertain, coachManaged } = resolveInitialGenerationAuthority(authority)
@@ -257,11 +258,11 @@ export default function useInitialGeneration(
       training: {
         read: readTraining,
         generate: async () => {
-          const response = await fetch('/api/generate-custom-program', {
+          const response = await aiFetch('/api/generate-custom-program', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(buildProgramParams(profile)),
-          })
+          }, userId, askAfterDecline)
           if (response.status === 429) throw new InitialGenerationFailure('quota_exhausted')
           return consumeProgramStream(response)
         },
@@ -272,11 +273,11 @@ export default function useInitialGeneration(
       },
       nutrition: {
         read: readNutrition,
-        generate: async () => consumeMealPlanStream(await fetch('/api/generate-meal-plan', {
+        generate: async () => consumeMealPlanStream(await aiFetch('/api/generate-meal-plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(buildMealPlanParams(profile)),
-        })),
+        }, userId, askAfterDecline)),
         validate: isValidInitialMealPlan,
         persist: persistNutrition,
         canGenerate: !coachManaged && authority.capabilities.ai && authority.capabilities.nutrition,
@@ -370,7 +371,7 @@ export default function useInitialGeneration(
     if (!userId || !profile?.needs_initial_generation) return
     if (autoStartedForUserRef.current === generationRunKey) return
     autoStartedForUserRef.current = generationRunKey
-    const timer = window.setTimeout(() => execute(['training', 'nutrition']), 0)
+    const timer = window.setTimeout(() => execute(['training', 'nutrition'], false), 0)
     return () => window.clearTimeout(timer)
   }, [execute, generationRunKey, profile?.needs_initial_generation, userId])
 

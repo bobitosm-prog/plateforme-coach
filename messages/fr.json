@@ -71,6 +71,7 @@
     "retryDomain": "Réessayer {domain}",
     "finalizationError": "Les ressources sont prêtes, mais la finalisation doit être relancée.",
     "status": {
+      "consentDeferred": "En pause — utilisation manuelle disponible",
       "ready": "Prêt",
       "generating": "En préparation…",
       "missing": "À préparer",

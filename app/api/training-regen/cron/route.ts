@@ -1,3 +1,4 @@
+import { withAiUser, assertAiConsent } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { buildProgramParams } from '@/lib/training/build-program-params'
@@ -75,11 +76,12 @@ export async function POST(req: NextRequest) {
           results.details.push({ user_id: profile.id, status: 'invalid_request' })
           return
         }
+        await assertAiConsent(supabaseAdmin, profile.id)
         const params = buildProgramParams(profile, {
           notes: `Remplace le programme car le client a explicitement changé son objectif vers ${request.objective}. Conserve les contraintes déclarées et ne change que ce que le nouvel objectif exige.`,
         })
         const clientContext = formatAthenaClientContextForPrompt(buildAthenaClientContext(profile))
-        const program = await generateProgram({ ...params, clientContext }, apiKey, catalog)
+        const program = await withAiUser(supabaseAdmin, profile.id, () => generateProgram({ ...params, clientContext }, apiKey, catalog))
         if (!program) throw new Error('No program generated')
 
         const replacement = await replacePersonalTrainingProgram(supabaseAdmin, profile.id, {

@@ -1,4 +1,6 @@
 "use client";
+import { AiConsentDeclinedError } from "@/lib/ai/consent-policy";
+import { aiFetch } from "@/lib/ai/consent-client";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useTrainingFollowup } from "@/app/hooks/useTrainingFollowup";
@@ -70,7 +72,7 @@ export default function FollowupPanel({
     setBusy(true);
     setError(false);
     try {
-      const response = await fetch("/api/training-followup", {
+      const response = await ((input as { action: string }).action === "monthly" ? aiFetch : fetch)("/api/training-followup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
@@ -105,8 +107,8 @@ export default function FollowupPanel({
         return;
       }
       await load();
-    } catch {
-      setError(true);
+    } catch (error) {
+      if (!(error instanceof AiConsentDeclinedError)) setError(true);
     } finally {
       setBusy(false);
     }

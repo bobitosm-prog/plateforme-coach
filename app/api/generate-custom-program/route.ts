@@ -1,3 +1,4 @@
+import { withAiConsent } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -19,7 +20,7 @@ const schema = z.object({
   allowAdvancedTechniques: z.boolean().default(false),
 }).strict()
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
@@ -102,3 +103,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Service temporairement indisponible' }, { status: 503 })
   }
 }
+
+export const POST = withAiConsent(handlePost)

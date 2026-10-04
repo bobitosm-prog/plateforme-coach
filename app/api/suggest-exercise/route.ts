@@ -1,10 +1,11 @@
+import { withAiConsent, consentedAnthropicFetch } from '@/lib/ai/consent-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { checkRateLimit, checkAiRateLimit, aiRateLimitResponse, logAiUsage } from '../../../lib/rate-limit'
 import { EXERCISE_SWAP_PROMPT } from '../../../lib/coach-knowledge'
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   // Auth check
   const cookieStore = await cookies()
   const supabaseAuth = createServerClient(
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
       : isIsolation === false ? `IMPORTANT : "${exerciseName}" est un exercice COMPOSE. Propose UNIQUEMENT d'autres exercices composes.`
       : ''
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await consentedAnthropicFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
@@ -82,3 +83,5 @@ Reponds UNIQUEMENT en JSON valide :
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
+
+export const POST = withAiConsent(handlePost)
