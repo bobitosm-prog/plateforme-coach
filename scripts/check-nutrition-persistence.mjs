@@ -146,6 +146,13 @@ try {
   execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
     input: canonicalMigration, stdio: ['pipe', 'pipe', 'pipe'],
   })
+  stage = 'Anthropic consent RLS and idempotency'
+  const consentMigration = readFileSync(new URL('../supabase/migrations/20261004095806_anthropic_user_consent.sql', import.meta.url))
+  for (const input of [Buffer.from('CREATE TABLE IF NOT EXISTS auth.users(id uuid PRIMARY KEY);'), consentMigration, consentMigration,
+    readFileSync(new URL('../tests/sql/ai-consent-rls.sql', import.meta.url))]) {
+    execFileSync('docker', ['exec', '-i', database, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input, stdio: ['pipe', 'pipe', 'pipe'] })
+  }
+  console.log('Anthropic consent: account isolation, explicit grant/withdrawal, anonymous denial, worker read-only access and idempotency passed.')
   // Separate image retrieval from runtime failures; neither command contains credentials.
   stage = 'postgrest image pull'
   docker('pull', postgrestImage)

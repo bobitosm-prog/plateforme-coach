@@ -15,6 +15,12 @@ import { mealDraftKey, readMealDraft, writeMealDraft } from '@/lib/nutrition/mea
 // Opt-in suite. Requires a disposable PostgreSQL + PostgREST fixture on loopback.
 // Authentication/provider/quota are simulated; persistence and row isolation are real.
 const state = vi.hoisted(() => ({ client: null as SupabaseClient | null, userId: '' }))
+// This suite exercises nutrition persistence after permission. The real consent
+// transport is covered in ai-consent-runtime; this runner also executes its RLS SQL.
+vi.mock('@/lib/ai/consent-server', () => ({
+  withAiConsent: (handler: unknown) => handler,
+  consentedAnthropicFetch: (...args: Parameters<typeof fetch>) => fetch(...args),
+}))
 vi.mock('next/headers', () => ({ cookies: async () => ({ getAll: () => [] }) }))
 vi.mock('@supabase/ssr', () => ({ createServerClient: () => state.client }))
 vi.mock('@/lib/api-guard', () => ({ guardCoachManagedCapabilities: async () => null }))

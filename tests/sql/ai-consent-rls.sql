@@ -6,6 +6,7 @@ insert into auth.users(id) values
  ('00000000-0000-4000-8000-000000000002');
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000000001"}', true);
 select public.set_ai_consent(true, 'anthropic-2026-10-04-v1', '00000000-0000-4000-8000-000000000001');
 do $$ begin
  if not (select granted from public.ai_consents) then raise exception 'acceptance lost'; end if;
@@ -36,6 +37,7 @@ do $$ begin
  if (select granted from public.ai_consents) then raise exception 'withdrawal lost'; end if;
 end $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000000002"}', true);
 do $$ declare affected integer; begin
  if (select count(*) from public.ai_consents) <> 0 then raise exception 'other consent leaked'; end if;
  update public.ai_consents set granted = true where user_id = '00000000-0000-4000-8000-000000000001';
