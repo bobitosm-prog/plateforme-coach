@@ -973,7 +973,11 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       </header>
       <div className={ledgerStyles.timer}>{(restOn || restDone) && <RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/>}</div>
       <div className={ledgerStyles.content}>
-        <div className={ledgerStyles.intro}><h1>{sessionName || t('freeSession')}</h1><p>{tv2('completedSetProgress', {current:completed,total})}</p></div>
+        <div className={ledgerStyles.intro}>
+          <h1>{sessionName || t('freeSession')}</h1>
+          <p>{draft.programSource === 'coach' ? tv2('coachPlan') : draft.programSource === 'personal' ? tv2('personalProgram') : t('freeSession')}</p>
+          <p>{tv2('completedSetProgress', {current:completed,total})}</p>
+        </div>
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
