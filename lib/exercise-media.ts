@@ -1,4 +1,4 @@
-// Exercise images from free-exercise-db (MIT license)
+// Exercise images from free-exercise-db (Unlicense / public-domain dedication)
 // Source: https://github.com/yuhonas/free-exercise-db
 // Each folder has 0.jpg (start position) and 1.jpg (end position)
 
