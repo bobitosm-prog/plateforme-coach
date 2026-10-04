@@ -2745,6 +2745,14 @@
     }
   },
   "nutrition_tab": {
+    "editor": {
+      "name": "Nom du repas",
+      "type": "Type de repas",
+      "grams": "Quantité en grammes",
+      "edit": "Modifier le repas",
+      "addToJournal": "Ajouter au journal",
+      "saveError": "Enregistrement impossible. Tes modifications sont conservées : réessaie."
+    },
     "journal": {"addTitle": "Que veux-tu ajouter ?", "food": "Un aliment", "saved": "Un repas enregistré", "photo": "Une photo", "barcode": "Un code-barres"},
     "quickEntry": {
       "eyebrow": "Saisie rapide",
@@ -2785,6 +2793,7 @@
       "discard": "Quitter sans enregistrer cette sélection ?",
       "uncertainClose": "Résultat incertain : réessaie ici sans doublon, ou ferme et vérifie le journal avant tout nouvel ajout.",
       "uncertainRetained": "Le résultat est incertain. En fermant, tu conserves cette tentative sur cet appareil. Rouvre le même repas à la même date pour réessayer sans recréer les aliments.",
+      "addSelectedMeal": "Ajouter le repas choisi à cette sélection",
       "restoredDraft": "Sélection récupérée sur cet appareil. Vérifie les quantités avant de confirmer.",
       "restoredPending": "Enregistrement à confirmer récupéré. Réessaie cette tentative ; ne recrée pas les aliments ailleurs.",
       "storageError": "Le brouillon ne peut pas être conservé ou a changé dans une autre fenêtre. Aucun nouvel envoi effectué. Ferme puis rouvre ce repas avant de réessayer.",

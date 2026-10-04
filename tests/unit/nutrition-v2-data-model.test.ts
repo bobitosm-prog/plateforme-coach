@@ -58,7 +58,10 @@ describe('Nutrition V2 canonical domain', () => {
     expect(hook).toContain('readActivePersonalMealPlan(supabase, userId)')
     expect(personalPlanRepository).toContain('plan:plan_data,active:is_active')
     expect(personalPlanRepository).toContain("'id,user_id,plan,active,created_at'")
-    expect(tab).not.toMatch(/total_proteins|total_fats|use_count/)
+    // Production saved_meals uses plural nutrient columns (schema audited 2026-10-04).
+    // The historical CREATE TABLE IF NOT EXISTS does not describe that deployed table.
+    expect(tab).not.toMatch(/\btotal_protein\s*:|\btotal_fat\s*:/)
+    expect(tab).not.toContain('use_count')
   })
 
   it('does not add an API, SQL migration or permanent dashboard read', () => {
