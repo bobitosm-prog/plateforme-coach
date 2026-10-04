@@ -1,4 +1,35 @@
-# MoovX — prototype iOS (B0)
+# MoovX — client iOS en préparation
+
+## Lancement direct — 4 octobre 2026
+
+L'app ouvre désormais directement `PrototypeBrowser`, sans accueil de prototype,
+présentation modale ni bandeau TEST / PRODUCTION. Le nom affiché en Release est
+MoovX ; les identifiants de bundle sont conservés pour préserver les installations
+et leurs données. Les noms techniques historiques de projet/classes restent
+inchangés. Aucun build TestFlight n'est publié par ce changement de code.
+
+La vue respecte les zones sûres iPhone. Les contrôles de navigation, le magasin
+WebKit persistant, les ponts Apple, la caméra, le repos et la reprise après
+interruption sont conservés. Les messages chargement/erreur/reprise/navigation
+sont disponibles en FR/EN/DE. Le lancement contacte désormais directement le site
+de production ; les essais authentifiés nécessitent un compte de test dédié.
+
+Validation locale : 33 contrôles de politique passent ; 7 tests XCTest passent
+sur iOS 27, dont le catalogue StoreKit, les largeurs WebKit 320–440 points et la
+géométrie de la vraie vue SwiftUI (320, 393 et 440 points) après chargement d'une
+page synthétique. Le test vérifie l'absence d'espace réservé à l'ancien bandeau.
+Ces tests ne certifient ni un achat sandbox complet ni une séance authentifiée.
+La compilation Release simulateur est également vérifiée.
+
+Le contrôle visuel et les captures restent à réaliser : les accès à Xcode et
+Device Hub par l'outil de contrôle d'interface ont expiré pendant cette session.
+Avant distribution, vérifier sur iPhone le lancement, le clavier, la navigation
+Analytics → Accueil, la reprise et l'ajout/validation de séries.
+
+## Historique du prototype B0 — 23 septembre 2026
+
+Les sections historiques ci-dessous décrivent les limites des anciens builds ;
+leurs mentions d'absence d'achats Apple ne décrivent plus l'implémentation actuelle.
 
 Prototype technique, **pas un candidat App Store**. Aucune modification du site,
 du schéma DB, des contrats API ni des droits d'abonnement. Pas de secret embarqué.

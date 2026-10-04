@@ -1,7 +1,15 @@
 "cameraDeniedTitle" = "Caméra désactivée";
-"cameraDeniedMessage" = "Autorise l’accès à la caméra pour MoovX Test dans Réglages, puis réessaie.";
+"cameraDeniedMessage" = "Autorise l’accès à la caméra pour MoovX dans Réglages, puis réessaie.";
 "cameraSettings" = "Ouvrir Réglages";
 "cameraCancel" = "Annuler";
 "restNotificationBody" = "Repos terminé — reprends ta série.";
 "restNotificationDeniedTitle" = "Alerte de repos désactivée";
-"restNotificationDeniedMessage" = "Autorise les notifications et leur son pour MoovX Test dans Réglages afin d’entendre la fin du repos écran verrouillé.";
+"restNotificationDeniedMessage" = "Autorise les notifications et leur son pour MoovX dans Réglages afin d’entendre la fin du repos écran verrouillé.";
+
+"browserRecovered" = "Page relancée après une interruption iOS. Vérifie tes dernières saisies.";
+"browserLoading" = "Chargement de MoovX…";
+"browserInterrupted" = "Chargement interrompu";
+"browserRetry" = "Réessayer";
+"browserNavigationBlocked" = "Navigation non disponible";
+"browserUnderstood" = "Compris";
+"browserNavigationMessage" = "Ce lien ne peut pas être ouvert dans MoovX. Utilise les options de connexion et d’achat proposées dans l’app.";
