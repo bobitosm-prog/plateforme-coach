@@ -1,6 +1,6 @@
-.body { display: grid; gap: 16px; color: #f5f0e8; }
+.body { display: grid; gap: 16px; min-width: 0; color: #f5f0e8; }
 .search { display: flex; gap: 8px; }
-.body input { min-width: 0; background: #0d0b08; border: 1px solid #51462c; border-radius: 10px; padding: 12px; color: #f5f0e8; font: inherit; }
+.body input { min-width: 0; background: #0d0b08; border: 1px solid #51462c; border-radius: 10px; padding: 12px; color: #f5f0e8; font: inherit; font-size: max(16px, 1em); }
 .search input { flex: 1; width: 100%; }
 .body button { min-height: 44px; border: 1px solid #51462c; border-radius: 10px; background: #211d14; color: #e6c364; font: inherit; cursor: pointer; padding: 10px 12px; }
 .body button:disabled { opacity: .5; cursor: not-allowed; }
@@ -9,14 +9,18 @@
 .sources { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 3px; }
 .sources button { white-space: nowrap; }
 .sources button[aria-pressed=true] { background: #e6c364; color: #171208; }
-.choices { display: grid; gap: 6px; max-height: 220px; overflow-y: auto; }
-.choices button { text-align: left; display: flex; justify-content: space-between; gap: 10px; }
+/* Do not compress long food names into fixed grid tracks. The sheet owns scrolling. */
+.choices { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.choices button { flex: 0 0 auto; min-width: 0; text-align: left; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+.choices button span { flex: 0 0 auto; }
 .draft { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
 .draft li { display: grid; grid-template-columns: minmax(0,1fr) 88px 44px; gap: 8px; align-items: center; }
+.draft li > div { min-width: 0; overflow-wrap: anywhere; }
 .draft small { display: block; color: #beb6a7; margin-top: 4px; }
 .draft label { font-size: 12px; }
 .draft input { width: 100%; box-sizing: border-box; }
-.footer { position: sticky; bottom: 0; background: #19160f; border-top: 1px solid #51462c; padding: 12px 0; display: grid; gap: 10px; }
+/* Keep confirmation after the selection, never over search results or focused inputs. */
+.footer { position: static; background: #19160f; border-top: 1px solid #51462c; padding: 12px 0; display: grid; gap: 10px; }
 .footer button { background: #e6c364; color: #171208; font-weight: 700; }
 .muted { color: #beb6a7; font-size: 13px; margin: 0; line-height: 1.5; }
 .error { color: #ffb4b4; }
@@ -25,7 +29,7 @@
 .inlineBody { gap: 14px; }
 .inlineBody .sources { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
 .inlineBody .sources button { flex: 0 0 auto; padding-inline: 11px; font-size: 12px; }
-.inlineBody .choices { max-height: 165px; }
+
 .inlineBody .footer { position: static; background: transparent; border-top: 0; padding: 0; }
 .inlineBody .footer button { border: 0; min-height: 52px; }
 @media (max-width: 380px) { .inlineCard { padding: 14px; } .draft li { grid-template-columns: minmax(0,1fr) 72px 44px; } }
