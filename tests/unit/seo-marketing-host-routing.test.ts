@@ -28,6 +28,9 @@ describe('marketing/application host boundary', () => {
   })
 
   const multilingualBlogPaths = [
+    '/fr/support',
+    '/en/support',
+    '/de/support',
     '/fr/blog',
     '/fr/blog/article-test',
     '/en/blog',

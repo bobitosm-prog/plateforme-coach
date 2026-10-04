@@ -127,7 +127,7 @@ MoovX uses several technical service providers acting as processors within the m
 | **Supabase Inc.** | Database hosting, authentication | European Union (EU region) | SCCs + Switzerland-EU Adequacy |
 | **Vercel Inc.** | Web hosting, CDN, analytics | United States / Worldwide (CDN) | EU-US Data Privacy Framework |
 | **Stripe Payments Europe Ltd.** | Payment processing | Ireland (EU) / United States | SCCs + EU-US Data Privacy Framework |
-| **Anthropic PBC** | AI technology for Athena | United States | EU-US Data Privacy Framework + API non-retention policy |
+| **Anthropic PBC** | AI technology for Athena | United States | See the provider’s applicable processing and transfer terms |
 | **Resend Inc.** *(if applicable)* | Transactional email sending | United States | EU-US Data Privacy Framework |
 
 ### 5.2 Transfers outside Switzerland / EU
@@ -140,7 +140,7 @@ For Swiss users, Switzerland published its own adequacy decision for the DPF in 
 
 ### 5.3 Special case of Athena (Anthropic)
 
-Conversations with Athena are transmitted to Anthropic PBC's API for AI processing. **Anthropic contractually commits not to use data received via the API to train its models** (zero data retention policy available on Anthropic's website).
+Athena conversations are sent to Anthropic for AI processing. Not using data for training does not mean no retention. Anthropic states that API inputs and outputs are deleted within 30 days, subject to contractual, legal or safety exceptions. MoovX does not guarantee zero retention. [Provider policy](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data).
 
 Users are advised **not to communicate sensitive medical data** in their exchanges with Athena (e.g., medical diagnosis, treatment, health identifiers).
 

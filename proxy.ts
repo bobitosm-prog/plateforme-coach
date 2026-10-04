@@ -18,7 +18,7 @@ const LEGACY_GUIDE_REDIRECTS: Readonly<Record<string, string>> = {
 
 export function isMarketingPath(pathname: string): boolean {
   // Pages localisées : /fr/landing, /en/cgu, /de/privacy
-  if (/^\/(fr|en|de)\/(landing|cgu|privacy)(?:\/|$)/.test(pathname)) return true
+  if (/^\/(fr|en|de)\/(landing|cgu|privacy|support)(?:\/|$)/.test(pathname)) return true
   // Blog public disponible dans les trois langues
   if (/^\/(fr|en|de)\/blog(?:\/|$)/.test(pathname)) return true
   // Surfaces d'acquisition disponibles uniquement en français

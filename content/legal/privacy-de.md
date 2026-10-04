@@ -127,7 +127,7 @@ MoovX nutzt mehrere technische Dienstleister, die als Auftragsverarbeiter im Sin
 | **Supabase Inc.** | Datenbankhosting, Authentifizierung | Europäische Union (EU-Region) | SCC + Schweiz-EU-Angemessenheit |
 | **Vercel Inc.** | Web-Hosting, CDN, Analytics | Vereinigte Staaten / Weltweit (CDN) | EU-US Data Privacy Framework |
 | **Stripe Payments Europe Ltd.** | Zahlungsabwicklung | Irland (EU) / Vereinigte Staaten | SCC + EU-US Data Privacy Framework |
-| **Anthropic PBC** | KI-Technologie für Athena | Vereinigte Staaten | EU-US Data Privacy Framework + API-Nicht-Speicherungs-Richtlinie |
+| **Anthropic PBC** | KI-Technologie für Athena | Vereinigte Staaten | Siehe die geltenden Verarbeitungs- und Übermittlungsbedingungen des Anbieters |
 | **Resend Inc.** *(gegebenenfalls)* | Versand transaktionaler E-Mails | Vereinigte Staaten | EU-US Data Privacy Framework |
 
 ### 5.2 Übermittlungen ausserhalb Schweiz / EU
@@ -140,7 +140,7 @@ Für Schweizer Nutzer hat die Schweiz im September 2024 ihren eigenen Angemessen
 
 ### 5.3 Sonderfall Athena (Anthropic)
 
-Gespräche mit Athena werden zur KI-Verarbeitung an die API von Anthropic PBC übermittelt. **Anthropic verpflichtet sich vertraglich, die über die API empfangenen Daten nicht zum Training seiner Modelle zu verwenden** (Zero-Data-Retention-Richtlinie verfügbar auf Anthropics Website).
+Athena-Gespräche werden zur KI-Verarbeitung an Anthropic übermittelt. Keine Nutzung für das Training bedeutet nicht, dass keine Speicherung erfolgt. Anthropic nennt eine Löschung der API-Eingaben und -Ausgaben innerhalb von 30 Tagen, mit vertraglichen, rechtlichen oder sicherheitsbedingten Ausnahmen. MoovX garantiert keine Nullspeicherung. [Anbieterrichtlinie](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data).
 
 Die Nutzer werden gebeten, **keine sensiblen medizinischen Daten** in ihren Gesprächen mit Athena mitzuteilen (z. B. medizinische Diagnose, Behandlung, Gesundheitsdaten).
 
