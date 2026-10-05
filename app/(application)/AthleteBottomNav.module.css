@@ -15,7 +15,8 @@
 .dock::before {
   position: absolute;
   z-index: 0;
-  top: -42px;
+  /* Fade only 16px above the rail (8px dock padding + 8px extension). */
+  top: -8px;
   right: 0;
   bottom: 0;
   left: 0;
