@@ -1,7 +1,7 @@
 # Allgemeine Geschäftsbedingungen — MoovX
 
-**Letzte Aktualisierung: 17. Mai 2026**
-**Version: 1.0**
+**Letzte Aktualisierung: 5. Oktober 2026**
+**Version: 1.1**
 
 ---
 
@@ -120,9 +120,11 @@ Steuerhinweis: Der Anbieter ist nicht mehrwertsteuerpflichtig (Art. 10 Abs. 2 MW
 
 ### 7.2 Zahlungsmittel
 
-Zahlungen werden ausschliesslich über **Stripe Payments Europe, Ltd.** (Irland), einen zugelassenen Zahlungsdienstleister, abgewickelt. Der Anbieter erhebt, verarbeitet oder speichert keine Bankdaten. Die anwendbaren Stripe-Bedingungen sind unter https://stripe.com/legal verfügbar.
+In-App-Käufe auf dem iPhone werden von **Apple** abgewickelt und müssen im Apple-Kaufdialog bestätigt werden. Preis und Währung werden vor der Bestätigung angezeigt und können je nach App-Store-Land variieren. MoovX erhält weder die Kartennummer noch die für den Kauf verwendeten Apple-Account-Zugangsdaten.
 
-Akzeptierte Zahlungsmittel sind: Bankkarten (Visa, Mastercard, American Express) sowie alle anderen beim Bezahlvorgang von Stripe angebotenen Mittel.
+Im Web angebotene Zahlungen werden von **Stripe Payments Europe, Ltd.** (Irland) mit den beim Kauf angebotenen Zahlungsmitteln und gemäss den Bedingungen unter https://stripe.com/legal abgewickelt.
+
+Für Apple-Käufe gelten bei Abrechnung, Verlängerungsmitteilungen, Zahlungsproblemen und Preisänderungen die Bedingungen und Verfahren von Apple. Die Stripe-Regelungen in den Abschnitten 7.4 und 7.5 betreffen Webkäufe. Die Apple-Nutzungsbedingungen stehen unter https://www.apple.com/legal/internet-services/itunes/dev/stdeula/.
 
 ### 7.3 Automatische Verlängerung der Abonnements
 
@@ -140,6 +142,12 @@ Der Anbieter behält sich das Recht vor, seine Preise jederzeit zu ändern. Neue
 
 ---
 
+### 7.6 Kostenlose MoovX-Testphase von 14 Tagen
+
+Die MoovX-Testphase ermöglicht 14 Tage Zugang zu kostenpflichtigen Funktionen, ohne zu Beginn ein Abonnement zu bestätigen. Am Ende beginnt weder eine Zahlung noch eine kostenpflichtige Verlängerung automatisch. Für weiteren kostenpflichtigen Zugang auf dem iPhone wählt und bestätigt der Nutzer einen Apple-Kauf. Der Lifetime-Zugang ist eine einmalige Zahlung; nur Monats- und Jahresabonnements verlängern sich automatisch.
+
+---
+
 ## 8. Laufzeit und Kündigung
 
 ### 8.1 Laufzeit
@@ -148,7 +156,11 @@ Monatsabonnements werden für eine Laufzeit von einem Monat mit stillschweigende
 
 ### 8.2 Kündigung durch den Kunden
 
-Der Kunde kann sein Abonnement jederzeit aus seinem persönlichen Bereich unter „Mein Konto > Abonnement > Kündigen" kündigen. Die Kündigung wird **am Ende der laufenden Periode** wirksam (monatlich oder jährlich). Eine pro rata Erstattung erfolgt nicht.
+Ein Apple-Abonnement wird in den Apple-Account-Einstellungen unter Abonnements verwaltet und gekündigt: https://support.apple.com/118428. Die Kündigung beendet die Verlängerung; der Zugang bleibt bis zum Ende des bezahlten Zeitraums bestehen, ausser bei Erstattung oder Widerruf des Kaufs. Erstattungen für Apple-Käufe können unter https://reportaproblem.apple.com beantragt werden und unterliegen den Voraussetzungen und Regeln von Apple sowie den geltenden gesetzlichen Rechten.
+
+Ein Stripe-Webabonnement kann unter „Mein Konto > Abonnement > Kündigen“ gekündigt werden. Die Kündigung wird am Ende der laufenden Periode wirksam, vorbehaltlich geltender gesetzlicher Rechte.
+
+Die Löschung des MoovX-Kontos kündigt ein Apple-Abonnement nicht automatisch. Berechtigte Käufe können über „Käufe wiederherstellen“ in der App mit dem zum Kauf gehörenden MoovX-Konto wiederhergestellt werden.
 
 ### 8.3 Kündigung durch den Anbieter
 
@@ -166,6 +178,8 @@ Der Nutzer kann sein Konto jederzeit über „Mein Konto > Konto löschen" endg�
 ---
 
 ## 9. Widerrufsrecht
+
+Für Apple-In-App-Käufe gelten die anwendbaren Kauf-, Widerrufs- und Erstattungsbedingungen von Apple, unbeschadet zwingender Verbraucherrechte. Der Apple-Kaufvorgang enthält nicht das nachstehend für Webabonnements beschriebene MoovX-Kontrollkästchen.
 
 ### 9.1 Ausdrücklicher Verzicht auf das Widerrufsrecht
 
