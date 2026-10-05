@@ -216,3 +216,66 @@ et le traitement explicite d'une interruption au premier plan. Les tests de
 géométrie WebKit et StoreKit existants restent inclus. Ces tests ne déterminent
 pas pourquoi iOS a interrompu le processus sur l'iPhone de Marco.
 Ce changement natif nécessite un nouveau build TestFlight pour être disponible.
+
+## Apple Watch — première version (5 octobre 2026)
+
+Le compagnon `MoovXWatch` cible watchOS 10+, avec iOS 17+ sur l’iPhone.
+L’activation est volontaire depuis une séance ; la préférence sert ensuite aux
+séances suivantes. Les séries restent saisies sur l’iPhone. La Watch affiche
+la durée, la fréquence cardiaque et les calories actives pendant une session
+HealthKit `traditionalStrengthTraining`. Elle est l’unique auteur du workout.
+
+Fermer la fenêtre de séance ne termine pas l’entraînement. Terminer demande
+la sauvegarde ; Abandonner demande d’écarter la session non sauvegardée. L’arrêt
+reste disponible sur la montre, notamment si la liaison est indisponible.
+Une interruption ambiguë ne recrée jamais automatiquement un entraînement.
+
+WatchConnectivity transporte uniquement un identifiant opaque, une action,
+sa date et un état. Aucune mesure Santé n’est envoyée au serveur, au coach ou à
+l’IA. Les identifiants terminés sont persistés et HealthKit reçoit un
+SyncIdentifier stable. Les démarrages de plus de 120 secondes sont rejetés.
+L’autorisation d’écriture est vérifiée explicitement ; un refus indique le
+chemin Réglages → Santé → Apps → MoovX. La permission est relue au retour actif.
+
+### Validation
+
+- Contrat : iPhone et Watch compilent ; les versions doivent être identiques,
+  le compagnon embarqué et ses droits HealthKit présents. Aucun changement DB.
+- Automatisation : 14 XCTest natifs passent ; la suite web de 2 412 tests,
+  dont les 3 tests du nouveau pont, et TypeScript passent.
+- Runtime watchOS 27 simulé : autorisation, démarrage, arrêt manuel, sauvegarde
+  et rejeu après relancement. La requête HealthKit limitée à la fixture 113
+  retourne exactement un workout, sans erreur ni entraînement encore actif.
+- Runtime de la paire dédiée : démarrage envoyé depuis l’iPhone, réveil de la
+  Watch, état HealthKit Running, puis finish depuis l’iPhone. La fixture 114
+  est enregistrée (saved), sans activeID restant. Le rejeu répété de finish
+  et le relancement retournent aussi count=1/queryError=0 dans Santé.
+- Sécurité : origine HTTPS/main frame contrôlée dans le pont, UUID obligatoire,
+  aucun échantillon de santé transmis au web et sondes absentes du Release.
+
+La recette physique sur Ultra 1/watchOS 26.6 reste à effectuer via TestFlight
+avant App Review : autorisation/refus, début/fin depuis la séance réelle,
+verrouillage/reprise, déconnexion, arrêt manuel et absence de doublon dans
+Fitness. Les mesures du simulateur ne valident pas la précision des capteurs.
+
+### Reproduire les tests
+
+Compiler le simulateur avec `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-`.
+Sans signature, les droits HealthKit simulés manquent et la demande d’accès
+échoue avant d’ouvrir la fenêtre. Xcode place ces droits simulés dans la section
+Mach-O `__TEXT,__entitlements` ; une lecture codesign seule ne suffit pas.
+
+```sh
+python3 ios/scripts/check-watch-bundle.py /path/to/MoovXPrototype.app
+```
+
+Ce contrôle vérifie versions, identifiant du compagnon et traitement workout
+en arrière-plan. La configuration Debug initiale conservait un ancien numéro
+iPhone ; elle a été alignée avec la Watch sur 1.0/build 13. Utiliser une paire
+simulée connectée, avec les deux composants issus du même build.
+
+Les arguments Debug/simulateur `--watch-workout-probe`, `--watch-start-probe`
+et `--watch-finish-probe` utilisent deux fixtures UUID fixes. Le premier teste
+la Watch seule, les deux autres le véritable service iPhone. Les vérifications
+HealthKit sont limitées à ces fixtures et ne lisent pas l’historique utilisateur.
+Les sondes sont exclues du Release.

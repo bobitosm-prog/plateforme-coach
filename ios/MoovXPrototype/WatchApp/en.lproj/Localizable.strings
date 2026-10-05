@@ -1,0 +1,16 @@
+"watch.strength" = "Traditional strength training";
+"watch.idle" = "Start your session in MoovX on iPhone.";
+"watch.permission" = "Allow Health, then retry from iPhone.";
+"watch.expired" = "Request expired. Retry from iPhone.";
+"watch.running" = "Running";
+"watch.saving" = "Saving…";
+"watch.saved" = "Saved to Health";
+"watch.discarded" = "Workout discarded";
+"watch.error" = "Saving interrupted. Retry finishing.";
+"watch.interrupted" = "Recovery uncertain. Check Health; no automatic new record.";
+"watch.authorize" = "Allow Health";
+"watch.finish" = "Finish and save";
+"watch.discard" = "Discard without saving";
+"watch.finishQuestion" = "End the Watch workout?";
+"watch.acknowledge" = "Close recovery";
+"watch.denied" = "In Settings → Health → Apps → MoovX, allow writing Workouts. Then return here.";
