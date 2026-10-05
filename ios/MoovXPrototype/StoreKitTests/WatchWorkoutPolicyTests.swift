@@ -27,7 +27,11 @@ final class WatchWorkoutPolicyTests: XCTestCase {
     }
     func testCommandRoundTripAndRepeatedCompletionAreIdempotent() {
         let command=WatchWorkoutCommand(id:UUID(),action:.start)
-        XCTAssertEqual(WatchWorkoutCommand(command.dictionary),command)
+        let restored = WatchWorkoutCommand(command.dictionary)!
+        XCTAssertEqual(restored.id, command.id)
+        XCTAssertEqual(restored.action, command.action)
+        // Date epoch conversion may round sub-microsecond floating-point precision.
+        XCTAssertEqual(restored.issuedAt.timeIntervalSince1970, command.issuedAt.timeIntervalSince1970, accuracy: 0.000001)
         var ledger=WatchWorkoutLedger(activeID:command.id)
         ledger.finish(command.id);ledger.finish(command.id)
         XCTAssertEqual(ledger.terminalIDs,[command.id])
