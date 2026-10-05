@@ -51,6 +51,8 @@ struct PrototypeBrowser: View {
                         }
                 }
             }
+            // Extend the web background below the home indicator; CSS safe-area padding protects controls.
+            .ignoresSafeArea(.container, edges: .bottom)
             .background(Color(red: 0.045, green: 0.04, blue: 0.025))
             .alert(NSLocalizedString("cameraDeniedTitle", comment: "Camera access denied title"), isPresented: $state.cameraDenied) {
                 Button(NSLocalizedString("cameraSettings", comment: "Open app settings")) {

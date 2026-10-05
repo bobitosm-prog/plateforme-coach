@@ -5,7 +5,7 @@ import SwiftUI
 
 @MainActor
 final class MobileViewportTests: XCTestCase {
-    func testDirectBrowserFillsSafeAreaWithoutPrototypeHeader() async throws {
+    func testDirectBrowserReachesBottomWhilePreservingTopSafeArea() async throws {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
         let controller = UIHostingController(rootView: PrototypeBrowser().preferredColorScheme(.dark))
         window.rootViewController = controller
@@ -26,7 +26,7 @@ final class MobileViewportTests: XCTestCase {
         let web = try XCTUnwrap(browser)
         // Exercise the real SwiftUI shell without signing into a production account.
         web.stopLoading()
-        web.loadHTMLString("<meta name='viewport' content='width=device-width,initial-scale=1'><body>MoovX layout fixture</body>", baseURL: NavigationPolicy.entryURL)
+        web.loadHTMLString("<meta name='viewport' content='width=device-width,initial-scale=1'><body>MoovX layout fixture<div id='footer' style='position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)'></div></body>", baseURL: NavigationPolicy.entryURL)
         for _ in 0..<100 {
             if (try? await web.evaluateJavaScript("document.readyState === 'complete' && document.body.textContent === 'MoovX layout fixture'")) as? Bool == true { break }
             try await Task.sleep(for: .milliseconds(50))
@@ -44,7 +44,10 @@ final class MobileViewportTests: XCTestCase {
             XCTAssertEqual(actual.minX, expected.minX, accuracy: 1)
             XCTAssertEqual(actual.minY, expected.minY, accuracy: 1)
             XCTAssertEqual(actual.width, expected.width, accuracy: 1)
-            XCTAssertEqual(actual.height, expected.height, accuracy: 1)
+            XCTAssertEqual(actual.maxY, controller.view.bounds.maxY, accuracy: 1)
+            let bottomPadding = try await web.evaluateJavaScript("parseFloat(getComputedStyle(document.querySelector('#footer')).paddingBottom)") as! NSNumber
+            XCTAssertGreaterThanOrEqual(bottomPadding.doubleValue, Double(controller.view.safeAreaInsets.bottom) - 1,
+                "CSS must protect the home indicator after extending the native web view")
         }
     }
 
