@@ -195,3 +195,24 @@ python3 ios/scripts/check-storage.py --device <SIMULATOR_UUID>
 
 Elle compile deux builds distincts et vérifie quatre étapes de persistance
 sans compte ni connexion au site de production.
+
+## Reprise après arrière-plan — 5 octobre 2026
+
+Le rappel de reprise était permanent : sa présence à plusieurs retours ne
+permettait pas de conclure à plusieurs interruptions. Il dispose maintenant
+d'un bouton Fermer accessible (FR/EN/DE), sans fermeture automatique ni promesse
+de sauvegarde. Il apparaît seulement après la fin de navigation de reprise.
+
+Une reprise réussie réarme la récupération pour une interruption ultérieure en
+arrière-plan. Une interruption pendant cette tentative ou au premier plan
+conserve l'erreur et le bouton Réessayer, sans boucle automatique. Les traces
+OSLog WebRecovery consignent uniquement l'état actif et les étapes de reprise,
+sans URL, identité ni contenu. Le magasin WebKit et les brouillons restent inchangés.
+
+Validation : 10 XCTest sur simulateur iOS 27, dont trois nouveaux scénarios
+de cycle de vie du coordinateur (callbacks simulés, WKWebView instrumentée).
+Ils couvrent trois reprises séparées, l'absence de boucle si la reprise échoue
+et le traitement explicite d'une interruption au premier plan. Les tests de
+géométrie WebKit et StoreKit existants restent inclus. Ces tests ne déterminent
+pas pourquoi iOS a interrompu le processus sur l'iPhone de Marco.
+Ce changement natif nécessite un nouveau build TestFlight pour être disponible.
