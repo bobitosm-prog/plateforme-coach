@@ -13,3 +13,5 @@
 "browserNavigationBlocked" = "Navigation unavailable";
 "browserUnderstood" = "OK";
 "browserNavigationMessage" = "This link cannot be opened in MoovX. Use the sign-in and purchase options provided in the app.";
+
+"browserDismissRecovery" = "Dismiss recovery notice";

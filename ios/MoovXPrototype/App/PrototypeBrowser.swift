@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 import Combine
 import AVFoundation
+import OSLog
 
 @MainActor
 final class BrowserState: ObservableObject {
@@ -20,7 +21,14 @@ struct PrototypeBrowser: View {
     var body: some View {
             VStack(spacing: 0) {
                 if state.recovered {
-                    Text(NSLocalizedString("browserRecovered", comment: "Recovery notice")).font(.caption).padding(8)
+                    HStack {
+                        Text(NSLocalizedString("browserRecovered", comment: "Recovery notice")).font(.caption)
+                        Spacer(minLength: 8)
+                        Button { state.recovered = false } label: {
+                            Image(systemName: "xmark").frame(width: 44, height: 44)
+                        }
+                        .accessibilityLabel(NSLocalizedString("browserDismissRecovery", comment: "Dismiss recovery notice"))
+                    }.padding(.horizontal, 8)
                 }
                 if state.loading { ProgressView(NSLocalizedString("browserLoading", comment: "Loading state")).padding() }
                 if let error = state.error {
@@ -29,6 +37,7 @@ struct PrototypeBrowser: View {
                     } description: { Text(error) } actions: {
                         Button(NSLocalizedString("browserRetry", comment: "Retry loading")) {
                             state.error = nil
+                            state.recovered = false
                             state.loading = true
                             state.reloadID += 1
                         }
@@ -127,6 +136,7 @@ struct PrototypeWebView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+        private let logger = Logger(subsystem: "ch.moovx.app", category: "WebRecovery")
         let state: BrowserState
         let appleAuth = AppleSignInBridge()
         let applePurchases = ApplePurchaseBridge()
@@ -137,7 +147,11 @@ struct PrototypeWebView: UIViewRepresentable {
         private var workoutActive = false
         private var recoveryPending = false
         private var automaticRecoveryUsed = false
-        init(state: BrowserState) { self.state = state }
+        private let applicationState: () -> UIApplication.State
+        init(state: BrowserState, applicationState: @escaping () -> UIApplication.State = { UIApplication.shared.applicationState }) {
+            self.state = state
+            self.applicationState = applicationState
+        }
 
         func observeCameraPermission(on webView: WKWebView) {
             self.webView = webView
@@ -170,13 +184,13 @@ struct PrototypeWebView: UIViewRepresentable {
             refreshWorkoutScreenAwake()
         }
 
-        private func recoverIfNeeded() {
+        func recoverIfNeeded() {
             guard recoveryPending, let webView,
-                  UIApplication.shared.applicationState == .active else { return }
+                  applicationState() == .active else { return }
             recoveryPending = false
             automaticRecoveryUsed = true
+            logger.notice("Starting deferred WebContent recovery")
             state.loading = true
-            state.recovered = true
             // Reload the existing view to retain its URL and persistent data store.
             if webView.reload() == nil {
                 webView.load(URLRequest(url: NavigationPolicy.entryURL))
@@ -244,6 +258,13 @@ struct PrototypeWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             state.loading = false
+            if automaticRecoveryUsed {
+                logger.notice("WebContent recovery navigation completed")
+                state.recovered = true
+                // A completed reload ends this recovery attempt. A later background
+                // eviction gets its own attempt; an interruption during reload does not.
+                automaticRecoveryUsed = false
+            }
             refreshCameraPermission()
 #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--rest-bridge-probe") {
@@ -262,11 +283,14 @@ struct PrototypeWebView: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            // Lifecycle metadata only: never log URLs, account details or page content.
+            logger.notice("WebContent terminated; active: \(self.applicationState() == .active, privacy: .public); recovery in progress: \(self.automaticRecoveryUsed, privacy: .public)")
             appleAuth.cancel()
             applePurchases.cancel()
             workoutActive = false
             refreshWorkoutScreenAwake()
-            if UIApplication.shared.applicationState != .active && !automaticRecoveryUsed {
+            state.recovered = false
+            if applicationState() != .active && !automaticRecoveryUsed {
                 recoveryPending = true
                 state.loading = true
                 return
