@@ -3744,5 +3744,25 @@
     "error": "Vérifie MoovX sur ta Watch. Ta séance iPhone reste disponible.",
     "unavailable": "Watch non joignable. Tu peux continuer sur l’iPhone et réessayer.",
     "checkEnd": "Vérifie la fin de l’entraînement sur ta Watch. Si elle est déconnectée, termine-le directement sur la montre."
+  },
+  "daily_energy": {
+    "title": "Ma journée en calories",
+    "estimate": "Estimation Santé",
+    "intro": "Santé de cet iPhone · données du jour sélectionné.",
+    "burned": "Dépensées · Santé",
+    "eaten": "Consommées · MoovX",
+    "breakdown": "Activité : {active} kcal · Repos : {resting} kcal",
+    "difference": "Écart consommées − dépensées : {value} kcal",
+    "missing": "Données Santé incomplètes ou accès non autorisé. Vérifie les autorisations pour MoovX dans Santé et laisse la montre se synchroniser. Aucun total n’est estimé à partir de données manquantes.",
+    "foodMissing": "Le journal alimentaire n’est pas disponible pour cette date.",
+    "updated": "Lecture à {time} · heure suisse. La synchronisation Santé peut être différée.",
+    "loading": "Lecture de Santé…",
+    "consent": "Relie Santé de cet iPhone pour lire les calories actives et au repos. Ces valeurs restent sur cet appareil, sans envoi au coach ni à l’IA.",
+    "error": "Santé est momentanément indisponible. Réessaie lorsque l’iPhone est déverrouillé.",
+    "connect": "Relier Apple Santé",
+    "refresh": "Actualiser",
+    "disconnect": "Déconnecter",
+    "note": "Pour aujourd’hui, le total correspond aux données disponibles jusqu’à présent. Comparaison indicative : ton objectif alimentaire reste inchangé. Les calories de séance sont déjà incluses dans l’activité.",
+    "details": "Détails et connexion Santé"
   }
 }

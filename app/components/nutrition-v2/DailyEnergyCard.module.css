@@ -1,0 +1,18 @@
+.card { margin: 14px 0; padding: 18px; border-radius: 22px; background: #1c1b18; border: 1px solid rgba(230,195,100,.16); color: #e5e2e1; min-width: 0; }
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.heading h2 { color: #e6c364; font-size: 18px; margin: 0; }
+.heading > span { font-size: 12px; background: rgba(230,195,100,.1); border-radius: 12px; padding: 4px 9px; color: #e6c364; }
+.copy { font-size: 13px; line-height: 1.5; color: #d0c5b2; margin: 10px 0; overflow-wrap: anywhere; }
+.metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 18px 0 12px; }
+.metrics > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.metrics span { min-height: 2.8em; line-height: 1.4; font-size: 13px; color: #d0c5b2; }
+.metrics strong { font-size: clamp(22px,6vw,30px); line-height: 1.2; overflow-wrap: anywhere; }
+.metrics small { font-size: 12px; font-weight: normal; }
+.balance { font-size: 14px; color: #e6c364; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.actions button { min-height: 44px; padding: 8px 12px; border-radius: 12px; background: rgba(230,195,100,.1); color: #e6c364; border: 1px solid rgba(230,195,100,.2); font-size: 14px; }
+.actions button:disabled { opacity: .5; }
+.actions button:focus-visible { outline: 2px solid #e6c364; outline-offset: 2px; }
+.footnote { margin: 12px 0 0; color: #d0c5b2; font-size: 12px; line-height: 1.5; }
+
+.details summary { min-height: 44px; display: list-item; align-content: center; color: #d0c5b2; font-size: 13px; cursor: pointer; }

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import type { NutritionViewModel } from '../../../lib/nutrition/nutrition-dashboard-model'
 import NutritionHero from './NutritionHero'
+import DailyEnergyCard from './DailyEnergyCard'
 import NutritionQuickCard from './NutritionQuickCard'
 import styles from './NutritionV2.module.css'
 
@@ -41,6 +42,8 @@ export default function NutritionV2({
       onAddMeal={onAddMeal}
       onRetry={onRetry}
     />
+    {userId && <DailyEnergyCard key={`${userId}:${selectedDate}`} account={userId} date={selectedDate}
+      consumed={['ready','empty'].includes(model.consumed.state) ? model.consumed.data?.calories ?? null : null} />}
     {!compactToday && <NutritionQuickCard
       key={userId}
       userId={userId}
