@@ -3744,5 +3744,25 @@
     "error": "Prüfe MoovX auf deiner Watch. Die iPhone-Einheit bleibt verfügbar.",
     "unavailable": "Watch nicht erreichbar. Du kannst auf dem iPhone fortfahren.",
     "checkEnd": "Prüfe, ob das Watch-Training beendet ist. Bei fehlender Verbindung direkt auf der Watch beenden."
+  },
+  "daily_energy": {
+    "title": "Meine täglichen Kalorien",
+    "estimate": "Health-Schätzung",
+    "intro": "Health auf diesem iPhone · Daten des gewählten Tages.",
+    "burned": "Verbraucht · Health",
+    "eaten": "Gegessen · MoovX",
+    "breakdown": "Aktiv: {active} kcal · Ruhe: {resting} kcal",
+    "difference": "Gegessen − verbraucht: {value} kcal",
+    "missing": "Health-Daten fehlen oder der Zugriff ist nicht erlaubt. Prüfe die MoovX-Berechtigungen in Health und lasse die Watch synchronisieren. Fehlende Daten werden nicht als null gezählt.",
+    "foodMissing": "Das Ernährungstagebuch ist für dieses Datum nicht verfügbar.",
+    "updated": "Abgelesen um {time} · Schweizer Zeit. Health kann verzögert synchronisieren.",
+    "loading": "Health wird gelesen…",
+    "consent": "Verbinde Health auf diesem iPhone, um Aktivitäts- und Ruhekalorien zu lesen. Werte bleiben auf diesem Gerät und werden nicht an Coach oder KI gesendet.",
+    "error": "Health ist vorübergehend nicht verfügbar. Versuche es mit entsperrtem iPhone erneut.",
+    "connect": "Apple Health verbinden",
+    "refresh": "Aktualisieren",
+    "disconnect": "Trennen",
+    "note": "Für heute umfasst die Summe die bisher verfügbaren Daten. Nur zum Vergleich: Dein Ernährungsziel bleibt unverändert. Trainingskalorien sind bereits in der Aktivitätsenergie enthalten.",
+    "details": "Details und Health-Verbindung"
   }
 }

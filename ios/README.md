@@ -279,3 +279,12 @@ et `--watch-finish-probe` utilisent deux fixtures UUID fixes. Le premier teste
 la Watch seule, les deux autres le véritable service iPhone. Les vérifications
 HealthKit sont limitées à ces fixtures et ne lisent pas l’historique utilisateur.
 Les sondes sont exclues du Release.
+
+
+### Daily Health energy comparison — build 14
+
+Nutrition now has an optional native-only card for the selected journal date. It reads HealthKit cumulative active and basal energy, displays their sum alongside the existing logged food calories, and leaves nutrition targets unchanged. It does not sum workout records into active energy again. The date uses the journal's Europe/Zurich timezone, including DST, and today's query ends at the current time; no full-day extrapolation is made.
+
+`DailyEnergyBridge` accepts only foreground messages from the trusted app origin and main frame. Read access is requested on an explicit Connect action. Opt-in is keyed by MoovX account on this device; Health itself always belongs to the iPhone owner. Read denial cannot be distinguished from missing samples, so absent components remain unknown and suppress the total/difference. Only display state holds returned daily totals: no database, localStorage, server, coach or AI transfer is added. The card refreshes on foreground, manually, and each visible minute. Disconnect stops reading for that account; OS permissions are managed in Health.
+
+Validation: native simulator tests cover journal timezone, 23/25-hour days, invalid/future dates and no extrapolation. UI runtime tests cover opt-in/disconnect, missing data, stale account/date responses and resume. Browser visual checks use explicitly synthetic totals at 320 and 390 pixels. Real Health read authorization and agreement with the paired iPhone Health totals still require build 14 testing on the physical device.

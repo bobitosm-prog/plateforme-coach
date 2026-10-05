@@ -1,4 +1,4 @@
 "NSCameraUsageDescription" = "MoovX verwendet die Kamera, um eine Mahlzeit zu fotografieren und einen Barcode zu scannen, wenn du diese Funktionen auswählst.";
 
-"NSHealthShareUsageDescription" = "MoovX zeigt Herzfrequenz und Kalorien während deines Apple-Watch-Trainings.";
+"NSHealthShareUsageDescription" = "MoovX liest Aktivitäts- und Ruhekalorien zum Vergleich mit erfassten Mahlzeiten sowie die Herzfrequenz während Watch-Trainings.";
 "NSHealthUpdateUsageDescription" = "MoovX speichert Apple-Watch-Trainings in Health, wenn du diese Funktion aktivierst.";
