@@ -273,7 +273,7 @@ export default function useClientDetail() {
       const likedArr = Array.isArray(profile.liked_foods) ? profile.liked_foods : []
       if (likedArr.length) {
         const { data: foods } = await supabase
-          .from('food_items')
+          .from('selectable_food_items')
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .in('id', likedArr)
           .limit(200)
@@ -284,7 +284,7 @@ export default function useClientDetail() {
       }
       if (availableFoods.length < 10) {
         const { data: fallback } = await supabase
-          .from('food_items')
+          .from('selectable_food_items')
           .select('id, name, energy_kcal, proteins, carbohydrates, fat')
           .eq('source', 'fitness')
           .not('name', 'is', null)
@@ -489,7 +489,7 @@ export default function useClientDetail() {
     setProfile(p)
     const pLiked = Array.isArray(p.liked_foods) ? p.liked_foods : []
     if (pLiked.length) {
-      supabase.from('food_items').select('id,name').eq('source', 'fitness').in('id', pLiked).limit(200)
+      supabase.from('selectable_food_items').select('id,name').eq('source', 'fitness').in('id', pLiked).limit(200)
         .then(({ data: foods }: any) => { if (foods) setResolvedFoods(foods.map((f: any) => ({ id: f.id, name: f.name, emoji: null }))) })
     }
     setEditName(p.full_name ?? ''); setEditEmail(p.email ?? ''); setEditPhone(p.phone ?? ''); setEditBirth(p.birth_date ?? ''); setEditGender(p.gender ?? '')

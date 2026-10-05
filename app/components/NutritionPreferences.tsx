@@ -1,4 +1,5 @@
 'use client'
+import FoodCatalogNotice from './nutrition-v2/FoodCatalogNotice'
 import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 import { aiFetch } from '@/lib/ai/consent-client'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -202,8 +203,8 @@ export default function NutritionPreferences({
     const timer = setTimeout(async () => {
       try {
         const [{ data: fitness }, { data: anses }] = await Promise.all([
-          supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', `%${mealSearchQuery}%`).limit(10),
-          supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${mealSearchQuery}%`).limit(10),
+          supabase.from('selectable_food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').ilike('name', `%${mealSearchQuery}%`).limit(10),
+          supabase.from('selectable_food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${mealSearchQuery}%`).limit(10),
         ])
         const data = [...(fitness || []), ...(anses || [])]
         const results = data.map((f: any) => ({
@@ -713,6 +714,7 @@ export default function NutritionPreferences({
         </div>
 
         {/* Search community foods */}
+        <FoodCatalogNotice />
         <div style={{ position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...inputStyle, padding: 0 }}>
             <Search size={14} color={colors.textMuted} style={{ marginLeft: 12 }} />

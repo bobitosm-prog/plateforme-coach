@@ -11,7 +11,7 @@ export async function searchFoodCatalog(db: any, query: string, signal?: AbortSi
   const terms = foodSearchTerms(query)
   if (!terms.length) return []
   const responses = await Promise.all(terms.flatMap(term => [true, false].map(fitness => {
-    let request = db.from('food_items').select(columns)
+    let request = db.from('selectable_food_items').select(columns)
     if (fitness) request = request.eq('source', 'fitness')
     request = request.ilike('name', `%${term}%`).order('name').limit(fitness ? 12 : 30)
     return signal ? request.abortSignal(signal) : request

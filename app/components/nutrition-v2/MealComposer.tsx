@@ -1,4 +1,5 @@
 'use client'
+import FoodCatalogNotice from './FoodCatalogNotice'
 import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 import { aiFetch } from '@/lib/ai/consent-client'
 import { useEffect, useRef, useState } from 'react'
@@ -119,7 +120,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
       supabase.from('daily_food_logs').select('custom_name,quantity_g,calories,protein,carbs,fat').eq('user_id',userId).order('created_at',{ascending:false}).limit(30).abortSignal(controller.signal),
       supabase.from('saved_meals').select('id,name,foods').eq('user_id',userId).order('created_at',{ascending:false}).limit(100).abortSignal(controller.signal),
       supabase.from('profiles').select('liked_foods').eq('id',userId).single().abortSignal(controller.signal),
-      supabase.from('food_items').select('id,name,energy_kcal,proteins,carbohydrates,fat,source').eq('source','fitness').limit(200).abortSignal(controller.signal),
+      supabase.from('selectable_food_items').select('id,name,energy_kcal,proteins,carbohydrates,fat,source').eq('source','fitness').limit(200).abortSignal(controller.signal),
     ]).then(([logs, meals, profile, catalog]: any[]) => {
       if (controller.signal.aborted) return
       setReadError([logs,meals,profile,catalog].some(result=>result.error))
@@ -189,7 +190,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const totals=foods.reduce((sum,food)=> {const n=draftNutrients(food);return {calories:sum.calories+n.calories,protein:sum.protein+n.protein,carbs:sum.carbs+n.carbs,fat:sum.fat+n.fat}}, {calories:0,protein:0,carbs:0,fat:0})
   const valid=foods.length>0 && foods.every(food=>Number.isFinite(food.quantity) && food.quantity>0)
 
-  const body = <div className={`${styles.body} ${inline ? styles.inlineBody : ''}`}>
+  const body = <div className={`${styles.body} ${inline ? styles.inlineBody : ''}`}><FoodCatalogNotice />
         {discard ? <div role="alert"><p>{t(locked ? 'uncertainRetained' : 'discard')}</p><button onClick={()=>setDiscard(false)}>{t('keep')}</button> <button onClick={discardOrKeep}>{t('close')}</button></div> : <>
         {restored && <p role="status">{t(locked ? 'restoredPending' : 'restoredDraft')}</p>}
         {restored && initialFoods?.length && !selectedMealAdded ? <button type="button" disabled={locked || analyzing} onClick={() => { if (add(initialFoods)) setSelectedMealAdded(true) }}>{t('addSelectedMeal')}</button> : null}

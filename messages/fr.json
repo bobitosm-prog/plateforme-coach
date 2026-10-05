@@ -3719,5 +3719,11 @@
     "close": "Fermer",
     "signOut": "Se déconnecter",
     "manage": "Gérer mon abonnement Apple"
+  },
+  "food_catalog": {
+    "title": "Sources et valeurs nutritionnelles",
+    "source": "Anses. 2025. Table de composition nutritionnelle des aliments Ciqual — Licence Ouverte 2.0. Sous-ensemble adapté pour MoovX : énergie et macronutriments pour 100 g.",
+    "values": "Les valeurs sont arrondies pour l’affichage. Les traces sont approximées à zéro et les valeurs inférieures à un seuil utilisent ce seuil pour le calcul : les totaux restent des estimations. Les fiches dont une valeur nécessaire est inconnue sont exclues des nouvelles sélections.",
+    "fitness": "Les références MoovX Fitness sont proposées en premier. Elles constituent un catalogue distinct ; elles ne sont pas toutes issues de Ciqual."
   }
 }

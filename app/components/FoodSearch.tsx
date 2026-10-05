@@ -1,4 +1,5 @@
 'use client'
+import FoodCatalogNotice from './nutrition-v2/FoodCatalogNotice'
 import { useEffect, useRef, useState } from 'react'
 import { Search, X, Plus, Minus, Star, Camera } from 'lucide-react'
 import { normalizeFoodItem } from '../../lib/utils/food'
@@ -62,7 +63,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   // Load all fitness foods + user favorites once
   useEffect(() => {
     Promise.all([
-      supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').order('name').limit(200),
+      supabase.from('selectable_food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'fitness').order('name').limit(200),
       supabase.from('profiles').select('liked_foods').eq('id', userId).single(),
     ]).then(([foodRes, profRes]: any[]) => {
       const foods = (foodRes.data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') }))
@@ -79,7 +80,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
     clearTimeout(searchTimer.current)
     if (query.length < 2) { setAnsesResults([]); return }
     searchTimer.current = setTimeout(async () => {
-      const { data } = await supabase.from('food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${query}%`).limit(20)
+      const { data } = await supabase.from('selectable_food_items').select('id, name, energy_kcal, proteins, carbohydrates, fat, source').eq('source', 'ANSES').ilike('name', `%${query}%`).limit(20)
       setAnsesResults((data || []).map((f: any) => ({ ...normalizeFoodItem(f), cat: categorize(f.name || '') })))
     }, 300)
     return () => clearTimeout(searchTimer.current)
@@ -139,6 +140,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
               <X size={14} color={colors.textMuted} />
             </button>
           </div>
+          <FoodCatalogNotice />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
             <button onClick={() => setQuantityStr(String(Math.max(0, quantity - 25)))} style={{ width: 44, height: 44, borderRadius: 12, background: colors.background, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Minus size={18} color={colors.text} />
@@ -218,6 +220,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
       )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 24px' }}>
+        <FoodCatalogNotice />
         {loading && <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem', padding: '32px 0' }}>Chargement...</p>}
 
         {/* Favorites section */}

@@ -3719,5 +3719,11 @@
     "close": "Schließen",
     "signOut": "Abmelden",
     "manage": "Apple-Abonnement verwalten"
+  },
+  "food_catalog": {
+    "title": "Quellen und Nährwerte",
+    "source": "Anses. 2025. Ciqual-Nährwerttabelle — Open Licence 2.0. Für MoovX angepasster Auszug: Energie und Makronährstoffe je 100 g.",
+    "values": "Werte werden für die Anzeige gerundet. Spuren werden mit null angenähert; bei Werten unter einer Grenze wird diese Grenze zur Berechnung verwendet. Summen bleiben Schätzungen. Lebensmittel mit fehlenden erforderlichen Werten werden bei neuer Auswahl ausgeschlossen.",
+    "fitness": "MoovX-Fitness-Einträge erscheinen zuerst. Sie bilden einen eigenen Katalog und stammen nicht alle aus Ciqual."
   }
 }
