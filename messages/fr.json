@@ -3725,5 +3725,24 @@
     "source": "Anses. 2025. Table de composition nutritionnelle des aliments Ciqual — Licence Ouverte 2.0. Sous-ensemble adapté pour MoovX : énergie et macronutriments pour 100 g.",
     "values": "Les valeurs sont arrondies pour l’affichage. Les traces sont approximées à zéro et les valeurs inférieures à un seuil utilisent ce seuil pour le calcul : les totaux restent des estimations. Les fiches dont une valeur nécessaire est inconnue sont exclues des nouvelles sélections.",
     "fitness": "Les références MoovX Fitness sont proposées en premier. Elles constituent un catalogue distinct ; elles ne sont pas toutes issues de Ciqual."
+  },
+  "watch_workout": {
+    "off": "Option désactivée. Active-la pour démarrer les prochaines séances sur ta Watch.",
+    "enable": "Activer avec cette séance",
+    "retry": "Réessayer la connexion",
+    "disable": "Désactiver",
+    "idle": "Prêt à démarrer sur la Watch.",
+    "running": "Musculation traditionnelle en cours sur la Watch.",
+    "saved": "Entraînement enregistré dans Santé.",
+    "discarded": "Entraînement annulé sur la Watch.",
+    "saving": "Enregistrement en cours sur la Watch.",
+    "pending": "Commande envoyée. Vérifie la Watch ; ne lance pas aussi Exercice Apple.",
+    "permission": "Ouvre MoovX sur ta Watch et autorise Santé, puis réessaie ici.",
+    "install": "Installe MoovX sur ta Watch depuis l’app Watch de l’iPhone.",
+    "busy": "Une autre séance est encore ouverte sur la Watch. Termine-la sur la montre.",
+    "expired": "La demande a expiré. Réessaie pour démarrer maintenant.",
+    "error": "Vérifie MoovX sur ta Watch. Ta séance iPhone reste disponible.",
+    "unavailable": "Watch non joignable. Tu peux continuer sur l’iPhone et réessayer.",
+    "checkEnd": "Vérifie la fin de l’entraînement sur ta Watch. Si elle est déconnectée, termine-le directement sur la montre."
   }
 }

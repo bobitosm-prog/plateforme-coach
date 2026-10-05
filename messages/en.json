@@ -3725,5 +3725,24 @@
     "source": "Anses. 2025. Ciqual food composition table — Open Licence 2.0. Subset adapted for MoovX: energy and macronutrients per 100 g.",
     "values": "Values are rounded for display. Traces are approximated as zero; values below a threshold use that threshold for calculation. Totals remain estimates. Foods with missing required values are excluded from new selections.",
     "fitness": "MoovX Fitness references appear first. They form a separate catalogue and are not all sourced from Ciqual."
+  },
+  "watch_workout": {
+    "off": "Disabled. Enable to start future sessions on your Watch.",
+    "enable": "Enable for this session",
+    "retry": "Retry connection",
+    "disable": "Disable",
+    "idle": "Ready to start on Watch.",
+    "running": "Traditional strength training is running on Watch.",
+    "saved": "Workout saved to Health.",
+    "discarded": "Watch workout discarded.",
+    "saving": "Saving on Watch.",
+    "pending": "Command sent. Check your Watch; do not also start Apple Workout.",
+    "permission": "Open MoovX on Watch, allow Health access, then retry here.",
+    "install": "Install MoovX using the Watch app on your iPhone.",
+    "busy": "Another workout is open on Watch. End it on your watch.",
+    "expired": "Request expired. Retry to start now.",
+    "error": "Check MoovX on Watch. Your iPhone session remains available.",
+    "unavailable": "Watch unavailable. Continue on iPhone and retry later.",
+    "checkEnd": "Check that your Watch workout has ended. If disconnected, end it directly on your watch."
   }
 }

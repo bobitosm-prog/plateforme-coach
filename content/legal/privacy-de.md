@@ -293,3 +293,7 @@ Chemin Clair Val 2
 **Diese Erklärung ist in französischer, englischer und deutscher Sprache verfügbar. Bei Auslegungsunterschieden ist die französische Fassung massgebend.**
 
 **© 2026 Marco Ferreira / MoovX — Alle Rechte vorbehalten.**
+
+### Apple Watch und Health (optionale Funktion)
+
+Wenn du die Apple-Watch-Begleitapp aktivierst, fragt MoovX nach Health-Berechtigungen für Herzfrequenz, Kalorien und das Speichern eines traditionellen Krafttrainings. Die Watch speichert das Training in HealthKit; diese Messwerte verbleiben in Apple Health und werden durch diese Integration weder an MoovX-Server noch an deinen Coach oder Anthropic gesendet. iPhone und Watch tauschen nur Befehle, eine technische Sitzungskennung und deren Status aus. Diese Daten werden nicht für Werbung verwendet. Die Funktion kann in der MoovX-Einheit deaktiviert werden; Berechtigungen lassen sich in den Health-Einstellungen widerrufen. Bereits gespeicherte Trainings können direkt in Health gelöscht werden.

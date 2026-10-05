@@ -293,3 +293,7 @@ Chemin Clair Val 2
 **This Policy is available in French, English, and German. In the event of any discrepancy in interpretation, the French version shall prevail.**
 
 **© 2026 Marco Ferreira / MoovX — All rights reserved.**
+
+### Apple Watch and Health (optional feature)
+
+If you enable the Apple Watch companion, MoovX requests Health permissions to track heart rate and calories and save a traditional strength training workout. The watch saves the workout in HealthKit; these measurements remain within Apple Health and are not sent to MoovX servers, your coach or Anthropic by this integration. iPhone and Watch exchange only commands, a technical session identifier and its status. This data is not used for advertising. You can disable the feature within the MoovX session and revoke permissions in Health settings. Workouts already saved in Health can be deleted there directly.

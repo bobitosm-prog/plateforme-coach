@@ -293,3 +293,7 @@ Chemin Clair Val 2
 **Cette Politique est disponible en français, anglais et allemand. En cas de divergence d'interprétation, la version française fait foi.**
 
 **© 2026 Marco Ferreira / MoovX — Tous droits réservés.**
+
+### Apple Watch et Santé (fonction facultative)
+
+Si vous activez le compagnon Apple Watch, MoovX demande les autorisations Santé nécessaires au suivi du rythme cardiaque et des calories ainsi qu’à l’enregistrement d’un entraînement de musculation traditionnelle. La montre enregistre la séance dans HealthKit ; ces mesures restent dans l’environnement Santé d’Apple et ne sont pas envoyées aux serveurs MoovX, au coach ni à Anthropic par cette intégration. L’iPhone et la montre échangent uniquement les commandes, un identifiant technique de séance et son état. Ces données ne sont pas utilisées pour la publicité. Vous pouvez désactiver cette fonction dans la séance MoovX et retirer les autorisations dans les réglages Santé. Les entraînements déjà enregistrés dans Santé peuvent y être supprimés directement.
