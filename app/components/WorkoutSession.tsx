@@ -1,4 +1,7 @@
 'use client'
+import WatchWorkoutControls from './training-v2/WatchWorkoutControls'
+import { watchWorkout } from '@/lib/training/watch-workout'
+import { toast } from 'sonner'
 import WorkoutLedgerTable from './training-v2/WorkoutLedgerTable'
 import ledgerStyles from './training-v2/WorkoutLedger.module.css'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -281,6 +284,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const tBisetRecovery=useTranslations('trainingBisetRecovery')
   const tExtraSet=useTranslations('trainingExtraSet')
   const guide=useTranslations('techniqueGuide')
+  const twatch = useTranslations('watch_workout')
   const sessionName = draft.sessionName
   const startedAt = draft.startedAt
   const raw = draft.exercises
@@ -772,6 +776,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
     if (elT.current) clearInterval(elT.current)
     setSaving(true)
     setSaveError(false)
+      void watchWorkout('finish', draftRef.current.draftId).then(result => {
+        if(result.enabled && !['saved','discarded','unsupported'].includes(result.status)) toast(twatch('checkEnd'))
+      })
     try {
       const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber, loadMode: s.loadMode ?? e.loadMode ?? 'legacy' }) })) }, draftRef.current)
       cancelNativeRestNotification()
@@ -977,6 +984,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           <h1>{sessionName || t('freeSession')}</h1>
           <p>{draft.programSource === 'coach' ? tv2('coachPlan') : draft.programSource === 'personal' ? tv2('personalProgram') : t('freeSession')}</p>
           <p>{tv2('completedSetProgress', {current:completed,total})}</p>
+          <WatchWorkoutControls key={draft.draftId} draftId={draft.draftId}/>
         </div>
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
@@ -1352,7 +1360,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
                 fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>{t('cancel')}</button>
-              <button onClick={() => { cancelNativeRestNotification(); setShowDeleteConfirm(false); setShowEndModal(false); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
+              <button onClick={() => { cancelNativeRestNotification(); setShowDeleteConfirm(false); setShowEndModal(false); void watchWorkout('discard', draftRef.current.draftId).then(result => { if(result.enabled) toast(twatch('checkEnd')) }); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
                 fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,

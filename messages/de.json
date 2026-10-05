@@ -3725,5 +3725,24 @@
     "source": "Anses. 2025. Ciqual-Nährwerttabelle — Open Licence 2.0. Für MoovX angepasster Auszug: Energie und Makronährstoffe je 100 g.",
     "values": "Werte werden für die Anzeige gerundet. Spuren werden mit null angenähert; bei Werten unter einer Grenze wird diese Grenze zur Berechnung verwendet. Summen bleiben Schätzungen. Lebensmittel mit fehlenden erforderlichen Werten werden bei neuer Auswahl ausgeschlossen.",
     "fitness": "MoovX-Fitness-Einträge erscheinen zuerst. Sie bilden einen eigenen Katalog und stammen nicht alle aus Ciqual."
+  },
+  "watch_workout": {
+    "off": "Deaktiviert. Aktivieren, um künftige Einheiten auf der Watch zu starten.",
+    "enable": "Für diese Einheit aktivieren",
+    "retry": "Verbindung erneut versuchen",
+    "disable": "Deaktivieren",
+    "idle": "Bereit zum Start auf der Watch.",
+    "running": "Traditionelles Krafttraining läuft auf der Watch.",
+    "saved": "Training in Health gespeichert.",
+    "discarded": "Watch-Training verworfen.",
+    "saving": "Wird auf der Watch gespeichert.",
+    "pending": "Befehl gesendet. Prüfe die Watch; starte nicht zusätzlich Apples Training.",
+    "permission": "Öffne MoovX auf der Watch, erlaube Health-Zugriff und versuche es hier erneut.",
+    "install": "Installiere MoovX über die Watch-App auf deinem iPhone.",
+    "busy": "Ein anderes Training läuft auf der Watch. Beende es dort.",
+    "expired": "Anfrage abgelaufen. Erneut versuchen, um jetzt zu starten.",
+    "error": "Prüfe MoovX auf deiner Watch. Die iPhone-Einheit bleibt verfügbar.",
+    "unavailable": "Watch nicht erreichbar. Du kannst auf dem iPhone fortfahren.",
+    "checkEnd": "Prüfe, ob das Watch-Training beendet ist. Bei fehlender Verbindung direkt auf der Watch beenden."
   }
 }

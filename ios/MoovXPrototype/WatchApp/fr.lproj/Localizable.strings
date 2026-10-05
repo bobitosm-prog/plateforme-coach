@@ -1,0 +1,16 @@
+"watch.strength" = "Musculation traditionnelle";
+"watch.idle" = "Démarre ta séance depuis MoovX sur l’iPhone.";
+"watch.permission" = "Autorise Santé, puis réessaie depuis l’iPhone.";
+"watch.expired" = "Demande expirée. Réessaie depuis l’iPhone.";
+"watch.running" = "En cours";
+"watch.saving" = "Enregistrement…";
+"watch.saved" = "Enregistré dans Santé";
+"watch.discarded" = "Entraînement annulé";
+"watch.error" = "Enregistrement interrompu. Réessaie de terminer.";
+"watch.interrupted" = "Reprise incertaine. Vérifie Santé ; aucun nouvel enregistrement automatique.";
+"watch.authorize" = "Autoriser Santé";
+"watch.finish" = "Terminer et enregistrer";
+"watch.discard" = "Annuler sans enregistrer";
+"watch.finishQuestion" = "Terminer l’entraînement Watch ?";
+"watch.acknowledge" = "Fermer cette reprise";
+"watch.denied" = "Dans Réglages → Santé → Apps → MoovX, active Entraînements (écriture). Puis reviens ici.";

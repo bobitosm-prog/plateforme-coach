@@ -5,6 +5,7 @@ struct MoovXPrototypeApp: App {
     init() {
         RestNotificationManager.shared.installDelegate()
         ApplePurchaseManager.shared.start()
+        _ = PhoneWatchWorkout.shared
 #if DEBUG
         // Simulator-only probe: verifies the system delivers a local alert
         // without relying on an authenticated web workout.

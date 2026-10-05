@@ -99,6 +99,7 @@ struct PrototypeWebView: UIViewRepresentable {
         configuration.userContentController.add(context.coordinator, name: "moovxCameraDenied")
         configuration.userContentController.add(context.coordinator, name: "moovxWorkoutActive")
         configuration.userContentController.add(context.coordinator, name: "moovxRestTimer")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator.watchWorkout, contentWorld: .page, name: "moovxWatchWorkout")
         configuration.userContentController.addScriptMessageHandler(context.coordinator.applePurchases, contentWorld: .page, name: "moovxApplePurchases")
         configuration.userContentController.addScriptMessageHandler(context.coordinator.appleAuth, contentWorld: .page, name: "moovxAppleAuth")
         // Separate app sandbox; Apple credentials return only to their requesting document.
@@ -122,6 +123,7 @@ struct PrototypeWebView: UIViewRepresentable {
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxCameraDenied")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWorkoutActive")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxRestTimer")
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWatchWorkout", contentWorld: .page)
         coordinator.applePurchases.cancel()
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxApplePurchases", contentWorld: .page)
         coordinator.appleAuth.cancel()
@@ -138,6 +140,7 @@ struct PrototypeWebView: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         private let logger = Logger(subsystem: "ch.moovx.app", category: "WebRecovery")
         let state: BrowserState
+        let watchWorkout = WatchWorkoutBridge()
         let appleAuth = AppleSignInBridge()
         let applePurchases = ApplePurchaseBridge()
         private var purchaseObserver: NSObjectProtocol?
