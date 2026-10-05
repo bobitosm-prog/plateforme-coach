@@ -6,8 +6,8 @@
   left: 0;
   display: flex;
   justify-content: center;
-  /* Keep the rail above the home indicator without lifting it high into the viewport. */
-  padding: 8px 12px clamp(8px, env(safe-area-inset-bottom, 0px), 34px);
+  /* The rail reaches the bottom; its own padding protects the home gesture. */
+  padding: 8px 12px 0;
   pointer-events: none;
   isolation: isolate;
 }
@@ -38,8 +38,8 @@
   gap: 4px;
   width: 100%;
   max-width: 512px;
-  padding: 7px;
-  border-radius: 20px;
+  padding: 7px 7px max(7px, env(safe-area-inset-bottom, 0px));
+  border-radius: 20px 20px 0 0;
   background: #1b1a17;
   box-shadow: 0 16px 38px rgba(0, 0, 0, .42);
   pointer-events: auto;
@@ -107,7 +107,7 @@
 
 @media (max-width: 359px) {
   .dock { padding-right: 7px; padding-left: 7px; }
-  .rail { gap: 2px; padding: 6px 4px; }
+  .rail { gap: 2px; padding: 6px 4px max(6px, env(safe-area-inset-bottom, 0px)); }
   .label { font-size: 9px; letter-spacing: .04em; }
 }
 

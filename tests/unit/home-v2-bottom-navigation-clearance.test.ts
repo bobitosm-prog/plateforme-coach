@@ -21,7 +21,8 @@ describe('Home V2 mobile bottom navigation clearance', () => {
     expect(page).toContain('className={`mobile-nav ${navStyles.dock}`}')
     expect(navStyles).toContain('position: fixed;')
     expect(navStyles).toContain('bottom: 0;')
-    expect(navStyles).toContain('clamp(8px, env(safe-area-inset-bottom, 0px), 34px)')
+    expect(navStyles).toContain('padding: 8px 12px 0;')
+    expect(navStyles).toContain('max(7px, env(safe-area-inset-bottom, 0px))')
     expect(page).toContain('zIndex: Z_NAV')
   })
 
