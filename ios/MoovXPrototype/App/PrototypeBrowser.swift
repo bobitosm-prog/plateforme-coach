@@ -99,6 +99,7 @@ struct PrototypeWebView: UIViewRepresentable {
         configuration.userContentController.add(context.coordinator, name: "moovxCameraDenied")
         configuration.userContentController.add(context.coordinator, name: "moovxWorkoutActive")
         configuration.userContentController.add(context.coordinator, name: "moovxRestTimer")
+        configuration.userContentController.addScriptMessageHandler(context.coordinator.dailyEnergy, contentWorld: .page, name: "moovxDailyEnergy")
         configuration.userContentController.addScriptMessageHandler(context.coordinator.watchWorkout, contentWorld: .page, name: "moovxWatchWorkout")
         configuration.userContentController.addScriptMessageHandler(context.coordinator.applePurchases, contentWorld: .page, name: "moovxApplePurchases")
         configuration.userContentController.addScriptMessageHandler(context.coordinator.appleAuth, contentWorld: .page, name: "moovxAppleAuth")
@@ -124,6 +125,7 @@ struct PrototypeWebView: UIViewRepresentable {
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWorkoutActive")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxRestTimer")
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxWatchWorkout", contentWorld: .page)
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxDailyEnergy", contentWorld: .page)
         coordinator.applePurchases.cancel()
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "moovxApplePurchases", contentWorld: .page)
         coordinator.appleAuth.cancel()
@@ -141,6 +143,7 @@ struct PrototypeWebView: UIViewRepresentable {
         private let logger = Logger(subsystem: "ch.moovx.app", category: "WebRecovery")
         let state: BrowserState
         let watchWorkout = WatchWorkoutBridge()
+        let dailyEnergy = DailyEnergyBridge()
         let appleAuth = AppleSignInBridge()
         let applePurchases = ApplePurchaseBridge()
         private var purchaseObserver: NSObjectProtocol?

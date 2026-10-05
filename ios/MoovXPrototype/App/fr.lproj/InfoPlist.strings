@@ -1,4 +1,4 @@
 "NSCameraUsageDescription" = "MoovX utilise la caméra pour photographier un repas et scanner un code-barres quand vous choisissez ces fonctions.";
 
-"NSHealthShareUsageDescription" = "MoovX affiche votre rythme cardiaque et vos calories pendant votre entraînement sur Apple Watch.";
+"NSHealthShareUsageDescription" = "MoovX lit vos calories actives et au repos pour comparer votre dépense quotidienne aux repas enregistrés, et votre rythme cardiaque pendant une séance Watch.";
 "NSHealthUpdateUsageDescription" = "MoovX enregistre vos entraînements Apple Watch dans Santé lorsque vous activez cette fonction.";
