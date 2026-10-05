@@ -1,7 +1,7 @@
 # Terms and Conditions of Use — MoovX
 
-**Last updated: 17 May 2026**
-**Version: 1.0**
+**Last updated: 5 October 2026**
+**Version: 1.1**
 
 ---
 
@@ -120,9 +120,11 @@ Tax note: The Provider is not subject to Swiss VAT (article 10 paragraph 2 of th
 
 ### 7.2 Payment method
 
-Payments are processed exclusively by **Stripe Payments Europe, Ltd.** (Ireland), an authorized payment service provider. The Provider does not collect, process, or store any banking data. The applicable Stripe terms are available at https://stripe.com/legal.
+In-app purchases on iPhone are processed by **Apple** and require confirmation in Apple's purchase sheet. The applicable price and currency appear before confirmation and may vary by App Store country. MoovX receives neither card numbers nor the Apple Account credentials used for the purchase.
 
-Accepted payment methods include: bank cards (Visa, Mastercard, American Express), and any other method offered by Stripe at checkout.
+Payments offered on the web are processed by **Stripe Payments Europe, Ltd.** (Ireland), using the methods offered at checkout and the terms at https://stripe.com/legal.
+
+For Apple purchases, billing, renewal notices, payment issues and price changes follow Apple's terms and procedures. The Stripe arrangements in sections 7.4 and 7.5 concern web purchases. Apple's terms of use are available at https://www.apple.com/legal/internet-services/itunes/dev/stdeula/.
 
 ### 7.3 Automatic subscription renewal
 
@@ -140,6 +142,12 @@ The Provider reserves the right to modify its prices at any time. New prices app
 
 ---
 
+### 7.6 MoovX 14-day trial
+
+The MoovX trial provides access to paid features for 14 days without confirming a subscription at the start. No payment or paid renewal starts automatically when it ends. To continue paid access on iPhone, the User chooses and confirms an Apple purchase. Lifetime access is a one-time payment; only monthly and annual subscriptions renew automatically.
+
+---
+
 ## 8. Duration and termination
 
 ### 8.1 Duration
@@ -148,7 +156,11 @@ Monthly subscriptions are concluded for a one-month term, tacitly renewable. Ann
 
 ### 8.2 Termination by the Client
 
-The Client may cancel their subscription at any time from their personal area, under "My Account > Subscription > Cancel". Termination takes effect **at the end of the current period** (monthly or annual). No pro rata refund is granted.
+For an Apple purchase, manage and cancel the subscription in Apple Account settings, under Subscriptions: https://support.apple.com/118428. Cancellation stops renewal; access remains until the end of the paid period, except in the event of a refund or revocation. Apple refund requests are made at https://reportaproblem.apple.com and remain subject to eligibility, Apple's rules and applicable statutory rights.
+
+For a Stripe web purchase, the Client may cancel under “My Account > Subscription > Cancel”. Cancellation takes effect at the end of the current period, subject to applicable statutory rights.
+
+Deleting a MoovX account does not automatically cancel an Apple subscription. To recover an eligible purchase, use “Restore Purchases” in the app with the MoovX account associated with the purchase.
 
 ### 8.3 Termination by the Provider
 
@@ -166,6 +178,8 @@ The User may permanently delete their account at any time via "My Account > Dele
 ---
 
 ## 9. Right of withdrawal
+
+For Apple in-app purchases, Apple's applicable purchase, withdrawal and refund terms apply, without prejudice to mandatory consumer rights. The Apple purchase flow does not include the MoovX checkbox described below for web subscriptions.
 
 ### 9.1 Express waiver of the right of withdrawal
 

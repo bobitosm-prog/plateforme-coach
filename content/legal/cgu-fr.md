@@ -1,7 +1,7 @@
 # Conditions Générales d'Utilisation — MoovX
 
-**Dernière mise à jour : 17 mai 2026**
-**Version : 1.0**
+**Dernière mise à jour : 5 octobre 2026**
+**Version : 1.1**
 
 ---
 
@@ -120,9 +120,11 @@ Note fiscale : Le Prestataire n'est pas assujetti à la TVA suisse (article 10 a
 
 ### 7.2 Mode de paiement
 
-Les paiements sont traités exclusivement par **Stripe Payments Europe, Ltd.** (Irlande), prestataire de services de paiement agréé. Le Prestataire ne collecte, ne traite ni ne stocke aucune donnée bancaire. Les conditions de Stripe applicables sont disponibles sur https://stripe.com/legal.
+Les achats intégrés sur iPhone sont traités par **Apple** et doivent être confirmés dans la feuille d’achat Apple. Les prix et la devise applicables sont affichés avant confirmation et peuvent varier selon le pays de l’App Store. MoovX ne reçoit ni le numéro de carte ni les identifiants du compte Apple utilisés pour l’achat.
 
-Les moyens de paiement acceptés sont : cartes bancaires (Visa, Mastercard, American Express), et tout autre moyen proposé par Stripe lors du paiement.
+Les paiements proposés sur le web sont traités par **Stripe Payments Europe, Ltd.** (Irlande), selon les moyens proposés au paiement et les conditions disponibles sur https://stripe.com/legal.
+
+Pour les achats Apple, la facturation, les notifications de renouvellement, les incidents de paiement et les changements de prix suivent les conditions et procédures d’Apple. Les modalités Stripe des articles 7.4 et 7.5 concernent les achats web. Les conditions d’utilisation Apple sont disponibles sur https://www.apple.com/legal/internet-services/itunes/dev/stdeula/.
 
 ### 7.3 Renouvellement automatique des abonnements
 
@@ -140,6 +142,12 @@ Le Prestataire se réserve le droit de modifier ses tarifs à tout moment. Les n
 
 ---
 
+### 7.6 Essai MoovX de 14 jours
+
+L’essai MoovX donne accès aux fonctions payantes pendant 14 jours sans confirmer d’abonnement au départ. Aucun paiement ni renouvellement payant ne démarre automatiquement à son terme. Pour poursuivre l’accès payant sur iPhone, l’Utilisateur choisit puis confirme un achat Apple. L’accès à vie est un paiement unique ; seuls les abonnements mensuel et annuel se renouvellent automatiquement.
+
+---
+
 ## 8. Durée et résiliation
 
 ### 8.1 Durée
@@ -148,7 +156,11 @@ Les abonnements mensuels sont conclus pour une durée d'un mois renouvelable tac
 
 ### 8.2 Résiliation par le Client
 
-Le Client peut résilier son abonnement à tout moment depuis son espace personnel, rubrique « Mon compte > Abonnement > Résilier ». La résiliation prend effet **à la fin de la période en cours** (mensuelle ou annuelle). Aucun remboursement prorata temporis n'est effectué.
+Pour un achat Apple, l’abonnement se gère et s’annule dans les réglages du compte Apple, rubrique Abonnements : https://support.apple.com/118428. L’annulation arrête le renouvellement ; l’accès reste disponible jusqu’à la fin de la période payée, sauf remboursement ou révocation. Les demandes de remboursement Apple se font sur https://reportaproblem.apple.com et restent soumises à l’éligibilité et aux règles d’Apple ainsi qu’aux droits légaux applicables.
+
+Pour un achat web Stripe, le Client peut résilier depuis « Mon compte > Abonnement > Résilier ». La résiliation prend effet à la fin de la période en cours, sous réserve des droits légaux applicables.
+
+La suppression du compte MoovX ne résilie pas automatiquement un abonnement Apple. Pour retrouver un achat éligible, utiliser « Restaurer mes achats » dans l’app avec le compte MoovX associé à l’achat.
 
 ### 8.3 Résiliation par le Prestataire
 
@@ -166,6 +178,8 @@ L'Utilisateur peut supprimer définitivement son compte à tout moment via « Mo
 ---
 
 ## 9. Droit de rétractation
+
+Pour les achats intégrés Apple, les conditions d’achat, de rétractation et de remboursement applicables sont celles d’Apple, sans préjudice des droits impératifs du consommateur. Le parcours Apple ne comporte pas la case MoovX décrite ci-dessous pour les souscriptions web.
 
 ### 9.1 Renonciation expresse au droit de rétractation
 
