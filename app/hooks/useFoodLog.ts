@@ -26,10 +26,10 @@ export default function useFoodLog({ supabase, userId, onMutate }: UseFoodLogPar
     if (foodSearch.length < 2) { setFoodResults([]); return }
     searchRef.current = setTimeout(async () => {
       if (searchTab === 'fitness') {
-        const { data } = await supabase.from('food_items').select('*').eq('source', 'fitness').ilike('name', `%${foodSearch}%`).limit(50)
+        const { data } = await supabase.from('selectable_food_items').select('*').eq('source', 'fitness').ilike('name', `%${foodSearch}%`).limit(50)
         setFoodResults(data || [])
       } else if (searchTab === 'anses') {
-        const { data } = await supabase.from('food_items').select('*').eq('source', 'ANSES').ilike('name', `%${foodSearch}%`).limit(50)
+        const { data } = await supabase.from('selectable_food_items').select('*').eq('source', 'ANSES').ilike('name', `%${foodSearch}%`).limit(50)
         setFoodResults(data || [])
       } else {
         const { data } = await supabase.from('custom_foods').select('*').eq('user_id', userId).ilike('name', `%${foodSearch}%`).limit(20)

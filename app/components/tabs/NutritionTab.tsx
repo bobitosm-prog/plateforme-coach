@@ -1,4 +1,5 @@
 'use client'
+import FoodCatalogNotice from '../nutrition-v2/FoodCatalogNotice'
 import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 import { aiFetch } from '@/lib/ai/consent-client'
 import dynamic from 'next/dynamic'
@@ -639,6 +640,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 </div>
               ))}
             </div>
+            <FoodCatalogNotice />
             {/* Inline food search — adds directly to editingMeal.foods */}
             <div style={{ marginBottom: 12 }}>
               <input value={editAddFoodQuery} onChange={async (e) => {

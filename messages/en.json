@@ -3719,5 +3719,11 @@
     "close": "Close",
     "signOut": "Sign out",
     "manage": "Manage Apple subscription"
+  },
+  "food_catalog": {
+    "title": "Sources and nutrition values",
+    "source": "Anses. 2025. Ciqual food composition table — Open Licence 2.0. Subset adapted for MoovX: energy and macronutrients per 100 g.",
+    "values": "Values are rounded for display. Traces are approximated as zero; values below a threshold use that threshold for calculation. Totals remain estimates. Foods with missing required values are excluded from new selections.",
+    "fitness": "MoovX Fitness references appear first. They form a separate catalogue and are not all sourced from Ciqual."
   }
 }

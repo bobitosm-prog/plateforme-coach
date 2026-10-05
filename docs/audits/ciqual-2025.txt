@@ -1,0 +1,38 @@
+CIQUAL CATALOGUE REPAIR — 2026-10-05
+Source: Anses. 2025. Table de composition nutritionnelle des aliments Ciqual.
+Official release: https://doi.org/10.57745/RDMHWY (version 1)
+Licence: Etalab/Open Licence 2.0, https://www.etalab.gouv.fr/licence-ouverte-open-licence/
+ANSES XML release: 2025-11-03. Download API identifiers: 666252 (foods),
+666249 (composition), 666246 (nutrients). Metadata:
+https://entrepot.recherche.data.gouv.fr/api/datasets/:persistentId/?persistentId=doi:10.57745/RDMHWY
+
+Four-nutrient adapted subset: EU energy 328, Jones protein 25000,
+carbohydrate 31000, fat 40000. Names retain original MoovX punctuation.
+3,484 unique local names match the official food names after accent and
+punctuation normalization. Migration matches exact existing names, not IDs.
+15 unmatched rows move to source=unverified, preserving IDs and values.
+
+Raw strings are retained. Numeric values retain official precision; absent
+values become NULL; traces use zero as an approximation; less-than values
+use the stated upper bound as a conservative estimate, never literal zero.
+The in-app disclosure explains these adaptations and links to source/licence.
+The selectable_food_items security-invoker view excludes unverified sources
+and incomplete energy/macronutrient records (161 Ciqual foods). Incomplete
+reference records remain available for audit in food_items. Historic logs,
+meal snapshots and saved meals are not rewritten. Fitness appears first.
+
+DEPLOYMENT ORDER
+Apply and verify migration before deploying the new view readers. Legacy
+clients may still use food_items until refreshed; validate current iPhone UI.
+Rollback frontend only does not restore old catalog semantics. Restore the
+archived four-nutrient snapshot only through a separately reviewed migration.
+
+VERIFICATION
+Local disposable PostgreSQL: replay production reference snapshot, run
+migration twice, check preservation of IDs, source counts, raw values,
+thresholds, NULL handling, role permissions and unchanged historical fixture.
+Also run food search, saved meal/composer runtime, TypeScript and i18n tests.
+
+SCOPE LIMITS
+This repair identifies and attributes Ciqual. It does not certify every
+MoovX Fitness value or close Open Food Facts shared-catalogue licensing.
