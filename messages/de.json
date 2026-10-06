@@ -716,6 +716,8 @@
     }
   },
   "exerciseInfo": {
+    "exercise": "Übungsanleitung",
+    "close": "Übungsanleitung schließen",
     "unavailable": "Video derzeit nicht verfügbar.",
     "comingSoon": "VIDEO KOMMT BALD",
     "description": "BESCHREIBUNG",
@@ -2132,6 +2134,8 @@
         "no": "NEIN — NUR DIESES MAL"
       },
       "exerciseInfo": {
+    "exercise": "Übungsanleitung",
+    "close": "Übungsanleitung schließen",
         "videoSoon": "VIDEO KOMMT BALD",
         "description": "BESCHREIBUNG",
         "execution": "AUSFÜHRUNG",

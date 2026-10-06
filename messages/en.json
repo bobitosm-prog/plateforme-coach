@@ -716,6 +716,8 @@
     }
   },
   "exerciseInfo": {
+    "exercise": "Exercise guide",
+    "close": "Close exercise guide",
     "unavailable": "Video currently unavailable.",
     "comingSoon": "VIDEO COMING SOON",
     "description": "DESCRIPTION",
@@ -2132,6 +2134,8 @@
         "no": "NO — JUST THIS TIME"
       },
       "exerciseInfo": {
+    "exercise": "Exercise guide",
+    "close": "Close exercise guide",
         "videoSoon": "VIDEO COMING SOON",
         "description": "DESCRIPTION",
         "execution": "EXECUTION",
