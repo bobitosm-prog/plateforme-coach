@@ -681,3 +681,49 @@
   .dailyPair { gap: 8px; }
   .dailyPair .statusTile, .trainingCard { padding: 12px; border-radius: 16px; }
 }
+
+
+/* A shared visual hierarchy for all three daily domains. */
+.statusCockpit { display: flex; flex-direction: column; --daily-accent: #dfc27a; --daily-text: #f7f4ed; --daily-muted: #aaa69d; }
+.statusCockpit .statusTile .statusTileIcon {
+  width: 24px; height: 24px; border: 0; border-radius: 0;
+  background: none; color: var(--daily-accent);
+}
+.statusCockpit .heroLabel, .statusCockpit .statusTileLabel {
+  color: var(--daily-accent); font-family: inherit; font-size: .65rem;
+  font-weight: 750; line-height: 1.4; letter-spacing: .08em;
+}
+.statusCockpit .trainingCard .heroLabel {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin: 0 0 5px;
+}
+.trainingCard .heroLabel svg { width: 24px; height: 24px; flex-shrink: 0; }
+.statusCockpit .trainingCard .heroTitle, .statusCockpit .statusTile .statusTileCopy strong {
+  margin: 5px 0 0; color: var(--daily-text); font-family: inherit;
+  font-size: 1.05rem; font-weight: 750; line-height: 1.3; letter-spacing: -.02em;
+}
+.statusCockpit .heroCopy, .statusCockpit .statusTileCopy p,
+.statusCockpit .statusTileFacts, .statusCockpit .meta {
+  color: var(--daily-muted); font-size: .78rem; font-weight: 400; line-height: 1.45;
+}
+.statusCockpit .trainingCard .hero .button,
+.statusCockpit .statusTileLink {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  min-height: 44px; width: 100%; padding: 8px 0; border: 0; border-radius: 0;
+  background: transparent; box-shadow: none; color: var(--daily-accent);
+  font-family: inherit; font-size: .76rem; font-weight: 750; line-height: 1.35;
+  text-align: left; text-decoration: none;
+}
+.statusCockpit .trainingCard .hero .button:hover,
+.statusCockpit .statusTileLink:hover { background: transparent; color: #f0d27c; }
+.statusCockpit .trainingCard .hero .button:focus-visible {
+  outline: 3px solid rgba(230,195,100,.5); outline-offset: 2px;
+}
+.statusCockpit .button svg, .statusCockpit .statusTileLink svg { flex-shrink: 0; }
+.statusTile.recoveryOverview { display: flex; flex-direction: column; gap: 10px; }
+.recoveryOverview .statusTileActions { width: 100%; }
+.statusCockpit .statusTileLabel { display: block; }
+.statusCockpit .trainingCard .hero { display: contents; }
+.trainingCard .heroMain { order: 0; }
+.trainingCard .weeklyProgress { order: 1; margin: auto 0 12px; padding-top: 16px; }
+.statusCockpit .trainingCard .actions { order: 2; margin-top: auto; }
+.dailyPair .statusTileActions .statusTileLink { order: 1; }
