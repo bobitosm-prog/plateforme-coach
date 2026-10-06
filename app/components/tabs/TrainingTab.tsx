@@ -12,7 +12,7 @@ import { de as deLocale } from 'date-fns/locale/de'
 import { useTranslations, useLocale } from 'next-intl'
 import { getSessionForDay, frDayToIndex } from '../../../lib/get-today-session'
 import {
-  ChevronRight, ChevronLeft, CalendarDays, History, HeartPulse,
+  ChevronRight, ChevronLeft, CalendarDays, History, Check, Dumbbell,
 } from 'lucide-react'
 import {
   fonts, colors, JS_DAYS_FR,
@@ -30,6 +30,7 @@ import type { ActiveTrainingProgramContext, TrainingReadState } from '../../../l
 import { TrainingV2 } from '../training-v2/TrainingV2'
 import NoActiveSession from '../training-v2/NoActiveSession'
 import NextPlannedSessionCard from '../training-v2/NextPlannedSessionCard'
+import ExerciseCatalogCard from '../training/ExerciseCatalogCard'
 import overviewStyles from './TrainingOverview.module.css'
 
 const DATE_LOCALES: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
@@ -68,7 +69,6 @@ export default function TrainingTab({
   const [trainingDay, setTrainingDay]   = useState<string>(() => JS_DAYS_FR[new Date().getDay()])
   const [weekOffset, setWeekOffset] = useState(0)
   const [weekDir, setWeekDir] = useState(0)
-  const [exploreOpen, setExploreOpen] = useState<'calendar' | 'history' | 'cardio' | null>(null)
   const calTouchStart = useRef<number | null>(null)
   const activeCustomProgram = activeTrainingProgram.source === 'personal'
     ? activeTrainingProgram.program as PersonalProgram
@@ -118,7 +118,7 @@ export default function TrainingTab({
     const today = new Date()
     const dow = today.getDay()
     const monday = new Date(today)
-    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+    monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7)
     monday.setHours(0, 0, 0, 0)
     return paddedDays.map((day: any, i: number) => {
       const date = new Date(monday)
@@ -206,14 +206,13 @@ export default function TrainingTab({
 
   function showNextPlannedSession() {
     if (!v2NextSession) return
-    setExploreOpen('calendar')
     const now = new Date()
     const monday = new Date(now)
     const dow = now.getDay()
     monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
     monday.setHours(0, 0, 0, 0)
     const selectedDate = v2NextSession.date
-    const targetWeekOffset = Math.round((new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 12).getTime()
+    const targetWeekOffset = Math.floor((new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 12).getTime()
       - new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 12).getTime()) / (7 * 86400000))
     setTrainingDay(v2NextSession.dayKey)
     setCalendarSelectedDate(selectedDate)
@@ -224,7 +223,7 @@ export default function TrainingTab({
   // ══════════════════════════════════════════
   return (
     <TrainingV2>
-    <div style={{ minHeight: '100vh', background: colors.background, paddingBottom: 100, overflowX: 'hidden', maxWidth: '100%' }}>
+    <div className={overviewStyles.page}>
       <style>{`
         .set-input { -webkit-appearance: none; appearance: none; }
         .set-input::-webkit-inner-spin-button,
@@ -266,31 +265,11 @@ export default function TrainingTab({
         onView={showNextPlannedSession}
         onEdit={() => onEditPlannedSession(v2NextSession.dayIndex)}
       />}
+      {!v2NextSession && <section className={overviewStyles.card}><h2 className={overviewStyles.label}><CalendarDays size={24} />{t('v2.nextSession')}</h2><p className={overviewStyles.hint}>{activeTrainingProgram.state === 'loading' ? t('overview.loading') : activeTrainingProgram.state === 'error' ? t('overview.error') : t('overview.noNext')}</p></section>}
       </NoActiveSession>
 
-      <section className={overviewStyles.explorer} aria-labelledby="training-explorer-heading">
-        <h2 id="training-explorer-heading" className={overviewStyles.explorerTitle}>{t('v2.explore')}</h2>
-        <div className={overviewStyles.explorerGrid}>
-          <button type="button" className={overviewStyles.explorerTile} aria-controls="training-calendar-panel" aria-expanded={exploreOpen === 'calendar'} onClick={() => setExploreOpen(value => value === 'calendar' ? null : 'calendar')}>
-            <CalendarDays size={20} aria-hidden="true" />
-            <strong>{t('v2.exploreCalendar')}</strong>
-            <span>{t('v2.exploreCalendarHint')}</span>
-          </button>
-          <button type="button" className={overviewStyles.explorerTile} aria-controls="training-history-panel" aria-expanded={exploreOpen === 'history'} onClick={() => setExploreOpen(value => value === 'history' ? null : 'history')}>
-            <History size={20} aria-hidden="true" />
-            <strong>{t('v2.exploreHistory')}</strong>
-            <span>{t('v2.exploreHistoryHint')}</span>
-          </button>
-        </div>
-        <button type="button" className={`${overviewStyles.explorerTile} ${overviewStyles.explorerCardio}`} aria-controls="training-cardio-panel" aria-expanded={exploreOpen === 'cardio'} onClick={() => setExploreOpen(value => value === 'cardio' ? null : 'cardio')}>
-          <HeartPulse size={20} aria-hidden="true" />
-          <span><strong>{t('v2.exploreCardio')}</strong><small>{t('v2.exploreCardioHint')}</small></span>
-          <ChevronRight size={17} aria-hidden="true" />
-        </button>
-      </section>
-
       {/* ═══ SECTION 2 — CALENDRIER HORIZONTAL ═══ */}
-      <div id="training-calendar-panel" hidden={exploreOpen !== 'calendar'}>{exploreOpen === 'calendar' && (() => {
+      <section id="training-calendar-panel" className={overviewStyles.card}>{(() => {
         const today = new Date()
         const dow = today.getDay()
         const baseMonday = new Date(today)
@@ -323,6 +302,7 @@ export default function TrainingTab({
               calTouchStart.current = null
             }}
           >
+            <h2 className={overviewStyles.label}><CalendarDays size={24} aria-hidden="true" />{t('v2.exploreCalendar')}</h2>
             {/* Header */}
             <div className={overviewStyles.calendarHeader}>
               <span className={overviewStyles.calendarMonth}>{monthLabel}</span>
@@ -360,7 +340,6 @@ export default function TrainingTab({
                 const isRest = isProgRest || ws?.session_type === 'rest' || ws?.title === 'Repos'
                 const isDone = (ws?.completed || doneDates.has(dateStr)) && !isRest
                 const isMissed = !isDone && !isToday && !isRest && ws && date < new Date(todayStr)
-                const dotColor = isRest ? 'rgba(255,255,255,0.2)' : isDone ? colors.success : isMissed ? colors.error : isToday ? colors.gold : `${colors.goldContainer}4d`
                 const statusLabel = isRest
                   ? t('calendar.legendRest')
                   : isDone
@@ -385,7 +364,7 @@ export default function TrainingTab({
                   >
                     <span className={overviewStyles.dayName}>{dayName}</span>
                     <span className={overviewStyles.dayNumber}>{dayNum}</span>
-                    <span aria-hidden="true" className={overviewStyles.dayDot} style={{ background: dotColor }} />
+                    <span aria-hidden="true" className={overviewStyles.dayStatus} data-done={isDone}>{isDone ? <Check size={17} /> : isRest ? '—' : ws || (activeCustomProgram && !isProgRest) ? <Dumbbell size={15} /> : '·'}</span>
                   </button>
                 )
               })}
@@ -405,16 +384,34 @@ export default function TrainingTab({
                 </div>
               ))}
             </div>
+            {(() => {
+              const index = Math.max(0, frDayToIndex(trainingDay))
+              const selected = displayDays[index]
+              const planned = activeCustomProgram?.days?.length ? getSessionForDay(resolvedDays, index) : null
+              const coachDay = coachProgram?.[trainingDay]
+              const exercises = planned?.exercises || coachDay?.exercises || []
+              const rest = planned?.type === 'rest' || coachDay?.repos || selected.ws?.session_type === 'rest'
+              const completed = workoutHistory.filter(w => w.completed && (w.date === selected.dateStr || (!w.date && toDateStr(new Date(w.created_at)) === selected.dateStr)))
+              return <div className={overviewStyles.dayDetails} aria-live="polite">
+                <h3>{format(selected.date, 'EEEE d MMMM', { locale: dateLocale })}</h3>
+                <p>{rest ? t('calendar.rest') : planned?.name || coachDay?.name || coachDay?.day_name || selected.ws?.title || t('v2.noSessionToday')}</p>
+                {exercises.length > 0 && <ol className={overviewStyles.exerciseList}>{exercises.map((exercise: any, n: number) => <li key={n}><strong>{exercise.exercise_name || exercise.custom_name || exercise.name}</strong><small>{exercise.sets ? `${exercise.sets} × ${exercise.reps || '—'}` : ''}</small></li>)}</ol>}
+                {completed.map(w => <button key={w.id} className={overviewStyles.link} onClick={() => openWorkoutDetail(w)}>{w.name || t('v2.viewCompletedSession')}<ChevronRight size={16} /></button>)}
+              </div>
+            })()}
+
           </div>
         )
-      })()}</div>
+      })()}</section>
 
-      {/* ═══ SECTION 5 — DERNIÈRES SÉANCES ═══ */}
-      <div id="training-history-panel" hidden={exploreOpen !== 'history'}>{exploreOpen === 'history' && <RecentSessionsList workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />}</div>
-      {/* ═══ SECTION 6 — CARDIO ═══ */}
-      <div id="training-cardio-panel" hidden={exploreOpen !== 'cardio'} className={overviewStyles.cardioWrap}>
-        {exploreOpen === 'cardio' && <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />}
+      <section id="training-history-panel" className={overviewStyles.card}>
+        <h2 className={overviewStyles.label}><History size={24} aria-hidden="true" />{t('overview.lastTen')}</h2>
+        <RecentSessionsList embedded recentLimit={10} workoutHistory={workoutHistory} state={workoutHistoryState} onOpenDetail={openWorkoutDetail} loadHistory={loadHistory} />
+      </section>
+      <div id="training-cardio-panel">
+        <CardioSection supabase={supabase} userId={session?.user?.id || ''} weight={profile?.current_weight || 75} weightIsReal={!!profile?.current_weight} setModal={setModal} />
       </div>
+      <ExerciseCatalogCard supabase={supabase} />
 
       {/* ═══ ALL EXISTING MODALS (unchanged) ═══ */}
 
@@ -429,7 +426,7 @@ export default function TrainingTab({
           <ModalHeader title={selectedWorkout.name || t('calendar.exercise')} onClose={() => setSelectedWorkout(null)} />
           <div style={{flex:1,overflowY:'auto',padding:'14px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
             <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginBottom:14}}>
-              {new Date(selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
+              {new Date(selectedWorkout.date ? `${selectedWorkout.date}T12:00:00` : selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
               {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
             </div>
             <WorkoutDetailList detail={workoutDetail} loading={loadingDetail} />

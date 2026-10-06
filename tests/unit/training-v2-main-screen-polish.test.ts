@@ -9,8 +9,8 @@ const trainingTab = read('app/components/tabs/TrainingTab.tsx')
 const noActiveSession = read('app/components/training-v2/NoActiveSession.tsx')
 
 describe('Training V2 main-screen polish', () => {
-  it('keeps three recent sessions without a competing global count', () => {
-    expect(recentSessions).toContain('workoutHistory.slice(0, 3)')
+  it('keeps a configurable recent session list without a competing global count', () => {
+    expect(recentSessions).toContain('workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)')
     expect(recentSessions).toContain('data-training-section-card="recent-history"')
     expect(recentSessions).toContain("{t('lastSessions')}")
     expect(recentSessions).toContain('renderRows(recent, true)')
@@ -23,8 +23,8 @@ describe('Training V2 main-screen polish', () => {
     expect(recentSessions).toContain("t('viewAll')")
   })
 
-  it('keeps cardio compact and collapsed by default', () => {
-    expect(cardio).toContain('const [expanded, setExpanded] = useState(false)')
+  it('keeps cardio visible and collapsible by default', () => {
+    expect(cardio).toContain('const [expanded, setExpanded] = useState(true)')
     expect(cardio).toContain('data-training-section-card="cardio"')
     expect(cardio).toContain('aria-expanded={expanded}')
     expect(cardio).toContain('aria-controls={panelId}')
@@ -42,15 +42,15 @@ describe('Training V2 main-screen polish', () => {
 
   it('reveals the existing HIIT and LISS functions only after expansion', () => {
     expect(cardio).toContain('{expanded && (')
-    expect(cardio).toContain('<WorkoutCard workout={suggestedHiit}')
-    expect(cardio).toContain('<WorkoutCard workout={suggestedLiss}')
+    expect(cardio).toContain('allWorkouts.filter(w => favorites.includes(w.id))')
+    expect(cardio).toContain('filtered.map(w => <WorkoutCard')
     expect(cardio).toContain('<HiitTimer workout={activeWorkout}')
     expect(cardio).toContain('<LissTimer workout={activeWorkout}')
     expect(cardio.match(/from\('cardio_sessions'\)\.insert/g)).toHaveLength(2)
   })
 
-  it('adds no read and keeps the Training entry points intact', () => {
-    expect(cardio).not.toMatch(/\.select\(|\.rpc\(|fetch\(/)
+  it('loads account favorites and keeps the Training entry points intact', () => {
+    expect(cardio).toContain("from('cardio_favorites').select('workout_id').eq('user_id', userId)")
     expect(trainingTab).toContain('<NoActiveSession')
     expect(trainingTab).toContain('<CardioSection')
     expect(trainingTab).toContain('startProgramWorkout')

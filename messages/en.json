@@ -1703,6 +1703,25 @@
     "clearLabel": "Clear conversation"
   },
   "training_tab": {
+    "overview": {
+      "lastTen": "Last 10 sessions",
+      "catalog": "All exercises",
+      "search": "Search an exercise or muscle",
+      "loading": "Loading…",
+      "error": "Unable to load data.",
+      "retry": "Retry",
+      "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+      "video": "Watch video",
+      "details": "View details",
+      "more": "Show more",
+      "noNext": "No upcoming session scheduled",
+      "favorites": "Favorite cardio",
+      "favorite": "Add to favorites",
+      "unfavorite": "Remove from favorites",
+      "favoriteError": "Unable to update favorites. Try again.",
+      "noFavorites": "Star your preferred cardio workouts.",
+      "favoritesLoading": "Loading favorites…"
+    },
     "header": {
       "title": "TRAINING",
       "noActiveProgram": "NO ACTIVE PROGRAM",

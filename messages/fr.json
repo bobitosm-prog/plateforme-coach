@@ -1703,6 +1703,25 @@
     "clearLabel": "Effacer la conversation"
   },
   "training_tab": {
+    "overview": {
+      "lastTen": "Les 10 dernières séances",
+      "catalog": "Tous les exercices",
+      "search": "Rechercher un exercice ou un muscle",
+      "loading": "Chargement…",
+      "error": "Impossible de charger les données.",
+      "retry": "Réessayer",
+      "exerciseCount": "{count, plural, one {# exercice} other {# exercices}}",
+      "video": "Voir la vidéo",
+      "details": "Voir la fiche",
+      "more": "Afficher plus",
+      "noNext": "Aucune prochaine séance programmée",
+      "favorites": "Cardios favoris",
+      "favorite": "Ajouter aux favoris",
+      "unfavorite": "Retirer des favoris",
+      "favoriteError": "Impossible de modifier les favoris. Réessaie.",
+      "noFavorites": "Ajoute tes cardios préférés avec l’étoile.",
+      "favoritesLoading": "Chargement des favoris…"
+    },
     "header": {
       "title": "TRAINING",
       "noActiveProgram": "AUCUN PROGRAMME ACTIF",

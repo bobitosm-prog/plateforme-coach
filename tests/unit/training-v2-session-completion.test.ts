@@ -148,8 +148,8 @@ describe('Training V2 session completion', () => {
     expect(workoutSession).toContain('onClose()')
   })
 
-  it('limits the primary recent history to three rows and keeps expanded history secondary', () => {
-    expect(history).toContain('workoutHistory.slice(0, 3)')
+  it('limits the primary recent history to the configured rows and keeps expanded history secondary', () => {
+    expect(history).toContain('workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)')
     expect(history).toContain('filtered.slice(0, visibleCount)')
     expect(history).toContain('useState(20)')
     expect(history).toContain('<TrainingSheet')

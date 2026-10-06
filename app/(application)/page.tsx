@@ -572,9 +572,13 @@ function CoachAppContent() {
           /* 62px items + 7px rail top + safe-area bottom + 16px clearance. */
           padding-bottom: calc(85px + max(7px, env(safe-area-inset-bottom, 0px)));
         }
+        .client-main-scroll-training {
+          padding-bottom: calc(85px + max(7px, env(safe-area-inset-bottom, 0px)));
+        }
         @media (min-width: 768px) {
           .client-main-scroll,
           .client-main-scroll-home { padding-bottom: 16px; }
+          .client-main-scroll-training { padding-bottom: 16px; }
         }
       `}</style>
 
@@ -784,7 +788,7 @@ function CoachAppContent() {
           <div className="client-main-scroll client-main-scroll-home" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('home') && <HomeTab pausedWorkoutName={h.pausedWorkoutSession?.sessionName} onResumeWorkout={h.resumeWorkoutSession} homeModel={homeModel} supabase={h.supabase} session={h.session} profile={h.profile} avatarRef={h.avatarRef} photoRef={h.photoRef} uploadAvatar={h.uploadAvatar} uploadProgressPhoto={h.uploadProgressPhoto} calorieGoal={h.calorieGoal} completedSessions={h.completedSessions} streak={h.streak} coachProgram={h.coachProgram} coachMealPlan={h.coachMealPlan} todayKey={h.todayKey} todayCoachDay={h.todayCoachDay} todaySessionDone={h.todaySessionDone} setActiveTab={navigateTo} setModal={h.setModal} onOpenNutritionPhoto={() => { setNutritionQuickAction('photo'); navigateTo('nutrition') }} onOpenNutritionBarcode={() => h.setModal('scan')} startProgramWorkout={h.startProgramWorkout} completedThisWeek={h.completedThisWeek} aiAllowed={h.aiAllowed} nextSession={h.nextSession} latestDiagnostic={h.latestDiagnostic} setLatestDiagnostic={h.setLatestDiagnostic} activeTab={h.activeTab} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll client-main-scroll-training" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('training') && <TrainingTab supabase={h.supabase} session={h.session} profile={h.profile} activeTrainingProgram={h.activeTrainingProgram} todayKey={h.todayKey} todaySessionDone={h.todaySessionDone} hasActiveDraft={Boolean(h.workoutSession || h.pausedWorkoutSession)} workoutHistory={h.wSessions.filter(item => item.completed)} workoutHistoryState={h.workoutHistoryState} startProgramWorkout={h.startProgramWorkout} onOpenProgramSettings={() => navigateTo('training_program')} onEditPlannedSession={(dayIndex) => { setTrainingEditorDay(dayIndex); navigateApp({ tab: 'account', section: 'training-program', mode: 'configure' }) }} scheduledSessions={h.scheduledSessions} setCalendarSelectedDate={h.setCalendarSelectedDate} setModal={h.setModal} />}
           </div>
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>

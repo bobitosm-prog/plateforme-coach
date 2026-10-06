@@ -80,3 +80,30 @@
 .explorerCardio { width: 100%; min-height: 74px; flex-direction: row; align-items: center; justify-content: flex-start; }
 .explorerCardio > span { display: flex; flex: 1; flex-direction: column; gap: 3px; }
 @media (max-width: 359px) { .calendar { width: calc(100% - 28px); padding-inline: 10px; } .days { gap: 2px; } .calendarDay { min-height: 62px; } }
+
+.page { width:100%; max-width:1180px; margin:0 auto; padding:20px 20px 0; box-sizing:border-box; display:flex; flex-direction:column; gap:20px; color:#f7f4ed; }
+.card { min-width:0; padding:16px; border:1px solid #302d24; border-radius:20px; background:#201e18; }
+.label { display:flex; flex-direction:column; align-items:flex-start; gap:10px; margin:0 0 16px; color:#dfc27a; line-height:1.4; font-family:inherit; font-size:.65rem; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+.calendar { width:100%; margin:0; padding:0; background:none; }
+.calendarMonth { font-size:.78rem; }
+.calendarHeader { flex-wrap:wrap; }
+.calendarDay { min-height:112px; gap:10px; border:1px solid transparent; border-radius:12px; background:#1d1c18; }
+.calendarDay[data-selected='true'] { border-color:#dfc27a; background:#29261e; }
+.dayNumber { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; }
+.calendarDay[data-today='true'] .dayNumber { background:#dfc27a; color:#111; }
+.dayStatus { display:grid; place-items:center; width:26px; height:26px; color:#dfc27a; border-radius:8px; }
+.dayStatus[data-done='true'] { color:#111; background:#dfc27a; }
+.dayDetails { margin-top:16px; padding-top:12px; border-top:1px solid #39362e; }
+.dayDetails h3 { margin:0; font-size:1.05rem; font-weight:750; }
+.dayDetails p, .hint { color:#aaa69d; font-size:.78rem; line-height:1.45; }
+.exerciseList { list-style:none; margin:12px 0; padding:0; }
+.exerciseList li { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #39362e; font-size:.85rem; }
+.exerciseList small { color:#aaa69d; white-space:nowrap; }
+.link { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; margin-top:12px; padding:8px 0; border:0; border-top:1px solid #39362e; background:none; color:#dfc27a; font:inherit; font-size:.76rem; font-weight:750; text-align:left; cursor:pointer; }
+.search { box-sizing:border-box; width:100%; min-height:44px; padding:12px; background:#171612; border:1px solid #39362e; border-radius:12px; color:#f7f4ed; font:inherit; font-size:16px; }
+.catalogRow { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:56px; padding:12px 0; border:0; border-bottom:1px solid #39362e; background:none; color:#f7f4ed; font:inherit; font-size:.85rem; text-align:left; cursor:pointer; }
+.catalogRow small { display:block; margin-top:4px; color:#aaa69d; font-size:.73rem; }
+.page button:focus-visible, .search:focus-visible { outline:2px solid #dfc27a; outline-offset:3px; }
+@media(max-width:360px){ .page { padding-inline:15px; } .card { padding:12px; } }
+
+.page { background:#111; }

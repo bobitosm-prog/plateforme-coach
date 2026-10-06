@@ -1,3 +1,4 @@
+import { Dumbbell } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import styles from './TrainingV2.module.css'
 
@@ -37,6 +38,7 @@ export default function TrainingSessionHero({
   return (
     <section className={styles.hero} data-mode={mode} aria-labelledby={`training-${mode}-title`}>
       <div className={styles.eyebrow}>
+        {mode === 'planned' && <Dumbbell size={24} aria-hidden="true" />}
         {mode === 'active'
           ? t('sessionActive')
           : hasPlannedExercises

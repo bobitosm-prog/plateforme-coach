@@ -1543,3 +1543,25 @@
 .workoutBuilder button { overflow-wrap: anywhere; }
 .builderScroll { min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 .builderFooter { flex: 0 0 auto; width: 100%; }
+
+/* Overview only: align with Home without changing the active workout logger. */
+.landing { width:100%; margin:0; padding:0; }
+.overviewHeader { margin:0 0 20px; }
+.journeyTimeline { margin:0; padding:0; border:0; display:flex; flex-direction:column; gap:20px; }
+.journeyStep { margin:0; }
+.journeyStep::before { display:none; }
+.landing .journeyStep:first-child, .landing .nextSessionCard { padding:16px; border:1px solid #302d24; border-radius:20px; background:#201e18; box-shadow:none; }
+.landing .hero, .landing .journeyStepCompleted .hero { padding:0; border:0; border-radius:0; background:none; }
+.landing .eyebrow, .landing .journeyStepCompleted .eyebrow, .landing .nextSessionEyebrow { color:#dfc27a; font-family:inherit; font-size:.65rem; font-weight:750; letter-spacing:.08em; line-height:1.4; }
+.landing .heroTitle, .landing .emptyTitle, .landing .journeyStepCompleted .emptyTitle, .landing .nextSessionTitle { font-family:inherit; font-size:1.05rem; font-weight:750; line-height:1.3; letter-spacing:-.02em; }
+.landing .heroMeta, .landing .emptyDescription, .landing .nextSessionDate { color:#aaa69d; font-family:inherit; font-size:.78rem; line-height:1.45; }
+.landing .secondaryTools { margin:12px 0 0; padding-top:12px; border-top:1px solid #39362e; }
+.landing .secondaryTools button, .landing .nextSessionActions button, .landing .secondaryAction { font-family:inherit; font-size:.76rem; color:#dfc27a; background:none; border:0; min-height:44px; }
+.landing .primaryAction { font-family:inherit; font-size:.85rem; letter-spacing:0; text-transform:none; }
+.landing .nextSessionExercise strong { font-family:inherit; font-size:.85rem; }
+
+.landing .eyebrow { display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+.landing .nextSessionHeading { flex-direction:column-reverse; align-items:flex-start; gap:10px; }
+.landing .nextSessionIcon { width:24px; height:24px; padding:0; background:none; border:0; color:#dfc27a; }
+
+.landing .heroTitle, .landing .emptyTitle, .landing .nextSessionTitle { text-transform:none; }

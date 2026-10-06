@@ -46,7 +46,7 @@ describe('Training V2 no-session hierarchy', () => {
     expect(trainingTab).toContain('findNextPlannedSession({')
     expect(trainingTab).toContain('<NextPlannedSessionCard')
     expect(trainingTab).toContain('onView={showNextPlannedSession}')
-    expect(trainingTab).toContain("setExploreOpen('calendar')")
+    expect(trainingTab).toContain('id="training-calendar-panel" className={overviewStyles.card}')
     expect(noActiveSession).toContain('{children && <div className={styles.journeyStep}>{children}</div>}')
   })
 
@@ -58,8 +58,8 @@ describe('Training V2 no-session hierarchy', () => {
     expect(trainingTab).toContain('aria-hidden="true"')
   })
 
-  it('limits the primary history to three sessions and hides advanced filters until expanded', () => {
-    expect(recentSessions).toContain('workoutHistory.slice(0, 3)')
+  it('limits the primary history to the configured sessions and hides advanced filters until expanded', () => {
+    expect(recentSessions).toContain('workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)')
     expect(recentSessions).toContain('filtered.slice(0, visibleCount)')
     expect(recentSessions).toContain('useState(20)')
     expect(recentSessions).toContain('{showFullHistory && (')
