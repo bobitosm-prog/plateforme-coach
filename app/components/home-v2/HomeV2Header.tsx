@@ -33,10 +33,21 @@ export default function HomeV2Header({
   return <header className={styles.header} data-interactive-header>
     <div className={styles.headerTop}>
       <span className={styles.wordmark} aria-label="MOOVX">MOO<span>V</span>X</span>
-      <div className={styles.identity}>
-        <button type="button" className={styles.athenaButton} onClick={onOpenAthena} aria-label={t('openAthena')}>
-          <span aria-hidden="true">A</span><Sparkles size={11} aria-hidden="true" />
-        </button>
+      <button type="button" className={styles.athenaButton} onClick={onOpenAthena} aria-label={t('openAthena')}>
+        <span aria-hidden="true">A</span><Sparkles size={11} aria-hidden="true" />
+      </button>
+      <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>
+        {identity.avatar
+          ? <Image className={styles.headerAvatar} src={identity.avatar} alt="" width={36} height={36} unoptimized />
+          : <span className={styles.avatarInitial} aria-hidden="true">{identity.firstName.slice(0, 1).toUpperCase()}</span>}
+      </button>
+    </div>
+    <div className={styles.headerCopy}>
+      <button type="button" className={styles.dateButton} onClick={onOpenTraining}>
+        {formattedDate} · {t('hello', { name: identity.firstName })}
+      </button>
+      <div className={styles.headerHeadline}>
+        <h1 className={styles.title}>{t('editorialTitleLead')}{' '}<br /><em>{t('editorialTitleAccent')}</em></h1>
         <div className={styles.metrics} aria-label={t('secondaryMetrics')}>
           {identity.streak > 0 && <button type="button" className={styles.metric} onClick={onOpenProgression} aria-label={t('openStreak', { count: identity.streak })}>
             <Flame size={14} aria-hidden="true" /> {identity.streak}
@@ -45,18 +56,7 @@ export default function HomeV2Header({
             <Sparkles size={13} aria-hidden="true" /> {identity.xp} XP
           </button>}
         </div>
-        <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>
-          {identity.avatar
-            ? <Image className={styles.headerAvatar} src={identity.avatar} alt="" width={36} height={36} unoptimized />
-            : <span className={styles.avatarInitial} aria-hidden="true">{identity.firstName.slice(0, 1).toUpperCase()}</span>}
-        </button>
       </div>
-    </div>
-    <div className={styles.headerCopy}>
-      <button type="button" className={styles.dateButton} onClick={onOpenTraining}>
-        {formattedDate} · {t('hello', { name: identity.firstName })}
-      </button>
-      <h1 className={styles.title}>{t('editorialTitleLead')}{' '}<br /><em>{t('editorialTitleAccent')}</em></h1>
     </div>
     <HomeWeekCalendar todayKey={today.localDateKey} days={weekCalendar} />
   </header>
