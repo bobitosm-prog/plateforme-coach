@@ -1,50 +1,130 @@
-import { readFileSync } from 'node:fs'
+// @vitest-environment jsdom
+import React, { useState } from "react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from "next-intl";
+import ProgressionV2, {
+  type ProgressionSection,
+} from "@/app/components/progression-v2/ProgressionV2";
+import { buildProgressionViewModel } from "@/lib/progression/progression-dashboard-model";
+import messages from "@/messages/fr.json";
 
-import { describe, expect, it } from 'vitest'
-
-const shell = readFileSync('app/components/progression-v2/ProgressionV2.tsx', 'utf8')
-const progressTab = readFileSync('app/components/tabs/ProgressTab.tsx', 'utf8')
-const css = readFileSync('app/components/progression-v2/ProgressionV2.module.css', 'utf8')
-
-describe('Progression V2 section navigation position', () => {
-  it('renders one global navigation after Hero and Key Trends but before every detail section', () => {
-    const hero = shell.indexOf('<ProgressionHero')
-    const trends = shell.indexOf('<KeyTrends')
-    const navigation = shell.indexOf('<nav className={styles.sectionNav}')
-    const weight = shell.indexOf('<WeightHistory')
-    const performance = shell.indexOf('<div className={styles.performanceGrid}>')
-    const body = shell.indexOf('<BodyMeasurements')
-    const history = shell.indexOf('{children}')
-
-    expect([hero, trends, navigation, weight, performance, body, history].every(index => index >= 0)).toBe(true)
-    expect(hero).toBeLessThan(trends)
-    expect(trends).toBeLessThan(navigation)
-    expect(navigation).toBeLessThan(weight)
-    expect(weight).toBeLessThan(performance)
-    expect(performance).toBeLessThan(body)
-    expect(body).toBeLessThan(history)
-    expect(`${shell}\n${progressTab}`.match(/<nav className=/g)).toHaveLength(1)
-  })
-
-  it('keeps the four labels and their existing anchor targets', () => {
-    expect(shell).toContain("['weight', 'performance', 'body', 'history']")
-    expect(progressTab).toContain("? 'progression-v2-weight'")
-    expect(progressTab).toContain("? 'progression-v2-records'")
-    expect(progressTab).toContain("? 'progression-v2-measurements'")
-    expect(progressTab).toContain(": 'progression-v2-history'")
-  })
-
-  it('uses CSS scroll offsets and keeps the current active-state behavior', () => {
-    expect(css).toMatch(/\.detailSection \{[^}]*scroll-margin-top:\s*76px/)
-    expect(css).toMatch(/\.performanceCard \{[^}]*scroll-margin-top:\s*76px/)
-    expect(css).toMatch(/\.historySection \{[^}]*scroll-margin-top:\s*76px/)
-    expect(shell).toContain('aria-pressed={activeSection === section}')
-    expect(shell).toContain('onSectionNavigate(section)')
-    expect(progressTab).toContain("useState<ProgressionSection>('weight')")
-  })
-
-  it('does not introduce data or business decisions in the navigation shell', () => {
-    expect(shell).not.toMatch(/supabase|\.from\(|fetch\(|subscription|entitlement|coach_clients/i)
-    expect(shell).toContain('model: ProgressionViewModel')
-  })
-})
+const base = {
+  now: new Date("2026-10-06T12:00:00Z"),
+  weight: {
+    logs: [
+      { date: "2026-10-06", poids: 65 },
+      { date: "2026-09-08", poids: 66 },
+    ],
+  },
+  sessions: { rows: [] },
+  records: { rows: [] },
+  measurements: { rows: [] },
+  photos: { rows: [] },
+  wellbeing: { rows: [] },
+};
+const onAddWeight = vi.fn(),
+  onAddBodyMeasurement = vi.fn(),
+  onAddPhoto = vi.fn();
+function Harness({ failed = false }: { failed?: boolean }) {
+  const [section, setSection] = useState<ProgressionSection>("summary");
+  const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "all">("30d");
+  return React.createElement(ProgressionV2, {
+    model: buildProgressionViewModel({ ...base, period }),
+    onPeriodChange: setPeriod,
+    onAddWeight,
+    onAddBodyMeasurement,
+    onAddPhoto,
+    activeSection: section,
+    onSectionNavigate: setSection,
+    photos: React.createElement("p", null, "Photos privées"),
+    advanced: React.createElement("p", null, "Analyses musculaires"),
+    children: React.createElement("p", null, "Export"),
+    calories: [
+      { date: "2026-10-06", calories: 2400, protein: 120, carbs: 300, fat: 80 },
+      { date: "2026-09-08", calories: 1800, protein: 90, carbs: 230, fat: 70 },
+    ],
+    water: [{ date: "2026-10-06", ml: 0 }],
+    checkins: [
+      { date: "2026-10-06", sleep_hours: 7.5, mood: "bien", note: null },
+    ],
+    dailyStates: {
+      records: "ready",
+      nutrition: failed ? "error" : "ready",
+      hydration: "ready",
+      wellbeing: "ready",
+    },
+    dailyTruncated: false,
+    sessions: [],
+  });
+}
+function mount(failed = false) {
+  return render(
+    React.createElement(NextIntlClientProvider, {
+      locale: "fr",
+      messages,
+      timeZone: "Europe/Zurich",
+      children: React.createElement(Harness, { failed }),
+    }),
+  );
+}
+beforeEach(() => {
+  vi.stubGlobal("React", React);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  vi.clearAllMocks();
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+it("shows only the chosen view, retaining access to photos and sport details", () => {
+  mount();
+  expect(screen.getByRole("heading", { name: "Les essentiels" })).toBeTruthy();
+  expect(screen.queryByText("Photos privées")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Corps" }));
+  expect(screen.queryByRole("heading", { name: "Les essentiels" })).toBeNull();
+  expect(screen.getByText("Photos privées")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Sport" }));
+  expect(screen.queryByText("Photos privées")).toBeNull();
+  expect(screen.getByText("Analyses musculaires")).toBeTruthy();
+});
+it("filters daily averages and keeps genuine zero water rather than fabricating missing days", () => {
+  mount();
+  fireEvent.click(screen.getByRole("button", { name: "Suivi" }));
+  expect(screen.getByText(/2.?100 kcal/)).toBeTruthy();
+  expect(screen.getAllByText("0 L")[0]).toBeTruthy();
+  expect(screen.getByText("Bien")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "7 jours" }));
+  expect(screen.getAllByText(/2.?400 kcal/)[0]).toBeTruthy();
+  expect(screen.queryByText(/2.?100 kcal/)).toBeNull();
+});
+it("does not show stale nutrition values on read errors", () => {
+  mount(true);
+  fireEvent.click(screen.getByRole("button", { name: "Suivi" }));
+  expect(screen.getAllByText("— kcal")[0]).toBeTruthy();
+  expect(screen.queryByText(/2.?100 kcal/)).toBeNull();
+});
+it("opens the accessible entry chooser and dispatches the requested measurement", () => {
+  mount();
+  fireEvent.click(screen.getByRole("button", { name: "Mesure" }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Toutes mes mensurations",
+    }),
+  );
+  expect(onAddBodyMeasurement).toHaveBeenCalledOnce();
+  expect(onAddWeight).not.toHaveBeenCalled();
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+it("explores a real dated point with the keyboard-compatible range control", () => {
+  mount();
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+  expect(screen.getByText(/8 sept.*66 kg/)).toBeTruthy();
+});

@@ -110,8 +110,8 @@ describe('Progression V2 weight/body architecture', () => {
     expect(`${weight}\n${body}`).not.toMatch(/supabase|\.from\(|fetch\(|weight_logs|body_measurements/i)
     expect(weight).toContain("type WeightModel = ProgressionViewModel['weight']")
     expect(body).toContain("type MeasurementsModel = ProgressionViewModel['measurements']")
-    expect(shell).toContain('<WeightHistory weight={model.weight}')
-    expect(shell).toContain('<BodyMeasurements measurements={model.measurements}')
+    expect(shell).toContain('model.weight.series')
+    expect(shell).toContain('model.measurements.fields')
   })
 
   it('removes both legacy weight charts and the legacy measurement summary only', () => {
@@ -138,7 +138,7 @@ describe('Progression V2 weight/body architecture', () => {
 
   it('preserves V2 records, photos, wellbeing and advanced analytics', () => {
     expect(shell).toContain('<PersonalRecordsV2')
-    for (const marker of ['<TransformationPhotos', '<WellbeingCompact', '<AnalyticsSection']) {
+    for (const marker of ['<TransformationPhotos', 'checkins={wellbeingEntries}', '<AnalyticsSection']) {
       expect(progressTab).toContain(marker)
     }
   })

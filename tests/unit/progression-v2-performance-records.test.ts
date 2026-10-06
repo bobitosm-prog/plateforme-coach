@@ -132,13 +132,14 @@ describe('Progression V2 performance architecture and legacy cleanup', () => {
     expect(`${records}\n${exercise}\n${volume}`).not.toMatch(/supabase|\.from\(|fetch\(|exercises_db|workout_sets|personal_records/i)
     expect(shell).toContain('<PersonalRecordsV2 records={model.records}')
     expect(shell).toContain('<ExerciseProgression exerciseProgress={model.exerciseProgress}')
-    expect(shell).toContain('<WeeklyVolumeTrend volume={model.volume}')
+    expect(shell).toContain('model.volume.weeklyVolume')
   })
 
   it('renders one accessible exercise chart with a textual summary', () => {
-    expect(exercise.match(/<svg/g)).toHaveLength(1)
-    expect(exercise).toContain('<figcaption className={styles.srOnly}>')
-    expect(exercise).toContain('styles.chartSummary')
+    expect(exercise).toContain('<InteractiveTrend')
+    const chart = readFileSync('app/components/progression-v2/InteractiveTrend.tsx', 'utf8')
+    expect(chart).toContain('aria-live="polite"')
+    expect(chart).toContain('type="range"')
     expect(exercise).toContain('<select')
     expect(exercise).not.toContain('exercises_db')
   })
@@ -155,7 +156,7 @@ describe('Progression V2 performance architecture and legacy cleanup', () => {
     expect(analytics).toContain("t('muscleVolumeTitle')")
     expect(analytics).toContain("tV2('history.advanced.rir')")
     expect(progressTab).toContain('advancedOpen &&')
-    expect(progressTab).toContain('<AnalyticsSection wSessions={wSessions} muscleMap={advancedMuscleMap} mappingState={advancedMappingState}')
+    expect(progressTab).toContain('<AnalyticsSection period={progressionModel.period} wSessions={wSessions} muscleMap={advancedMuscleMap} mappingState={advancedMappingState}')
   })
 
   it('adds no API and preserves neutral volume semantics', () => {
