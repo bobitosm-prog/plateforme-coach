@@ -3108,6 +3108,27 @@
   },
   "home": {
     "v2": {
+      "dailyCompletion": {
+        "label": "Recommended actions",
+        "title": "Complete your day",
+        "copy": "Here is what still needs logging today.",
+        "completeTitle": "Perfect day ✓",
+        "completeCopy": "All your daily tracking is complete. Well done!",
+        "training": "Training",
+        "nutrition": "Meals",
+        "morning": "Morning check-in",
+        "hydration": "Hydration",
+        "rest": "Planned rest day",
+        "unavailable": "Data needs checking",
+        "done": "Complete",
+        "trainingMissing": "Your workout is still to do.",
+        "morningMissing": "Log your mood and hours of sleep.",
+        "hydrationMissing": "Keep going towards your water goal.",
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "snack": "Snack",
+        "dinner": "Dinner"
+      },
       "calendar": {
         "title": "Weekly activity",
         "nutritionLabel": "Nutrition above",

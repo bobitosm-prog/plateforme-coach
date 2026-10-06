@@ -26,6 +26,7 @@ import { subscribeNutritionJournal } from '../../lib/nutrition/journal-events'
 import { buildHomeWeekCalendar, homeWeekKeys } from '../../lib/home/home-week-calendar'
 
 interface HomeSupplementalData {
+  loggedMealTypes: string[] | null
   foodDates: string[]
   foodDatesComplete: boolean
   calendarNutritionError: boolean
@@ -71,6 +72,7 @@ interface HomeRecoveryMetadataState {
 }
 
 const emptySupplementalData: HomeSupplementalData = {
+  loggedMealTypes: null,
   foodDates: [],
   foodDatesComplete: false,
   calendarNutritionError: false,
@@ -243,7 +245,7 @@ export default function useHomeDashboardModel({
         .maybeSingle(),
       readActivePersonalMealPlan(supabase, userId),
       supabase.from('daily_food_logs')
-        .select('calories,protein,carbs,fat')
+        .select('calories,protein,carbs,fat,meal_type')
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
         .limit(1000),
@@ -284,6 +286,7 @@ export default function useHomeDashboardModel({
           foodDatesComplete: !weekFoodLogs.error && (weekFoodLogs.data?.length ?? 0) < 1000,
           calendarNutritionError: Boolean(weekFoodLogs.error),
           loggedNutrition: nutrition.values,
+          loggedMealTypes: foodLogs.error || (foodLogs.data?.length ?? 0) >= 1000 ? null : (foodLogs.data ?? []).map(row => row.meal_type),
           nutritionHasData: nutrition.state === 'ready',
           hasPersonalMealPlan: nutrition.hasPersonalMealPlan,
           coachDisplayName: coachProfile.data?.full_name ?? null,
@@ -356,6 +359,7 @@ export default function useHomeDashboardModel({
       },
       nutrition: {
         ...base.nutrition,
+        loggedMealTypes: currentSupplemental.data.loggedMealTypes,
         state: nutritionLoading
           ? 'loading'
           : currentSupplemental.errors.nutrition

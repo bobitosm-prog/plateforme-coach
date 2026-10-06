@@ -3108,6 +3108,27 @@
   },
   "home": {
     "v2": {
+      "dailyCompletion": {
+        "label": "Actions recommandées",
+        "title": "Pour une journée complète",
+        "copy": "Voici ce qu’il reste à renseigner aujourd’hui.",
+        "completeTitle": "Journée parfaite ✓",
+        "completeCopy": "Tout ton suivi du jour est renseigné. Bravo !",
+        "training": "Entraînement",
+        "nutrition": "Repas",
+        "morning": "Check-in du matin",
+        "hydration": "Hydratation",
+        "rest": "Jour de repos prévu",
+        "unavailable": "Données à vérifier",
+        "done": "Complété",
+        "trainingMissing": "Ta séance reste à faire.",
+        "morningMissing": "Renseigne ton humeur et tes heures de sommeil.",
+        "hydrationMissing": "Continue jusqu’à ton objectif d’eau.",
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "snack": "Collation",
+        "dinner": "Dîner"
+      },
       "calendar": {
         "title": "Suivi de la semaine",
         "nutritionLabel": "Nutrition en haut",

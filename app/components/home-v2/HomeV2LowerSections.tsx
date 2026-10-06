@@ -4,6 +4,7 @@ import { forwardRef, useId, useImperativeHandle, useRef, useState, type ReactNod
 import { Check, ChevronDown, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 
+import { resolveDailyCompletion } from '../../../lib/home/daily-completion'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
 
@@ -44,6 +45,9 @@ export interface HomeV2LowerSectionsHandle {
 interface HomeV2LowerSectionsProps {
   diagnosticControls?: ReactNode
   model: HomeViewModel
+  waterAvailable?: boolean
+  onOpenNutrition?: () => void
+  onStartTraining?: () => void
   waterToday: number
   waterTarget: number
   diagnostic: Diagnostic
@@ -87,6 +91,9 @@ function moodIcon(mood: string | null): string | null {
 const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSectionsProps>(function HomeV2LowerSections({
   diagnosticControls,
   model,
+  waterAvailable = true,
+  onOpenNutrition,
+  onStartTraining,
   waterToday,
   waterTarget,
   diagnostic,
@@ -103,10 +110,12 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   onOpenTraining,
 }, ref) {
   const t = useTranslations('home.v2.lower')
+  const completionT = useTranslations('home.v2.dailyCompletion')
   const locale = useLocale()
   const panelId = useId()
   const weekPanelId = useId()
   const checkInCardRef = useRef<HTMLElement>(null)
+  const waterCardRef = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
   const [weekExpanded, setWeekExpanded] = useState(false)
   const [savingCheckIn, setSavingCheckIn] = useState(false)
@@ -120,6 +129,19 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
     mood: model.checkIn.mood,
     sleep: model.checkIn.sleep == null ? '' : String(model.checkIn.sleep),
     note: model.checkIn.note ?? '',
+  }
+  const completion = resolveDailyCompletion(
+    localCheckIn ? { ...model, checkIn: { ...model.checkIn, state: 'ready' } } : model,
+    displayedCheckIn, { current: waterToday, target: waterTarget, available: waterAvailable },
+  )
+  function openCompletionAction(key: keyof typeof completion.states) {
+    if (key === 'training') (onStartTraining ?? onOpenTraining)()
+    if (key === 'nutrition') onOpenNutrition?.()
+    if (key === 'morning') openCheckIn()
+    if (key === 'hydration') {
+      waterCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      waterCardRef.current?.focus({ preventScroll: true })
+    }
   }
   const checkInCompleted = localCheckIn !== null || model.checkIn.completedToday
   const checkInLoading = model.checkIn.state === 'loading' && localCheckIn === null
@@ -190,6 +212,32 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   const diagnosticUnavailable = model.diagnostic.state === 'error'
 
   return <div className={styles.lowerSections} data-home-v2-lower>
+    <section className={styles.completionCard} aria-labelledby="daily-completion-title">
+      <p className={styles.quickEyebrow}>{completionT('label')}</p>
+      <h2 id="daily-completion-title" className={styles.nbaTitle}>{completionT(completion.complete ? 'completeTitle' : 'title')}</h2>
+      <p className={styles.quickCopy}>{completionT(completion.complete ? 'completeCopy' : 'copy')}</p>
+      <ul className={styles.completionList}>
+        {(Object.keys(completion.states) as Array<keyof typeof completion.states>).map(key => {
+          const state = completion.states[key]
+          return <li key={key} data-completion={state}>
+            <span className={styles.completionMark} aria-hidden="true">{state === 'done' ? <Check size={16} /> : '○'}</span>
+            <div>
+              <strong>{completionT(key)}</strong>
+              <p>{key === 'training' && model.training.dayStatus === 'rest'
+                ? completionT('rest')
+                : state === 'unavailable' ? completionT('unavailable')
+                : state === 'done' ? completionT('done')
+                : key === 'nutrition' ? completion.missingMeals.map(type => completionT(type)).join(' · ')
+                : completionT(`${key}Missing`)}</p>
+            </div>
+            {state === 'pending' && (key !== 'nutrition' || onOpenNutrition) && <button type="button"
+              className={styles.textButton} onClick={() => openCompletionAction(key)} aria-label={completionT(key)}>
+              <ChevronRight size={20} aria-hidden="true" />
+            </button>}
+          </li>
+        })}
+      </ul>
+    </section>
     <section className={styles.lowerSection} aria-labelledby="home-daily-habits-title">
       <h2 id="home-daily-habits-title" className={styles.lowerSectionTitle}>{t('dailyHabits')}</h2>
       <div className={styles.lowerGrid}>
@@ -274,7 +322,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
           </div>}
         </article>
 
-        <article className={styles.quickCard}>
+        <article ref={waterCardRef} tabIndex={-1} className={styles.quickCard}>
           <div className={styles.hydrationRow}>
             <span className={styles.lowerIcon}><Droplets size={19} aria-hidden="true" /></span>
             <div className={styles.hydrationValue}>
@@ -285,7 +333,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
               type="button"
               className={styles.compactButton}
               aria-label={t('hydration.addLabel')}
-              disabled={addingWater}
+              disabled={addingWater || !waterAvailable}
               onClick={addWater}
             >
               {addingWater ? <Loader2 size={16} className={styles.spinner} aria-hidden="true" /> : t('hydration.add')}

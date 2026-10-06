@@ -4,11 +4,10 @@ import type { ReactNode } from 'react'
 import type { HomeViewModel, HomeTrainingSession } from '../../../lib/home/home-dashboard-model'
 import HomeV2Header from './HomeV2Header'
 import DailyStatus from './DailyStatus'
-import NextBestActionCard from './NextBestActionCard'
 import ProgressionSnapshot from './ProgressionSnapshot'
 import AthenaInsightCard from './AthenaInsightCard'
 import ActiveCoachCard from './ActiveCoachCard'
-import { resolveNextBestAction, type NextBestAction } from '../../../lib/home/next-best-action'
+import { type NextBestAction } from '../../../lib/home/next-best-action'
 import { resolveAthenaHomeInsight } from '../../../lib/home/athena-home-insight'
 import styles from './HomeV2.module.css'
 
@@ -30,7 +29,6 @@ export interface HomeV2Actions {
 }
 
 export default function HomeV2({ model, actions, children }: { model: HomeViewModel; actions: HomeV2Actions; children?: ReactNode }) {
-  const recommendation = resolveNextBestAction(model)
   const athenaInsight = resolveAthenaHomeInsight(model)
   return <div className={styles.shell} data-home-v2>
     <HomeV2Header
@@ -55,13 +53,11 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       onNutritionBarcode={actions.onNutritionBarcode}
       onOpenRecovery={() => actions.onOpenRecovery?.()}
     />
-    {!['start_training', 'open_nutrition', 'open_recovery', 'open_program'].includes(recommendation.type) &&
-      <NextBestActionCard recommendation={recommendation} onAction={action => actions.onNextBestAction?.(action)} />}
+    {children && <div className={styles.lowerContent}>{children}</div>}
     <ProgressionSnapshot progression={model.progression} onOpenProgression={actions.onOpenProgression} />
     <div className={styles.intelligenceGrid}>
       <AthenaInsightCard insight={athenaInsight} onOpenAthena={actions.onOpenAthena} />
       <ActiveCoachCard coach={model.coach} onOpenMessages={actions.onOpenMessages} />
     </div>
-    {children && <div className={styles.lowerContent}>{children}</div>}
   </div>
 }
