@@ -727,3 +727,14 @@
 .trainingCard .weeklyProgress { order: 1; margin: auto 0 12px; padding-top: 16px; }
 .statusCockpit .trainingCard .actions { order: 2; margin-top: auto; }
 .dailyPair .statusTileActions .statusTileLink { order: 1; }
+
+.completionCard { padding: 20px; border: 1px solid #302d24; border-radius: 20px; background: #201e18; }
+.completionCard .nbaTitle { margin: 8px 0; font-size: 1.15rem; color: #f7f4ed; }
+.completionList { list-style: none; margin: 16px 0 0; padding: 0; }
+.completionList li { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid #39362e; }
+.completionMark { color: #dfc27a; flex: 0 0 20px; }
+.completionList li > div { flex: 1; min-width: 0; }
+.completionList strong { color: #f7f4ed; font-size: .85rem; }
+.completionList p { margin: 4px 0 0; color: #aaa69d; font-size: .76rem; line-height: 1.4; }
+.completionList button { flex: 0 0 44px; min-height: 44px; justify-content: center; }
+.completionList [data-completion='done'] .completionMark { color: #dfc27a; }

@@ -3108,6 +3108,27 @@
   },
   "home": {
     "v2": {
+      "dailyCompletion": {
+        "label": "Empfohlene Aktionen",
+        "title": "Vervollständige deinen Tag",
+        "copy": "Das fehlt heute noch in deinem Tagebuch.",
+        "completeTitle": "Perfekter Tag ✓",
+        "completeCopy": "Dein Tagesprotokoll ist vollständig. Gut gemacht!",
+        "training": "Training",
+        "nutrition": "Mahlzeiten",
+        "morning": "Morgen-Check-in",
+        "hydration": "Flüssigkeit",
+        "rest": "Geplanter Ruhetag",
+        "unavailable": "Daten überprüfen",
+        "done": "Erledigt",
+        "trainingMissing": "Dein Training steht noch aus.",
+        "morningMissing": "Erfasse deine Stimmung und Schlafstunden.",
+        "hydrationMissing": "Erreiche dein Wasserziel.",
+        "breakfast": "Frühstück",
+        "lunch": "Mittagessen",
+        "snack": "Snack",
+        "dinner": "Abendessen"
+      },
       "calendar": {
         "title": "Wochenübersicht",
         "nutritionLabel": "Ernährung oben",

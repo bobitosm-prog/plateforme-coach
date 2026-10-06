@@ -89,6 +89,7 @@ export interface HomeViewModel {
     macrosConsumed: HomeMacros
     macrosTarget: HomeMacros
     hasPlan: boolean
+    loggedMealTypes?: readonly string[] | null
   }
   recovery: {
     state: HomeDomainState
@@ -168,6 +169,7 @@ export interface HomeViewModelInput {
     macrosConsumed?: Partial<HomeMacros>
     macrosTarget?: Partial<HomeMacros>
     hasPlan?: boolean
+    loggedMealTypes?: readonly string[] | null
   }
   recovery?: {
     state?: HomeDomainState
@@ -474,6 +476,7 @@ export function buildHomeViewModel(input: HomeViewModelInput): HomeViewModel {
         : normalizeMacros(input.nutrition.macrosConsumed),
       macrosTarget: normalizeMacros(input.nutrition.macrosTarget),
       hasPlan: input.nutrition.hasPlan ?? false,
+      loggedMealTypes: input.nutrition.loggedMealTypes ?? null,
     },
     recovery: {
       state: states.recovery,

@@ -16,6 +16,7 @@ import HomeV2LowerSections, { type HomeV2LowerSectionsHandle } from '../home-v2/
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import type { NextBestAction } from '../../../lib/home/next-best-action'
 import RecoveryModal from '../home/modals/RecoveryModal'
+import { subscribeNutritionJournal } from '../../../lib/nutrition/journal-events'
 import WeeklyCompletionControls from '../home/WeeklyCompletionControls'
 
 interface HomeTabProps {
@@ -98,13 +99,24 @@ export default function HomeTab({
   const [customIsRest, setCustomIsRest] = useState(false)
   const [todayScheduledSession, setTodayScheduledSession] = useState<any>(null)
 
+  const [waterAvailable, setWaterAvailable] = useState(false)
   // Fetch water
   useEffect(() => {
     if (!session?.user?.id) return
-    supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', homeModel.today.localDateKey).limit(50)
-      .then(({ data }: any) => {
-        setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
-      })
+    let active = true
+    const refreshWater = () => {
+      setWaterAvailable(false)
+      supabase.from('water_intake').select('amount_ml').eq('user_id', session.user.id).eq('date', homeModel.today.localDateKey).limit(1000)
+        .then(({ data, error }: any) => {
+          if (!active) return
+          setWaterAvailable(!error && (data?.length ?? 0) < 1000)
+          if (!error) setWaterToday((data || []).reduce((s: number, r: any) => s + (r.amount_ml || 0), 0))
+        }).catch(() => { if (active) setWaterAvailable(false) })
+    }
+    refreshWater()
+    const unsubscribe = subscribeNutritionJournal(session.user.id, refreshWater)
+    return () => { active = false; unsubscribe() }
+
   }, [homeModel.today.localDateKey, session?.user?.id, supabase])
 
   async function addWater(ml: number): Promise<boolean> {
@@ -266,7 +278,13 @@ export default function HomeTab({
       >
         <HomeV2LowerSections
           diagnosticControls={<WeeklyCompletionControls generating={generatingDiag} onGenerate={handleGenerateDiagnostic} />}
+          key={`${session?.user?.id}:${homeModel.today.localDateKey}`}
           ref={lowerSectionsRef}
+          waterAvailable={waterAvailable}
+          onOpenNutrition={() => setActiveTab('nutrition')}
+          onStartTraining={() => homeModel.training.dayStatus === 'scheduled'
+            ? handleNextBestAction({ type: 'start_training', reason: 'scheduled_training', priority: 2 })
+            : setActiveTab('training')}
           model={homeModel}
           waterToday={waterToday}
           waterTarget={homeModel.hydration.targetMl ?? profile?.water_goal ?? 3000}
