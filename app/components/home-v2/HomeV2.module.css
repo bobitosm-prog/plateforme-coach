@@ -507,7 +507,7 @@
 .weekToggle strong { font-size: inherit; font-weight: inherit; }
 .weekToggle small { color: #aaa294; font-size: .78rem; font-weight: 400; letter-spacing: 0; }
 .weekToggle svg { flex-shrink: 0; color: #e6c364; transition: transform 160ms ease; }
-.weekToggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+.weekToggle[aria-expanded='true'] > svg { transform: rotate(180deg); }
 .weekToggle:focus-visible { outline: 3px solid rgba(230,195,100,.5); outline-offset: 3px; border-radius: 8px; }
 .weekPanel { padding-top: 14px; }
 .weekPanel[hidden] { display: none; }
@@ -738,3 +738,48 @@
 .completionList p { margin: 4px 0 0; color: #aaa69d; font-size: .76rem; line-height: 1.4; }
 .completionList button { flex: 0 0 44px; min-height: 44px; justify-content: center; }
 .completionList [data-completion='done'] .completionMark { color: #dfc27a; }
+
+
+/* Summary cards follow the same shell, hierarchy and links as daily cards. */
+.weekDisclosure, .progression, .intelligenceCard.athenaInsight {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 0;
+  margin: 0; padding: 16px; border: 1px solid #302d24;
+  border-radius: 20px; background: #201e18; box-shadow: none;
+}
+.progressionHeader { display: block; margin: 0; }
+.progressionTitle, .athenaInsight .intelligenceLabel, .weekToggle > span {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  margin: 0; color: #dfc27a; font-family: inherit; font-size: .65rem;
+  font-weight: 750; line-height: 1.4; letter-spacing: .08em; text-transform: uppercase;
+}
+.athenaInsight .intelligenceIcon {
+  display: flex; width: 24px; height: 24px; padding: 0; border: 0;
+  border-radius: 0; background: none; color: #dfc27a;
+}
+.weekToggle { padding: 0; min-height: 44px; }
+.weekToggle small { text-transform: none; color: #aaa69d; font-size: .78rem; line-height: 1.45; }
+.progressionCopy, .athenaInsight .insightMessage {
+  margin: 10px 0 0; color: #aaa69d; font-size: .78rem; line-height: 1.45;
+}
+.progressionGrid { display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 12px; margin-top: 16px; }
+.progressionMetric {
+  flex: 0 0 calc((100% - 12px) / 2); width: calc((100% - 12px) / 2);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 12px 0; border: 0; border-top: 1px solid #39362e; background: none;
+}
+.progressionIcon { width: 24px; height: 24px; background: none; color: #dfc27a; }
+.progressionMetricLabel { color: #c4b8a2; font-size: .62rem; line-height: 1.4; }
+.progressionMetricValue { font-size: 1.05rem; font-weight: 750; line-height: 1.3; letter-spacing: -.02em; }
+.progressionMetricMeta, .progressionMetric > small { color: #aaa69d; font-size: .73rem; line-height: 1.4; }
+.progressionLink, .athenaInsight .intelligenceCta {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; min-height: 44px; margin-top: 12px; padding: 8px 0;
+  border: 0; border-top: 1px solid #39362e; border-radius: 0;
+  background: none; color: #dfc27a; font-family: inherit; font-size: .76rem;
+  font-weight: 750; line-height: 1.35; text-align: left; text-decoration: none;
+}
+.progressionLink svg, .athenaInsight .intelligenceCta svg { flex-shrink: 0; }
+.weekPanel .weeklyCard { margin: 0; padding: 12px 0; border-top: 1px solid #39362e; border-radius: 0; background: none; }
+@media (min-width: 700px) {
+  .progressionMetric { flex-basis: calc((100% - 36px) / 4); width: calc((100% - 36px) / 4); }
+}

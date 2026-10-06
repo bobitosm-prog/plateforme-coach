@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { AthenaHomeInsight } from '../../../lib/home/athena-home-insight'
 import styles from './HomeV2.module.css'
@@ -16,7 +16,7 @@ export default function AthenaInsightCard({
 
   return <article className={`${styles.intelligenceCard} ${styles.athenaInsight}`} data-insight={insight.reason} aria-busy={insight.type === 'loading'}>
     <h2 className={styles.intelligenceLabel}>
-      <span className={styles.intelligenceIcon}><Sparkles size={17} aria-hidden="true" /></span>
+      <span className={styles.intelligenceIcon}><Sparkles size={24} aria-hidden="true" /></span>
       <span>{t('label')}</span>
     </h2>
     {insight.type === 'loading'
@@ -26,7 +26,7 @@ export default function AthenaInsightCard({
       </div>
       : <p className={styles.insightMessage}>{t(`messages.${insight.message}`)}</p>}
     <button type="button" className={styles.intelligenceCta} onClick={onOpenAthena}>
-      {t('cta')} <ArrowRight size={15} aria-hidden="true" />
+      {t('cta')} <ChevronRight size={16} aria-hidden="true" />
     </button>
   </article>
 }

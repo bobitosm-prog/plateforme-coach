@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, useId, useImperativeHandle, useRef, useState, type ReactNode } from 'react'
-import { Check, ChevronDown, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
+import { CalendarDays, Check, ChevronDown, ChevronRight, Droplets, Loader2, Moon, Sparkles } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { resolveDailyCompletion } from '../../../lib/home/daily-completion'
@@ -377,7 +377,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
           aria-controls={weekPanelId}
           onClick={() => setWeekExpanded(current => !current)}
         >
-          <span><strong>{t('week')}</strong><small id={`${weekPanelId}-summary`}>{t('diagnostic.label')}{diagnostic ? ` · ${diagnostic.score_semaine}/100` : ''}{showCoachWeek ? ` · ${t('coachWeek.label')}` : ''}</small></span>
+          <span><CalendarDays size={24} aria-hidden="true" /><strong>{t('week')}</strong><small id={`${weekPanelId}-summary`}>{t('diagnostic.label')}{diagnostic ? ` · ${diagnostic.score_semaine}/100` : ''}{showCoachWeek ? ` · ${t('coachWeek.label')}` : ''}</small></span>
           <ChevronDown size={20} aria-hidden="true" />
         </button>
       </h2>
