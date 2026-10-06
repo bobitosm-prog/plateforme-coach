@@ -114,9 +114,12 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   const locale = useLocale()
   const panelId = useId()
   const weekPanelId = useId()
+  const hydrationPanelId = useId()
+  const completionCardRef = useRef<HTMLElement>(null)
   const checkInCardRef = useRef<HTMLElement>(null)
   const waterCardRef = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [waterExpanded, setWaterExpanded] = useState(false)
   const [weekExpanded, setWeekExpanded] = useState(false)
   const [savingCheckIn, setSavingCheckIn] = useState(false)
   const [checkInError, setCheckInError] = useState(false)
@@ -137,18 +140,30 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   function openCompletionAction(key: keyof typeof completion.states) {
     if (key === 'training') (onStartTraining ?? onOpenTraining)()
     if (key === 'nutrition') onOpenNutrition?.()
-    if (key === 'morning') openCheckIn()
+    if (key === 'morning') { if (expanded) closeDailyPanel(); else openCheckIn() }
     if (key === 'hydration') {
-      waterCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      waterCardRef.current?.focus({ preventScroll: true })
+      if (waterExpanded) { closeDailyPanel(); return }
+      setExpanded(false)
+      setWaterExpanded(true)
+      requestAnimationFrame(() => {
+        waterCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        waterCardRef.current?.focus({ preventScroll: true })
+      })
     }
   }
   const checkInCompleted = localCheckIn !== null || model.checkIn.completedToday
   const checkInLoading = model.checkIn.state === 'loading' && localCheckIn === null
   const checkInUnavailable = model.checkIn.state === 'error' && localCheckIn === null
 
+  function closeDailyPanel() {
+    setExpanded(false)
+    setWaterExpanded(false)
+    requestAnimationFrame(() => completionCardRef.current?.focus({ preventScroll: true }))
+  }
+
   function openCheckIn() {
     if (checkInLoading || checkInUnavailable) return
+    setWaterExpanded(false)
     setDraft(displayedCheckIn)
     setCheckInError(false)
     setExpanded(true)
@@ -171,7 +186,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
       return
     }
     setLocalCheckIn(draft)
-    setExpanded(false)
+    closeDailyPanel()
   }
 
   async function addWater() {
@@ -212,7 +227,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
   const diagnosticUnavailable = model.diagnostic.state === 'error'
 
   return <div className={styles.lowerSections} data-home-v2-lower>
-    <section className={styles.completionCard} aria-labelledby="daily-completion-title">
+    <section ref={completionCardRef} tabIndex={-1} className={styles.completionCard} aria-labelledby="daily-completion-title">
       <p className={styles.quickEyebrow}>{completionT('label')}</p>
       <h2 id="daily-completion-title" className={styles.nbaTitle}>{completionT(completion.complete ? 'completeTitle' : 'title')}</h2>
       <p className={styles.quickCopy}>{completionT(completion.complete ? 'completeCopy' : 'copy')}</p>
@@ -230,18 +245,19 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
                 : key === 'nutrition' ? completion.missingMeals.map(type => completionT(type)).join(' · ')
                 : completionT(`${key}Missing`)}</p>
             </div>
-            {state === 'pending' && (key !== 'nutrition' || onOpenNutrition) && <button type="button"
-              className={styles.textButton} onClick={() => openCompletionAction(key)} aria-label={completionT(key)}>
+            {(state === 'pending' || (state === 'done' && (key === 'morning' || key === 'hydration'))) && (key !== 'nutrition' || onOpenNutrition) && <button type="button"
+              className={styles.textButton} onClick={() => openCompletionAction(key)} aria-label={completionT(key)}
+              aria-expanded={key === 'morning' ? expanded : key === 'hydration' ? waterExpanded : undefined}
+              aria-controls={key === 'morning' ? panelId : key === 'hydration' ? hydrationPanelId : undefined}>
               <ChevronRight size={20} aria-hidden="true" />
             </button>}
           </li>
         })}
       </ul>
     </section>
-    <section className={styles.lowerSection} aria-labelledby="home-daily-habits-title">
-      <h2 id="home-daily-habits-title" className={styles.lowerSectionTitle}>{t('dailyHabits')}</h2>
+    {(expanded || waterExpanded) && <section className={styles.lowerSection} aria-label={t('dailyHabits')}>
       <div className={styles.lowerGrid}>
-        <article ref={checkInCardRef} tabIndex={-1} className={styles.quickCard} data-check-in-card aria-busy={checkInLoading}>
+        {expanded && <article ref={checkInCardRef} tabIndex={-1} className={styles.quickCard} data-check-in-card aria-busy={checkInLoading}>
           <div className={styles.quickCardHeader}>
             <div>
               <p className={styles.quickEyebrow}>{t('checkIn.label')}</p>
@@ -265,7 +281,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
               aria-expanded={expanded}
               aria-controls={panelId}
               disabled={checkInLoading || checkInUnavailable}
-              onClick={() => expanded ? setExpanded(false) : openCheckIn()}
+              onClick={closeDailyPanel}
             >
               {expanded ? t('checkIn.close') : checkInCompleted ? t('checkIn.edit') : t('checkIn.start')}
             </button>
@@ -320,13 +336,16 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
               {savingCheckIn ? t('checkIn.saving') : checkInCompleted ? t('checkIn.update') : t('checkIn.save')}
             </button>
           </div>}
-        </article>
+        </article>}
 
-        <article ref={waterCardRef} tabIndex={-1} className={styles.quickCard}>
+        {waterExpanded && <article id={hydrationPanelId} ref={waterCardRef} tabIndex={-1} className={styles.quickCard}>
+          <div className={styles.quickCardHeader}>
+            <p className={styles.quickEyebrow}>{completionT('hydration')}</p>
+            <button type="button" className={styles.compactButton} onClick={closeDailyPanel}>{t('checkIn.close')}</button>
+          </div>
           <div className={styles.hydrationRow}>
             <span className={styles.lowerIcon}><Droplets size={19} aria-hidden="true" /></span>
             <div className={styles.hydrationValue}>
-              <p className={styles.quickEyebrow}>{t('hydration.label')}</p>
               <strong>{t('hydration.value', { current: (waterToday / 1000).toFixed(1), target: (waterTarget / 1000).toFixed(1) })}</strong>
             </div>
             <button
@@ -343,9 +362,9 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
             <span style={{ width: `${waterPercent}%` }} />
           </div>
           {waterError && <p className={styles.inlineError} role="status">{t('hydration.error')}</p>}
-        </article>
+        </article>}
       </div>
-    </section>
+    </section>}
 
     <section className={`${styles.lowerSection} ${styles.weekDisclosure}`} aria-labelledby="home-week-title">
       <h2 id="home-week-title" className={styles.lowerSectionTitle}>
