@@ -3110,6 +3110,12 @@
     "v2": {
       "hello": "Hallo {name}",
       "today": "Heute",
+      "editorialTitleLead": "Wir kommen",
+      "editorialTitleAccent": "gemeinsam voran.",
+      "weekCalendar": "Wochenkalender",
+      "openCalendarDate": "Kalender öffnen · {date}",
+      "weeklyProgressTitle": "Diese Woche",
+      "weeklyProgressCount": "{completed} von {planned} Einheiten",
       "secondaryMetrics": "Weitere Fortschrittswerte",
       "avatarAlt": "Profilbild",
       "openAccount": "Mein Konto öffnen",

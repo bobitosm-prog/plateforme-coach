@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, ChevronRight, Dumbbell, HeartPulse, Play } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { HomeViewModel, HomeTrainingSession } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
 
@@ -26,6 +26,7 @@ export function getTodayHeroState(training: HomeViewModel['training']): TodayHer
 
 export default function TodayHero({ training, onStartSession, onOpenSession, onOpenProgram, onStartFreeSession }: TodayHeroProps) {
   const t = useTranslations('home.v2.hero')
+  const locale = useLocale()
   const statusT = useTranslations('home.v2.dailyStatus')
   const viewState = getTodayHeroState(training)
   if (viewState === 'loading') return <section className={styles.hero} aria-busy="true" aria-label={t('loading')}>
@@ -53,7 +54,7 @@ export default function TodayHero({ training, onStartSession, onOpenSession, onO
 
   if (viewState === 'scheduled' && session) return <section className={styles.hero}>
     <div className={styles.heroMain}><div><p className={styles.heroLabel}>{statusT('training.label')}</p><h3 className={styles.heroTitle}>{session.title || t('sessionFallback')}</h3><div className={styles.meta}>
-      {session.scheduledAt && <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+      {session.scheduledAt && <span>{new Date(session.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' })}</span>}
       {session.exercises.length > 0 && <span>{t('exerciseCount', { count: session.exercises.length })}</span>}
       <span>{t(`source.${training.source}`)}</span>
     </div></div><span className={styles.heroStatusIcon} aria-hidden="true"><Dumbbell size={22} /></span></div>

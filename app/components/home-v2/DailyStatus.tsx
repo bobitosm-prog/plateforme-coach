@@ -47,6 +47,9 @@ export default function DailyStatus({
   onOpenRecovery,
 }: DailyStatusProps) {
   const t = useTranslations('home.v2.dailyStatus')
+  const homeT = useTranslations('home.v2')
+  const { planned, completed } = training.weeklySummary
+  const weeklyPercent = planned > 0 ? Math.min(100, Math.max(0, completed / planned * 100)) : 0
   const recoveryT = useTranslations('home.v2.recoveryModal.muscles')
   const nutritionQuickT = useTranslations('nutrition_tab.v2.quickCard')
   const locale = useLocale()
@@ -91,6 +94,17 @@ export default function DailyStatus({
         onOpenProgram={onOpenProgram}
         onStartFreeSession={onStartFreeSession}
       />
+      {planned > 0 && <div className={styles.weeklyProgress}>
+        <div className={styles.weeklyProgressCopy}>
+          <span>{homeT('weeklyProgressTitle')}</span>
+          <strong>{homeT('weeklyProgressCount', { completed, planned })}</strong>
+        </div>
+        <div className={styles.weeklyProgressTrack} role="progressbar"
+          aria-label={homeT('weeklyProgressTitle')} aria-valuemin={0} aria-valuemax={planned}
+          aria-valuenow={Math.min(planned, Math.max(0, completed))}>
+          <span style={{ width: `${weeklyPercent}%` }} />
+        </div>
+      </div>}
       <div className={styles.statusSignals} aria-label={t('detailsLabel')}>
         <article className={styles.statusTile} data-domain="nutrition" data-tone={presentation.nutrition.tone} aria-busy={nutrition.state === 'loading'}>
           <span className={styles.statusTileIcon} aria-hidden="true"><Apple size={20} /></span>

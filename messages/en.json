@@ -3110,6 +3110,12 @@
     "v2": {
       "hello": "Hello {name}",
       "today": "Today",
+      "editorialTitleLead": "Moving forward",
+      "editorialTitleAccent": "together.",
+      "weekCalendar": "This week’s calendar",
+      "openCalendarDate": "Open the calendar · {date}",
+      "weeklyProgressTitle": "This week",
+      "weeklyProgressCount": "{completed} of {planned} sessions",
       "secondaryMetrics": "Secondary progress metrics",
       "avatarAlt": "Profile picture",
       "openAccount": "Open my account",
