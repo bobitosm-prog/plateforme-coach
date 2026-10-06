@@ -1,7 +1,8 @@
 'use client'
 
+import { getProgressionDateKey } from '@/lib/progression/progression-date'
 import { setTonnage } from '@/lib/training/load-volume'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
 
@@ -26,6 +27,7 @@ export function MuscleVolumeTooltip({ active, payload }: {
   </div>
 }
 interface AdvancedWorkoutSet {
+  exercise_name?: string | null
   load_mode?: string | null
   duration_seconds?: number | null
   completed?: boolean | null
@@ -37,31 +39,34 @@ interface AdvancedWorkoutSet {
 }
 
 export interface AdvancedWorkoutSession {
+  id?: string | null
+  name?: string | null
   completed?: boolean | null
   created_at?: string | null
   workout_sets?: AdvancedWorkoutSet[] | null
 }
 
 interface AnalyticsSectionProps {
+  period: { start: string | null; end: string }
   wSessions: AdvancedWorkoutSession[]
   muscleMap: Map<string, string>
   mappingState: 'loading' | 'ready' | 'empty' | 'error'
 }
 
-export default function AnalyticsSection({ wSessions, muscleMap, mappingState }: AnalyticsSectionProps) {
+export default function AnalyticsSection({ wSessions, muscleMap, mappingState, period }: AnalyticsSectionProps) {
   const { rootRef, hasSize } = useHasSize()
   const t = useTranslations('progress.analytics')
   const tV2 = useTranslations('progress.v2')
   const tMuscle = useTranslations('muscles')
   const locale = useLocale() as 'fr' | 'en' | 'de'
-  const [analysisCutoff] = useState(() => Date.now() - 28 * 86400000)
+  const { start, end } = period
   const { volumeByMuscle, unmappedSets } = useMemo(() => {
     const aggregate: Record<string, { sets: number; tonnage: number }> = {}
     let unmappedSets = 0
     for (const session of wSessions) for (const set of session.workout_sets || []) {
       if (session.completed === false || !set.completed) continue
-      const timestamp = new Date(set.created_at || session.created_at || '').getTime()
-      if (!Number.isFinite(timestamp) || timestamp < analysisCutoff) continue
+      const date = getProgressionDateKey(set.created_at || session.created_at || '')
+      if (!date || (start && date < start) || date > end) continue
       const muscle = set.exercise_id ? muscleMap.get(set.exercise_id) : undefined
       if (!muscle) { unmappedSets += 1; continue }
       if (!aggregate[muscle]) aggregate[muscle] = { sets: 0, tonnage: 0 }
@@ -75,15 +80,15 @@ export default function AnalyticsSection({ wSessions, muscleMap, mappingState }:
       tonnage: Math.round(value.tonnage),
     })).sort((a, b) => b.sets - a.sets)
     return { volumeByMuscle, unmappedSets }
-  }, [analysisCutoff, locale, muscleMap, tMuscle, wSessions])
+  }, [start, end, locale, muscleMap, tMuscle, wSessions])
 
   const rirByMuscle = useMemo(() => {
     const aggregate: Record<string, { sum: number; count: number }> = {}
     for (const session of wSessions) for (const set of session.workout_sets || []) {
-      if (!set.completed || !set.exercise_id || set.rir == null) continue
-      const timestamp = new Date(set.created_at || session.created_at || '').getTime()
+      if (session.completed === false || !set.completed || !set.exercise_id || set.rir == null) continue
+      const date = getProgressionDateKey(set.created_at || session.created_at || '')
       const muscle = muscleMap.get(set.exercise_id)
-      if (!timestamp || timestamp < analysisCutoff || !muscle) continue
+      if (!date || (start && date < start) || date > end || !muscle) continue
       if (!aggregate[muscle]) aggregate[muscle] = { sum: 0, count: 0 }
       aggregate[muscle].sum += set.rir
       aggregate[muscle].count += 1
@@ -94,7 +99,7 @@ export default function AnalyticsSection({ wSessions, muscleMap, mappingState }:
       average: Math.round((value.sum / value.count) * 10) / 10,
       count: value.count,
     })).sort((a, b) => a.average - b.average)
-  }, [analysisCutoff, locale, muscleMap, tMuscle, wSessions])
+  }, [start, end, locale, muscleMap, tMuscle, wSessions])
 
   if (mappingState === 'loading') return <div className={styles.compactState} aria-busy="true">{tV2('states.loading')}</div>
   if (mappingState === 'error') return <div className={styles.compactState} role="status">{tV2('states.unavailable')}</div>

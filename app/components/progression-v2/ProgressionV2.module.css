@@ -288,3 +288,16 @@
 }
 @media (max-width: 380px) { .trendGrid { grid-template-columns: 1fr; } .trendCard:last-child { grid-column: auto; } }
 @media (min-width: 768px) { .page { padding: 28px 28px 80px; } }
+
+/* Compact Analytics: the application shell already reserves bottom navigation space. */
+.page { min-height:0; padding:20px 16px 16px; }
+.page .performanceCard, .page .secondaryCard { background:#211f18; border:1px solid #393326; border-radius:20px; padding:18px; }
+.page .detailHeading h2, .page .secondaryHeading h2 { font-family:inherit; color:#dfbf70; font-size:.8rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
+.page .detailHeading .eyebrow, .page .secondaryHeading .eyebrow { display:none; }
+.page .detailHeading > div > p:last-child { font-size:.8rem; color:#aaa69b; }
+.page .detailState, .page .compactState { min-height:0; padding:14px 0; background:transparent; }
+.page .exerciseSelector { font-size:16px; }
+.page .recordGroupToggle { min-height:54px; }
+.page .recordRowMain h3 { white-space:normal; overflow-wrap:anywhere; }
+.page .secondaryActions .secondaryButton, .page .exportActions .secondaryButton { min-height:44px; }
+@media(min-width:768px){.page{padding:28px 28px 16px}}

@@ -76,10 +76,10 @@ describe('Progression V2 trends contract', () => {
     expect(progressTab).not.toContain('SECTION 1 — HEADER')
     expect(progressTab).not.toContain('3 STATS RÉSUMÉ')
     expect(progressTab).not.toContain('totalVolume')
-    expect(shell).toContain('<WeightHistory')
-    expect(shell).toContain('<BodyMeasurements')
+    expect(shell).toContain('model.weight.series')
+    expect(shell).toContain('PROGRESSION_MEASUREMENT_FIELDS')
     expect(shell).toContain('<PersonalRecordsV2')
-    for (const section of ['<TransformationPhotos', '<WellbeingCompact', '<AnalyticsSection']) {
+    for (const section of ['<TransformationPhotos', 'checkins={wellbeingEntries}', '<AnalyticsSection']) {
       expect(progressTab).toContain(section)
     }
   })

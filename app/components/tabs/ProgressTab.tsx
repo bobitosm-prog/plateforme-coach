@@ -23,7 +23,8 @@ import ProgressionExports from '../progression-v2/ProgressionExports'
 import ProgressionV2, { type ProgressionSection } from '../progression-v2/ProgressionV2'
 import progressionV2Styles from '../progression-v2/ProgressionV2.module.css'
 import TransformationPhotos, { shouldLoadSignedPhotoUrls, type TransformationPhoto } from '../progression-v2/TransformationPhotos'
-import WellbeingCompact from '../progression-v2/WellbeingCompact'
+import type { AnalyticsSourceStates, ProgressionWellbeingEntry } from '../../hooks/useAnalytics'
+import { getProgressionDateKey } from '../../../lib/progression/progression-date'
 import { RailOverlay } from '../ui/RailOverlay'
 
 const EMPTY_MUSCLE_MAP = new Map<string, string>()
@@ -35,6 +36,7 @@ interface MeasurementRow {
   chest?: number | null
   biceps?: number | null
   thighs?: number | null
+  calves?: number | null
 }
 
 interface ProfileSummary {
@@ -42,6 +44,9 @@ interface ProfileSummary {
 }
 
 interface ProgressTabProps {
+  wellbeingEntries: ProgressionWellbeingEntry[]
+  dailyStates: AnalyticsSourceStates
+  dailyTruncated: boolean
   supabase: SupabaseClient
   weightHistory30: { date: string; poids: number }[]
   measurements: MeasurementRow[]
@@ -61,6 +66,9 @@ interface ProgressTabProps {
 }
 
 export default function ProgressTab({
+  wellbeingEntries,
+  dailyStates,
+  dailyTruncated,
   supabase,
   weightHistory30,
   measurements,
@@ -69,12 +77,10 @@ export default function ProgressTab({
   photoUploading,
   uploadProgressPhoto,
   setModal,
-  profile,
   weeklyCalories,
   weeklyWater,
   weightHistoryFull,
   wSessions,
-  currentWeight,
   progressionModel,
   onProgressionPeriodChange,
 }: ProgressTabProps) {
@@ -83,7 +89,7 @@ export default function ProgressTab({
   const locale = useLocale()
   const dateLocales: Record<string, Locale> = { fr: frLocale, en: enUS, de: deLocale }
   const dateLocale = dateLocales[locale] || frLocale
-  const [activeSection, setActiveSection] = useState<ProgressionSection>('weight')
+  const [activeSection, setActiveSection] = useState<ProgressionSection>('summary')
   const [photosOpen, setPhotosOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [advancedMappingResult, setAdvancedMappingResult] = useState<{
@@ -172,21 +178,15 @@ export default function ProgressTab({
     return () => window.removeEventListener('keydown', closeOnEscape)
   }, [showCompare])
 
-  function scrollToSection(section: ProgressionSection) {
-    setActiveSection(section)
-    const target = section === 'weight'
-      ? 'progression-v2-weight'
-      : section === 'performance'
-        ? 'progression-v2-records'
-        : section === 'body'
-          ? 'progression-v2-measurements'
-          : 'progression-v2-history'
-    document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const inPeriod = (date: string) => {
+    const key = getProgressionDateKey(date)
+    return key && (!progressionModel.period.start || key >= progressionModel.period.start) && key <= progressionModel.period.end
   }
+  const visiblePhotos = progressPhotos.filter(photo => photo.date && inPeriod(photo.date))
 
   function openComparison() {
-    if (progressPhotos.length < 2) return
-    setCompareIndexes([progressPhotos.length - 1, 0])
+    if (visiblePhotos.length < 2) return
+    setCompareIndexes([visiblePhotos.length - 1, 0])
     setSliderValue(50)
     setShowCompare(true)
   }
@@ -194,19 +194,19 @@ export default function ProgressTab({
   function exportAnalyticsCsv() {
     const dates = new Set<string>()
     weightHistoryFull.forEach(row => dates.add(row.date))
-    weeklyCalories.forEach(row => dates.add(row.date))
-    weeklyWater.forEach(row => dates.add(row.date))
+    ;(dailyStates.nutrition === 'ready' ? weeklyCalories : []).forEach(row => dates.add(row.date))
+    ;(dailyStates.hydration === 'ready' ? weeklyWater : []).forEach(row => dates.add(row.date))
     const weightMap = Object.fromEntries(weightHistoryFull.map(row => [row.date, row.poids]))
-    const calorieMap = Object.fromEntries(weeklyCalories.map(row => [row.date, row]))
-    const waterMap = Object.fromEntries(weeklyWater.map(row => [row.date, row.ml]))
-    const rows = [...dates].sort().map(date => [
+    const calorieMap = Object.fromEntries((dailyStates.nutrition === 'ready' ? weeklyCalories : []).map(row => [row.date, row]))
+    const waterMap = Object.fromEntries((dailyStates.hydration === 'ready' ? weeklyWater : []).map(row => [row.date, row.ml]))
+    const rows = [...dates].filter(date => inPeriod(date)).sort().map(date => [
       date,
       weightMap[date] ?? null,
       calorieMap[date]?.calories ?? null,
       calorieMap[date]?.protein ?? null,
       calorieMap[date]?.carbs ?? null,
       calorieMap[date]?.fat ?? null,
-      waterMap[date] ? Math.round((waterMap[date] / 1000) * 10) / 10 : null,
+      waterMap[date] != null ? Math.round((waterMap[date] / 1000) * 10) / 10 : null,
     ])
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     downloadCsv(`moovx_analytics_${today}.csv`, [tAnalytics('csvDate'), tAnalytics('csvWeight'), tAnalytics('csvCalories'), tAnalytics('csvProtein'), tAnalytics('csvCarbs'), tAnalytics('csvFat'), tAnalytics('csvWater')], rows)
@@ -214,18 +214,17 @@ export default function ProgressTab({
 
   function exportBodyXlsx() {
     const workbook = XLSX.utils.book_new()
-    if (weightHistory30.length) {
-      const rows = [['Date', 'Poids (kg)', 'Variation (kg)'], ...weightHistory30.map((weight, index) => [weight.date, weight.poids, index ? +(weight.poids - weightHistory30[index - 1].poids).toFixed(1) : ''])]
+    const selectedWeights = weightHistory30.filter(row => inPeriod(row.date)).sort((a,b) => a.date.localeCompare(b.date))
+    const selectedMeasurements = measurements.filter(row => inPeriod(row.date)).sort((a,b) => a.date.localeCompare(b.date))
+    if (selectedWeights.length) {
+      const rows = [['Date', 'Poids (kg)', 'Variation (kg)'], ...selectedWeights.map((weight, index) => [weight.date, weight.poids, index ? +(weight.poids - selectedWeights[index - 1].poids).toFixed(1) : ''])]
       XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), 'Poids')
     }
-    if (measurements.length) {
-      const rows = [['Date', 'Taille (cm)', 'Hanches (cm)', 'Poitrine (cm)', 'Bras (cm)', 'Cuisses (cm)', '% Graisse', 'IMC'], ...measurements.map(measurement => {
-        const height = profile?.height ? profile.height / 100 : 0
-        const bmi = measurement.waist && height > 0 ? +(weightHistory30.find(weight => weight.date === measurement.date)?.poids || currentWeight || 0) / (height * height) : ''
-        return [measurement.date, measurement.waist ?? '', measurement.hips ?? '', measurement.chest ?? '', measurement.biceps ?? '', measurement.thighs ?? '', '', typeof bmi === 'number' ? +bmi.toFixed(1) : '']
-      })]
+    if (selectedMeasurements.length) {
+      const rows = [['Date', 'Taille (cm)', 'Hanches (cm)', 'Poitrine (cm)', 'Bras (cm)', 'Cuisses (cm)', 'Mollets (cm)'], ...selectedMeasurements.map(m => [m.date, m.waist ?? '', m.hips ?? '', m.chest ?? '', m.biceps ?? '', m.thighs ?? '', m.calves ?? ''])]
       XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), 'Mensurations')
     }
+    if (!workbook.SheetNames.length) return
     XLSX.writeFile(workbook, 'MoovX_Mes_Donnees.xlsx')
     toast.success(t('history.exports.done'))
   }
@@ -236,8 +235,8 @@ export default function ProgressTab({
       ? 'loading'
       : progressionModel.photos.state
 
-  const beforePhoto = progressPhotos[compareIndexes[0]]
-  const afterPhoto = progressPhotos[compareIndexes[1]]
+  const beforePhoto = visiblePhotos[compareIndexes[0]]
+  const afterPhoto = visiblePhotos[compareIndexes[1]]
   const beforeUrl = beforePhoto ? signedUrls[beforePhoto.id] ?? '' : ''
   const afterUrl = afterPhoto ? signedUrls[afterPhoto.id] ?? '' : ''
 
@@ -252,7 +251,8 @@ export default function ProgressTab({
         return
       }
       setAlignment(result)
-      await supabase.from('progress_photos').update({ adjustments: result.after }).eq('id', afterPhoto.id)
+      const { error } = await supabase.from('progress_photos').update({ adjustments: result.after }).eq('id', afterPhoto.id)
+      if (error) throw error
     } catch {
       setAlignError(t('history.photos.alignError'))
     } finally {
@@ -266,40 +266,33 @@ export default function ProgressTab({
       onPeriodChange={onProgressionPeriodChange}
       onAddWeight={() => setModal('weight')}
       onAddBodyMeasurement={() => setModal('measure')}
+      onAddPhoto={() => photoRef.current?.click()}
       activeSection={activeSection}
-      onSectionNavigate={scrollToSection}
-    >
-
-    <section id="progression-v2-history" className={progressionV2Styles.historySection} aria-labelledby="progression-history-title">
-      <div className={progressionV2Styles.sectionHeading}>
-        <p className={progressionV2Styles.eyebrow}>{t('history.eyebrow')}</p>
-        <h2 id="progression-history-title">{t('history.title')}</h2>
-        <p>{t('history.subtitle')}</p>
-      </div>
-
-      <div className={progressionV2Styles.secondaryGrid}>
-        <TransformationPhotos
-          state={photoState}
-          photos={progressPhotos}
-          signedUrls={signedUrls}
-          open={photosOpen}
-          onToggle={() => setPhotosOpen(open => !open)}
-          onAdd={() => photoRef.current?.click()}
-          onCompare={openComparison}
-        />
-        <WellbeingCompact wellbeing={progressionModel.wellbeing} />
-      </div>
-
-      <section className={progressionV2Styles.secondaryCard} aria-labelledby="progression-advanced-title">
+      onSectionNavigate={setActiveSection}
+      calories={weeklyCalories}
+      water={weeklyWater}
+      checkins={wellbeingEntries}
+      dailyStates={dailyStates}
+      dailyTruncated={dailyTruncated}
+      sessions={wSessions}
+      photos={<TransformationPhotos
+        state={photoState}
+        photos={visiblePhotos}
+        signedUrls={signedUrls}
+        open={photosOpen}
+        onToggle={() => setPhotosOpen(open => !open)}
+        onAdd={() => photoRef.current?.click()}
+        onCompare={openComparison}
+      />}
+      advanced={<section className={progressionV2Styles.secondaryCard} aria-labelledby="progression-advanced-title">
         <button type="button" className={progressionV2Styles.secondaryToggle} onClick={() => setAdvancedOpen(open => !open)} aria-expanded={advancedOpen} aria-controls="progression-advanced-content">
           <span><strong id="progression-advanced-title">{t('history.advanced.title')}</strong><small>{t('history.advanced.subtitle')}</small></span>
           <ChevronDown size={18} aria-hidden="true" data-open={advancedOpen} />
         </button>
-        {advancedOpen && <div id="progression-advanced-content" className={progressionV2Styles.secondaryContent}><AnalyticsSection wSessions={wSessions} muscleMap={advancedMuscleMap} mappingState={advancedMappingState} /></div>}
-      </section>
-
-      <ProgressionExports onCsv={exportAnalyticsCsv} onXlsx={exportBodyXlsx} xlsxAvailable={Boolean(weightHistory30.length || measurements.length)} />
-    </section>
+        {advancedOpen && <div id="progression-advanced-content" className={progressionV2Styles.secondaryContent}><AnalyticsSection period={progressionModel.period} wSessions={wSessions} muscleMap={advancedMuscleMap} mappingState={advancedMappingState} /></div>}
+      </section>}
+    >
+      <ProgressionExports onCsv={exportAnalyticsCsv} onXlsx={exportBodyXlsx} xlsxAvailable={Boolean(weightHistory30.some(row => inPeriod(row.date)) || measurements.some(row => inPeriod(row.date)))} />
     </ProgressionV2>
 
     {showCompare && beforePhoto && afterPhoto && <RailOverlay>
@@ -320,7 +313,7 @@ export default function ProgressTab({
               setCompareIndexes(next)
               setAlignment(null)
             }}>
-              {progressPhotos.map((photo, photoIndex) => <option key={photo.id} value={photoIndex}>{photo.date ? format(new Date(photo.date), 'd MMM yyyy', { locale: dateLocale }) : t('history.photos.photoNumber', { number: photoIndex + 1 })}</option>)}
+              {visiblePhotos.map((photo, photoIndex) => <option key={photo.id} value={photoIndex}>{photo.date ? format(new Date(photo.date), 'd MMM yyyy', { locale: dateLocale }) : t('history.photos.photoNumber', { number: photoIndex + 1 })}</option>)}
             </select>
           </label>)}
         </div>

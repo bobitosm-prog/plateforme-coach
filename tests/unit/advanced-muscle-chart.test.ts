@@ -31,7 +31,7 @@ it('counts only completed recent mapped sets and discloses unmapped ones without
     { completed: false, workout_sets: [set] },
   ]
   const view = render(React.createElement(NextIntlClientProvider, { locale: 'fr', messages: fr, timeZone: 'Europe/Zurich',
-    children: React.createElement(AnalyticsSection, { wSessions: sessions, muscleMap: new Map([['quads', 'Quadriceps']]), mappingState: 'ready' }),
+    children: React.createElement(AnalyticsSection, { period: { start: '2026-08-27', end: '2026-09-23' }, wSessions: sessions, muscleMap: new Map([['quads', 'Quadriceps']]), mappingState: 'ready' }),
   }))
   expect(chart.data).toEqual([expect.objectContaining({ label: 'Quadriceps', sets: 3, tonnage: 400 })])
   expect(view.getByTestId('axis').dataset.decimals).toBe('false')

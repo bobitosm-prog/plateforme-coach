@@ -1,0 +1,344 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  font-family: var(--font-body), sans-serif;
+  color: #f5f2ea;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+}
+.header h1 {
+  margin: 0;
+}
+.header em {
+  font-style: normal;
+}
+.measureButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: #292519;
+  color: #dfbf70;
+  border: 1px solid #675834;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.periodCaption {
+  margin: 0;
+  color: #aaa69b;
+  font-size: 0.8rem;
+}
+.periods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  background: #211f18;
+  border-radius: 14px;
+}
+.periods button {
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #aaa69b;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.periods button[aria-pressed="true"] {
+  background: #dfbf70;
+  color: #17140c;
+}
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.tabs button {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid #393326;
+  background: transparent;
+  color: #aaa69b;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tabs button[aria-pressed="true"] {
+  color: #dfbf70;
+  border-bottom-color: #dfbf70;
+}
+.card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #393326;
+  border-radius: 20px;
+  background: #211f18;
+}
+.card h2 {
+  margin: 0;
+  color: #dfbf70;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.card h3 {
+  margin: 14px 0 6px;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #dfbf70;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat {
+  min-width: 0;
+  border-top: 1px solid #3a352a;
+  padding: 12px 0;
+}
+.stat span,
+.stat small {
+  display: block;
+  color: #aaa69b;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.stat strong {
+  display: block;
+  font-size: 1.25rem;
+  margin: 5px 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.metrics button {
+  min-width: 0;
+  min-height: 72px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 0;
+  color: #f5f2ea;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.metrics button[aria-pressed="true"] {
+  border-color: #dfbf70;
+}
+.metrics span,
+.metrics small {
+  display: block;
+  color: #aaa69b;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.metrics small {
+  font-size: 0.67rem;
+  color: #dfbf70;
+}
+.metrics strong {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 0;
+  margin-top: 8px;
+  border: 0;
+  border-top: 1px solid #3a352a;
+  background: none;
+  color: #dfbf70;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.link svg {
+  flex-shrink: 0;
+}
+.small,
+.notice {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #aaa69b;
+  margin: 8px 0;
+}
+.notice {
+  padding: 10px 0;
+}
+.selectorLabel {
+  display: block;
+  margin: 12px 0 6px;
+  color: #aaa69b;
+  font-size: 0.8rem;
+}
+.select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  background: #14130f;
+  border: 1px solid #51462f;
+  border-radius: 12px;
+  color: #f5f2ea;
+  font: inherit;
+  font-size: 16px;
+}
+.trend {
+  min-width: 0;
+  margin: 12px 0;
+}
+.trend h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+.trend input {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  accent-color: #dfbf70;
+}
+.pointValue {
+  margin: 4px 0;
+  color: #dfbf70;
+  font-size: 0.8rem;
+  min-height: 22px;
+}
+.details {
+  border-top: 1px solid #3a352a;
+  padding: 12px 0;
+}
+.details summary,
+.card > summary,
+.exports > summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  color: #dfbf70;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.dataRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #3a352a;
+  font-size: 0.85rem;
+}
+.dataRow > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dataRow > :last-child {
+  text-align: right;
+}
+.dataRow small {
+  display: block;
+  color: #aaa69b;
+  font-size: 0.73rem;
+  margin-top: 5px;
+}
+.dataRow strong {
+  font-weight: 600;
+}
+.exports {
+  border-top: 1px solid #393326;
+  padding-top: 4px;
+}
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0009;
+}
+.dialog {
+  position: fixed;
+  z-index: 1001;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100% - 32px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  padding: 22px;
+  background: #211f18;
+  color: #f5f2ea;
+  border: 1px solid #51462f;
+  border-radius: 24px;
+  font-family: var(--font-body), sans-serif;
+}
+.dialog h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.close {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: #302b1e;
+  border: 0;
+  border-radius: 12px;
+  color: #dfbf70;
+  cursor: pointer;
+}
+.shell button:focus-visible,
+.shell select:focus-visible,
+.shell input:focus-visible,
+.shell summary:focus-visible,
+.dialog button:focus-visible {
+  outline: 2px solid #dfbf70;
+  outline-offset: 3px;
+}
+@media (max-width: 380px) {
+  .card {
+    padding: 14px;
+  }
+  .metrics strong {
+    font-size: 1.05rem;
+  }
+  .measureButton {
+    padding: 8px;
+  }
+  .header {
+    gap: 8px;
+  }
+}
