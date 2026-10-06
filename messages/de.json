@@ -1737,6 +1737,8 @@
       "sessionCompletedLabel": "Heute abgeschlossen",
       "sessionCompletedToday": "Training heute abgeschlossen",
       "viewCompletedSession": "Training ansehen",
+      "pageTitleLead": "Meine",
+      "pageTitleAccent": "Trainingsseite.",
       "trainingLabel": "Training",
       "noSessionToday": "Heute kein Training",
       "noSessionDescription": "Ruhetag oder keine Einheit geplant.",

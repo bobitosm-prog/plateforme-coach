@@ -1737,6 +1737,8 @@
       "sessionCompletedLabel": "Completed today",
       "sessionCompletedToday": "Session completed today",
       "viewCompletedSession": "View session",
+      "pageTitleLead": "My training",
+      "pageTitleAccent": "page.",
       "trainingLabel": "Training",
       "noSessionToday": "No session today",
       "noSessionDescription": "Rest day or no session scheduled.",

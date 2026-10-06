@@ -5,6 +5,7 @@ import type { TrainingProgramSource, TrainingProgramState } from '../../../lib/t
 import type { TodayTrainingKind } from '../../../lib/training/today-training-state'
 import TrainingSessionHero from './TrainingSessionHero'
 import styles from './TrainingV2.module.css'
+import homeStyles from '../home-v2/HomeV2.module.css'
 
 interface NoActiveSessionProps {
   programState: TrainingProgramState
@@ -69,7 +70,7 @@ export default function NoActiveSession({
   return (
     <div className={styles.landing} data-training-v2="no-active-session">
       <header className={styles.overviewHeader}>
-        <h1 className={styles.overviewTitle}>{t('trainingLabel')}</h1>
+        <h1 className={homeStyles.title}>{t('pageTitleLead')}{' '}<br /><em>{t('pageTitleAccent')}</em></h1>
       </header>
       <div className={styles.journeyTimeline} data-training-journey="true">
       <div className={`${styles.journeyStep} ${completedToday ? styles.journeyStepCompleted : ''}`}>
