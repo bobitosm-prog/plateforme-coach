@@ -1,0 +1,38 @@
+.shell { --font-headline:var(--font-body); --font-alt:var(--font-body); background:#111110; color:#f5f2ea; font-family:var(--font-body),sans-serif; }
+.toolbar { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:max(12px,env(safe-area-inset-top,0px)) 18px 8px; background:#111110; color:#aaa69b; font-size:13px; }
+.toolbar button { display:flex; align-items:center; gap:7px; min-height:44px; border:0; background:none; color:#aaa69b; font:inherit; padding:8px; cursor:pointer; }
+.toolbar .next { color:#dfbf70; background:#302b1e; border-radius:12px; }
+.content { width:100%; max-width:620px; margin:auto; padding:12px 18px 20px; }
+.description { color:#aaa69b; font-size:13px; line-height:1.5; margin:12px 0 18px; }
+.card { padding:16px; margin-top:14px; border:1px solid #393326; border-radius:20px; background:#211f18; }
+.exerciseHeading { display:flex; align-items:center; gap:12px; }
+.exerciseHeading h2 { font:600 17px/1.3 var(--font-body),sans-serif; margin:0; color:#f5f2ea; overflow-wrap:anywhere; }
+.exerciseHeading p { color:#aaa69b; font-size:12px; margin:5px 0 0; }
+.index { color:#dfbf70; flex:0 0 28px; font-size:15px; }
+.fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:16px; }
+.fields label { color:#aaa69b; font-size:12px; }
+.fields input { display:block; width:100%; min-height:44px; padding:8px 3px; border:1px solid #51462f; border-radius:10px; background:#15140f; color:#f5f2ea; font-family:inherit; text-align:center; margin-top:6px; }
+.fields input:disabled { opacity:.6; }
+.selected { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+.selected button { display:flex; align-items:center; gap:6px; min-height:44px; border:1px solid #51462f; background:#302b1e; color:#dfbf70; padding:8px 10px; border-radius:10px; font:inherit; font-size:12px; cursor:pointer; }
+.search { display:flex; align-items:center; gap:10px; margin:16px 0 12px; padding:0 12px; border:1px solid #51462f; border-radius:12px; background:#171611; color:#dfbf70; }
+.search input { width:100%; min-height:48px; border:0; background:none; color:#f5f2ea; font-family:inherit; }
+.search button { display:grid; place-items:center; flex-shrink:0; min-width:44px; min-height:44px; background:none; border:0; color:#dfbf70; cursor:pointer; }
+.filters { display:flex; flex-wrap:wrap; gap:6px; }
+.filters button { min-height:44px; padding:8px 12px; border:1px solid #393326; background:#211f18; color:#aaa69b; border-radius:10px; font:inherit; font-size:12px; cursor:pointer; }
+.filters button[aria-pressed=true] { color:#dfbf70; border-color:#897443; background:#302b1e; }
+.eyebrow { margin:0 0 12px; color:#dfbf70; font:600 11px/1.4 var(--font-body),sans-serif; text-transform:uppercase; letter-spacing:.12em; }
+.choice { width:100%; display:flex; align-items:center; gap:12px; min-height:72px; padding:16px 0; border:0; border-top:1px solid #393326; background:none; color:#dfbf70; text-align:left; font:inherit; cursor:pointer; }
+.choiceText { flex:1; min-width:0; }
+.choiceText strong { display:block; color:#f5f2ea; font-size:14px; font-weight:500; overflow-wrap:anywhere; }
+.choiceText small { display:block; color:#aaa69b; font-size:12px; line-height:1.5; margin-top:5px; }
+.choice:disabled { opacity:.4; cursor:default; }
+.check { display:grid; place-items:center; width:28px; height:28px; flex:0 0 28px; border:1px solid #675834; border-radius:8px; }
+.choice[aria-pressed=true] .check { background:#dfbf70; color:#17140c; }
+.footer { padding:12px 18px max(12px,env(safe-area-inset-bottom,0px)); border-top:1px solid #393326; background:#111110; }
+.primary { display:block; width:100%; max-width:584px; margin:auto; min-height:50px; padding:12px; border:0; border-radius:13px; background:#dfbf70; color:#17140c; font:600 15px/1.4 var(--font-body),sans-serif; cursor:pointer; }
+.shell button:focus-visible,.shell input:focus-visible { outline:2px solid #dfbf70; outline-offset:3px; }
+.shell svg { flex-shrink:0; }
+@media(max-width:360px){.content{padding-inline:12px}.card{padding:12px}.choice{gap:8px}}
+
+.scroll { flex:1 1 auto; }

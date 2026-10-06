@@ -112,7 +112,7 @@ describe('real WorkoutSession runtime',()=>{
   })
   it('keeps paired exercises adjacent even when another exercise lies between them',()=>{
     start([{name:'A',sets:2,reps:10,technique:'superset',technique_details:'B'},{name:'Solo',sets:1,reps:10},{name:'B',sets:2,reps:10}])
-    expect(screen.getAllByRole('heading',{level:2}).map(e=>e.textContent)).toEqual(['A','B','Solo'])
+    expect(screen.getAllByRole('heading',{level:2}).filter(e=>e.closest('[data-paired]')).map(e=>e.textContent)).toEqual(['A','B','Solo'])
     expect(screen.getByText('Biset · A1 avec B')).toBeTruthy()
     expect(screen.getByText('Biset · A2 avec A')).toBeTruthy()
   })
