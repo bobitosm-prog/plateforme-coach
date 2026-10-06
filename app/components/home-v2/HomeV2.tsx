@@ -36,6 +36,7 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
     <HomeV2Header
       identity={model.identity}
       today={model.today}
+      weekCalendar={model.weekCalendar}
       onOpenAthena={actions.onOpenAthena}
       onOpenTraining={actions.onOpenTraining}
       onOpenProgression={actions.onOpenProgression}

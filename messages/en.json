@@ -3108,6 +3108,31 @@
   },
   "home": {
     "v2": {
+      "calendar": {
+        "title": "Weekly activity",
+        "nutritionLabel": "Nutrition above",
+        "sportLabel": "Training below",
+        "done": "Done",
+        "empty": "Not logged",
+        "rest": "Rest",
+        "today": "Today",
+        "nutrition": {
+          "done": "Nutrition logged",
+          "empty": "Nutrition not logged",
+          "planned": "Nutrition planned",
+          "rest": "Rest",
+          "future": "Upcoming",
+          "unknown": "Nutrition unavailable"
+        },
+        "sport": {
+          "done": "Workout completed",
+          "empty": "No workout logged",
+          "planned": "Workout planned",
+          "rest": "Rest day",
+          "future": "Upcoming",
+          "unknown": "Training unavailable"
+        }
+      },
       "hello": "Hello {name}",
       "today": "Today",
       "editorialTitleLead": "Moving forward",

@@ -54,7 +54,7 @@ describe('Home V2 architecture guards', () => {
   })
 
   it('sources the displayed date from HomeViewModel.today', () => {
-    expect(header).toContain("Pick<HomeViewModel, 'identity' | 'today'>")
+    expect(header).toContain("Pick<HomeViewModel, 'identity' | 'today' | 'weekCalendar'>")
     expect(header).toContain('today.localDateKey')
   })
 

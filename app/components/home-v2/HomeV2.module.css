@@ -600,8 +600,38 @@
 .statusCockpit .hero .primary { width: 100%; min-height: 48px; padding: 10px 16px; color: #17150e; background: #dfc27a; white-space: normal; text-align: center; }
 .statusCockpit .hero .primary:hover { color: #17150e; background: #ecd394; }
 .statusCockpit .hero.success, .statusCockpit .hero.error { background: none; }
-.progressionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (min-width: 700px) { .progressionGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .statusTileActions { flex-wrap: nowrap; justify-content: flex-start; }
 .statusTileActions .statusTileLink { flex: 1 1 auto; min-width: 0; }
 .statusTileIconAction { flex-shrink: 0; background: transparent; }
+
+/* Compact week columns: labels identify the two status rows without colour alone. */
+.calendar { margin-top: 22px; max-width: 600px; }
+.calendarLabels, .calendarLegend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: #aaa79d; font-size: .69rem; }
+.calendarLabels span, .calendarLegend > span { display: inline-flex; align-items: center; gap: 5px; }
+.calendarLabels svg { color: #dfc27a; }
+.calendarColumns { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; margin-top: 10px; }
+.calendarDay { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; padding: 10px 0; border: 1px solid transparent; border-radius: 12px; background: #1d1c18; color: #aaa79d; font: inherit; cursor: pointer; }
+.calendarDay[aria-pressed="true"] { border-color: #bfa566; background: #29261d; }
+.calendarDay:focus-visible { outline: 2px solid #dfc27a; outline-offset: 2px; }
+.calendarWeekday { font-size: .64rem; text-transform: uppercase; }
+.calendarDate { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #f3f0e9; font-size: .82rem; }
+.calendarDay[aria-current="date"] .calendarDate { box-shadow: inset 0 0 0 1px #dfc27a; }
+.calendarDay[aria-pressed="true"] .calendarDate { background: #dfc27a; color: #15130d; }
+.calendarStatus { display: grid; place-items: center; box-sizing: border-box; width: 24px; height: 24px; border: 1px solid #777267; border-radius: 7px; color: #aaa79d; font-size: .7rem; }
+.calendarStatus[data-status="done"] { color: #15130d; background: #dfc27a; border-color: #dfc27a; }
+.calendarStatus[data-status="rest"], .calendarStatus[data-status="future"] { border-color: transparent; }
+.calendarStatus[data-status="future"]::after { content: '·'; }
+.calendarStatus[data-status="planned"] { border-style: dashed; }
+.calendarLegend { margin-top: 10px; font-size: .65rem; }
+.calendarLegend svg { color: #dfc27a; }
+.calendarEmpty { width: 9px; height: 9px; border: 1px solid #777267; border-radius: 3px; }
+.calendarDetail { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #39362e; font-size: .73rem; line-height: 1.45; }
+.calendarDetail strong { color: #f3f0e9; font-weight: 600; text-transform: capitalize; }
+.calendarDetail > span { color: #aaa79d; }
+
+/* Keep rows intrinsically sized on WebKit, without the nested outer grid. */
+.progressionGrid { display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; height: auto; min-height: 0; gap: 0; }
+.progressionMetric { flex: 0 0 50%; width: 50%; height: auto; min-height: 0; align-content: start; }
+.progressionMetric > small { grid-column: 2; }
+@media (min-width: 700px) { .progressionMetric { flex-basis: 25%; width: 25%; } }
+.progressionMetricLabel { overflow: visible; white-space: normal; text-overflow: clip; overflow-wrap: anywhere; }
