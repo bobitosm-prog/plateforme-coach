@@ -30,7 +30,8 @@ describe('unified daily status cards', () => {
     expect(component).toContain('t(`nutrition.${presentation.nutrition.status}`)')
     expect(component).toContain('t(`recovery.${presentation.recovery.status}`)')
     expect(css).toContain('.statusTileCopy strong')
-    expect(component).not.toMatch(/aria-valuenow|progressbar/)
+    expect(component).toContain('training.weeklySummary')
+    expect(component).toContain('Math.min(planned, Math.max(0, completed))')
   })
 
   it('provides visible focus and 44px actions', () => {

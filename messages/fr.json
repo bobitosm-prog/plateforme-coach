@@ -3110,6 +3110,12 @@
     "v2": {
       "hello": "Bonjour {name}",
       "today": "Aujourd’hui",
+      "editorialTitleLead": "On avance",
+      "editorialTitleAccent": "ensemble.",
+      "weekCalendar": "Calendrier de la semaine",
+      "openCalendarDate": "Ouvrir le calendrier · {date}",
+      "weeklyProgressTitle": "Cette semaine",
+      "weeklyProgressCount": "{completed} séances sur {planned}",
       "secondaryMetrics": "Progression secondaire",
       "avatarAlt": "Photo de profil",
       "openAccount": "Ouvrir mon compte",
