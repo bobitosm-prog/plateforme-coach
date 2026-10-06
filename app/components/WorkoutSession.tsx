@@ -919,15 +919,19 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       )}
 
       <header className={ledgerStyles.header}>
-        <button className={ledgerStyles.back} aria-label={t('back')} onClick={onClose}><ArrowLeft size={20}/></button>
+        <button className={ledgerStyles.back} aria-label={t('back')} onClick={() => setShowEndModal(true)}><ArrowLeft size={20}/></button>
         <div className={ledgerStyles.clock}><small>MOOVX</small>{dur(elapsed)}</div>
       </header>
       <div className={ledgerStyles.content}>
         <div className={ledgerStyles.intro}>
-          <h1 className={homeStyles.title}>{tDesign('sessionLead')}<br /><em>{tDesign('sessionAccent')}</em></h1>
-          <h2>{sessionName || t('freeSession')}</h2>
-          <p>{draft.programSource === 'coach' ? tv2('coachPlan') : draft.programSource === 'personal' ? tv2('personalProgram') : t('freeSession')}</p>
-          <p>{tv2('completedSetProgress', {current:completed,total})}</p>
+          <div className={ledgerStyles.introRow}>
+            <h1 className={homeStyles.title}>{tDesign('sessionLead')}<br /><em>{tDesign('sessionAccent')}</em></h1>
+            <div className={ledgerStyles.sessionSummary}>
+              <h2 data-length={(sessionName || t('freeSession')).length > 55 ? 'long' : (sessionName || t('freeSession')).length > 28 ? 'medium' : 'short'}>{sessionName || t('freeSession')}</h2>
+              <p>{draft.programSource === 'coach' ? tv2('coachPlan') : draft.programSource === 'personal' ? tv2('personalProgram') : t('freeSession')}</p>
+              <p>{tv2('completedSetProgress', {current:completed,total})}</p>
+            </div>
+          </div>
           <WatchWorkoutControls key={draft.draftId} draftId={draft.draftId}/>
         </div>
         {!reorderMode && exos.length === 0 && (

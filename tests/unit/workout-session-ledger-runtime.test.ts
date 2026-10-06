@@ -22,13 +22,14 @@ const draft = (source: ActiveWorkoutDraft['programSource'] = 'personal') => crea
 })
 function mount(value = draft(), finish = vi.fn(async () => ({}))) {
  const changed = vi.fn()
+ const close = vi.fn()
  const view = render(React.createElement(NextIntlClientProvider, { locale: 'fr', messages, timeZone: 'Europe/Zurich',
   children: React.createElement(WorkoutSession, {
-   draft: value, onDraftChange: changed, onFinish: finish, onClose: vi.fn(),
+   draft: value, onDraftChange: changed, onFinish: finish, onClose: close,
    onNavigateHome: vi.fn(), onNavigateProgress: vi.fn(),
   }),
  }))
- return { ...view, changed, finish }
+ return { ...view, changed, finish, close }
 }
 beforeEach(() => {
  vi.stubGlobal('React', React)
@@ -164,4 +165,23 @@ it('places finish after the last exercise and preserves the confirmation step', 
  expect(last.compareDocumentPosition(finish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
  fireEvent.click(finish)
  expect(screen.getByText(messages.training_tab.ws.endModal.question)).toBeTruthy()
+})
+
+it('asks before leaving via back and preserves entered sets when continuing', async () => {
+ const {close,finish}=mount()
+ const group=within(screen.getByRole('group',{name:'Curl'}))
+ const [load,reps]=group.getAllByRole('textbox')
+ fireEvent.change(load,{target:{value:'12'}})
+ fireEvent.change(reps,{target:{value:'10'}})
+ fireEvent.click(group.getAllByRole('button')[0])
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.back}))
+ expect(close).not.toHaveBeenCalled()
+ expect(finish).not.toHaveBeenCalled()
+ expect(screen.getByText(messages.training_tab.ws.endModal.question)).toBeTruthy()
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.endModal.continue}))
+ expect((group.getAllByRole('textbox')[0] as HTMLInputElement).value).toBe('12')
+ expect(group.getAllByRole('button')[0].getAttribute('aria-pressed')).toBe('true')
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.back}))
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.endModal.save}))
+ await waitFor(()=>expect(finish).toHaveBeenCalledTimes(1))
 })
