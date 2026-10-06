@@ -35,3 +35,13 @@
 .addExercise{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin-top:16px;padding:12px;border:1px solid #675834;border-radius:13px;background:#211f18;color:#dfbf70;font:600 14px/1.4 var(--font-body),sans-serif;}
 .shell button{font-family:inherit;cursor:pointer}.shell button:focus-visible{outline:2px solid #dfbf70;outline-offset:3px}.shell button:disabled{cursor:default}
 @media(max-width:360px){.exercise{padding:12px}.title h2{font-size:16px}}
+
+/* Keep the session identity beside the page title, including narrow phones. */
+.introRow { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); align-items:center; gap:16px; }
+.sessionSummary { min-width:0; text-align:right; }
+.sessionSummary h2 { margin:0 0 8px; font-size:clamp(16px,4.5vw,21px); line-height:1.25; overflow-wrap:anywhere; text-wrap:balance; }
+.sessionSummary h2[data-length=medium] { font-size:clamp(15px,4vw,18px); }
+.sessionSummary h2[data-length=long] { font-size:clamp(14px,3.5vw,16px); }
+.sessionSummary p { font-size:12px; line-height:1.45; overflow-wrap:anywhere; }
+.sessionSummary p + p { margin-top:3px; }
+@media(max-width:360px){.introRow{gap:10px}.sessionSummary p{font-size:11px}}
