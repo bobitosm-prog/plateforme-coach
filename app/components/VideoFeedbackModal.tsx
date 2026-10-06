@@ -7,7 +7,7 @@ import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_RULE, RED,
   TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY,
-} from '../../lib/design-tokens'
+} from '../../lib/app-design-tokens'
 import {
   findActiveCoachForClient,
   resolveCoachRelationAuthority,

@@ -4,7 +4,7 @@ import { RailOverlay } from '../ui/RailOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, Z_MODAL } from '../../../lib/design-tokens'
+import { colors, fonts, Z_MODAL } from '../../../lib/app-design-tokens'
 import { getHeroImage } from '../../../lib/session-types'
 import { shortenSessionTitle } from '../home/HeroSessionCard'
 

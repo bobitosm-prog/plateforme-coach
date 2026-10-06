@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import {
   BG_CARD, BORDER, GOLD, GOLD_RULE, RED,
   TEXT_PRIMARY, TEXT_MUTED, FONT_ALT, FONT_BODY,
-} from "@/lib/design-tokens";
+} from "@/lib/app-design-tokens";
 
 type Props = {
   open: boolean;
@@ -76,7 +76,7 @@ export default function ConfirmDialog({
         style={{
           background: BG_CARD,
           border: `1px solid ${GOLD_RULE}`,
-          borderRadius: 16,
+          borderRadius: 20,
           padding: 24,
           maxWidth: 420,
           width: "100%",
@@ -88,7 +88,7 @@ export default function ConfirmDialog({
           id="confirm-dialog-title"
           style={{
             fontFamily: FONT_ALT,
-            textTransform: "uppercase",
+            textTransform: "none",
             letterSpacing: "0.04em",
             fontSize: "0.95rem",
             fontWeight: 800,
@@ -120,13 +120,14 @@ export default function ConfirmDialog({
               background: "transparent",
               border: `1px solid ${BORDER}`,
               borderRadius: 12,
-              padding: "9px 18px",
+              padding: "12px 18px",
+              minHeight: 44,
               color: TEXT_PRIMARY,
               fontFamily: FONT_ALT,
-              fontSize: "0.78rem",
+              fontSize: "0.95rem",
               fontWeight: 700,
               letterSpacing: "0.04em",
-              textTransform: "uppercase",
+              textTransform: "none",
               cursor: "pointer",
             }}
           >
@@ -138,13 +139,14 @@ export default function ConfirmDialog({
               background: isDanger ? RED : GOLD,
               border: "none",
               borderRadius: 12,
-              padding: "9px 18px",
+              padding: "12px 18px",
+              minHeight: 44,
               color: isDanger ? "#fff" : "#0D0B08",
               fontFamily: FONT_ALT,
-              fontSize: "0.78rem",
+              fontSize: "0.95rem",
               fontWeight: 800,
               letterSpacing: "0.04em",
-              textTransform: "uppercase",
+              textTransform: "none",
               cursor: "pointer",
             }}
           >

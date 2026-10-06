@@ -10,7 +10,7 @@ import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_DIM, GOLD_RULE,
   MUSCLE_COLORS,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 
 interface ExerciseDetailModalProps {
   exercise: any | null
@@ -75,11 +75,11 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
                     {exercise.muscle_group}
                   </span>
                 )}
-                <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '2px', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.025em', margin: '8px 0 0', textTransform: 'none', color: TEXT_PRIMARY }}>
                   {getExerciseName(exercise, locale)}
                 </h3>
               </div>
-              <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <X size={14} color={TEXT_MUTED} />
               </button>
             </div>
