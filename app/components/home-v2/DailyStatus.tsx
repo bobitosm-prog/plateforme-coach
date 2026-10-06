@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 
 import { deriveDailyStatusPresentation } from '../../../lib/home/daily-status-presentation'
 import type { HomeTrainingSession, HomeViewModel } from '../../../lib/home/home-dashboard-model'
+import { BodyMap } from '../home/modals/RecoveryModal'
 import TodayHero from './TodayHero'
 import styles from './HomeV2.module.css'
 
@@ -58,6 +59,11 @@ export default function DailyStatus({
     [nutrition, recovery, training],
   )
 
+  const recoveryZones = useMemo(() => new Map(
+    (recovery.state === 'loading' || recovery.state === 'error' ? [] : recovery.zones)
+      .map(zone => [zone.zone, zone]),
+  ), [recovery.state, recovery.zones])
+
   const calorieNumber = createHomeNutritionNumberFormatter(locale, 0)
   const macroNumber = createHomeNutritionNumberFormatter(locale, 1)
   const priorityZoneNames = presentation.recovery.priorityZones.map(zone => recoveryT(zone))
@@ -87,25 +93,7 @@ export default function DailyStatus({
   return <section className={styles.statusSection} aria-labelledby="daily-status-title">
     <h2 id="daily-status-title" className={styles.sectionTitle}>{t('title')}</h2>
     <div className={styles.statusCockpit}>
-      <TodayHero
-        training={training}
-        onStartSession={onStartSession}
-        onOpenSession={onOpenSession}
-        onOpenProgram={onOpenProgram}
-        onStartFreeSession={onStartFreeSession}
-      />
-      {planned > 0 && <div className={styles.weeklyProgress}>
-        <div className={styles.weeklyProgressCopy}>
-          <span>{homeT('weeklyProgressTitle')}</span>
-          <strong>{homeT('weeklyProgressCount', { completed, planned })}</strong>
-        </div>
-        <div className={styles.weeklyProgressTrack} role="progressbar"
-          aria-label={homeT('weeklyProgressTitle')} aria-valuemin={0} aria-valuemax={planned}
-          aria-valuenow={Math.min(planned, Math.max(0, completed))}>
-          <span style={{ width: `${weeklyPercent}%` }} />
-        </div>
-      </div>}
-      <div className={styles.statusSignals} aria-label={t('detailsLabel')}>
+      <div className={styles.dailyPair} aria-label={t('detailsLabel')}>
         <article className={styles.statusTile} data-domain="nutrition" data-tone={presentation.nutrition.tone} aria-busy={nutrition.state === 'loading'}>
           <span className={styles.statusTileIcon} aria-hidden="true"><Apple size={20} /></span>
           <div className={styles.statusTileCopy}>
@@ -127,21 +115,46 @@ export default function DailyStatus({
           </div>
         </article>
 
-        <article className={styles.statusTile} data-domain="recovery" data-tone={presentation.recovery.tone} aria-busy={recovery.state === 'loading'}>
-          <span className={styles.statusTileIcon} aria-hidden="true"><HeartPulse size={20} /></span>
-          <div className={styles.statusTileCopy}>
-            <span className={styles.statusTileLabel}>{t('recovery.label')}</span>
-            <strong>{t(`recovery.${presentation.recovery.status}`)}</strong>
-            <p>{recoveryDetail}</p>
-            {recoveryCountParts.length > 0 && <div className={styles.statusTileFacts}>{recoveryCountParts.join(' · ')}</div>}
-          </div>
-          <div className={styles.statusTileActions}>
-            <button type="button" className={styles.statusTileLink} onClick={onOpenRecovery}>
-              {t('actions.open_recovery')} <ArrowUpRight size={15} aria-hidden="true" />
-            </button>
-          </div>
-        </article>
+        <div className={styles.trainingCard}>
+          <TodayHero
+            training={training}
+            onStartSession={onStartSession}
+            onOpenSession={onOpenSession}
+            onOpenProgram={onOpenProgram}
+            onStartFreeSession={onStartFreeSession}
+          />
+          {planned > 0 && <div className={styles.weeklyProgress}>
+            <div className={styles.weeklyProgressCopy}>
+              <span>{homeT('weeklyProgressTitle')}</span>
+              <strong>{homeT('weeklyProgressCount', { completed, planned })}</strong>
+            </div>
+            <div className={styles.weeklyProgressTrack} role="progressbar"
+              aria-label={homeT('weeklyProgressTitle')} aria-valuemin={0} aria-valuemax={planned}
+              aria-valuenow={Math.min(planned, Math.max(0, completed))}>
+              <span style={{ width: `${weeklyPercent}%` }} />
+            </div>
+          </div>}
+        </div>
       </div>
+
+      <article className={`${styles.statusTile} ${styles.recoveryOverview}`} data-domain="recovery" data-tone={presentation.recovery.tone} aria-busy={recovery.state === 'loading'}>
+        <span className={styles.statusTileIcon} aria-hidden="true"><HeartPulse size={20} /></span>
+        <div className={styles.statusTileCopy}>
+          <span className={styles.statusTileLabel}>{t('recovery.label')}</span>
+          <strong>{t(`recovery.${presentation.recovery.status}`)}</strong>
+          <p>{recoveryDetail}</p>
+          {recoveryCountParts.length > 0 && <div className={styles.statusTileFacts}>{recoveryCountParts.join(' · ')}</div>}
+        </div>
+        <div className={styles.recoveryBodies}>
+          <BodyMap side="front" zones={recoveryZones} />
+          <BodyMap side="back" zones={recoveryZones} />
+        </div>
+        <div className={styles.statusTileActions}>
+          <button type="button" className={styles.statusTileLink} onClick={onOpenRecovery}>
+            {t('actions.open_recovery')} <ArrowUpRight size={15} aria-hidden="true" />
+          </button>
+        </div>
+      </article>
     </div>
   </section>
 }

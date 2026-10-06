@@ -9,7 +9,7 @@ const css = readFileSync('app/components/home-v2/HomeV2.module.css', 'utf8')
 describe('unified daily status cards', () => {
   it('shows the workout once and keeps nutrition and recovery facts in their cards', () => {
     expect(component).toContain('<TodayHero')
-    expect(component.match(/<article className={styles.statusTile}/g)).toHaveLength(2)
+    expect(component.match(/<article /g)).toHaveLength(2)
     expect(component).toContain('data-domain="nutrition"')
     expect(component).toContain('data-domain="recovery"')
     expect(component).not.toContain('daily-status-panel')
