@@ -716,6 +716,7 @@
     }
   },
   "exerciseInfo": {
+    "unavailable": "Video currently unavailable.",
     "comingSoon": "VIDEO COMING SOON",
     "description": "DESCRIPTION",
     "execution": "EXECUTION",
