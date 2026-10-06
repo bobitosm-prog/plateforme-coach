@@ -716,6 +716,8 @@
     }
   },
   "exerciseInfo": {
+    "exercise": "Fiche exercice",
+    "close": "Fermer la fiche",
     "unavailable": "Vidéo indisponible pour le moment.",
     "comingSoon": "VIDÉO À VENIR",
     "description": "DESCRIPTION",
@@ -2132,6 +2134,8 @@
         "no": "NON — JUSTE CETTE FOIS"
       },
       "exerciseInfo": {
+    "exercise": "Fiche exercice",
+    "close": "Fermer la fiche",
         "videoSoon": "VIDÉO À VENIR",
         "description": "DESCRIPTION",
         "execution": "EXÉCUTION",

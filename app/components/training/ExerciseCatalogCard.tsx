@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Dumbbell, ChevronRight, Video } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { getExerciseName } from '../../../lib/i18n-exercise'
+import { exerciseMedia } from '../../../lib/exercise-video-media'
 import ExerciseInfoPopup from '../ExerciseInfoPopup'
 import styles from '../tabs/TrainingOverview.module.css'
 
@@ -41,7 +42,7 @@ export default function ExerciseCatalogCard({ supabase }: { supabase: any }) {
     <input className={styles.search} aria-label={t('search')} placeholder={t('search')} value={query} onChange={e => { setQuery(e.target.value); setCount(12) }} />
     {status === 'loading' ? <p role="status" className={styles.hint}>{t('loading')}</p> : status === 'error' ? <div role="alert"><p>{t('error')}</p><button className={styles.link} onClick={() => setRetry(n => n + 1)}>{t('retry')}</button></div> : <>
       <p className={styles.hint}>{t('exerciseCount', { count: filtered.length })}</p>
-      {filtered.slice(0, count).map(row => <button key={row.id} className={styles.catalogRow} onClick={() => setSelected(row)}><span>{getExerciseName(row, locale)}<small>{row.muscle_group} · {row.video_url ? t('video') : t('details')}</small></span>{row.video_url ? <Video size={20} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}</button>)}
+      {filtered.slice(0, count).map(row => { const media = exerciseMedia(row.video_url); return <button key={row.id} className={styles.catalogRow} onClick={() => setSelected(row)}>{media.poster && <img className={styles.videoThumbnail} src={media.poster} alt="" loading="lazy" />}<span>{getExerciseName(row, locale)}<small>{row.muscle_group} · {row.video_url ? t('video') : t('details')}</small></span>{row.video_url ? <Video size={20} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}</button>})}
       {count < filtered.length && <button className={styles.link} onClick={() => setCount(n => n + 20)}>{t('more')}<ChevronRight size={16} /></button>}
     </>}
     {selected && <ExerciseInfoPopup info={selected} onClose={() => setSelected(null)} />}

@@ -1,14 +1,13 @@
-'use client'
-import { useState } from 'react'
+ 'use client'
+import { useId, useState } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
+import { X, Video, Lightbulb } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
-import {
-  BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
-  RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL,
-} from '../../lib/design-tokens'
 import { getExerciseName, getExerciseDescription, getExerciseTips } from '../../lib/i18n-exercise'
+import { exerciseMedia } from '../../lib/exercise-video-media'
 import { RailOverlay } from './ui/RailOverlay'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
+import styles from './ExerciseInfoPopup.module.css'
 
 interface ExerciseInfo {
   name: string
@@ -40,98 +39,29 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
   const displayName = getExerciseName(info, locale)
   const displayDesc = getExerciseDescription(info, locale)
   const displayTips = getExerciseTips(info, locale)
-
-  return (<RailOverlay>
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(8px)', zIndex: Z_MODAL,
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-    }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: BG_CARD, border: `1px solid ${GOLD_RULE}`,
-        borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500,
-        maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: '16px 20px',
-          borderBottom: `1px solid ${BORDER}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
-        }}>
-          <div>
-            <div style={{
-              fontFamily: FONT_DISPLAY, fontSize: 22, letterSpacing: 2,
-              color: TEXT_PRIMARY,
-            }}>{displayName}</div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-              {info.muscle_group && (
-                <span style={{
-                  fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700,
-                  padding: '2px 8px', borderRadius: 6,
-                  background: GOLD_DIM, color: GOLD,
-                  letterSpacing: 1, textTransform: 'uppercase',
-                }}>{getMuscleLabel(info.muscle_group, locale, tMuscle)}</span>
-              )}
-              {info.equipment && (
-                <span style={{
-                  fontFamily: FONT_BODY, fontSize: 10,
-                  padding: '2px 8px', borderRadius: 6,
-                  background: 'rgba(138,133,128,0.08)', color: TEXT_MUTED,
-                }}>{info.equipment}</span>
-              )}
-            </div>
+  const media = exerciseMedia(info.video_url)
+  const titleId = useId()
+  return <Dialog.Root open onOpenChange={open => { if (!open) onClose() }}>
+    <RailOverlay>
+      <Dialog.Overlay className={styles.backdrop} />
+      <Dialog.Content className={styles.dialog} aria-labelledby={titleId} aria-describedby={undefined}>
+        <header className={styles.header}>
+          <div className={styles.heading}>
+            <span className={styles.eyebrow}><Video size={16} aria-hidden="true" />{t('exercise')}</span>
+            <Dialog.Title id={titleId} className={styles.title}>{displayName}</Dialog.Title>
+            {info.muscle_group && <span className={styles.badge}>{getMuscleLabel(info.muscle_group, locale, tMuscle)}</span>}
           </div>
-          <button onClick={onClose} style={{
-            width: 36, height: 36, borderRadius: 12,
-            background: GOLD_DIM, border: `1px solid ${BORDER}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: TEXT_MUTED, fontSize: 16,
-          }}>✕</button>
+          <Dialog.Close className={styles.close} aria-label={t('close')}><X size={22} /></Dialog.Close>
+        </header>
+        <div className={styles.body}>
+          {media.video && failedVideo !== media.video ? <div className={styles.media}>
+            <video key={media.video} src={media.video} poster={media.poster} controls preload="metadata" onError={() => setFailedVideo(media.video || null)} autoPlay loop muted playsInline aria-label={displayName} />
+          </div> : info.gif_url ? <div className={styles.media}><img src={info.gif_url} alt={displayName} /></div> : <div className={styles.empty} role="status"><Video size={28} aria-hidden="true" /><p>{t(failedVideo && failedVideo === media.video ? 'unavailable' : 'comingSoon')}</p></div>}
+          {displayDesc && <section className={styles.section}><h3>{t('description')}</h3><p>{displayDesc}</p></section>}
+          {info.instructions && <section className={styles.section}><h3>{t('execution')}</h3><p>{info.instructions}</p></section>}
+          {displayTips && <section className={styles.tips}><h3><Lightbulb size={17} aria-hidden="true" />{t('tips')}</h3><p>{displayTips}</p></section>}
         </div>
-
-        {/* Scrollable body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' as any }}>
-          {/* Media: video > gif > placeholder */}
-          {info.video_url && failedVideo !== info.video_url ? (
-            <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <video key={info.video_url} src={info.video_url} controls onError={() => setFailedVideo(info.video_url || null)} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
-          ) : info.gif_url ? (
-            <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <img src={info.gif_url} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
-          ) : (
-            <div style={{ marginBottom: 20, borderRadius: 14, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🎬</div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1 }}>{t(failedVideo === info.video_url ? 'unavailable' : 'comingSoon')}</div>
-            </div>
-          )}
-
-          {/* Description */}
-          {displayDesc && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('description')}</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6 }}>{displayDesc}</div>
-            </div>
-          )}
-
-          {/* Instructions */}
-          {info.instructions && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('execution')}</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_PRIMARY, lineHeight: 1.6 }}>{info.instructions}</div>
-            </div>
-          )}
-
-          {/* Tips */}
-          {displayTips && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 2, color: GOLD, marginBottom: 8, textTransform: 'uppercase' }}>{t('tips')}</div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, padding: '12px 14px', background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, borderRadius: 12 }}>{displayTips}</div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </RailOverlay>)
+      </Dialog.Content>
+    </RailOverlay>
+  </Dialog.Root>
 }

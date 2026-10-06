@@ -107,3 +107,6 @@
 @media(max-width:360px){ .page { padding-inline:15px; } .card { padding:12px; } }
 
 .page { background:#111; }
+
+.videoThumbnail { width:48px; height:64px; flex-shrink:0; object-fit:contain; border-radius:9px; background:#fff; border:1px solid #393427; }
+.catalogRow > span { flex:1; min-width:0; }
