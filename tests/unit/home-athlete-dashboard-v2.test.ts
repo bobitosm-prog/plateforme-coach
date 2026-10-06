@@ -67,7 +67,7 @@ describe('athlete dashboard home', () => {
     const openProgram = vi.fn()
     renderDashboard(openProgram)
 
-    expect(screen.getByRole('heading', { name: 'Aujourd’hui' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'On avance ensemble.' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: /points XP/ })).toBeNull()
     expect(screen.getAllByRole('heading', { name: 'Jour de repos' })).toHaveLength(1)
     expect(screen.getByRole('heading', { name: 'Statut du jour' })).toBeTruthy()

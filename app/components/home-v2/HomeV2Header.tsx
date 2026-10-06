@@ -66,7 +66,7 @@ export default function HomeV2Header({
       <button type="button" className={styles.dateButton} onClick={onOpenTraining}>
         {formattedDate} · {t('hello', { name: identity.firstName })}
       </button>
-      <h1 className={styles.title}>{t('editorialTitleLead')}<br /><em>{t('editorialTitleAccent')}</em></h1>
+      <h1 className={styles.title}>{t('editorialTitleLead')}{' '}<br /><em>{t('editorialTitleAccent')}</em></h1>
     </div>
     <div className={styles.weekStrip} role="group" aria-label={t('weekCalendar')}>
       {week.map(day => {
