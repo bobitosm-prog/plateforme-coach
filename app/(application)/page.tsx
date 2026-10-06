@@ -569,11 +569,8 @@ function CoachAppContent() {
           );
         }
         .client-main-scroll-home {
-          padding-bottom: calc(
-            var(--mobile-bottom-nav-height)
-            + var(--mobile-bottom-visual-gap)
-            + env(safe-area-inset-bottom, 0px)
-          );
+          /* 62px items + 7px rail top + safe-area bottom + 16px clearance. */
+          padding-bottom: calc(85px + max(7px, env(safe-area-inset-bottom, 0px)));
         }
         @media (min-width: 768px) {
           .client-main-scroll,

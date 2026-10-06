@@ -13,7 +13,7 @@ describe('Home V2 mobile bottom navigation clearance', () => {
     expect(page).not.toContain('--mobile-floating-action-gap')
     expect(page).not.toContain('--mobile-athena-fab-size')
     expect(page).toContain('className="client-main-scroll client-main-scroll-home"')
-    expect(page).toMatch(/\.client-main-scroll-home\s*\{[\s\S]*?var\(--mobile-bottom-nav-height\)[\s\S]*?var\(--mobile-bottom-visual-gap\)[\s\S]*?env\(safe-area-inset-bottom, 0px\)/)
+    expect(page).toMatch(/\.client-main-scroll-home\s*\{[\s\S]*?padding-bottom: calc\(85px \+ max\(7px, env\(safe-area-inset-bottom, 0px\)\)\)/)
     expect(page).not.toContain('padding-bottom: calc(240px')
   })
 
