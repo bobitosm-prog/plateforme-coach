@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, ChevronLeft, Scale, User, Search, Utensils, Leaf, Apple, Coffee, Salad, Sun, Moon, CheckCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts, radii, cardStyle, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, btnPrimary } from '../../../lib/design-tokens'
+import { ACTIVITY_LEVELS, calcMifflinStJeor, colors, fonts, radii, cardStyle, titleStyle, titleLineStyle, subtitleStyle, statStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, btnPrimary } from '../../../lib/app-design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()

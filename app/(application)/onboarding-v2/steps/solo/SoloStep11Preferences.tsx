@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { MEAL_KEYS, MEAL_DEFAULTS, MEAL_EMOJIS, type MealKey } from '@/lib/meal-plan/meal-suggestions'
-import { colors, fonts } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/app-design-tokens'
 
 export interface MealPrefsState {
   breakfast: string[]

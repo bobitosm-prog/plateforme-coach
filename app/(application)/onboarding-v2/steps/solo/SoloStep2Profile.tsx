@@ -1,6 +1,6 @@
 'use client'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, inputStyle, cardStyle, radii } from '@/lib/design-tokens'
+import { colors, fonts, inputStyle, cardStyle, radii } from '@/lib/app-design-tokens'
 
 interface SoloStep2ProfileProps {
   firstName: string

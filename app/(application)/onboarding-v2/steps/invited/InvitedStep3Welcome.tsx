@@ -1,7 +1,7 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { Check } from 'lucide-react'
-import { colors, fonts } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/app-design-tokens'
 
 interface InvitedStep3WelcomeProps {
   firstName: string
@@ -48,8 +48,8 @@ export default function InvitedStep3Welcome({
           fontSize: 32,
           fontWeight: 800,
           color: colors.text,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          textTransform: 'none',
+          letterSpacing: '-0.04em',
           margin: 0,
         }}
       >

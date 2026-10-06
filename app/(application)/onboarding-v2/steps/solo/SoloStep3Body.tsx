@@ -1,6 +1,6 @@
 'use client'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, inputStyle } from '@/lib/design-tokens'
+import { colors, fonts, inputStyle } from '@/lib/app-design-tokens'
 
 interface SoloStep3BodyProps {
   weight: string

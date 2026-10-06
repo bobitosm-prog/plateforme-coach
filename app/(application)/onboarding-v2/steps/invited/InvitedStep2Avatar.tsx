@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Upload } from 'lucide-react'
-import { colors, fonts, btnSecondary } from '@/lib/design-tokens'
+import { colors, fonts, btnSecondary } from '@/lib/app-design-tokens'
 
 interface InvitedStep2AvatarProps {
   avatarUrl: string | null

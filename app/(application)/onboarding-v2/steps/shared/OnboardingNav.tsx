@@ -1,7 +1,7 @@
 'use client'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, btnPrimary, btnSecondary } from '@/lib/design-tokens'
+import { colors, btnPrimary, btnSecondary } from '@/lib/app-design-tokens'
 
 interface OnboardingNavProps {
   onBack?: () => void

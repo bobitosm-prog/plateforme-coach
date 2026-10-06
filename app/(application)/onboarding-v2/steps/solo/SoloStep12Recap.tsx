@@ -1,6 +1,6 @@
 'use client'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, cardStyle, radii } from '@/lib/design-tokens'
+import { colors, fonts, cardStyle, radii } from '@/lib/app-design-tokens'
 
 interface SoloStep10RecapProps {
   tdee: number

@@ -1,5 +1,5 @@
 'use client'
-import { colors, fonts } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/app-design-tokens'
 
 interface OnboardingHeaderProps {
   currentStep: number

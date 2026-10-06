@@ -1,6 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
-import { colors, fonts } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/app-design-tokens'
 import type { ReactNode } from 'react'
 
 const slideVariants = {
