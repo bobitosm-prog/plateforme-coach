@@ -2665,7 +2665,19 @@
     "betaAccess": "Beta-Zugang",
     "trialPeriod": "Testphase",
     "daysLeft": "{count, plural, one {# Tag übrig} other {# Tage übrig}}",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "titleLead": "Mein",
+    "titleAccent": "Konto.",
+    "settingsTitle": "Profil & Einstellungen",
+    "helpTitle": "Hilfe & Feedback",
+    "accessTitle": "Konto & Abonnement",
+    "accessDescription": "Zugang, Zahlungen und Kontoverwaltung",
+    "profileDescription": "Persönliche Angaben und Foto",
+    "goalsDescription": "Deine Ziele und Meilensteine",
+    "preferencesDescription": "Sprache, Erinnerungen und Präferenzen",
+    "athenaDescription": "Mit deinem Assistenten sprechen",
+    "xpProgress": "XP-Fortschritt",
+    "unread": "{count, plural, one {# ungelesen} other {# ungelesen}}"
   },
   "nutritionPlanConsistency": {
     "outdated": "Dein Plan wurde mit anderen Zielen, einer anderen Ernährungsweise oder anderen Ausschlüssen erstellt. Er bleibt verfügbar, wurde aber nicht an deine gespeicherten Einstellungen angepasst. Erstelle ihn unter Konto → Ernährungsprogramm neu.",

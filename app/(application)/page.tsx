@@ -572,13 +572,13 @@ function CoachAppContent() {
           /* 62px items + 7px rail top + safe-area bottom + 16px clearance. */
           padding-bottom: calc(85px + max(7px, env(safe-area-inset-bottom, 0px)));
         }
-        .client-main-scroll-training, .client-main-scroll-nutrition {
+        .client-main-scroll-training, .client-main-scroll-nutrition, .client-main-scroll-account {
           padding-bottom: calc(85px + max(7px, env(safe-area-inset-bottom, 0px)));
         }
         @media (min-width: 768px) {
           .client-main-scroll,
           .client-main-scroll-home { padding-bottom: 16px; }
-          .client-main-scroll-training, .client-main-scroll-nutrition { padding-bottom: 16px; }
+          .client-main-scroll-training, .client-main-scroll-nutrition, .client-main-scroll-account { padding-bottom: 16px; }
         }
       `}</style>
 
@@ -797,7 +797,7 @@ function CoachAppContent() {
           <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('progress') && <ProgressTab wellbeingEntries={h.wellbeingEntries} dailyStates={h.analyticsSourceStates} dailyTruncated={h.analyticsDailyTruncated} supabase={h.supabase} weightHistory30={h.weightHistory30} measurements={h.measurements} progressPhotos={h.progressPhotos} photoRef={h.photoRef} photoUploading={h.photoUploading} uploadProgressPhoto={h.uploadProgressPhoto} setModal={h.setModal} profile={h.profile} weeklyCalories={h.weeklyCalories} weeklyWater={h.weeklyWater} weightHistoryFull={h.weightHistoryFull} wSessions={h.wSessions} currentWeight={h.currentWeight} progressionModel={h.progressionModel} onProgressionPeriodChange={h.setProgressionPeriod} />}
           </div>
-          <div className="client-main-scroll" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="client-main-scroll client-main-scroll-account" data-scroll-container style={{ width: mainSize.w, flexShrink: 0, minWidth: mainSize.w, maxWidth: mainSize.w, height: mainSize.h, minHeight: mainSize.h, maxHeight: mainSize.h, overflowY: 'auto', overflowX: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
             {visitedTabs.current.has('compte') && <AccountTab firstName={h.firstName} displayAvatar={h.displayAvatar} unreadCount={h.unreadCount} supabase={h.supabase} userId={h.session?.user?.id} session={h.session} onNavigate={navigateTo} focusPrograms={navigation.tab === 'account' && navigation.section === 'programs'} isInTrial={h.isInTrial} trialDaysLeft={h.trialDaysLeft} isInBeta={h.isInBeta} betaDaysLeft={h.betaDaysLeft} />}
           </div>
         </motion.div>
