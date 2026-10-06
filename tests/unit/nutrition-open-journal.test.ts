@@ -15,7 +15,7 @@ vi.mock('@/app/components/BarcodeScanner',()=>({default:({onSelected}:any)=>Reac
 vi.mock('@/app/hooks/useNutritionDashboardModel',()=>({default:()=>{
  const [selectedDate,setSelectedDate]=React.useState(day.localDateKey)
  const [,refreshView]=React.useState(0)
- return {model:makeModel(selectedDate),selectedDate,setSelectedDate,dailyLogs:logs,daysWithMeals:new Set(),refresh:async()=>refreshView(v=>v+1)}
+ return {model:makeModel(selectedDate),selectedDate,setSelectedDate,dailyLogs:logs,daysWithMeals:new Set(),historyStart:"2026-08-30",mealCounts:{},refresh:async()=>refreshView(v=>v+1)}
 }}))
 const day=getNutritionDayWindow(new Date('2026-09-29T12:00:00Z'))
 const breakfast={id:'breakfast',date:day.localDateKey,meal_type:'petit_dejeuner',custom_name:'Flocons test',quantity_g:80,calories:300,protein:10,carbs:50,fat:6}
@@ -38,11 +38,13 @@ function setup(ai=true){
  const view=render(React.createElement(NextIntlClientProvider,{locale:'fr',messages,timeZone:'Europe/Zurich',children:React.createElement(NutritionTab,props)}))
  return {upsert,view}
 }
+function expand(meal:string){const button=screen.getByRole('button',{name:new RegExp('^'+meal)});if(button.getAttribute('aria-expanded')!=='true')fireEvent.click(button)}
 function plus(meal:string){fireEvent.click(screen.getByRole('button',{name:`Ajouter — ${meal}`}))}
-it('opens on all four meals and existing foods without a permanent composer or disclosure',()=>{
+it('shows four compact meals and reveals existing foods on demand',()=>{
  setup()
- for(const name of ['Petit-déjeuner','Déjeuner','Collation','Dîner'])expect(screen.getByRole('heading',{name})).toBeTruthy()
- expect(screen.getByText('Flocons test')).toBeTruthy();expect(screen.getByText('Poulet test')).toBeTruthy()
+ for(const name of ['Petit-déjeuner','Déjeuner','Collation','Dîner'])expect(screen.getByRole('button',{name:new RegExp('^'+name)})).toBeTruthy()
+ expand('Petit-déjeuner');expect(screen.getByText('Flocons test')).toBeTruthy();expand('Déjeuner')
+ expect(screen.getByText('Poulet test')).toBeTruthy()
  expect(screen.queryByPlaceholderText('Rechercher un aliment…')).toBeNull()
  expect(screen.queryByText('Repas enregistrés et détails')).toBeNull()
  expect(screen.queryByText(/Pour 80 g enregistrés/)).toBeNull()
@@ -63,18 +65,18 @@ it('adds a saved meal only on confirmation and shows it immediately in the chose
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull())
  expect(upsert).toHaveBeenCalledTimes(1)
  expect(upsert.mock.calls[0][0][0]).toMatchObject({meal_type:'diner',date:day.localDateKey,quantity_g:100,calories:130})
- expect(screen.getByText('Riz test')).toBeTruthy()
+ expand('Dîner');expect(screen.getByText('Riz test')).toBeTruthy()
 })
 it('keeps the selected past date when adding one recent food',async()=>{
  const {upsert}=setup()
- fireEvent.change(screen.getByLabelText('Date du journal'),{target:{value:'2026-09-28'}})
+ fireEvent.change(screen.getByLabelText('Choisir une date'),{target:{value:'2026-09-28'}})
  expect(screen.queryByText('Flocons test')).toBeNull()
  plus('Petit-déjeuner');fireEvent.click(screen.getByRole('button',{name:'Un aliment'}))
  fireEvent.click(await screen.findByRole('button',{name:/Flocons test/}))
  fireEvent.click(screen.getByRole('button',{name:'Confirmer mon repas'}))
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull())
  expect(upsert.mock.calls[0][0][0]).toMatchObject({date:'2026-09-28',meal_type:'petit_dejeuner'})
- expect(screen.getByText('Flocons test')).toBeTruthy()
+ expand('Petit-déjeuner');expect(screen.getByText('Flocons test')).toBeTruthy()
 })
 it('opens photo analysis, retains the estimate in draft and saves in the selected meal',async()=>{
  const fetchMock=vi.fn().mockResolvedValue({ok:true,json:async()=>({foods:[{name:'Photo test',quantity_g:100,calories:100,proteins:10,carbs:10,fats:2}]})});vi.stubGlobal('fetch',fetchMock)
@@ -84,7 +86,7 @@ it('opens photo analysis, retains the estimate in draft and saves in the selecte
  await screen.findByLabelText('Quantité — Photo test');expect(upsert).not.toHaveBeenCalled()
  fireEvent.click(screen.getByRole('button',{name:'Confirmer mon repas'}))
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull())
- expect(upsert.mock.calls[0][0][0].meal_type).toBe('collation');expect(screen.getByText('Photo test')).toBeTruthy()
+ expect(upsert.mock.calls[0][0][0].meal_type).toBe('collation');expand('Collation');expect(screen.getByText('Photo test')).toBeTruthy()
 })
 it('opens the barcode source and confirms the scanned food through the same draft',async()=>{
  const {upsert}=setup();plus('Déjeuner');fireEvent.click(screen.getByRole('button',{name:'Un code-barres'}))
@@ -113,7 +115,7 @@ it('reopens an uncertain saved meal through another source and retries identical
  fireEvent.click(screen.getByRole('button',{name:'Fermer'}))
  fireEvent.click(within(screen.getByRole('alert')).getByRole('button',{name:'Fermer'}))
  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull())
- expect(screen.getByText('Riz test')).toBeTruthy()
+ expand('Dîner');expect(screen.getByText('Riz test')).toBeTruthy()
  plus('Dîner');fireEvent.click(screen.getByRole('button',{name:'Un code-barres'}))
  expect(screen.queryByRole('button',{name:'Résultat scanner simulé'})).toBeNull()
  expect((screen.getByLabelText('Quantité — Riz test') as HTMLInputElement).disabled).toBe(true)

@@ -26,7 +26,8 @@ import type { ActiveCoachResolutionState } from '../../../lib/coach-relations/re
 import useNutritionDashboardModel from '../../hooks/useNutritionDashboardModel'
 import { getNutritionDayKey } from '../../../lib/nutrition/nutrition-date'
 import { normalizeNutritionMealType, type NutritionMealType } from '../../../lib/nutrition/nutrition-dashboard-model'
-import NutritionV2 from '../nutrition-v2/NutritionV2'
+import NutritionOverview from '../nutrition-v2/NutritionOverview'
+import overviewStyles from '../nutrition-v2/NutritionOverview.module.css'
 import TodayMeals from '../nutrition-v2/TodayMeals'
 import ActiveNutritionPlan from '../nutrition-v2/ActiveNutritionPlan'
 import NutritionTools from '../nutrition-v2/NutritionTools'
@@ -333,34 +334,19 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
 
   return (
-    <NutritionV2
+    <NutritionOverview
+      key={`${userId}:${selectedDate}`}
       userId={userId}
       model={nutritionModel}
       selectedDate={selectedDate}
-      onAddMeal={() => {
-        setSubTab('today')
-        setPendingMealAction('food')
-      }}
+      historyStart={nutritionDashboard.historyStart}
+      mealCounts={nutritionDashboard.mealCounts}
+      recipesEnabled={capabilities.nutrition}
+      tab={subTab}
+      onTabChange={setSubTab}
       onRetry={() => void refreshNutrition()}
-      onPhoto={() => setPendingMealAction('photo')}
-      onBarcode={onOpenBarcode}
       onDateChange={setSelectedDate}
-      compactToday={subTab === 'today'}
     >
-
-      {/* PILLS NAVIGATION */}
-      <div className={quickEntryStyles.pageTabs} role="group" aria-label={nt('v2.title')}>
-        {([
-          { id: 'today' as SubTab, label: nt('tabs.journal') },
-          { id: 'plan' as SubTab, label: nt('tabs.plan') },
-        ]).map(({ id, label }) => {
-          return (
-            <button type="button" key={id} onClick={() => setSubTab(id)} aria-pressed={subTab === id}>
-              {label}
-            </button>
-          )
-        })}
-      </div>
 
       {addingMeal && <MealAddSheet
         mealLabel={MEAL_LABELS[addingMeal]}
@@ -414,11 +400,12 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
         const canAddWater = selectedDate === today
 
         return (
-          <div style={{ padding: '0 4px' }}>
-            <section className={quickEntryStyles.section}>
+          <div className={overviewStyles.journal}>
+            <section className={overviewStyles.card}>
               <TodayMeals
                 key={`journal:${userId}:${selectedDate}`}
                 journalMode
+                compactJournal
                 model={nutritionModel}
                 selectedDate={selectedDate}
                 actionError={mealActionError}
@@ -462,7 +449,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
             </section>
 
             {/* Hydration remains a separate legacy module during the progressive migration. */}
-            <div className={quickEntryStyles.hydrationCard}>
+            <div className={`${quickEntryStyles.hydrationCard} ${overviewStyles.hydration}`}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ display: 'grid', width: 38, height: 38, placeItems: 'center', borderRadius: 12, background: '#2b271e' }}>
                   <Droplets size={18} color="#e6c364" aria-hidden="true" />
@@ -480,10 +467,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
               </div>
             </div>
 
-            <div className={quickEntryStyles.utilityLinks}>
-              <button type="button" onClick={() => setSubTab('meals')}>{nt('v2.tools.savedMeals')}</button>
-              {capabilities.nutrition && <button type="button" onClick={() => setSubTab('recipes')}>{nt('v2.tools.recipes')}</button>}
-            </div>
+
 
           </div>
         )
@@ -517,15 +501,15 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
       })()}
 
       {/* Recipes sub-tab */}
-      {subTab === 'recipes' && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
+      {capabilities.nutrition && subTab === 'recipes' && (
+        <div className={overviewStyles.library}>
           <RecipesSection supabase={supabase} userId={userId} aiAllowed={capabilities.ai} />
         </div>
       )}
 
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
-        <div style={{ padding: '0 20px', paddingBottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className={overviewStyles.library}>
           <SectionTitle noPadding title={nt('chrome.myMeals')} />
           <div style={{ ...cardStyle, padding: 16 }}>
             {myMealsError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 12px' }}>{myMealsError}</p>}
@@ -878,6 +862,6 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
           </div>
         </>
       </RailOverlay>)}
-    </NutritionV2>
+    </NutritionOverview>
   )
 }

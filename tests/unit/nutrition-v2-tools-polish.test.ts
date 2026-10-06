@@ -11,20 +11,11 @@ const styles = readFileSync('app/components/nutrition-v2/NutritionV2.module.css'
 const messages = readFileSync('messages/fr.json', 'utf8')
 
 describe('Nutrition V2 compact tools', () => {
-  it('keeps Journal and Plan as the only primary navigation entries', () => {
-    const navigation = tab.slice(tab.indexOf('{/* PILLS NAVIGATION */}'), tab.indexOf('{/* Food search modal */}'))
-    expect(navigation).toContain("id: 'today'")
-    expect(navigation).toContain("id: 'plan'")
-    expect(navigation).not.toContain("id: 'recipes'")
-    expect(navigation).not.toContain("id: 'meals'")
-  })
-
-  it('moves recipes and saved meals to secondary tools without a direct data read', () => {
+  it('uses the shared overview navigation and retains lazy recipe and saved-meal flows', () => {
+    expect(tab).toContain('<NutritionOverview')
+    expect(tab).toContain('onTabChange={setSubTab}')
     expect(tab).not.toContain('<NutritionTools')
-    expect(tab).toContain("onClick={() => setSubTab('meals')}")
-    expect(tab).toContain("onClick={() => setSubTab('recipes')}")
-    expect(tools).not.toContain('.from(')
-    expect(tools).not.toContain('fetch(')
+    expect(tab).toContain('recipesEnabled={capabilities.nutrition}')
   })
 
   it('gates photo and recipe AI actions with capabilities', () => {
