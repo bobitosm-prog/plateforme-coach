@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDown, ArrowRight, ArrowUp, Dumbbell, Gauge, Minus, Trophy, Weight } from 'lucide-react'
+import { ArrowDown, ChevronRight, TrendingUp, ArrowUp, Dumbbell, Gauge, Minus, Trophy, Weight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import styles from './HomeV2.module.css'
@@ -63,12 +63,10 @@ export default function ProgressionSnapshot({
   return <section className={styles.progression} aria-labelledby="progression-snapshot-title" aria-busy={state === 'loading'} data-state={state}>
     <div className={styles.progressionHeader}>
       <div>
-        <h2 id="progression-snapshot-title" className={styles.progressionTitle}>{t('title')}</h2>
+        <h2 id="progression-snapshot-title" className={styles.progressionTitle}><TrendingUp size={24} aria-hidden="true" />{t('title')}</h2>
         {(state === 'partial' || state === 'complete') && <p className={styles.progressionCopy}>{t(`${state}Copy`)}</p>}
       </div>
-      {(state === 'partial' || state === 'complete') && <button type="button" className={styles.progressionLink} onClick={onOpenProgression}>
-        {t('cta')} <ArrowRight size={15} aria-hidden="true" />
-      </button>}
+
     </div>
 
     {state === 'loading' && <div className={styles.progressionState} aria-live="polite">
@@ -82,7 +80,7 @@ export default function ProgressionSnapshot({
 
     {state === 'empty' && <div className={styles.progressionState}>
       <strong>{t('emptyTitle')}</strong><span>{t('emptyCopy')}</span>
-      <button type="button" className={styles.progressionLink} onClick={onOpenProgression}>{t('cta')} <ArrowRight size={15} aria-hidden="true" /></button>
+      <button type="button" className={styles.progressionLink} onClick={onOpenProgression}>{t('cta')} <ChevronRight size={16} aria-hidden="true" /></button>
     </div>}
 
     {(state === 'partial' || state === 'complete') && <div className={styles.progressionGrid}>
@@ -124,5 +122,8 @@ export default function ProgressionSnapshot({
         </span>}
       </article>}
     </div>}
+    {(state === 'partial' || state === 'complete') && <button type="button" className={styles.progressionLink} onClick={onOpenProgression}>
+        {t('cta')} <ChevronRight size={16} aria-hidden="true" />
+      </button>}
   </section>
 }
