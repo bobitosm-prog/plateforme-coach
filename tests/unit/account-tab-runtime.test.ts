@@ -19,6 +19,6 @@ describe('Account tab', () => {
     fireEvent.click(screen.getByRole('button', { name: /trainingProgram/ }))
     fireEvent.click(screen.getByRole('button', { name: /messages/ }))
     expect(navigate.mock.calls.map(call => call[0])).toEqual(['nutrition_program', 'training_program', 'messages'])
-    expect(screen.getByRole('progressbar', { name: 'Progression XP' })).toBeDefined()
+    expect(screen.getByRole('progressbar', { name: 'xpProgress' })).toBeDefined()
   })
 })

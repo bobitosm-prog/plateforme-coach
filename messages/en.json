@@ -2665,7 +2665,19 @@
     "betaAccess": "Beta access",
     "trialPeriod": "Trial period",
     "daysLeft": "{count, plural, one {# day left} other {# days left}}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "titleLead": "My",
+    "titleAccent": "account.",
+    "settingsTitle": "Profile & settings",
+    "helpTitle": "Help & feedback",
+    "accessTitle": "Account & subscription",
+    "accessDescription": "Access, payments and account management",
+    "profileDescription": "Personal details and photo",
+    "goalsDescription": "Your goals and milestones",
+    "preferencesDescription": "Language, reminders and preferences",
+    "athenaDescription": "Talk to your assistant",
+    "xpProgress": "XP progress",
+    "unread": "{count, plural, one {# unread} other {# unread}}"
   },
   "nutritionPlanConsistency": {
     "outdated": "Your plan was generated with different targets, diet or exclusions. It remains available but has not been updated to your saved settings. Regenerate it from Account → Nutrition program.",

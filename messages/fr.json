@@ -2665,7 +2665,19 @@
     "betaAccess": "Accès beta",
     "trialPeriod": "Période d'essai",
     "daysLeft": "{count, plural, one {# jour restant} other {# jours restants}}",
-    "signOut": "Déconnexion"
+    "signOut": "Déconnexion",
+    "titleLead": "Mon",
+    "titleAccent": "compte.",
+    "settingsTitle": "Profil & réglages",
+    "helpTitle": "Aide & retours",
+    "accessTitle": "Compte & abonnement",
+    "accessDescription": "Accès, paiements et gestion du compte",
+    "profileDescription": "Informations personnelles et photo",
+    "goalsDescription": "Tes objectifs et tes repères",
+    "preferencesDescription": "Langue, rappels et préférences",
+    "athenaDescription": "Échanger avec ton assistant",
+    "xpProgress": "Progression XP",
+    "unread": "{count, plural, one {# non lu} other {# non lus}}"
   },
   "nutritionPlanConsistency": {
     "outdated": "Votre plan a été généré avec d’autres objectifs, un autre régime ou d’autres exclusions. Il reste disponible, mais n’a pas été mis à jour avec vos réglages enregistrés. Régénérez-le depuis Compte → Programme nutrition.",
