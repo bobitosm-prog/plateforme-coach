@@ -56,7 +56,7 @@ describe('Training V2 history modal layout', () => {
   })
 
   it('preserves history bounds, filters and data ownership', () => {
-    expect(history).toContain('workoutHistory.slice(0, 3)')
+    expect(history).toContain('workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)')
     expect(history).toContain('filtered.slice(0, visibleCount)')
     expect(history).toContain('matchesWorkoutHistory(session, historyFilter)')
     expect(history).toContain('loadHistory(controller.signal)')

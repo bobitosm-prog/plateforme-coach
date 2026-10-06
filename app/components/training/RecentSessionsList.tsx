@@ -11,13 +11,15 @@ import { RailOverlay } from '../ui/RailOverlay'
 import styles from './RecentSessionsList.module.css'
 
 interface RecentSessionsListProps {
+  embedded?: boolean
+  recentLimit?: number
   workoutHistory: WorkoutHistoryItem[]
   state: TrainingReadState
   onOpenDetail: (workout: WorkoutHistoryItem) => void
   loadHistory: (signal: AbortSignal) => Promise<WorkoutHistoryItem[]>
 }
 
-export default function RecentSessionsList({ workoutHistory, state, onOpenDetail, loadHistory }: RecentSessionsListProps) {
+export default function RecentSessionsList({ embedded = false, recentLimit = 3, workoutHistory, state, onOpenDetail, loadHistory }: RecentSessionsListProps) {
   const t = useTranslations('training_tab.recent')
   const locale = useLocale()
   const filterLabels: Record<string, string> = Object.fromEntries(HISTORY_FILTERS.map(f => [f.key, t(`filters.${f.key}`)]))
@@ -50,7 +52,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
 
   const filtered = allHistory.filter(session => matchesWorkoutHistory(session, historyFilter))
 
-  const recent = workoutHistory.slice(0, 3)
+  const recent = workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)
   const expanded = filtered.slice(0, visibleCount)
 
   const renderRows = (sessions: WorkoutHistoryItem[], compact = false) => sessions.map((session, index) => {
@@ -80,7 +82,7 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
             {dateLabel}{session.duration_minutes ? ` · ${session.duration_minutes} min` : ''}
           </span>
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: colors.success, fontFamily: fonts.alt, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#dfc27a', fontFamily: fonts.body, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em' }}>
           <CheckCircle2 size={15} aria-hidden="true" />
           {t('completed')}
           <ChevronRight size={16} color={colors.textDim} aria-hidden="true" />
@@ -90,14 +92,14 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
   })
 
   return (
-    <div className={styles.overviewWrap}>
+    <div className={embedded ? undefined : styles.overviewWrap}>
       <section
         data-training-section-card="recent-history"
-        className={styles.overviewCard}
+        className={embedded ? undefined : styles.overviewCard}
       >
-        <h2 style={{ margin: '0 0 14px', color: '#eee9df', fontFamily: fonts.body, fontSize: '1.32rem', fontWeight: 750, letterSpacing: '-.025em', lineHeight: 1.25 }}>
+        {!embedded && <h2 style={{ margin: '0 0 14px', color: '#eee9df', fontFamily: fonts.body, fontSize: '1.32rem', fontWeight: 750, letterSpacing: '-.025em', lineHeight: 1.25 }}>
           {t('lastSessions')}
-        </h2>
+        </h2>}
 
         {state === 'loading' ? (
           <div role="status" style={{ textAlign: 'center', padding: '24px 0', fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
@@ -120,12 +122,12 @@ export default function RecentSessionsList({ workoutHistory, state, onOpenDetail
                 onClick={() => setShowFullHistory(true)}
                 style={{
                   width: '100%', minHeight: 44, padding: 12, marginTop: 10,
-                  background: '#29261f',
-                  border: 0, borderRadius: 12,
-                  fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
-                  letterSpacing: '0.18em', color: colors.gold,
-                  textTransform: 'uppercase', cursor: 'pointer',
-                  textAlign: 'center',
+                  background: 'transparent',
+                  border: 0, borderTop: '1px solid #39362e', borderRadius: 0,
+                  fontFamily: fonts.body, fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0', color: '#dfc27a',
+                  textTransform: 'none', cursor: 'pointer',
+                  textAlign: 'left',
                 }}
               >
                 {t('viewAll')}

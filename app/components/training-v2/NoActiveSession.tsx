@@ -1,3 +1,4 @@
+import { Dumbbell } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import type { TrainingProgramSource, TrainingProgramState } from '../../../lib/training/active-program'
@@ -28,7 +29,6 @@ interface NoActiveSessionProps {
 export default function NoActiveSession({
   programState,
   programSource,
-  programName,
   sessionName,
   exerciseCount,
   totalSets,
@@ -45,11 +45,6 @@ export default function NoActiveSession({
   children,
 }: NoActiveSessionProps) {
   const t = useTranslations('training_tab.v2')
-  const sourceLabel = programSource === 'coach'
-    ? t('coachPlan')
-    : programSource === 'personal'
-      ? t('personalProgram')
-      : t('noProgram')
   const hasPlannedSession = exerciseCount > 0
   const isSettledEmpty = !hasPlannedSession && programState !== 'loading' && programState !== 'error'
   const programActionLabel = programState === 'loading' || programState === 'error'
@@ -80,7 +75,7 @@ export default function NoActiveSession({
       <div className={`${styles.journeyStep} ${completedToday ? styles.journeyStepCompleted : ''}`}>
       {completedToday ? (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-completed-title">
-          <div className={styles.eyebrow}>{t('sessionCompletedLabel')}</div>
+          <div className={styles.eyebrow}><Dumbbell size={24} aria-hidden="true" />{t('sessionCompletedLabel')}</div>
           <h2 id="training-completed-title" className={styles.emptyTitle}>{completedSessionName || t('sessionCompletedToday')}</h2>
           {completedSessionName && <p className={styles.emptyDescription}>{t('sessionCompletedToday')}</p>}
           {onViewCompleted && <div className={`${styles.emptyActions} ${styles.emptyActionsSingle}`}>
@@ -99,7 +94,7 @@ export default function NoActiveSession({
         onAction={canStart ? onStart : undefined}
       /> : (
         <section className={`${styles.hero} ${styles.emptyHero}`} aria-labelledby="training-empty-title">
-          <div className={styles.eyebrow}>{t('sessionToday')}</div>
+          <div className={styles.eyebrow}><Dumbbell size={24} aria-hidden="true" />{t('sessionToday')}</div>
           <h2 id="training-empty-title" className={styles.emptyTitle}>{stateTitle}</h2>
           {isSettledEmpty && <p className={styles.emptyDescription}>{t('noSessionDescription')}</p>}
           {isSettledEmpty && (
@@ -109,22 +104,14 @@ export default function NoActiveSession({
           )}
         </section>
       )}
+        <div className={styles.secondaryTools}>
+          <button type="button" className={styles.tertiaryAction} onClick={onOpenProgramSettings}>{programActionLabel}</button>
+          {hasPlannedSession && <button type="button" className={styles.toolAction} onClick={onFreeSession}>{t('freeSession')}</button>}
+        </div>
       </div>
       {children && <div className={styles.journeyStep}>{children}</div>}
       </div>
-      <section className={styles.summary} aria-labelledby="active-program-summary">
-        <div>
-          <div className={styles.sectionLabel}>{t('activeProgram')}</div>
-          <h2 id="active-program-summary" className={styles.summaryTitle}>{programName || t('noProgram')}</h2>
-          <div className={styles.sourceRow}>
-            <span className={styles.sourceBadge}>{sourceLabel}</span>
-          </div>
-        </div>
-        <button type="button" className={styles.tertiaryAction} onClick={onOpenProgramSettings}>{programActionLabel}</button>
-      </section>
-      {hasPlannedSession && <div className={styles.secondaryTools}>
-        <button type="button" className={styles.toolAction} onClick={onFreeSession}>{t('freeSession')}</button>
-      </div>}
+
     </div>
   )
 }

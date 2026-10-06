@@ -29,7 +29,7 @@ describe('Training overview for a completed day', () => {
     expect(journey?.children).toHaveLength(2)
     expect(journey?.lastElementChild?.textContent).toContain('Prochaine séance')
     if (!journey) throw new Error('Training journey is missing')
-    expect(journey.compareDocumentPosition(screen.getByText('Masse Avancée')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('button', {name:'Mon programme'})).toBeTruthy()
   })
 
   it('passes the actual daily state regardless of the calendar selection', () => {

@@ -1703,6 +1703,25 @@
     "clearLabel": "Unterhaltung löschen"
   },
   "training_tab": {
+    "overview": {
+      "lastTen": "Die letzten 10 Einheiten",
+      "catalog": "Alle Übungen",
+      "search": "Übung oder Muskel suchen",
+      "loading": "Wird geladen…",
+      "error": "Daten konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "exerciseCount": "{count, plural, one {# Übung} other {# Übungen}}",
+      "video": "Video ansehen",
+      "details": "Details ansehen",
+      "more": "Mehr anzeigen",
+      "noNext": "Keine nächste Einheit geplant",
+      "favorites": "Cardio-Favoriten",
+      "favorite": "Als Favorit speichern",
+      "unfavorite": "Favorit entfernen",
+      "favoriteError": "Favoriten konnten nicht geändert werden.",
+      "noFavorites": "Markiere deine bevorzugten Cardio-Einheiten mit dem Stern.",
+      "favoritesLoading": "Favoriten werden geladen…"
+    },
     "header": {
       "title": "TRAINING",
       "noActiveProgram": "KEIN AKTIVES PROGRAMM",

@@ -28,7 +28,7 @@ describe('Training V2 final polish contracts', () => {
   })
 
   it('keeps history bounded and avoids eager full exercise loading', () => {
-    expect(recentSessions).toContain('workoutHistory.slice(0, 3)')
+    expect(recentSessions).toContain('workoutHistory.filter(session => session.completed !== false).slice(0, recentLimit)')
     expect(recentSessions).toContain('filtered.slice(0, visibleCount)')
     expect(recentSessions).toContain('useState(20)')
     expect(trainingTab).not.toContain("from('exercises_db')")

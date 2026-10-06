@@ -1,7 +1,7 @@
 'use client'
 import { useId, useState, useEffect, useRef } from 'react'
 import { toDateStr } from '../../lib/schedule-utils'
-import { Play, Pause, Square, SkipForward, ChevronDown } from 'lucide-react'
+import { Play, Pause, Square, SkipForward, ChevronDown, Star, HeartPulse, ChevronRight } from 'lucide-react'
 import { HIIT_WORKOUTS, LISS_WORKOUTS, estimateCalories, type CardioWorkout, type HiitExercise } from '../../lib/cardio-data'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -10,6 +10,7 @@ import {
   GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../lib/design-tokens'
+import overviewStyles from './tabs/TrainingOverview.module.css'
 import { RailOverlay } from './ui/RailOverlay'
 
 interface CardioProps {
@@ -22,19 +23,51 @@ interface CardioProps {
 
 export default function CardioSection({ supabase, userId, weight, weightIsReal, setModal }: CardioProps) {
   const t = useTranslations('cardio')
-  const [expanded, setExpanded] = useState(false)
+  const tf = useTranslations('training_tab.overview')
+  const [expanded, setExpanded] = useState(true)
   const [filter, setFilter] = useState<'all' | 'hiit' | 'liss'>('all')
   const [activeWorkout, setActiveWorkout] = useState<CardioWorkout | null>(null)
-  const [showLibrary, setShowLibrary] = useState(false)
+  const [showLibrary, setShowLibrary] = useState(true)
   const panelId = useId()
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [favoritesState, setFavoritesState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [savingFavorite, setSavingFavorite] = useState<string | null>(null)
+  const [favoriteRetry, setFavoriteRetry] = useState(0)
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') setFavoriteRetry(n => n + 1) }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => { window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh) }
+  }, [])
+
+  useEffect(() => {
+    let current = true
+    setFavorites([]); setFavoritesState('loading')
+    if (!userId) { setFavoritesState('error'); return }
+    supabase.from('cardio_favorites').select('workout_id').eq('user_id', userId).then(({data, error}: any) => {
+      if (!current) return
+      if (error) { setFavoritesState('error'); return }
+      setFavorites((data || []).map((row: any) => row.workout_id)); setFavoritesState('ready')
+    }).catch(() => { if (current) setFavoritesState('error') })
+    return () => { current = false }
+  }, [supabase, userId, favoriteRetry])
+  async function toggleFavorite(id: string) {
+    if (!userId || savingFavorite || favoritesState !== 'ready') return
+    setSavingFavorite(id)
+    const exists = favorites.includes(id)
+    try {
+      const { error } = exists
+        ? await supabase.from('cardio_favorites').delete().eq('user_id', userId).eq('workout_id', id)
+        : await supabase.from('cardio_favorites').insert({user_id: userId, workout_id: id})
+      if (error) throw error
+      setFavorites(previous => exists ? previous.filter(value => value !== id) : [...previous, id])
+    } catch { toast.error(tf('favoriteError')) }
+    finally { setSavingFavorite(null) }
+  }
+
 
   const allWorkouts = [...HIIT_WORKOUTS, ...LISS_WORKOUTS]
   const filtered = filter === 'all' ? allWorkouts : allWorkouts.filter(w => w.type === filter)
-
-  // Suggest today's cardio (rotate based on day of week)
-  const dayIdx = new Date().getDay()
-  const suggestedHiit = HIIT_WORKOUTS[dayIdx % HIIT_WORKOUTS.length]
-  const suggestedLiss = LISS_WORKOUTS[dayIdx % LISS_WORKOUTS.length]
 
   if (activeWorkout) {
     return (
@@ -49,12 +82,10 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
   return (
     <section
       data-training-section-card="cardio"
-      style={{ background: '#1d1c19', border: 0, borderRadius: 18, padding: 18 }}
+      className={overviewStyles.card}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
-        <h2 style={{ margin: 0, color: '#eee9df', fontFamily: FONT_BODY, fontSize: '1.32rem', fontWeight: 750, letterSpacing: '-.025em', lineHeight: 1.25 }}>
-          {t('ui.title')}
-        </h2>
+        <h2 className={overviewStyles.label}><HeartPulse size={24} aria-hidden="true" />{t('ui.title')}</h2>
         <span style={{ color: colors.textDim, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
           {t('ui.optionsCount', { count: allWorkouts.length })}
         </span>
@@ -78,11 +109,13 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
 
       {expanded && (
         <div id={panelId} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Suggested workouts */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <WorkoutCard workout={suggestedHiit} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(suggestedHiit)} />
-            <WorkoutCard workout={suggestedLiss} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(suggestedLiss)} />
-          </div>
+          <h3 style={{margin:0,fontSize:'1.05rem',fontWeight:750}}>{tf('favorites')}</h3>
+          {favoritesState === 'loading' ? <p role="status" className={overviewStyles.hint}>{tf('favoritesLoading')}</p> : favoritesState === 'error' ? <button className={overviewStyles.link} onClick={() => setFavoriteRetry(n => n + 1)}>{tf('error')} · {tf('retry')}</button> : <>
+            {favorites.length === 0 && <p className={overviewStyles.hint}>{tf('noFavorites')}</p>}
+            <div style={{display:'grid',gridTemplateColumns:'1fr',gap:8}}>
+              {allWorkouts.filter(w => favorites.includes(w.id)).map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(w)} favorite favoriteDisabled={!!savingFavorite} onFavorite={() => toggleFavorite(w.id)} />)}
+            </div>
+          </>}
 
           {/* Library toggle */}
           <button type="button" onClick={() => setShowLibrary(!showLibrary)} style={{ minHeight: 44, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', color: GOLD, textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}>
@@ -100,8 +133,8 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
                   )
                 })}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(w)} />)}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                {filtered.map(w => <WorkoutCard key={w.id} workout={w} weight={weight} weightIsReal={weightIsReal} setModal={setModal} onStart={() => setActiveWorkout(w)} favorite={favorites.includes(w.id)} favoriteDisabled={!!savingFavorite || favoritesState !== 'ready'} onFavorite={() => toggleFavorite(w.id)} />)}
               </div>
             </>
           )}
@@ -111,23 +144,18 @@ export default function CardioSection({ supabase, userId, weight, weightIsReal, 
   )
 }
 
-function WorkoutCard({ workout, weight, weightIsReal, setModal, onStart }: { workout: CardioWorkout; weight: number; weightIsReal: boolean; setModal: (m: string | null) => void; onStart: () => void }) {
+function WorkoutCard({ workout, weight, weightIsReal, setModal, onStart, favorite, favoriteDisabled, onFavorite }: { workout: CardioWorkout; weight: number; weightIsReal: boolean; setModal: (m: string | null) => void; onStart: () => void; favorite?: boolean; favoriteDisabled?: boolean; onFavorite: () => void }) {
   const t = useTranslations('cardio')
-  const cal = estimateCalories(workout, weight)
-  const isHiit = workout.type === 'hiit'
-  return (
-    <div role="button" tabIndex={0} onClick={onStart} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStart() } }} style={{ background: '#27251f', border: 0, borderRadius: 14, padding: 14, textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 6, background: isHiit ? 'rgba(239,68,68,0.15)' : 'rgba(96,165,250,0.15)', border: `1px solid ${isHiit ? RED : 'rgba(96,165,250,0.5)'}`, fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: isHiit ? RED : 'rgba(96,165,250,1)', textTransform: 'uppercase' }}>{workout.type}</span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>🕐 {workout.duration_min} {t('ui.minShort')}</span>
-      </div>
-      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 400, color: TEXT_PRIMARY, textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.2 }}>{t(`workouts.${workout.id}.name`)}</div>
-      <div style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: GOLD, textTransform: 'uppercase' }}>~{cal} kcal</div>
-      {weightIsReal
-        ? <div style={{ fontFamily: FONT_BODY, fontSize: 9, color: TEXT_MUTED, marginTop: 3 }}>{t('ui.weightEstimate', { weight })}</div>
-        : <span onClick={(e) => { e.stopPropagation(); setModal('weight') }} style={{ fontFamily: FONT_BODY, fontSize: 9, color: GOLD, opacity: 0.6, marginTop: 3, cursor: 'pointer' }}>{t('ui.weightPrompt')} ›</span>}
+  const tf = useTranslations('training_tab.overview')
+  return <div style={{padding:'12px 0',borderTop:'1px solid #39362e'}}>
+    <div style={{display:'flex',alignItems:'center',gap:12}}>
+      <button type="button" onClick={onStart} className={overviewStyles.catalogRow} style={{border:0,flex:1}}>
+        <span><strong>{t(`workouts.${workout.id}.name`)}</strong><small>{workout.type.toUpperCase()} · {workout.duration_min} {t('ui.minShort')} · ~{estimateCalories(workout, weight)} kcal</small></span><ChevronRight size={16} />
+      </button>
+      <button type="button" aria-label={`${tf(favorite ? 'unfavorite' : 'favorite')} : ${t(`workouts.${workout.id}.name`)}`} aria-pressed={!!favorite} disabled={favoriteDisabled} onClick={onFavorite} style={{width:44,height:44,flexShrink:0,border:0,borderRadius:12,background:'#29261e',color:'#dfc27a',cursor:'pointer'}}><Star size={20} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
     </div>
-  )
+    {!weightIsReal && <button className={overviewStyles.link} onClick={() => setModal('weight')}>{t('ui.weightPrompt')}<ChevronRight size={16} /></button>}
+  </div>
 }
 
 /* ═══════════════════════════════════ HIIT TIMER ═══════════════════════════════════ */
