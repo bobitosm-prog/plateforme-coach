@@ -1,6 +1,6 @@
 'use client'
 
-import { Apple, ArrowUpRight, Camera, HeartPulse, ScanLine } from 'lucide-react'
+import { Apple, ChevronRight, Camera, HeartPulse, ScanLine } from 'lucide-react'
 import { useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -108,7 +108,7 @@ export default function DailyStatus({
           </div>
           <div className={styles.statusTileActions}>
             {onOpenNutrition && <button type="button" className={styles.statusTileLink} onClick={onOpenNutrition}>
-              {t('actions.open_nutrition')} <ArrowUpRight size={15} aria-hidden="true" />
+              {t('actions.open_nutrition')} <ChevronRight size={16} aria-hidden="true" />
             </button>}
             {onNutritionPhoto && <button type="button" className={styles.statusTileIconAction} onClick={onNutritionPhoto} aria-label={nutritionQuickT('photoLabel')}><Camera size={18} aria-hidden="true" /></button>}
             {onNutritionBarcode && <button type="button" className={styles.statusTileIconAction} onClick={onNutritionBarcode} aria-label={nutritionQuickT('barcodeLabel')}><ScanLine size={18} aria-hidden="true" /></button>}
@@ -151,7 +151,7 @@ export default function DailyStatus({
         </div>
         <div className={styles.statusTileActions}>
           <button type="button" className={styles.statusTileLink} onClick={onOpenRecovery}>
-            {t('actions.open_recovery')} <ArrowUpRight size={15} aria-hidden="true" />
+            {t('actions.open_recovery')} <ChevronRight size={16} aria-hidden="true" />
           </button>
         </div>
       </article>
