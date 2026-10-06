@@ -430,7 +430,7 @@ function CoachAppContent() {
   }), [h.coachProgram, h.loading, h.workoutHistoryState, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession, homeWeeklyProgress])
 
   const homeModel = useHomeDashboardModel({
-    enabled: h.userRole === 'client' && Boolean(h.session?.user?.id),
+    enabled: (h.userRole === 'client' || h.userRole === 'admin') && Boolean(h.session?.user?.id),
     supabase: h.supabase,
     userId: h.session?.user?.id,
     base: homeBase,
