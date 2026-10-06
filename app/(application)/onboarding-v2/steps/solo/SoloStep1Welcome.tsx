@@ -1,7 +1,7 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { Dumbbell } from 'lucide-react'
-import { colors, fonts, radii } from '@/lib/design-tokens'
+import { colors, fonts, radii } from '@/lib/app-design-tokens'
 
 export default function SoloStep1Welcome() {
   const t = useTranslations('onboarding_v2')

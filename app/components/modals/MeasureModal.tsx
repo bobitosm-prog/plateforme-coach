@@ -9,7 +9,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import {
   BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 
 interface MeasureModalProps {
   measurements: any[]
@@ -49,8 +49,8 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, overflowY: 'auto' }}>
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 64, minHeight: '90vh' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY }}>{t('measureModal.title')}</h3>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.025em', margin: 0, color: TEXT_PRIMARY }}>{t('measureModal.title')}</h3>
+          <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, flexShrink: 0, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
         </div>
 
         {/* Inputs */}
@@ -85,14 +85,14 @@ export default function MeasureModal({ measurements, onSave, onClose }: MeasureM
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           <button
             onClick={onClose}
-            style={{ flex: 1, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, padding: '16px', borderRadius: 12, cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms' }}
+            style={{ flex: 1, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, padding: '16px', borderRadius: 12, cursor: 'pointer', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'all 200ms' }}
           >
             {t('measureModal.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={!hasValue}
-            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 200ms',  }}
+            style={{ flex: 2, background: hasValue ? GOLD : '#2A2A2A', color: hasValue ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: hasValue ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'all 200ms',  }}
           >
             {t('measureModal.save')}
           </button>

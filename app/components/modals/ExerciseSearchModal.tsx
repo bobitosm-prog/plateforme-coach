@@ -11,7 +11,7 @@ import {
   BG_BASE, BG_CARD, BG_CARD_2, BORDER, TEXT_MUTED, TEXT_PRIMARY, ORANGE, GOLD,
   MUSCLE_COLORS, MUSCLE_GROUPS_FILTER,
   RADIUS_CARD, FONT_DISPLAY, FONT_ALT, FONT_BODY, colors, Z_MODAL,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 import { getExerciseImage } from '../../../lib/exercise-media'
 
 interface ExerciseSearchModalProps {
@@ -73,11 +73,11 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <button
                 onClick={() => { onClose(); }}
-                style={{ width: 36, height: 36, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                style={{ width: 44, height: 44, borderRadius: 12, background: BG_CARD_2, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
               >
                 <X size={16} color={TEXT_MUTED} />
               </button>
-              <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: 0, textTransform: 'uppercase', color: TEXT_PRIMARY }}>BASE D'EXERCICES</h2>
+              <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.025em', margin: 0, textTransform: 'none', color: TEXT_PRIMARY }}>Mes exercices.</h2>
             </div>
             {/* Search bar */}
             <div style={{ position: 'relative', marginBottom: 12 }}>
@@ -208,11 +208,11 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
                       {getMuscleLabel(selectedExDb.muscle_group, locale, tMuscle)}
                     </span>
                   )}
-                  <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '2px', margin: '8px 0 0', textTransform: 'uppercase', color: TEXT_PRIMARY }}>
+                  <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.025em', margin: '8px 0 0', textTransform: 'none', color: TEXT_PRIMARY }}>
                     {getExerciseName(selectedExDb, locale)}
                   </h3>
                 </div>
-                <button onClick={() => setSelectedExDb(null)} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button onClick={() => setSelectedExDb(null)} style={{ width: 44, height: 44, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <X size={14} color={TEXT_MUTED} />
                 </button>
               </div>

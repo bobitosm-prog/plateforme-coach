@@ -1,7 +1,7 @@
 .shell {
   min-height: 100dvh;
-  background: #090806;
-  color: #f7f2e8;
+  background: #111110;
+  color: #f5f2ea;
   display: grid;
   place-items: center;
   font-family: var(--font-body), sans-serif;
@@ -13,24 +13,24 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #0d0b08;
+  background: #111110;
 }
 
-.header { margin: 16px 16px 0; padding: 20px; border: 1px solid rgba(230,195,100,.18); border-radius: 24px; background: radial-gradient(circle at 88% 18%,rgba(230,195,100,.13),transparent 40%),linear-gradient(145deg,#15130f,#0d0c0a 72%); }
+.header { margin: 16px 16px 0; padding: 20px; border: 1px solid rgba(230,195,100,.18); border-radius: 24px; background: #211f18; }
 .header > div { display: flex; justify-content: space-between; }
 .header strong { font-size: 20px; }
-.header span { color: #aa9f8c; font-size: 13px; }
+.header span { color: #aaa69b; font-size: 13px; }
 .header ol { display: flex; gap: 8px; list-style: none; padding: 0; margin: 14px 0 0; }
 .header li { height: 4px; flex: 1; border-radius: 9px; background: #29241c; }
-.header .active { background: #e6c364; }
+.header .active { background: #dfbf70; }
 
 .content { flex: 1; overflow: auto; padding: 18px 20px 28px; }
 .title h1 { font-size: clamp(27px, 7vw, 38px); line-height: 1.05; letter-spacing: -.035em; margin: 0 0 8px; text-transform: none; }
-.title p { color: #aa9f8c; margin: 0 0 22px; line-height: 1.45; }
+.title p { color: #aaa69b; margin: 0 0 22px; line-height: 1.45; }
 .content > div + div,
 .group { margin-top: 18px; }
 .group,
-.row { padding: 15px; border: 1px solid rgba(201,168,76,.18); border-radius: 20px; background: #12110f; }
+.row { padding: 15px; border: 1px solid #393326; border-radius: 20px; background: #211f18; }
 
 .disclosure {
   width: 100%;
@@ -38,8 +38,8 @@
   margin-top: 20px;
   border: 1px solid #403523;
   border-radius: 12px;
-  background: #17130e;
-  color: #e6c364;
+  background: #211f18;
+  color: #dfbf70;
 }
 
 .restrictions {
@@ -53,38 +53,38 @@
 }
 .restrictions legend { padding: 0 6px; color: #cfc4b2; }
 /* Keep radio cards separate from the conditional free-text field. */
-.restrictionChoice { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 14px; border: 1px solid rgba(201,168,76,.22); border-radius: 16px; background: #12110f; color: #f7f4ed; cursor: pointer; }
-.restrictionChoice:has(input:checked) { border-color: #e6c364; background: rgba(230,195,100,.1); }
-.restrictionChoice input { flex: 0 0 22px; width: 22px; height: 22px; margin: 0; accent-color: #e6c364; }
+.restrictionChoice { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 14px; border: 1px solid #393326; border-radius: 16px; background: #211f18; color: #f7f4ed; cursor: pointer; }
+.restrictionChoice:has(input:checked) { border-color: #dfbf70; background: rgba(230,195,100,.1); }
+.restrictionChoice input { flex: 0 0 22px; width: 22px; height: 22px; margin: 0; accent-color: #dfbf70; }
 .restrictionChoice span { min-width: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
 .restrictionDetails { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; color: #d0c5b2; }
 .restrictionDetails input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #51462c; border-radius: 12px; background: #0d0c0a; color: #f7f4ed; padding: 12px; font: inherit; }
 .groupTitle { margin: 0 0 16px; color: #f7f4ed; font-size: 18px; line-height: 1.4; text-transform: none; letter-spacing: -.01em; }
-.optionCard { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 76px; padding: 16px; border: 1px solid rgba(201,168,76,.22); border-radius: 18px; background: #12110f; color: #f7f4ed; text-align: left; font: inherit; cursor: pointer; }
-.optionCard[aria-pressed='true'] { border-color: #e6c364; background: linear-gradient(135deg,rgba(230,195,100,.14),rgba(201,168,76,.05)); }
-.optionIcon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 12px; background: rgba(230,195,100,.08); color: #e6c364; }
+.optionCard { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 76px; padding: 16px; border: 1px solid #393326; border-radius: 18px; background: #211f18; color: #f7f4ed; text-align: left; font: inherit; cursor: pointer; }
+.optionCard[aria-pressed='true'] { border-color: #dfbf70; background: #302b1e; }
+.optionIcon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 12px; background: rgba(230,195,100,.08); color: #dfbf70; }
 .optionLabel { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
 .optionCheck { display: grid; place-items: center; flex: 0 0 24px; height: 24px; border: 1px solid #817454; border-radius: 50%; }
-.optionCard[aria-pressed='true'] .optionCheck { color: #151108; background: #e6c364; border-color: #e6c364; }
+.optionCard[aria-pressed='true'] .optionCheck { color: #151108; background: #dfbf70; border-color: #dfbf70; }
 .app *, .app *::before, .app *::after { box-sizing: border-box; }
-.app button:focus-visible, .app input:focus-visible { outline: 3px solid #e6c364; outline-offset: 3px; }
+.app button:focus-visible, .app input:focus-visible { outline: 3px solid #dfbf70; outline-offset: 3px; }
 .app input { max-width: 100%; }
 
 .summary { display: flex; flex-direction: column; gap: 10px; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .row > div { min-width: 0; overflow-wrap: anywhere; }
 .row p { margin: 4px 0 0; color: #aaa08f; }
-.row button { min-height: 44px; border: 0; background: transparent; color: #e6c364; }
-.macros { display: flex; flex-direction: column; gap: 5px; padding: 18px; border-radius: 15px; background: #e6c364; color: #17120a; }
+.row button { min-height: 44px; border: 0; background: transparent; color: #dfbf70; }
+.macros { display: flex; flex-direction: column; gap: 5px; padding: 18px; border-radius: 15px; background: #dfbf70; color: #17120a; }
 .macros b { font-size: 29px; }
 .error { padding: 12px; border: 1px solid #8c4545; border-radius: 12px; background: #281616; color: #ffd0d0; }
 
 .nav { display: flex; gap: 10px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); }
 .primary,
 .back { min-height: 52px; border-radius: 14px; font: inherit; font-weight: 700; }
-.primary { flex: 1; border: 0; background: linear-gradient(135deg,#f0d27c,#c9a84c); color: #17120a; }
+.primary { flex: 1; border: 0; background: #dfbf70; color: #17120a; }
 .primary:disabled { opacity: .45; }
-.back { width: 52px; border: 1px solid #403523; background: #17130e; color: #e6c364; }
+.back { width: 52px; border: 1px solid #403523; background: #211f18; color: #dfbf70; }
 
 @media (max-width: 430px) {
   .content { padding-top: 12px; }
@@ -102,3 +102,22 @@
 @media (prefers-reduced-motion: reduce) {
   .app * { animation: none !important; transition: none !important; }
 }
+
+/* Shared application hierarchy; page contents scroll without moving the footer. */
+.shell { --font-alt:var(--font-body); --font-display:var(--font-body); --font-headline:var(--font-body); --font-dm-sans:var(--font-body); }
+.app { height:100dvh; min-height:0; overflow:hidden; }
+.header { flex:0 0 auto; margin:0; padding:max(20px,env(safe-area-inset-top,0px)) 20px 16px; border:0; border-radius:0; background:none; }
+.header strong { font-size:20px; letter-spacing:.16em; text-transform:uppercase; }
+.header strong span { color:#dfbf70; font-size:inherit; }
+.header li { background:#393326; }
+.content { min-height:0; overscroll-behavior:contain; overflow-x:hidden; }
+.title h1 { font-family:var(--font-body),sans-serif; font-size:clamp(28px,7vw,36px); font-weight:750; letter-spacing:-.045em; color:#f5f2ea; }
+.title h1 em { display:block; color:#dec07a; font-style:normal; }
+.groupTitle { font-size:16px; font-weight:650; }
+.optionCard { border-radius:20px; }
+.nav { flex:0 0 auto; border-top:1px solid #393326; background:#111110; padding-bottom:max(16px,env(safe-area-inset-bottom,0px)); }
+.primary,.back { font-family:var(--font-body),sans-serif; font-size:15px; }
+.app input:not([type=checkbox]):not([type=radio]),.app select,.app textarea { font-size:16px; }
+.app button { cursor:pointer; }
+.app button:disabled { cursor:default; }
+@media(min-width:768px){.app{height:min(900px,calc(100dvh - 64px));min-height:0}}

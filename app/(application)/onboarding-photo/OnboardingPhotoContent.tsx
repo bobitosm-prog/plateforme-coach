@@ -6,7 +6,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, radii, cardStyle, pageTitleStyle, titleStyle, titleLineStyle, bodyStyle, labelStyle, mutedStyle, btnPrimary, btnSecondary } from '../../../lib/design-tokens'
+import { colors, fonts, radii, cardStyle, pageTitleStyle, titleStyle, titleLineStyle, bodyStyle, labelStyle, mutedStyle, btnPrimary, btnSecondary } from '../../../lib/app-design-tokens'
 import { Camera, ChevronLeft, Upload, Shield } from 'lucide-react'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()

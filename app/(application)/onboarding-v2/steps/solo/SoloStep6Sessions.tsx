@@ -1,6 +1,6 @@
 'use client'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, mutedStyle } from '@/lib/design-tokens'
+import { colors, fonts, mutedStyle } from '@/lib/app-design-tokens'
 
 interface SoloStep6SessionsProps {
   sessions: number

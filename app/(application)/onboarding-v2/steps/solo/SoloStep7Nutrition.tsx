@@ -1,7 +1,7 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { DIETARY_PATTERN_OPTS, NUTRITION_OPTS } from '@/lib/onboarding-options'
-import { colors, fonts } from '@/lib/design-tokens'
+import { colors, fonts } from '@/lib/app-design-tokens'
 import OptionStep from './shared/OptionStep'
 
 interface SoloStep7NutritionProps {

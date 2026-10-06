@@ -5,7 +5,7 @@ import {
   BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
   FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
   ACTIVITY_LEVELS, calcMifflinStJeor, calcKatchMcArdle, calcHarrisBenedict,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
 import { calculateAutomaticCalorieMacroTargets } from '../../../lib/nutrition/calorie-macro-targets'
 
@@ -76,10 +76,10 @@ export default function BmrModal({ supabase, session, profile, initialValues, on
       <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', marginTop: 40, minHeight: '90vh' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '2px', margin: '0 0 2px', color: TEXT_PRIMARY }}>CALCULATEUR BMR</h3>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.025em', margin: '0 0 2px', color: TEXT_PRIMARY }}>Calculateur BMR</h3>
             <p style={{ fontSize: '0.7rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Mifflin-St Jeor · Katch-McArdle · Harris-Benedict</p>
           </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
+          <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, flexShrink: 0, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           {[['weight', 'Poids', 'kg'], ['height', 'Taille', 'cm'], ['age', 'Âge', 'ans'], ['body_fat', '% Graisse (opt.)', '%']].map(([key, label, unit]) => (
@@ -119,7 +119,7 @@ export default function BmrModal({ supabase, session, profile, initialValues, on
             </button>
           ))}
         </div>
-        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,  }}>Calculer mon TDEE</button>
+        <button onClick={calculateBMR} style={{ width: '100%', background: GOLD, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', marginBottom: 20,  }}>Calculer mon TDEE</button>
         {bmrResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ background: BG_BASE, border: `1px solid ${GOLD_RULE}`, borderRadius: RADIUS_CARD, padding: 20 }}>

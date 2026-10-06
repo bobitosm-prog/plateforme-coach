@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, radii, cardStyle, titleStyle, bodyStyle, mutedStyle, btnPrimary, btnSecondary, statStyle } from '../../../lib/design-tokens'
+import { colors, fonts, radii, cardStyle, titleStyle, bodyStyle, mutedStyle, btnPrimary, btnSecondary, statStyle } from '../../../lib/app-design-tokens'
 import { Zap, Dumbbell, Target, Clock, ChevronLeft, Flame, Activity, TrendingUp, Award, UtensilsCrossed, BarChart3, Leaf, GraduationCap, Medal, Trophy, Armchair, PersonStanding, CheckCircle2 } from 'lucide-react'
 import { GOALS, ACTIVITY_OPTS, NUTRITION_OPTS, EXPERIENCE_OPTS, type OnboardingOption } from '@/lib/onboarding-options'
 

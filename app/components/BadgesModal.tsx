@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { RailOverlay } from './ui/RailOverlay'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { colors, fonts, titleStyle, titleLineStyle, cardStyle, cardTitleAbove, mutedStyle, radii } from '../../lib/design-tokens'
+import { colors, fonts, titleStyle, titleLineStyle, cardStyle, cardTitleAbove, mutedStyle, radii } from '../../lib/app-design-tokens'
 import { getProgress, type Badge } from '../../lib/check-badges'
 import { getLevelFromXP } from '../../lib/gamification'
 

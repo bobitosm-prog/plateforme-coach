@@ -2,7 +2,7 @@
 import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera } from 'lucide-react'
-import { colors, fonts, btnSecondary } from '@/lib/design-tokens'
+import { colors, fonts, btnSecondary } from '@/lib/app-design-tokens'
 
 interface SoloStep9PhotoBodyProps {
   photoUrl: string | null

@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import {
   colors, fonts, radii, cardStyle, btnPrimary, btnSecondary, inputStyle,
   modalOverlay, modalContainer, titleStyle,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 import { updateProfile } from '../../../lib/profile-service'
 import { buildObjectiveTransitionAnswers, type CanonicalObjective } from '../../../lib/athena/objective-transition'
 import { calculateAutomaticCalorieMacroTargets } from '../../../lib/nutrition/calorie-macro-targets'
@@ -151,8 +151,8 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: colors.textDim, letterSpacing: '0.15em' }}>{stepLabel}</span>
-          <button onClick={onClose} style={{ background: colors.divider, border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <span style={{ fontFamily: fonts.headline, fontSize: 12, fontWeight: 700, color: colors.textDim, letterSpacing: '0.15em' }}>{stepLabel}</span>
+          <button onClick={onClose} aria-label="Fermer" style={{ background: colors.divider, border: 'none', borderRadius: 8, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X size={14} color={colors.textMuted} />
           </button>
         </div>
@@ -162,7 +162,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 1 — OBJECTIF ═══ */}
         {step === 1 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step1Title')}</div>
+            <div style={{ ...titleStyle, fontSize: 20, letterSpacing: '-.025em', textTransform: 'none', color: colors.text, marginBottom: 20, textAlign: 'left' }}>{t('step1Title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               {OBJECTIVE_IDS.map(id => {
                 const selected = objective === id
@@ -197,7 +197,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 2 — POIDS ═══ */}
         {step === 2 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step2Title')}</div>
+            <div style={{ ...titleStyle, fontSize: 20, letterSpacing: '-.025em', textTransform: 'none', color: colors.text, marginBottom: 20, textAlign: 'left' }}>{t('step2Title')}</div>
 
             <label style={{ fontFamily: fonts.headline, fontSize: 9, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>{t('currentWeightLabel')}</label>
             <input
@@ -231,7 +231,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 3 — ACTIVITÉ ═══ */}
         {step === 3 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step3Title')}</div>
+            <div style={{ ...titleStyle, fontSize: 20, letterSpacing: '-.025em', textTransform: 'none', color: colors.text, marginBottom: 20, textAlign: 'left' }}>{t('step3Title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
               {ACTIVITY_IDS.map(id => {
                 const selected = activity === id
@@ -264,7 +264,7 @@ export default function ObjectiveModal({ profile, currentWeight, goalWeight, sup
         {/* ═══ STEP 4 — CONFIRMATION ═══ */}
         {step === 4 && (
           <>
-            <div style={{ ...titleStyle, fontSize: 13, marginBottom: 20, textAlign: 'center' }}>{t('step4Title')}</div>
+            <div style={{ ...titleStyle, fontSize: 20, letterSpacing: '-.025em', textTransform: 'none', color: colors.text, marginBottom: 20, textAlign: 'left' }}>{t('step4Title')}</div>
 
             {/* Summary card */}
             <div style={{ ...cardStyle, padding: 16, marginBottom: 16 }}>
