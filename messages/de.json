@@ -1,4 +1,13 @@
 {
+  "workoutDesign": {
+    "sessionLead": "Mein",
+    "sessionAccent": "Training.",
+    "exercisesLead": "Meine",
+    "exercisesAccent": "Übungen.",
+    "configureHint": "Lege Sätze, Wiederholungen und Pausen fest.",
+    "chooseHint": "Wähle Übungen für dein Training.",
+    "clearSearch": "Suche löschen"
+  },
   "workoutLedger": {"set": "Satz", "reps": "Wdh.", "done": "Bestätigter Satz", "sequence": "Sätze der Reihe nach bestätigen; die Übung ist jederzeit wechselbar.", "select": "Übungsoptionen", "biset": "Supersatz · {side} mit {partner}", "chain": "Ohne Pause mit A2 fortfahren", "pairRest": "Pause nach A2 · {seconds} s", "miniRest": "Kurze Pause zwischen den Minisätzen", "dropRest": "Keine Pause zwischen Reduktionen · danach {seconds} s", "rest": "Pause · {seconds} s", "techniqueDetails": "Technikdetails", "exerciseTools": "Notizen, Video und Austausch", "setOptions": "Satzeinstellungen · Last und RIR", "invalidSet": "Gültige Last (0 erlaubt) und mindestens eine Wiederholung eingeben."},
   "workoutMobile": {"invalidConfig": "Wähle 1–10 Sätze und eine Pause oder Dauer von höchstens 600 Sekunden.", "catalogError": "Der Katalog ist nicht verfügbar. Bitte suche erneut."},
   "workoutResume": {"completed": "Alle Sätze dieser Übung sind abgeschlossen.", "continue": "Eine offene Übung fortsetzen", "set": "Satz {number}"},

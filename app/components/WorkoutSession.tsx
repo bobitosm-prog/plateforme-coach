@@ -4,13 +4,15 @@ import { watchWorkout } from '@/lib/training/watch-workout'
 import { toast } from 'sonner'
 import WorkoutLedgerTable from './training-v2/WorkoutLedgerTable'
 import ledgerStyles from './training-v2/WorkoutLedger.module.css'
+import builderStyles from './training-v2/WorkoutBuilder.module.css'
+import homeStyles from './home-v2/HomeV2.module.css'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Check, Plus, ArrowLeft, Search, X, Dumbbell, Clock, CheckCircle2 } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { getExerciseName } from '../../lib/i18n-exercise'
 import { getMuscleLabel } from '../../lib/i18n-muscle'
 import { createBrowserClient } from '@supabase/ssr'
-import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, btnPrimary } from '../../lib/design-tokens'
+import { colors, BG_BASE, BORDER, GOLD, GOLD_DIM, GOLD_RULE, GREEN, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, btnPrimary } from '../../lib/design-tokens'
 import { Reorder } from 'framer-motion'
 import { initAudio, finishRestPeriodSounds, playWarningTick, vibrateDevice, scheduleRestPeriodSounds, cancelScheduledSounds, scheduleNativeRestNotification, cancelNativeRestNotification, type ScheduledSound } from '../../lib/timer-audio'
 import { getRestSeconds } from '../../lib/utils/exercise'
@@ -52,6 +54,8 @@ import { normalizeWorkoutDraftExercises } from '../../lib/training/active-workou
 import { bisetFor, relinkWorkoutBiset, startWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions, workoutBisetSetupOptions } from '../../lib/training/guided-techniques'
 import TechniqueGuidance from './training-v2/TechniqueGuidance'
 
+const WORKOUT_FONT = "var(--font-body), 'Outfit', sans-serif"
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -87,6 +91,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
   bisetPartner?: { name: string; targetSets: number; existingNames: readonly string[] }
 }) {
   const t = useTranslations('training_tab.ws')
+  const tDesign = useTranslations('workoutDesign')
   const tBiset = useTranslations('trainingBisetRecovery')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -133,149 +138,86 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
     const accepted = onStart(name, cfg.map(e => ({ exercise_id: e.id, equipment: e.equipment, exercise_name: e.name, muscle_group: e.muscle_group, sets: e.targetSets, reps: e.targetDurationSeconds ? 0 : e.targetReps, duration_seconds: e.targetDurationSeconds, rest_seconds: e.rest, notes: e.description, video_url: e.video_url })))
     if (accepted === false) { launched.current = false; setError(true) }
   }
-  const dc = (d: string) => d === 'debutant' ? GREEN : d === 'intermediaire' ? GOLD : RED
-
   if (step === 'config') return (
-    <div data-no-tab-swipe="true" className={trainingV2Styles.workoutBuilder} style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
-      <div style={{ flexShrink: 0, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 16, paddingLeft: 16, borderBottom: `1px solid ${BORDER}`, background: BG_BASE, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={() => setStep('build')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <ArrowLeft size={14} /> {t('back')}
-        </button>
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{t('builder.configure')}</span>
-      </div>
-      <div className={trainingV2Styles.builderScroll} style={{ flex: 1, paddingTop: 16, paddingRight: 16, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {bisetPartner && <p style={{ margin: 0, color: TEXT_MUTED }}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
-        {error && <p role="alert" style={{ color: RED }}>{tBiset('partnerFailed')}</p>}
-        {configError && <p role="alert">{mobile('invalidConfig')}</p>}
-        {cfg.map((e, i) => (
-          <div key={e.id} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 14, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 14 }}>{i + 1}</span>
+    <div data-no-tab-swipe="true" className={`${trainingV2Styles.workoutBuilder} ${builderStyles.shell}`}>
+      <header className={builderStyles.toolbar}>
+        <button type="button" onClick={() => setStep('build')}><ArrowLeft size={18} /> {t('back')}</button>
+        <span>{t('builder.configure')}</span>
+      </header>
+      <div className={`${trainingV2Styles.builderScroll} ${builderStyles.scroll}`}>
+        <div className={builderStyles.content}>
+          <h1 className={homeStyles.title}>{tDesign('sessionLead')}<br /><em>{tDesign('sessionAccent')}</em></h1>
+          <p className={builderStyles.description}>{tDesign('configureHint')}</p>
+          {bisetPartner && <p className={builderStyles.description}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
+          {error && <p role="alert">{tBiset('partnerFailed')}</p>}
+          {configError && <p role="alert">{mobile('invalidConfig')}</p>}
+          {cfg.map((e, i) => (
+            <section key={e.id} className={builderStyles.card}>
+              <div className={builderStyles.exerciseHeading}>
+                <span className={builderStyles.index}>{String(i + 1).padStart(2, '0')}</span>
+                <div><h2>{getExerciseName(e, locale)}</h2>{e.muscle_group && <p>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</p>}</div>
               </div>
-              <div>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
-                {e.muscle_group && <div style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_MUTED }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</div>}
+              <div className={builderStyles.fields}>
+                {[[t('builder.sets'), 'targetSets', 'number', ''], [e.targetDurationSeconds ? t('builder.duration') : t('builder.reps'), e.targetDurationSeconds ? 'targetDurationSeconds' : 'targetReps', 'text', e.targetDurationSeconds ? 's' : ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
+                  <label key={key}>{label}{unit && ` · ${unit}`}
+                    <input aria-label={`${label} · ${getExerciseName(e, locale)}`} min={key === 'rest' ? 0 : 1} max={key === 'targetSets' ? 10 : 600} type={type} value={(e as any)[key]} disabled={Boolean(bisetPartner && key === 'targetSets')}
+                      onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))} />
+                  </label>
+                ))}
               </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-              {[[t('builder.sets'), 'targetSets', 'number', ''], [e.targetDurationSeconds ? t('builder.duration') : t('builder.reps'), e.targetDurationSeconds ? 'targetDurationSeconds' : 'targetReps', 'text', e.targetDurationSeconds ? 's' : ''], [t('builder.rest'), 'rest', 'number', 's']].map(([label, key, type, unit]) => (
-                <div key={key} style={{ background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: 12 }}>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: TEXT_MUTED, textTransform: 'uppercase' as const, marginBottom: 6 }}>{label}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <input aria-label={String(label)} min={key === 'rest' ? 0 : 1} max={key === 'targetSets' ? 10 : 600} type={type} value={(e as any)[key]} disabled={Boolean(bisetPartner && key === 'targetSets')}
-                      onChange={ev => setCfg(p => p.map((x, j) => j !== i ? x : { ...x, [key]: type === 'number' ? parseInt(ev.target.value) || 0 : ev.target.value }))}
-                      style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: GOLD, fontFamily: FONT_DISPLAY, fontSize: 18 }} />
-                    {unit && <span style={{ fontSize: 11, color: TEXT_DIM, fontFamily: FONT_BODY }}>{unit}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+            </section>
+          ))}
+        </div>
       </div>
-      <div className={trainingV2Styles.builderFooter} style={{ paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.95)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${GOLD_RULE}`, zIndex: 51 }}>
-        <button onClick={launch} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-          {bisetPartner ? tBiset('confirmPartner') : t('builder.launchSession')}
-        </button>
+      <div className={`${trainingV2Styles.builderFooter} ${builderStyles.footer}`}>
+        <button type="button" onClick={launch} className={builderStyles.primary}>{bisetPartner ? tBiset('confirmPartner') : t('builder.launchSession')}</button>
       </div>
     </div>
   )
 
   return (
-    <div data-no-tab-swipe="true" className={trainingV2Styles.workoutBuilder} style={{ background: BG_BASE, fontFamily: FONT_BODY }}>
-      {/* Header */}
-      <div style={{ flexShrink: 0, background: BG_BASE, paddingTop: 'max(16px, env(safe-area-inset-top, 16px))', paddingRight: 16, paddingBottom: 10, paddingLeft: 16, borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: TEXT_MUTED, cursor: 'pointer', fontFamily: FONT_BODY, fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <ArrowLeft size={14} /> {t('back')}
-          </button>
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY }}>{bisetPartner ? tBiset('addPartner') : t('builder.add')}</span>
-          {selected.length > 0 ? (
-            <button onClick={goConfig} style={{ background: GOLD, color: colors.onGold, border: 'none', borderRadius: 12, padding: '8px 16px', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: 1, cursor: 'pointer' }}>{t('builder.next', { count: selected.length })}</button>
-          ) : <div style={{ width: 60 }} />}
-        </div>
-
-        {/* Selected tags */}
-        {selected.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-            {selected.map(e => (
-              <button key={e.id} onClick={() => toggle(e)} style={{ padding: '4px 10px', borderRadius: 10, background: GOLD_DIM, border: `1px solid ${GOLD_RULE}`, color: GOLD, fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                {getExerciseName(e, locale)} <X size={9} />
-              </button>
-            ))}
+    <div data-no-tab-swipe="true" className={`${trainingV2Styles.workoutBuilder} ${builderStyles.shell}`}>
+      <header className={builderStyles.toolbar}>
+        <button type="button" onClick={onCancel}><ArrowLeft size={18} /> {t('back')}</button>
+        {selected.length > 0 && <button type="button" onClick={goConfig} className={builderStyles.next}>{t('builder.next', { count: selected.length })}</button>}
+      </header>
+      <div className={`${trainingV2Styles.builderScroll} ${builderStyles.scroll}`}>
+        <div className={builderStyles.content}>
+          <h1 className={homeStyles.title}>{tDesign('exercisesLead')}<br /><em>{tDesign('exercisesAccent')}</em></h1>
+          <p className={builderStyles.description}>{bisetPartner ? tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets }) : tDesign('chooseHint')}</p>
+          {selected.length > 0 && <div className={builderStyles.selected}>
+            {selected.map(e => <button type="button" key={e.id} onClick={() => toggle(e)}>{getExerciseName(e, locale)} <X size={14} aria-hidden="true" /></button>)}
+          </div>}
+          <div className={builderStyles.search}>
+            <Search size={18} aria-hidden="true" />
+            <input aria-label={t('builder.searchPlaceholder')} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('builder.searchPlaceholder')} />
+            {search && <button type="button" aria-label={tDesign('clearSearch')} onClick={() => setSearch('')}><X size={18} /></button>}
           </div>
-        )}
-
-        {bisetPartner && <p style={{ margin: '0 0 10px', color: TEXT_MUTED, fontSize: 13 }}>{tBiset('partnerFor', { exercise: bisetPartner.name, count: bisetPartner.targetSets })}</p>}
-
-        {/* Search */}
-        <div style={{ position: 'relative', marginBottom: 10 }}>
-          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, pointerEvents: 'none' }} />
-          <input autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} inputMode="search" enterKeyHint="search"
-            value={search} onChange={e => setSearch(e.target.value)} placeholder={t('builder.searchPlaceholder')}
-            style={{ width: '100%', padding: '14px 44px 14px 36px', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12, color: TEXT_PRIMARY, fontSize: 16, fontFamily: FONT_BODY, outline: 'none' }} />
-          {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: GOLD_DIM, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <X size={12} color={GOLD} />
-            </button>
-          )}
-        </div>
-
-        {/* Muscle filters */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {muscleFilters.map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)} style={{
-              padding: '6px 14px', borderRadius: 10,
-              border: `1px solid ${filter === f.key ? GOLD : BORDER}`,
-              background: filter === f.key ? GOLD_DIM : colors.surface2,
-              color: filter === f.key ? GOLD : TEXT_MUTED,
-              fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
-            }}>{f.label}</button>
-          ))}
+          <div className={builderStyles.filters}>
+            {muscleFilters.map(f => <button type="button" key={f.key} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>{f.label}</button>)}
+          </div>
+          <section className={builderStyles.card} aria-label={t('builder.add')}>
+            <h2 className={builderStyles.eyebrow}>{t('builder.add')}</h2>
+            {dbExos.map((e: any) => {
+              const sel = !!selected.find(x => x.id === e.id)
+              const unavailable = Boolean(bisetPartner && (prescribedDuration(e) || bisetPartner.existingNames.includes(canonicalExerciseName(e.name))))
+              return <button type="button" className={builderStyles.choice} key={e.id} disabled={unavailable} aria-pressed={sel} onClick={() => toggle(e)}>
+                <Dumbbell size={20} aria-hidden="true" />
+                <span className={builderStyles.choiceText}><strong>{getExerciseName(e, locale)}</strong><small>{[e.muscle_group ? getMuscleLabel(e.muscle_group, locale, tMuscle) : null, e.equipment, e.difficulty ? t(`difficulty.${e.difficulty}`) : null].filter(Boolean).join(' · ')}</small></span>
+                <span className={builderStyles.check}>{sel ? <Check size={17} aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}</span>
+              </button>
+            })}
+            {error && <p role="alert">{mobile('catalogError')}</p>}
+            {dbExos.length === 0 && !error && <p className={builderStyles.description}>{t('builder.noResults')}</p>}
+          </section>
         </div>
       </div>
-
-      {/* Exercise list */}
-      <div className={trainingV2Styles.builderScroll} style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingTop: 8, paddingRight: 16, paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))', paddingLeft: 16 }}>
-        {dbExos.map((e: any) => {
-          const sel = !!selected.find(x => x.id === e.id)
-          const unavailable = Boolean(bisetPartner && (prescribedDuration(e) || bisetPartner.existingNames.includes(canonicalExerciseName(e.name))))
-          return (
-            <button key={e.id} disabled={unavailable} onClick={() => toggle(e)} style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-              padding: '14px 0', borderBottom: `1px solid ${BORDER}`,
-              background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
-              opacity: unavailable ? 0.35 : sel ? 0.5 : 1,
-            }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: sel ? GOLD : GOLD_DIM, border: `1px solid ${sel ? 'transparent' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {sel ? <Check size={16} color={colors.onGold} strokeWidth={3} /> : <Dumbbell size={15} color={TEXT_DIM} />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>{getExerciseName(e, locale)}</div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                  {e.muscle_group && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: GOLD_DIM, color: GOLD, letterSpacing: 1, textTransform: 'uppercase' as const }}>{getMuscleLabel(e.muscle_group, locale, tMuscle)}</span>}
-                  {e.difficulty && <span style={{ fontFamily: FONT_ALT, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: `${dc(e.difficulty)}18`, color: dc(e.difficulty), letterSpacing: 1 }}>{t(`difficulty.${e.difficulty}`)}</span>}
-                  {e.equipment && <span style={{ fontFamily: FONT_BODY, fontSize: 10, color: TEXT_DIM }}>{e.equipment}</span>}
-                </div>
-              </div>
-            </button>
-          )
-        })}
-        {error && <p role="alert">{mobile('catalogError')}</p>}
-        {dbExos.length === 0 && !error && <div style={{ textAlign: 'center', padding: 40, color: TEXT_MUTED, fontSize: 14 }}>{t('builder.noResults')}</div>}
-      </div>
-
-      {/* Bottom button */}
-      {selected.length > 0 && (
-        <div className={trainingV2Styles.builderFooter} style={{ paddingTop: 12, paddingRight: 16, paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))', paddingLeft: 16, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(16px)', borderTop: `1px solid ${BORDER}` }}>
-          <button onClick={goConfig} style={{ width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold, fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, cursor: 'pointer' }}>
-            {bisetPartner ? tBiset('confirmPartner') : t('builder.addExercises', { count: selected.length })}
-          </button>
-        </div>
-      )}
+      {selected.length > 0 && <div className={`${trainingV2Styles.builderFooter} ${builderStyles.footer}`}>
+        <button type="button" onClick={goConfig} className={builderStyles.primary}>{bisetPartner ? tBiset('confirmPartner') : t('builder.addExercises', { count: selected.length })}</button>
+      </div>}
     </div>
   )
+
 }
 
 export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
@@ -289,6 +231,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const startedAt = draft.startedAt
   const raw = draft.exercises
   const t = useTranslations('training_tab.ws')
+  const tDesign = useTranslations('workoutDesign')
   const tv2 = useTranslations('training_tab.v2')
   const tResume = useTranslations('workoutResume')
   const tLedger = useTranslations('workoutLedger')
@@ -907,7 +850,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
 
   return (
     <TrainingV2 session>
-    <div data-no-tab-swipe="true" className={`${trainingV2Styles.sessionShell} ${trainingV2Styles.workoutViewport} ${ledgerStyles.shell} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: FONT_BODY }}>
+    <div data-no-tab-swipe="true" className={`${trainingV2Styles.sessionShell} ${trainingV2Styles.workoutViewport} ${ledgerStyles.shell} fixed inset-0 z-50 overflow-y-auto`} style={{ fontFamily: WORKOUT_FONT }}>
       <style>{`
         .ws-input { -webkit-appearance: none; appearance: none; }
         .ws-input::-webkit-inner-spin-button,
@@ -933,10 +876,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       {(saving || saveError) && (
         <div role="alertdialog" aria-modal="true" aria-labelledby="workout-save-status" style={{ position: 'fixed', inset: 0, zIndex: 10020, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 360, padding: 24, borderRadius: 18, background: BG_BASE, border: `1px solid ${saveError ? RED : GOLD}`, textAlign: 'center' }}>
-            <h2 id="workout-save-status" style={{ margin: '0 0 10px', color: saveError ? RED : GOLD, fontFamily: FONT_ALT, fontSize: 17 }}>
+            <h2 id="workout-save-status" style={{ margin: '0 0 10px', color: saveError ? RED : GOLD, fontFamily: WORKOUT_FONT, fontSize: 17 }}>
               {saving ? t('done.saving') : t('done.saveErrorTitle')}
             </h2>
-            <p style={{ margin: '0 0 20px', color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 20px', color: TEXT_MUTED, fontFamily: WORKOUT_FONT, fontSize: 14, lineHeight: 1.5 }}>
               {saving
                 ? t('done.saving')
                 : t('done.saveErrorDescription')}
@@ -953,13 +896,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       {draftPrompt && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: BG_BASE, border: `1px solid ${GOLD}`, borderRadius: 20, padding: 24, maxWidth: 360, width: '100%', animation: 'wsPopIn 0.3s ease-out' }}>
-            <h2 style={{ fontFamily: FONT_ALT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>{t('draft.title')}</h2>
-            <p style={{ fontFamily: FONT_BODY, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
+            <h2 style={{ fontFamily: WORKOUT_FONT, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.95rem', fontWeight: 800, color: GOLD, margin: '0 0 12px' }}>{t('draft.title')}</h2>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: '0.875rem', color: TEXT_MUTED, lineHeight: 1.55, margin: '0 0 24px' }}>
               {t('draft.description', { name: sessionName })}
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.restart')}</button>
-              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: FONT_ALT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
+              <button onClick={discardDraft} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT_PRIMARY, fontFamily: WORKOUT_FONT, fontWeight: 700, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.restart')}</button>
+              <button onClick={resumeDraft} style={{ flex: 2, padding: '12px', background: GOLD, border: 'none', borderRadius: 10, color: colors.onGold, fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' as const, cursor: 'pointer' }}>{t('draft.resume')}</button>
             </div>
           </div>
         </div>
@@ -981,7 +924,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       </header>
       <div className={ledgerStyles.content}>
         <div className={ledgerStyles.intro}>
-          <h1>{sessionName || t('freeSession')}</h1>
+          <h1 className={homeStyles.title}>{tDesign('sessionLead')}<br /><em>{tDesign('sessionAccent')}</em></h1>
+          <h2>{sessionName || t('freeSession')}</h2>
           <p>{draft.programSource === 'coach' ? tv2('coachPlan') : draft.programSource === 'personal' ? tv2('personalProgram') : t('freeSession')}</p>
           <p>{tv2('completedSetProgress', {current:completed,total})}</p>
           <WatchWorkoutControls key={draft.draftId} draftId={draft.draftId}/>
@@ -989,8 +933,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
             <Dumbbell size={32} color={TEXT_DIM} style={{ marginBottom: 12 }} />
-            <p style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>{t('emptyTitle')}</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: TEXT_DIM, margin: 0 }}>{t('emptyHint')}</p>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: 14, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 1, margin: '0 0 4px' }}>{t('emptyTitle')}</p>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: 12, color: TEXT_DIM, margin: 0 }}>{t('emptyHint')}</p>
           </div>
         )}
 
@@ -998,8 +942,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         {reorderMode && (
           <div>
             <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(201,168,76,0.10)' }}>
-              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: FONT_ALT }}>{t('reorder.title')}</div>
-              <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: FONT_BODY }}>{t('reorder.hint')}</div>
+              <div style={{ fontSize: 11, letterSpacing: '0.18em', fontWeight: 700, color: GOLD, fontFamily: WORKOUT_FONT }}>{t('reorder.title')}</div>
+              <div style={{ fontSize: 10, color: TEXT_DIM, marginTop: 4, fontFamily: WORKOUT_FONT }}>{t('reorder.hint')}</div>
             </div>
             <Reorder.Group axis="y" values={exos} onReorder={(newOrder) => {
               // Track the exercise identity across list moves, not its old position.
@@ -1032,10 +976,10 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                     cursor: 'grabbing',
                   }}
                 >
-                  <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: FONT_ALT, fontWeight: 700 }}>{idx + 1}</span>
+                  <span style={{ fontSize: 11, color: 'rgba(201,168,76,0.5)', letterSpacing: '0.15em', flexShrink: 0, minWidth: 16, fontFamily: WORKOUT_FONT, fontWeight: 700 }}>{idx + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 700, lineHeight: 1.2, fontFamily: FONT_BODY }}>{getExerciseName(exo, locale)}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: FONT_BODY }}>{exo.muscle ? `${getMuscleLabel(exo.muscle, locale, tMuscle)} · ` : ''}{t('done.setsCount', { count: exo.targetSets })}</div>
+                    <div style={{ fontSize: 15, color: TEXT_PRIMARY, fontWeight: 700, lineHeight: 1.2, fontFamily: WORKOUT_FONT }}>{getExerciseName(exo, locale)}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(245,241,232,0.5)', marginTop: 2, fontFamily: WORKOUT_FONT }}>{exo.muscle ? `${getMuscleLabel(exo.muscle, locale, tMuscle)} · ` : ''}{t('done.setsCount', { count: exo.targetSets })}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: 4, flexShrink: 0 }}>
                     <div style={{ width: 18, height: 2, background: GOLD, borderRadius: 1 }} />
@@ -1045,7 +989,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-            <button onClick={() => setReorderMode(false)} style={{ width: '100%', minHeight: 44, background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: colors.onGold, letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: FONT_ALT }}>{t('reorder.done')}</button>
+            <button onClick={() => setReorderMode(false)} style={{ width: '100%', minHeight: 44, background: GOLD, padding: 14, borderRadius: 12, border: 'none', textAlign: 'center', fontSize: 13, fontWeight: 800, color: colors.onGold, letterSpacing: '0.15em', marginTop: 18, cursor: 'pointer', fontFamily: WORKOUT_FONT }}>{t('reorder.done')}</button>
           </div>
         )}
 
@@ -1095,7 +1039,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             : 'repairBiset'
           const namedPartnerPresent = exos.some((member, memberIndex) => memberIndex !== idx && member.name === exo.techniqueDetails)
           return (
-            <section key={exo.id} id={`ledger-${exo.id}`} className={ledgerStyles.exercise} data-paired={paired}>
+            <section key={exo.id} id={`ledger-${exo.id}`} className={ledgerStyles.exercise} data-paired={paired} data-pair-side={paired ? (bisetFor(exos, idx)!.a === idx ? 'first' : 'second') : undefined}>
               <div className={ledgerStyles.title}><h2>{getExerciseName(exo, locale)}</h2><button type="button" aria-label={`${exo.name}, ${tLedger('select')}`} aria-expanded={menuExerciseId===exo.id} aria-controls={`options-${exo.id}`} onClick={()=>{selectExercise(idx);setMenuExerciseId(current=>current===exo.id?null:exo.id)}}>···</button></div>
               {paired && <div className={ledgerStyles.pair}>{tLedger('biset', {side:bisetFor(exos,idx)!.a===idx?'A1':'A2',partner:exos[bisetFor(exos,idx)!.a===idx?bisetFor(exos,idx)!.b:bisetFor(exos,idx)!.a].name})}</div>}
               <div className={ledgerStyles.meta}>{[techniqueSummary,!exo.targetDurationSeconds?tLoad(exo.loadMode??'legacy'):null,exo.rir!=null?`RIR ${exo.rir}`:null,targetLabel,selected&&firstUndone>=0?tv2('currentSet',{current:activeSetNumber,total:exo.sets.length}):null].filter(Boolean).join(' · ')}</div>
@@ -1256,7 +1200,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         {/* Reorder link — visible only in normal mode with 2+ exos */}
         {exos.length >= 2 && !reorderMode && (
           <div style={{ textAlign: 'center', padding: '6px 0', marginBottom: 14 }}>
-            <button onClick={() => setReorderMode(true)} style={{ minHeight: 44, background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: FONT_BODY }}>{t('reorderLink')}</button>
+            <button onClick={() => setReorderMode(true)} style={{ minHeight: 44, background: 'transparent', border: 'none', fontSize: 12, color: 'rgba(201,168,76,0.6)', letterSpacing: '0.05em', textDecoration: 'underline', textDecorationColor: 'rgba(201,168,76,0.3)', textUnderlineOffset: 3, cursor: 'pointer', fontFamily: WORKOUT_FONT }}>{t('reorderLink')}</button>
           </div>
         )}
 
@@ -1269,17 +1213,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         <button
           onClick={() => { setBisetSourceId(null); setMode('custom') }}
           aria-label={t('addExercise')}
-          className="active:scale-90"
-          style={{
-            position: 'relative',
-            margin: '12px auto calc(32px + env(safe-area-inset-bottom, 0px))',
-            minWidth: 160, minHeight: 44, borderRadius: 12,
-            background: 'transparent', color: GOLD, border: `1px solid ${GOLD_RULE}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(212,175,55,0.3)',
-            cursor: 'pointer',
-            transition: 'transform 120ms ease',
-          }}
+          className={ledgerStyles.addExercise}
         >
           {t('addExercise')}
         </button>
@@ -1293,8 +1227,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           <div style={{ background: BG_BASE, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTop: `1px solid ${BORDER}`, width: '100%', maxWidth: 480, padding: 24, paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', animation: 'wsSlideUp 300ms ease-out' }}>
             {/* Handle */}
             <div style={{ width: 40, height: 4, background: 'rgba(201,168,76,0.3)', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>{t('endModal.title')}</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.question')}</p>
+            <h3 style={{ fontFamily: WORKOUT_FONT, fontSize: 20, letterSpacing: 2, color: TEXT_PRIMARY, textAlign: 'center', margin: '0 0 4px' }}>{t('endModal.title')}</h3>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: 13, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 20px' }}>{t('endModal.question')}</p>
             {/* Summary stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
               {([
@@ -1304,20 +1238,20 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               ]).map(stat => (
                 <div key={stat.label} style={{ padding: '10px 6px', textAlign: 'center', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>{stat.icon}</div>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{stat.value}</div>
-                  <div style={{ fontFamily: FONT_ALT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{stat.label}</div>
+                  <div style={{ fontFamily: WORKOUT_FONT, fontSize: 15, color: GOLD, letterSpacing: 1 }}>{stat.value}</div>
+                  <div style={{ fontFamily: WORKOUT_FONT, fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' as const, color: TEXT_DIM, marginTop: 2 }}>{stat.label}</div>
                 </div>
               ))}
             </div>
             {sessionModified && (
-              <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 16px' }}>
+              <p style={{ fontFamily: WORKOUT_FONT, fontSize: 12, lineHeight: 1.5, color: TEXT_MUTED, textAlign: 'center', margin: '0 0 16px' }}>
                 {t('endModal.sessionOnly')}
               </p>
             )}
             {/* Save button */}
             <button onClick={() => { setShowEndModal(false); void finish() }} className="active:scale-[0.98]" style={{
               width: '100%', padding: 16, borderRadius: 14, background: GOLD, border: 'none', color: colors.onGold,
-              fontFamily: FONT_ALT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+              fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
             }}>
               <Check size={16} strokeWidth={3} />{t('endModal.save')}
@@ -1327,7 +1261,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             <button onClick={() => setShowDeleteConfirm(true)} className="active:scale-[0.98]" style={{
               width: '100%', padding: 14, borderRadius: 14,
               background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)',
-              color: 'rgba(239,68,68,0.8)', fontFamily: FONT_ALT, fontWeight: 800, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+              color: 'rgba(239,68,68,0.8)', fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4,
             }}>
               <X size={16} strokeWidth={3} />{t('endModal.delete')}
@@ -1337,7 +1271,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             <button onClick={() => setShowEndModal(false)} className="active:scale-[0.98]" style={{
               width: '100%', padding: 14, borderRadius: 14, background: 'transparent',
               border: `1px solid ${colors.divider}`, color: TEXT_MUTED,
-              fontFamily: FONT_ALT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
+              fontFamily: WORKOUT_FONT, fontWeight: 700, fontSize: 13, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' as const,
             }}>{t('endModal.continue')}</button>
           </div>
         </div>
@@ -1350,20 +1284,20 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={28} color={colors.error} strokeWidth={2} />
             </div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>{t('deleteModal.title')}</h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>
+            <h3 style={{ fontFamily: WORKOUT_FONT, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, margin: '0 0 8px' }}>{t('deleteModal.title')}</h3>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: 13, color: TEXT_MUTED, lineHeight: 1.6, margin: '0 0 20px' }}>
               {completed > 0 ? t('deleteModal.withSets', { count: completed }) : t('deleteModal.noSets')}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowDeleteConfirm(false)} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12, background: 'transparent',
                 border: `1px solid ${BORDER}`, color: TEXT_MUTED,
-                fontFamily: FONT_ALT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
+                fontFamily: WORKOUT_FONT, fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>{t('cancel')}</button>
               <button onClick={() => { cancelNativeRestNotification(); setShowDeleteConfirm(false); setShowEndModal(false); void watchWorkout('discard', draftRef.current.draftId).then(result => { if(result.enabled) toast(twatch('checkEnd')) }); cleanupDraft(); onClose() }} className="active:scale-[0.98]" style={{
                 flex: 1, padding: 14, borderRadius: 12,
                 background: colors.error, border: 'none', color: '#fff',
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
+                fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 12, letterSpacing: 1, cursor: 'pointer', textTransform: 'uppercase' as const,
               }}>{t('delete')}</button>
             </div>
           </div>
@@ -1383,22 +1317,22 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
               </svg>
             </div>
-            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>
+            <h3 style={{ fontFamily: WORKOUT_FONT, fontSize: 18, letterSpacing: 2, color: TEXT_PRIMARY, marginBottom: 8 }}>
               {t('repsWarning.title')}
             </h3>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
+            <p style={{ fontFamily: WORKOUT_FONT, fontSize: 14, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 20 }}>
               {t('repsWarning.description', { reps: repsWarning.reps })}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <button onClick={() => setRepsWarning(null)} className="active:scale-[0.98]" style={{
                 width: '100%', padding: 12, borderRadius: 12,
                 background: 'transparent', border: `1.5px solid ${GOLD_RULE}`, color: GOLD,
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
+                fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
               }}>{t('repsWarning.edit')}</button>
               <button onClick={() => { doValidate(repsWarning.eid, repsWarning.sid); setRepsWarning(null) }} className="active:scale-[0.98]" style={{
                 width: '100%', padding: 12, borderRadius: 12,
                 background: GOLD, border: 'none', color: colors.onGold,
-                fontFamily: FONT_ALT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
+                fontFamily: WORKOUT_FONT, fontWeight: 800, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' as const, cursor: 'pointer',
               }}>{t('repsWarning.confirm')}</button>
             </div>
           </div>
