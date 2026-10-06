@@ -63,6 +63,7 @@ export interface HomeProgressionRecord {
 }
 
 export interface HomeViewModel {
+  weekCalendar?: import('./home-week-calendar').HomeCalendarDay[]
   identity: {
     state: HomeDomainState
     firstName: string

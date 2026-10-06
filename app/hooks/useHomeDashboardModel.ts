@@ -23,7 +23,12 @@ import {
 import { readActivePersonalMealPlan } from '../../lib/meal-plan/personal-plan-repository'
 import { subscribeNutritionJournal } from '../../lib/nutrition/journal-events'
 
+import { buildHomeWeekCalendar, homeWeekKeys } from '../../lib/home/home-week-calendar'
+
 interface HomeSupplementalData {
+  foodDates: string[]
+  foodDatesComplete: boolean
+  calendarNutritionError: boolean
   xp: number | null
   checkIn: {
     mood: string | null
@@ -66,6 +71,9 @@ interface HomeRecoveryMetadataState {
 }
 
 const emptySupplementalData: HomeSupplementalData = {
+  foodDates: [],
+  foodDatesComplete: false,
+  calendarNutritionError: false,
   xp: null,
   checkIn: null,
   loggedNutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
@@ -239,9 +247,16 @@ export default function useHomeDashboardModel({
         .eq('user_id', userId)
         .eq('date', today.localDateKey)
         .limit(1000),
+      supabase.from('daily_food_logs')
+        .select('date')
+        .eq('user_id', userId)
+        .gte('date', homeWeekKeys(today.localDateKey)[0])
+        .lte('date', today.localDateKey)
+        .order('date', { ascending: false })
+        .limit(1000),
       coachProfileRead,
       appointmentRead,
-    ]).then(([xp, checkIn, plan, foodLogs, coachProfile, appointment]) => {
+    ]).then(([xp, checkIn, plan, foodLogs, weekFoodLogs, coachProfile, appointment]) => {
       if (!active) return
       const errors: Partial<Record<HomeDomain, string>> = {}
       if (xp.error) errors.identity = 'HOME_IDENTITY_READ_FAILED'
@@ -265,6 +280,9 @@ export default function useHomeDashboardModel({
               note: checkIn.data.note ?? null,
             }
             : null,
+          foodDates: weekFoodLogs.error ? [] : (weekFoodLogs.data ?? []).map(row => row.date),
+          foodDatesComplete: !weekFoodLogs.error && (weekFoodLogs.data?.length ?? 0) < 1000,
+          calendarNutritionError: Boolean(weekFoodLogs.error),
           loggedNutrition: nutrition.values,
           nutritionHasData: nutrition.state === 'ready',
           hasPersonalMealPlan: nutrition.hasPersonalMealPlan,
@@ -325,7 +343,7 @@ export default function useHomeDashboardModel({
         ? 'error'
         : recoveryModel.zones.length > 0 ? 'ready' : 'empty'
 
-    return buildHomeViewModel({
+    const model = buildHomeViewModel({
       ...base,
       today,
       training: trainingSource
@@ -377,6 +395,14 @@ export default function useHomeDashboardModel({
       },
       errors: { ...base.errors, ...currentSupplemental.errors },
     })
+    return { ...model, weekCalendar: buildHomeWeekCalendar({
+      todayKey: today.localDateKey,
+      foodDates: currentSupplemental.data.foodDates,
+      foodDatesComplete: currentSupplemental.data.foodDatesComplete,
+      nutritionState: supplementalLoading ? 'loading'
+        : currentSupplemental.errors.nutrition || currentSupplemental.data.calendarNutritionError ? 'error' : 'ready',
+      training: trainingSource,
+    }) }
   }, [
     base,
     effectiveNow,

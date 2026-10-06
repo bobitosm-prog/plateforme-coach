@@ -3108,6 +3108,31 @@
   },
   "home": {
     "v2": {
+      "calendar": {
+        "title": "Wochenübersicht",
+        "nutritionLabel": "Ernährung oben",
+        "sportLabel": "Sport unten",
+        "done": "Erledigt",
+        "empty": "Nicht erfasst",
+        "rest": "Ruhe",
+        "today": "Heute",
+        "nutrition": {
+          "done": "Ernährung erfasst",
+          "empty": "Ernährung nicht erfasst",
+          "planned": "Ernährung geplant",
+          "rest": "Ruhe",
+          "future": "Demnächst",
+          "unknown": "Ernährung nicht verfügbar"
+        },
+        "sport": {
+          "done": "Training abgeschlossen",
+          "empty": "Kein Training erfasst",
+          "planned": "Training geplant",
+          "rest": "Ruhetag",
+          "future": "Demnächst",
+          "unknown": "Sport nicht verfügbar"
+        }
+      },
       "hello": "Hallo {name}",
       "today": "Heute",
       "editorialTitleLead": "Wir kommen",

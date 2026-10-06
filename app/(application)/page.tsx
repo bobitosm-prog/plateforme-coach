@@ -426,8 +426,8 @@ function CoachAppContent() {
     weeklyCompleted: homeWeeklyProgress.completed,
     weeklyPlanned: homeWeeklyProgress.planned,
     hasProgram: Boolean(h.planningDays?.length || h.coachProgram),
-    state: h.loading ? 'loading' as const : 'ready' as const,
-  }), [h.coachProgram, h.loading, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession, homeWeeklyProgress])
+    state: h.loading ? 'loading' as const : h.workoutHistoryState === 'error' ? 'error' as const : 'ready' as const,
+  }), [h.coachProgram, h.loading, h.workoutHistoryState, h.nextSession, h.planningDays, h.scheduledSessions, h.wSessions, homeProgramSession, homeWeeklyProgress])
 
   const homeModel = useHomeDashboardModel({
     enabled: h.userRole === 'client' && Boolean(h.session?.user?.id),

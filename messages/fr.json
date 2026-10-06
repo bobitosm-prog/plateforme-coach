@@ -3108,6 +3108,31 @@
   },
   "home": {
     "v2": {
+      "calendar": {
+        "title": "Suivi de la semaine",
+        "nutritionLabel": "Nutrition en haut",
+        "sportLabel": "Sport en bas",
+        "done": "Fait",
+        "empty": "Non renseigné",
+        "rest": "Repos",
+        "today": "Aujourd’hui",
+        "nutrition": {
+          "done": "Nutrition renseignée",
+          "empty": "Nutrition non renseignée",
+          "planned": "Nutrition prévue",
+          "rest": "Repos",
+          "future": "À venir",
+          "unknown": "Nutrition indisponible"
+        },
+        "sport": {
+          "done": "Séance terminée",
+          "empty": "Aucune séance enregistrée",
+          "planned": "Séance prévue",
+          "rest": "Jour de repos",
+          "future": "À venir",
+          "unknown": "Sport indisponible"
+        }
+      },
       "hello": "Bonjour {name}",
       "today": "Aujourd’hui",
       "editorialTitleLead": "On avance",
