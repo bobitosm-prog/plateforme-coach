@@ -151,6 +151,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
   const analyticsHook = useAnalytics({
     supabase,
     enabled: activeTab === 'progress',
+    period: progressionPeriod,
     userId,
     workoutSessions: wSessions,
     weightHistory: weightHistory30,
@@ -888,7 +889,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     },
     wellbeing: {
       rows: analyticsHook.wellbeingEntries,
-      isTruncated: analyticsHook.wellbeingEntries.length === 100,
+      isTruncated: analyticsHook.dailyTruncated,
       state: analyticsHook.sourceStates.wellbeing,
       errorCode: analyticsHook.sourceStates.wellbeing === 'error' ? 'PROGRESSION_WELLBEING_READ_FAILED' : undefined,
     },
@@ -1037,6 +1038,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
     weeklyVolume: analyticsHook.weeklyVolume,
     weightHistoryFull: analyticsHook.weightHistoryFull,
     wellbeingEntries: analyticsHook.wellbeingEntries,
+    analyticsSourceStates: analyticsHook.sourceStates,
+    analyticsDailyTruncated: analyticsHook.dailyTruncated,
     progressionModel,
     setProgressionPeriod,
     checkForPR,

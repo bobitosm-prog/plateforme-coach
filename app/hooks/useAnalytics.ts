@@ -1,9 +1,11 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getProgressionWeekKey } from '../../lib/progression/progression-date'
+import { readAnalyticsPages } from '../../lib/progression/analytics-daily-read'
+import { getProgressionDateKey, progressionPeriodStart, getProgressionWeekKey } from '../../lib/progression/progression-date'
 import { setTonnage } from '../../lib/training/load-volume'
 import type {
+  ProgressionPeriod,
   ProgressionRecordRow,
   ProgressionWorkoutSession,
 } from '../../lib/progression/progression-dashboard-model'
@@ -17,6 +19,7 @@ export interface ProgressionWellbeingEntry {
 
 interface UseAnalyticsParams {
   supabase: SupabaseClient
+  period?: ProgressionPeriod
   enabled: boolean
   userId: string | null | undefined
   workoutSessions: readonly ProgressionWorkoutSession[]
@@ -67,6 +70,7 @@ export function enrichRecordsWithMuscleMetadata(
 export default function useAnalytics({
   supabase,
   enabled,
+  period = '30d',
   userId,
   workoutSessions,
   weightHistory,
@@ -76,6 +80,13 @@ export default function useAnalytics({
   const [weeklyWater, setWeeklyWater] = useState<{ date: string; ml: number }[]>([])
   const [wellbeingEntries, setWellbeingEntries] = useState<ProgressionWellbeingEntry[]>([])
   const [sourceStates, setSourceStates] = useState<AnalyticsSourceStates>(INITIAL_SOURCE_STATES)
+  const [dailyTruncated, setDailyTruncated] = useState(false)
+  const [loadedKey, setLoadedKey] = useState('')
+  const requestVersion = useRef(0)
+  const ownerRef = useRef(userId)
+  useEffect(() => { ownerRef.current = userId }, [userId])
+  const todayKey = getProgressionDateKey(new Date())!
+  const requestKey = `${userId}:${period}:${todayKey}`
   const loadedUserRef = useRef<string | null>(null)
   const recordMuscleMetadataRef = useRef<ExerciseMuscleMetadata[]>([])
 
@@ -105,18 +116,23 @@ export default function useAnalytics({
   }, [workoutSessions])
 
   const fetchAnalyticsData = useCallback(async (uid: string) => {
-    const today = new Date()
-    const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(today.getDate() - 7)
-    const ninetyDaysAgo = new Date(today)
-    ninetyDaysAgo.setDate(today.getDate() - 90)
-
+    const version = ++requestVersion.current
+    const end = todayKey
+    const start = period === 'all' ? null : progressionPeriodStart(new Date(`${end}T12:00:00Z`), Number(period.slice(0, -1)))
+    setSourceStates(INITIAL_SOURCE_STATES)
+    // Stable (date,id) order avoids skipped entries where many foods share a day.
+    const journalQuery = (table: string, columns: string) => {
+      let query = supabase.from(table).select(columns).eq('user_id', uid).lte('date', end)
+      if (start) query = query.gte('date', start)
+      return query.order('date', { ascending: false }).order('id').returns<Record<string, unknown>[]>()
+    }
     const [prRes, calsRes, waterRes, wellbeingRes] = await Promise.all([
       supabase.from('personal_records').select('*').eq('user_id', uid).order('achieved_at', { ascending: false }).limit(50),
-      supabase.from('daily_food_logs').select('date, calories, protein, carbs, fat').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
-      supabase.from('water_intake').select('date, amount_ml').eq('user_id', uid).gte('date', sevenDaysAgo.toISOString().split('T')[0]).order('date').limit(30),
-      supabase.from('daily_checkins').select('date,mood,sleep_hours,note').eq('user_id', uid).gte('date', ninetyDaysAgo.toISOString().split('T')[0]).order('date').limit(100),
+      readAnalyticsPages<{ date: string; calories: number; protein: number; carbs: number; fat: number }>((from, to) => journalQuery('daily_food_logs', 'date,calories,protein,carbs,fat').range(from, to).returns<{ date: string; calories: number; protein: number; carbs: number; fat: number }[]>()),
+      readAnalyticsPages<{ date: string; amount_ml: number }>((from, to) => journalQuery('water_intake', 'date,amount_ml').range(from, to).returns<{ date: string; amount_ml: number }[]>()),
+      readAnalyticsPages<ProgressionWellbeingEntry>((from, to) => journalQuery('daily_checkins', 'date,mood,sleep_hours,note').range(from, to).returns<ProgressionWellbeingEntry[]>()),
     ])
+    if (version !== requestVersion.current || ownerRef.current !== uid) return
 
     const recordRows = (prRes.data || []) as ProgressionRecordRow[]
     const recordExerciseNames = getDistinctRecordExerciseNames(recordRows)
@@ -129,6 +145,9 @@ export default function useAnalytics({
         .limit(recordExerciseNames.length)
       muscleMetadata = data || []
     }
+    if (version !== requestVersion.current || ownerRef.current !== uid) return
+    setDailyTruncated(calsRes.truncated || waterRes.truncated || wellbeingRes.truncated)
+    setLoadedKey(`${uid}:${period}:${todayKey}`)
     recordMuscleMetadataRef.current = muscleMetadata
     setPersonalRecords(enrichRecordsWithMuscleMetadata(recordRows, muscleMetadata))
     setWellbeingEntries(wellbeingRes.data || [])
@@ -157,8 +176,8 @@ export default function useAnalytics({
       waterByDay[w.date] = (waterByDay[w.date] || 0) + (w.amount_ml || 0)
     }
     setWeeklyWater(Object.entries(waterByDay).map(([date, ml]) => ({ date, ml })).sort((a, b) => a.date.localeCompare(b.date)))
-    loadedUserRef.current = uid
-  }, [supabase])
+    loadedUserRef.current = `${uid}:${period}:${todayKey}`
+  }, [period, supabase, todayKey])
 
   // Home needs only the latest PR snapshot. The full analytics payload remains
   // lazy and is requested only after opening Progression.
@@ -179,9 +198,11 @@ export default function useAnalytics({
   }, [enabled, supabase, userId])
 
   useEffect(() => {
-    if (!enabled || !userId || loadedUserRef.current === userId) return
-    queueMicrotask(() => void fetchAnalyticsData(userId))
-  }, [enabled, fetchAnalyticsData, userId])
+    if (!enabled || !userId || loadedUserRef.current === requestKey) return
+    let active = true
+    queueMicrotask(() => { if (active) void fetchAnalyticsData(userId) })
+    return () => { active = false; requestVersion.current += 1; loadedUserRef.current = null }
+  }, [enabled, fetchAnalyticsData, requestKey, userId])
 
   // PR detection -- called after finishing a workout set
   async function checkForPR(uid: string, exerciseName: string, weight: number, reps: number, loadMode = 'legacy'): Promise<{ newPR: boolean; exercise?: string; value?: number; previous?: number }> {
@@ -232,6 +253,6 @@ export default function useAnalytics({
 
   return {
     personalRecords, weeklyCalories, weeklyWater, weeklyVolume, weightHistoryFull,
-    wellbeingEntries, sourceStates, fetchAnalyticsData, checkForPR,
+    wellbeingEntries, dailyTruncated, sourceStates: enabled && loadedKey !== requestKey ? INITIAL_SOURCE_STATES : sourceStates, fetchAnalyticsData, checkForPR,
   }
 }

@@ -281,10 +281,9 @@ function periodRows<T extends { date: string }>(
   period: ProgressionPeriod,
   now: Date,
 ): T[] {
-  if (period === 'all') return [...rows]
-  const start = progressionPeriodStart(now, PERIOD_DAYS[period])
+  const start = period === 'all' ? null : progressionPeriodStart(now, PERIOD_DAYS[period])
   const end = getProgressionDateKey(now)
-  return rows.filter(row => row.date >= start && (!end || row.date <= end))
+  return rows.filter(row => (!start || row.date >= start) && (!end || row.date <= end))
 }
 
 function periodContract(
@@ -372,6 +371,19 @@ function buildWeight(input: ProgressionViewModelInput, now: Date) {
   }
 }
 
+function selectedWeekKeys(input: ProgressionViewModelInput, now: Date): string[] {
+  const end = getProgressionWeekKey(now)!
+  const period = input.period ?? '30d'
+  const dates = input.sessions.rows.flatMap(row => {
+    const date = row.created_at ? getProgressionDateKey(row.created_at) : null
+    return date && date <= getProgressionDateKey(now)! ? [date] : []
+  }).sort()
+  const first = period === 'all' ? dates[0] ?? end : progressionPeriodStart(now, PERIOD_DAYS[period])
+  const keys: string[] = []
+  for (let key = getProgressionWeekKey(first)!; key <= end; key = addProgressionDays(key, 7)) keys.push(key)
+  return keys
+}
+
 function buildRegularity(input: ProgressionViewModelInput, now: Date) {
   if (sourceIsError(input.sessions)) return { state: 'error' as const, weeks: [], averageCompleted: null, currentWeek: null, previousWeek: null, trend: 'unknown' as const }
   if (input.sessions.state === 'loading') return { state: 'loading' as const, weeks: [], averageCompleted: null, currentWeek: null, previousWeek: null, trend: 'unknown' as const }
@@ -379,16 +391,19 @@ function buildRegularity(input: ProgressionViewModelInput, now: Date) {
   const currentWeekKey = getProgressionWeekKey(now)
   if (!currentWeekKey) return { state: 'empty' as const, weeks: [], averageCompleted: null, currentWeek: null, previousWeek: null, trend: 'unknown' as const }
   const period = input.period ?? '30d'
-  const weekCount = period === '7d' ? 2 : period === '30d' ? 5 : period === '90d' ? 14 : 14
+  const weekKeys = selectedWeekKeys(input, now)
+  const selected = periodRows(input.sessions.rows.flatMap(session => {
+    const date = session.created_at ? getProgressionDateKey(session.created_at) : null
+    return date ? [{ ...session, date }] : []
+  }), period, now)
   const counts = new Map<string, number>()
-  for (const session of input.sessions.rows) {
+  for (const session of selected) {
     if (session.completed === false || !session.created_at) continue
     const key = getProgressionWeekKey(session.created_at)
     if (key) counts.set(key, (counts.get(key) ?? 0) + 1)
   }
   const weeks: ProgressionWeekSummary[] = []
-  for (let offset = weekCount - 1; offset >= 0; offset -= 1) {
-    const weekKey = addProgressionDays(currentWeekKey, -offset * 7)
+  for (const weekKey of weekKeys) {
     const planned = input.sessions.plannedByWeek?.[weekKey]
     weeks.push({
       weekKey,
@@ -406,7 +421,7 @@ function buildRegularity(input: ProgressionViewModelInput, now: Date) {
     : null
   const delta = currentWeek && previousWeek ? currentWeek.completed - previousWeek.completed : null
   return {
-    state: input.sessions.rows.length ? 'ready' as const : 'empty' as const,
+    state: input.sessions.isTruncated ? 'partial' as const : selected.length ? 'ready' as const : 'empty' as const,
     weeks,
     averageCompleted,
     currentWeek,
@@ -432,18 +447,17 @@ function completedSets(input: ProgressionViewModelInput): Array<ProgressionWorko
 function buildVolume(input: ProgressionViewModelInput, now: Date) {
   if (sourceIsError(input.sessions)) return { state: 'error' as const, weeklyVolume: [], currentWeek: null, previousWeek: null, deltaPercent: null }
   if (input.sessions.state === 'loading') return { state: 'loading' as const, weeklyVolume: [], currentWeek: null, previousWeek: null, deltaPercent: null }
-  const sets = completedSets(input)
+  const sets = periodRows(completedSets(input), input.period ?? '30d', now)
   const currentWeekKey = getProgressionWeekKey(now)
   if (!currentWeekKey) return { state: 'empty' as const, weeklyVolume: [], currentWeek: null, previousWeek: null, deltaPercent: null }
-  const weekCount = (input.period ?? '30d') === '7d' ? 2 : (input.period ?? '30d') === '90d' ? 14 : 5
+  const weekKeys = selectedWeekKeys(input, now)
   const sums = new Map<string, number>()
   for (const set of sets) {
     if (!finiteNumber(set.weight) || !finiteNumber(set.reps) || set.weight <= 0 || set.reps <= 0) continue
     const weekKey = getProgressionWeekKey(set.date)
     if (weekKey) sums.set(weekKey, (sums.get(weekKey) ?? 0) + setTonnage(set))
   }
-  const weeklyVolume = Array.from({ length: weekCount }, (_, index) => {
-    const weekKey = addProgressionDays(currentWeekKey, -(weekCount - 1 - index) * 7)
+  const weeklyVolume = weekKeys.map(weekKey => {
     return { weekKey, volume: round(sums.get(weekKey) ?? 0, 0) }
   })
   const currentWeek = weeklyVolume[weeklyVolume.length - 1]?.volume ?? null
@@ -452,7 +466,7 @@ function buildVolume(input: ProgressionViewModelInput, now: Date) {
     ? Math.round(((currentWeek - previousWeek) / previousWeek) * 100)
     : null
   return {
-    state: sets.length ? 'ready' as const : 'empty' as const,
+    state: input.sessions.isTruncated ? 'partial' as const : sets.length ? 'ready' as const : 'empty' as const,
     weeklyVolume,
     currentWeek,
     previousWeek,
