@@ -7,6 +7,7 @@ import type { UserCapabilities } from '../../lib/entitlements/capabilities'
 import type { NutritionCoachRelationState } from '../../lib/nutrition/nutrition-dashboard-model'
 import {
   buildNutritionViewModel,
+  normalizeNutritionMealType,
   type CoachNutritionPlan,
   type HydrationRow,
   type MealTrackingRow,
@@ -163,7 +164,21 @@ export default function useNutritionDashboardModel({
     loadedAt: snapshot.loadedAt,
   }), [capabilities, coachRelation, day, loading, profile, selectedDate, snapshot, week])
 
+  const mealCounts = useMemo(() => {
+    const mealsByDate = new Map<string, Set<string>>()
+    for (const row of snapshot.dailyLogs) {
+      const type = normalizeNutritionMealType(row.meal_type)
+      if (!type) continue
+      const types = mealsByDate.get(row.date) ?? new Set<string>()
+      types.add(type)
+      mealsByDate.set(row.date, types)
+    }
+    return Object.fromEntries([...mealsByDate].map(([date, types]) => [date, types.size]))
+  }, [snapshot.dailyLogs])
+
   return {
+    historyStart,
+    mealCounts,
     model,
     selectedDate,
     setSelectedDate,

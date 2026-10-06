@@ -7,7 +7,7 @@ import messages from '@/messages/fr.json'
 import NutritionTab from '@/app/components/tabs/NutritionTab'
 const state = vi.hoisted(() => ({ meals: [] as any[], writes: [] as any[], fail: false, composer: null as any }))
 vi.mock('@/app/hooks/useNutritionDashboardModel', () => ({default: () => ({model:{day:{localDateKey:'2026-10-04',dayKey:'dimanche'},hydration:{data:null},activePlan:{plan:null,state:'empty'},coachRelation:{status:'none'}}, selectedDate:'2026-10-04',setSelectedDate:vi.fn(),dailyLogs:[],refresh:vi.fn()})}))
-vi.mock('@/app/components/nutrition-v2/NutritionV2', () => ({default: ({children}:any) => children}))
+vi.mock('@/app/components/nutrition-v2/NutritionOverview', () => ({default: ({children,onTabChange}:any) => React.createElement(React.Fragment,null,React.createElement('button',{onClick:()=>onTabChange('meals')},'Mes repas'),children)}))
 vi.mock('@/app/components/nutrition-v2/TodayMeals', () => ({default: () => null}))
 vi.mock('@/app/components/nutrition-v2/MealComposer', () => ({default: (props:any) => {state.composer=props;return React.createElement('div',null,'Composer ouvert')}}))
 vi.mock('@/app/components/ui/RailOverlay', () => ({RailOverlay: ({children}:any) => children}))

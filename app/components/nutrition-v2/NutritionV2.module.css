@@ -1095,3 +1095,22 @@
 .openJournal .mealActionBar button { border: 0; background: transparent; color: #aaa294; }
 .openJournal .mealOverflowMenu { right: 14px; top: 60px; bottom: auto; }
 .openJournal .mealActionBar button svg { display: block; }
+
+/* Compact journal matches the shared Home cards; expanded food editors stay intact. */
+.compactJournal.openJournal { padding: 0; background: transparent; border: 0; }
+.compactJournal .todayMealsHeading { margin-bottom: 12px; }
+.compactJournal .todayMealsHeading .eyebrow { display: none; }
+.compactJournal .todayMealsHeading h2 { font-size: 12px; color: #dec07a; letter-spacing: .11em; text-transform: uppercase; font-weight: 750; margin: 0; }
+.compactJournal .mealList { gap: 0; }
+.compactJournal .mealRow { background: transparent; border: 0; border-top: 1px solid #423b2a; border-radius: 0; padding: 12px 0; }
+.compactJournal .mealRow:last-child { padding-bottom: 0; }
+.compactJournal .mealToggle { min-width: 0; padding: 0; min-height: 44px; }
+.compactJournal .mealText strong { font-size: 15px; }
+.compactJournal .mealText>span { font-size: 11px; line-height: 1.5; }
+.compactJournal .mealPrimaryAction { width: 40px; height: 44px; min-height: 44px; background: #373020; color: #dec07a; border-radius: 12px; flex-shrink: 0; }
+.compactJournal .todayMealsHeading { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+.compactJournal .mealRowMain { padding: 0; }
+.compactJournal .mealDetail { padding: 8px 0 0; }
+.compactJournal .mealActionArea { position: relative; }
+.compactJournal .mealActionBar { position: static; width: auto; justify-content: flex-end; }
+.compactJournal .mealOverflowMenu { top: auto; bottom: 48px; right: 0; }

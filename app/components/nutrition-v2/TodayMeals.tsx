@@ -85,6 +85,7 @@ interface TodayMealsProps {
   model: NutritionViewModel
   selectedDate: string
   journalMode?: boolean
+  compactJournal?: boolean
   selectedMeal?: NutritionMealType
   actionError: string | null
   onRetry: () => void
@@ -106,6 +107,7 @@ export default function TodayMeals({
   selectedDate,
   selectedMeal,
   journalMode = false,
+  compactJournal = false,
   actionError,
   onRetry,
   onChooseMeal,
@@ -197,7 +199,7 @@ export default function TodayMeals({
     setOpenMeal(nextAction.mealType)
   }
 
-  return <section className={`${styles.todayMeals} ${journalMode ? styles.openJournal : ''}`} aria-labelledby="today-meals-title">
+  return <section className={`${styles.todayMeals} ${journalMode ? styles.openJournal : ''} ${compactJournal ? styles.compactJournal : ''}`} aria-labelledby="today-meals-title">
     <div className={styles.todayMealsHeading}>
       <div>
         <p className={styles.eyebrow}>{t('eyebrow')}</p>
@@ -218,7 +220,7 @@ export default function TodayMeals({
     {model.meals.state !== 'loading' && model.meals.state !== 'error' && <div className={styles.mealList}>
       {(selectedMeal ? [selectedMeal] : MEAL_ORDER).map(type => {
         const meal = meals.find(entry => entry.type === type) ?? { type, planned: [], logged: [], completed: false, status: 'empty' as const }
-        const expanded = journalMode || openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
+        const expanded = compactJournal ? openMeal === type : journalMode || openMeal === type || (meal.logged.length > 0 && !collapsedMeals[type])
         const primaryAction = getMealPrimaryAction(meal.status)
         const calories = sumLoggedCalories(meal.logged)
         const activeLog = meal.logged.find(log => log.id === activeLogId) ?? meal.logged[0] ?? null
@@ -231,7 +233,7 @@ export default function TodayMeals({
 
         return <article key={type} className={styles.mealRow} data-status={meal.status}>
           <div className={styles.mealRowMain}>
-            {journalMode ? <div className={styles.journalMealHeading}>
+            {journalMode && !compactJournal ? <div className={styles.journalMealHeading}>
               <h3>{t(`meal.${type}`)}</h3>
               <span>{Math.round(calories)} kcal</span>
             </div> : <button
