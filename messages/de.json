@@ -716,6 +716,7 @@
     }
   },
   "exerciseInfo": {
+    "unavailable": "Video derzeit nicht verfügbar.",
     "comingSoon": "VIDEO KOMMT BALD",
     "description": "BESCHREIBUNG",
     "execution": "AUSFÜHRUNG",

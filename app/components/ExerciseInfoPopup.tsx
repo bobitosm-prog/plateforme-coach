@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import {
   BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
@@ -32,6 +33,7 @@ interface ExerciseInfoPopupProps {
 }
 
 export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupProps) {
+  const [failedVideo, setFailedVideo] = useState<string | null>(null)
   const t = useTranslations('exerciseInfo')
   const locale = useLocale() as 'fr' | 'en' | 'de'
   const tMuscle = useTranslations('muscles')
@@ -90,9 +92,9 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' as any }}>
           {/* Media: video > gif > placeholder */}
-          {info.video_url ? (
+          {info.video_url && failedVideo !== info.video_url ? (
             <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-              <video src={`${info.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <video key={info.video_url} src={info.video_url} controls onError={() => setFailedVideo(info.video_url || null)} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           ) : info.gif_url ? (
             <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}` }}>
@@ -101,7 +103,7 @@ export default function ExerciseInfoPopup({ info, onClose }: ExerciseInfoPopupPr
           ) : (
             <div style={{ marginBottom: 20, borderRadius: 14, border: `1px dashed ${BORDER}`, padding: '40px 20px', textAlign: 'center', background: GOLD_DIM }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🎬</div>
-              <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1 }}>{t('comingSoon')}</div>
+              <div style={{ fontFamily: FONT_ALT, fontSize: 12, fontWeight: 700, color: TEXT_DIM, letterSpacing: 1 }}>{t(failedVideo === info.video_url ? 'unavailable' : 'comingSoon')}</div>
             </div>
           )}
 

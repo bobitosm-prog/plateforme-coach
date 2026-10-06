@@ -716,6 +716,7 @@
     }
   },
   "exerciseInfo": {
+    "unavailable": "Vidéo indisponible pour le moment.",
     "comingSoon": "VIDÉO À VENIR",
     "description": "DESCRIPTION",
     "execution": "EXÉCUTION",
