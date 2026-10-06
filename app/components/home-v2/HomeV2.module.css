@@ -569,7 +569,7 @@
 .progressionGrid { gap: 0; margin-top: 14px; }
 .progressionMetric { padding: 13px 7px 13px 0; border: 0; border-top: 1px solid #39362e; border-radius: 0; background: none; }
 .progressionIcon { border-radius: 50%; background: transparent; }
-.intelligenceGrid { gap: 0; margin-top: 4px; }
+.intelligenceGrid { gap: 20px; margin-top: 20px; }
 .intelligenceCard, .athenaInsight, .coachCard { min-height: 0; padding: 20px 0; border: 0; border-top: 1px solid #39362e; border-radius: 0; background: none; }
 .insightMessage { margin: 12px 0; }
 .lowerContent { margin-top: 12px; }
@@ -783,3 +783,6 @@
 @media (min-width: 700px) {
   .progressionMetric { flex-basis: calc((100% - 36px) / 4); width: calc((100% - 36px) / 4); }
 }
+
+/* The main scroll container alone reserves space for the fixed navigation. */
+.shell { padding-bottom: 0; }
