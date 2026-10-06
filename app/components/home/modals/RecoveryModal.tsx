@@ -40,11 +40,11 @@ export function resolveRecoverySelection(
   return { zone, recovery: zones.find(candidate => candidate.zone === zone) ?? null }
 }
 
-function BodyMap({ side, zones, selected, onSelect }: {
+export function BodyMap({ side, zones, selected = null, onSelect }: {
   side: RecoveryMaskView
   zones: ReadonlyMap<RecoveryZone, MuscleRecovery>
-  selected: RecoveryZone | null
-  onSelect: (zone: RecoveryZone) => void
+  selected?: RecoveryZone | null
+  onSelect?: (zone: RecoveryZone) => void
 }) {
   const t = useTranslations('home.v2.recoveryModal')
   const handleClick = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -54,16 +54,16 @@ function BodyMap({ side, zones, selected, onSelect }: {
       event.clientY,
       event.currentTarget.getBoundingClientRect(),
     )
-    if (zone) onSelect(zone)
+    if (zone) onSelect?.(zone)
   }
 
   return <figure className={styles.bodyFigure}>
     <div
       className={styles.bodyVisual}
-      onClick={handleClick}
+      onClick={onSelect ? handleClick : undefined}
       data-recovery-view={side}
       data-hit-map="static"
-      data-interactive="true"
+      data-interactive={Boolean(onSelect)}
     >
       <Image
         src={RECOVERY_BODY_ASSETS[side]}
@@ -71,7 +71,7 @@ function BodyMap({ side, zones, selected, onSelect }: {
         fill
         sizes="(max-width: 699px) 44vw, 260px"
         className={styles.bodyImage}
-        loading="eager"
+        loading={onSelect ? 'eager' : 'lazy'}
         draggable={false}
       />
       <div className={styles.maskLayers} aria-hidden="true">

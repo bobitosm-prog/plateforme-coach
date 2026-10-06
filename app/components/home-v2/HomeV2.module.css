@@ -628,7 +628,7 @@
 .calendarLegend { margin-top: 10px; font-size: .65rem; }
 .calendarLegend svg { color: #dfc27a; }
 .calendarEmpty { width: 9px; height: 9px; border: 1px solid #777267; border-radius: 3px; }
-.calendarDetail { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #39362e; font-size: .73rem; line-height: 1.45; }
+.calendarDetail { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .calendarDetail strong { color: #f3f0e9; font-weight: 600; text-transform: capitalize; }
 .calendarDetail > span { color: #aaa79d; }
 
@@ -645,3 +645,39 @@
 .headerHeadline > .metrics { display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 38%; }
 .headerHeadline .metric { max-width: 100%; min-height: 36px; overflow-wrap: anywhere; text-align: right; }
 .headerHeadline .metric svg { flex-shrink: 0; }
+
+
+/* Daily cards keep intrinsic height, including in the iPhone web view. */
+.dailyPair { display: flex; align-items: stretch; gap: 12px; }
+.dailyPair > * { flex: 1 1 0; min-width: 0; box-sizing: border-box; }
+.dailyPair .statusTile, .trainingCard, .statusTile.recoveryOverview {
+  padding: 16px; border: 1px solid #302d24; border-radius: 20px; background: #201e18;
+}
+.dailyPair .statusTile { display: flex; flex-direction: column; gap: 10px; }
+.dailyPair .statusTileIcon { color: #dfc27a; border: 0; }
+.dailyPair .statusTileActions { flex-wrap: wrap; margin-top: auto; }
+.dailyPair .statusTileActions .statusTileLink { flex-basis: 100%; }
+.dailyPair .statusTileCopy strong { font-size: 1.05rem; }
+.trainingCard { display: flex; flex-direction: column; }
+.statusCockpit .trainingCard .hero {
+  flex: 1; min-height: 0; margin: 0; padding: 0; border: 0; background: none; gap: 12px;
+}
+.trainingCard .heroMain { display: block; }
+.trainingCard .heroLabel { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; font-size: .65rem; letter-spacing: .08em; }
+.statusCockpit .trainingCard .heroTitle { font-size: clamp(1.05rem, 4.5vw, 1.4rem); line-height: 1.2; }
+.statusCockpit .trainingCard .heroCopy, .trainingCard .meta { font-size: .76rem; }
+.trainingCard .restIcon { display: none; }
+.statusCockpit .trainingCard .actions { gap: 6px; margin-top: auto; }
+.statusCockpit .trainingCard .hero .button { min-width: 0; width: 100%; min-height: 44px; padding: 8px; font-size: .75rem; white-space: normal; }
+.trainingCard .weeklyProgress { margin: 12px 0 0; padding: 10px 0 0; }
+.trainingCard .weeklyProgressCopy { flex-wrap: wrap; font-size: .68rem; }
+.statusTile.recoveryOverview { margin-top: 12px; }
+.recoveryOverview .statusTileCopy strong { color: #dfc27a; }
+.recoveryOverview[data-tone='critical'] .statusTileCopy strong { color: #ff9fa5; }
+.recoveryBodies { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 460px; margin: 16px auto 8px; }
+.recoveryOverview .statusTileActions { grid-column: 1 / -1; border-top: 1px solid #39362e; padding-top: 8px; }
+.recoveryOverview .statusTileLink { justify-content: space-between; }
+@media (max-width: 360px) {
+  .dailyPair { gap: 8px; }
+  .dailyPair .statusTile, .trainingCard { padding: 12px; border-radius: 16px; }
+}
