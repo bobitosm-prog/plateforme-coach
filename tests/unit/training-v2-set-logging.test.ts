@@ -131,3 +131,7 @@ describe('Training V2 set logging', () => {
     expect(currentSetEditor).not.toContain('supabase')
   })
 })
+it('does not use per-leg rows as unsided progression evidence', () => {
+ const result=buildPreviousPerformanceMap([{key:'fentes',exerciseId:null,name:'Fentes'}],[{exercise_name:'Fentes',side:'left',weight:20,reps:10,completed:true,session_id:'new'}])
+ expect(result.fentes.state).toBe('no_history')
+})

@@ -185,3 +185,30 @@ it('asks before leaving via back and preserves entered sets when continuing', as
  fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.endModal.save}))
  await waitFor(()=>expect(finish).toHaveBeenCalledTimes(1))
 })
+it('validates and restores six leg sets with half rest and side-specific saved history', async () => {
+ const value=createActiveWorkoutDraft({userId:'synthetic-owner',programId:null,programSource:'none',sessionName:'Jambes',sessionKey:'leg-test',exercises:[{name:'Fentes',sets:3,reps:10,rest:90}]})
+ let view=mount(value)
+ await waitFor(()=>expect(m.history).toHaveBeenCalled())
+ const complete=(index:number)=>{
+  const group=within(screen.getByRole('group',{name:'Fentes'}));const inputs=group.getAllByRole('textbox')
+  fireEvent.change(inputs[index*2],{target:{value:'12'}});fireEvent.change(inputs[index*2+1],{target:{value:'10'}})
+  const button=group.getAllByRole('button').filter(b=>b.hasAttribute('aria-pressed'))[index] as HTMLButtonElement
+  expect(button.disabled).toBe(false);fireEvent.click(button)
+ }
+ complete(0)
+ let saved=view.changed.mock.calls.at(-1)![0] as ActiveWorkoutDraft
+ expect(Date.parse(saved.restTimerEndAt!)-Date.now()).toBeGreaterThan(43000)
+ expect(Date.parse(saved.restTimerEndAt!)-Date.now()).toBeLessThanOrEqual(45000)
+ view.unmount();view=mount(saved)
+ for(let i=1;i<6;i++) complete(i)
+ saved=view.changed.mock.calls.at(-1)![0] as ActiveWorkoutDraft
+ expect(saved.exercises[0].sets.filter(s=>s.done)).toHaveLength(6)
+ expect(saved.exercises[0].sets.map(s=>s.side)).toEqual(['left','right','left','right','left','right'])
+ // Exercise the real retry/finish payload path with the restored draft.
+ view.unmount();saved.status='save_error';const finish=vi.fn(async()=>({}));mount(saved,finish)
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.ws.done.retry}))
+ await waitFor(()=>expect(finish).toHaveBeenCalledTimes(1))
+ const payload=(finish.mock.calls as any)[0][0]
+ expect(payload.exercises[0].setsTarget).toBe(3)
+ expect(payload.exercises[0].sets.map((s:any)=>[s.roundNumber,s.side])).toEqual([[1,'left'],[1,'right'],[2,'left'],[2,'right'],[3,'left'],[3,'right']])
+})

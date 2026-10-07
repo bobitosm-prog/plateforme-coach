@@ -21,6 +21,7 @@ export interface ObservedWorkoutSessionRow {
 }
 
 export interface ObservedWorkoutSetRow {
+  side?: unknown
   load_mode?: unknown
   duration_seconds?: unknown
   session_id?: unknown
@@ -323,7 +324,7 @@ export async function loadAthenaObservedContext(
   const sessions = (sessionsResult.data ?? []) as ObservedWorkoutSessionRow[]
   const sessionIds = sessions.flatMap(row => stringValue(row.id) ?? []).filter(Boolean)
   const setsResult = sessionIds.length
-    ? await supabase.from('workout_sets').select('session_id, completed, exercise_id, exercise_name, weight, reps, rir, load_mode, duration_seconds').eq('user_id', userId).eq('completed', true).in('session_id', sessionIds)
+    ? await supabase.from('workout_sets').select('session_id, completed, exercise_id, exercise_name, weight, reps, rir, side, load_mode, duration_seconds').eq('user_id', userId).eq('completed', true).in('session_id', sessionIds)
     : { data: [], error: null }
 
   const sourceErrors: SourceName[] = []

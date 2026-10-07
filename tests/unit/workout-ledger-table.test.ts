@@ -40,3 +40,10 @@ it('shows an explicit read failure and retries without inventing a previous load
  expect(await screen.findByText('18 × 10')).toBeTruthy()
  expect(history).toHaveBeenCalledTimes(2)
 })
+it('matches each leg by prescribed round and never guesses the side of legacy history',async()=>{
+ const p={...props(),exercise:normalizeWorkoutDraftExercises([{name:'Fentes',sets:1,reps:10}])[0]}
+ history.mockResolvedValue([{...row(8,24),side:'right',round_number:1},{...row(7,20),side:'left',round_number:1},row(1,99)])
+ render(React.createElement(WorkoutLedgerTable,p))
+ expect(await screen.findByText('20 × 10')).toBeTruthy();expect(screen.getByText('24 × 10')).toBeTruthy()
+ expect(screen.queryByText('99 × 10')).toBeNull()
+})

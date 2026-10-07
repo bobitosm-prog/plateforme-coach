@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface HistoricalSet {
+  side?: 'left' | 'right' | null; round_number?: number | null
   id: string; session_id: string; set_number: number; weight: number | null; reps: number | null
   created_at: string; load_mode: string | null; technique: string | null
   parent_set_number: number | null; duration_seconds: number | null
@@ -12,7 +13,7 @@ export async function loadLastExerciseSession(db: SupabaseClient, userId: string
   if (!userId || !name) throw new Error('HISTORY_OWNER_REQUIRED')
   if (exerciseId && !/^[0-9a-f-]{36}$/i.test(exerciseId)) throw new Error('INVALID_EXERCISE_ID')
   const query = () => {
-    let q = db.from('workout_sets').select('id,session_id,set_number,weight,reps,created_at,load_mode,technique,parent_set_number,duration_seconds,workout_sessions!inner(completed)')
+    let q = db.from('workout_sets').select('id,session_id,set_number,weight,reps,created_at,load_mode,technique,parent_set_number,duration_seconds,side,round_number,workout_sessions!inner(completed)')
       .eq('user_id', userId).eq('completed', true).eq('workout_sessions.completed', true)
     q = exerciseId ? q.or(`exercise_id.eq.${exerciseId},and(exercise_id.is.null,exercise_name.eq.${JSON.stringify(name)})`) : q.eq('exercise_name', name)
     return q.abortSignal(signal)

@@ -20,11 +20,11 @@ export function defaultLoadMode(row: Record<string, unknown>): LoadMode {
   return 'total'
 }
 
-export function setTonnage(set: {weight?: unknown; reps?: unknown; completed?: boolean | null; done?: boolean; duration_seconds?: unknown; durationSeconds?: unknown; load_mode?: unknown; loadMode?: unknown}): number {
+export function setTonnage(set: {side?: unknown; weight?: unknown; reps?: unknown; completed?: boolean | null; done?: boolean; duration_seconds?: unknown; durationSeconds?: unknown; load_mode?: unknown; loadMode?: unknown}): number {
   if (set.completed === false || set.done === false || Number(set.duration_seconds ?? set.durationSeconds) > 0) return 0
   const mode = set.load_mode ?? set.loadMode
   if (mode === 'band' || mode === 'unquantified') return 0 // Not a quantified constant lifted mass.
   const weight = Number(set.weight), reps = Number(set.reps)
   if (!Number.isFinite(weight) || !Number.isFinite(reps) || weight <= 0 || reps <= 0) return 0
-  return weight * reps * (mode === 'two_dumbbells' || mode === 'unilateral_both' ? 2 : 1)
+  return weight * reps * (mode === 'two_dumbbells' || (mode === 'unilateral_both' && !set.side) ? 2 : 1)
 }

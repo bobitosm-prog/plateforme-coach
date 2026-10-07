@@ -170,7 +170,7 @@ async function handlePost(req: NextRequest) {
       let query = state.db
         .from("workout_sets")
         .select(
-          "session_id,load_mode,weight,reps,rir,completed,created_at,workout_sessions!inner(completed)",
+          "session_id,side,load_mode,weight,reps,rir,completed,created_at,workout_sessions!inner(completed)",
         )
         .eq("user_id", auth.user.id)
         .eq("completed", true)
@@ -191,6 +191,7 @@ async function handlePost(req: NextRequest) {
       const latest = history.data.filter(
         (set) => set.session_id === row.session_id_origin,
       );
+      if (latest.some(set => set.side)) return NextResponse.json({code:'changed'}, {status:409});
       const loadMode = latest[0]?.load_mode ?? 'legacy';
       if ((loadMode === 'band' || loadMode === 'unquantified') || latest.some(set => (set.load_mode ?? 'legacy') !== loadMode))
         return NextResponse.json({code:'changed'}, {status:409});
@@ -209,7 +210,7 @@ async function handlePost(req: NextRequest) {
         setsTarget: Number(match.exercise.sets),
         targetReps: String(match.exercise.reps ?? ""),
         currentRirs: latest.map((set) => set.rir),
-        history: history.data.filter(set => (set.load_mode ?? 'legacy') === loadMode).map((set) => ({
+        history: history.data.filter(set => !set.side && (set.load_mode ?? 'legacy') === loadMode).map((set) => ({
           sessionId: set.session_id,
           weight: Number(set.weight),
           reps: Number(set.reps),

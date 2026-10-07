@@ -615,6 +615,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
             exercise_name: exercise.name,
             exercise_id: exercise.exerciseId ?? null,
             set_number: set.setNumber ?? index + 1,
+            side: set.side ?? null,
+            round_number: set.roundNumber ?? null,
             reps: Number(set.reps) || 0,
             duration_seconds: set.durationSeconds ?? null,
             technique: exercise.technique || null,
@@ -644,6 +646,8 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
       exercise_name: exercise.name,
       exercise_id: exercise.exerciseId ?? null,
       set_number: set.setNumber ?? index + 1,
+      side: set.side ?? null,
+      round_number: set.roundNumber ?? null,
       reps: Number(set.reps) || 0,
       duration_seconds: set.durationSeconds ?? null,
       technique: exercise.technique || null,
@@ -716,7 +720,7 @@ export default function useClientDashboard(initialTab: Tab = 'home') {
 
     const overloadRequests: Promise<void>[] = []
     for (const exercise of data.exercises) {
-      if(exercise.technique) continue
+      if(exercise.technique || exercise.sets.some(set => set.side)) continue
       if (!exercise.sets.length || (exercise.setsTarget && exercise.sets.length < exercise.setsTarget)) continue
       const reps = Number(exercise.sets[0].reps) || 0
       const weight = Number(exercise.sets[0].weight) || 0
