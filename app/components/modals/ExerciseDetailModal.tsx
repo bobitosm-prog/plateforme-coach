@@ -1,4 +1,5 @@
 'use client'
+import { exerciseMedia } from '@/lib/exercise-video-media'
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
@@ -87,7 +88,7 @@ export default function ExerciseDetailModal({ exercise, sets, reps, rest, onClos
             {/* Media: video > gif > placeholder */}
             {exercise.video_url ? (
               <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 18px', borderRadius: RADIUS_CARD, overflow: 'hidden', background: BG_BASE }}>
-                <video src={`${exercise.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <video src={exerciseMedia(exercise.video_url).video} poster={exerciseMedia(exercise.video_url).poster} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </div>
             ) : exercise.gif_url ? (
               <div style={{ aspectRatio: '9/16', maxHeight: '55vh', margin: '0 auto 18px', borderRadius: RADIUS_CARD, overflow: 'hidden', background: BG_BASE, border: `1px solid ${BORDER}` }}>

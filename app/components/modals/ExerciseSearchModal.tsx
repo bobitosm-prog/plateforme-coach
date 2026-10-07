@@ -1,4 +1,5 @@
 'use client'
+import { exerciseMedia } from '@/lib/exercise-video-media'
 import { useState, useEffect, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { X, Search, Dumbbell } from 'lucide-react'
@@ -236,7 +237,7 @@ export default function ExerciseSearchModal({ supabase, onClose, onAdd }: Exerci
               {/* Video or placeholder */}
               {selectedExDb.video_url ? (
                 <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 20, background: colors.surface }}>
-                  <video src={`${selectedExDb.video_url}?v=2`} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  <video src={exerciseMedia(selectedExDb.video_url).video} poster={exerciseMedia(selectedExDb.video_url).poster} autoPlay loop muted playsInline style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
               ) : (
                 <div style={{ borderRadius: 12, border: `1px dashed ${BORDER}`, padding: '32px 20px', textAlign: 'center', background: colors.surface, marginBottom: 20 }}>
