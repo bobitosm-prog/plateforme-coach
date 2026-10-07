@@ -130,6 +130,9 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
           <Link href="/fr/programmes/musculation/debutant">Programme de musculation pour débutant</Link>
           <Link href="/fr/outils/calculateur-calories-macros">Calculateur de calories et macros</Link>
           <Link href="/fr/guides/nutrition">Guide de la nutrition sportive</Link>
+          <Link href="/fr/nutrition/proteines-par-jour">Comprendre combien de protéines consommer par jour</Link>
+          <Link href="/fr/nutrition/prise-de-masse">Construire une prise de masse progressive</Link>
+          <Link href="/fr/nutrition/perte-de-poids">Adapter son alimentation pour une perte de poids progressive</Link>
           <Link href="/fr/guides/musculation">Guide de la musculation</Link>
         </nav>
       </section>}
