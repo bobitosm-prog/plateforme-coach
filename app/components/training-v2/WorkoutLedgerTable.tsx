@@ -33,12 +33,13 @@ export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,
     <div className={styles.columns} aria-hidden="true"><span>{t('set')}</span><span>{v('previous')}</span><span>{timed?'—':'kg'}</span><span>{timed?'s':t('reps')}</span><span>✓</span></div>
     {exercise.sets.map((set,index)=>{
       const current=index===first, active=current&&selected
-      const previous=history?.find(row=>row.set_number===set.num && (row.parent_set_number??null)===(set.parentSetNumber??null) && (!set.parentSetNumber || row.technique===exercise.technique))
-      const stage=exercise.sets.slice(0,index+1).filter(s=>s.parentSetNumber).length
-      const label=set.parentSetNumber?`${exercise.technique==='restpause'?'M':'D'}${stage}`:String(set.num)
-      const aria=(name:string)=>active?name:`${exercise.name} · ${t('set')} ${label} · ${name}`
+      const previous=history?.find(row=>(set.side && !set.parentSetNumber ? row.round_number===set.roundNumber : row.set_number===set.num) && (row.side??null)===(set.side??null) && (row.parent_set_number??null)===(set.parentSetNumber??null) && (!set.parentSetNumber || row.technique===exercise.technique))
+      const stage=exercise.sets.slice(0,index+1).filter(s=>s.parentSetNumber && s.side===set.side).length
+      const label=set.parentSetNumber?`${exercise.technique==='restpause'?'M':'D'}${stage}`:String(set.roundNumber ?? set.num)
+      const sideLabel=set.side?t(set.side):''
+      const aria=(name:string)=>active&&!set.side?name:`${exercise.name} · ${t('set')} ${label}${sideLabel ? ' '+sideLabel : ''} · ${name}`
       return <Fragment key={set.id}><div className={styles.row} data-done={set.done} data-current={active} key={set.id}>
-        <span className={styles.number}>{label}</span>
+        <span className={styles.number}>{label}{set.side&&<small className={styles.side} title={sideLabel}>{t(`${set.side}Short`)}</small>}</span>
         <span className={styles.previous}>{previous ? previous.duration_seconds ? `${previous.duration_seconds} s` : `${previous.weight??'—'} × ${previous.reps??'—'}` : history===null&&!error?'…':'—'}
         </span>
         {timed?<span>—</span>:<input aria-label={aria(v('weight'))} inputMode="decimal" value={set.weightRaw??''} readOnly={set.done} onFocus={()=>{onSelect();if(!set.done)onWeightFocus(set.id)}} onChange={e=>onChange(set.id,'weight',e.target.value)} onBlur={()=>onWeightBlur(set.id)} />}

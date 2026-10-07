@@ -50,6 +50,7 @@ import { extendRestTimerDeadline, resolveRestTimer } from '../../lib/training/re
 import { prescribedDuration } from '../../lib/training/exercise-measurement'
 import { useTrainingFollowup } from '../hooks/useTrainingFollowup'
 import { addDropStage, addWorkoutSet, canAddWorkoutSet, configureFst7 } from '../../lib/training/technique-execution'
+import { isAlternatingLegExercise } from '../../lib/training/unilateral-legs'
 import { normalizeWorkoutDraftExercises } from '../../lib/training/active-workout-draft'
 import { bisetFor, relinkWorkoutBiset, startWorkoutBiset, techniqueIssue, transitionRest, workoutBisetAsSolo, workoutBisetPartnerOptions, workoutBisetSetupOptions } from '../../lib/training/guided-techniques'
 import TechniqueGuidance from './training-v2/TechniqueGuidance'
@@ -59,7 +60,7 @@ const WORKOUT_FONT = "var(--font-body), 'Outfit', sans-serif"
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-interface ExSet { loadMode?: LoadMode; id: string; num: number; parentSetNumber?: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
+interface ExSet { side?: 'left' | 'right'; roundNumber?: number; loadMode?: LoadMode; id: string; num: number; parentSetNumber?: number; weight: number | ''; weightRaw: string; weightInputSource?: 'suggested' | 'entered'; reps: number | ''; durationSeconds?: number | ''; done: boolean; rir: number | null }
 interface Exo { loadMode?: LoadMode; id: string; name: string; muscle: string; targetSets: number; targetReps: string; prescribedWeight?:number; prescribedReps?:number; targetDurationSeconds?: number; rest: number; tempo?: string; rir?: number | null; notes?: string; videoUrl?: string; imageUrl?: string; technique?: string; techniqueDetails?: string; exerciseId?: string | null; sets: ExSet[]; open: boolean }
 interface ExerciseVariant { id?: string; name: string; equipment?: string | null; muscle_group?: string | null; video_url?: string | null }
 interface VariantPopupState { exIdx: number; variants: ExerciseVariant[]; originalName: string; status: 'loading' | 'ready' | 'error' }
@@ -347,7 +348,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
   const progressionByExo = useMemo(() => {
     const map: Record<string, ReturnType<typeof computeProgression>> = {}
     for (const exo of exos) {
-      if (exo.targetDurationSeconds || !followup.enabled || exo.technique) continue
+      if (exo.targetDurationSeconds || !followup.enabled || exo.technique || exo.sets.some(set => set.side)) continue
       const progression = computeProgression(
         previousPerformance[exo.id]?.sessions ?? [],
         exo.targetReps,
@@ -381,7 +382,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       }
       const { data, error } = await supabase
         .from('workout_sets')
-        .select('exercise_id, exercise_name, load_mode, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
+        .select('exercise_id, exercise_name, side, load_mode, weight, reps, set_number, session_id, completed, created_at, rir, workout_sessions!inner(completed)')
         .is('technique',null)
         .eq('user_id', userId)
         .eq('completed', true)
@@ -409,7 +410,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           if (set.done) return set
           // Drop loads are entered explicitly; never prefill from an ordinary set.
           if (set.parentSetNumber) return set
-          const previousSet = recent ? performance?.latestSets[index] : undefined
+          const previousSet = recent && !set.side ? performance?.latestSets[index] : undefined
           const prefill = resolveCurrentSetPrefill({
             draftWeight: set.weight,
             draftWeightRaw: set.weightRaw,
@@ -688,7 +689,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       const parent=exo?.sets.find(row=>row.num===set.parentSetNumber)
       const load = Number(set.weightRaw.replace(',', '.'))
       const restPause = exo?.technique === 'restpause'
-      const main = exo?.sets.filter(row=>!row.parentSetNumber).at(-1)
+      const main = exo?.sets.filter(row=>!row.parentSetNumber && row.side===set.side).at(-1)
       const validLoad = restPause ? load>=0 && load===Number(main?.weight) : load>0 && load<Number(parent?.weight)
       if(!parent?.done || set.weightRaw.trim()==='' || !validLoad || !Number.isInteger(reps) || reps<1) {
         setSetStatusMessage(restPause ? guide('sameError') : tTechnique('lowerWeight')); return
@@ -723,7 +724,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         if(result.enabled && !['saved','discarded','unsupported'].includes(result.status)) toast(twatch('checkEnd'))
       })
     try {
-      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber, loadMode: s.loadMode ?? e.loadMode ?? 'legacy' }) })) }, draftRef.current)
+      const result = await onFinish({ duration: elapsed, completedSets: completed, totalSets: total, totalVolume: volume, exercises: exos.map(e => ({ name: e.name, muscle: e.muscle, exerciseId: e.exerciseId, technique: e.technique, setsTarget: e.targetSets, targetReps: e.targetReps, sets: e.sets.filter(s => s.done).map(s => e.targetDurationSeconds ? { side:s.side, roundNumber:s.roundNumber, setNumber:s.num, weight: 0, reps: 0, durationSeconds: Number(s.durationSeconds), rir: null } : { side:s.side, roundNumber:s.roundNumber, setNumber:s.num, weight: s.weight, reps: s.reps, rir: s.rir, parentSetNumber: s.parentSetNumber, loadMode: s.loadMode ?? e.loadMode ?? 'legacy' }) })) }, draftRef.current)
       cancelNativeRestNotification()
       setCompletionRecords(result.newPRs ?? [])
       setSaving(false)
@@ -789,7 +790,9 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       ...e,
       name: v.name,
       loadMode: defaultLoadMode({...v}),
-      sets: e.sets.map(set => ({...set, loadMode:defaultLoadMode({...v}), weight:'', weightRaw:'', weightInputSource:undefined})),
+      sets: isAlternatingLegExercise({...v}) !== e.sets.some(set => Boolean(set.side))
+        ? normalizeWorkoutDraftExercises([{...e, name:v.name, muscle:v.muscle_group || e.muscle, sets:e.targetSets, loadMode:defaultLoadMode({...v})}])[0].sets
+        : e.sets.map(set => ({...set, loadMode:defaultLoadMode({...v}), weight:'', weightRaw:'', weightInputSource:undefined})),
       targetDurationSeconds: prescribedDuration({ name: v.name }),
       muscle: v.muscle_group || e.muscle,
       exerciseId: v.id || e.exerciseId,
@@ -1006,13 +1009,13 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           const activeSet = exo.sets[activeSetIndex]
           const activeSetNumber = activeSet?.num ?? 1
           const progression = progressionByExo[exo.id]
-          const stageCount = exo.sets.filter(s=>s.parentSetNumber).length
-          const mainCount = exo.sets.length-stageCount
-          const stageNumber = exo.sets.slice(0,activeSetIndex+1).filter(s=>s.parentSetNumber).length
+          const stageCount = exo.sets.filter(s=>s.parentSetNumber && s.side===activeSet?.side).length
+          const mainCount = exo.sets.filter(s=>!s.parentSetNumber && s.side===activeSet?.side).length
+          const stageNumber = exo.sets.slice(0,activeSetIndex+1).filter(s=>s.parentSetNumber && s.side===activeSet?.side).length
           const stepLabel = stageCount ? activeSet?.parentSetNumber
             ? `${exo.technique==='restpause'?guide('mini'):guide('drop')} ${stageNumber}/${stageCount}`
-            : `${guide('main')} ${activeSetNumber}/${mainCount}` : undefined
-          const mainWeight = exo.sets.filter(s=>!s.parentSetNumber).at(-1)?.weight
+            : `${guide('main')} ${activeSet?.roundNumber ?? activeSetNumber}/${mainCount}` : undefined
+          const mainWeight = exo.sets.filter(s=>!s.parentSetNumber && s.side===activeSet?.side).at(-1)?.weight
           const targetLabel = activeSet?.parentSetNumber ? `${exo.technique==='restpause'?`${mainWeight ?? ''} kg — ${guide('same')}`:guide('reduced')} · ${guide('logReps')}` : exo.targetDurationSeconds ? `${exo.targetDurationSeconds} s` : progression
             ? `${fmtStep(progression.weight)} kg × ${progression.reps}`
             : `${exo.targetReps} reps`
@@ -1046,6 +1049,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
             <section key={exo.id} id={`ledger-${exo.id}`} className={ledgerStyles.exercise} data-paired={paired} data-pair-side={paired ? (bisetFor(exos, idx)!.a === idx ? 'first' : 'second') : undefined}>
               <div className={ledgerStyles.title}><h2>{getExerciseName(exo, locale)}</h2><button type="button" aria-label={`${exo.name}, ${tLedger('select')}`} aria-expanded={menuExerciseId===exo.id} aria-controls={`options-${exo.id}`} onClick={()=>{selectExercise(idx);setMenuExerciseId(current=>current===exo.id?null:exo.id)}}>···</button></div>
               {paired && <div className={ledgerStyles.pair}>{tLedger('biset', {side:bisetFor(exos,idx)!.a===idx?'A1':'A2',partner:exos[bisetFor(exos,idx)!.a===idx?bisetFor(exos,idx)!.b:bisetFor(exos,idx)!.a].name})}</div>}
+              {exo.sets.some(set => set.side) && <p className={ledgerStyles.meta}>{tLedger('perLeg', {count:exo.targetSets, rest:exo.rest / 2})}</p>}
               <div className={ledgerStyles.meta}>{[techniqueSummary,!exo.targetDurationSeconds?tLoad(exo.loadMode??'legacy'):null,exo.rir!=null?`RIR ${exo.rir}`:null,targetLabel,selected&&firstUndone>=0?tv2('currentSet',{current:activeSetNumber,total:exo.sets.length}):null].filter(Boolean).join(' · ')}</div>
               <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
                 restSetId={exos.some(item=>item.sets.some(set=>set.id===restSetId)) ? restSetId : exos.flatMap(item=>item.sets).filter(set=>set.done).at(-1)?.id ?? exos[0]?.sets[0]?.id}
@@ -1053,7 +1057,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 onSelect={()=>{if(!selected)selectExercise(idx)}}
                 onChange={(sid,field,value)=>{setSetStatusMessage('');setField(exo.id,sid,field,value)}}
                 onWeightFocus={sid=>beginWeightInput(exo.id,sid)} onWeightBlur={sid=>commitWeight(exo.id,sid)} onValidate={sid=>{if(!selected)selectExercise(idx);validate(exo.id,sid)}}/>
-              <div className={ledgerStyles.rest}>{paired ? tLedger(bisetFor(exos,idx)!.a===idx?'chain':'pairRest',{seconds:exo.rest}) : exo.technique==='restpause' ? tLedger('miniRest') : exo.technique==='dropset'?tLedger('dropRest',{seconds:exo.rest}):tLedger('rest',{seconds:exo.rest})}</div>
+              <div className={ledgerStyles.rest}>{paired ? tLedger(bisetFor(exos,idx)!.a===idx?'chain':'pairRest',{seconds:exo.sets.some(set => set.side) ? exo.rest / 2 : exo.rest}) : exo.technique==='restpause' ? tLedger('miniRest') : exo.technique==='dropset'?tLedger('dropRest',{seconds:exo.sets.some(set => set.side) ? exo.rest / 2 : exo.rest}):tLedger('rest',{seconds:exo.sets.some(set => set.side) ? exo.rest / 2 : exo.rest})}</div>
               {selected && <div className={ledgerStyles.status} role="status">{setStatusMessage}</div>}
               {selected && <details id={`options-${exo.id}`} className={ledgerStyles.menu} open={menuExerciseId===exo.id || missingBiset}><summary>{tLedger('select')}</summary><div className={ledgerStyles.options}>
               {missingBiset && <TechniqueGuidance exercises={exos} index={idx} setIndex={activeSetIndex} />}
@@ -1088,7 +1092,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                 {(exo.technique==='dropset' || (followup.enabled && followup.advanced_techniques)) && stageCount<3 && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? addDropStage(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('addDrop')}</button>}
-                {followup.enabled && followup.advanced_techniques && !exo.technique && exo.sets.length<=7 && !exo.sets.some(set=>set.done||set.parentSetNumber) && <button type="button" onClick={()=>{
+                {followup.enabled && followup.advanced_techniques && !exo.technique && exo.targetSets<=7 && !exo.sets.some(set=>set.done||set.parentSetNumber) && <button type="button" onClick={()=>{
                   setExos(items=>items.map(item=>item.id===exo.id ? configureFst7(item as WorkoutDraftExercise) as Exo:item));setSessionModified(true)
                 }}>{tTechnique('configureFst')}</button>}
                 {!exo.technique && <div style={{ marginTop: 10 }}>

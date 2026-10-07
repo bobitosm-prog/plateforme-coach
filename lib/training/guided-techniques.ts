@@ -105,5 +105,6 @@ export function transitionRest(exercises: readonly WorkoutDraftExercise[], from:
   }
   const pair = bisetFor(exercises, from)
   if (pair?.a === from && next.currentExerciseIndex === pair.b) return 0
-  return exercises[from]?.rest ?? 90
+  const rest = exercises[from]?.rest ?? 90
+  return exercises[from]?.sets.some(set => set.side) ? rest / 2 : rest
 }

@@ -1,6 +1,8 @@
 import { updateActiveWorkoutDraft, type ActiveWorkoutDraft } from './active-workout-draft'
 
 export interface CompletedWorkoutSet {
+  side?: import('./unilateral-legs').LegSide
+  roundNumber?: number
   loadMode?: import('./load-volume').LoadMode
   setNumber?: number
   parentSetNumber?: number

@@ -1,4 +1,5 @@
 import type { TrainingProgramSource } from './active-program'
+import { expandLegSets, isAlternatingLegExercise, isLegSide, type LegSide } from './unilateral-legs'
 import { prescribedDuration } from './exercise-measurement'
 import { bisetFor, bisetPairs, dropCount, restPausePrescription } from './guided-techniques'
 import { defaultLoadMode, isLoadMode, type LoadMode } from './load-volume'
@@ -18,6 +19,8 @@ export function workoutDraftStorageKey(userId: string): string {
 export type ActiveWorkoutStatus = 'active' | 'saving' | 'save_error' | 'completed'
 
 export interface WorkoutDraftSet {
+  side?: LegSide
+  roundNumber?: number
   loadMode?: LoadMode
   parentSetNumber?: number
   durationSeconds?: number | ''
@@ -128,7 +131,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
     const existingSets = Array.isArray(row.sets) ? row.sets : null
     const loadMode = isLoadMode(row.loadMode) ? row.loadMode : existingSets?.some((s:any)=>s.done || Number(s.weight)>0 || s.weightRaw) || Number(row.prescribedWeight)>0 ? 'legacy' : defaultLoadMode(row)
     const targetDurationSeconds = prescribedDuration(row)
-    const sets = existingSets
+    let sets: WorkoutDraftSet[] = existingSets
       ? existingSets.map((setValue, index) => {
           const set = typeof setValue === 'object' && setValue !== null ? setValue as Record<string, unknown> : {}
           const weight: number | '' = typeof set.weight === 'number' && Number.isFinite(set.weight) ? set.weight : ''
@@ -138,6 +141,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
             id: typeof set.id === 'string' ? set.id : setId(),
             num: positiveInteger(set.num, index + 1),
             ...(typeof set.parentSetNumber==='number' && set.parentSetNumber>0 && set.parentSetNumber<index+1 ? {parentSetNumber:set.parentSetNumber}:{}),
+            ...(isLegSide(set.side) ? { side: set.side, roundNumber: positiveInteger(set.roundNumber, Math.ceil((index + 1) / 2)) } : {}),
             weight,
             weightRaw: typeof set.weightRaw === 'string' ? set.weightRaw : weight === '' ? '' : String(weight).replace('.', ','),
             weightInputSource: set.weightInputSource === 'suggested' ? 'suggested' as const : 'entered' as const,
@@ -170,6 +174,7 @@ export function normalizeWorkoutDraftExercises(rows: readonly unknown[]): Workou
         sets.push({ loadMode, id: setId(), num: parent.num + 1, parentSetNumber: parent.num, weight: '', weightRaw: '', weightInputSource: 'entered', reps: '', done: false, rir: null })
       }
     }
+    if (!existingSets && isAlternatingLegExercise(row)) sets = expandLegSets(sets)
     return {
       loadMode,
       id: occurrenceId,
@@ -245,7 +250,9 @@ export function findNextWorkoutPosition(
     const a = exercises[pair.a].sets.findIndex(set => !set.done)
     const b = exercises[pair.b].sets.findIndex(set => !set.done)
     if (a >= 0 || b >= 0) {
-      const next = a >= 0 && (b < 0 || a <= b) ? pair.a : pair.b
+      const aRound = a < 0 ? Infinity : exercises[pair.a].sets[a].roundNumber ?? a + 1
+      const bRound = b < 0 ? Infinity : exercises[pair.b].sets[b].roundNumber ?? b + 1
+      const next = aRound <= bRound ? pair.a : pair.b
       return { currentExerciseIndex: next, currentSetIndex: next === pair.a ? a : b }
     }
   }

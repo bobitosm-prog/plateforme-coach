@@ -28,6 +28,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
   const locale = useLocale()
   const t = useTranslations('training_tab')
   const tLoad = useTranslations('trainingLoad')
+  const leg = useTranslations('workoutLedger')
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 40, color: colors.textMuted }}>{t('calendar.loading')}</div>
@@ -72,7 +73,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
           <small style={{ display: 'block', color: colors.textMuted, fontFamily: fonts.body, fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
             {Array.from(new Set(ex.sets.map(set=>set.load_mode ?? 'legacy'))).map(mode=>tLoad(mode)).join(' · ')}
           </small>
-          <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
             <span style={gridHeader}>SET</span>
             <span style={gridHeader}>KG</span>
             <span style={gridHeader}>{ex.sets.some(set => set.duration_seconds) ? t('v2.durationSeconds') : 'REPS'}</span>
@@ -80,8 +81,8 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
           </div>
           {/* Set rows */}
           {ex.sets.map((set: any, si: number) => (
-            <div key={si} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '5px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
-              <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, width: 22, height: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{si + 1}</span>
+            <div key={si} style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '5px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
+              <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, minWidth: 22, minHeight: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{set.side ? `${set.round_number ?? set.set_number} ${leg(set.side+'Short')}` : si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.duration_seconds ? `${set.duration_seconds} s` : set.reps || 0}</span>
               <span style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textMuted, textAlign: 'right' }}>{setTonnage(set).toLocaleString(locale)} kg</span>

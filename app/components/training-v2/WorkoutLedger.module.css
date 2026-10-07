@@ -45,3 +45,5 @@
 .sessionSummary p { font-size:12px; line-height:1.45; overflow-wrap:anywhere; }
 .sessionSummary p + p { margin-top:3px; }
 @media(max-width:360px){.introRow{gap:10px}.sessionSummary p{font-size:11px}}
+
+.side{display:block;color:#dfbf70;font-size:11px;line-height:1.3;font-weight:700}

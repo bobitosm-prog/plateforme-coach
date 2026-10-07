@@ -12,6 +12,7 @@ export interface PreviousExerciseReference {
 }
 
 export interface PreviousPerformanceRow {
+  side?: string | null
   load_mode?: string | null
   exercise_id?: string | null
   exercise_name?: string | null
@@ -69,7 +70,7 @@ export function buildPreviousPerformanceMap(
     if (failed) return [reference.key, emptyPerformance('error')]
 
     const matchingRows = rows
-      .filter(row => row.completed !== false && matchesReference(row, reference))
+      .filter(row => !row.side && row.completed !== false && matchesReference(row, reference))
       .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
     if (matchingRows.length === 0) return [reference.key, emptyPerformance('no_history')]
 
