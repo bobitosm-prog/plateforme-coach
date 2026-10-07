@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { NextIntlClientProvider } from "next-intl";
 import ProgressionV2, {
   type ProgressionSection,
+  type ProgressionV2Props,
 } from "@/app/components/progression-v2/ProgressionV2";
 import { buildProgressionViewModel } from "@/lib/progression/progression-dashboard-model";
 import messages from "@/messages/fr.json";
@@ -26,11 +27,12 @@ const base = {
 const onAddWeight = vi.fn(),
   onAddBodyMeasurement = vi.fn(),
   onAddPhoto = vi.fn();
-function Harness({ failed = false }: { failed?: boolean }) {
+type Model = ProgressionV2Props["model"];
+function Harness({ failed = false, transform = (model: Model) => model }: { failed?: boolean; transform?: (model: Model) => Model }) {
   const [section, setSection] = useState<ProgressionSection>("summary");
   const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "all">("30d");
   return React.createElement(ProgressionV2, {
-    model: buildProgressionViewModel({ ...base, period }),
+    model: transform(buildProgressionViewModel({ ...base, period })),
     onPeriodChange: setPeriod,
     onAddWeight,
     onAddBodyMeasurement,
@@ -58,13 +60,13 @@ function Harness({ failed = false }: { failed?: boolean }) {
     sessions: [],
   });
 }
-function mount(failed = false) {
+function mount(failed = false, transform?: (model: Model) => Model) {
   return render(
     React.createElement(NextIntlClientProvider, {
       locale: "fr",
       messages,
       timeZone: "Europe/Zurich",
-      children: React.createElement(Harness, { failed }),
+      children: React.createElement(Harness, { failed, transform }),
     }),
   );
 }
@@ -127,4 +129,34 @@ it("explores a real dated point with the keyboard-compatible range control", () 
   mount();
   fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
   expect(screen.getByText(/8 sept.*66 kg/)).toBeTruthy();
+});
+
+it("switches all four periods and exposes partial history", () => {
+  mount(false, model => ({ ...model, period: { ...model.period, isTruncated: true } }));
+  for (const name of ["7 jours", "30 jours", "90 jours", messages.progress.v2.periods.all]) {
+    const button = screen.getByRole("button", { name });
+    fireEvent.click(button);
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+  }
+  expect(screen.getAllByText(messages.analyticsCompact.limited)[0]).toBeTruthy();
+});
+it.each(["loading", "error"] as const)("keeps unavailable totals distinct from zero during %s", state => {
+  mount(false, model => ({ ...model,
+    regularity: { ...model.regularity, state },
+    volume: { ...model.volume, state },
+  }));
+  const sessions = screen.getByRole("button", { name: /Séances.*—/ });
+  fireEvent.click(sessions);
+  expect(screen.getByRole("status").textContent).toBe(
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"]
+  );
+  const volume = screen.getByRole("button", { name: /Volume.*— t/ });
+  fireEvent.click(volume);
+  expect(screen.getByRole("status")).toBeTruthy();
+});
+it("shows an actual zero session total without inventing a percentage", () => {
+  mount();
+  const sessions = screen.getByRole("button", { name: /Séances\s*0/ });
+  expect(sessions.textContent).not.toContain("%");
+  expect(screen.getByRole("button", { name: /Volume\s*0 t/ })).toBeTruthy();
 });
