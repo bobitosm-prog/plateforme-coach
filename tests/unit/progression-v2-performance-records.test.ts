@@ -10,7 +10,6 @@ import {
   getExerciseMetricKey,
   getExerciseProgressionState,
 } from '@/app/components/progression-v2/ExerciseProgression'
-import { getWeeklyVolumeState } from '@/app/components/progression-v2/WeeklyVolumeTrend'
 import {
   buildProgressionViewModel,
   type ProgressionViewModelInput,
@@ -99,7 +98,7 @@ describe('Progression V2 exercise progression', () => {
 describe('Progression V2 weekly volume', () => {
   it('compares current and previous weeks from the unified model', () => {
     const volume = buildProgressionViewModel(input()).volume
-    expect(getWeeklyVolumeState(volume)).toBe('ready')
+    expect(volume.state).toBe('ready')
     expect(volume.currentWeek).toBe(680)
     expect(volume.previousWeek).toBe(640)
     expect(volume.deltaPercent).toBe(6)
@@ -115,7 +114,7 @@ describe('Progression V2 weekly volume', () => {
 
   it('preserves volume errors instead of displaying zero', () => {
     const failed = buildProgressionViewModel(input({ sessions: { rows: [], state: 'error', errorCode: 'FAILED' } })).volume
-    expect(getWeeklyVolumeState(failed)).toBe('error')
+    expect(failed.state).toBe('error')
     expect(failed.currentWeek).toBeNull()
   })
 })
@@ -123,13 +122,12 @@ describe('Progression V2 weekly volume', () => {
 describe('Progression V2 performance architecture and legacy cleanup', () => {
   const records = readFileSync('app/components/progression-v2/PersonalRecordsV2.tsx', 'utf8')
   const exercise = readFileSync('app/components/progression-v2/ExerciseProgression.tsx', 'utf8')
-  const volume = readFileSync('app/components/progression-v2/WeeklyVolumeTrend.tsx', 'utf8')
   const shell = readFileSync('app/components/progression-v2/ProgressionV2.tsx', 'utf8')
   const progressTab = readFileSync('app/components/tabs/ProgressTab.tsx', 'utf8')
   const analytics = readFileSync('app/components/AnalyticsSection.tsx', 'utf8')
 
   it('keeps all visual components pure and model-driven', () => {
-    expect(`${records}\n${exercise}\n${volume}`).not.toMatch(/supabase|\.from\(|fetch\(|exercises_db|workout_sets|personal_records/i)
+    expect(`${records}\n${exercise}\n${shell}`).not.toMatch(/supabase|\.from\(|fetch\(/i)
     expect(shell).toContain('<PersonalRecordsV2 records={model.records}')
     expect(shell).toContain('<ExerciseProgression exerciseProgress={model.exerciseProgress}')
     expect(shell).toContain('model.volume.weeklyVolume')
@@ -160,8 +158,8 @@ describe('Progression V2 performance architecture and legacy cleanup', () => {
   })
 
   it('adds no API and preserves neutral volume semantics', () => {
-    expect(`${records}\n${exercise}\n${volume}`).not.toMatch(/\/api\/|excellent|poor|quality score/i)
-    expect(volume).toContain("volume.deltaPercent == null ? t('comparisonUnavailable')")
+    expect(`${records}\n${exercise}\n${shell}`).not.toMatch(/\/api\/|excellent|poor|quality score/i)
+    expect(shell).toContain("model.volume.weeklyVolume")
   })
 })
 

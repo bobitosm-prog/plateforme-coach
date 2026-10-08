@@ -3,12 +3,11 @@ import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { shouldLoadSignedPhotoUrls } from '@/app/components/progression-v2/TransformationPhotos'
-import { getWellbeingState } from '@/app/components/progression-v2/WellbeingCompact'
 import { buildProgressionViewModel } from '@/lib/progression/progression-dashboard-model'
 
 const progressTab = readFileSync('app/components/tabs/ProgressTab.tsx', 'utf8')
 const photos = readFileSync('app/components/progression-v2/TransformationPhotos.tsx', 'utf8')
-const wellbeing = readFileSync('app/components/progression-v2/WellbeingCompact.tsx', 'utf8')
+const wellbeing = readFileSync('app/components/progression-v2/ProgressionV2.tsx', 'utf8')
 const exportsComponent = readFileSync('app/components/progression-v2/ProgressionExports.tsx', 'utf8')
 const analytics = readFileSync('app/components/AnalyticsSection.tsx', 'utf8')
 const css = readFileSync('app/components/progression-v2/ProgressionV2.module.css', 'utf8')
@@ -42,7 +41,7 @@ describe('Progression V2 lazy history sections', () => {
     expect(progressTab).toContain('aria-modal="true"')
   })
 
-  it('renders wellbeing from the unified model without medical interpretation', () => {
+  it('preserves wellbeing model errors and a neutral active presentation', () => {
     const model = buildProgressionViewModel({
       period: '30d',
       now: new Date('2026-08-26T12:00:00.000Z'),
@@ -53,8 +52,8 @@ describe('Progression V2 lazy history sections', () => {
       photos: { rows: [] },
       wellbeing: { rows: [], state: 'error', errorCode: 'FAILED' },
     })
-    expect(getWellbeingState(model.wellbeing)).toBe('error')
-    expect(wellbeing).toContain("wellbeing.state === 'partial'")
+    expect(model.wellbeing.state).toBe('error')
+    expect(wellbeing).toContain("dailyTruncated")
     expect(wellbeing).not.toMatch(/diagnos|medical|patholog|treatment/i)
     expect(wellbeing).not.toMatch(/supabase|\.from\(|fetch\(/i)
   })

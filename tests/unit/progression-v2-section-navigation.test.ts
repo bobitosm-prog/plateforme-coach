@@ -28,7 +28,7 @@ const onAddWeight = vi.fn(),
   onAddBodyMeasurement = vi.fn(),
   onAddPhoto = vi.fn();
 type Model = ProgressionV2Props["model"];
-function Harness({ failed = false, transform = (model: Model) => model }: { failed?: boolean; transform?: (model: Model) => Model }) {
+function Harness({ failed = false, wellbeingState = "ready", transform = (model: Model) => model }: { failed?: boolean; wellbeingState?: "ready" | "error" | "loading"; transform?: (model: Model) => Model }) {
   const [section, setSection] = useState<ProgressionSection>("summary");
   const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "all">("30d");
   return React.createElement(ProgressionV2, {
@@ -54,19 +54,19 @@ function Harness({ failed = false, transform = (model: Model) => model }: { fail
       records: "ready",
       nutrition: failed ? "error" : "ready",
       hydration: "ready",
-      wellbeing: "ready",
+      wellbeing: wellbeingState,
     },
     dailyTruncated: false,
     sessions: [],
   });
 }
-function mount(failed = false, transform?: (model: Model) => Model) {
+function mount(failed = false, transform?: (model: Model) => Model, wellbeingState: "ready" | "error" | "loading" = "ready") {
   return render(
     React.createElement(NextIntlClientProvider, {
       locale: "fr",
       messages,
       timeZone: "Europe/Zurich",
-      children: React.createElement(Harness, { failed, transform }),
+      children: React.createElement(Harness, { failed, transform, wellbeingState }),
     }),
   );
 }
@@ -194,4 +194,24 @@ it.each(["empty", "error", "loading"] as const)("keeps missing body values unkno
   if (state !== "empty") expect(screen.getByRole("status").textContent).toBe(
     messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"]
   );
+});
+
+it("shows real weekly volume in tonnes and explores the kilogram series", () => {
+  mount(false, model => ({ ...model, volume: { ...model.volume, state: "ready",
+    weeklyVolume: [{ weekKey: "2026-09-28", volume: 640 }, { weekKey: "2026-10-05", volume: 680 }],
+  } }));
+  fireEvent.click(screen.getByRole("button", { name: /Volume.*1,3 t/ }));
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+  expect(screen.getByText(/28 sept.*640 kg/)).toBeTruthy();
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "1" } });
+  expect(screen.getByText(/5 oct.*680 kg/)).toBeTruthy();
+});
+it.each(["error", "loading"] as const)("does not expose stale sleep or mood during %s", state => {
+  mount(false, undefined, state);
+  fireEvent.click(screen.getByRole("button", { name: "Suivi" }));
+  expect(screen.getByText("— h")).toBeTruthy();
+  expect(screen.queryByText("Bien")).toBeNull();
+  expect(screen.queryByRole("slider")).toBeNull();
+  expect(screen.getAllByRole("status").some(node => node.textContent ===
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"])).toBe(true);
 });
