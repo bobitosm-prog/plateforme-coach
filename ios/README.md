@@ -294,3 +294,9 @@ Validation: native simulator tests cover journal timezone, 23/25-hour days, inva
 La bannière native « Chargement de MoovX » est retirée : le chargement de marque reste géré par la page web. Le suivi loading et les écrans d'erreur/reprise sont conservés. Validation : trois BrowserRecoveryTests réussis sur simulateur iPhone, aucune nouvelle distribution TestFlight effectuée.
 
 Ancien design au retour dans l'app : la WebView reste montée lors d'une reprise normale. Le service worker actuel est push-only ; /login en production répond avec private/no-cache/no-store. Cela suggère une page conservée en mémoire, sans constituer une reproduction du problème sur l'appareil. Ce changement ne force aucun rechargement ni effacement des données et ne prétend pas résoudre la mise à jour des pages déjà ouvertes.
+
+## Build TestFlight 1.0 (16) — 8 octobre 2026
+
+Archive Release signée et envoyée avec succès à App Store Connect (UPLOAD/EXPORT SUCCEEDED). Apple traite le paquet ; la disponibilité TestFlight n'est pas encore confirmée. iPhone et compagnon Watch vérifiés en 1.0 (16), identifiant compagnon cohérent et mode workout-processing présent. Cette livraison retire le premier message de chargement natif ; elle ne corrige pas encore la conservation d'une ancienne page web en mémoire. Le nettoyage web n'est pas déployé par cette archive, qui charge app.moovx.ch.
+
+Archive : ~/Library/Developer/Xcode/Archives/2026-10-08/MoovX-AppStore-1.0-Build16.xcarchive. Logs locaux : /tmp/moovx-build16-archive.log et /tmp/moovx-build16-upload.log. Tests de reprise natifs : 3 réussis avant archive.
