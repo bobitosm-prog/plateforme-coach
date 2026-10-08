@@ -160,3 +160,38 @@ it("shows an actual zero session total without inventing a percentage", () => {
   expect(sessions.textContent).not.toContain("%");
   expect(screen.getByRole("button", { name: /Volume\s*0 t/ })).toBeTruthy();
 });
+
+it("offers all six measurements and plots the selected dated measurement", () => {
+  mount(false, model => ({ ...model, measurements: buildProgressionViewModel({
+    ...base, period: "30d", measurements: { rows: [
+      { date: "2026-10-01", hips: 98, calves: 38 },
+      { date: "2026-10-06", hips: 97, calves: 37.5 },
+    ] },
+  }).measurements }));
+  fireEvent.click(screen.getByRole("button", { name: "Corps" }));
+  const selector = screen.getByRole("combobox");
+  expect(Array.from(selector.querySelectorAll("option")).map(option => option.value))
+    .toEqual(["weight", "chest", "waist", "hips", "biceps", "thighs", "calves"]);
+  fireEvent.change(selector, { target: { value: "hips" } });
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+  expect(screen.getByText(/1 oct.*98 cm/)).toBeTruthy();
+  fireEvent.change(selector, { target: { value: "calves" } });
+  expect(screen.getByText(/6 oct.*37,5 cm/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: messages.progress.v2.measurements.add }));
+  expect(onAddBodyMeasurement).toHaveBeenCalledOnce();
+});
+it.each(["empty", "error", "loading"] as const)("keeps missing body values unknown when %s", state => {
+  mount(false, model => ({ ...model,
+    weight: { ...model.weight, state, current: null, target: null, series: [] },
+    measurements: { ...model.measurements, state, fields: {} },
+  }));
+  fireEvent.click(screen.getByRole("button", { name: "Corps" }));
+  expect(screen.getByText("— kg")).toBeTruthy();
+  expect(screen.getAllByText("— cm").length).toBeGreaterThan(0);
+  expect(screen.queryByText("0 kg")).toBeNull();
+  expect(screen.queryByRole("slider")).toBeNull();
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: "waist" } });
+  if (state !== "empty") expect(screen.getByRole("status").textContent).toBe(
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"]
+  );
+});
