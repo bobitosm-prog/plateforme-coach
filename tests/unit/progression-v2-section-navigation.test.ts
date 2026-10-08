@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { NextIntlClientProvider } from "next-intl";
 import ProgressionV2, {
   type ProgressionSection,
+  type ProgressionV2Props,
 } from "@/app/components/progression-v2/ProgressionV2";
 import { buildProgressionViewModel } from "@/lib/progression/progression-dashboard-model";
 import messages from "@/messages/fr.json";
@@ -26,11 +27,12 @@ const base = {
 const onAddWeight = vi.fn(),
   onAddBodyMeasurement = vi.fn(),
   onAddPhoto = vi.fn();
-function Harness({ failed = false }: { failed?: boolean }) {
+type Model = ProgressionV2Props["model"];
+function Harness({ failed = false, wellbeingState = "ready", transform = (model: Model) => model }: { failed?: boolean; wellbeingState?: "ready" | "error" | "loading"; transform?: (model: Model) => Model }) {
   const [section, setSection] = useState<ProgressionSection>("summary");
   const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "all">("30d");
   return React.createElement(ProgressionV2, {
-    model: buildProgressionViewModel({ ...base, period }),
+    model: transform(buildProgressionViewModel({ ...base, period })),
     onPeriodChange: setPeriod,
     onAddWeight,
     onAddBodyMeasurement,
@@ -52,19 +54,19 @@ function Harness({ failed = false }: { failed?: boolean }) {
       records: "ready",
       nutrition: failed ? "error" : "ready",
       hydration: "ready",
-      wellbeing: "ready",
+      wellbeing: wellbeingState,
     },
     dailyTruncated: false,
     sessions: [],
   });
 }
-function mount(failed = false) {
+function mount(failed = false, transform?: (model: Model) => Model, wellbeingState: "ready" | "error" | "loading" = "ready") {
   return render(
     React.createElement(NextIntlClientProvider, {
       locale: "fr",
       messages,
       timeZone: "Europe/Zurich",
-      children: React.createElement(Harness, { failed }),
+      children: React.createElement(Harness, { failed, transform, wellbeingState }),
     }),
   );
 }
@@ -127,4 +129,89 @@ it("explores a real dated point with the keyboard-compatible range control", () 
   mount();
   fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
   expect(screen.getByText(/8 sept.*66 kg/)).toBeTruthy();
+});
+
+it("switches all four periods and exposes partial history", () => {
+  mount(false, model => ({ ...model, period: { ...model.period, isTruncated: true } }));
+  for (const name of ["7 jours", "30 jours", "90 jours", messages.progress.v2.periods.all]) {
+    const button = screen.getByRole("button", { name });
+    fireEvent.click(button);
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+  }
+  expect(screen.getAllByText(messages.analyticsCompact.limited)[0]).toBeTruthy();
+});
+it.each(["loading", "error"] as const)("keeps unavailable totals distinct from zero during %s", state => {
+  mount(false, model => ({ ...model,
+    regularity: { ...model.regularity, state },
+    volume: { ...model.volume, state },
+  }));
+  const sessions = screen.getByRole("button", { name: /Séances.*—/ });
+  fireEvent.click(sessions);
+  expect(screen.getByRole("status").textContent).toBe(
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"]
+  );
+  const volume = screen.getByRole("button", { name: /Volume.*— t/ });
+  fireEvent.click(volume);
+  expect(screen.getByRole("status")).toBeTruthy();
+});
+it("shows an actual zero session total without inventing a percentage", () => {
+  mount();
+  const sessions = screen.getByRole("button", { name: /Séances\s*0/ });
+  expect(sessions.textContent).not.toContain("%");
+  expect(screen.getByRole("button", { name: /Volume\s*0 t/ })).toBeTruthy();
+});
+
+it("offers all six measurements and plots the selected dated measurement", () => {
+  mount(false, model => ({ ...model, measurements: buildProgressionViewModel({
+    ...base, period: "30d", measurements: { rows: [
+      { date: "2026-10-01", hips: 98, calves: 38 },
+      { date: "2026-10-06", hips: 97, calves: 37.5 },
+    ] },
+  }).measurements }));
+  fireEvent.click(screen.getByRole("button", { name: "Corps" }));
+  const selector = screen.getByRole("combobox");
+  expect(Array.from(selector.querySelectorAll("option")).map(option => option.value))
+    .toEqual(["weight", "chest", "waist", "hips", "biceps", "thighs", "calves"]);
+  fireEvent.change(selector, { target: { value: "hips" } });
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+  expect(screen.getByText(/1 oct.*98 cm/)).toBeTruthy();
+  fireEvent.change(selector, { target: { value: "calves" } });
+  expect(screen.getByText(/6 oct.*37,5 cm/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: messages.progress.v2.measurements.add }));
+  expect(onAddBodyMeasurement).toHaveBeenCalledOnce();
+});
+it.each(["empty", "error", "loading"] as const)("keeps missing body values unknown when %s", state => {
+  mount(false, model => ({ ...model,
+    weight: { ...model.weight, state, current: null, target: null, series: [] },
+    measurements: { ...model.measurements, state, fields: {} },
+  }));
+  fireEvent.click(screen.getByRole("button", { name: "Corps" }));
+  expect(screen.getByText("— kg")).toBeTruthy();
+  expect(screen.getAllByText("— cm").length).toBeGreaterThan(0);
+  expect(screen.queryByText("0 kg")).toBeNull();
+  expect(screen.queryByRole("slider")).toBeNull();
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: "waist" } });
+  if (state !== "empty") expect(screen.getByRole("status").textContent).toBe(
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"]
+  );
+});
+
+it("shows real weekly volume in tonnes and explores the kilogram series", () => {
+  mount(false, model => ({ ...model, volume: { ...model.volume, state: "ready",
+    weeklyVolume: [{ weekKey: "2026-09-28", volume: 640 }, { weekKey: "2026-10-05", volume: 680 }],
+  } }));
+  fireEvent.click(screen.getByRole("button", { name: /Volume.*1,3 t/ }));
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+  expect(screen.getByText(/28 sept.*640 kg/)).toBeTruthy();
+  fireEvent.change(screen.getByRole("slider"), { target: { value: "1" } });
+  expect(screen.getByText(/5 oct.*680 kg/)).toBeTruthy();
+});
+it.each(["error", "loading"] as const)("does not expose stale sleep or mood during %s", state => {
+  mount(false, undefined, state);
+  fireEvent.click(screen.getByRole("button", { name: "Suivi" }));
+  expect(screen.getByText("— h")).toBeTruthy();
+  expect(screen.queryByText("Bien")).toBeNull();
+  expect(screen.queryByRole("slider")).toBeNull();
+  expect(screen.getAllByRole("status").some(node => node.textContent ===
+    messages.progress.v2.states[state === "loading" ? "loading" : "unavailable"])).toBe(true);
 });

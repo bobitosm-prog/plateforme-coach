@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -11,27 +12,11 @@ vi.mock('@/lib/beta-offer', () => ({
   trialDaysFor: () => 0,
 }))
 
-vi.mock('@/app/(marketing)/[locale]/landing/components/Cursor', () => ({ default: () => 'Cursor' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/ScrollBar', () => ({ default: () => 'ScrollBar' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/Navbar', () => ({ default: () => 'Navbar' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/Hero', () => ({ default: () => 'Hero' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/MarqueeSection', () => ({ default: () => 'MarqueeSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/Results', () => ({ default: () => 'Results' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/NutritionSection', () => ({ default: () => 'NutritionSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/TrainingSection', () => ({ default: () => 'TrainingSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/TrackingSection', () => ({ default: () => 'TrackingSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/CoachIaSection', () => ({ default: () => 'CoachIaSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/CoachingPro', () => ({ default: () => 'CoachingPro' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/Steps', () => ({ default: () => 'Steps' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/PwaSection', () => ({ default: () => 'PWASection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/PricingSection', () => ({ default: () => 'PricingSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/FaqSection', () => ({ default: () => 'FaqSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/GenevaSection', () => ({ default: () => 'GenevaSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/CtaSection', () => ({ default: () => 'CtaSection' }))
-vi.mock('@/app/(marketing)/[locale]/landing/components/FooterSection', () => ({ default: () => 'FooterSection' }))
 
 import LandingLayout from '@/app/(marketing)/[locale]/landing/layout'
 import LandingPage, { generateMetadata } from '@/app/(marketing)/[locale]/landing/page'
+
+vi.stubGlobal('React', React)
 
 const locales = ['fr', 'en', 'de'] as const
 
@@ -150,28 +135,14 @@ describe('Landing structured data graph', () => {
     })
   })
 
-  it('keeps every existing Landing content section mounted', async () => {
-    const html = await renderLanding('fr')
-
-    for (const section of [
-      'Navbar',
-      'Hero',
-      'MarqueeSection',
-      'Results',
-      'NutritionSection',
-      'TrainingSection',
-      'TrackingSection',
-      'CoachIaSection',
-      'CoachingPro',
-      'Steps',
-      'PWASection',
-      'PricingSection',
-      'FaqSection',
-      'GenevaSection',
-      'CtaSection',
-      'FooterSection',
-    ]) {
-      expect(html).toContain(section)
-    }
+  it.each(locales)('keeps real navigation targets and registration available for %s', async locale => {
+    const html = await renderLanding(locale)
+    expect(html).toContain('href="https://app.moovx.ch/register-client"')
+    expect(html).toContain('href="https://app.moovx.ch/login"')
+    expect(html).toContain(`href="/${locale}/privacy"`)
+    expect(html).toContain(`href="/${locale}/cgu"`)
+    const targets = [...html.matchAll(/href="#([^"]+)"/g)].map(match => match[1])
+    expect(targets.length).toBeGreaterThan(0)
+    for (const target of targets) expect(html).toContain(`id="${target}"`)
   })
 })

@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import { getMeasurementsState } from '@/app/components/progression-v2/BodyMeasurements'
-import { getWeightHistoryState } from '@/app/components/progression-v2/WeightHistory'
 import {
   buildProgressionViewModel,
   PROGRESSION_MEASUREMENT_FIELDS,
@@ -37,11 +35,11 @@ function input(overrides: Partial<ProgressionViewModelInput> = {}): ProgressionV
 
 describe('Progression V2 weight history', () => {
   it('preserves ready, partial, empty and error states without zero fallbacks', () => {
-    expect(getWeightHistoryState(buildProgressionViewModel(input()).weight)).toBe('ready')
-    expect(getWeightHistoryState(buildProgressionViewModel(input({ weight: { logs: [{ date: '2026-08-26', poids: 80 }], isTruncated: true } })).weight)).toBe('partial')
-    expect(getWeightHistoryState(buildProgressionViewModel(input({ weight: { logs: [] } })).weight)).toBe('empty')
+    expect(buildProgressionViewModel(input()).weight.state).toBe('ready')
+    expect(buildProgressionViewModel(input({ weight: { logs: [{ date: '2026-08-26', poids: 80 }], isTruncated: true } })).weight.state).toBe('partial')
+    expect(buildProgressionViewModel(input({ weight: { logs: [] } })).weight.state).toBe('empty')
     const failed = buildProgressionViewModel(input({ weight: { logs: [], state: 'error', errorCode: 'FAILED' } })).weight
-    expect(getWeightHistoryState(failed)).toBe('error')
+    expect(failed.state).toBe('error')
     expect(failed.current).toBeNull()
     expect(failed.series).toEqual([])
   })
@@ -90,16 +88,14 @@ describe('Progression V2 canonical body history', () => {
     const partial = buildProgressionViewModel(input({ measurements: { rows: [{ date: '2026-08-26', hips: 98, calves: 38 }] } })).measurements
     const empty = buildProgressionViewModel(input({ measurements: { rows: [] } })).measurements
     const failed = buildProgressionViewModel(input({ measurements: { rows: [], state: 'error', errorCode: 'FAILED' } })).measurements
-    expect(getMeasurementsState(partial)).toBe('partial')
-    expect(getMeasurementsState(empty)).toBe('empty')
-    expect(getMeasurementsState(failed)).toBe('error')
+    expect(partial.state).toBe('partial')
+    expect(empty.state).toBe('empty')
+    expect(failed.state).toBe('error')
     expect(failed.fields).toEqual({})
   })
 })
 
 describe('Progression V2 weight/body architecture', () => {
-  const weight = readFileSync('app/components/progression-v2/WeightHistory.tsx', 'utf8')
-  const body = readFileSync('app/components/progression-v2/BodyMeasurements.tsx', 'utf8')
   const shell = readFileSync('app/components/progression-v2/ProgressionV2.tsx', 'utf8')
   const progressTab = readFileSync('app/components/tabs/ProgressTab.tsx', 'utf8')
   const analytics = readFileSync('app/components/AnalyticsSection.tsx', 'utf8')
@@ -107,9 +103,7 @@ describe('Progression V2 weight/body architecture', () => {
   const dashboard = readFileSync('app/hooks/useClientDashboard.ts', 'utf8')
 
   it('keeps visual components pure and model-driven', () => {
-    expect(`${weight}\n${body}`).not.toMatch(/supabase|\.from\(|fetch\(|weight_logs|body_measurements/i)
-    expect(weight).toContain("type WeightModel = ProgressionViewModel['weight']")
-    expect(body).toContain("type MeasurementsModel = ProgressionViewModel['measurements']")
+    expect(shell).not.toMatch(/supabase|\.from\(|fetch\(|weight_logs|body_measurements/i)
     expect(shell).toContain('model.weight.series')
     expect(shell).toContain('model.measurements.fields')
   })

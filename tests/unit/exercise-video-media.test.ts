@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { exerciseMedia } from '../../lib/exercise-video-media'
 import { readdirSync } from 'node:fs'
 describe('published exercise media',()=>{
+ it('retains the previously published Curl marteau at the legacy URL',()=>{
+  const file = readFileSync('public/videos/exercises/curl-marteau.mp4')
+  expect(file.length).toBe(1162108)
+  expect(file.subarray(4, 8).toString()).toBe('ftyp')
+  expect(exerciseMedia('/videos/exercises/curl-marteau.mp4?v=4').video).toBe('/videos/exercises/curl-marteau.mp4?v=4')
+ })
  it('keeps validated video files and posters together',()=>{
   for(const poster of readdirSync('public/images/video-posters')) {
    const slug=poster.replace('.webp','')

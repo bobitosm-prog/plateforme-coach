@@ -1,4 +1,5 @@
 'use client'
+import { exerciseMedia } from '@/lib/exercise-video-media'
 import WatchWorkoutControls from './training-v2/WatchWorkoutControls'
 import { watchWorkout } from '@/lib/training/watch-workout'
 import { toast } from 'sonner'
@@ -916,7 +917,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           {videoError ? (
             <div className={trainingV2Styles.toolError} role="status">{tv2('videoError')}</div>
           ) : (
-            <video src={showVideo} controls preload="metadata" onError={() => setVideoError(true)} className={trainingV2Styles.exerciseVideo} />
+            <video src={exerciseMedia(showVideo).video} poster={exerciseMedia(showVideo).poster} playsInline controls preload="metadata" onError={() => setVideoError(true)} className={trainingV2Styles.exerciseVideo} />
           )}
         </TrainingSheet>
       )}
@@ -1360,7 +1361,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
           ) : (
             <div className={trainingV2Styles.exerciseInfoContent}>
               {exerciseInfo.video_url && (
-                <video src={exerciseInfo.video_url} controls preload="metadata" className={trainingV2Styles.exerciseVideo} />
+                <video src={exerciseMedia(exerciseInfo.video_url).video} poster={exerciseMedia(exerciseInfo.video_url).poster} playsInline controls preload="metadata" className={trainingV2Styles.exerciseVideo} />
               )}
               {exerciseInfo.description && <p>{exerciseInfo.description}</p>}
               {exerciseInfo.instructions && (

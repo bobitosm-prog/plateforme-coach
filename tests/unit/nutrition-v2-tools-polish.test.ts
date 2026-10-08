@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const tab = readFileSync('app/components/tabs/NutritionTab.tsx', 'utf8')
-const tools = readFileSync('app/components/nutrition-v2/NutritionTools.tsx', 'utf8')
+const overview = readFileSync('app/components/nutrition-v2/NutritionOverview.tsx', 'utf8')
 const recipes = readFileSync('app/components/RecipesSection.tsx', 'utf8')
 const hook = readFileSync('app/hooks/useNutritionDashboardModel.ts', 'utf8')
 const personalPlanRepository = readFileSync('lib/meal-plan/personal-plan-repository.ts', 'utf8')
@@ -22,7 +22,7 @@ describe('Nutrition V2 compact tools', () => {
     expect(tab).toContain('photoEnabled={capabilities.ai}')
     expect(tab).toContain('{capabilities.nutrition &&')
     expect(tab).toContain('aiAllowed={capabilities.ai}')
-    expect(tools).toContain('{photoEnabled &&')
+    expect(overview).toContain("disabled={item.id === 'recipes' && !recipesEnabled}")
     expect(recipes).toContain('{aiAllowed &&')
   })
 
@@ -30,7 +30,7 @@ describe('Nutrition V2 compact tools', () => {
     expect(tab).toContain("dynamic(() => import('../RecipesSection')")
     expect(tab).toContain("if (subTab === 'meals' && userId)")
     expect(tab).not.toContain('<BarcodeScanner')
-    expect(tools).toContain("t('scannerPending')")
+    expect(tab).not.toContain("import NutritionTools")
   })
 })
 

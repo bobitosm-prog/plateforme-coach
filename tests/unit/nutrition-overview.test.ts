@@ -70,7 +70,7 @@ const callbacks = {
   onTabChange: vi.fn(),
   onRetry: vi.fn(),
 }
-function content(selectedDate = date, account = 'A', failed = false) {
+function content(selectedDate = date, account = 'A', failed = false, recipesEnabled = true) {
   return React.createElement(NextIntlClientProvider, {
     locale: 'fr',
     messages,
@@ -83,6 +83,7 @@ function content(selectedDate = date, account = 'A', failed = false) {
       historyStart: '2026-09-06',
       mealCounts: { '2026-10-05': 4, [date]: 2 },
       tab: 'today',
+      recipesEnabled,
       ...callbacks,
       children: React.createElement('p', null, 'Journal sélectionné'),
     }),
@@ -227,4 +228,14 @@ it('discards delayed Health responses for an old account/date', async () => {
     account: 'B',
     date: '2026-10-05',
   })
+})
+
+it('disables recipes without blocking saved meals when recipes are unavailable', () => {
+  render(content(date, 'A', false, false))
+  const recipes = screen.getByRole('button', { name: 'Recettes' })
+  expect(recipes.hasAttribute('disabled')).toBe(true)
+  fireEvent.click(recipes)
+  expect(callbacks.onTabChange).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Mes repas' }))
+  expect(callbacks.onTabChange).toHaveBeenCalledWith('meals')
 })

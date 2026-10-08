@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import * as React from 'react'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -16,7 +17,8 @@ import DailyProteinPage, {
   generateStaticParams,
 } from '@/app/(marketing)/[locale]/nutrition/proteines-par-jour/page'
 import GuidePage from '@/app/(marketing)/[locale]/guides/[slug]/page'
-import LandingContextualLinks from '@/app/(marketing)/[locale]/landing/components/LandingContextualLinks'
+import LandingV2 from '@/app/(marketing)/[locale]/landing/components/LandingV2'
+vi.stubGlobal('React', React)
 
 const canonical = 'https://moovx.ch/fr/nutrition/proteines-par-jour'
 
@@ -97,7 +99,7 @@ describe('French daily protein pillar page', () => {
 
   it('receives crawlable links from the French landing and nutrition guide only', async () => {
     intl.locale = 'fr'
-    const landingFr = renderToStaticMarkup(createElement(LandingContextualLinks, { group: 'nutrition' }))
+    const landingFr = renderToStaticMarkup(createElement(LandingV2, { locale: 'fr', trialDays: 14 }))
     const guideFr = renderToStaticMarkup(await GuidePage({
       params: Promise.resolve({ locale: 'fr', slug: 'nutrition' }),
     }))
@@ -105,9 +107,9 @@ describe('French daily protein pillar page', () => {
     expect(landingFr).toContain('href="/fr/nutrition/proteines-par-jour"')
     expect(guideFr).toContain('href="/fr/nutrition/proteines-par-jour"')
 
-    for (const locale of ['en', 'de']) {
+    for (const locale of ['en', 'de'] as const) {
       intl.locale = locale
-      const landing = renderToStaticMarkup(createElement(LandingContextualLinks, { group: 'nutrition' }))
+      const landing = renderToStaticMarkup(createElement(LandingV2, { locale, trialDays: 14 }))
       expect(landing).not.toContain('/fr/nutrition/proteines-par-jour')
     }
   })

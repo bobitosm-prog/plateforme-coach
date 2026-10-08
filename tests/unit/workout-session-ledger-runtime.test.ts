@@ -212,3 +212,16 @@ it('validates and restores six leg sets with half rest and side-specific saved h
  expect(payload.exercises[0].setsTarget).toBe(3)
  expect(payload.exercises[0].sets.map((s:any)=>[s.roundNumber,s.side])).toEqual([[1,'left'],[1,'right'],[2,'left'],[2,'right'],[3,'left'],[3,'right']])
 })
+
+it('opens the same published video as the catalogue from an old session URL', async () => {
+ const value = createActiveWorkoutDraft({ userId: 'synthetic-owner', programId: null, programSource: 'none', sessionKey: 'video', sessionName: 'Video QA', exercises: [{name: 'Ab Roller', sets: 1, reps: 10, videoUrl: 'https://example.com/storage/ab-roller/ab-roller.mp4?v=old'}] })
+ mount(value)
+ fireEvent.click(screen.getByRole('button', {name: messages.training_tab.v2.exerciseTools}))
+ fireEvent.click(screen.getByRole('button', {name: messages.training_tab.v2.video}))
+ const video = document.querySelector('video[controls]')!
+ expect(video.getAttribute('src')).toBe('/videos/exercises/ab-roller.mp4?v=moovx-20261006')
+ expect(video.getAttribute('poster')).toBe('/images/video-posters/ab-roller.webp')
+ expect(video.hasAttribute('playsinline')).toBe(true)
+ fireEvent.error(video)
+ expect(screen.getByText(messages.training_tab.v2.videoError)).toBeTruthy()
+})
