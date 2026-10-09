@@ -1,5 +1,6 @@
 {
   "watch_readiness": {
+  "close": "Close",
   "ready": "Watch ready",
   "ready_detail": "Your watch responds and permits workouts. MoovX will launch it when you start your session.",
   "permission": "Watch: permission required",

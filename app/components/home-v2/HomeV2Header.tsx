@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import Image from 'next/image'
 import type { HomeViewModel } from '../../../lib/home/home-dashboard-model'
 import HomeWeekCalendar from './HomeWeekCalendar'
+import WatchReadinessIndicator from './WatchReadinessIndicator'
 import styles from './HomeV2.module.css'
 
 export interface HomeV2HeaderActions {
@@ -36,11 +37,14 @@ export default function HomeV2Header({
       <button type="button" className={styles.athenaButton} onClick={onOpenAthena} aria-label={t('openAthena')}>
         <span aria-hidden="true">A</span><Sparkles size={11} aria-hidden="true" />
       </button>
+      <div className={styles.profileActions}>
+      <WatchReadinessIndicator />
       <button type="button" className={styles.brandButton} onClick={onOpenAccount} aria-label={t('openAccount')}>
         {identity.avatar
           ? <Image className={styles.headerAvatar} src={identity.avatar} alt="" width={36} height={36} unoptimized />
           : <span className={styles.avatarInitial} aria-hidden="true">{identity.firstName.slice(0, 1).toUpperCase()}</span>}
       </button>
+      </div>
     </div>
     <div className={styles.headerCopy}>
       <button type="button" className={styles.dateButton} onClick={onOpenTraining}>

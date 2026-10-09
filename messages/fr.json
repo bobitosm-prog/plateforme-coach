@@ -1,5 +1,6 @@
 {
   "watch_readiness": {
+  "close": "Fermer",
   "ready": "Watch prête",
   "ready_detail": "La montre répond et autorise les entraînements. MoovX la lancera au démarrage de ta séance.",
   "permission": "Watch : autorisation requise",

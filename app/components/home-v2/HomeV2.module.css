@@ -786,3 +786,11 @@
 
 /* The main scroll container alone reserves space for the fixed navigation. */
 .shell { padding-bottom: 0; }
+
+/* Compact Watch status beside the profile; details stay out of the dashboard. */
+.profileActions { display: flex; align-items: center; justify-self: end; gap: 4px; }
+.watchIndicator { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; flex-shrink: 0; }
+.watchIndicator:focus-visible, .watchClose:focus-visible { outline: 2px solid #dfbf70; outline-offset: 2px; }
+.watchOverlay { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,.65); }
+.watchDialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 1101; width: min(380px,calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; box-sizing: border-box; padding: 24px; border: 1px solid #393326; border-radius: 20px; background: #211f18; color: #f5f2ea; font-family: var(--font-body), 'Outfit', sans-serif; }
+.watchClose { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: #dfbf70; cursor: pointer; }
