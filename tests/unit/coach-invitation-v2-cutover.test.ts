@@ -8,7 +8,7 @@ describe('Invitation V2 application cutover', () => {
   it('uses only opaque-token join links and rejects legacy coach UUID links', () => {
     const join = read('app/(application)/join/JoinPageContent.tsx')
     const coachSources = [
-      read('app/(application)/coach/page.tsx'),
+      read('app/(application)/coach/CoachDashboard.tsx'),
       read('app/(application)/coach/hooks/useCoachDashboard.ts'),
       read('app/(application)/onboarding-coach/OnboardingCoachContent.tsx'),
     ].join('\n')
@@ -21,7 +21,7 @@ describe('Invitation V2 application cutover', () => {
   })
 
   it('uses one creation authority and disables the browser-provided legacy email route', () => {
-    const coach = read('app/(application)/coach/page.tsx')
+    const coach = read('app/(application)/coach/CoachDashboard.tsx')
     const legacy = read('app/api/invite-client/route.ts')
     expect(coach).toContain("fetch('/api/coach/invitations'")
     expect(coach).not.toContain("fetch('/api/invite-client'")
