@@ -334,3 +334,22 @@ dont la réconciliation inactive et le rejet d’un démarrage retardé après c
 TypeScript, parité des trois langues et build Next passent. La compilation
 simulée comprend l’iPhone et son compagnon Watch. Cela ne constitue pas une
 validation de la liaison physique Ultra 1 ni une mise à disposition TestFlight.
+
+### Réveil du compagnon au démarrage — build 18, 9 octobre 2026
+
+La réconciliation directe décrite ci-dessus pouvait empêcher tout réveil : une
+Watch en veille ne répondait pas, donc le pont quittait avant l’appel HealthKit
+`startWatchApp(toHandle:)`. Le démarrage transmet désormais les identifiants des
+anciennes demandes avec la nouvelle commande, puis appelle HealthKit sans
+attendre cette réponse. Après récupération HealthKit, seule la Watch peut
+écarter ces demandes, et uniquement si aucun entraînement n’est actif. Une
+séance active reste protégée ; les commandes clôturées ne peuvent pas redémarrer.
+L’ouverture de l’app iPhone vérifie la disponibilité sans lancer de séance.
+
+Validation : 9 WatchWorkoutPolicyTests exécutés sur simulateur iPhone, sans
+échec (compatibilité des commandes, requêtes expirées, protection d’une séance
+active, arrêt reçu avant le réveil). Archive Release signée réussie ; paquet
+iPhone et Watch vérifié en 1.0 (18). Cela ne valide pas encore le réveil réel :
+installer le build 18 sur les deux appareils, laisser la Watch sur son cadran
+en veille, démarrer une séance depuis l’iPhone, puis vérifier démarrage,
+continuité en veille et sauvegarde unique en fin de séance.
