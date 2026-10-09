@@ -65,12 +65,12 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         if action == "disable" {
             defaults.set(false, forKey: "watchWorkoutEnabled")
             // Disabling never silently discards an already running workout.
-            if command?.id == id && command?.action == .start { send(WatchWorkoutCommand(id: id, action: .finish)) }
+            if command?.id == id && command?.action == .start { send(WatchWorkoutCommand(id: id, action: .finish, supersededIDs: command?.supersededIDs ?? [])) }
             return result(id)
         }
         if action == "finish" || action == "discard" {
             endedIDs.insert(id)
-            if command?.id == id { send(WatchWorkoutCommand(id: id, action: action == "finish" ? .finish : .discard)) }
+            if command?.id == id { send(WatchWorkoutCommand(id: id, action: action == "finish" ? .finish : .discard, supersededIDs: command?.supersededIDs ?? [])) }
             return result(id)
         }
         guard enabled || action == "enable" else { return result(id) }
@@ -85,19 +85,14 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
             if current.action != .start || acknowledgedID == id && ["running","saved","discarded","saving"].contains(status) { return result(id) }
             if action != "enable" { return result(id) } // No automatic relaunch on reload.
         }
-        if let current = command, current.id != id, status != "saved", status != "discarded" {
-            // Ask the sole HealthKit writer to retire only an inactive old ID.
-            // Never infer completion from a timeout or a transport failure.
-            let resolved = await request(["action": "reconcile", "id": current.id.uuidString], key: "status")
-            guard command == current else { return result(id) }
-            guard ["saved", "discarded"].contains(resolved) else { return result(id) }
-            status = resolved; acknowledgedID = current.id
-        }
-        // A finish/discard/disable may have arrived while awaiting the Watch.
+        // Do not require a live WCSession reply before waking the companion.
+        // Recovery and conflict checks belong to the Watch, the sole workout writer.
         guard !endedIDs.contains(id), defaults.bool(forKey: "watchWorkoutEnabled"), !launching else { return result(id) }
         launching = true
         defer { launching = false }
-        send(WatchWorkoutCommand(id: id, action: .start))
+        var superseded = command?.supersededIDs ?? []
+        if let previous = command, previous.id != id, !superseded.contains(previous.id) { superseded.append(previous.id) }
+        send(WatchWorkoutCommand(id: id, action: .start, supersededIDs: superseded))
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .traditionalStrengthTraining
         configuration.locationType = .indoor

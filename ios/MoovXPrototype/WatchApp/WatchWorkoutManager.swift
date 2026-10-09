@@ -121,13 +121,16 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
         }
         if command.action != .start {
             // Retire even a not-yet-started ID, so delayed starts cannot resurrect it.
-            if ledger.activeID == nil { var next = ledger; next.finish(command.id, status: "discarded"); ledger = next; report(id: command.id, as: "discarded"); return }
+            if ledger.activeID == nil { var next = ledger; next.retireSupersededRequests(for: command); next.finish(command.id, status: "discarded"); ledger = next; report(id: command.id, as: "discarded"); return }
             guard ledger.activeID == command.id else { report(id: command.id, as: "busy"); return }
             stop(discard: command.action == .discard); return
         }
         if ledger.activeID == command.id { report(); return }
         guard ledger.activeID == nil, !starting else { report(id: command.id, as: "busy"); return }
         guard command.canStart() else { status = "expired"; report(id: command.id, as: "expired"); return }
+        var nextLedger = ledger
+        nextLedger.retireSupersededRequests(for: command)
+        ledger = nextLedger
         let permission = health.authorizationStatus(for: HKObjectType.workoutType())
 #if DEBUG
         NSLog("MoovX Watch workout write permission: %ld", permission.rawValue)
