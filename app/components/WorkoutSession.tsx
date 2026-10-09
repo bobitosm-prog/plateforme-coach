@@ -222,6 +222,7 @@ function CustomBuilder({ onStart, onCancel, bisetPartner }: {
 }
 
 export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose, onNavigateHome, onNavigateProgress, rirTrackingEnabled }: WorkoutSessionProps) {
+  const [rirVisible, setRirVisible] = useState(Boolean(rirTrackingEnabled))
   const {preferences:followup}=useTrainingFollowup()
   const tTechnique=useTranslations('trainingTechnique')
   const tBisetRecovery=useTranslations('trainingBisetRecovery')
@@ -935,7 +936,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               <p>{tv2('completedSetProgress', {current:completed,total})}</p>
             </div>
           </div>
-          <WatchWorkoutControls key={draft.draftId} draftId={draft.draftId}/>
+          {exos.some(exercise => !exercise.targetDurationSeconds) && <button type="button" className={ledgerStyles.rirToggle} aria-pressed={rirVisible} onClick={() => setRirVisible(value => !value)}>{tv2('rir')}</button>}
+          {exos.length > 0 && <WatchWorkoutControls key={draft.draftId} draftId={draft.draftId}/>}
         </div>
         {!reorderMode && exos.length === 0 && (
           <div style={{ margin: '0 4px 24px', padding: '40px 20px', textAlign: 'center', border: `1.5px dashed ${colors.divider}`, borderRadius: 14, background: colors.surface2 }}>
@@ -1054,7 +1056,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
                 restSetId={exos.some(item=>item.sets.some(set=>set.id===restSetId)) ? restSetId : exos.flatMap(item=>item.sets).filter(set=>set.done).at(-1)?.id ?? exos[0]?.sets[0]?.id}
                 restTimer={(restOn || restDone) ? <div className={ledgerStyles.timer}><RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/></div> : null}
-                showRir={Boolean(rirTrackingEnabled)} onRirChange={(sid,value)=>setSetRir(exo.id,sid,value)}
+                showRir={rirVisible} onRirChange={(sid,value)=>setSetRir(exo.id,sid,value)}
                 onSelect={()=>{if(!selected)selectExercise(idx)}}
                 onChange={(sid,field,value)=>{setSetStatusMessage('');setField(exo.id,sid,field,value)}}
                 onWeightFocus={sid=>beginWeightInput(exo.id,sid)} onWeightBlur={sid=>commitWeight(exo.id,sid)} onValidate={sid=>{if(!selected)selectExercise(idx);validate(exo.id,sid)}}/>
@@ -1217,7 +1219,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
         <div style={{ height: 8 }} />
       </div>
 
-      {/* FAB ajout exercice — flottant, au-dessus de la barre TERMINER */}
+      <div className={ledgerStyles.sessionActions}>
+      {/* Session actions share the same inset as the exercise cards. */}
       {!reorderMode && (
         <button
           onClick={() => { setBisetSourceId(null); setMode('custom') }}
@@ -1229,6 +1232,8 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
       )}
 
       {!reorderMode && <div className={ledgerStyles.finishArea}><button type="button" onClick={() => setShowEndModal(true)}>{t('finish')}</button></div>}
+
+      </div>
 
       {/* END SESSION MODAL — slide up sheet */}
       {showEndModal && !showDeleteConfirm && (

@@ -232,9 +232,11 @@ it('exposes RIR outside closed options and retains it when validating and restor
  const restored = within(screen.getByRole('group',{name:'Curl'})).getAllByRole('combobox')[0] as HTMLSelectElement
  expect(restored.value).toBe('0'); expect(restored.disabled).toBe(true)
 })
-it('keeps RIR hidden when tracking is disabled', () => {
+it('allows enabling RIR directly in a session when the account preference is disabled', () => {
  mount()
  expect(within(screen.getByRole('group',{name:'Curl'})).queryByRole('combobox')).toBeNull()
+ fireEvent.click(screen.getByRole('button',{name:messages.training_tab.v2.rir}))
+ expect(within(screen.getByRole('group',{name:'Curl'})).getAllByRole('combobox')).toHaveLength(2)
 })
 
 it('stores 4+ on the selected leg only and omits RIR for timed exercises', async () => {
@@ -250,4 +252,16 @@ it('stores 4+ on the selected leg only and omits RIR for timed exercises', async
  await waitFor(()=>expect(changed.mock.calls.at(-1)?.[0].exercises[0].sets[1].rir).toBe(4))
  expect(changed.mock.calls.at(-1)?.[0].exercises[0].sets[0].rir).toBeNull()
  expect(within(screen.getByRole('group',{name:'Squat Barre'})).queryByRole('combobox')).toBeNull()
+})
+
+it('does not contact the Watch for an empty session and still offers adding an exercise', () => {
+ const value = draft(); value.exercises = []
+ const postMessage = vi.fn().mockResolvedValue({enabled:true,status:'busy'})
+ ;(window as any).webkit = {messageHandlers:{moovxWatchWorkout:{postMessage}}}
+ try {
+  mount(value)
+  expect(screen.queryByRole('region',{name:'Apple Watch'})).toBeNull()
+  expect(postMessage).not.toHaveBeenCalled()
+  expect(screen.getByRole('button',{name:messages.training_tab.ws.addExercise})).toBeTruthy()
+ } finally { delete (window as any).webkit }
 })
