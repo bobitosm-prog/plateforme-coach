@@ -1,4 +1,22 @@
 {
+  "watch_readiness": {
+  "ready": "Watch bereit",
+  "ready_detail": "Deine Watch antwortet und erlaubt Trainings. MoovX startet sie beim Beginn deiner Einheit.",
+  "permission": "Watch: Berechtigung erforderlich",
+  "permission_detail": "Öffne MoovX auf deiner Watch und erlaube das Schreiben von Trainings in Health.",
+  "busy": "Watch: Training prüfen",
+  "busy_detail": "Ein Training ist aktiv oder benötigt Aufmerksamkeit. Öffne MoovX auf deiner Watch.",
+  "checking": "Watch wird geprüft…",
+  "checking_detail": "Die Verbindung zu deiner Watch wird geprüft.",
+  "install": "Watch: Installation prüfen",
+  "install_detail": "Prüfe die Kopplung und die MoovX-Installation in der Watch-App auf deinem iPhone.",
+  "off": "Watch-Begleiter deaktiviert",
+  "off_detail": "Aktiviere den Begleiter, um Trainings mit deinen MoovX-Einheiten auf der Watch zu starten.",
+  "unverified": "Watch-Verfügbarkeit nicht bestätigt",
+  "unverified_detail": "Öffne MoovX auf deiner Watch und prüfe erneut. Eine ruhende Watch antwortet möglicherweise nicht. Verwende die neueste MoovX-Version auf beiden Geräten.",
+  "enable": "Begleiter aktivieren",
+  "verify": "Watch prüfen"
+},
   "workoutDesign": {
     "sessionLead": "Mein",
     "sessionAccent": "Training.",

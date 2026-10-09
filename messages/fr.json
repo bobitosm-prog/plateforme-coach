@@ -1,4 +1,22 @@
 {
+  "watch_readiness": {
+  "ready": "Watch prête",
+  "ready_detail": "La montre répond et autorise les entraînements. MoovX la lancera au démarrage de ta séance.",
+  "permission": "Watch : autorisation requise",
+  "permission_detail": "Ouvre MoovX sur la montre et autorise l’écriture des entraînements dans Santé.",
+  "busy": "Watch : séance à vérifier",
+  "busy_detail": "Une séance est active ou attend une résolution sur la montre. Ouvre MoovX sur la Watch pour la vérifier.",
+  "checking": "Vérification de la Watch…",
+  "checking_detail": "Vérification de la liaison avec ta montre.",
+  "install": "Watch : installation à vérifier",
+  "install_detail": "Vérifie le jumelage et l’installation de MoovX dans l’app Watch sur ton iPhone.",
+  "off": "Compagnon Watch désactivé",
+  "off_detail": "Active le compagnon pour démarrer un entraînement sur ta montre avec tes séances MoovX.",
+  "unverified": "Watch : disponibilité non confirmée",
+  "unverified_detail": "Ouvre MoovX sur ta montre, puis vérifie à nouveau. Une montre en veille peut ne pas répondre. Utilise la dernière version de MoovX sur les deux appareils.",
+  "enable": "Activer le compagnon",
+  "verify": "Vérifier la Watch"
+},
   "workoutDesign": {
     "sessionLead": "Ma",
     "sessionAccent": "séance.",

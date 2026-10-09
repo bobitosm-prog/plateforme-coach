@@ -218,6 +218,27 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
     }
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) { handle(context) }
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { handle(message) }
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        if message["action"] as? String == "reconcile", let raw = message["id"] as? String, let id = UUID(uuidString: raw) {
+            Task { @MainActor in
+                guard self.ready, !self.starting, !self.finalizing else { replyHandler(["status": "busy"]); return }
+                var next = self.ledger
+                let value = next.reconcileInactive(id)
+                self.ledger = next
+                if ["saved", "discarded"].contains(value), self.pending?.id == id { self.pending = nil }
+                replyHandler(["status": value])
+            }
+            return
+        }
+        guard message["action"] as? String == "readiness" else { replyHandler([:]); return }
+        Task { @MainActor in
+            // Read without triggering a workout or replaying a pending command.
+            let authorized = self.health.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized
+            let value = !self.ready ? "checking" : self.ledger.activeID != nil || self.starting || self.finalizing
+                ? "busy" : authorized ? "ready" : "permission"
+            replyHandler(["readiness": value])
+        }
+    }
     private nonisolated func handle(_ body: [String: Any]) {
         guard let command = WatchWorkoutCommand(body) else { return }
         Task { @MainActor in self.receive(command) }

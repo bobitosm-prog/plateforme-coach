@@ -8,6 +8,7 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
     private let store = HKHealthStore()
     private let defaults = UserDefaults.standard
     private var launching = false
+    private var endedIDs = Set<UUID>() // Cancels starts awaiting a live reconciliation reply.
     private var status: String {
         get { defaults.string(forKey: "watchWorkoutStatus") ?? "idle" }
         set { defaults.set(newValue, forKey: "watchWorkoutStatus") }
@@ -24,6 +25,40 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         super.init()
         if WCSession.isSupported() { WCSession.default.delegate = self; WCSession.default.activate() }
     }
+    /// A live reply is required before claiming readiness. A sleeping/unreachable
+    /// watch is unverified, not necessarily disconnected or unauthorized.
+    func readiness(enable: Bool = false) async -> [String: Any] {
+        if enable { defaults.set(true, forKey: "watchWorkoutEnabled") }
+        let enabled = defaults.bool(forKey: "watchWorkoutEnabled")
+        func result(_ value: String) -> [String: Any] { ["enabled": enabled, "status": value] }
+        guard WCSession.isSupported() else { return result("unsupported") }
+        let session = WCSession.default
+        guard session.activationState == .activated else { session.activate(); return result("checking") }
+        guard session.isPaired, session.isWatchAppInstalled else { return result("install") }
+        guard enabled else { return result("off") }
+        guard session.isReachable else { return result("unverified") }
+        let value = await request(["action": "readiness"], key: "readiness")
+        return result(["ready", "permission", "busy", "checking"].contains(value) ? value : "unverified")
+    }
+    private func request(_ body: [String: String], key: String) async -> String {
+        guard WCSession.default.isReachable else { return "unverified" }
+        return await withCheckedContinuation { continuation in
+            var completed = false
+            let finish: (String) -> Void = { value in
+                guard !completed else { return }
+                completed = true
+                continuation.resume(returning: value)
+            }
+            WCSession.default.sendMessage(body, replyHandler: { payload in
+                let value = payload[key] as? String ?? "unverified"
+                Task { @MainActor in finish(value) }
+            }, errorHandler: { _ in Task { @MainActor in finish("unverified") } })
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3))
+                finish("unverified")
+            }
+        }
+    }
     func handle(action: String, id: UUID) async -> [String: Any] {
         let enabled = defaults.bool(forKey: "watchWorkoutEnabled")
         if action == "enable" { defaults.set(true, forKey: "watchWorkoutEnabled") }
@@ -34,15 +69,16 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
             return result(id)
         }
         if action == "finish" || action == "discard" {
+            endedIDs.insert(id)
             if command?.id == id { send(WatchWorkoutCommand(id: id, action: action == "finish" ? .finish : .discard)) }
             return result(id)
         }
         guard enabled || action == "enable" else { return result(id) }
         guard WCSession.isSupported(), WCSession.default.activationState == .activated else {
-            status = "unavailable"; return result(id)
+            return result(id, override: "unavailable")
         }
         guard WCSession.default.isPaired, WCSession.default.isWatchAppInstalled else {
-            status = "install"; return result(id)
+            return result(id, override: "install")
         }
         if action == "status" { return result(id) }
         if let current = command, current.id == id {
@@ -50,9 +86,15 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
             if action != "enable" { return result(id) } // No automatic relaunch on reload.
         }
         if let current = command, current.id != id, status != "saved", status != "discarded" {
-            return result(id) // Preserve the real state of the other workout.
+            // Ask the sole HealthKit writer to retire only an inactive old ID.
+            // Never infer completion from a timeout or a transport failure.
+            let resolved = await request(["action": "reconcile", "id": current.id.uuidString], key: "status")
+            guard command == current else { return result(id) }
+            guard ["saved", "discarded"].contains(resolved) else { return result(id) }
+            status = resolved; acknowledgedID = current.id
         }
-        guard !launching else { return result(id) }
+        // A finish/discard/disable may have arrived while awaiting the Watch.
+        guard !endedIDs.contains(id), defaults.bool(forKey: "watchWorkoutEnabled"), !launching else { return result(id) }
         launching = true
         defer { launching = false }
         send(WatchWorkoutCommand(id: id, action: .start))
@@ -60,12 +102,14 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         configuration.activityType = .traditionalStrengthTraining
         configuration.locationType = .indoor
         do { try await store.startWatchApp(toHandle: configuration) }
-        catch { status = "unavailable" }
+        catch { if command?.id == id && command?.action == .start && acknowledgedID != id { status = "unavailable" } }
         return result(id)
     }
-    private func result(_ id: UUID) -> [String: Any] {
+    private func result(_ id: UUID, override: String? = nil) -> [String: Any] {
         ["enabled": defaults.bool(forKey: "watchWorkoutEnabled"),
-         "status": command?.id == id || command == nil ? status : "busy"]
+         "status": override ?? (command?.id == id || command == nil
+            ? (status == "pending" && command.map { Date().timeIntervalSince($0.issuedAt) > 15 } == true ? "unavailable" : status)
+            : "busy")]
     }
     private func send(_ next: WatchWorkoutCommand) {
         command = next; status = "pending"; acknowledgedID = nil
@@ -121,9 +165,15 @@ final class WatchWorkoutBridge: NSObject, WKScriptMessageHandlerWithReply {
               [0,443].contains(message.frameInfo.securityOrigin.port), NavigationPolicy.allows(message.webView?.url),
               UIApplication.shared.applicationState == .active,
               let body = message.body as? [String: String], let action = body["action"],
-              ["sync","status","enable","disable","finish","discard"].contains(action),
-              let raw = body["id"], let id = UUID(uuidString: raw) else {
+              ["readiness","configure","sync","status","enable","disable","finish","discard"].contains(action) else {
             replyHandler(nil,"watch_unavailable"); return
+        }
+        if action == "readiness" || action == "configure" {
+            Task { replyHandler(await PhoneWatchWorkout.shared.readiness(enable: action == "configure"), nil) }
+            return
+        }
+        guard let raw = body["id"], let id = UUID(uuidString: raw) else {
+            replyHandler(nil, "watch_unavailable"); return
         }
         Task { replyHandler(await PhoneWatchWorkout.shared.handle(action: action, id: id), nil) }
     }

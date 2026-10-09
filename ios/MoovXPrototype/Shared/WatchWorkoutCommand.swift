@@ -33,6 +33,13 @@ struct WatchWorkoutLedger: Codable {
         terminalStatuses[id.uuidString] = status
         if activeID == id { activeID = nil }
     }
+    /// Retire a request that never started only when no session needs recovery.
+    mutating func reconcileInactive(_ id: UUID) -> String {
+        guard activeID == nil else { return "busy" }
+        if terminalIDs.contains(id) { return terminalStatuses[id.uuidString] ?? "error" }
+        finish(id, status: "discarded")
+        return "discarded"
+    }
     func accepts(_ command: WatchWorkoutCommand, now: Date = Date()) -> Bool {
         guard !terminalIDs.contains(command.id) else { return false }
         if command.action == .start {

@@ -2,6 +2,20 @@ import XCTest
 @testable import MoovXPrototype
 
 final class WatchWorkoutPolicyTests: XCTestCase {
+    func testLiveReconciliationRetiresOnlyInactiveRequests() {
+        let old = UUID(), active = UUID()
+        var ledger = WatchWorkoutLedger(activeID: active)
+        XCTAssertEqual(ledger.reconcileInactive(old), "busy")
+        XCTAssertEqual(ledger.reconcileInactive(active), "busy")
+        XCTAssertEqual(ledger.activeID, active)
+        XCTAssertTrue(ledger.terminalIDs.isEmpty)
+        ledger.finish(active, status: "saved")
+        XCTAssertEqual(ledger.reconcileInactive(active), "saved")
+        XCTAssertEqual(ledger.reconcileInactive(old), "discarded")
+        XCTAssertEqual(ledger.reconcileInactive(old), "discarded")
+        XCTAssertFalse(ledger.accepts(WatchWorkoutCommand(id: old, action: .start)))
+        XCTAssertEqual(ledger.terminalIDs.filter { $0 == old }.count, 1)
+    }
     func testDelayedStartAndMalformedMessagesAreRejected() {
         let now = Date()
         XCTAssertNil(WatchWorkoutCommand(["id":"not-a-uuid","action":"start","issuedAt":now.timeIntervalSince1970]))

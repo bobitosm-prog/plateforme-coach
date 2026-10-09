@@ -288,3 +288,49 @@ Nutrition now has an optional native-only card for the selected journal date. It
 `DailyEnergyBridge` accepts only foreground messages from the trusted app origin and main frame. Read access is requested on an explicit Connect action. Opt-in is keyed by MoovX account on this device; Health itself always belongs to the iPhone owner. Read denial cannot be distinguished from missing samples, so absent components remain unknown and suppress the total/difference. Only display state holds returned daily totals: no database, localStorage, server, coach or AI transfer is added. The card refreshes on foreground, manually, and each visible minute. Disconnect stops reading for that account; OS permissions are managed in Health.
 
 Validation: native simulator tests cover journal timezone, 23/25-hour days, invalid/future dates and no extrapolation. UI runtime tests cover opt-in/disconnect, missing data, stale account/date responses and resume. Browser visual checks use explicitly synthetic totals at 320 and 390 pixels. Real Health read authorization and agreement with the paired iPhone Health totals still require build 14 testing on the physical device.
+
+## Démarrage : suppression du double chargement (8 octobre 2026)
+
+La bannière native « Chargement de MoovX » est retirée : le chargement de marque reste géré par la page web. Le suivi loading et les écrans d'erreur/reprise sont conservés. Validation : trois BrowserRecoveryTests réussis sur simulateur iPhone, aucune nouvelle distribution TestFlight effectuée.
+
+Ancien design au retour dans l'app : la WebView reste montée lors d'une reprise normale. Le service worker actuel est push-only ; /login en production répond avec private/no-cache/no-store. Cela suggère une page conservée en mémoire, sans constituer une reproduction du problème sur l'appareil. Ce changement ne force aucun rechargement ni effacement des données et ne prétend pas résoudre la mise à jour des pages déjà ouvertes.
+
+## Build TestFlight 1.0 (16) — 8 octobre 2026
+
+Archive Release signée et envoyée avec succès à App Store Connect (UPLOAD/EXPORT SUCCEEDED). Apple traite le paquet ; la disponibilité TestFlight n'est pas encore confirmée. iPhone et compagnon Watch vérifiés en 1.0 (16), identifiant compagnon cohérent et mode workout-processing présent. Cette livraison retire le premier message de chargement natif ; elle ne corrige pas encore la conservation d'une ancienne page web en mémoire. Le nettoyage web n'est pas déployé par cette archive, qui charge app.moovx.ch.
+
+Archive : ~/Library/Developer/Xcode/Archives/2026-10-08/MoovX-AppStore-1.0-Build16.xcarchive. Logs locaux : /tmp/moovx-build16-archive.log et /tmp/moovx-build16-upload.log. Tests de reprise natifs : 3 réussis avant archive.
+
+
+### Fiabilité du compagnon et état sur l’accueil — 9 octobre 2026
+
+- L’accueil natif propose l’activation du compagnon et vérifie la liaison à
+  l’ouverture, au retour au premier plan et toutes les 15 secondes tant qu’il
+  est visible. Cette vérification ne lance aucun entraînement.
+- « Watch prête » exige une réponse directe du compagnon, une récupération
+  HealthKit terminée, l’autorisation d’écriture et aucune séance active.
+  Une montre en veille/non joignable est indiquée comme non confirmée, sans
+  déduire à tort qu’une permission manque. Aucun échantillon Santé n’est lu
+  par le pont de disponibilité.
+- Dans une séance, la synchronisation est retentée toutes les 4 secondes avec
+  le même UUID. Cela couvre l’activation tardive de WatchConnectivity ; une
+  commande déjà envoyée n’est pas relancée automatiquement. Une attente sans
+  accusé de réception devient visible comme indisponible après 15 secondes.
+- Une ancienne demande non résolue est vérifiée directement sur la Watch.
+  Elle est écartée seulement si aucun entraînement n’est actif après récupération
+  HealthKit. La séance suivante attend cette confirmation.
+  Les états actifs, sauvegardes et erreurs ambiguës ne sont jamais effacés
+  automatiquement. Les états de liaison temporaires ne remplacent plus l’état
+  persistant du dernier entraînement.
+- Déploiement nécessaire : nouvelle version native iPhone + Watch et version
+  web contenant la carte. Le build 16 distribué ne contient pas ces changements.
+  La vérification physique Ultra 1 reste nécessaire : retour au premier plan,
+  montre endormie, début/fin, refus Santé, coupure de liaison et absence de doublon.
+
+Validation locale de ce lot : 2 487 tests web dans 282 fichiers, dont les
+interactions de la carte (web sans pont, vérification/reprise, activation sans
+entraînement et synchronisation avec UUID stable) ; 5 tests natifs sur simulateur,
+dont la réconciliation inactive et le rejet d’un démarrage retardé après clôture.
+TypeScript, parité des trois langues et build Next passent. La compilation
+simulée comprend l’iPhone et son compagnon Watch. Cela ne constitue pas une
+validation de la liaison physique Ultra 1 ni une mise à disposition TestFlight.

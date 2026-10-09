@@ -30,7 +30,7 @@ struct PrototypeBrowser: View {
                         .accessibilityLabel(NSLocalizedString("browserDismissRecovery", comment: "Dismiss recovery notice"))
                     }.padding(.horizontal, 8)
                 }
-                if state.loading { ProgressView(NSLocalizedString("browserLoading", comment: "Loading state")).padding() }
+                // The web app owns the branded loading screen; avoid a second native banner.
                 if let error = state.error {
                     ContentUnavailableView {
                         Label(NSLocalizedString("browserInterrupted", comment: "Loading error"), systemImage: "wifi.exclamationmark")
