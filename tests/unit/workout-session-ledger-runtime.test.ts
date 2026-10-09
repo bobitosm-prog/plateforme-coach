@@ -20,12 +20,12 @@ const draft = (source: ActiveWorkoutDraft['programSource'] = 'personal') => crea
  sessionKey: 'synthetic-session', sessionName: 'Ma séance',
  exercises: [{ name: 'Curl', sets: 2, reps: 10 }, { name: 'Squat Barre', sets: 2, reps: 10 }],
 })
-function mount(value = draft(), finish = vi.fn(async () => ({}))) {
+function mount(value = draft(), finish = vi.fn(async () => ({})), rirTrackingEnabled = false) {
  const changed = vi.fn()
  const close = vi.fn()
  const view = render(React.createElement(NextIntlClientProvider, { locale: 'fr', messages, timeZone: 'Europe/Zurich',
   children: React.createElement(WorkoutSession, {
-   draft: value, onDraftChange: changed, onFinish: finish, onClose: close,
+   draft: value, rirTrackingEnabled, onDraftChange: changed, onFinish: finish, onClose: close,
    onNavigateHome: vi.fn(), onNavigateProgress: vi.fn(),
   }),
  }))
@@ -211,4 +211,43 @@ it('validates and restores six leg sets with half rest and side-specific saved h
  const payload=(finish.mock.calls as any)[0][0]
  expect(payload.exercises[0].setsTarget).toBe(3)
  expect(payload.exercises[0].sets.map((s:any)=>[s.roundNumber,s.side])).toEqual([[1,'left'],[1,'right'],[2,'left'],[2,'right'],[3,'left'],[3,'right']])
+})
+
+it('exposes RIR outside closed options and retains it when validating and restoring a series', async () => {
+ const value = draft()
+ const {changed, unmount} = mount(value, vi.fn(async()=>({})), true)
+ const curl = within(screen.getByRole('group', {name:'Curl'}))
+ const rir = curl.getAllByRole('combobox')[0] as HTMLSelectElement
+ expect(rir.closest('details')).toBeNull()
+ fireEvent.change(rir, {target:{value:'0'}})
+ const [load, reps] = curl.getAllByRole('textbox')
+ fireEvent.focus(load); fireEvent.change(load,{target:{value:'12'}}); fireEvent.blur(load)
+ fireEvent.change(reps,{target:{value:'10'}})
+ fireEvent.click(curl.getAllByRole('button')[0])
+ await waitFor(()=>expect(changed.mock.calls.at(-1)?.[0].exercises[0].sets[0].done).toBe(true))
+ const saved = changed.mock.calls.at(-1)![0] as ActiveWorkoutDraft
+ expect(saved.exercises[0].sets[0].rir).toBe(0)
+ expect(saved.exercises[0].sets[1].rir).toBeNull()
+ unmount(); mount(saved, vi.fn(async()=>({})), true)
+ const restored = within(screen.getByRole('group',{name:'Curl'})).getAllByRole('combobox')[0] as HTMLSelectElement
+ expect(restored.value).toBe('0'); expect(restored.disabled).toBe(true)
+})
+it('keeps RIR hidden when tracking is disabled', () => {
+ mount()
+ expect(within(screen.getByRole('group',{name:'Curl'})).queryByRole('combobox')).toBeNull()
+})
+
+it('stores 4+ on the selected leg only and omits RIR for timed exercises', async () => {
+ const value = draft()
+ value.exercises[0].sets[0].side = 'left'
+ value.exercises[0].sets[0].roundNumber = 1
+ value.exercises[0].sets[1].side = 'right'
+ value.exercises[0].sets[1].roundNumber = 1
+ value.exercises[1].targetDurationSeconds = 30
+ const {changed} = mount(value, vi.fn(async()=>({})), true)
+ const curl = within(screen.getByRole('group',{name:'Curl'}))
+ fireEvent.change(curl.getAllByRole('combobox')[1],{target:{value:'4'}})
+ await waitFor(()=>expect(changed.mock.calls.at(-1)?.[0].exercises[0].sets[1].rir).toBe(4))
+ expect(changed.mock.calls.at(-1)?.[0].exercises[0].sets[0].rir).toBeNull()
+ expect(within(screen.getByRole('group',{name:'Squat Barre'})).queryByRole('combobox')).toBeNull()
 })

@@ -1054,6 +1054,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
               <WorkoutLedgerTable key={`${draft.userId}:${exo.id}`} db={supabase} userId={draft.userId} exercise={exo} selected={selected} blocked={Boolean(techniqueIssue(exos,idx))}
                 restSetId={exos.some(item=>item.sets.some(set=>set.id===restSetId)) ? restSetId : exos.flatMap(item=>item.sets).filter(set=>set.done).at(-1)?.id ?? exos[0]?.sets[0]?.id}
                 restTimer={(restOn || restDone) ? <div className={ledgerStyles.timer}><RestTimerCompact state={restDone?'finished':'running'} remainingSeconds={restSecs} onSkip={skipRest} onAddThirtySeconds={addRestTime} onDismissFinished={dismissRestDone}/></div> : null}
+                showRir={Boolean(rirTrackingEnabled)} onRirChange={(sid,value)=>setSetRir(exo.id,sid,value)}
                 onSelect={()=>{if(!selected)selectExercise(idx)}}
                 onChange={(sid,field,value)=>{setSetStatusMessage('');setField(exo.id,sid,field,value)}}
                 onWeightFocus={sid=>beginWeightInput(exo.id,sid)} onWeightBlur={sid=>commitWeight(exo.id,sid)} onValidate={sid=>{if(!selected)selectExercise(idx);validate(exo.id,sid)}}/>
@@ -1147,7 +1148,7 @@ export default function WorkoutSession({ draft, onDraftChange, onFinish, onClose
                       reps={exo.targetDurationSeconds ? activeSet.durationSeconds ?? '' : activeSet.reps}
                       rir={activeSet.rir}
                       weightStep={getIncrementForExercise(exo.name)}
-                      showRir={Boolean(rirTrackingEnabled) && !exo.targetDurationSeconds}
+                      showRir={false}
                       canValidate={!techniqueIssue(exos, idx) && !activeSet.done && (exo.targetDurationSeconds ? Number(activeSet.durationSeconds) > 0 && Number(activeSet.durationSeconds) <= 600 : activeSet.weightRaw !== '' || activeSet.reps !== '')}
                       suggestion={suggestion}
                       statusMessage={setStatusMessage}
