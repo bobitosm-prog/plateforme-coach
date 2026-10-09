@@ -9,15 +9,26 @@ export default function WatchWorkoutControls({draftId}: {draftId:string}) {
   const [available,setAvailable]=useState(false)
   const [state,setState]=useState<WatchWorkoutStatus>({enabled:false,status:'idle'})
   const [busy,setBusy]=useState(false)
+  // Older native builds also return busy for an unanswered reconciliation request.
+  // Confirm a live conflict before telling the user to end a workout.
+  async function checkedState(result: WatchWorkoutStatus) {
+    if (result.status !== 'busy') return result
+    const readiness = await watchWorkout('readiness')
+    return readiness.status === 'busy' ? result : {...result, status:'unavailable'}
+  }
   useEffect(()=>{
     if(!hasWatchWorkoutBridge())return
     setAvailable(true)
     let alive=true, polling=false
-    void watchWorkout('sync',draftId).then(result=>{if(alive)setState(result)})
+    const sync = async () => {
+      if(polling)return
+      polling=true
+      try{const result=await checkedState(await watchWorkout('sync',draftId));if(alive)setState(result)}finally{polling=false}
+    }
+    void sync()
     const timer=setInterval(async()=>{
       if(document.visibilityState!=='visible'||polling)return
-      polling=true
-      try{const result=await watchWorkout('sync',draftId);if(alive)setState(result)}finally{polling=false}
+      await sync()
     },4000)
     return ()=>{alive=false;clearInterval(timer)} // Hiding the sheet must not end a workout.
   },[draftId])
@@ -28,7 +39,7 @@ export default function WatchWorkoutControls({draftId}: {draftId:string}) {
     <strong style={{color:colors.gold}}>Apple Watch</strong>
     <p role="status" style={{fontSize:13}}>{state.enabled?t(status):t('off')}</p>
     <button type="button" disabled={busy} onClick={async()=>{
-      setBusy(true);try{setState(await watchWorkout('enable',draftId))}finally{setBusy(false)}
+      setBusy(true);try{setState(await checkedState(await watchWorkout('enable',draftId)))}finally{setBusy(false)}
     }} style={{minHeight:44,color:colors.gold}}>{t(state.enabled?'retry':'enable')}</button>
     {state.enabled&&<button type="button" disabled={busy} onClick={async()=>{
       setBusy(true);try{setState(await watchWorkout('disable',draftId))}finally{setBusy(false)}

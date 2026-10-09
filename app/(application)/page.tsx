@@ -65,7 +65,7 @@ import {
   type AppNavigationState,
 } from '../../lib/navigation/app-navigation'
 
-const CoachDashboard = dynamic(() => import('./coach/page'), { ssr: false })
+const CoachDashboard = dynamic(() => import('./coach/CoachDashboard'), { ssr: false })
 
 import { checkAndShowReminder } from '../../lib/notifications'
 

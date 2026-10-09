@@ -47,3 +47,12 @@
 @media(max-width:360px){.introRow{gap:10px}.sessionSummary p{font-size:11px}}
 
 .side{display:block;color:#dfbf70;font-size:11px;line-height:1.3;font-weight:700}
+
+.rirRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px 33px;color:#aaa69b;font-size:12px;line-height:1.4}
+.rirRow select{min-width:68px;min-height:44px;border:1px solid #675834;border-radius:9px;background:#15140f;color:#dfbf70;padding:6px 10px;font:inherit;font-size:16px}
+.rirRow select:focus-visible{outline:2px solid #dfbf70;outline-offset:2px}.rirRow select:disabled{color:#aaa69b;opacity:1}
+
+.sessionActions{width:100%;max-width:620px;margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom,0px));display:grid;gap:12px}
+.sessionActions .addExercise{margin-top:0}.sessionActions .finishArea{padding:0}
+
+.rirToggle{margin-top:12px;min-height:44px;padding:8px 14px;border:1px solid #675834;border-radius:10px;background:#15140f;color:#aaa69b;font:inherit}.rirToggle[aria-pressed=true]{color:#dfbf70;background:#dfbf7012}

@@ -13,12 +13,14 @@ interface Props {
   onChange: (id: string, field: 'weight' | 'reps' | 'durationSeconds', value: string) => void
   onWeightFocus: (id: string) => void; onWeightBlur: (id: string) => void
   onValidate: (id: string) => void
+  showRir?: boolean
+  onRirChange?: (id: string, value: number) => void
   restSetId?: string | null
   restTimer?: ReactNode
 }
 
 /** Historical values stay evidence-only; editing and validation use the existing draft engine. */
-export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,onSelect,onChange,onWeightFocus,onWeightBlur,onValidate,restSetId,restTimer}: Props) {
+export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,onSelect,onChange,onWeightFocus,onWeightBlur,onValidate,restSetId,restTimer,showRir=false,onRirChange}: Props) {
   const t=useTranslations('workoutLedger'), v=useTranslations('training_tab.v2'), h=useTranslations('previousWorkout'), load=useTranslations('trainingLoad')
   const [history,setHistory]=useState<HistoricalSet[]|null>(null),[error,setError]=useState(false),[retry,setRetry]=useState(0)
   useEffect(()=>{
@@ -46,6 +48,13 @@ export default function WorkoutLedgerTable({db,userId,exercise,selected,blocked,
         <input aria-label={aria(v(timed?'durationSeconds':'repetitions'))} inputMode="numeric" value={timed?set.durationSeconds??'':set.reps} readOnly={set.done} onFocus={onSelect} onChange={e=>onChange(set.id,timed?'durationSeconds':'reps',e.target.value.replace(/\D/g,''))} />
         <button type="button" className={styles.check} aria-label={set.done?aria(t('done')):aria(v('validateSet'))} aria-pressed={set.done} disabled={set.done||!current||blocked} onClick={()=>onValidate(set.id)}>{set.done?'✓':current?'✓':'·'}</button>
       </div>
+      {showRir && !timed && <label className={styles.rirRow}>
+        <span>{v('rir')} · {t('set')} {label}{sideLabel ? ' '+sideLabel : ''}</span>
+        <select aria-label={`${exercise.name} · ${t('set')} ${label}${sideLabel ? ' '+sideLabel : ''} · ${v('rir')}`} value={set.rir ?? ''} disabled={set.done} onChange={event=>{onSelect();onRirChange?.(set.id,Number(event.target.value))}}>
+          <option value="" disabled>—</option>
+          {[0,1,2,3,4].map(value=><option key={value} value={value}>{value===4?'4+':value}</option>)}
+        </select>
+      </label>}
       {set.id === restSetId && restTimer}
       </Fragment>
     })}

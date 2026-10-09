@@ -6,7 +6,7 @@ const read = (path: string) => readFileSync(path, 'utf8')
 const bugReport = read('app/components/BugReport.tsx')
 const account = read('app/components/tabs/AccountTab.tsx')
 const clientShell = read('app/(application)/page.tsx')
-const coachShell = read('app/(application)/coach/page.tsx')
+const coachShell = read('app/(application)/coach/CoachDashboard.tsx')
 const coachProfile = read('app/(application)/coach/components/CoachProfile.tsx')
 
 describe('Bug report account entry', () => {

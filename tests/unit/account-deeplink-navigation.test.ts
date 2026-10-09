@@ -38,7 +38,7 @@ describe('Account deep-link navigation integration', () => {
     expect(dashboard).toContain("if (postAuthDecision.route !== '/')")
     expect(dashboard).toContain("if (postAuthDecision.destination === 'coach_app')")
     expect(dashboard).toContain('readActiveWorkoutDraft(localStorage, session.user.id)')
-    expect(page).toContain("const CoachDashboard = dynamic(() => import('./coach/page')")
+    expect(page).toContain("const CoachDashboard = dynamic(() => import('./coach/CoachDashboard')")
   })
 
   it('adds no navigation DB authority, polling, or transient overlay query', () => {

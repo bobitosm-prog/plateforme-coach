@@ -46,3 +46,17 @@ it('retries synchronization after native activation, retaining the same draft ID
   await vi.advanceTimersByTimeAsync(4000)
   expect(post.mock.calls.slice(0,2)).toEqual([[{action:'sync',id:'stable-id'}],[{action:'sync',id:'stable-id'}]])
 })
+
+it.each(['ready','unverified'])('does not claim a running workout when reconciliation is busy but readiness is %s', async status => {
+ const post = vi.fn().mockImplementation(({action})=>Promise.resolve({enabled:true,status:action==='readiness'?status:'busy'})); native(post)
+ render(wrap(React.createElement(WatchWorkoutControls,{draftId:'new-id'})))
+ await screen.findByText(fr.watch_workout.unavailable)
+ expect(screen.queryByText(fr.watch_workout.busy)).toBeNull()
+ expect(post.mock.calls).toEqual([[{action:'sync',id:'new-id'}],[{action:'readiness'}]])
+})
+it('keeps the warning when the Watch confirms a busy state', async () => {
+ const post = vi.fn().mockResolvedValue({enabled:true,status:'busy'}); native(post)
+ render(wrap(React.createElement(WatchWorkoutControls,{draftId:'new-id'})))
+ await screen.findByText(fr.watch_workout.busy)
+ expect(post.mock.calls[1]).toEqual([{action:'readiness'}])
+})
