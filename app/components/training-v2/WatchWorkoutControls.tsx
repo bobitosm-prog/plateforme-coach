@@ -17,7 +17,7 @@ export default function WatchWorkoutControls({draftId}: {draftId:string}) {
     const timer=setInterval(async()=>{
       if(document.visibilityState!=='visible'||polling)return
       polling=true
-      try{const result=await watchWorkout('status',draftId);if(alive)setState(result)}finally{polling=false}
+      try{const result=await watchWorkout('sync',draftId);if(alive)setState(result)}finally{polling=false}
     },4000)
     return ()=>{alive=false;clearInterval(timer)} // Hiding the sheet must not end a workout.
   },[draftId])

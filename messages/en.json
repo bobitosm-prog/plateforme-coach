@@ -1,4 +1,22 @@
 {
+  "watch_readiness": {
+  "ready": "Watch ready",
+  "ready_detail": "Your watch responds and permits workouts. MoovX will launch it when you start your session.",
+  "permission": "Watch: permission required",
+  "permission_detail": "Open MoovX on your watch and allow it to write workouts to Health.",
+  "busy": "Watch: check your session",
+  "busy_detail": "A session is active or needs attention on your watch. Open MoovX on your Watch to check it.",
+  "checking": "Checking Watch…",
+  "checking_detail": "Checking the connection to your watch.",
+  "install": "Watch: check installation",
+  "install_detail": "Check pairing and the MoovX installation in the Watch app on your iPhone.",
+  "off": "Watch companion disabled",
+  "off_detail": "Enable the companion to start a workout on your watch with your MoovX sessions.",
+  "unverified": "Watch availability not confirmed",
+  "unverified_detail": "Open MoovX on your watch, then check again. A sleeping watch may not respond. Use the latest MoovX version on both devices.",
+  "enable": "Enable companion",
+  "verify": "Check Watch"
+},
   "workoutDesign": {
     "sessionLead": "My",
     "sessionAccent": "workout.",

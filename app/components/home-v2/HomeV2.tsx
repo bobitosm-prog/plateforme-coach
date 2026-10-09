@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { HomeViewModel, HomeTrainingSession } from '../../../lib/home/home-dashboard-model'
 import HomeV2Header from './HomeV2Header'
 import DailyStatus from './DailyStatus'
+import WatchReadinessCard from './WatchReadinessCard'
 import ProgressionSnapshot from './ProgressionSnapshot'
 import AthenaInsightCard from './AthenaInsightCard'
 import ActiveCoachCard from './ActiveCoachCard'
@@ -40,6 +41,7 @@ export default function HomeV2({ model, actions, children }: { model: HomeViewMo
       onOpenProgression={actions.onOpenProgression}
       onOpenAccount={actions.onOpenAccount}
     />
+    <WatchReadinessCard />
     <DailyStatus
       training={model.training}
       nutrition={model.nutrition}
