@@ -353,3 +353,37 @@ iPhone et Watch vérifié en 1.0 (18). Cela ne valide pas encore le réveil rée
 installer le build 18 sur les deux appareils, laisser la Watch sur son cadran
 en veille, démarrer une séance depuis l’iPhone, puis vérifier démarrage,
 continuité en veille et sauvegarde unique en fin de séance.
+
+### Démarrage en arrière-plan — build 19, 10 octobre 2026
+
+Le build 18 ne suffisait pas sur l’Ultra du testeur. Le délégué HealthKit de la
+Watch préparait implicitement le lancement en relisant un contexte
+WatchConnectivity, dont la livraison est asynchrone. Il prépare désormais une
+HKWorkoutSession (sans collecte), puis demande explicitement à l’iPhone la
+commande courante. La préparation est limitée à 20 secondes ; absence de
+commande, commande clôturée/refusée, erreur ou annulation libèrent la session
+préparée. Une récupération ambiguë bloque tout remplacement d’un entraînement.
+L’iPhone retransmet aussi sa commande lorsque le canal redevient joignable.
+
+Avant le réveil, l’iPhone demande l’autorisation Entraînements si elle n’a pas
+encore été choisie et distingue son refus d’un refus sur la Watch. Il reste sans
+écriture d’entraînement : seul le compagnon enregistre. Une annulation pendant
+la demande d’autorisation empêche le démarrage. Le diagnostic replié de la carte
+Watch affiche les builds et l’étape du réveil ; en cas d’erreur système, seuls
+son domaine et son code sont exposés, sans échantillon Santé ni identité.
+
+Validation runtime sur simulateurs appairés iOS/watchOS 27, build 19 :
+- départ iPhone : paired=1, installed=1, reachable=0 ; réveil HealthKit accepté ;
+- Watch : délégué de réveil appelé, commande start reçue par demande directe ;
+- accusé Watch « running », puis « saved » après fin depuis l’iPhone ;
+- répétition de la fin : requête limitée au seul UUID synthétique de test,
+  exactement un entraînement dans Santé, aucune erreur de requête.
+
+12 tests web ciblés passent ; TypeScript et parité FR/EN/DE passent. Archive
+Release signée 1.0 (19), paquet iPhone/Watch cohérent. Les tests de politique
+native restent distincts de cette validation runtime. Important : le premier
+refus HealthKit observé sur simulateur provenait d’une compilation Debug sans
+les droits de signature adaptés ; ce refus n’est pas une preuve de la cause
+sur l’iPhone du testeur. Utiliser CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-
+pour les probes HealthKit sur simulateur. L’Ultra 1 sous watchOS 26.6 doit encore
+valider réveil depuis le cadran en veille, continuité et fin sans doublon.
