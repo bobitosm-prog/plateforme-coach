@@ -14,7 +14,7 @@ import { draftFood, draftNutrients, mealDraftRows, persistMealDraft, type MealDr
 import { mealDraftKey, readMealDraft, writeMealDraft } from '../../../lib/nutrition/meal-draft-storage'
 import styles from './MealComposer.module.css'
 
-export type MealComposerSource = 'recent' | 'saved' | 'photo' | 'barcode'
+export type MealComposerSource = 'recent' | 'saved' | 'photo' | 'barcode' | 'plan'
 
 interface Props {
   supabase: any; userId: string; date: string; mealType: string; mealLabel: string
@@ -35,7 +35,7 @@ function MealComposerSession({supabase, userId, date, mealType, mealLabel, plann
   const [choicesOpen, setChoicesOpen] = useState(true)
   const quantityTarget = useRef<string | null>(null)
   const quantityInputs = useRef(new Map<string, HTMLInputElement>())
-  const [source, setSource] = useState(initialSource === 'saved' ? 'saved' : 'recent')
+  const [source, setSource] = useState(initialSource === 'saved' || initialSource === 'plan' ? initialSource : 'recent')
   const [recent, setRecent] = useState<any[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
   const [saved, setSaved] = useState<any[]>([])

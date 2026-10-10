@@ -350,6 +350,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {addingMeal && <MealAddSheet
         mealLabel={MEAL_LABELS[addingMeal]}
+        planAvailable={selectedDate === today && !!getPlanDayData(todayKey) && getMealByKey(getPlanDayData(todayKey)!.day, addingMeal).length > 0}
         photoEnabled={capabilities.ai}
         onClose={() => setAddingMeal(null)}
         onSelect={initialSource => {

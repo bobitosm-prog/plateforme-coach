@@ -4,7 +4,8 @@ vi.mock('@/lib/ai/consent-client', () => ({ aiFetch: (...args: [string, RequestI
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import MealComposer from '@/app/components/nutrition-v2/MealComposer'
+import MealComposer, { type MealComposerSource } from '@/app/components/nutrition-v2/MealComposer'
+import MealAddSheet from '@/app/components/nutrition-v2/MealAddSheet'
 
 vi.mock('next-intl',()=>{ const translate=(key:string)=>key; return {useTranslations:()=>translate} })
 vi.mock('@/app/components/BarcodeScanner',()=>({default:({onSelected}:any)=>React.createElement('button',{onClick:()=>onSelected({name:'Scanned',quantity_g:100,calories:100,protein:10,carbs:10,fat:2})},'scan result')}))
@@ -15,7 +16,7 @@ vi.mock('@/lib/nutrition/food-search',()=>({searchFoodCatalog:async()=>[
 beforeEach(()=>{localStorage.clear();vi.stubGlobal('React',React)})
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const food={name:'Rice',qty:200,kcal:260,prot:5.4,carb:56,fat:0.6}
-function setup(initialFoods:any[]=[],photoEnabled=false,inline=false) {
+function setup(initialFoods:any[]=[],photoEnabled=false,inline=false,initialSource?:MealComposerSource) {
   const upsert=vi.fn().mockResolvedValue({error:null})
   const supabase={from:vi.fn((table:string)=>{
     const chain:any={upsert}
@@ -24,10 +25,31 @@ function setup(initialFoods:any[]=[],photoEnabled=false,inline=false) {
     return chain
   })}
   const onSaved=vi.fn().mockResolvedValue(undefined),onClose=vi.fn()
-  const view=render(React.createElement(React.StrictMode,null,React.createElement(MealComposer,{supabase,userId:'owner',date:'2026-09-20',mealType:'diner',mealLabel:'Dinner',plannedFoods:[food],initialFoods,photoEnabled,onSaved,onClose,inline})))
+  const view=render(React.createElement(React.StrictMode,null,React.createElement(MealComposer,{supabase,userId:'owner',date:'2026-09-20',mealType:'diner',mealLabel:'Dinner',plannedFoods:[food],initialFoods,photoEnabled,onSaved,onClose,inline,initialSource})))
   return {upsert,onSaved,onClose,view}
 }
 describe('meal composer runtime',()=>{
+  it('offers the planned meal in the journal picker and opens its draft source',async()=>{
+    const select=vi.fn()
+    const picker=render(React.createElement(MealAddSheet,{mealLabel:'Dinner',photoEnabled:false,planAvailable:true,onSelect:select,onClose:vi.fn()}))
+    fireEvent.click(screen.getByRole('button',{name:'plan'}))
+    expect(select).toHaveBeenCalledWith('plan')
+    picker.unmount()
+    const {upsert,onSaved}=setup([],false,false,select.mock.calls[0][0])
+    fireEvent.click(screen.getByRole('button',{name:/usePlan/}))
+    fireEvent.change(screen.getByLabelText('quantity — Rice'),{target:{value:'100'}})
+    expect(upsert).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button',{name:'confirm'}))
+    await waitFor(()=>expect(onSaved).toHaveBeenCalledTimes(1))
+    expect(upsert).toHaveBeenCalledTimes(1)
+    expect(upsert.mock.calls[0][0]).toEqual([expect.objectContaining({custom_name:'Rice',date:'2026-09-20',meal_type:'diner',quantity_g:100,calories:130,protein:2.7})])
+  })
+  it('does not offer an unavailable plan meal in the journal picker',()=>{
+    render(React.createElement(MealAddSheet,{mealLabel:'Dinner',photoEnabled:false,planAvailable:false,onSelect:vi.fn(),onClose:vi.fn()}))
+    expect(screen.queryByRole('button',{name:'plan'})).toBeNull()
+    expect(screen.getByRole('button',{name:'food'})).toBeTruthy()
+  })
+
   it('keeps inline meal entry on the page and confirms only after explicit save',async()=>{
     const {upsert,onSaved,onClose}=setup([],true,true)
     expect(screen.getByRole('region',{name:'Dinner'})).toBeTruthy()

@@ -2827,7 +2827,7 @@
       "addToJournal": "Add to diary",
       "saveError": "Could not save. Your changes are kept: please try again."
     },
-    "journal": {"addTitle": "What would you like to add?", "food": "A food", "saved": "A saved meal", "photo": "A photo", "barcode": "A barcode"},
+    "journal": {"plan": "A meal from my plan", "addTitle": "What would you like to add?", "food": "A food", "saved": "A saved meal", "photo": "A photo", "barcode": "A barcode"},
     "quickEntry": {
       "eyebrow": "Quick entry",
       "title": "Add a meal",
