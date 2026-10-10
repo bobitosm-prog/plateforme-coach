@@ -14,3 +14,5 @@
 "watch.finishQuestion" = "Terminer l’entraînement Watch ?";
 "watch.acknowledge" = "Fermer cette reprise";
 "watch.denied" = "Dans Réglages → Santé → Apps → MoovX, active Entraînements (écriture). Puis reviens ici.";
+"watch.connecting" = "Connexion à la séance iPhone…";
+"watch.connectionFailed" = "Démarrage non confirmé. Réessaie depuis l’iPhone.";

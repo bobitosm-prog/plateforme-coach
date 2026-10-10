@@ -9,7 +9,7 @@ struct MoovXWatchApp: App {
 }
 final class WatchDelegate: NSObject, WKApplicationDelegate {
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
-        Task { @MainActor in WatchWorkoutManager.shared.launchedForWorkout() }
+        Task { @MainActor in WatchWorkoutManager.shared.launchedForWorkout(configuration: workoutConfiguration) }
     }
     func handleActiveWorkoutRecovery() { Task { @MainActor in _ = WatchWorkoutManager.shared } }
 }
@@ -41,6 +41,8 @@ struct WatchWorkoutView: View {
                 if manager.status == "interrupted" {
                     Button("watch.acknowledge") { manager.acknowledgeInterruption() }
                 }
+                Text("v" + (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"))
+                    .font(.caption2).foregroundStyle(.secondary)
             }.padding(.horizontal, 4)
         }.background(Color.black)
         .onChange(of: scenePhase) { _, phase in

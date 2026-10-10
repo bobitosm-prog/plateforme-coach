@@ -8,7 +8,9 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
     private let store = HKHealthStore()
     private let defaults = UserDefaults.standard
     private var launching = false
-    private var endedIDs = Set<UUID>() // Cancels starts awaiting a live reconciliation reply.
+    private var wakeDiagnostic = ""
+    private var watchBuild = ""
+    private var endedIDs = Set<UUID>() // Prevents a cancelled request from being retried.
     private var status: String {
         get { defaults.string(forKey: "watchWorkoutStatus") ?? "idle" }
         set { defaults.set(newValue, forKey: "watchWorkoutStatus") }
@@ -90,18 +92,43 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         guard !endedIDs.contains(id), defaults.bool(forKey: "watchWorkoutEnabled"), !launching else { return result(id) }
         launching = true
         defer { launching = false }
+        let workoutType = HKObjectType.workoutType()
+        if store.authorizationStatus(for: workoutType) == .notDetermined {
+            do { try await store.requestAuthorization(toShare: [workoutType], read: []) }
+            catch { wakeDiagnostic = "phone_authorization_failed"; return result(id, override: "phonePermission") }
+        }
+        guard store.authorizationStatus(for: workoutType) == .sharingAuthorized else {
+            wakeDiagnostic = "phone_workout_permission_required"
+            return result(id, override: "phonePermission")
+        }
+        // The user may finish the iPhone workout while the Health permission sheet is open.
+        guard !endedIDs.contains(id), defaults.bool(forKey: "watchWorkoutEnabled") else { return result(id) }
         var superseded = command?.supersededIDs ?? []
         if let previous = command, previous.id != id, !superseded.contains(previous.id) { superseded.append(previous.id) }
         send(WatchWorkoutCommand(id: id, action: .start, supersededIDs: superseded))
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .traditionalStrengthTraining
         configuration.locationType = .indoor
-        do { try await store.startWatchApp(toHandle: configuration) }
-        catch { if command?.id == id && command?.action == .start && acknowledgedID != id { status = "unavailable" } }
+        wakeDiagnostic = "wake_requested"
+#if DEBUG
+        NSLog("MoovX wake requested reachable=%d", WCSession.default.isReachable)
+#endif
+        do {
+            try await store.startWatchApp(toHandle: configuration)
+            if command?.id == id && wakeDiagnostic == "wake_requested" { wakeDiagnostic = "wake_accepted" }
+        } catch {
+            if command?.id == id && command?.action == .start && acknowledgedID != id {
+                let failure = error as NSError
+                // Domain/code only: never expose localized errors containing personal data.
+                wakeDiagnostic = "wake_failed:\(failure.domain):\(failure.code)"
+                status = "unavailable"
+            }
+        }
         return result(id)
     }
     private func result(_ id: UUID, override: String? = nil) -> [String: Any] {
         ["enabled": defaults.bool(forKey: "watchWorkoutEnabled"),
+         "diagnostic": wakeDiagnostic, "phoneBuild": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?", "watchBuild": watchBuild,
          "status": override ?? (command?.id == id || command == nil
             ? (status == "pending" && command.map { Date().timeIntervalSince($0.issuedAt) > 15 } == true ? "unavailable" : status)
             : "busy")]
@@ -125,12 +152,34 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
 #if DEBUG && targetEnvironment(simulator)
             let args = ProcessInfo.processInfo.arguments
             if args.contains("--watch-start-probe") || args.contains("--watch-finish-probe") {
-                let id = UUID(uuidString: "11111111-1111-4111-8111-111111111114")!
+                let id = UUID(uuidString: "11111111-1111-4111-8111-111111111120")!
                 let result = await self.handle(action: args.contains("--watch-finish-probe") ? "finish" : "enable", id: id)
+                NSLog("MoovX wake result: %@", self.wakeDiagnostic)
                 NSLog("MoovX Watch phone probe: paired=%d installed=%d reachable=%d status=%@",
                       session.isPaired, session.isWatchAppInstalled, session.isReachable, result["status"] as? String ?? "unknown")
             }
 #endif
+        }
+    }
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        if session.isReachable { Task { @MainActor in self.transmit() } }
+    }
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        guard message["action"] as? String == "workoutRequest" else { replyHandler([:]); return }
+        let build = message["watchBuild"] as? String ?? "?"
+        Task { @MainActor in
+            self.watchBuild = build
+#if DEBUG
+            NSLog("MoovX wake handshake received from Watch build %@", build)
+#endif
+            self.wakeDiagnostic = "watch_requested_command"
+            // Reply with the current command, including a cancellation received during wake.
+            // Never revive an old/expired start just because the Watch has become reachable.
+            guard let command = self.command,
+                  command.action != .start || (command.canStart() && self.defaults.bool(forKey: "watchWorkoutEnabled") && !self.endedIDs.contains(command.id)) else {
+                replyHandler(["command": false]); return
+            }
+            replyHandler(command.dictionary)
         }
     }
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
@@ -146,6 +195,7 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
             // Never let a late running acknowledgement overwrite a stop command.
             if self.command?.action != .start && value == "running" { self.transmit(); return }
             self.acknowledgedID = id; self.status = value
+            if value == "running" { self.wakeDiagnostic = "running_confirmed" }
         }
     }
 }

@@ -14,3 +14,5 @@
 "watch.finishQuestion" = "End the Watch workout?";
 "watch.acknowledge" = "Close recovery";
 "watch.denied" = "In Settings → Health → Apps → MoovX, allow writing Workouts. Then return here.";
+"watch.connecting" = "Connecting to the iPhone workout…";
+"watch.connectionFailed" = "Start not confirmed. Retry from iPhone.";
