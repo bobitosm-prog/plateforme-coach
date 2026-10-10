@@ -5,7 +5,10 @@
   color: #f5f2ea;
   font-family: var(--font-body), sans-serif;
 }
-.shell { width: min(100%, 680px); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+/* Keep mobile cards in normal block flow. Grid/flex intrinsic heights must
+   not be redistributed when the keep-alive rail returns from display:none. */
+.shell { width: min(100%, 680px); margin: 0 auto; display: block; }
+.shell > * + * { margin-top: 14px; }
 .header { padding: 10px 0; }
 .identity, .card { min-width: 0; padding: 18px; border: 1px solid #393326; border-radius: 20px; background: #211f18; }
 .identityTop { display: flex; align-items: center; gap: 14px; }
@@ -22,8 +25,8 @@
 .accessNotice { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border: 1px solid #393326; border-radius: 20px; background: #211f18; color: #dfbf70; font-size: .8rem; line-height: 1.5; }
 .accessNotice svg { flex-shrink: 0; }
 .sectionTitle { margin: 0 0 10px; color: #dfbf70; font-size: .8rem; font-weight: 700; line-height: 1.4; letter-spacing: .1em; text-transform: uppercase; scroll-margin-top: 24px; }
-.programGrid, .linkGrid { display: grid; gap: 0; }
-.link { display: flex; width: 100%; min-width: 0; min-height: 72px; align-items: center; gap: 12px; padding: 14px 0; border: 0; border-top: 1px solid #3a352a; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.programGrid, .linkGrid { display: block; }
+.link { display: flex; height: auto; align-self: start; width: 100%; min-width: 0; min-height: 72px; align-items: center; gap: 12px; padding: 14px 0; border: 0; border-top: 1px solid #3a352a; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .prominent { min-height: 88px; }
 .linkIcon { display: grid; width: 36px; height: 40px; flex: 0 0 36px; place-items: center; color: #dfbf70; }
 .linkText { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 5px; overflow-wrap: anywhere; }
@@ -34,4 +37,4 @@
 @media (hover: hover) and (pointer: fine) { .link:hover, .profileShortcut:hover { background: #302b1e; } }
 .link:focus-visible, .profileShortcut:focus-visible, .sectionTitle:focus-visible { outline: 2px solid #dfbf70; outline-offset: 3px; border-radius: 8px; }
 @media (max-width: 380px) { .page { padding-inline: 16px; } .identity, .card { padding: 14px; } .link { gap: 8px; } }
-@media (min-width: 720px) { .programGrid, .linkGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; } }
+@media (min-width: 720px) { .programGrid, .linkGrid { display: grid; align-items: start; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; } }
