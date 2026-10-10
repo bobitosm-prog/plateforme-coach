@@ -14,3 +14,5 @@
 "watch.finishQuestion" = "Watch-Training beenden?";
 "watch.acknowledge" = "Wiederherstellung schließen";
 "watch.denied" = "Unter Einstellungen → Health → Apps → MoovX das Schreiben von Trainings erlauben. Dann hierher zurückkehren.";
+"watch.connecting" = "Verbindung zum iPhone-Training…";
+"watch.connectionFailed" = "Start nicht bestätigt. Auf dem iPhone erneut versuchen.";

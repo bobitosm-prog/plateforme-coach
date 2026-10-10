@@ -1,4 +1,4 @@
-export type WatchWorkoutStatus = { enabled: boolean; status: string }
+export type WatchWorkoutStatus = { enabled: boolean; status: string; diagnostic?: string; phoneBuild?: string; watchBuild?: string }
 type WatchAction = 'readiness'|'configure'|'sync' | 'status' | 'enable' | 'disable' | 'finish' | 'discard'
 function bridge() {
   return typeof window === 'undefined' ? undefined : (window as Window & {webkit?: {messageHandlers?: {moovxWatchWorkout?: {postMessage: (body: unknown) => Promise<WatchWorkoutStatus>}}}}).webkit?.messageHandlers?.moovxWatchWorkout

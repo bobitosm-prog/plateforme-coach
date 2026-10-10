@@ -17,8 +17,8 @@
   C0000000000000000000000A = { isa = PBXBuildFile; fileRef = C00000000000000000000004; settings = { ATTRIBUTES = (RemoveHeadersOnCopy); }; };
   C0000000000000000000000B = { isa = PBXTargetDependency; target = C00000000000000000000001; targetProxy = C0000000000000000000000C; };
   C0000000000000000000000C = { isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = C00000000000000000000001; remoteInfo = MoovXWatch; };
-  C00000000000000000000010 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SDKROOT = watchos; SKIP_INSTALL = YES; PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; WATCHOS_DEPLOYMENT_TARGET = 10.0; TARGETED_DEVICE_FAMILY = 4; SUPPORTED_PLATFORMS = "watchos watchsimulator"; INFOPLIST_KEY_WKApplication = YES; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ch.moovx.prototype; INFOPLIST_KEY_CFBundleDisplayName = MoovX; INFOPLIST_FILE = WatchInfo.plist; INFOPLIST_KEY_NSHealthShareUsageDescription = "MoovX affiche votre rythme cardiaque et vos calories pendant l'entraînement."; INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MoovX enregistre votre entraînement dans Santé."; MARKETING_VERSION = 1.0; CURRENT_PROJECT_VERSION = 17; }; };
-  C00000000000000000000011 = { isa = XCBuildConfiguration; name = Release; buildSettings = { SDKROOT = watchos; SKIP_INSTALL = YES; PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.app.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; WATCHOS_DEPLOYMENT_TARGET = 10.0; TARGETED_DEVICE_FAMILY = 4; SUPPORTED_PLATFORMS = "watchos watchsimulator"; INFOPLIST_KEY_WKApplication = YES; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ch.moovx.app; INFOPLIST_KEY_CFBundleDisplayName = MoovX; INFOPLIST_FILE = WatchInfo.plist; INFOPLIST_KEY_NSHealthShareUsageDescription = "MoovX affiche votre rythme cardiaque et vos calories pendant l'entraînement."; INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MoovX enregistre votre entraînement dans Santé."; MARKETING_VERSION = 1.0; CURRENT_PROJECT_VERSION = 17; }; };
+  C00000000000000000000010 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SDKROOT = watchos; SKIP_INSTALL = YES; PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.prototype.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; WATCHOS_DEPLOYMENT_TARGET = 10.0; TARGETED_DEVICE_FAMILY = 4; SUPPORTED_PLATFORMS = "watchos watchsimulator"; INFOPLIST_KEY_WKApplication = YES; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ch.moovx.prototype; INFOPLIST_KEY_CFBundleDisplayName = MoovX; INFOPLIST_FILE = WatchInfo.plist; INFOPLIST_KEY_NSHealthShareUsageDescription = "MoovX affiche votre rythme cardiaque et vos calories pendant l'entraînement."; INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MoovX enregistre votre entraînement dans Santé."; MARKETING_VERSION = 1.0; CURRENT_PROJECT_VERSION = 19; }; };
+  C00000000000000000000011 = { isa = XCBuildConfiguration; name = Release; buildSettings = { SDKROOT = watchos; SKIP_INSTALL = YES; PRODUCT_BUNDLE_IDENTIFIER = ch.moovx.app.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; CODE_SIGN_ENTITLEMENTS = WatchApp.entitlements; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; WATCHOS_DEPLOYMENT_TARGET = 10.0; TARGETED_DEVICE_FAMILY = 4; SUPPORTED_PLATFORMS = "watchos watchsimulator"; INFOPLIST_KEY_WKApplication = YES; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ch.moovx.app; INFOPLIST_KEY_CFBundleDisplayName = MoovX; INFOPLIST_FILE = WatchInfo.plist; INFOPLIST_KEY_NSHealthShareUsageDescription = "MoovX affiche votre rythme cardiaque et vos calories pendant l'entraînement."; INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MoovX enregistre votre entraînement dans Santé."; MARKETING_VERSION = 1.0; CURRENT_PROJECT_VERSION = 19; }; };
 
   B00000000000000000000001 = { isa = PBXNativeTarget; buildConfigurationList = B00000000000000000000004; buildPhases = (B00000000000000000000005, B00000000000000000000006, B00000000000000000000007); buildRules = (); dependencies = (B00000000000000000000008); fileSystemSynchronizedGroups = (B00000000000000000000002); name = AthenaStoreKitTests; productName = AthenaStoreKitTests; productReference = B00000000000000000000003; productType = "com.apple.product-type.bundle.unit-test"; };
   B00000000000000000000002 = { isa = PBXFileSystemSynchronizedRootGroup; path = StoreKitTests; sourceTree = "<group>"; };
@@ -91,7 +91,7 @@
     SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
     ENABLE_TESTABILITY = YES;
     MARKETING_VERSION = 1.0;
-    CURRENT_PROJECT_VERSION = 17;
+    CURRENT_PROJECT_VERSION = 19;
    };
   };
   A00000000000000000000013 = {
@@ -114,7 +114,7 @@
     SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
     CODE_SIGN_STYLE = Automatic;
     MARKETING_VERSION = 1.0;
-    CURRENT_PROJECT_VERSION = 17;
+    CURRENT_PROJECT_VERSION = 19;
    };
   };
  };

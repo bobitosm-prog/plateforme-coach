@@ -2,6 +2,48 @@ import XCTest
 @testable import MoovXPrototype
 
 final class WatchWorkoutPolicyTests: XCTestCase {
+    func testWakeCommandRetiresInactiveRequestsAndRejectsDelayedReplay() throws {
+        let old = UUID(), new = UUID()
+        let command = WatchWorkoutCommand(id: new, action: .start, supersededIDs: [old, old, new])
+        let decoded = try XCTUnwrap(WatchWorkoutCommand(command.dictionary))
+        var ledger = WatchWorkoutLedger()
+        ledger.retireSupersededRequests(for: decoded)
+        XCTAssertTrue(ledger.accepts(decoded))
+        XCTAssertEqual(ledger.terminalIDs, [old])
+        XCTAssertFalse(ledger.accepts(WatchWorkoutCommand(id: old, action: .start)))
+        XCTAssertEqual(try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(command)), command)
+    }
+    func testWakeCommandNeverRetiresLiveWorkoutOrChangesSavedStatus() {
+        let old = UUID(), new = UUID()
+        let command = WatchWorkoutCommand(id: new, action: .start, supersededIDs: [old])
+        var live = WatchWorkoutLedger(activeID: old)
+        live.retireSupersededRequests(for: command)
+        XCTAssertEqual(live.activeID, old)
+        XCTAssertTrue(live.terminalIDs.isEmpty)
+        XCTAssertFalse(live.accepts(command))
+        live.finish(old, status: "saved")
+        live.retireSupersededRequests(for: command)
+        XCTAssertEqual(live.terminalStatuses[old.uuidString], "saved")
+    }
+    func testExpiredWakeDoesNotRetireRequestsAndLegacyCommandStillDecodes() throws {
+        let old = UUID(), new = UUID(), now = Date()
+        var ledger = WatchWorkoutLedger()
+        ledger.retireSupersededRequests(for: WatchWorkoutCommand(id: new, action: .start, issuedAt: now.addingTimeInterval(-121), supersededIDs: [old]), now: now)
+        XCTAssertTrue(ledger.terminalIDs.isEmpty)
+        let legacy = WatchWorkoutCommand(id: old, action: .start)
+        XCTAssertNil(try JSONDecoder().decode(WatchWorkoutCommand.self, from: JSONEncoder().encode(legacy)).supersededIDs)
+        var invalid = legacy.dictionary; invalid["supersededIDs"] = ["invalid"]
+        XCTAssertNil(WatchWorkoutCommand(invalid))
+    }
+    func testStopBeforeWakeRetiresSupersededStartsWithoutReplayingThem() {
+        let old = UUID(), new = UUID()
+        let stop = WatchWorkoutCommand(id: new, action: .discard, supersededIDs: [old])
+        var ledger = WatchWorkoutLedger()
+        ledger.retireSupersededRequests(for: stop)
+        ledger.finish(new, status: "discarded")
+        XCTAssertFalse(ledger.accepts(WatchWorkoutCommand(id: old, action: .start)))
+        XCTAssertFalse(ledger.accepts(WatchWorkoutCommand(id: new, action: .start)))
+    }
     func testLiveReconciliationRetiresOnlyInactiveRequests() {
         let old = UUID(), active = UUID()
         var ledger = WatchWorkoutLedger(activeID: active)

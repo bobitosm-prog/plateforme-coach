@@ -60,3 +60,21 @@ it('keeps the warning when the Watch confirms a busy state', async () => {
  await screen.findByText(fr.watch_workout.busy)
  expect(post.mock.calls[1]).toEqual([{action:'readiness'}])
 })
+
+it('starts directly without requiring a readiness reply from a sleeping Watch and exposes wake diagnostics', async () => {
+ const post = vi.fn().mockResolvedValue({enabled:true,status:'unavailable',diagnostic:'wake_failed:HKErrorDomain:11',phoneBuild:'19',watchBuild:'18'}); native(post)
+ render(wrap(React.createElement(WatchWorkoutControls,{draftId:'sleeping-watch'})))
+ await screen.findByText('wake_failed:HKErrorDomain:11')
+ expect(screen.getByText('Build iPhone : 19 · Watch : 18')).toBeTruthy()
+ expect(post.mock.calls).toEqual([[{action:'sync',id:'sleeping-watch'}]])
+ fireEvent.click(screen.getByRole('button',{name:fr.watch_workout.retry}))
+ await screen.findByText(fr.watch_workout.unavailable)
+ expect(post.mock.calls[1]).toEqual([{action:'enable',id:'sleeping-watch'}])
+})
+
+it('distinguishes iPhone authorization from Watch authorization', async () => {
+ const post = vi.fn().mockResolvedValue({enabled:true,status:'phonePermission'}); native(post)
+ render(wrap(React.createElement(WatchWorkoutControls,{draftId:'phone-consent'})))
+ await screen.findByText(fr.watch_workout.phonePermission)
+ expect(screen.queryByText(fr.watch_workout.permission)).toBeNull()
+})

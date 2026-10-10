@@ -3852,6 +3852,9 @@
     "fitness": "MoovX Fitness references appear first. They form a separate catalogue and are not all sourced from Ciqual."
   },
   "watch_workout": {
+    "phonePermission": "Allow Workouts for MoovX in Health on this iPhone, then retry. Watch permission alone is not enough to wake the app.",
+    "diagnostic": "Watch diagnostics",
+    "diagnosticVersions": "iPhone build: {phone} · Watch: {watch}",
     "off": "Disabled. Enable to start future sessions on your Watch.",
     "enable": "Enable for this session",
     "retry": "Retry connection",

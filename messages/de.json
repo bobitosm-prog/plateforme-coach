@@ -3852,6 +3852,9 @@
     "fitness": "MoovX-Fitness-Einträge erscheinen zuerst. Sie bilden einen eigenen Katalog und stammen nicht alle aus Ciqual."
   },
   "watch_workout": {
+    "phonePermission": "Erlaube MoovX den Zugriff auf Trainings in Health auf diesem iPhone und versuche es erneut. Die Watch-Berechtigung allein reicht zum Aufwecken nicht aus.",
+    "diagnostic": "Watch-Diagnose",
+    "diagnosticVersions": "iPhone-Build: {phone} · Watch: {watch}",
     "off": "Deaktiviert. Aktivieren, um künftige Einheiten auf der Watch zu starten.",
     "enable": "Für diese Einheit aktivieren",
     "retry": "Verbindung erneut versuchen",

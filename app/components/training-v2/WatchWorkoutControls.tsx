@@ -33,11 +33,16 @@ export default function WatchWorkoutControls({draftId}: {draftId:string}) {
     return ()=>{alive=false;clearInterval(timer)} // Hiding the sheet must not end a workout.
   },[draftId])
   if(!available)return null
-  const known=['running','saved','discarded','saving','pending','permission','install','busy','expired','error','unavailable','idle']
+  const known=['running','saved','discarded','saving','pending','permission','phonePermission','install','busy','expired','error','unavailable','idle']
   const status=known.includes(state.status)?state.status:'unavailable'
   return <section aria-label="Apple Watch" style={{margin:'12px 0',padding:12,borderRadius:12,background:colors.surface2,border:`1px solid ${colors.goldBorder}`}}>
     <strong style={{color:colors.gold}}>Apple Watch</strong>
     <p role="status" style={{fontSize:13}}>{state.enabled?t(status):t('off')}</p>
+    {state.diagnostic && ['unavailable','error','pending','expired','permission','phonePermission'].includes(status) && <details style={{fontSize:12,marginBottom:8,overflowWrap:'anywhere'}}>
+      <summary style={{minHeight:44,cursor:'pointer'}}>{t('diagnostic')}</summary>
+      <p>{t('diagnosticVersions',{phone:state.phoneBuild||'?',watch:state.watchBuild||'?'})}</p>
+      <code>{state.diagnostic}</code>
+    </details>}
     <button type="button" disabled={busy} onClick={async()=>{
       setBusy(true);try{setState(await checkedState(await watchWorkout('enable',draftId)))}finally{setBusy(false)}
     }} style={{minHeight:44,color:colors.gold}}>{t(state.enabled?'retry':'enable')}</button>
