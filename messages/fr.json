@@ -1,4 +1,5 @@
 {
+  "legalReader": { "retry": "Réessayer", "error": "Impossible de charger le document. Réessaie." },
   "watch_readiness": {
   "close": "Fermer",
   "ready": "Watch prête",
