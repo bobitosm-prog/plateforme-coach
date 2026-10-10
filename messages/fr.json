@@ -2827,7 +2827,7 @@
       "addToJournal": "Ajouter au journal",
       "saveError": "Enregistrement impossible. Tes modifications sont conservées : réessaie."
     },
-    "journal": {"addTitle": "Que veux-tu ajouter ?", "food": "Un aliment", "saved": "Un repas enregistré", "photo": "Une photo", "barcode": "Un code-barres"},
+    "journal": {"plan": "Le repas de mon plan", "addTitle": "Que veux-tu ajouter ?", "food": "Un aliment", "saved": "Un repas enregistré", "photo": "Une photo", "barcode": "Un code-barres"},
     "quickEntry": {
       "eyebrow": "Saisie rapide",
       "title": "Ajouter un repas",

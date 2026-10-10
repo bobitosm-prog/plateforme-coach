@@ -2827,7 +2827,7 @@
       "addToJournal": "Zum Tagebuch hinzufügen",
       "saveError": "Speichern fehlgeschlagen. Deine Änderungen bleiben erhalten. Bitte erneut versuchen."
     },
-    "journal": {"addTitle": "Was möchtest du hinzufügen?", "food": "Ein Lebensmittel", "saved": "Eine gespeicherte Mahlzeit", "photo": "Ein Foto", "barcode": "Einen Barcode"},
+    "journal": {"plan": "Eine Mahlzeit aus meinem Plan", "addTitle": "Was möchtest du hinzufügen?", "food": "Ein Lebensmittel", "saved": "Eine gespeicherte Mahlzeit", "photo": "Ein Foto", "barcode": "Einen Barcode"},
     "quickEntry": {
       "eyebrow": "Schneller Eintrag",
       "title": "Mahlzeit hinzufügen",
