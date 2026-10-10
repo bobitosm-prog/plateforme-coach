@@ -23,8 +23,8 @@ describe('Wave 6F auth entry UI contracts', () => {
     expect(register).toContain("'client' | 'coach'")
     expect(register).toContain('acceptedTerms')
     expect(register).toContain("t('errors.termsRequired')")
-    expect(register).toContain("href={`/${locale}/cgu`}")
-    expect(register).toContain("href={`/${locale}/privacy`}")
+    expect(register).toContain('<LegalDocumentDialog document="cgu">')
+    expect(register).toContain('<LegalDocumentDialog document="privacy">')
   })
 
   it('keeps accessible password controls and compact dynamic viewport layouts', () => {
