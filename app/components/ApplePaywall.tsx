@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
+import LegalDocumentDialog from './LegalDocumentDialog'
 import { BG_BASE, BG_CARD, GOLD, TEXT_PRIMARY, TEXT_MUTED, FONT_BODY, FONT_DISPLAY } from '@/lib/design-tokens'
 export default function ApplePaywall({ userId, onSignOut, dismissible = false, supported = true }: { userId: string; onSignOut: () => void; dismissible?: boolean; supported?: boolean }) {
   const t = useTranslations('applePurchases')
-  const locale = useLocale()
   const [products, setProducts] = useState<NativeProduct[]>([])
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -34,7 +34,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
     <p style={{ color: TEXT_MUTED }}>{t('renewal')}</p>
     <button style={button} disabled={busy || !supported || !applePurchaseBridge()} onClick={() => run('restore')}>{t('restore')}</button>
     <p role="status" aria-live="polite">{busy ? t('processing') : message}</p>
-    <p><a href={`/${locale}/cgu`} style={{ color: GOLD }}>{t('terms')}</a> · <a href={`/${locale}/privacy`} style={{ color: GOLD }}>{t('privacy')}</a></p>
+    <p><LegalDocumentDialog document="cgu">{t('terms')}</LegalDocumentDialog> · <LegalDocumentDialog document="privacy">{t('privacy')}</LegalDocumentDialog></p>
     <button onClick={onSignOut} style={{ ...button, background: BG_CARD, color: TEXT_PRIMARY }}>{dismissible ? t('close') : t('signOut')}</button>
   </section>
 }

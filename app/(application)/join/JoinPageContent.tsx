@@ -1,12 +1,13 @@
 'use client'
 
+import LegalDocumentDialog from '@/app/components/LegalDocumentDialog'
 import { createBrowserClient } from '@supabase/ssr'
 import { Eye, EyeOff } from 'lucide-react'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { invitationTerminalState, shouldClearInvitationIntent } from './invitation-state'
 import {
   BG_BASE, BG_CARD, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GREEN,
@@ -39,7 +40,6 @@ const GoogleIcon = () => <svg width="18" height="18" viewBox="0 0 18 18"><path d
 
 function JoinContent() {
   const t = useTranslations('auth.join')
-  const locale = useLocale()
   const params = useSearchParams()
   const router = useRouter()
   const tokenRef = useRef<string | null>(null)
@@ -265,7 +265,7 @@ function JoinContent() {
         <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="join-input" value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); setError('') }} placeholder={t('confirmPasswordPlaceholder')} onKeyDown={event => { if (event.key === 'Enter') void handleSignUp() }} style={{ marginBottom: 16 }} />
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: TEXT_MUTED, fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, marginBottom: 16 }}>
           <input type="checkbox" checked={acceptedTerms} onChange={event => { setAcceptedTerms(event.target.checked); setError('') }} style={{ marginTop: 2 }} />
-          <span>{t('terms.prefix')} <Link href={`/${locale}/cgu`} target="_blank">{t('terms.terms')}</Link> {t('terms.and')} <Link href={`/${locale}/privacy`} target="_blank">{t('terms.privacy')}</Link>.</span>
+          <span>{t('terms.prefix')} <LegalDocumentDialog document="cgu">{t('terms.terms')}</LegalDocumentDialog> {t('terms.and')} <LegalDocumentDialog document="privacy">{t('terms.privacy')}</LegalDocumentDialog>.</span>
         </label>
         {error && <p role="alert" aria-live="polite" style={{ color: RED, fontSize: 13, fontFamily: FONT_BODY }}>{error}</p>}
         <button onClick={() => void handleSignUp()} disabled={loading} style={{ width: '100%', background: loading ? BORDER : GOLD, color: BG_BASE, border: 'none', borderRadius: 12, padding: 14, fontWeight: 800, fontFamily: FONT_ALT }}>{loading ? t('loadingButton') : t('submitButton')}</button>

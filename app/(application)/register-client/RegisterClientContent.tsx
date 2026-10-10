@@ -1,4 +1,5 @@
 'use client'
+import LegalDocumentDialog from '@/app/components/LegalDocumentDialog'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -186,9 +187,9 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
       />
       <span>
         {t('shared.termsPrefix')}{' '}
-        <Link href={`/${locale}/cgu`} target="_blank" style={{ color: GOLD }}>{t('shared.termsLink')}</Link>{' '}
+        <LegalDocumentDialog document="cgu">{t('shared.termsLink')}</LegalDocumentDialog>{' '}
         {t('shared.termsAnd')}{' '}
-        <Link href={`/${locale}/privacy`} target="_blank" style={{ color: GOLD }}>{t('shared.privacyLink')}</Link>.
+        <LegalDocumentDialog document="privacy">{t('shared.privacyLink')}</LegalDocumentDialog>.
       </span>
     </label>
   )
