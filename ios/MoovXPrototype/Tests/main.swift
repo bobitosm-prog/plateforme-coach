@@ -64,3 +64,11 @@ for raw in ["moovx://auth/other", "moovx://evil/confirmed", "https://auth/confir
     precondition(NavigationPolicy.confirmationReturn(URL(string: raw)!) == nil)
 }
 print("Registration and confirmation handoff: 12 checks passed")
+
+for raw in ["https://app.moovx.ch/fr/privacy", "https://moovx.ch/en/privacy", "https://privacy.claude.com/", "https://privacy.claude.com/en/"] {
+    precondition(NavigationPolicy.opensPrivacyDocument(URL(string: raw)))
+}
+for raw in ["http://privacy.claude.com/", "https://privacy.claude.com.evil.invalid/", "https://user:pass@privacy.claude.com/", "https://privacy.claude.com:8443/", "https://moovx.ch/checkout", "https://app.moovx.ch/fr/privacy?redirect=evil", "javascript:alert(1)"] {
+    precondition(!NavigationPolicy.opensPrivacyDocument(URL(string: raw)))
+}
+print("Privacy handoff: 11 checks passed")

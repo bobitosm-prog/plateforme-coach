@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { showAiConsentDialog } from '@/lib/ai/consent-dialog'
 beforeEach(() => {
+  delete (window as Window & { __moovxPrivacyLinks?: boolean }).__moovxPrivacyLinks
   document.body.innerHTML = '<button id="launch">Athena</button>'
   document.documentElement.lang = 'fr'
   HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) { this.open = true })
@@ -19,6 +20,16 @@ describe('consent dialog interaction', () => {
     expect(document.activeElement?.tagName).toBe('H2')
     ;(modal.querySelector('button') as HTMLButtonElement).click()
     expect(await result).toBe(true); expect(document.querySelector('dialog')).toBeNull()
+  })
+  it('keeps consent pending while native legal links open outside the webview', async () => {
+    (window as Window & { __moovxPrivacyLinks?: boolean }).__moovxPrivacyLinks = true
+    const result = showAiConsentDialog()
+    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('dialog a'))
+    expect(links.map(a => a.target)).toEqual(['_self', '_self'])
+    expect(links[1].href).toBe('https://privacy.claude.com/')
+    expect(document.querySelector('dialog')?.open).toBe(true)
+    ;(document.querySelectorAll('dialog button')[1] as HTMLButtonElement).click()
+    expect(await result).toBe(false)
   })
   it('Escape refuses, removes the overlay, and returns focus', async () => {
     const launch = document.getElementById('launch')!; launch.focus()

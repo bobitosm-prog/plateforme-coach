@@ -30,7 +30,9 @@ function DomainRow({
           ? 'quotaExhausted'
           : state.phase === 'missing'
             ? 'missing'
-            : 'error'
+            : failed && state.reason && ['generation', 'persistence', 'confirmation'].includes(state.reason)
+              ? state.reason
+              : 'error'
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44 }}>

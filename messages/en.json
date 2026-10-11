@@ -112,7 +112,10 @@
       "missing": "To prepare",
       "waitingForCoach": "Waiting for your coach’s plan",
       "quotaExhausted": "Quota reached — try again later",
-      "error": "Temporary error"
+      "error": "Temporary error",
+      "generation": "Preparation interrupted — retry this step",
+      "persistence": "Could not save — retry this step",
+      "confirmation": "Could not verify the saved result — retry"
     }
   },
   "muscles": {

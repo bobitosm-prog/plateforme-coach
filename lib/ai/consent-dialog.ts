@@ -31,7 +31,9 @@ export function showAiConsentDialog(): Promise<boolean> {
       const a = document.createElement('a')
       a.textContent = label
       a.href = href
-      a.target = '_blank'
+      // The native shell opens approved legal links in the system browser.
+      // Avoid a popup request, which WKWebView does not create by default.
+      a.target = (window as Window & { __moovxPrivacyLinks?: boolean }).__moovxPrivacyLinks ? '_self' : '_blank'
       a.rel = 'noopener noreferrer'
       a.style.cssText = 'display:block;color:#e8c563;margin:10px 0;text-decoration:underline;min-height:32px'
       dialog.append(a)

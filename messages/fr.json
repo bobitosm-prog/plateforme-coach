@@ -112,7 +112,10 @@
       "missing": "À préparer",
       "waitingForCoach": "En attente du plan coach",
       "quotaExhausted": "Quota atteint — réessayez plus tard",
-      "error": "Erreur temporaire"
+      "error": "Erreur temporaire",
+      "generation": "Préparation interrompue — réessayez cette étape",
+      "persistence": "Enregistrement impossible — réessayez cette étape",
+      "confirmation": "Vérification de l’enregistrement impossible — réessayez"
     }
   },
   "muscles": {
