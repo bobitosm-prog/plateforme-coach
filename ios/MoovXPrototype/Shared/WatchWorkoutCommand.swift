@@ -65,3 +65,14 @@ struct WatchWorkoutLedger: Codable {
         return activeID == command.id
     }
 }
+
+/// Retry a missed system wake with the same request; never extend its lifetime.
+struct WatchWakeRetry {
+    private(set) var attempts = 0
+    private var lastAttempt: Date?
+    mutating func record(now: Date = Date()) { attempts += 1; lastAttempt = now }
+    func allows(_ command: WatchWorkoutCommand, acknowledged: Bool, now: Date = Date()) -> Bool {
+        !acknowledged && command.canStart(now: now) && attempts < 3 &&
+            lastAttempt.map { now.timeIntervalSince($0) >= 20 } != false
+    }
+}

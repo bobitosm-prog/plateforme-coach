@@ -387,3 +387,28 @@ les droits de signature adaptés ; ce refus n’est pas une preuve de la cause
 sur l’iPhone du testeur. Utiliser CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-
 pour les probes HealthKit sur simulateur. L’Ultra 1 sous watchOS 26.6 doit encore
 valider réveil depuis le cadran en veille, continuité et fin sans doublon.
+
+### Build 23 — new TestFlight accounts and bounded Watch wake retries
+
+The iPhone now supplies StoreKit's verified AppTransaction JWS. The server verifies
+its Apple chain, bundle and environment before issuing the authenticated user's
+account binding. APPLE_IAP_SANDBOX_ENABLED=true allows any new TestFlight account;
+legacy builds retain their explicit QA allowlist. No unsigned environment flag is
+accepted. Production purchases retain their separate activation gate. Sandbox and
+Production ledgers stay separate; purchase signatures, appAccountToken ownership,
+current Apple reconciliation, expiry and refunds remain mandatory. The sandbox
+entitlement reader is only enabled by server configuration and never grants access
+from the app receipt alone. No database migration is required.
+
+The Watch prepares its HealthKit session directly in the wake delegate, before
+waiting for recovery/connectivity. A bounded timer retries transient command
+handshake failures. Duplicate wake callbacks preserve the in-flight reply. The
+phone retries a missed wake at most three times, with the same workout UUID and
+original expiration; acknowledgements and stop commands prevent further retries.
+
+Validation: 2,527 web tests, TypeScript and locale parity pass. Native StoreKit and
+Watch policy tests pass. A paired-simulator cold launch starts with reachable=0,
+receives the Watch build 23 handshake, starts the timer and saves exactly one
+synthetic Health workout after repeated finish commands. These checks do not prove
+physical Ultra 1 wake reliability or a real TestFlight purchase: retest both on
+build 23 before re-recording the App Review demonstration.

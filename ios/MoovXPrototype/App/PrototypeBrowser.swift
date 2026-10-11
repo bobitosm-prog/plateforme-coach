@@ -97,6 +97,7 @@ struct PrototypeWebView: UIViewRepresentable {
         (() => {
           window.__moovxExternalRegistration = true;
           window.__moovxPrivacyLinks = true;
+          window.__moovxSignedAppleEnvironment = true;
           window.__moovxCameraDenied = \(denied ? "true" : "false");
           document.addEventListener('click', event => {
             const input = event.target;

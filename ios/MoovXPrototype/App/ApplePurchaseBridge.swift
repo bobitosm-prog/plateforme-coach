@@ -22,7 +22,14 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
             do {
                 guard self?.generation == requestGeneration else { throw ApplePurchaseManager.PurchaseError.invalid }
                 let result: [String: Any]
-                if action == "manage" {
+                if action == "environment" {
+                    let proof = try await AppTransaction.shared
+                    guard case .verified(let transaction) = proof,
+                          transaction.environment == .sandbox || transaction.environment == .production else {
+                        throw ApplePurchaseManager.PurchaseError.invalid
+                    }
+                    result = ["status": "success", "signedAppTransaction": proof.jwsRepresentation]
+                } else if action == "manage" {
                     guard let scene = message.webView?.window?.windowScene else { throw ApplePurchaseManager.PurchaseError.invalid }
                     try await AppStore.showManageSubscriptions(in: scene)
                     result = ["status": "success"]

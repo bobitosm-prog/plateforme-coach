@@ -3,11 +3,11 @@ import { verifyAppleTransaction } from './transaction-verification'
 import { reconcileApplePurchase } from './reconciliation'
 import { prepareAppleAccountBinding } from './purchase-ledger'
 
+import type { AppleEnvironment } from './transaction-verification'
 import { purchaseEnvironment } from './environment'
 export { purchaseEnvironment } from './environment'
 
-export async function syncApplePurchase(userId: string, signedTransaction: string) {
-  const environment = purchaseEnvironment(userId)
+export async function syncApplePurchase(userId: string, signedTransaction: string, environment: AppleEnvironment = purchaseEnvironment(userId)) {
   const token = await prepareAppleAccountBinding(userId, environment)
   const context = { environment, expectedAccountToken: token }
   const seed = await verifyAppleTransaction(signedTransaction, context)

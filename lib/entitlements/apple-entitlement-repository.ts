@@ -1,5 +1,5 @@
 import 'server-only'
-import { purchaseEnvironment } from '@/lib/apple/environment'
+import { purchaseEnvironment, sandboxPurchasesEnabled } from '@/lib/apple/environment'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { AppleEntitlement } from './apple-entitlement'
 
@@ -37,5 +37,10 @@ export async function getActiveAppleEntitlement(userId: string): Promise<AppleEn
   const { data, error } = await supabaseAdmin.rpc(purchaseEnvironment(userId) === 'Sandbox'
     ? 'read_apple_sandbox_entitlement_states' : 'read_apple_entitlement_states', { p_user_id: userId })
   if (error) throw new Error('APPLE_ENTITLEMENT_UNAVAILABLE')
-  return selectAppleEntitlement(data)
+  const production = selectAppleEntitlement(data)
+  if (production || !sandboxPurchasesEnabled() || purchaseEnvironment(userId) === 'Sandbox') return production
+  // Sandbox remains a separate ledger: only verified, reconciled purchases grant access.
+  const sandbox = await supabaseAdmin.rpc('read_apple_sandbox_entitlement_states', { p_user_id: userId })
+  if (sandbox.error) throw new Error('APPLE_ENTITLEMENT_UNAVAILABLE')
+  return selectAppleEntitlement(sandbox.data)
 }

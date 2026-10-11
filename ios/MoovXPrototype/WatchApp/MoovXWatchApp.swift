@@ -7,9 +7,10 @@ struct MoovXWatchApp: App {
     @WKApplicationDelegateAdaptor(WatchDelegate.self) var delegate
     var body: some Scene { WindowGroup { WatchWorkoutView() } }
 }
+@MainActor
 final class WatchDelegate: NSObject, WKApplicationDelegate {
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
-        Task { @MainActor in WatchWorkoutManager.shared.launchedForWorkout(configuration: workoutConfiguration) }
+        WatchWorkoutManager.shared.launchedForWorkout(configuration: workoutConfiguration)
     }
     func handleActiveWorkoutRecovery() { Task { @MainActor in _ = WatchWorkoutManager.shared } }
 }

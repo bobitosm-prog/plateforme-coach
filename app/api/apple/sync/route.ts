@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const results = []
     for (const environment of [Environment.PRODUCTION, Environment.SANDBOX] as const) {
-      if (environment === Environment.SANDBOX && !process.env.APPLE_IAP_SANDBOX_USER_IDS?.trim()) continue
+      if (environment === Environment.SANDBOX && process.env.APPLE_IAP_SANDBOX_ENABLED !== 'true' && !process.env.APPLE_IAP_SANDBOX_USER_IDS?.trim()) continue
       results.push({ environment, ...await runAppleSync(environment) })
     }
     return Response.json({ results }, { headers: { 'Cache-Control': 'no-store' } })

@@ -16,6 +16,16 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 describe('native Apple purchase coordination', () => {
+  it('sends the signed app environment for preparation and synchronization on build 23+', async () => {
+    ;(window as any).__moovxSignedAppleEnvironment = true
+    bridge.postMessage.mockResolvedValueOnce({ status: 'success', signedAppTransaction: 'signed.app.proof' })
+    request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'recorded', transactionId: '123' }) })
+    await nativeApplePurchase(userId, 'restore')
+    expect(bridge.postMessage).toHaveBeenNthCalledWith(1, { action: 'environment' })
+    expect(JSON.parse(request.mock.calls[0][1].body)).toEqual({ action: 'prepare', userId, signedAppTransaction: 'signed.app.proof' })
+    expect(JSON.parse(request.mock.calls[1][1].body).signedAppTransaction).toBe('signed.app.proof')
+  })
+
   it('finishes only after the server acknowledges the same transaction', async () => {
     request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'recorded', transactionId: '123' }) })
     expect((await nativeApplePurchase(userId, 'restore')).count).toBe(1)
