@@ -118,18 +118,23 @@ describe('platform checkout authorization and failure boundaries', () => {
     expect((await request({ clientId, coachId })).status).toBe(503)
     expect(m.admin).not.toHaveBeenCalled()
   })
-  it.each(['client_monthly', 'client_yearly', 'client_lifetime', 'coach_monthly'])('preserves checkout behavior for %s', async planId => {
+  it.each(['client_monthly', 'client_yearly', 'coach_monthly'])('preserves checkout behavior for %s', async planId => {
     if (planId === 'coach_monthly') m.profile.mockResolvedValue({ data: { role: 'coach' }, error: null })
     const response = await request({ clientId, planId, coachId: 'platform' })
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ url: 'https://checkout.invalid/test' })
     const params = m.create.mock.calls[0][0]
-    expect(params.mode).toBe(planId === 'client_lifetime' ? 'payment' : 'subscription')
+    expect(params.mode).toBe('subscription')
     expect(params.line_items).toEqual([{ price: `price_${planId.toUpperCase()}`, quantity: 1 }])
     expect(params.metadata).toEqual({ clientId, planId, coachId: 'platform', subType: planId })
     expect(params.success_url).toBe(`https://moovx.invalid/${planId === 'coach_monthly' ? 'coach' : ''}?payment=success`)
     expect((params.subscription_data || params.payment_intent_data).transfer_data.destination).toBe('acct_test')
     expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({ client_id: clientId, coach_id: null, status: 'pending', stripe_checkout_session_id: 'cs_test' }))
+  })
+  it('blocks the suspended lifetime plan before creating a checkout', async () => {
+    expect((await request({ clientId, planId: 'client_lifetime' })).status).toBe(400)
+    expect(m.create).not.toHaveBeenCalled()
+    expect(m.insert).not.toHaveBeenCalled()
   })
   it('uses only a verified coach relationship in payment attribution', async () => {
     expect((await request({ clientId, coachId })).status).toBe(200)

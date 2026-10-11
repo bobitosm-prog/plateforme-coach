@@ -110,9 +110,10 @@ The Provider uses its best efforts to ensure permanent access to the Platform. H
 ### 7.1 Pricing
 
 Athena subscription prices are indicated in Swiss francs (CHF), all taxes included:
-- **Monthly:** CHF 10 / month
-- **Annual:** CHF 80 / year
-- **Lifetime:** CHF 150 (one-time payment, lifetime access for as long as the Platform is operated)
+- **Monthly:** CHF 9.90 / month
+- **Annual:** CHF 79.90 / year
+
+Lifetime access is suspended for new purchases. Existing lifetime access remains valid under its original terms.
 
 Coach service prices are set freely by each Coach and indicated on their profile.
 
@@ -144,7 +145,7 @@ The Provider reserves the right to modify its prices at any time. New prices app
 
 ### 7.6 MoovX 14-day trial
 
-The MoovX trial provides access to paid features for 14 days without confirming a subscription at the start. No payment or paid renewal starts automatically when it ends. To continue paid access on iPhone, the User chooses and confirms an Apple purchase. Lifetime access is a one-time payment; only monthly and annual subscriptions renew automatically.
+The MoovX trial provides access to paid features for 14 days without confirming a subscription at the start. No payment or paid renewal starts automatically when it ends. To continue paid access on iPhone, the User chooses and confirms an Apple purchase. Monthly and annual subscriptions renew automatically.
 
 ---
 
@@ -152,7 +153,7 @@ The MoovX trial provides access to paid features for 14 days without confirming 
 
 ### 8.1 Duration
 
-Monthly subscriptions are concluded for a one-month term, tacitly renewable. Annual subscriptions are concluded for a twelve-month term, tacitly renewable. The Lifetime subscription is concluded for an open-ended duration (lifetime of the Platform).
+Monthly subscriptions are concluded for a one-month term, tacitly renewable. Annual subscriptions are concluded for a twelve-month term, tacitly renewable. The historical Lifetime subscription is concluded for an open-ended duration (lifetime of the Platform).
 
 ### 8.2 Termination by the Client
 

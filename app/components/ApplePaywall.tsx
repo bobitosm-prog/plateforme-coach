@@ -27,8 +27,8 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
   return <section style={{ background: BG_BASE, color: TEXT_PRIMARY, padding: 24, minHeight: '100dvh', fontFamily: FONT_BODY }}>
     <h1 style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{t('title')}</h1><p style={{ color: TEXT_MUTED }}>{t('trial')}</p>
     {products.map((product, i) => <div key={product.id} style={{ background: BG_CARD, borderRadius: 22, padding: 20, marginTop: 16 }}>
-      <h2>{t(['monthly', 'yearly', 'lifetime'][i])}</h2>
-      <p>{product.displayPrice} {i < 2 ? t(i === 0 ? 'perMonth' : 'perYear') : t('oneTime')}</p>
+      <h2>{t(['monthly', 'yearly'][i])}</h2>
+      <p>{product.displayPrice} {t(i === 0 ? 'perMonth' : 'perYear')}</p>
       <button style={button} disabled={busy} onClick={() => run('purchase', product.id)}>{t('buy')}</button>
     </div>)}
     <p style={{ color: TEXT_MUTED }}>{t('renewal')}</p>

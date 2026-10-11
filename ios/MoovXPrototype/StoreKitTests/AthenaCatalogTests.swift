@@ -21,8 +21,8 @@ final class AthenaCatalogTests: XCTestCase {
 
     func testLoadsRealStoreKitCatalogueWithoutPurchasingOrIntroTrial() async throws {
         let products = try await AthenaCatalog.load()
-        XCTAssertEqual(products.map(\.id), AthenaOffer.allCases.map(\.rawValue))
-        XCTAssertEqual(products.map(\.price), [Decimal(10), Decimal(80), Decimal(150)])
+        XCTAssertEqual(products.map(\.id), AthenaCatalog.saleOffers.map(\.rawValue))
+        XCTAssertEqual(products.map(\.price), [Decimal(string: "9.90")!, Decimal(string: "79.90")!])
         XCTAssertTrue(products.allSatisfy { !$0.displayPrice.isEmpty })
         XCTAssertTrue(products.allSatisfy { $0.priceFormatStyle.currencyCode == "CHF" })
         XCTAssertTrue(session.allTransactions().isEmpty)
@@ -42,15 +42,18 @@ final class AthenaCatalogTests: XCTestCase {
         } catch {}
         try await session.setSimulatedError(nil, forAPI: .loadProducts)
         let products = try await AthenaCatalog.load()
-        XCTAssertEqual(products.count, 3)
+        XCTAssertEqual(products.count, 2)
     }
 
     @MainActor
     func testPurchaseRemainsUnfinishedUntilServerAcknowledgementAndIsAccountScoped() async throws {
         let manager = ApplePurchaseManager()
         let owner = UUID()
-        let reply = try await manager.purchase(productID: AthenaOffer.lifetime.rawValue, token: owner)
-        XCTAssertEqual(reply["status"] as? String, "success")
+        // Simulate a lifetime purchase made before the offer was suspended.
+        let legacyProducts = try await Product.products(for: [AthenaOffer.lifetime.rawValue])
+        let legacy = try XCTUnwrap(legacyProducts.first)
+        _ = try await legacy.purchase(options: [.appAccountToken(owner)])
+        _ = try await manager.collect(token: owner, restore: false)
         let payloads = try manager.payloads(token: owner)
         XCTAssertEqual(payloads.count, 1)
         XCTAssertFalse(payloads[0]["signedTransaction"]!.isEmpty)
@@ -77,6 +80,15 @@ final class AthenaCatalogTests: XCTestCase {
             if case .verified(let transaction) = result, transaction.id == id { entitled = true }
         }
         XCTAssertTrue(entitled)
+    }
+
+    @MainActor
+    func testLifetimeIsNotAvailableForNewPurchases() async throws {
+        do {
+            _ = try await ApplePurchaseManager().purchase(productID: AthenaOffer.lifetime.rawValue, token: UUID())
+            XCTFail("The suspended lifetime offer must not be purchasable")
+        } catch {}
+        XCTAssertTrue(session.allTransactions().isEmpty)
     }
 
     @MainActor

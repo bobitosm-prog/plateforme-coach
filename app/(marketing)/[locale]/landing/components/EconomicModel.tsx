@@ -106,7 +106,7 @@ export default function EconomicModel() {
 
             {/* Price tags */}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 32 }}>
-              {['CHF 10/mois', 'CHF 80/an', 'CHF 150 à vie'].map(tag => (
+              {['CHF 9.90/mois', 'CHF 79.90/an'].map(tag => (
                 <span key={tag} style={{
                   display: 'inline-flex',
                   fontFamily: 'var(--font-alt)',

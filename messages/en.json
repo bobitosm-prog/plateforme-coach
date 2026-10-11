@@ -503,7 +503,7 @@
     "plan_monthly_period": "/mo",
     "plan_yearly_label": "Yearly",
     "plan_yearly_period": "/yr",
-    "plan_yearly_save": "−33%",
+    "plan_yearly_save": "−32%",
     "plan_lifetime_label": "Lifetime",
     "plan_lifetime_period": "lifetime",
     "client_feat1": "Personalized nutrition plans",
@@ -1393,7 +1393,7 @@
       "perYear": "/year",
       "popular": "Popular",
       "bestOffer": "Best offer",
-      "save33": "Save 33%"
+      "save33": "Save 32%"
     },
     "features": {
       "clientMonthly": {
@@ -1533,15 +1533,15 @@
       "lifetimeDesc": "Permanent access to all MoovX features.",
       "legacyAccess": "Historical access",
       "legacyAccessDesc": "Your historical access to MoovX remains active.",
-      "planMonthly": "Monthly Plan — CHF 10/month",
-      "planYearly": "Yearly Plan — CHF 80/year",
+      "planMonthly": "Monthly Plan",
+      "planYearly": "Yearly Plan",
       "planCoach": "Coach Pro — CHF 50/month",
       "daysRemaining": "{days} days remaining",
       "renewalDate": "Renewal on {date}",
       "expiringSoon": "Your subscription is expiring soon",
       "manageSubscription": "MANAGE MY SUBSCRIPTION",
       "subscribePrompt": "Subscribe to access all features.",
-      "subscribeCta": "Subscribe — From CHF 10/month"
+      "subscribeCta": "Subscribe — From CHF 9.90/month"
     },
     "billing": {
       "title": "Payment history",
@@ -3839,7 +3839,7 @@
     "empty": "No purchases to restore for this MoovX account.",
     "sandbox": "Apple test purchase confirmed. Your test account access has been refreshed.",
     "success": "Purchase confirmed. Your access has been refreshed.",
-    "renewal": "Monthly and yearly subscriptions renew automatically unless cancelled in Apple settings. Lifetime access is a one-time purchase.",
+    "renewal": "Monthly and yearly subscriptions renew automatically unless cancelled in Apple settings.",
     "terms": "Terms",
     "privacy": "Privacy",
     "close": "Close",

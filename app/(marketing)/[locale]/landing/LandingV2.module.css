@@ -357,8 +357,13 @@
 .priceTop { align-items: flex-end; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; padding-bottom: 22px; }
 .priceTop span { color: var(--muted); font-size: 11px; text-transform: uppercase; }
 .priceTop strong { color: var(--gold-light); font-family: var(--font-display); font-size: 36px; font-weight: 400; }
-.priceOptions { display: flex; gap: 8px; margin: 16px 0 26px; }
-.priceOptions span { background: rgba(221,184,79,.07); border: 1px solid var(--line); color: rgba(255,255,255,.7); flex: 1; font-size: 11px; padding: 10px; text-align: center; }
+.priceOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 24px 0 28px; }
+.priceOption { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 22px 16px; border: 1px solid rgba(221,184,79,.4); background: linear-gradient(145deg, rgba(221,184,79,.16), rgba(221,184,79,.03)); }
+.priceOption strong { color: var(--gold-light); font-family: var(--font-body), sans-serif; font-size: clamp(42px, 4.5vw, 60px); font-weight: 850; letter-spacing: -.055em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.priceCurrency { color: var(--gold-light); font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+.pricePeriod { color: #fff; font-size: 15px; }
+.priceAnnual { border-color: var(--gold); box-shadow: inset 0 0 32px rgba(221,184,79,.08); }
+.priceOption small { color: var(--gold-light); font-size: 11px; line-height: 1.5; margin-top: 10px; }
 .priceCard ul { display: grid; gap: 12px; list-style: none; margin: 0 0 28px; padding: 0; }
 .priceCard li { align-items: center; color: rgba(255,255,255,.72); display: flex; font-size: 13px; gap: 10px; }
 .priceCard li svg { color: var(--gold); }
@@ -489,7 +494,9 @@
   .priceCard { padding: 24px 18px; }
   .priceTop { align-items: flex-start; flex-direction: column; gap: 8px; }
   .priceTop strong { font-size: 34px; }
-  .priceOptions { flex-direction: column; }
+  .priceOptions { gap: 10px; }
+  .priceOption { padding: 18px 12px; }
+  .priceOption strong { font-size: clamp(36px, 10vw, 52px); }
   .faqSection { gap: 38px; }
   .faqSection summary { font-size: 14px; min-height: 68px; }
   .finalSection { min-height: 560px; }

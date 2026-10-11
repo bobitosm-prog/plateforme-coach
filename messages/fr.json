@@ -503,7 +503,7 @@
     "plan_monthly_period": "/mois",
     "plan_yearly_label": "Annuel",
     "plan_yearly_period": "/an",
-    "plan_yearly_save": "−33%",
+    "plan_yearly_save": "−32%",
     "plan_lifetime_label": "Lifetime",
     "plan_lifetime_period": "à vie",
     "client_feat1": "Plans nutrition personnalisés",
@@ -1393,7 +1393,7 @@
       "perYear": "/an",
       "popular": "Populaire",
       "bestOffer": "Meilleure offre",
-      "save33": "Economise 33%"
+      "save33": "Economise 32%"
     },
     "features": {
       "clientMonthly": {
@@ -1533,15 +1533,15 @@
       "lifetimeDesc": "Accès permanent à toutes les fonctionnalités MoovX.",
       "legacyAccess": "Accès historique",
       "legacyAccessDesc": "Ton accès historique à MoovX reste actif.",
-      "planMonthly": "Plan Mensuel — CHF 10/mois",
-      "planYearly": "Plan Annuel — CHF 80/an",
+      "planMonthly": "Plan Mensuel",
+      "planYearly": "Plan Annuel",
       "planCoach": "Coach Pro — CHF 50/mois",
       "daysRemaining": "{days} jours restants",
       "renewalDate": "Renouvellement le {date}",
       "expiringSoon": "Ton abonnement expire bientôt",
       "manageSubscription": "GÉRER MON ABONNEMENT",
       "subscribePrompt": "Abonne-toi pour accéder à toutes les fonctionnalités.",
-      "subscribeCta": "S'abonner — Dès CHF 10/mois"
+      "subscribeCta": "S'abonner — Dès CHF 9.90/mois"
     },
     "billing": {
       "title": "Historique des paiements",
@@ -3839,7 +3839,7 @@
     "empty": "Aucun achat à restaurer pour ce compte MoovX.",
     "sandbox": "Achat de test Apple confirmé. Les droits de ton compte de test sont actualisés.",
     "success": "Achat confirmé, tes droits ont été actualisés.",
-    "renewal": "Les abonnements mensuel et annuel se renouvellent automatiquement, sauf annulation dans les réglages Apple. L’accès à vie est un paiement unique.",
+    "renewal": "Les abonnements mensuel et annuel se renouvellent automatiquement, sauf annulation dans les réglages Apple.",
     "terms": "Conditions",
     "privacy": "Confidentialité",
     "close": "Fermer",

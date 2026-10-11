@@ -110,9 +110,10 @@ Le Prestataire fait ses meilleurs efforts pour assurer un accès permanent à la
 ### 7.1 Tarifs
 
 Les tarifs des abonnements Athena sont indiqués en francs suisses (CHF), toutes taxes comprises (TTC) :
-- **Mensuel :** 10.- CHF / mois
-- **Annuel :** 80.- CHF / an
-- **Lifetime :** 150.- CHF (paiement unique, accès à vie tant que la Plateforme est exploitée)
+- **Mensuel :** 9.90 CHF / mois
+- **Annuel :** 79.90 CHF / an
+
+L’offre à vie est suspendue pour les nouveaux achats. Les accès à vie déjà acquis restent valables selon leurs conditions initiales.
 
 Les tarifs des services des Coaches sont fixés librement par chaque Coach et indiqués sur sa fiche.
 
@@ -144,7 +145,7 @@ Le Prestataire se réserve le droit de modifier ses tarifs à tout moment. Les n
 
 ### 7.6 Essai MoovX de 14 jours
 
-L’essai MoovX donne accès aux fonctions payantes pendant 14 jours sans confirmer d’abonnement au départ. Aucun paiement ni renouvellement payant ne démarre automatiquement à son terme. Pour poursuivre l’accès payant sur iPhone, l’Utilisateur choisit puis confirme un achat Apple. L’accès à vie est un paiement unique ; seuls les abonnements mensuel et annuel se renouvellent automatiquement.
+L’essai MoovX donne accès aux fonctions payantes pendant 14 jours sans confirmer d’abonnement au départ. Aucun paiement ni renouvellement payant ne démarre automatiquement à son terme. Pour poursuivre l’accès payant sur iPhone, l’Utilisateur choisit puis confirme un achat Apple. Les abonnements mensuel et annuel se renouvellent automatiquement.
 
 ---
 
@@ -152,7 +153,7 @@ L’essai MoovX donne accès aux fonctions payantes pendant 14 jours sans confir
 
 ### 8.1 Durée
 
-Les abonnements mensuels sont conclus pour une durée d'un mois renouvelable tacitement. Les abonnements annuels pour une durée de douze mois renouvelable tacitement. L'abonnement Lifetime est conclu pour une durée indéterminée (durée de vie de la Plateforme).
+Les abonnements mensuels sont conclus pour une durée d'un mois renouvelable tacitement. Les abonnements annuels pour une durée de douze mois renouvelable tacitement. L'ancien abonnement Lifetime est conclu pour une durée indéterminée (durée de vie de la Plateforme).
 
 ### 8.2 Résiliation par le Client
 

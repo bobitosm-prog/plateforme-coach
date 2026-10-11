@@ -110,9 +110,9 @@ Der Anbieter bemüht sich nach besten Kräften, einen dauerhaften Zugang zur Pla
 ### 7.1 Preise
 
 Die Preise für die Athena-Abonnements sind in Schweizer Franken (CHF) inklusive aller Steuern angegeben:
-- **Monatlich:** CHF 10 / Monat
-- **Jährlich:** CHF 80 / Jahr
-- **Lifetime:** CHF 150 (einmalige Zahlung, lebenslanger Zugang, solange die Plattform betrieben wird)
+- **Monatlich:** CHF 9.90 / Monat
+- **Jährlich:** CHF 79.90 / Jahr
+Das lebenslange Angebot ist für Neukäufe ausgesetzt. Bereits erworbene lebenslange Zugänge bleiben gemäß ihren ursprünglichen Bedingungen gültig.
 
 Die Preise für Coach-Dienste werden von jedem Coach frei festgelegt und auf seinem Profil angegeben.
 
@@ -144,7 +144,7 @@ Der Anbieter behält sich das Recht vor, seine Preise jederzeit zu ändern. Neue
 
 ### 7.6 Kostenlose MoovX-Testphase von 14 Tagen
 
-Die MoovX-Testphase ermöglicht 14 Tage Zugang zu kostenpflichtigen Funktionen, ohne zu Beginn ein Abonnement zu bestätigen. Am Ende beginnt weder eine Zahlung noch eine kostenpflichtige Verlängerung automatisch. Für weiteren kostenpflichtigen Zugang auf dem iPhone wählt und bestätigt der Nutzer einen Apple-Kauf. Der Lifetime-Zugang ist eine einmalige Zahlung; nur Monats- und Jahresabonnements verlängern sich automatisch.
+Die MoovX-Testphase ermöglicht 14 Tage Zugang zu kostenpflichtigen Funktionen, ohne zu Beginn ein Abonnement zu bestätigen. Am Ende beginnt weder eine Zahlung noch eine kostenpflichtige Verlängerung automatisch. Für weiteren kostenpflichtigen Zugang auf dem iPhone wählt und bestätigt der Nutzer einen Apple-Kauf. Monats- und Jahresabonnements verlängern sich automatisch.
 
 ---
 
@@ -152,7 +152,7 @@ Die MoovX-Testphase ermöglicht 14 Tage Zugang zu kostenpflichtigen Funktionen, 
 
 ### 8.1 Laufzeit
 
-Monatsabonnements werden für eine Laufzeit von einem Monat mit stillschweigender Verlängerung abgeschlossen. Jahresabonnements für zwölf Monate mit stillschweigender Verlängerung. Das Lifetime-Abonnement wird auf unbestimmte Zeit abgeschlossen (Lebenszeit der Plattform).
+Monatsabonnements werden für eine Laufzeit von einem Monat mit stillschweigender Verlängerung abgeschlossen. Jahresabonnements für zwölf Monate mit stillschweigender Verlängerung. Das bisherige Lifetime-Abonnement wird auf unbestimmte Zeit abgeschlossen (Lebenszeit der Plattform).
 
 ### 8.2 Kündigung durch den Kunden
 
