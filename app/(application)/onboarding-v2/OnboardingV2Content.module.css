@@ -2,8 +2,9 @@
   min-height: 100dvh;
   background: #111110;
   color: #f5f2ea;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   font-family: var(--font-body), sans-serif;
   color-scheme: dark;
 }
@@ -24,7 +25,7 @@
 .header li { height: 4px; flex: 1; border-radius: 9px; background: #29241c; }
 .header .active { background: #dfbf70; }
 
-.content { flex: 1; overflow: auto; padding: 18px 20px 28px; }
+.content { flex: 1 0 auto; padding: 18px 20px 28px; }
 .title h1 { font-size: clamp(27px, 7vw, 38px); line-height: 1.05; letter-spacing: -.035em; margin: 0 0 8px; text-transform: none; }
 .title p { color: #aaa69b; margin: 0 0 22px; line-height: 1.45; }
 .content > div + div,
@@ -93,7 +94,7 @@
 
 @media (min-width: 768px) {
   .shell { padding: 32px; }
-  .app { min-height: min(900px, calc(100dvh - 64px)); border: 1px solid #30291f; border-radius: 24px; overflow: hidden; }
+  .app { min-height: min(900px, calc(100dvh - 64px)); border: 1px solid #30291f; border-radius: 24px; }
   .content,
   .header,
   .nav { padding-left: 34px; padding-right: 34px; }
@@ -103,21 +104,22 @@
   .app * { animation: none !important; transition: none !important; }
 }
 
-/* Shared application hierarchy; page contents scroll without moving the footer. */
+/* One document scroll surface: avoid clipping onboarding inside a viewport-sized
+   nested scroller in WKWebView. Controls remain in flow when text/keyboard grows. */
 .shell { --font-alt:var(--font-body); --font-display:var(--font-body); --font-headline:var(--font-body); --font-dm-sans:var(--font-body); }
-.app { height:100dvh; min-height:0; overflow:hidden; }
+.app { min-height:100dvh; }
 .header { flex:0 0 auto; margin:0; padding:max(20px,env(safe-area-inset-top,0px)) 20px 16px; border:0; border-radius:0; background:none; }
 .header strong { font-size:20px; letter-spacing:.16em; text-transform:uppercase; }
 .header strong span { color:#dfbf70; font-size:inherit; }
 .header li { background:#393326; }
-.content { min-height:0; overscroll-behavior:contain; overflow-x:hidden; }
+.content { min-width:0; }
 .title h1 { font-family:var(--font-body),sans-serif; font-size:clamp(28px,7vw,36px); font-weight:750; letter-spacing:-.045em; color:#f5f2ea; }
 .title h1 em { display:block; color:#dec07a; font-style:normal; }
 .groupTitle { font-size:16px; font-weight:650; }
 .optionCard { border-radius:20px; }
-.nav { flex:0 0 auto; border-top:1px solid #393326; background:#111110; padding-bottom:max(16px,env(safe-area-inset-bottom,0px)); }
+.nav { position:sticky; bottom:0; z-index:1; flex:0 0 auto; margin-top:auto; border-top:1px solid #393326; background:#111110; padding-bottom:max(16px,env(safe-area-inset-bottom,0px)); }
 .primary,.back { font-family:var(--font-body),sans-serif; font-size:15px; }
 .app input:not([type=checkbox]):not([type=radio]),.app select,.app textarea { font-size:16px; }
 .app button { cursor:pointer; }
 .app button:disabled { cursor:default; }
-@media(min-width:768px){.app{height:min(900px,calc(100dvh - 64px));min-height:0}}
+@media(min-width:768px){.app{min-height:min(900px,calc(100dvh - 64px))}}
