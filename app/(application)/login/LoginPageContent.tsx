@@ -294,7 +294,7 @@ export default function LoginPageContent() {
 
                 <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.42s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('noAccount')}{' '}</span>
-                  <button onClick={() => router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
+                  <button onClick={() => { if ((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) window.location.href = 'https://moovx.ch/?source=ios' + (nextTarget === '/join' ? '&next=%2Fjoin' : ''); else router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                     {t('createAccount')}
                   </button>

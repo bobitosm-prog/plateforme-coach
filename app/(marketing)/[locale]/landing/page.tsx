@@ -72,9 +72,10 @@ export async function generateMetadata({
 }
 
 export default async function LandingPage({
-  params,
+  params, searchParams = Promise.resolve({}),
 }: {
   params: Promise<{ locale: string }>
+  searchParams?: Promise<{ source?: string; next?: string }>
 }) {
   const { locale } = await params
   const betaOffer = await getActiveBetaOffer()
@@ -85,7 +86,7 @@ export default async function LandingPage({
     <>
       <StructuredData data={schemaGraph} />
       <div id="features">
-        <LandingV2 locale={locale as Locale} trialDays={trialDays} />
+        <LandingV2 locale={locale as Locale} trialDays={trialDays} nativeSource={(await searchParams).source === 'ios'} invitationNext={(await searchParams).next === '/join'} />
       </div>
     </>
   );

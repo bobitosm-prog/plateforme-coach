@@ -9,12 +9,16 @@ import styles from '../LandingV2.module.css'
 
 const APP_URL = 'https://app.moovx.ch'
 
-export default function LandingV2({ locale, trialDays }: { locale: LandingV2Locale; trialDays: number }) {
+export default function LandingV2({ locale, trialDays, nativeSource = false, invitationNext = false }: { locale: LandingV2Locale; trialDays: number; nativeSource?: boolean; invitationNext?: boolean }) {
   const copy = LANDING_V2_COPY[locale]
+  const registrationQuery = new URLSearchParams()
+  if (nativeSource) registrationQuery.set('source', 'ios')
+  if (invitationNext) registrationQuery.set('next', '/join')
+  const registerURL = `${APP_URL}/register-client${registrationQuery.size ? `?${registrationQuery}` : ''}`
 
   return <div className={styles.page}>
     <LandingMotion />
-    <Header locale={locale} copy={copy} />
+    <Header locale={locale} copy={copy} registerURL={registerURL} />
 
     <main>
       <section className={styles.hero}>
@@ -27,7 +31,7 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
             <h1>{copy.hero.titleA}<br /><em>{copy.hero.titleB}</em></h1>
             <p className={styles.heroBody}>{copy.hero.body}</p>
             <div className={styles.heroActions}>
-              <a className={styles.primaryButton} href={`${APP_URL}/register-client`}>{copy.hero.primary}<ArrowRight size={17} aria-hidden="true" /></a>
+              <a className={styles.primaryButton} href={registerURL}>{copy.hero.primary}<ArrowRight size={17} aria-hidden="true" /></a>
               <a className={styles.secondaryButton} href="#product">{copy.hero.secondary}</a>
             </div>
             <small>{copy.hero.note.replace('14', String(trialDays))}</small>
@@ -111,7 +115,7 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
             <div className={`${styles.priceOption} ${styles.priceAnnual}`}><span className={styles.priceCurrency}>CHF</span><strong>{copy.pricing.yearly}</strong><span className={styles.pricePeriod}>{copy.pricing.yearlyPeriod}</span><small>{copy.pricing.yearlySavings}</small></div>
           </div>
           <ul>{copy.pricing.included.map(item => <li key={item}><Check size={15} aria-hidden="true" />{item}</li>)}</ul>
-          <a className={styles.primaryButton} href={`${APP_URL}/register-client`}>{copy.pricing.cta}<ArrowRight size={17} aria-hidden="true" /></a>
+          <a className={styles.primaryButton} href={registerURL}>{copy.pricing.cta}<ArrowRight size={17} aria-hidden="true" /></a>
           <small>{copy.pricing.note.replace('14', String(trialDays))}</small>
           <a className={styles.coachLink} href={`${APP_URL}/onboarding-coach`}>{copy.pricing.coach}<ChevronRight size={15} aria-hidden="true" /></a>
         </div>
@@ -123,7 +127,7 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
       </section>
 
       <section className={styles.finalSection}>
-        <div data-landing-reveal><p className={styles.eyebrow}>{copy.final.eyebrow}</p><h2>{copy.final.title}</h2><p>{copy.final.body}</p><a className={styles.primaryButton} href={`${APP_URL}/register-client`}>{copy.final.cta}<ArrowRight size={17} aria-hidden="true" /></a></div>
+        <div data-landing-reveal><p className={styles.eyebrow}>{copy.final.eyebrow}</p><h2>{copy.final.title}</h2><p>{copy.final.body}</p><a className={styles.primaryButton} href={registerURL}>{copy.final.cta}<ArrowRight size={17} aria-hidden="true" /></a></div>
       </section>
       {locale === 'fr' && <section className={styles.resourcesSection} aria-labelledby="landing-resources-title">
         <h2 id="landing-resources-title">Ressources gratuites pour ton entraînement et ta nutrition</h2>
@@ -171,11 +175,11 @@ function AppScreens({ copy }: { copy: LandingV2Copy }) {
   </section>
 }
 
-function Header({ locale, copy }: { locale: LandingV2Locale; copy: LandingV2Copy }) {
+function Header({ locale, copy, registerURL }: { locale: LandingV2Locale; copy: LandingV2Copy; registerURL: string }) {
   return <header className={styles.header}>
     <Link className={styles.brand} href={`/${locale}/landing`} aria-label={copy.a11y.home}><Image src="/logo-moovx-48.png" width={32} height={32} alt="" /><strong>MOOVX</strong><span>GENEVA · CH</span></Link>
     <nav aria-label={copy.a11y.navigation}><a href="#product">{copy.nav.product}</a><a href="#method">{copy.nav.method}</a><a href="#pricing">{copy.nav.pricing}</a></nav>
-    <div className={styles.headerActions}><a href={`${APP_URL}/login`}>{copy.nav.login}</a><a href={`${APP_URL}/register-client`}>{copy.nav.start}</a></div>
+    <div className={styles.headerActions}><a href={`${APP_URL}/login`}>{copy.nav.login}</a><a href={registerURL}>{copy.nav.start}</a></div>
   </header>
 }
 

@@ -6,6 +6,7 @@ import OSLog
 
 @MainActor
 final class BrowserState: ObservableObject {
+    @Published var entryURL = NavigationPolicy.entryURL
     @Published var loading = true
     @Published var error: String?
     @Published var blocked = false
@@ -53,6 +54,14 @@ struct PrototypeBrowser: View {
             }
             // Extend the web background below the home indicator; CSS safe-area padding protects controls.
             .ignoresSafeArea(.container, edges: .bottom)
+            .onOpenURL { url in
+                guard let target = NavigationPolicy.confirmationReturn(url) else { return }
+                state.entryURL = target
+                state.blocked = false
+                state.error = nil
+                state.loading = true
+                state.reloadID += 1
+            }
             .background(Color(red: 0.045, green: 0.04, blue: 0.025))
             .alert(NSLocalizedString("cameraDeniedTitle", comment: "Camera access denied title"), isPresented: $state.cameraDenied) {
                 Button(NSLocalizedString("cameraSettings", comment: "Open app settings")) {
@@ -86,6 +95,7 @@ struct PrototypeWebView: UIViewRepresentable {
         let denied = Self.cameraAccessDenied
         let script = """
         (() => {
+          window.__moovxExternalRegistration = true;
           window.__moovxCameraDenied = \(denied ? "true" : "false");
           document.addEventListener('click', event => {
             const input = event.target;
@@ -114,7 +124,7 @@ struct PrototypeWebView: UIViewRepresentable {
         view.navigationDelegate = context.coordinator
         context.coordinator.observeCameraPermission(on: view)
         view.allowsBackForwardNavigationGestures = true
-        view.load(URLRequest(url: NavigationPolicy.entryURL))
+        view.load(URLRequest(url: state.entryURL))
         return view
     }
 
@@ -248,6 +258,11 @@ struct PrototypeWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if action.sourceFrame.isMainFrame && NavigationPolicy.opensRegistration(action.request.url), let url = action.request.url {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+                return
+            }
             guard NavigationPolicy.allows(action.request.url), action.targetFrame != nil else {
                 state.blocked = true
                 if action.targetFrame?.isMainFrame != false { state.loading = false }
