@@ -1,5 +1,5 @@
 'use client'
-import { aiFetch } from '@/lib/ai/consent-client'
+import { aiFetch, ensureAiConsent } from '@/lib/ai/consent-client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -239,6 +239,7 @@ export default function useInitialGeneration(
     const persistNutrition = async (payload: unknown): Promise<boolean> => {
       if (!isValidInitialMealPlan(payload)) return false
       const result = await replacePersonalMealPlan(supabase, userId, payload)
+      if (result.ok) window.dispatchEvent(new CustomEvent('moovx-meal-plan-saved', { detail: { userId } }))
       return result.ok
     }
 
@@ -340,6 +341,7 @@ export default function useInitialGeneration(
       domains,
       ports,
       checkQuota,
+      authorize: () => ensureAiConsent(userId, askAfterDecline),
       clearFlag,
       replaceExisting,
       onChange: next => {
@@ -370,8 +372,10 @@ export default function useInitialGeneration(
     mountedRef.current = true
     if (!userId || !profile?.needs_initial_generation) return
     if (autoStartedForUserRef.current === generationRunKey) return
-    autoStartedForUserRef.current = generationRunKey
-    const timer = window.setTimeout(() => execute(['training', 'nutrition'], false), 0)
+    const timer = window.setTimeout(() => {
+      autoStartedForUserRef.current = generationRunKey
+      execute(['training', 'nutrition'], false)
+    }, 0)
     return () => window.clearTimeout(timer)
   }, [execute, generationRunKey, profile?.needs_initial_generation, userId])
 

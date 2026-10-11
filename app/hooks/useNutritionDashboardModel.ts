@@ -147,6 +147,17 @@ export default function useNutritionDashboardModel({
     }
   }, [refresh])
 
+  useEffect(() => {
+    const onPlanSaved = (event: Event) => {
+      if ((event as CustomEvent<{ userId: string }>).detail?.userId !== userId) return
+      void refresh().catch(() => setSnapshot(current => ({
+        ...current, errors: { ...current.errors, personalPlan: 'NUTRITION_PERSONAL_PLAN_READ_FAILED' },
+      })))
+    }
+    window.addEventListener('moovx-meal-plan-saved', onPlanSaved)
+    return () => window.removeEventListener('moovx-meal-plan-saved', onPlanSaved)
+  }, [refresh, userId])
+
   const model = useMemo(() => buildNutritionViewModel({
     day,
     week,
