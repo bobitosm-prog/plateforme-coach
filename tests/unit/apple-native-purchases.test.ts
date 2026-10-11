@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nativeApplePurchase, loadNativeAppleProducts } from '@/lib/apple/native-purchases'
+import { applePurchaseErrorKey, nativeApplePurchase, loadNativeAppleProducts } from '@/lib/apple/native-purchases'
 const userId = 'account-a'
 const token = '00000000-0000-4000-8000-000000000001'
 const bridge = { postMessage: vi.fn() }
@@ -57,5 +57,17 @@ describe('two-offer Apple catalogue', () => {
   it('blocks new lifetime purchases without calling StoreKit', async () => {
     await expect(nativeApplePurchase(userId, 'purchase', 'ch.moovx.app.athena.lifetime')).rejects.toThrow('APPLE_PRODUCT_INVALID')
     expect(bridge.postMessage).not.toHaveBeenCalled()
+  })
+})
+
+describe('purchase error guidance', () => {
+  it('never opens StoreKit when purchase preparation is unavailable', async () => {
+    request.mockReset().mockResolvedValueOnce({ ok: false, status: 503 })
+    await expect(nativeApplePurchase(userId, 'purchase', 'ch.moovx.app.athena.monthly')).rejects.toThrow('APPLE_UNAVAILABLE')
+    expect(bridge.postMessage).not.toHaveBeenCalled()
+    expect(applePurchaseErrorKey(new Error('APPLE_UNAVAILABLE'))).toBe('unavailable')
+  })
+  it('keeps restoration guidance after a transaction fails to synchronize', () => {
+    expect(applePurchaseErrorKey(new Error('APPLE_SYNC_UNAVAILABLE'))).toBe('retry')
   })
 })

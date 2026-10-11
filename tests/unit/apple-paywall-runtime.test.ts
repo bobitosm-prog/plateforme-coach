@@ -6,7 +6,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import messages from '@/messages/fr.json'
 import Paywall from '@/app/components/Paywall'
 const native = vi.hoisted(() => ({ detect: vi.fn(), products: vi.fn(), purchase: vi.fn() }))
-vi.mock('@/lib/apple/native-purchases', () => ({ isNativeMoovx: native.detect, applePurchaseBridge: () => ({}), loadNativeAppleProducts: native.products, nativeApplePurchase: native.purchase }))
+vi.mock('@/lib/apple/native-purchases', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/apple/native-purchases')>(), isNativeMoovx: native.detect, applePurchaseBridge: () => ({}), loadNativeAppleProducts: native.products, nativeApplePurchase: native.purchase }))
 beforeEach(() => {
   vi.stubGlobal('React', React)
   native.detect.mockReturnValue(true)
@@ -31,6 +31,15 @@ describe('iPhone purchase screen runtime', () => {
     await screen.findByText(/Les achats Apple ne sont pas encore disponibles/)
     expect(native.products).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: 'Continuer avec Apple' })).toBeNull()
+  })
+  it('explains pre-purchase unavailability without claiming a purchase needs restoring', async () => {
+    native.purchase.mockRejectedValue(new Error('APPLE_UNAVAILABLE'))
+    mount()
+    const buttons = await screen.findAllByRole('button', { name: 'Continuer avec Apple' })
+    fireEvent.click(buttons[0])
+    await screen.findByText(/Les achats Apple ne sont pas encore disponibles/)
+    expect(screen.queryByText(/Impossible de confirmer ton achat/)).toBeNull()
+    await waitFor(() => expect((buttons[0] as HTMLButtonElement).disabled).toBe(false))
   })
   it('offers an explicit restore action and keeps recovery available after failure', async () => {
     native.purchase.mockRejectedValue(new Error('offline'))
