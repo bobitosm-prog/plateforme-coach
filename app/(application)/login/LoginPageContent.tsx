@@ -24,6 +24,7 @@ export default function LoginPageContent() {
   const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
   const [successBanner, setSuccessBanner] = useState<'confirmed' | 'reset' | null>(null)
   const [checking, setChecking] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -35,6 +36,8 @@ export default function LoginPageContent() {
   const [resetError, setResetError] = useState('')
 
   useEffect(() => {
+    const native = Boolean((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration)
+    setShowWelcome(native && !searchParams.get('confirmed') && !searchParams.get('reset') && !searchParams.get('auth_error'))
     if (searchParams.get('confirmed') === '1') {
       setSuccessBanner('confirmed')
     } else if (searchParams.get('reset') === 'success') {
@@ -63,6 +66,22 @@ export default function LoginPageContent() {
       setChecking(false)
     })
   }, [nextTarget, router, t])
+
+  function openRegistration() {
+    if ((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) {
+      window.location.href = 'https://moovx.ch/?source=ios' + (nextTarget === '/join' ? '&next=%2Fjoin' : '')
+    } else {
+      router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')
+    }
+  }
+
+  function returnToWelcome(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (!(window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) return
+    event.preventDefault()
+    setForgotMode(false)
+    setShowWelcome(true)
+    setError('')
+  }
 
   const callbackNext = nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ''
   const redirectUrl = typeof window !== 'undefined'
@@ -139,7 +158,7 @@ export default function LoginPageContent() {
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
       {/* Hero gym background */}
-      <Image src="/images/hero-gym.webp" alt={t('panel.heroAlt')} fill priority sizes="100vw" style={{ position: 'fixed', objectFit: 'cover', zIndex: 0 }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}><Image src="/images/hero-gym.webp" alt={t('panel.heroAlt')} fill priority sizes="100vw" style={{ objectFit: 'cover' }} /></div>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -163,17 +182,27 @@ export default function LoginPageContent() {
 
           {/* Mobile logo + back link */}
           <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-            <Link href={`/${locale}/landing`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+            <Link href={`/${locale}/landing`} onClick={returnToWelcome} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
               <Image src="/logo-moovx.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
               <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
             </Link>
-            <Link href={`/${locale}/landing`} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+            {!showWelcome && <Link href={`/${locale}/landing`} onClick={returnToWelcome} style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
               {t('backToHome')}
-            </Link>
+            </Link>}
           </div>
           <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 
-          {forgotMode ? (
+          {showWelcome ? (
+            <section aria-labelledby="auth-welcome-title">
+              <h1 id="auth-welcome-title" style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', lineHeight: 1.15, margin: '0 0 16px' }}>{t('welcome.title')}</h1>
+              <p style={{ ...bodyStyle, lineHeight: 1.6, margin: '0 0 28px' }}>{t('welcome.subtitle')}</p>
+              <div style={{ display: 'grid', gap: 14 }}>
+                <button className="gold-btn" onClick={openRegistration}>{t('welcome.register')}</button>
+                <button className="oauth-btn" onClick={() => setShowWelcome(false)} style={{ border: `1px solid ${GOLD}`, background: BG_BASE, color: GOLD }}>{t('welcome.login')}</button>
+              </div>
+              <p style={{ ...mutedStyle, fontSize: '0.82rem', lineHeight: 1.6, marginTop: 20 }}>{t('welcome.browserHint')}</p>
+            </section>
+          ) : forgotMode ? (
             /* ── Forgot password ── */
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
               <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('forgot.title')}</h1>
@@ -294,7 +323,7 @@ export default function LoginPageContent() {
 
                 <div style={{ textAlign: 'center', marginTop: 12, animation: 'fadeUp 0.7s 0.42s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <span style={{ ...mutedStyle, fontSize: '0.82rem' }}>{t('noAccount')}{' '}</span>
-                  <button onClick={() => { if ((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) window.location.href = 'https://moovx.ch/?source=ios' + (nextTarget === '/join' ? '&next=%2Fjoin' : ''); else router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client') }} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
+                  <button onClick={openRegistration} style={{ background: 'none', border: 'none', color: TEXT_MUTED, fontSize: '0.82rem', cursor: 'pointer', fontFamily: fonts.body, transition: 'color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = GOLD)} onMouseLeave={e => (e.currentTarget.style.color = TEXT_MUTED)}>
                     {t('createAccount')}
                   </button>

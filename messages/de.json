@@ -808,6 +808,13 @@
   "auth": {
     "_test": "Auth-Provider funktioniert auf Deutsch",
     "login": {
+      "welcome": {
+        "title": "Willkommen bei MoovX.",
+        "subtitle": "Dein Training, deine Ernährung und deine Fortschritte an einem Ort.",
+        "register": "Konto erstellen",
+        "login": "Anmelden",
+        "browserHint": "Die Registrierung öffnet sich in deinem Browser. Nach der E-Mail-Bestätigung kannst du zur App zurückkehren."
+      },
       "title": "SCHÖN, DICH WIEDERZUSEHEN",
       "subtitle": "Melde dich in deinem Bereich an",
       "emailPlaceholder": "E-Mail",
