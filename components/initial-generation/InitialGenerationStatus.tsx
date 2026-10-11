@@ -28,7 +28,7 @@ function DomainRow({
         ? 'waitingForCoach'
         : state.reason === 'quota_exhausted'
           ? 'quotaExhausted'
-          : state.phase === 'missing'
+          : state.phase === 'missing' || state.phase === 'idle'
             ? 'missing'
             : failed && state.reason && ['generation', 'persistence', 'confirmation'].includes(state.reason)
               ? state.reason

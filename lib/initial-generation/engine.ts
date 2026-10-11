@@ -55,6 +55,7 @@ interface RunInitialGenerationInput {
   snapshot: InitialGenerationSnapshot
   domains: readonly InitialGenerationDomain[]
   ports: Record<InitialGenerationDomain, InitialGenerationDomainPort>
+  authorize?: () => Promise<unknown>
   checkQuota: () => Promise<QuotaCheckResult>
   clearFlag: () => Promise<boolean>
   onChange?: (snapshot: InitialGenerationSnapshot) => void
@@ -102,6 +103,7 @@ export async function runInitialGenerationAttempt({
   domains,
   ports,
   checkQuota,
+  authorize,
   clearFlag,
   onChange,
   replaceExisting = false,
@@ -118,6 +120,18 @@ export async function runInitialGenerationAttempt({
       ...(finalization ? { finalization } : {}),
     }
     onChange?.(cloneSnapshot(snapshot))
+  }
+
+  // No preparing state, quota reservation or generation until consent is saved.
+  if (authorize && domains.some(domain => ports[domain].canGenerate && (replaceExisting || snapshot[domain].phase !== 'ready'))) {
+    try { await authorize() } catch (error) {
+      for (const domain of domains) {
+        if (snapshot[domain].phase !== 'ready') emit(domain, error instanceof AiConsentDeclinedError
+          ? { phase: 'missing', reason: 'consent_declined' }
+          : { phase: 'error', reason: 'generation' })
+      }
+      return cloneSnapshot(snapshot)
+    }
   }
 
   for (const domain of domains) {
