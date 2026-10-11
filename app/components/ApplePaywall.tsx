@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
+import { applePurchaseErrorKey, applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
 import LegalDocumentDialog from './LegalDocumentDialog'
 import { BG_BASE, BG_CARD, GOLD, TEXT_PRIMARY, TEXT_MUTED, FONT_BODY, FONT_DISPLAY } from '@/lib/design-tokens'
 export default function ApplePaywall({ userId, onSignOut, dismissible = false, supported = true }: { userId: string; onSignOut: () => void; dismissible?: boolean; supported?: boolean }) {
@@ -21,7 +21,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
     try {
       const result = await nativeApplePurchase(userId, action, productId)
       setMessage(t(result.status === 'pending' ? 'pending' : result.status === 'cancelled' ? 'cancelled' : result.count === 0 ? 'empty' : result.sandbox ? 'sandbox' : 'success'))
-    } catch { setMessage(t('retry')) } finally { setBusy(false) }
+    } catch (error) { setMessage(t(applePurchaseErrorKey(error))) } finally { setBusy(false) }
   }
   const button = { minHeight: 48, borderRadius: 14, padding: '12px 20px', border: 'none', background: GOLD, color: BG_BASE, cursor: 'pointer', fontWeight: 700 } as const
   return <section style={{ background: BG_BASE, color: TEXT_PRIMARY, padding: 24, minHeight: '100dvh', fontFamily: FONT_BODY }}>

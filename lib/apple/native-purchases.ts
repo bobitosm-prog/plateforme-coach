@@ -40,3 +40,9 @@ export async function nativeApplePurchase(userId: string, action: 'purchase' | '
   if (count) window.dispatchEvent(new Event('moovx:apple-purchase-updated'))
   return { status: 'success', count, sandbox: config.environment === 'Sandbox' }
 }
+
+/** Failures before StoreKit opens must not ask users to restore a nonexistent purchase. */
+export function applePurchaseErrorKey(error: unknown): 'unavailable' | 'retry' {
+  return error instanceof Error && ['APPLE_UNAVAILABLE', 'APPLE_BRIDGE_UNAVAILABLE', 'APPLE_ACCOUNT_CHANGED', 'APPLE_PRODUCT_INVALID'].includes(error.message)
+    ? 'unavailable' : 'retry'
+}
