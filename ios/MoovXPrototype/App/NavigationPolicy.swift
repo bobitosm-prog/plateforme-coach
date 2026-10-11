@@ -12,6 +12,18 @@ enum NavigationPolicy {
         return URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains(URLQueryItem(name: "source", value: "ios")) == true
     }
 
+    // Legal links leave the webview only after a user tap. Keep the allowlist
+    // limited to public policy documents; never allow arbitrary external pages.
+    static func opensPrivacyDocument(_ url: URL?) -> Bool {
+        guard let url, url.scheme == "https", url.user == nil, url.password == nil,
+              url.port == nil || url.port == 443, url.query == nil else { return false }
+        if ["moovx.ch", "app.moovx.ch"].contains(url.host ?? "") {
+            return ["/fr/privacy", "/en/privacy", "/de/privacy"].contains(url.path)
+        }
+        return url.host == "privacy.claude.com"
+            && ["", "/", "/en", "/fr", "/de"].contains(url.path)
+    }
+
     static func confirmationReturn(_ url: URL) -> URL? {
         guard url.scheme == "moovx", url.host == "auth", url.path == "/confirmed",
               url.user == nil, url.password == nil, url.port == nil else { return nil }

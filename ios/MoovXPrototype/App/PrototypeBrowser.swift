@@ -96,6 +96,7 @@ struct PrototypeWebView: UIViewRepresentable {
         let script = """
         (() => {
           window.__moovxExternalRegistration = true;
+          window.__moovxPrivacyLinks = true;
           window.__moovxCameraDenied = \(denied ? "true" : "false");
           document.addEventListener('click', event => {
             const input = event.target;
@@ -258,6 +259,12 @@ struct PrototypeWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if action.sourceFrame.isMainFrame, action.navigationType == .linkActivated,
+               NavigationPolicy.opensPrivacyDocument(action.request.url), let url = action.request.url {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+                return
+            }
             if action.sourceFrame.isMainFrame && NavigationPolicy.opensRegistration(action.request.url), let url = action.request.url {
                 UIApplication.shared.open(url)
                 decisionHandler(.cancel)
