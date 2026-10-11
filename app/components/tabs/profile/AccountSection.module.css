@@ -1,0 +1,16 @@
+.page { padding: 20px 20px 24px; background: #111; color: #f5f2ea; font-family: var(--font-body), sans-serif; }
+.shell { width: min(100%,680px); margin: 0 auto; }
+.shell > * + * { margin-top: 14px; }
+.back { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid #393326; border-radius: 12px; background: #211f18; color: #dfbf70; cursor: pointer; }
+.shell header { margin-bottom: 24px; }
+.card { padding: 18px; border: 1px solid #393326; border-radius: 20px; background: #211f18; }
+.label { margin: 0 0 16px; color: #dfbf70; font: inherit; font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.offers { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 18px 0; }
+.offer { min-width: 0; padding: 16px 12px; border: 1px solid #554931; border-radius: 16px; background: #191812; }
+.offer h3 { margin: 0 0 12px; font-size: .9rem; font-weight: 600; }
+.offer strong { display: block; color: #dfbf70; font-size: clamp(1.2rem,5vw,1.8rem); line-height: 1.2; overflow-wrap: anywhere; }
+.offer span { display: block; color: #aaa69b; margin-top: 6px; font-size: .8rem; }
+.primary { width: 100%; min-height: 48px; padding: 12px; border: 0; border-radius: 12px; background: #dfbf70; color: #17140c; font: inherit; font-weight: 700; cursor: pointer; }
+.message { color: #aaa69b; font-size: .85rem; line-height: 1.5; }
+.page button:focus-visible { outline: 2px solid #dfbf70; outline-offset: 3px; }
+@media(max-width:380px) { .page { padding-inline:16px; } .card { padding:14px; } }

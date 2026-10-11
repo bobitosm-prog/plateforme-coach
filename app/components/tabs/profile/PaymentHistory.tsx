@@ -18,8 +18,8 @@ export default function PaymentHistory({ supabase, userId }: { supabase: any; us
   if (!loaded) return null
 
   return (
-    <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 18, marginBottom: 8 }}>
-      <div style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>{t('title')}</div>
+    <div style={{ background: '#211f18', border: '1px solid #393326', borderRadius: 20, padding: 18, marginBottom: 8 }}>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 13, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>{t('title')}</div>
       {payments.length === 0 ? (
         <p style={{ fontSize: '0.82rem', color: TEXT_MUTED, margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>{t('empty')}</p>
       ) : (
@@ -33,7 +33,7 @@ export default function PaymentHistory({ supabase, userId }: { supabase: any; us
                   <div style={{ fontSize: '0.82rem', color: TEXT_PRIMARY, fontFamily: FONT_BODY, fontWeight: 400 }}>CHF {p.amount || 30}</div>
                   <div style={{ fontSize: '0.65rem', color: TEXT_MUTED, marginTop: 2, fontFamily: FONT_BODY, fontWeight: 300 }}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString(locale) : t('noDate')}</div>
                 </div>
-                <span style={{ fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: statusColor, background: `${statusColor}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>{statusLabel}</span>
+                <span style={{ fontSize: 11, fontFamily: FONT_BODY, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: statusColor, background: `${statusColor}20`, borderRadius: RADIUS_CARD, padding: '4px 8px' }}>{statusLabel}</span>
               </div>
             )
           })}
