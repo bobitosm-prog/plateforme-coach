@@ -1,7 +1,7 @@
 export const APPLE_PRODUCTS = ['ch.moovx.app.athena.monthly', 'ch.moovx.app.athena.yearly'] as const
 export interface NativeProduct { id: string; displayPrice: string }
 type TransactionReply = { id: string; signedTransaction: string }
-type BridgeReply = { status: string; products?: NativeProduct[]; transactions?: TransactionReply[] }
+type BridgeReply = { status: string; signedAppTransaction?: string; products?: NativeProduct[]; transactions?: TransactionReply[] }
 type Bridge = { postMessage(message: Record<string, string>): Promise<BridgeReply> }
 export function applePurchaseBridge(): Bridge | undefined {
   return typeof window === 'undefined' ? undefined : (window as any).webkit?.messageHandlers?.moovxApplePurchases
@@ -17,7 +17,16 @@ export async function loadNativeAppleProducts(): Promise<NativeProduct[]> {
 export async function nativeApplePurchase(userId: string, action: 'purchase' | 'restore' | 'pending', productId?: string) {
   const bridge = applePurchaseBridge()
   if (!bridge) throw Error('APPLE_BRIDGE_UNAVAILABLE')
-  const configResponse = await fetch('/api/apple/purchases', { cache: 'no-store' })
+  // Build 23+ supplies Apple's signed app receipt; older builds retain their QA binding.
+  let signedAppTransaction: string | undefined
+  if ((window as any).__moovxSignedAppleEnvironment === true) {
+    const proof = await bridge.postMessage({ action: 'environment' })
+    if (typeof proof?.signedAppTransaction !== 'string' || proof.signedAppTransaction.length > 32768) throw Error('APPLE_UNAVAILABLE')
+    signedAppTransaction = proof.signedAppTransaction
+  }
+  const configResponse = await fetch('/api/apple/purchases', signedAppTransaction
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'prepare', userId, signedAppTransaction }), cache: 'no-store' }
+    : { cache: 'no-store' })
   if (!configResponse.ok) throw Error('APPLE_UNAVAILABLE')
   const config = await configResponse.json()
   if (config.userId !== userId || typeof config.appAccountToken !== 'string') throw Error('APPLE_ACCOUNT_CHANGED')
@@ -29,7 +38,7 @@ export async function nativeApplePurchase(userId: string, action: 'purchase' | '
   let count = 0
   for (const transaction of result.transactions) {
     if (!/^\d{1,40}$/.test(transaction.id) || typeof transaction.signedTransaction !== 'string' || transaction.signedTransaction.length > 32768) throw Error('APPLE_INVALID_REPLY')
-    const response = await fetch('/api/apple/purchases', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, signedTransaction: transaction.signedTransaction }) })
+    const response = await fetch('/api/apple/purchases', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, signedTransaction: transaction.signedTransaction, ...(signedAppTransaction ? { signedAppTransaction } : {}) }) })
     if (!response.ok) throw Error('APPLE_SYNC_UNAVAILABLE')
     const acknowledgement = await response.json()
     if (acknowledgement.status !== 'recorded' || acknowledgement.transactionId !== transaction.id) throw Error('APPLE_INVALID_ACKNOWLEDGEMENT')

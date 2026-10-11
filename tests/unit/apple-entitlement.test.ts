@@ -12,6 +12,19 @@ const now = Date.now()
 const row = { state: 'active', checked_ms: now, access_until_ms: now + 3600000,
   product_id: 'ch.moovx.app.athena.monthly', revoked_ms: null, is_upgraded: false }
 describe('Apple access authority', () => {
+  it('allows reconciled Sandbox purchases for new accounts only when the server enables testing', async () => {
+    const user = '00000000-0000-4000-8000-000000000005'
+    vi.stubEnv('APPLE_IAP_SANDBOX_USER_IDS', '')
+    vi.stubEnv('APPLE_IAP_SANDBOX_ENABLED', 'true')
+    rpc.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({ data: [row], error: null })
+    expect((await getActiveAppleEntitlement(user))?.plan).toBe('monthly')
+    expect(rpc).toHaveBeenLastCalledWith('read_apple_sandbox_entitlement_states', { p_user_id: user })
+    rpc.mockReset().mockResolvedValue({ data: [], error: null })
+    vi.stubEnv('APPLE_IAP_SANDBOX_ENABLED', 'false')
+    expect(await getActiveAppleEntitlement(user)).toBeNull()
+    expect(rpc).toHaveBeenCalledTimes(1)
+  })
+
   it('uses the sandbox reader only for an explicit server-owned QA allowlist', async () => {
     const tester = '00000000-0000-4000-8000-000000000001'
     const regular = '00000000-0000-4000-8000-000000000002'
