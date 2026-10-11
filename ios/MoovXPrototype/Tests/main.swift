@@ -53,3 +53,14 @@ for (main, scheme, host, port, url) in [
     precondition(!AppleSignInPolicy.allows(isMainFrame: main, scheme: scheme, host: host, port: port, currentURL: url, nonce: appleNonce))
 }
 print("Apple bridge policy: 12 checks passed")
+
+precondition(NavigationPolicy.opensRegistration(URL(string: "https://moovx.ch/?source=ios")))
+for raw in ["https://evil.invalid/?source=ios", "https://moovx.ch/checkout?source=ios", "https://moovx.ch/", "http://moovx.ch/?source=ios", "https://u:p@moovx.ch/?source=ios"] {
+    precondition(!NavigationPolicy.opensRegistration(URL(string: raw)))
+}
+precondition(NavigationPolicy.confirmationReturn(URL(string: "moovx://auth/confirmed")!)?.absoluteString == "https://app.moovx.ch/login?confirmed=1")
+precondition(NavigationPolicy.confirmationReturn(URL(string: "moovx://auth/confirmed?next=%2Fjoin")!)?.absoluteString == "https://app.moovx.ch/login?confirmed=1&next=%2Fjoin")
+for raw in ["moovx://auth/other", "moovx://evil/confirmed", "https://auth/confirmed", "moovx://u:p@auth/confirmed"] {
+    precondition(NavigationPolicy.confirmationReturn(URL(string: raw)!) == nil)
+}
+print("Registration and confirmation handoff: 12 checks passed")
