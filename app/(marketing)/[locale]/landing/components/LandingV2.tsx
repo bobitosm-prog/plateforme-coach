@@ -105,8 +105,11 @@ export default function LandingV2({ locale, trialDays }: { locale: LandingV2Loca
           <p className={styles.eyebrow}>{copy.pricing.eyebrow}</p><h2>{copy.pricing.title}</h2><p>{copy.pricing.body}</p>
         </div>
         <div className={styles.priceCard} data-landing-reveal>
-          <div className={styles.priceTop}><span>{copy.pricing.product}</span><strong>{copy.pricing.monthly}</strong></div>
-          <div className={styles.priceOptions}><span>{copy.pricing.yearly}</span><span>{copy.pricing.lifetime}</span></div>
+          <div className={styles.priceTop}><span>{copy.pricing.product}</span></div>
+          <div className={styles.priceOptions}>
+            <div className={styles.priceOption}><span className={styles.priceCurrency}>CHF</span><strong>{copy.pricing.monthly}</strong><span className={styles.pricePeriod}>{copy.pricing.monthlyPeriod}</span></div>
+            <div className={`${styles.priceOption} ${styles.priceAnnual}`}><span className={styles.priceCurrency}>CHF</span><strong>{copy.pricing.yearly}</strong><span className={styles.pricePeriod}>{copy.pricing.yearlyPeriod}</span><small>{copy.pricing.yearlySavings}</small></div>
+          </div>
           <ul>{copy.pricing.included.map(item => <li key={item}><Check size={15} aria-hidden="true" />{item}</li>)}</ul>
           <a className={styles.primaryButton} href={`${APP_URL}/register-client`}>{copy.pricing.cta}<ArrowRight size={17} aria-hidden="true" /></a>
           <small>{copy.pricing.note.replace('14', String(trialDays))}</small>

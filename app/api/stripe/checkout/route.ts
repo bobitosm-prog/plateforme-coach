@@ -19,15 +19,13 @@ const OWNER_EMAIL = process.env.NEXT_PUBLIC_COACH_EMAIL || 'fe.ma@bluewin.ch'
 const PRICE_MAP: Record<string, string | undefined> = {
   client_monthly:  process.env.NEXT_PUBLIC_PRICE_CLIENT_MONTHLY,
   client_yearly:   process.env.NEXT_PUBLIC_PRICE_CLIENT_YEARLY,
-  client_lifetime: process.env.NEXT_PUBLIC_PRICE_CLIENT_LIFETIME,
   coach_monthly:   process.env.NEXT_PUBLIC_PRICE_COACH_MONTHLY,
 }
 
 // Plan metadata
 const PLAN_META: Record<string, { mode: 'subscription' | 'payment'; subType: string; amount: number; description: string }> = {
-  client_monthly:  { mode: 'subscription', subType: 'client_monthly',  amount: 10,  description: 'MoovX Athena — Mensuel' },
-  client_yearly:   { mode: 'subscription', subType: 'client_yearly',   amount: 80,  description: 'MoovX Athena — Annuel' },
-  client_lifetime: { mode: 'payment',      subType: 'client_lifetime', amount: 150, description: 'MoovX Athena — À vie' },
+  client_monthly:  { mode: 'subscription', subType: 'client_monthly',  amount: 9.90,  description: 'MoovX Athena — Mensuel' },
+  client_yearly:   { mode: 'subscription', subType: 'client_yearly',   amount: 79.90,  description: 'MoovX Athena — Annuel' },
   coach_monthly:   { mode: 'subscription', subType: 'coach_monthly',   amount: 50,  description: 'MoovX Coach Pro — Mensuel' },
 }
 

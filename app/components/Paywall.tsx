@@ -43,9 +43,8 @@ export default function Paywall({ role, userId, coachId, onSignOut, dismissible 
   type PlanDef = { id: string; nameKey: string; price: number; intervalKey: string; features: string[]; badge?: string; savings?: string }
 
   const CLIENT_PLANS: PlanDef[] = [
-    { id: 'client_monthly', nameKey: 'plans.monthly', price: 10, intervalKey: 'plans.perMonth', features: Array.from({ length: 4 }, (_, i) => t(`features.clientMonthly.${i}`)) },
-    { id: 'client_yearly', nameKey: 'plans.yearly', price: 80, intervalKey: 'plans.perYear', badge: t('plans.popular'), savings: t('plans.save33'), features: Array.from({ length: 3 }, (_, i) => t(`features.clientYearly.${i}`)) },
-    { id: 'client_lifetime', nameKey: 'plans.lifetime', price: 150, intervalKey: '', badge: t('plans.bestOffer'), features: Array.from({ length: 4 }, (_, i) => t(`features.clientLifetime.${i}`)) },
+    { id: 'client_monthly', nameKey: 'plans.monthly', price: 9.90, intervalKey: 'plans.perMonth', features: Array.from({ length: 4 }, (_, i) => t(`features.clientMonthly.${i}`)) },
+    { id: 'client_yearly', nameKey: 'plans.yearly', price: 79.90, intervalKey: 'plans.perYear', badge: t('plans.popular'), savings: t('plans.save33'), features: Array.from({ length: 3 }, (_, i) => t(`features.clientYearly.${i}`)) },
   ]
 
   const COACH_PLANS: PlanDef[] = [
@@ -103,10 +102,9 @@ export default function Paywall({ role, userId, coachId, onSignOut, dismissible 
 
   function getCta(plan: typeof CLIENT_PLANS[0]) {
     if (loading === plan.id) return t('cta.redirecting')
-    if (plan.id === 'client_monthly') return t('cta.startMonthly', { price: plan.price })
-    if (plan.id === 'client_yearly') return t('cta.startYearly', { price: plan.price })
-    if (plan.id === 'client_lifetime') return t('cta.payLifetime', { price: plan.price })
-    if (plan.id === 'coach_monthly') return t('cta.startMonthly', { price: plan.price })
+    if (plan.id === 'client_monthly') return t('cta.startMonthly', { price: plan.price.toFixed(2) })
+    if (plan.id === 'client_yearly') return t('cta.startYearly', { price: plan.price.toFixed(2) })
+    if (plan.id === 'coach_monthly') return t('cta.startMonthly', { price: plan.price.toFixed(2) })
     return t('cta.redirecting')
   }
 
@@ -186,7 +184,7 @@ export default function Paywall({ role, userId, coachId, onSignOut, dismissible 
                 <div style={{ fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', fontFamily: FONT_ALT, fontWeight: 700, color: isHighlight ? GOLD : TEXT_MUTED, marginBottom: 16 }}>{t(plan.nameKey)}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
                   <span style={{ fontSize: '0.75rem', color: TEXT_DIM, alignSelf: 'flex-start', marginTop: 16, fontFamily: FONT_BODY }}>CHF</span>
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 64, lineHeight: 1, color: isHighlight ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{plan.price}</span>
+                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 64, lineHeight: 1, color: isHighlight ? GOLD : TEXT_PRIMARY, letterSpacing: '1px' }}>{plan.price.toFixed(2)}</span>
                   {plan.intervalKey && <span style={{ color: TEXT_DIM, fontSize: '0.85rem', fontFamily: FONT_BODY }}>{t(plan.intervalKey)}</span>}
                 </div>
                 {'savings' in plan && plan.savings && (

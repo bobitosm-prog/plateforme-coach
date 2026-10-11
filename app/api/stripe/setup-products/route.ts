@@ -31,22 +31,16 @@ export async function POST() {
 
     const clientMonthly = await stripe.prices.create({
       product: clientProduct.id,
-      unit_amount: 1000, // 10 CHF in centimes
+      unit_amount: 990, // 9.90 CHF in centimes
       currency: 'chf',
       recurring: { interval: 'month' },
     })
 
     const clientYearly = await stripe.prices.create({
       product: clientProduct.id,
-      unit_amount: 8000, // 80 CHF
+      unit_amount: 7990, // 79.90 CHF
       currency: 'chf',
       recurring: { interval: 'year' },
-    })
-
-    const clientLifetime = await stripe.prices.create({
-      product: clientProduct.id,
-      unit_amount: 15000, // 150 CHF
-      currency: 'chf',
     })
 
     // Product 2: MoovX Coach Pro (for coaches)
@@ -67,7 +61,6 @@ export async function POST() {
       prices: {
         PRICE_CLIENT_MONTHLY: clientMonthly.id,
         PRICE_CLIENT_YEARLY: clientYearly.id,
-        PRICE_CLIENT_LIFETIME: clientLifetime.id,
         PRICE_COACH_MONTHLY: coachMonthly.id,
       },
       note: 'Add these price IDs to your .env.local and Vercel environment variables',

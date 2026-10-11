@@ -33,9 +33,8 @@ export default function PricingSection({ trialDays = 14 }: { trialDays?: number 
   ]
 
   const CLIENT_PLANS = [
-    { price: 'CHF 10', period: t('plan_monthly_period'), label: t('plan_monthly_label'), popular: false },
-    { price: 'CHF 80', period: t('plan_yearly_period'), label: t('plan_yearly_label'), popular: true, save: t('plan_yearly_save') },
-    { price: 'CHF 150', period: t('plan_lifetime_period'), label: t('plan_lifetime_label'), popular: false },
+    { price: 'CHF 9.90', period: t('plan_monthly_period'), label: t('plan_monthly_label'), popular: false },
+    { price: 'CHF 79.90', period: t('plan_yearly_period'), label: t('plan_yearly_label'), popular: true, save: t('plan_yearly_save') },
   ]
 
   const COACH_FEATURES = [

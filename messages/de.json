@@ -503,7 +503,7 @@
     "plan_monthly_period": "/Mon",
     "plan_yearly_label": "Jährlich",
     "plan_yearly_period": "/Jahr",
-    "plan_yearly_save": "−33%",
+    "plan_yearly_save": "−32%",
     "plan_lifetime_label": "Lifetime",
     "plan_lifetime_period": "lebenslang",
     "client_feat1": "Personalisierte Ernährungspläne",
@@ -1393,7 +1393,7 @@
       "perYear": "/Jahr",
       "popular": "Beliebt",
       "bestOffer": "Bestes Angebot",
-      "save33": "33% sparen"
+      "save33": "32% sparen"
     },
     "features": {
       "clientMonthly": {
@@ -1533,15 +1533,15 @@
       "lifetimeDesc": "Dauerhafter Zugang zu allen MoovX-Funktionen.",
       "legacyAccess": "Historischer Zugang",
       "legacyAccessDesc": "Dein historischer Zugang zu MoovX bleibt aktiv.",
-      "planMonthly": "Monatsplan — CHF 10/Monat",
-      "planYearly": "Jahresplan — CHF 80/Jahr",
+      "planMonthly": "Monatsplan",
+      "planYearly": "Jahresplan",
       "planCoach": "Coach Pro — CHF 50/Monat",
       "daysRemaining": "{days} Tage verbleibend",
       "renewalDate": "Verlängerung am {date}",
       "expiringSoon": "Dein Abonnement läuft bald ab",
       "manageSubscription": "MEIN ABONNEMENT VERWALTEN",
       "subscribePrompt": "Abonniere, um Zugang zu allen Funktionen zu erhalten.",
-      "subscribeCta": "Abonnieren — Ab CHF 10/Monat"
+      "subscribeCta": "Abonnieren — Ab CHF 9.90/Monat"
     },
     "billing": {
       "title": "Zahlungsverlauf",
@@ -3839,7 +3839,7 @@
     "empty": "Keine Käufe für dieses MoovX-Konto gefunden.",
     "sandbox": "Apple-Testkauf bestätigt. Der Zugang deines Testkontos wurde aktualisiert.",
     "success": "Kauf bestätigt. Dein Zugang wurde aktualisiert.",
-    "renewal": "Monats- und Jahresabonnements verlängern sich automatisch, sofern sie nicht in den Apple-Einstellungen gekündigt werden. Lebenslanger Zugang ist ein einmaliger Kauf.",
+    "renewal": "Monats- und Jahresabonnements verlängern sich automatisch, sofern sie nicht in den Apple-Einstellungen gekündigt werden.",
     "terms": "Bedingungen",
     "privacy": "Datenschutz",
     "close": "Schließen",

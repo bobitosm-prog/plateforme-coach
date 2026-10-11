@@ -54,7 +54,9 @@ export type LandingV2Copy = {
     body: string
     monthly: string
     yearly: string
-    lifetime: string
+    monthlyPeriod: string
+    yearlyPeriod: string
+    yearlySavings: string
     product: string
     included: readonly string[]
     cta: string
@@ -142,7 +144,7 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
       ],
     },
     pricing: {
-      eyebrow: 'Simple et transparent', title: 'Toute l’expérience MoovX.', body: 'Choisis la durée qui te convient. Le produit reste le même.', monthly: 'CHF 10 / mois', yearly: 'CHF 80 / an', lifetime: 'CHF 150 à vie', product: 'MoovX complet',
+      eyebrow: 'Simple et transparent', title: 'Toute l’expérience MoovX.', body: 'Choisis la durée qui te convient. Le produit reste le même.', monthly: '9.90', yearly: '79.90', monthlyPeriod: 'par mois', yearlyPeriod: 'par an', yearlySavings: '38.90 CHF économisés par an', product: 'MoovX complet',
       included: ['Programme personnalisé', 'Nutrition et suivi des macros', 'Athena et suivi contextuel', 'Récupération musculaire', 'Progression et historique', 'Application FR · EN · DE'],
       cta: 'Commencer gratuitement', note: '14 jours gratuits · Sans carte · Annulation libre', coach: 'Tu es coach ? Découvrir l’espace professionnel',
     },
@@ -227,7 +229,7 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
       ],
     },
     pricing: {
-      eyebrow: 'Simple and transparent', title: 'The full MoovX experience.', body: 'Choose the duration that suits you. The product stays the same.', monthly: 'CHF 10 / month', yearly: 'CHF 80 / year', lifetime: 'CHF 150 lifetime', product: 'Complete MoovX',
+      eyebrow: 'Simple and transparent', title: 'The full MoovX experience.', body: 'Choose the duration that suits you. The product stays the same.', monthly: '9.90', yearly: '79.90', monthlyPeriod: 'per month', yearlyPeriod: 'per year', yearlySavings: 'Save CHF 38.90 per year', product: 'Complete MoovX',
       included: ['Personalised programme', 'Nutrition and macro tracking', 'Athena and contextual guidance', 'Muscle recovery', 'Progress and history', 'App in FR · EN · DE'],
       cta: 'Start for free', note: '14 days free · No card · Cancel anytime', coach: 'Are you a coach? Discover the professional space',
     },
@@ -308,7 +310,7 @@ export const LANDING_V2_COPY: Record<LandingV2Locale, LandingV2Copy> = {
       ],
     },
     pricing: {
-      eyebrow: 'Einfach und transparent', title: 'Das vollständige MoovX-Erlebnis.', body: 'Wähle die Laufzeit, die zu dir passt. Das Produkt bleibt dasselbe.', monthly: 'CHF 10 / Monat', yearly: 'CHF 80 / Jahr', lifetime: 'CHF 150 lebenslang', product: 'MoovX komplett',
+      eyebrow: 'Einfach und transparent', title: 'Das vollständige MoovX-Erlebnis.', body: 'Wähle die Laufzeit, die zu dir passt. Das Produkt bleibt dasselbe.', monthly: '9.90', yearly: '79.90', monthlyPeriod: 'pro Monat', yearlyPeriod: 'pro Jahr', yearlySavings: 'CHF 38.90 pro Jahr sparen', product: 'MoovX komplett',
       included: ['Personalisiertes Programm', 'Ernährung und Makro-Tracking', 'Athena und kontextbezogene Begleitung', 'Muskelregeneration', 'Fortschritt und Verlauf', 'App auf FR · EN · DE'],
       cta: 'Kostenlos starten', note: '14 Tage kostenlos · Keine Karte · Jederzeit kündbar', coach: 'Du bist Coach? Entdecke den professionellen Bereich',
     },

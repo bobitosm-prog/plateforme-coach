@@ -6,8 +6,7 @@ export const PRICES = {
 } as const
 
 export const PLAN_DETAILS = {
-  client_monthly: { name: 'Mensuel', price: 10, currency: 'CHF', interval: 'mois', priceId: PRICES.CLIENT_MONTHLY, mode: 'subscription' as const },
-  client_yearly: { name: 'Annuel', price: 80, currency: 'CHF', interval: 'an', priceId: PRICES.CLIENT_YEARLY, mode: 'subscription' as const, badge: 'Populaire', savings: 'Économise 33%' },
-  client_lifetime: { name: 'À vie', price: 150, currency: 'CHF', interval: null, priceId: PRICES.CLIENT_LIFETIME, mode: 'payment' as const, badge: 'Meilleure offre' },
+  client_monthly: { name: 'Mensuel', price: 9.90, currency: 'CHF', interval: 'mois', priceId: PRICES.CLIENT_MONTHLY, mode: 'subscription' as const },
+  client_yearly: { name: 'Annuel', price: 79.90, currency: 'CHF', interval: 'an', priceId: PRICES.CLIENT_YEARLY, mode: 'subscription' as const, badge: 'Populaire', savings: 'Économise 32%' },
   coach_monthly: { name: 'Coach Pro', price: 50, currency: 'CHF', interval: 'mois', priceId: PRICES.COACH_MONTHLY, mode: 'subscription' as const },
 } as const
