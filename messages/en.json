@@ -1551,7 +1551,8 @@
       "expiringSoon": "Your subscription is expiring soon",
       "manageSubscription": "MANAGE MY SUBSCRIPTION",
       "subscribePrompt": "Subscribe to access all features.",
-      "subscribeCta": "Subscribe — From CHF 9.90/month"
+      "subscribeCta": "Subscribe — From CHF 9.90/month",
+      "viewOffers": "View plans"
     },
     "billing": {
       "title": "Payment history",

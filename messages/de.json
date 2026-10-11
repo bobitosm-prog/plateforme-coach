@@ -1551,7 +1551,8 @@
       "expiringSoon": "Dein Abonnement läuft bald ab",
       "manageSubscription": "MEIN ABONNEMENT VERWALTEN",
       "subscribePrompt": "Abonniere, um Zugang zu allen Funktionen zu erhalten.",
-      "subscribeCta": "Abonnieren — Ab CHF 9.90/Monat"
+      "subscribeCta": "Abonnieren — Ab CHF 9.90/Monat",
+      "viewOffers": "Angebote ansehen"
     },
     "billing": {
       "title": "Zahlungsverlauf",

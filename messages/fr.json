@@ -1551,7 +1551,8 @@
       "expiringSoon": "Ton abonnement expire bientôt",
       "manageSubscription": "GÉRER MON ABONNEMENT",
       "subscribePrompt": "Abonne-toi pour accéder à toutes les fonctionnalités.",
-      "subscribeCta": "S'abonner — Dès CHF 9.90/mois"
+      "subscribeCta": "S'abonner — Dès CHF 9.90/mois",
+      "viewOffers": "Voir les offres"
     },
     "billing": {
       "title": "Historique des paiements",
