@@ -2,6 +2,21 @@ import XCTest
 @testable import MoovXPrototype
 
 final class WatchWorkoutPolicyTests: XCTestCase {
+    func testMissedWakeRetriesAreBoundedAndNeverReviveFinishedOrExpiredCommands() {
+        let now = Date(), id = UUID()
+        let start = WatchWorkoutCommand(id: id, action: .start, issuedAt: now)
+        var retry = WatchWakeRetry()
+        retry.record(now: now)
+        XCTAssertFalse(retry.allows(start, acknowledged: false, now: now.addingTimeInterval(19)))
+        XCTAssertTrue(retry.allows(start, acknowledged: false, now: now.addingTimeInterval(20)))
+        XCTAssertFalse(retry.allows(start, acknowledged: true, now: now.addingTimeInterval(20)))
+        XCTAssertFalse(retry.allows(WatchWorkoutCommand(id: id, action: .finish), acknowledged: false, now: now.addingTimeInterval(20)))
+        XCTAssertFalse(retry.allows(start, acknowledged: false, now: now.addingTimeInterval(121)))
+        retry.record(now: now.addingTimeInterval(20))
+        retry.record(now: now.addingTimeInterval(40))
+        XCTAssertFalse(retry.allows(start, acknowledged: false, now: now.addingTimeInterval(60)))
+    }
+
     func testWakeCommandRetiresInactiveRequestsAndRejectsDelayedReplay() throws {
         let old = UUID(), new = UUID()
         let command = WatchWorkoutCommand(id: new, action: .start, supersededIDs: [old, old, new])

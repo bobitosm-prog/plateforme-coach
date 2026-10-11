@@ -8,6 +8,7 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
     private let store = HKHealthStore()
     private let defaults = UserDefaults.standard
     private var launching = false
+    private var wakeRetry = WatchWakeRetry()
     private var wakeDiagnostic = ""
     private var watchBuild = ""
     private var endedIDs = Set<UUID>() // Prevents a cancelled request from being retried.
@@ -85,7 +86,9 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         if action == "status" { return result(id) }
         if let current = command, current.id == id {
             if current.action != .start || acknowledgedID == id && ["running","saved","discarded","saving"].contains(status) { return result(id) }
-            if action != "enable" { return result(id) } // No automatic relaunch on reload.
+            if action != "enable" && !wakeRetry.allows(current, acknowledged: acknowledgedID == id) { return result(id) }
+        } else {
+            wakeRetry = WatchWakeRetry()
         }
         // Do not require a live WCSession reply before waking the companion.
         // Recovery and conflict checks belong to the Watch, the sole workout writer.
@@ -105,7 +108,13 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
         guard !endedIDs.contains(id), defaults.bool(forKey: "watchWorkoutEnabled") else { return result(id) }
         var superseded = command?.supersededIDs ?? []
         if let previous = command, previous.id != id, !superseded.contains(previous.id) { superseded.append(previous.id) }
-        send(WatchWorkoutCommand(id: id, action: .start, supersededIDs: superseded))
+        if command?.id == id && command?.action == .start {
+            // Retrying transport does not refresh the original request's expiry.
+            transmit()
+        } else {
+            send(WatchWorkoutCommand(id: id, action: .start, supersededIDs: superseded))
+        }
+        wakeRetry.record()
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .traditionalStrengthTraining
         configuration.locationType = .indoor
@@ -152,7 +161,7 @@ final class PhoneWatchWorkout: NSObject, WCSessionDelegate {
 #if DEBUG && targetEnvironment(simulator)
             let args = ProcessInfo.processInfo.arguments
             if args.contains("--watch-start-probe") || args.contains("--watch-finish-probe") {
-                let id = UUID(uuidString: "11111111-1111-4111-8111-111111111120")!
+                let id = UUID(uuidString: "11111111-1111-4111-8111-111111111123")!
                 let result = await self.handle(action: args.contains("--watch-finish-probe") ? "finish" : "enable", id: id)
                 NSLog("MoovX wake result: %@", self.wakeDiagnostic)
                 NSLog("MoovX Watch phone probe: paired=%d installed=%d reachable=%d status=%@",

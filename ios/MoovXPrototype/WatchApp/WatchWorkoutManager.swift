@@ -25,6 +25,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
     private var wakeToken: UUID?
     private var requestingCommand = false
     private var wakeTimeout: Task<Void, Never>?
+    private var wakeRetry: Task<Void, Never>?
     private var endAction: WatchWorkoutCommand.Action? {
         get { defaults.string(forKey: "workoutEndAction").flatMap(WatchWorkoutCommand.Action.init(rawValue:)) }
         set { defaults.set(newValue?.rawValue, forKey: "workoutEndAction") }
@@ -83,6 +84,8 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
 #if DEBUG
             NSLog("MoovX Watch HealthKit wake delegate received")
 #endif
+            // A duplicate HealthKit wake must not invalidate an in-flight reply.
+            if wakeToken != nil { requestWorkoutFromPhone(); return }
             wakeConfiguration = configuration
             wakeToken = UUID()
             beginWake()
@@ -93,7 +96,9 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
         }
     }
     private func beginWake() {
-        guard ready, let configuration = wakeConfiguration, let token = wakeToken else { return }
+        guard let configuration = wakeConfiguration, let token = wakeToken else { return }
+        // Prepare during the HealthKit delegate call, before asynchronous recovery or
+        // connectivity callbacks: otherwise watchOS can suspend this background launch.
         guard ledger.activeID == nil, !starting, !finalizing else {
             clearWake(); report(); return
         }
@@ -114,6 +119,14 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
                 guard !Task.isCancelled, let self, self.wakeToken == token else { return }
                 self.clearWake(); self.status = "connectionFailed"
             }
+            wakeRetry?.cancel()
+            wakeRetry = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled, let self, self.wakeToken == token else { return }
+                    self.requestWorkoutFromPhone()
+                }
+            }
             requestWorkoutFromPhone()
         } catch { clearWake(); status = "connectionFailed" }
     }
@@ -129,6 +142,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
                 guard self.wakeToken == token else { return }
                 self.requestingCommand = false
                 self.wakeTimeout?.cancel(); self.wakeTimeout = nil
+                self.wakeRetry?.cancel(); self.wakeRetry = nil
                 self.wakeToken = nil; self.wakeConfiguration = nil
                 guard let command else { self.clearWake(); self.status = "expired"; return }
 #if DEBUG
@@ -148,6 +162,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
     }
     private func clearWake() {
         wakeTimeout?.cancel(); wakeTimeout = nil
+        wakeRetry?.cancel(); wakeRetry = nil
         wakeToken = nil; wakeConfiguration = nil; requestingCommand = false
         if let session = preparedWorkout {
             preparedWorkout = nil
@@ -159,7 +174,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
         health.recoverActiveWorkoutSession { [weak self] recovered, error in
             Task { @MainActor in
                 guard let self else { return }
-                guard error == nil else { self.status = "interrupted"; return }
+                guard error == nil else { self.clearWake(); self.status = "interrupted"; return }
                 self.ready = true
                 if let recovered, self.ledger.activeID == nil {
                     if recovered.state == .prepared {
@@ -168,7 +183,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
                         if self.wakeToken == nil { self.clearWake() }
                     } else {
                         // Never replace an unknown live workout after a partial recovery.
-                        self.ready = false; self.status = "interrupted"; return
+                        self.ready = false; self.clearWake(); self.status = "interrupted"; return
                     }
                 }
                 if let recovered, self.ledger.activeID != nil {
@@ -205,7 +220,7 @@ final class WatchWorkoutManager: NSObject, ObservableObject, WCSessionDelegate, 
             if ledger.activeID == nil { status = ledger.terminalStatuses[command.id.uuidString] ?? "error" }
             report(id: command.id, as: ledger.terminalStatuses[command.id.uuidString] ?? "error")
 #if DEBUG && targetEnvironment(simulator)
-            if ["11111111-1111-4111-8111-111111111113", "11111111-1111-4111-8111-111111111114", "11111111-1111-4111-8111-111111111120"].contains(command.id.uuidString) {
+            if ["11111111-1111-4111-8111-111111111113", "11111111-1111-4111-8111-111111111114", "11111111-1111-4111-8111-111111111123"].contains(command.id.uuidString) {
                 // Query only this synthetic fixture; never enumerate personal workouts.
                 let predicate = HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeySyncIdentifier, allowedValues: ["moovx.watch.\(command.id.uuidString)"])
                 health.execute(HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
