@@ -112,7 +112,10 @@
       "missing": "Vorbereitung ausstehend",
       "waitingForCoach": "Warten auf den Plan des Coaches",
       "quotaExhausted": "Kontingent erreicht — später erneut versuchen",
-      "error": "Vorübergehender Fehler"
+      "error": "Vorübergehender Fehler",
+      "generation": "Vorbereitung unterbrochen — diesen Schritt erneut versuchen",
+      "persistence": "Speichern fehlgeschlagen — diesen Schritt erneut versuchen",
+      "confirmation": "Gespeichertes Ergebnis konnte nicht geprüft werden — erneut versuchen"
     }
   },
   "muscles": {
