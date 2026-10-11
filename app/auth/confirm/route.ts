@@ -5,11 +5,14 @@ import { checkRateLimit } from '@/lib/rate-limit'
 export const dynamic = 'force-dynamic'
 const headers = {
   'Cache-Control': 'no-store, max-age=0',
-  'Referrer-Policy': 'no-referrer',
+  // Preserve same-origin POST validation without disclosing the token-bearing URL.
+  'Referrer-Policy': 'strict-origin',
   'X-Robots-Tag': 'noindex, nofollow',
   'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
 }
-const validToken = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32,128}$/i.test(value)
+// Supabase prefixes signup hashes with `pkce_` for SSR/PKCE registrations.
+// Keep it intact for verifyOtp; only accept an HTML-safe, bounded token format.
+const validToken = (value: unknown): value is string => typeof value === 'string' && /^(?:pkce_)?[a-f0-9]{32,128}$/i.test(value)
 
 function invitationNext(value: string | null, origin: string) {
   if (value === '/join') return '/join'
