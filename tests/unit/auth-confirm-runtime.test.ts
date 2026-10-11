@@ -20,7 +20,7 @@ describe('cross-browser signup confirmation', () => {
     const response = GET(new NextRequest(`${origin}/auth/confirm?token_hash=${token}`))
     expect(response.status).toBe(200)
     expect(await response.text()).toContain('method="post"')
-    expect(response.headers.get('referrer-policy')).toBe('no-referrer')
+    expect(response.headers.get('referrer-policy')).toBe('strict-origin')
     expect(response.headers.get('cache-control')).toContain('no-store')
     expect(m.verify).not.toHaveBeenCalled()
   })
@@ -39,6 +39,25 @@ describe('cross-browser signup confirmation', () => {
     const response = await POST(new NextRequest(`${origin}/auth/confirm`, { method: 'POST', headers: { origin, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token_hash: token, source: 'ios' }) }))
     expect(response.headers.get('location')).toBe(`${origin}/auth/confirmed`)
     expect(response.headers.get('location')).not.toContain(token)
+  })
+
+  it('renders and submits PKCE signup hashes without stripping their prefix', async () => {
+    const pkceToken = 'pkce_' + 'b'.repeat(56)
+    const destination = encodeURIComponent(`${origin}/auth/callback?type=signup&source=ios`)
+    const response = GET(new NextRequest(`${origin}/auth/confirm?token_hash=${pkceToken}&next=${destination}`))
+    expect(response.status).toBe(200)
+    const html = await response.text()
+    expect(html).toContain(`name="token_hash" value="${pkceToken}"`)
+    expect(html).toContain('name="source" value="ios"')
+    expect(m.verify).not.toHaveBeenCalled()
+    const confirmed = await post({ token_hash: pkceToken, next: '' })
+    expect(m.verify).toHaveBeenCalledWith({ token_hash: pkceToken, type: 'email' })
+    expect(confirmed.headers.get('location')).toBe(`${origin}/login?confirmed=1`)
+  })
+  it.each(['pkce_', 'pkce_' + 'x'.repeat(56), 'pkce_' + 'a'.repeat(129), 'pkce_<script>'])('rejects malformed prefixed hashes', async (invalid) => {
+    expect(GET(new NextRequest(`${origin}/auth/confirm?token_hash=${encodeURIComponent(invalid)}`)).status).toBe(303)
+    expect((await post({ token_hash: invalid, next: '' })).status).toBe(303)
+    expect(m.verify).not.toHaveBeenCalled()
   })
 
   it('rejects expired or already used tokens without a success message', async () => {
