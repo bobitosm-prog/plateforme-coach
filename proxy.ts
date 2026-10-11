@@ -124,6 +124,8 @@ export async function proxy(request: NextRequest) {
   // Skip Supabase middleware for routes that don't need it
   if (
     pathname.startsWith('/api/') ||
+    pathname === '/auth/confirm' ||
+    pathname === '/auth/confirmed' ||
     pathname.startsWith('/_next/') ||
     pathname === '/sitemap.xml' ||
     pathname === '/robots.txt'

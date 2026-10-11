@@ -85,9 +85,10 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     })
   }, [nextTarget, router, t])
 
-  // Route via /auth/callback pour exchange PKCE + signOut + banner sur /login
-  // Le flag type=signup signale à la callback de forcer un re-login (vs auto-login)
-  const redirectQuery = nextTarget ? '?type=signup&next=%2Fjoin' : '?type=signup'
+  // OAuth keeps its PKCE callback. The confirmation email template carries this
+  // allowlisted return destination to /auth/confirm, without a PKCE exchange.
+  const redirectQuery = (nextTarget ? '?type=signup&next=%2Fjoin' : '?type=signup')
+    + (searchParams.get('source') === 'ios' ? '&source=ios' : '')
   const redirectUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/auth/callback${redirectQuery}`
     : `/auth/callback${redirectQuery}`
