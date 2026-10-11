@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nativeApplePurchase } from '@/lib/apple/native-purchases'
+import { nativeApplePurchase, loadNativeAppleProducts } from '@/lib/apple/native-purchases'
 const userId = 'account-a'
 const token = '00000000-0000-4000-8000-000000000001'
 const bridge = { postMessage: vi.fn() }
@@ -42,5 +42,20 @@ describe('native Apple purchase coordination', () => {
     request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'recorded', transactionId: 'other' }) })
     await expect(nativeApplePurchase(userId, 'restore')).rejects.toThrow('APPLE_INVALID_ACKNOWLEDGEMENT')
     expect(bridge.postMessage).toHaveBeenCalledOnce()
+  })
+})
+
+describe('two-offer Apple catalogue', () => {
+  it.each([['monthly', 'yearly'], ['monthly', 'yearly', 'lifetime']])('accepts current and legacy native catalogues: %s', async (...plans) => {
+    bridge.postMessage.mockResolvedValue({ products: plans.map(plan => ({ id: `ch.moovx.app.athena.${plan}`, displayPrice: 'CHF 9.90' })) })
+    expect((await loadNativeAppleProducts()).map(p => p.id)).toEqual(['ch.moovx.app.athena.monthly', 'ch.moovx.app.athena.yearly'])
+  })
+  it('rejects an incomplete catalogue', async () => {
+    bridge.postMessage.mockResolvedValue({ products: [{ id: 'ch.moovx.app.athena.monthly', displayPrice: 'CHF 9.90' }] })
+    await expect(loadNativeAppleProducts()).rejects.toThrow('APPLE_CATALOG_UNAVAILABLE')
+  })
+  it('blocks new lifetime purchases without calling StoreKit', async () => {
+    await expect(nativeApplePurchase(userId, 'purchase', 'ch.moovx.app.athena.lifetime')).rejects.toThrow('APPLE_PRODUCT_INVALID')
+    expect(bridge.postMessage).not.toHaveBeenCalled()
   })
 })

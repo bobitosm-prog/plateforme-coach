@@ -10,7 +10,7 @@ vi.mock('@/lib/apple/native-purchases', () => ({ isNativeMoovx: native.detect, a
 beforeEach(() => {
   vi.stubGlobal('React', React)
   native.detect.mockReturnValue(true)
-  native.products.mockResolvedValue(['monthly', 'yearly', 'lifetime'].map((plan, i) => ({ id: `ch.moovx.app.athena.${plan}`, displayPrice: ['CHF 10.00', 'CHF 80.00', 'CHF 150.00'][i] })))
+  native.products.mockResolvedValue(['monthly', 'yearly'].map((plan, i) => ({ id: `ch.moovx.app.athena.${plan}`, displayPrice: ['CHF 9.90', 'CHF 79.90'][i] })))
   native.purchase.mockResolvedValue({ status: 'pending', count: 0, sandbox: false })
 })
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks() })
@@ -18,7 +18,9 @@ const mount = () => render(React.createElement(NextIntlClientProvider, { locale:
 describe('iPhone purchase screen runtime', () => {
   it('renders localized Apple prices and purchases only after an explicit click', async () => {
     mount()
-    await screen.findByText('CHF 80.00 / an')
+    await screen.findByText('CHF 79.90 / an')
+    expect(screen.getAllByRole('button', { name: 'Continuer avec Apple' })).toHaveLength(2)
+    expect(screen.queryByText('À vie')).toBeNull()
     expect(native.purchase).not.toHaveBeenCalled()
     fireEvent.click(screen.getAllByRole('button', { name: 'Continuer avec Apple' })[0])
     await screen.findByText('Achat en attente de validation Apple.')

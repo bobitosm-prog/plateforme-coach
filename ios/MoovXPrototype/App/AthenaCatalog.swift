@@ -14,21 +14,23 @@ enum AthenaCatalog {
         case invalidProductConfiguration
     }
 
+    // Historical lifetime transactions remain recognized by AthenaOffer.
+    static let saleOffers: [AthenaOffer] = [.monthly, .yearly]
+
     static func load() async throws -> [Product] {
-        let products = try await Product.products(for: AthenaOffer.allCases.map(\.rawValue))
+        let products = try await Product.products(for: saleOffers.map(\.rawValue))
         return try validate(products)
     }
 
     /// Fail closed if Apple returns a partial or incompatible catalogue.
     /// Loading products does not purchase anything or grant an entitlement.
     static func validate(_ products: [Product]) throws -> [Product] {
-        guard products.count == AthenaOffer.allCases.count,
-              Set(products.map(\.id)) == Set(AthenaOffer.allCases.map(\.rawValue)) else {
+        guard products.count == saleOffers.count,
+              Set(products.map(\.id)) == Set(saleOffers.map(\.rawValue)) else {
             throw CatalogError.incompleteProducts
         }
-        let ordered = AthenaOffer.allCases.compactMap { offer in products.first { $0.id == offer.rawValue } }
-        guard ordered[2].type == .nonConsumable,
-              ordered[0].type == .autoRenewable, ordered[1].type == .autoRenewable,
+        let ordered = saleOffers.compactMap { offer in products.first { $0.id == offer.rawValue } }
+        guard ordered[0].type == .autoRenewable, ordered[1].type == .autoRenewable,
               let monthly = ordered[0].subscription, let yearly = ordered[1].subscription,
               monthly.subscriptionGroupID == yearly.subscriptionGroupID,
               monthly.subscriptionPeriod.value == 1, monthly.subscriptionPeriod.unit == .month,

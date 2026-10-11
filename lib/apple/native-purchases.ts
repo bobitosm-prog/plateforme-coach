@@ -1,4 +1,4 @@
-export const APPLE_PRODUCTS = ['ch.moovx.app.athena.monthly', 'ch.moovx.app.athena.yearly', 'ch.moovx.app.athena.lifetime'] as const
+export const APPLE_PRODUCTS = ['ch.moovx.app.athena.monthly', 'ch.moovx.app.athena.yearly'] as const
 export interface NativeProduct { id: string; displayPrice: string }
 type TransactionReply = { id: string; signedTransaction: string }
 type BridgeReply = { status: string; products?: NativeProduct[]; transactions?: TransactionReply[] }
@@ -11,7 +11,7 @@ export function isNativeMoovx(): boolean {
 }
 export async function loadNativeAppleProducts(): Promise<NativeProduct[]> {
   const result = await applePurchaseBridge()?.postMessage({ action: 'products' })
-  if (!result?.products || result.products.length !== 3 || !APPLE_PRODUCTS.every(id => result.products!.some(p => p.id === id && typeof p.displayPrice === 'string' && p.displayPrice.length > 0))) throw Error('APPLE_CATALOG_UNAVAILABLE')
+  if (!result?.products || !APPLE_PRODUCTS.every(id => result.products!.some(p => p.id === id && typeof p.displayPrice === 'string' && p.displayPrice.length > 0))) throw Error('APPLE_CATALOG_UNAVAILABLE')
   return APPLE_PRODUCTS.map(id => result.products!.find(p => p.id === id)!)
 }
 export async function nativeApplePurchase(userId: string, action: 'purchase' | 'restore' | 'pending', productId?: string) {
