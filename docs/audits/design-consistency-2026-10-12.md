@@ -189,3 +189,11 @@ Restent notamment : fenêtres de copie/sauvegarde depuis le journal et photos de
 Fenêtre RecoveryModal : Outfit, titre 28 px gras, surfaces app, cartes 20 px, détails 14–15 px et liste musculaire lisible. En-tête fixe et corps défilant ; safe areas et marges 12 px sur mobile. Animation du cadre retirée. Les styles du BodyMap partagé avec Home restent inchangés hors fenêtre ; silhouettes, masques, couleurs de statut et calculs conservés. Aucun accès ni changement DB.
 
 Validation : 34 tests ciblés recovery UI/modèle/hit-test, TypeScript, diff. Navigateur mobile 393 × 852 avec fixtures : ouverture par bouton, sélection Dos, détail correspondant, fermeture Échap et restitution du focus ; pas de débordement horizontal, fermeture visible après défilement. Capture recuperation-mobile.png. Fixture temporaire retirée. Pas de test physique iPhone.
+
+## Landing — palette et captures actuelles
+
+- LandingV2 : fond #111110, cartes #211f18, or #dfbf70, police Outfit, boutons arrondis et titres cohérents avec l’application. Ancienne carte fictive du hero remplacée par l’accueil actuel.
+- Quatre captures WebP v2 (393 × 852), profil fictif Alex : HomeV2, séance assemblée avec les styles WorkoutSession et le composant WorkoutLedgerTable (RIR), NutritionOverview, RecoveryModal. Aucun compte ni enregistrement réel ; source locale temporaire retirée après capture. Les assets v1 sont conservés.
+- Prix CHF 9.90/mois et CHF 79.90/an conservés. Routes, paramètres source=ios / next=/join, SEO et formulaires inchangés.
+- Runtime local : 1440 × 1000 et 393 × 852 ; quatre images chargées, pas de débordement horizontal, onglet Nutrition fonctionnel, paramètres d’inscription présents, tarifs lisibles.
+- TypeScript, parité i18n 3779 clés × 3 langues, 6 tests unitaires SEO des liens et git diff --check : OK. Captures de vérification dans design-audit-2026-10-12/landing-*.png.
