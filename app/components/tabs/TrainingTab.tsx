@@ -1,9 +1,8 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import { loadWorkoutHistory } from '../../../lib/training/workout-history'
-import { RailOverlay } from '../ui/RailOverlay'
+import SessionDetailModal from '../training/SessionDetailModal'
 import WorkoutDetailList from '../training/WorkoutDetailList'
-import ModalHeader from '../ui/ModalHeader'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, type Locale } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale/fr'
@@ -16,7 +15,7 @@ import {
 } from 'lucide-react'
 import {
   fonts, colors, JS_DAYS_FR,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 import CardioSection from '../CardioSection'
 import { ScheduledSession, toDateStr, padTo7Days } from '../../../lib/schedule-utils'
 import { getEffectiveWeek } from '../../../lib/training/program-week'
@@ -421,18 +420,13 @@ export default function TrainingTab({
       )}
 
       {/* Workout detail popup */}
-      {selectedWorkout && (<RailOverlay>
-        <div style={{position:'fixed',inset:0,background:colors.background,zIndex:200,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <ModalHeader title={selectedWorkout.name || t('calendar.exercise')} onClose={() => setSelectedWorkout(null)} />
-          <div style={{flex:1,overflowY:'auto',padding:'14px 16px 32px',WebkitOverflowScrolling:'touch' as any}}>
-            <div style={{fontFamily:fonts.body,fontSize:12,color:colors.textMuted,marginBottom:14}}>
-              {new Date(selectedWorkout.date ? `${selectedWorkout.date}T12:00:00` : selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
-              {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
-            </div>
-            <WorkoutDetailList detail={workoutDetail} loading={loadingDetail} />
-          </div>
-        </div>
-      </RailOverlay>)}
+      {selectedWorkout && <SessionDetailModal isOpen onClose={()=>setSelectedWorkout(null)} sessionTitle={selectedWorkout.name || t('calendar.exercise')} dayStatus="done">
+        <p style={{fontFamily:fonts.body,fontSize:15,color:colors.textMuted,margin:'0 0 20px'}}>
+          {new Date(selectedWorkout.date ? `${selectedWorkout.date}T12:00:00` : selectedWorkout.created_at).toLocaleDateString(locale === 'de' ? 'de-CH' : locale === 'en' ? 'en-US' : 'fr-CH',{weekday:'long',day:'numeric',month:'long'})}
+          {selectedWorkout.duration_minutes?` · ${selectedWorkout.duration_minutes} min`:''}
+        </p>
+        <WorkoutDetailList detail={workoutDetail} loading={loadingDetail}/>
+      </SessionDetailModal>}
     </div>
     </TrainingV2>
   )

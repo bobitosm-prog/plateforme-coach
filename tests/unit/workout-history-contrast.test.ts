@@ -5,7 +5,7 @@ import { afterEach, expect, it } from 'vitest'
 import { NextIntlClientProvider } from 'next-intl'
 import WorkoutDetailList from '@/app/components/training/WorkoutDetailList'
 import messages from '@/messages/fr.json'
-import { colors } from '@/lib/design-tokens'
+import { colors } from '@/lib/app-design-tokens'
 
 afterEach(cleanup)
 
@@ -24,7 +24,7 @@ it.each(['external_only', 'two_dumbbells', 'barbell_total', 'legacy'] as const)(
     }),
   ))
   const label = getByText(messages.trainingLoad[mode])
-  expect(getComputedStyle(label).color).toBe('rgb(208, 197, 178)')
+  expect(getComputedStyle(label).color).toBe('rgb(183, 176, 160)')
   expect(getComputedStyle(label).display).toBe('block')
   expect(getComputedStyle(label).fontSize).toBe('13px')
   expect(getComputedStyle(label).marginBottom).toBe('8px')

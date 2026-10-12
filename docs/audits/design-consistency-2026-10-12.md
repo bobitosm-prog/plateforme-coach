@@ -143,3 +143,11 @@ Trois composants actifs harmonisés : ChatAI (tokens app, textes lisibles, saisi
 Validation : quatre tests runtime locaux pour refus IA/fermeture, envoi simulé, calcul avec payload de sauvegarde simulé et détail de séance. TypeScript, parité i18n et diff vérifiés. Navigateur : calculateur à 393 px sans débordement, inputs 16 px et fermeture vers aperçu séance. Capture desktop conservée. Pas d’envoi IA réel, pas de modification de profil réel, pas de vérification physique iPhone. Prévisualisation temporaire retirée.
 
 Restent notamment : recherche/détail exercices, poids/mensurations, modals repas et médias ; le présent lot ne clôt pas l’audit global.
+
+## Correction après retour visuel : Voir la séance et Athena
+
+Le précédent lot avait couvert le cadre SessionDetailModal mais pas TrainingSessionDone / WorkoutDetailList, encore sur les tokens historiques. Les deux contenus sont maintenant harmonisés et l’entrée historique Training réutilise le même cadre que Home. Suppression du hero photo et des animations superposées à l’ouverture, titre adaptatif, cartes 20 px, séries espacées.
+
+Athena reçoit une vraie nouvelle disposition : titre Athena., colonne jusqu’à 800 px, réponses en cartes larges, marges 20–24 px, saisie multiligne, résumé repliable et suggestions verticales sur mobile. Suppression du statut toujours « en ligne » non lié à une présence. Le panneau est téléporté via RailOverlay ; scroll automatique sans animation et callback nettoyé. Rendu Markdown conservé, tokens harmonisés. Consentement, modèle, endpoints, historique et suppression restent inchangés.
+
+Vérification : tests runtime envoi/fermeture/refus IA et conversation, rendu mobile 393 × 852 sur données fictives pour le chat et le contenu complet de séance. Pas de débordement ; captures athena-aere-mobile.png et seance-detail-mobile.png conservées. Réduction des animations vérifiée ; disparition du gel sur iPhone physique non confirmée. Banc temporaire supprimé, aucun message envoyé ni donnée réelle modifiée.

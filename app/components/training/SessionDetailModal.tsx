@@ -2,12 +2,9 @@
 
 import styles from '../SecondaryPanels.module.css'
 import { RailOverlay } from '../ui/RailOverlay'
-import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, Z_MODAL } from '../../../lib/app-design-tokens'
-import { getHeroImage } from '../../../lib/session-types'
-import { shortenSessionTitle } from '../home/HeroSessionCard'
 
 export interface SessionDetailModalProps {
   isOpen: boolean
@@ -22,103 +19,19 @@ export default function SessionDetailModal({
   isOpen, onClose, sessionTitle, dayStatus, dayBadge, children,
 }: SessionDetailModalProps) {
   const t = useTranslations('training_tab.sessionDetail')
-  const heroImage = getHeroImage(sessionTitle)
-  const isPast = dayStatus === 'done' || dayStatus === 'missed'
-  const isDone = dayStatus === 'done'
-
-  // Portal to document.body to escape rail transform containing block
-  return (<RailOverlay active={isOpen}>
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="session-detail-title"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          style={{
-            position: 'fixed', inset: 0, zIndex: Z_MODAL,
-            background: colors.background,
-            display: 'flex', flexDirection: 'column',
-            paddingTop: 'env(safe-area-inset-top, 0px)',
-          }}
-        >
-          {/* HEADER with hero image */}
-          <div style={{ position: 'relative', height: 240, flexShrink: 0, overflow: 'hidden' }}>
-            {/* Hero image background */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: `url(${heroImage})`,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              filter: isPast ? 'grayscale(0.7)' : 'none',
-            }} />
-
-            {/* Gradient overlay */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(19,19,19,0.95) 0%, rgba(19,19,19,0.6) 50%, rgba(19,19,19,0.3) 100%)',
-            }} />
-
-            {/* Green tint if done */}
-            {isDone && (
-              <div style={{ position: 'absolute', inset: 0, background: `${colors.success}20` }} />
-            )}
-
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              aria-label={t('close')}
-              style={{
-                position: 'absolute', top: 16, right: 16,
-                width: 44, height: 44, borderRadius: 12,
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={20} color="white" />
-            </button>
-
-            {/* Title + badge */}
-            <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20, display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-              <div style={{ width: 4, height: 46, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-              <div>
-                {dayBadge && (
-                  <span style={{
-                    fontFamily: fonts.alt, fontSize: 13, fontWeight: 700,
-                    letterSpacing: '.08em', color: colors.gold,
-                    textTransform: 'uppercase', display: 'block', marginBottom: 8,
-                  }}>
-                    {dayBadge.text}
-                  </span>
-                )}
-                <h1 id="session-detail-title" style={{
-                  fontFamily: fonts.headline, fontSize: 'clamp(26px, 7vw, 36px)', fontWeight: 700,
-                  color: colors.gold, textTransform: 'none',
-                  letterSpacing: '-.03em', margin: 0, lineHeight: 1,
-                  textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                }}>
-                  {shortenSessionTitle(sessionTitle)}
-                </h1>
-              </div>
-            </div>
-          </div>
-
-          {/* BODY scrollable */}
-          <div style={{
-            flex: 1, overflowY: 'auto', overflowX: 'hidden',
-            padding: 20,
-            paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
-          }}>
-            {children || (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: colors.textDim, fontFamily: fonts.body }}>
-                <p style={{ margin: 0, fontSize: 14 }}>{t('placeholder')}</p>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </RailOverlay>)
+  return <RailOverlay active={isOpen}>
+    {isOpen && <div className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="session-detail-title"
+      style={{position:'fixed',inset:0,zIndex:Z_MODAL,background:colors.background,display:'flex',flexDirection:'column',paddingTop:'env(safe-area-inset-top, 0px)'}}>
+      <header style={{width:'100%',maxWidth:760,margin:'0 auto',padding:'24px 20px',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:20}}>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:13,color:colors.gold,letterSpacing:'.08em',marginBottom:10}}>{dayBadge?.text || 'MOOVX'}</div>
+          <h1 id="session-detail-title" style={{fontFamily:fonts.headline,fontSize:'clamp(28px,7vw,36px)',fontWeight:700,color:colors.gold,letterSpacing:'-.03em',lineHeight:1.12,margin:0,overflowWrap:'anywhere'}}>{sessionTitle}</h1>
+        </div>
+        <button aria-label={t('close')} onClick={onClose} style={{width:46,height:46,flexShrink:0,borderRadius:13,background:colors.surfaceCard,border:`1px solid ${colors.goldBorder}`,color:colors.gold,display:'grid',placeItems:'center',cursor:'pointer'}}><X size={22}/></button>
+      </header>
+      <div style={{flex:1,minHeight:0,overflowY:'auto',overscrollBehavior:'contain'}}><div style={{width:'100%',maxWidth:760,margin:'0 auto',padding:'0 20px calc(24px + env(safe-area-inset-bottom, 0px))'}}>
+        {children || <p style={{fontSize:16,color:colors.textMuted}}>{t('placeholder')}</p>}
+      </div></div>
+    </div>}
+  </RailOverlay>
 }
