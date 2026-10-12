@@ -1,13 +1,14 @@
 'use client'
+import styles from '../client/SupportPages.module.css'
 import { useRef, useEffect, useState } from 'react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MessageCircle, Send, Check, CheckCheck, ImageIcon, X, ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
-  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, GOLD_DIM, GOLD_RULE,
-  TEXT_PRIMARY, TEXT_MUTED, FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD,
-} from '../../../lib/design-tokens'
+  BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD,
+  TEXT_PRIMARY, TEXT_MUTED, FONT_ALT, FONT_BODY,
+} from '../../../lib/app-design-tokens'
 import { useMessageImageUpload } from '../../hooks/useMessageImageUpload'
 import MessageImage from '../MessageImage'
 
@@ -99,35 +100,28 @@ export default function MessagesTab({
   }, [messages.length])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className={styles.page}>
       {/* Back button */}
       {onBack && (
-        <button onClick={onBack} aria-label={tc('backToAccount')} style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', color: GOLD, flexShrink: 0 }}>
+        <button onClick={onBack} aria-label={tc('backToAccount')} className={styles.back}>
           <ArrowLeft size={18} />
-          <span style={{ fontFamily: FONT_ALT, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>{tc('navAccount')}</span>
+          <span style={{ fontFamily: FONT_ALT, fontSize: 14, fontWeight: 600 }}>{tc('navAccount')}</span>
         </button>
       )}
-      {/* Header */}
-      <div style={{ background: BG_CARD, padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_ALT, fontSize: '0.85rem', fontWeight: 700, color: '#0D0B08' }}>C</div>
-        <div>
-          <h1 style={{ fontFamily: FONT_ALT, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '2px', margin: 0, color: TEXT_PRIMARY, textTransform: 'uppercase' }}>{isCoachManaged ? 'MON COACH' : 'SUPPORT'}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E' }} />
-            <span style={{ fontSize: '0.62rem', color: '#22C55E', fontWeight: 600, fontFamily: FONT_BODY }}>En ligne</span>
-          </div>
-        </div>
-      </div>
+      <header className={styles.header}>
+        <h1 className={styles.title}>{isCoachManaged ? 'Mon coach' : 'Support'}<span>.</span></h1>
+        <p className={styles.subtitle}>{isCoachManaged ? 'Tes échanges avec ton coach.' : 'Tes échanges avec l’équipe MoovX.'}</p>
+      </header>
 
       {!coachId ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+        <div className={styles.empty}>
           <MessageCircle size={40} color={TEXT_MUTED} />
           <p style={{ color: TEXT_MUTED, fontSize: '0.9rem', margin: 0, fontFamily: FONT_BODY, fontWeight: 300 }}>Aucun coach assigné pour l'instant.</p>
         </div>
       ) : (
         <>
           {/* Messages */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div className={styles.conversation}>
             {messages.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <MessageCircle size={32} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
@@ -147,15 +141,15 @@ export default function MessagesTab({
                   {showDate && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0', padding: '0 8px' }}>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: '0.62rem', color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', flexShrink: 0, fontFamily: FONT_ALT }}>{dateLabel(msg.created_at)}</span>
+                      <span style={{ fontSize: 13, color: TEXT_MUTED, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '2px', flexShrink: 0, fontFamily: FONT_ALT }}>{dateLabel(msg.created_at)}</span>
                       <div style={{ flex: 1, height: 1, background: BORDER }} />
                     </div>
                   )}
                   {/* Bubble */}
                   <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
                     <div style={{
-                      maxWidth: '78%',
-                      background: isMine ? 'linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%)' : BG_CARD_2,
+                      maxWidth: '85%', minWidth: 0, overflowWrap: 'anywhere',
+                      background: isMine ? GOLD : BG_CARD_2,
                       color: isMine ? '#0D0B08' : TEXT_PRIMARY,
                       borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                       padding: msg.image_url ? 4 : '10px 14px',
@@ -165,8 +159,8 @@ export default function MessagesTab({
                       {msg.image_url && <MessageImage supabase={supabase} path={msg.image_url} />}
                       {msg.content && <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', fontFamily: FONT_BODY, fontWeight: 400, padding: msg.image_url ? '4px 10px 0' : 0 }}>{msg.content}</p>}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 4, marginTop: 3, padding: msg.image_url ? '0 10px 4px' : 0 }}>
-                        <span style={{ fontSize: '0.58rem', opacity: 0.5, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
-                        {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.6, color: GOLD }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
+                        <span style={{ fontSize: 12, opacity: 0.8, fontFamily: FONT_BODY }}>{format(new Date(msg.created_at), 'HH:mm')}</span>
+                        {isMine && (msg.read ? <CheckCheck size={12} style={{ opacity: 0.8, color: '#17140c' }} /> : <Check size={12} style={{ opacity: 0.4 }} />)}
                       </div>
                     </div>
                   </div>
@@ -181,29 +175,31 @@ export default function MessagesTab({
           {previewUrl && (
             <div style={{ padding: '8px 14px 0', background: BG_BASE, borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 8 }}>
               <img src={previewUrl} alt="Preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: `1px solid ${BORDER}` }} />
-              <button onClick={clearFile} style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
+              <button onClick={clearFile} aria-label="Retirer la photo" style={{ background: 'none', border: 'none', cursor: 'pointer', color: TEXT_MUTED, padding: 4 }}><X size={16} /></button>
             </div>
           )}
 
           {/* Input */}
           <div style={{ flexShrink: 0, padding: '12px 14px', background: BG_BASE, borderTop: previewUrl ? 'none' : `1px solid ${BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileSelected} />
-            <button onClick={() => fileInputRef.current?.click()} style={{ width: 40, height: 40, borderRadius: '50%', background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <button onClick={() => fileInputRef.current?.click()} aria-label="Joindre une photo" style={{ width: 44, height: 44, borderRadius: '50%', background: 'transparent', border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <ImageIcon size={16} color={TEXT_MUTED} />
             </button>
             <textarea
+              aria-label="Écrire un message"
               ref={inputRef}
               value={msgInput}
               onChange={e => setMsgInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder="Écrire un message..."
               rows={1}
-              style={{ flex: 1, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: '0.88rem', outline: 'none', resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
+              style={{ flex: 1, minWidth: 0, minHeight: 44, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 24, padding: '10px 16px', color: TEXT_PRIMARY, fontSize: 16, resize: 'none', maxHeight: 100, lineHeight: 1.4, fontFamily: FONT_BODY, fontWeight: 400 }}
             />
             <button
               onClick={handleSend}
+              aria-label="Envoyer le message"
               disabled={!msgInput.trim() && !selectedFile}
-              style={{ width: 40, height: 40, borderRadius: '50%', background: (msgInput.trim() || selectedFile) ? GOLD : BORDER, border: 'none', cursor: (msgInput.trim() || selectedFile) ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
+              style={{ width: 44, height: 44, borderRadius: '50%', background: (msgInput.trim() || selectedFile) ? GOLD : BORDER, border: 'none', cursor: (msgInput.trim() || selectedFile) ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 200ms' }}
             >
               {uploading ? <div style={{ width: 16, height: 16, border: '2px solid #0D0B08', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <Send size={16} color={(msgInput.trim() || selectedFile) ? '#0D0B08' : TEXT_MUTED} />}
             </button>

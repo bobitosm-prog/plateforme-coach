@@ -1,4 +1,6 @@
 'use client'
+import styles from './SupportPages.module.css'
+import { colors, cardStyle } from '@/lib/app-design-tokens'
 import { ArrowLeft, MessageSquare, AlertCircle, Lightbulb, MoreHorizontal, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { useMyFeedback, type MyFeedbackReport } from '@/app/hooks/useMyFeedback'
 
@@ -9,7 +11,7 @@ interface Props {
 function typeIcon(type: string) {
   if (type === 'bug') return <AlertCircle size={14} style={{ color: '#fb7185' }} />
   if (type === 'amelioration') return <Lightbulb size={14} style={{ color: '#fbbf24' }} />
-  return <MoreHorizontal size={14} style={{ color: '#99907e' }} />
+  return <MoreHorizontal size={14} style={{ color: colors.textMuted }} />
 }
 
 function typeLabel(type: string) {
@@ -19,9 +21,9 @@ function typeLabel(type: string) {
 }
 
 function statusLabel(status: string | null): string {
-  if (!status || status === 'nouveau') return 'Recu'
+  if (!status || status === 'nouveau') return 'Reçu'
   if (status === 'en_cours') return 'En traitement'
-  if (status === 'resolu') return 'Resolu'
+  if (status === 'resolu') return 'Résolu'
   if (status === 'rejete') return 'Clos'
   return status
 }
@@ -44,11 +46,12 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
   const isUnread = hasReply && report.read_by_user === false
 
   return (
-    <div
+    <article className={styles.report}
       style={{
-        background: isUnread ? 'rgba(212, 168, 67, 0.04)' : '#141414',
-        border: `1px solid ${isUnread ? 'rgba(212, 168, 67, 0.25)' : 'rgba(255,255,255,0.05)'}`,
-        borderRadius: '14px',
+        ...cardStyle,
+        background: colors.surfaceCard,
+        border: `1px solid ${isUnread ? colors.gold : colors.goldBorder}`,
+        borderRadius: 20,
         padding: '16px',
         position: 'relative',
       }}
@@ -57,13 +60,13 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
         <div style={{
           position: 'absolute', top: 12, right: 12,
           width: 8, height: 8, borderRadius: '50%',
-          background: '#D4A843',
+          background: colors.gold,
           boxShadow: '0 0 12px rgba(212, 168, 67, 0.6)',
         }} />
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-2 mb-2 text-xs" style={{ color: '#99907e' }}>
+      <div className={`flex items-center gap-2 mb-2 text-[13px] ${styles.reportMeta}`} style={{ color: colors.textMuted }}>
         {typeIcon(report.type)}
         <span>{typeLabel(report.type)}</span>
         <span>·</span>
@@ -74,14 +77,14 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
       </div>
 
       {/* Titre */}
-      <div className="text-base font-semibold mb-2" style={{ color: '#e5e2e1' }}>
+      <div className="text-base font-semibold mb-2" style={{ color: colors.text }}>
         {report.title}
       </div>
 
       {/* Message original */}
       <div
         className="text-sm whitespace-pre-wrap mb-3"
-        style={{ color: '#99907e', lineHeight: 1.55 }}
+        style={{ color: colors.textMuted, lineHeight: 1.55 }}
       >
         {report.description}
       </div>
@@ -92,8 +95,8 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
           href={report.page_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs inline-flex items-center gap-1 mb-3"
-          style={{ color: '#D4A843' }}
+          className="text-[13px] inline-flex items-center gap-1 mb-3"
+          style={{ color: colors.gold }}
         >
           {report.page_url.replace(/^https?:\/\//, '').slice(0, 50)}
           <ExternalLink size={10} />
@@ -111,26 +114,26 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
             padding: '12px 14px',
           }}
         >
-          <div className="flex items-center gap-1.5 mb-2 text-xs" style={{ color: '#D4A843' }}>
+          <div className="flex items-center gap-1.5 mb-2 text-[13px]" style={{ color: colors.gold }}>
             <CheckCircle2 size={12} />
             <span style={{ fontWeight: 600, letterSpacing: '0.5px' }}>
-              Reponse de l'equipe MoovX
+              Réponse de l’équipe MoovX
             </span>
           </div>
           <div
             className="text-sm whitespace-pre-wrap"
-            style={{ color: '#e5e2e1', lineHeight: 1.6 }}
+            style={{ color: colors.text, lineHeight: 1.6 }}
           >
             {report.admin_reply}
           </div>
           {report.replied_at && (
-            <div className="text-[10px] mt-2" style={{ color: '#5a5246' }}>
+            <div className="text-[13px] mt-2" style={{ color: colors.textMuted }}>
               {formatDate(report.replied_at)}
             </div>
           )}
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
@@ -138,87 +141,54 @@ export default function FeedbackTab({ onBack }: Props) {
   const { reports, loading, error, refetch } = useMyFeedback(true)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0B08', color: '#e5e2e1' }}>
-      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '20px 16px 100px' }}>
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            type="button"
-            onClick={onBack}
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: '10px',
-              width: 36, height: 36,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#e5e2e1',
-              cursor: 'pointer',
-            }}
-            aria-label="Retour"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold" style={{ color: '#e5e2e1' }}>
-              Mes rapports
-            </h1>
-            <div className="text-xs" style={{ color: '#99907e' }}>
-              Suggestions, bugs et reponses de l'equipe
-            </div>
-          </div>
-        </div>
+    <div className={styles.page}>
+        <button type="button" onClick={onBack} className={styles.back} aria-label="Retour au compte"><ArrowLeft size={20} /> Compte</button>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Mes rapports<span>.</span></h1>
+          <p className={styles.subtitle}>Suggestions, bugs et réponses de l’équipe.</p>
+        </header>
 
         {/* Body */}
         {loading && (
-          <div className="text-center text-sm py-12" style={{ color: '#99907e' }}>
+          <div role="status" className={styles.empty} style={{ color: colors.textMuted }}>
             Chargement...
           </div>
         )}
 
         {!loading && error && (
-          <div
+          <div role="alert"
             style={{
               background: 'rgba(251, 113, 133, 0.06)',
               border: '1px solid rgba(251, 113, 133, 0.2)',
-              borderRadius: '12px',
-              padding: '14px',
+              borderRadius: 20,
+              padding: 18,
               color: '#fb7185',
               fontSize: '14px',
             }}
           >
             {error}
-            <button onClick={refetch} className="ml-2 underline">Reessayer</button>
+            <button onClick={refetch} className="ml-2 underline">Réessayer</button>
           </div>
         )}
 
         {!loading && !error && reports.length === 0 && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '48px 24px',
-              background: '#141414',
-              border: '1px solid rgba(255,255,255,0.05)',
-              borderRadius: '14px',
-            }}
-          >
-            <MessageSquare size={32} style={{ color: '#5a5246', margin: '0 auto 12px' }} />
-            <div style={{ color: '#e5e2e1', fontSize: '15px', marginBottom: '6px' }}>
+          <div className={styles.empty}>
+            <MessageSquare size={32} style={{ color: colors.textMuted, margin: '0 auto 12px' }} />
+            <div style={{ color: colors.text, fontSize: '15px', marginBottom: '6px' }}>
               Aucun rapport pour l'instant
             </div>
-            <div style={{ color: '#99907e', fontSize: '13px' }}>
-              Utilisez le bouton en bas a droite pour nous ecrire.
+            <div style={{ color: colors.textMuted, fontSize: '13px' }}>
+              Depuis Compte, ouvre « Signaler un problème » pour nous écrire.
             </div>
           </div>
         )}
 
         {!loading && !error && reports.length > 0 && (
-          <div className="space-y-3">
+          <div className={styles.stack}>
             {reports.map(r => <ReportCard key={r.id} report={r} />)}
           </div>
         )}
 
-      </div>
     </div>
   )
 }
