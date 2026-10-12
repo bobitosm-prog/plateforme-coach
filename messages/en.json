@@ -700,9 +700,10 @@
     "unavailableHint": "The quota cannot be checked right now."
   },
   "recipesSection": {
+    "favorite": "Favorite",
     "title": "Fitness recipes",
     "generateBtn": "Generate",
-    "generateTitle": "GENERATE A RECIPE",
+    "generateTitle": "Generate a recipe",
     "generateDesc": "Our chef creates a recipe matched to your macros",
     "category": "Category",
     "generating": "Our chef is preparing your recipe...",
@@ -728,7 +729,7 @@
     }
   },
   "shoppingList": {
-    "title": "SHOPPING LIST",
+    "title": "Shopping list",
     "subtitle": "{total} items — {checked}/{total} checked",
     "copy": "Copy",
     "copySuccess": "List copied!",
@@ -2832,6 +2833,10 @@
   },
   "nutrition_tab": {
     "editor": {
+      "createMeal": "+ Create a meal",
+      "deleteMeal": "Delete meal",
+      "confirm": "Confirm",
+      "removeFood": "Remove this food",
       "name": "Meal name",
       "type": "Meal type",
       "grams": "Quantity in grams",

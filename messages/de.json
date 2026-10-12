@@ -700,9 +700,10 @@
     "unavailableHint": "Das Kontingent kann derzeit nicht geprüft werden."
   },
   "recipesSection": {
+    "favorite": "Favorit",
     "title": "Fitness-Rezepte",
     "generateBtn": "Generieren",
-    "generateTitle": "REZEPT GENERIEREN",
+    "generateTitle": "Rezept erstellen",
     "generateDesc": "Unser Chef erstellt ein Rezept passend zu deinen Makros",
     "category": "Kategorie",
     "generating": "Unser Chef bereitet dein Rezept vor...",
@@ -728,7 +729,7 @@
     }
   },
   "shoppingList": {
-    "title": "EINKAUFSLISTE",
+    "title": "Einkaufsliste",
     "subtitle": "{total} Artikel — {checked}/{total} abgehakt",
     "copy": "Kopieren",
     "copySuccess": "Liste kopiert!",
@@ -2832,6 +2833,10 @@
   },
   "nutrition_tab": {
     "editor": {
+      "createMeal": "+ Mahlzeit erstellen",
+      "deleteMeal": "Mahlzeit löschen",
+      "confirm": "Bestätigen",
+      "removeFood": "Lebensmittel entfernen",
       "name": "Name der Mahlzeit",
       "type": "Art der Mahlzeit",
       "grams": "Menge in Gramm",
