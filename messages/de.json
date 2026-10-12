@@ -99,6 +99,11 @@
     "restSec": "Pause (s)"
   },
   "initialGeneration": {
+    "hide": "Ausblenden",
+    "trainingReady": "Dein Trainingsprogramm ist bereit.",
+    "nutritionReady": "Dein Ernährungsplan ist bereit.",
+    "preparationError": "{domain}: Die Vorbereitung wurde unterbrochen.",
+    "showDetails": "Details anzeigen",
     "title": "Dein Bereich wird vorbereitet",
     "training": "Trainingsprogramm",
     "nutrition": "Ernährungsplan",

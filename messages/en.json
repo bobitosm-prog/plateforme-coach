@@ -99,6 +99,11 @@
     "restSec": "Rest (s)"
   },
   "initialGeneration": {
+    "hide": "Hide",
+    "trainingReady": "Your training program is ready.",
+    "nutritionReady": "Your nutrition plan is ready.",
+    "preparationError": "{domain}: preparation was interrupted.",
+    "showDetails": "View details",
     "title": "Preparing your space",
     "training": "Training program",
     "nutrition": "Nutrition plan",

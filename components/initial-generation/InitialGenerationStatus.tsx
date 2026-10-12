@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { CheckCircle2, CircleAlert, LoaderCircle, RefreshCw, Sparkles } from 'lucide-react'
 import type { InitialGenerationDomainState } from '@/lib/initial-generation/engine'
@@ -60,7 +62,35 @@ function DomainRow({
 
 export default function InitialGenerationStatus({ generation }: { generation: UseInitialGenerationResult }) {
   const t = useTranslations('initialGeneration')
-  if (!generation.visible) return null
+  const [hidden, setHidden] = useState(false)
+  const previous = useRef({ training: generation.training.phase, nutrition: generation.nutrition.phase, finalization: generation.finalization })
+
+  // Presentation only: dismissing this panel never stops the generation hook.
+  // Ready is emitted by the engine after the saved resource has been verified.
+  useEffect(() => {
+    for (const domain of ['training', 'nutrition'] as const) {
+      const phase = generation[domain].phase
+      const before = previous.current[domain]
+      if (phase === 'ready' && (before === 'generating' || before === 'checking')) {
+        toast.success(t(`${domain}Ready`), { duration: 6000 })
+      }
+      if (hidden && phase === 'error' && before !== 'error' && generation[domain].reason !== 'consent_declined') {
+        toast.error(t('preparationError', { domain: t(domain) }), {
+          duration: 10000,
+          action: { label: t('showDetails'), onClick: () => setHidden(false) },
+        })
+      }
+    }
+    if (hidden && generation.finalization === 'error' && previous.current.finalization !== 'error') {
+      toast.error(t('finalizationError'), {
+        duration: 10000,
+        action: { label: t('showDetails'), onClick: () => setHidden(false) },
+      })
+    }
+    previous.current = { training: generation.training.phase, nutrition: generation.nutrition.phase, finalization: generation.finalization }
+  }, [generation, hidden, t])
+
+  if (!generation.visible || hidden) return null
   // A deliberate postponement must not leave a fixed warning over manual features.
   if (!generation.generating && [generation.training, generation.nutrition].some(state => state.reason === 'consent_declined')) return null
 
@@ -72,7 +102,11 @@ export default function InitialGenerationStatus({ generation }: { generation: Us
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <Sparkles size={17} color={GOLD} aria-hidden />
-        <strong style={{ color: TEXT_PRIMARY, fontSize: 15 }}>{t('title')}</strong>
+        <strong style={{ flex: 1, color: TEXT_PRIMARY, fontSize: 15 }}>{t('title')}</strong>
+        <button type="button" onClick={() => setHidden(true)} aria-label={t('hide')}
+          style={{ minHeight: 44, padding: '0 8px', border: 0, background: 'transparent', color: GOLD, fontFamily: FONT_BODY, fontWeight: 700, cursor: 'pointer' }}>
+          {t('hide')}
+        </button>
       </div>
       <DomainRow label={t('training')} state={generation.training} retry={generation.retryTraining} />
       <DomainRow label={t('nutrition')} state={generation.nutrition} retry={generation.retryNutrition} />

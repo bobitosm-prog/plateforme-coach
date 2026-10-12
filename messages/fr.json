@@ -99,6 +99,11 @@
     "restSec": "Repos (s)"
   },
   "initialGeneration": {
+    "hide": "Masquer",
+    "trainingReady": "Ton programme d’entraînement est prêt.",
+    "nutritionReady": "Ton plan nutritionnel est prêt.",
+    "preparationError": "{domain} : la préparation a été interrompue.",
+    "showDetails": "Voir le détail",
     "title": "Préparation de votre espace",
     "training": "Programme d’entraînement",
     "nutrition": "Plan nutrition",
