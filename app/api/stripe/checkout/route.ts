@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       mode: plan.mode,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}${successPath}`,
+      success_url: `${baseUrl}${successPath}${isCoachPlan ? '' : '&session_id={CHECKOUT_SESSION_ID}'}`,
       cancel_url: `${baseUrl}${cancelPath}`,
       metadata: { clientId: user.id, planId: resolvedPlanId, coachId: verifiedCoachId || 'platform', subType: plan.subType },
     }

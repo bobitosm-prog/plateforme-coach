@@ -127,7 +127,7 @@ describe('platform checkout authorization and failure boundaries', () => {
     expect(params.mode).toBe('subscription')
     expect(params.line_items).toEqual([{ price: `price_${planId.toUpperCase()}`, quantity: 1 }])
     expect(params.metadata).toEqual({ clientId, planId, coachId: 'platform', subType: planId })
-    expect(params.success_url).toBe(`https://moovx.invalid/${planId === 'coach_monthly' ? 'coach' : ''}?payment=success`)
+    expect(params.success_url).toBe(`https://moovx.invalid/${planId === 'coach_monthly' ? 'coach' : ''}?payment=success${planId === 'coach_monthly' ? '' : '&session_id={CHECKOUT_SESSION_ID}'}`)
     expect((params.subscription_data || params.payment_intent_data).transfer_data.destination).toBe('acct_test')
     expect(m.insert).toHaveBeenCalledWith(expect.objectContaining({ client_id: clientId, coach_id: null, status: 'pending', stripe_checkout_session_id: 'cs_test' }))
   })

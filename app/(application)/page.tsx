@@ -58,6 +58,8 @@ import { useClientPermissions } from '../../lib/use-client-permissions'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import navStyles from './AthleteBottomNav.module.css'
+import { useConsent } from '@/components/CookieConsent'
+import { reportSubscriptionConversion } from '@/lib/marketing/google-ads'
 import {
   appNavigationHref,
   normalizeAppNavigationQuery,
@@ -167,6 +169,7 @@ function CoachAppContent() {
   const perms = useClientPermissions(h.session?.user?.id, h.supabase)
   const overlayOpen = useOverlayOpen()
   const paymentHandled = React.useRef(false)
+  const consent = useConsent()
   const [nutritionQuickAction, setNutritionQuickAction] = React.useState<'photo' | null>(null)
 
   const navigateApp = React.useCallback((target: AppNavigationState, replace = false) => {
@@ -199,6 +202,36 @@ function CoachAppContent() {
     badgeQueue.current = badges.slice(1)
     setCelebrateBadge(badges[0])
   }, [])
+
+  React.useEffect(() => {
+    const userId = h.session?.user?.id
+    if (!userId || !consent?.marketing) return
+    const sessionId = sessionStorage.getItem('moovx_pending_ads_checkout')
+    if (!sessionId) return
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let attempts = 0
+
+    const checkPaidCheckout = async () => {
+      attempts += 1
+      // The payment is visible only to its owner under the existing RLS policy.
+      const { data, error } = await h.supabase.from('payments')
+        .select('id,amount,currency,status')
+        .filter('stripe_checkout_session_id', 'eq', sessionId)
+        .eq('client_id', userId)
+        .is('coach_id', null)
+        .maybeSingle()
+      if (stopped) return
+      if (!error && data?.status === 'paid' && data.currency?.toLowerCase() === 'chf' && data.amount > 0) {
+        reportSubscriptionConversion({ id: data.id, amount: data.amount }, consent)
+        sessionStorage.removeItem('moovx_pending_ads_checkout')
+        return
+      }
+      if (attempts < 12) timer = setTimeout(checkPaidCheckout, 5000)
+    }
+    void checkPaidCheckout()
+    return () => { stopped = true; if (timer) clearTimeout(timer) }
+  }, [consent, h.session?.user?.id, h.supabase])
   const handleBadgeClose = React.useCallback(async () => {
     // Mark ALL uncelebrated as celebrated (same pattern as ProfileTab L.528)
     try {
