@@ -1,0 +1,5 @@
+.panel { font-family: var(--font-body), 'Outfit', sans-serif; color: #f5f2ea; overflow-wrap: anywhere; }
+.panel, .panel * { box-sizing: border-box; }
+.panel button { min-height: 44px; }
+.panel input, .panel textarea { min-height: 48px; }
+.panel button:focus-visible, .panel input:focus-visible, .panel textarea:focus-visible { outline: 2px solid #dfbf70 !important; outline-offset: 3px; }

@@ -1746,7 +1746,8 @@
     "welcomeCalorie": "Your goal is {calorieGoal} kcal/day. ",
     "loading": "Loading conversation...",
     "input": {
-      "placeholder": "Ask your question..."
+      "placeholder": "Ask your question...",
+      "send": "Send"
     },
     "clearConfirm": "Clear the entire conversation? This action is irreversible.",
     "clearLabel": "Clear conversation"
