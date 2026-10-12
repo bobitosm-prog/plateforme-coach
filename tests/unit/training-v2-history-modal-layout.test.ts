@@ -28,7 +28,7 @@ describe('Training V2 history modal layout', () => {
   })
 
   it('contains the sheet within the real viewport and safe area', () => {
-    expect(sheetStyles).toMatch(/\.viewportTrainingSheet\s*\{[\s\S]*?width:\s*min\(calc\(100vw - 24px\), 560px\);/)
+    expect(sheetStyles).toMatch(/\.viewportTrainingSheet\s*\{[\s\S]*?width:\s*min\(calc\(100vw - 24px\), 680px\);/)
     expect(sheetStyles).toMatch(/\.viewportTrainingSheet\s*\{[\s\S]*?max-width:\s*calc\(100vw - 24px\);/)
     expect(sheetStyles).toMatch(/\.viewportTrainingSheet\s*\{[\s\S]*?max-height:\s*calc\(100dvh - env\(safe-area-inset-top, 0px\) - 12px\);/)
     expect(sheetStyles).toMatch(/\.trainingSheetBody\s*\{[\s\S]*?overflow-y:\s*auto;[\s\S]*?safe-area-inset-bottom/)
