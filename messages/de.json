@@ -1746,7 +1746,8 @@
     "welcomeCalorie": "Dein Ziel ist {calorieGoal} kcal/Tag. ",
     "loading": "Unterhaltung wird geladen...",
     "input": {
-      "placeholder": "Stelle deine Frage..."
+      "placeholder": "Stelle deine Frage...",
+      "send": "Senden"
     },
     "clearConfirm": "Gesamte Unterhaltung löschen? Diese Aktion ist unwiderruflich.",
     "clearLabel": "Unterhaltung löschen"

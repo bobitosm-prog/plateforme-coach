@@ -135,3 +135,11 @@ Paywall web et WeeklyDiagnosticDetailContent utilisent les tokens app : Outfit, 
 Tarifs, choix Apple natif, checkout Stripe, données et application des ajustements inchangés. Validation locale : 15 tests ciblés, dont choix annuel simulé et prévention du double clic, branche native Apple, diagnostic expiré non applicable, accordéon et retour. TypeScript, parité i18n et diff vérifiés. Paywall vu dans le navigateur local à 393 px : Outfit, boutons >=48 px et aucun débordement ; capture desktop conservée. Le diagnostic est vérifié par rendu runtime simulé, pas sur un compte réel ni iPhone physique. Banc local retiré avant commit.
 
 Prochain lot : modals secondaires Training/Nutrition et parcours Athena ; conserver un audit séparé des médias et des écrans coach/admin.
+
+## Lot Athena, détail séance et calculateur calorique
+
+Trois composants actifs harmonisés : ChatAI (tokens app, textes lisibles, saisie 16 px, commandes nommées, bulles dorées), SessionDetailModal (titre, fermeture 44 px, sémantique dialog), BmrModal (largeur 680 px, suppression hauteur vide imposée, champs 16 px avec labels et focus). CSS partagé limité aux trois panneaux. Calculs, sauvegarde profil, historique et requêtes IA conservés. Correction de l’ordre des hooks de ChatAI : le retour anticipé sans droit IA arrive désormais après les hooks ; garde d’envoi explicite conservant l’interdiction IA.
+
+Validation : quatre tests runtime locaux pour refus IA/fermeture, envoi simulé, calcul avec payload de sauvegarde simulé et détail de séance. TypeScript, parité i18n et diff vérifiés. Navigateur : calculateur à 393 px sans débordement, inputs 16 px et fermeture vers aperçu séance. Capture desktop conservée. Pas d’envoi IA réel, pas de modification de profil réel, pas de vérification physique iPhone. Prévisualisation temporaire retirée.
+
+Restent notamment : recherche/détail exercices, poids/mensurations, modals repas et médias ; le présent lot ne clôt pas l’audit global.

@@ -1746,7 +1746,8 @@
     "welcomeCalorie": "Ton objectif est de {calorieGoal} kcal/jour. ",
     "loading": "Chargement de la conversation...",
     "input": {
-      "placeholder": "Pose ta question..."
+      "placeholder": "Pose ta question...",
+      "send": "Envoyer"
     },
     "clearConfirm": "Effacer toute la conversation ? Cette action est irréversible.",
     "clearLabel": "Effacer la conversation"

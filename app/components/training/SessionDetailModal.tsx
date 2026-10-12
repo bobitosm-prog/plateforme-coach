@@ -1,5 +1,6 @@
 'use client'
 
+import styles from '../SecondaryPanels.module.css'
 import { RailOverlay } from '../ui/RailOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -29,7 +30,7 @@ export default function SessionDetailModal({
   return (<RailOverlay active={isOpen}>
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <motion.div className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="session-detail-title"
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
@@ -68,7 +69,7 @@ export default function SessionDetailModal({
               aria-label={t('close')}
               style={{
                 position: 'absolute', top: 16, right: 16,
-                width: 40, height: 40, borderRadius: 12,
+                width: 44, height: 44, borderRadius: 12,
                 background: 'rgba(255,255,255,0.12)',
                 backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(255,255,255,0.15)',
@@ -85,17 +86,17 @@ export default function SessionDetailModal({
               <div>
                 {dayBadge && (
                   <span style={{
-                    fontFamily: fonts.alt, fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.18em', color: colors.gold,
+                    fontFamily: fonts.alt, fontSize: 13, fontWeight: 700,
+                    letterSpacing: '.08em', color: colors.gold,
                     textTransform: 'uppercase', display: 'block', marginBottom: 8,
                   }}>
                     {dayBadge.text}
                   </span>
                 )}
-                <h1 style={{
-                  fontFamily: fonts.headline, fontSize: 36, fontWeight: 400,
-                  color: colors.gold, textTransform: 'uppercase',
-                  letterSpacing: '0.02em', margin: 0, lineHeight: 1,
+                <h1 id="session-detail-title" style={{
+                  fontFamily: fonts.headline, fontSize: 'clamp(26px, 7vw, 36px)', fontWeight: 700,
+                  color: colors.gold, textTransform: 'none',
+                  letterSpacing: '-.03em', margin: 0, lineHeight: 1,
                   textShadow: '0 2px 8px rgba(0,0,0,0.4)',
                 }}>
                   {shortenSessionTitle(sessionTitle)}
