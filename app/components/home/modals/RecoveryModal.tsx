@@ -148,6 +148,7 @@ export default function RecoveryModal({ recovery, onClose }: {
           </button>
         </header>
 
+        <div className={styles.scrollArea}>
         <p id="recovery-dialog-description" className={styles.description}>{t('description')}</p>
         <div className={styles.overall} data-status={recovery.status} role={recovery.state === 'error' ? 'status' : undefined} aria-busy={recovery.state === 'loading'}>
           <span>{t('overall')}</span>
@@ -207,6 +208,7 @@ export default function RecoveryModal({ recovery, onClose }: {
         </div>
 
         <p className={styles.disclaimer}>{t('disclaimer')}</p>
+        </div>
       </div>
     </div>
   </RailOverlay>
