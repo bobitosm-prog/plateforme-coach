@@ -2,7 +2,7 @@
 import { ensureAiConsent, AiConsentDeclinedError } from '@/lib/ai/consent-client'
 import { uploadPhoto } from '@/lib/photos/upload-photo'
 import { createBrowserClient } from '@supabase/ssr'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft } from 'lucide-react'
@@ -58,6 +58,16 @@ export default function OnboardingV2Content() {
   const [uploadingPhoto,setUploadingPhoto]=useState(false); const [advancedOpen,setAdvancedOpen]=useState(false)
   const [mealPrefs,setMealPrefs]=useState<MealPrefsState>({breakfast:[],snack:[],lunch:[],dinner:[]}); const [dislikedFoods,setDislikedFoods]=useState<string[]>([])
   const [restrictions,setRestrictions]=useState<'unanswered'|'none'|'some'>('unanswered'); const [restrictionDetails,setRestrictionDetails]=useState('')
+
+  useLayoutEffect(() => {
+    if (loading || !flow) return
+    // The steps share the document scroll position in WKWebView. Release the
+    // focused control before resetting it, otherwise WebKit scrolls it back.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    window.scrollTo(0, 0)
+    const frame = window.requestAnimationFrame(() => window.scrollTo(0, 0))
+    return () => window.cancelAnimationFrame(frame)
+  }, [flow, loading, step])
 
   useEffect(()=>{ let mounted=true; void (async()=>{
     const {data:{session}}=await supabase.auth.getSession(); if(!session){router.replace('/login');return}
