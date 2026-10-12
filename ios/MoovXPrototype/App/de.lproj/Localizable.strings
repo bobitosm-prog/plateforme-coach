@@ -6,12 +6,9 @@
 "restNotificationDeniedTitle" = "Pausenhinweis deaktiviert";
 "restNotificationDeniedMessage" = "Erlaube Mitteilungen und Töne für MoovX in den Einstellungen, um das Pausenende bei gesperrtem Bildschirm zu hören.";
 
-"browserRecovered" = "Seite nach einer iOS-Unterbrechung neu geladen. Prüfe deine letzten Eingaben.";
 "browserLoading" = "MoovX wird geladen…";
 "browserInterrupted" = "Laden unterbrochen";
 "browserRetry" = "Erneut versuchen";
 "browserNavigationBlocked" = "Navigation nicht verfügbar";
 "browserUnderstood" = "Verstanden";
 "browserNavigationMessage" = "Dieser Link kann in MoovX nicht geöffnet werden. Nutze die Anmelde- und Kaufoptionen in der App.";
-
-"browserDismissRecovery" = "Wiederherstellungshinweis schließen";

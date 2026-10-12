@@ -13,7 +13,6 @@ final class BrowserState: ObservableObject {
     @Published var cameraDenied = false
     @Published var notificationUnavailable = false
     @Published var reloadID = 0
-    @Published var recovered = false
 }
 
 struct PrototypeBrowser: View {
@@ -21,16 +20,6 @@ struct PrototypeBrowser: View {
 
     var body: some View {
             VStack(spacing: 0) {
-                if state.recovered {
-                    HStack {
-                        Text(NSLocalizedString("browserRecovered", comment: "Recovery notice")).font(.caption)
-                        Spacer(minLength: 8)
-                        Button { state.recovered = false } label: {
-                            Image(systemName: "xmark").frame(width: 44, height: 44)
-                        }
-                        .accessibilityLabel(NSLocalizedString("browserDismissRecovery", comment: "Dismiss recovery notice"))
-                    }.padding(.horizontal, 8)
-                }
                 // The web app owns the branded loading screen; avoid a second native banner.
                 if let error = state.error {
                     ContentUnavailableView {
@@ -38,7 +27,6 @@ struct PrototypeBrowser: View {
                     } description: { Text(error) } actions: {
                         Button(NSLocalizedString("browserRetry", comment: "Retry loading")) {
                             state.error = nil
-                            state.recovered = false
                             state.loading = true
                             state.reloadID += 1
                         }
@@ -290,8 +278,8 @@ struct PrototypeWebView: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             state.loading = false
             if automaticRecoveryUsed {
+                // Successful background recovery is silent; genuine failures retain Retry.
                 logger.notice("WebContent recovery navigation completed")
-                state.recovered = true
                 // A completed reload ends this recovery attempt. A later background
                 // eviction gets its own attempt; an interruption during reload does not.
                 automaticRecoveryUsed = false
@@ -320,7 +308,6 @@ struct PrototypeWebView: UIViewRepresentable {
             applePurchases.cancel()
             workoutActive = false
             refreshWorkoutScreenAwake()
-            state.recovered = false
             if applicationState() != .active && !automaticRecoveryUsed {
                 recoveryPending = true
                 state.loading = true

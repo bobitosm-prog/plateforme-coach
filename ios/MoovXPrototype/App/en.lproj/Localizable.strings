@@ -6,12 +6,9 @@
 "restNotificationDeniedTitle" = "Rest alert unavailable";
 "restNotificationDeniedMessage" = "Allow notifications and sounds for MoovX in Settings to hear the end of your rest while the screen is locked.";
 
-"browserRecovered" = "Page reloaded after an iOS interruption. Check your latest entries.";
 "browserLoading" = "Loading MoovX…";
 "browserInterrupted" = "Loading interrupted";
 "browserRetry" = "Try again";
 "browserNavigationBlocked" = "Navigation unavailable";
 "browserUnderstood" = "OK";
 "browserNavigationMessage" = "This link cannot be opened in MoovX. Use the sign-in and purchase options provided in the app.";
-
-"browserDismissRecovery" = "Dismiss recovery notice";
