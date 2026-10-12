@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Activity, ArrowRight, BrainCircuit, Check, ChevronRight, Dumbbell, ShieldCheck, Sparkles, UtensilsCrossed } from 'lucide-react'
+import { ArrowRight, BrainCircuit, Check, ChevronRight, ShieldCheck, Sparkles } from 'lucide-react'
 import type { LandingV2Copy, LandingV2Locale } from '../landing-v2-copy'
 import { LANDING_V2_COPY } from '../landing-v2-copy'
 import LandingMotion from './LandingMotion'
@@ -36,7 +36,7 @@ export default function LandingV2({ locale, trialDays, nativeSource = false, inv
             </div>
             <small>{copy.hero.note.replace('14', String(trialDays))}</small>
           </div>
-          <DailyPreview copy={copy} />
+          <figure className={styles.heroPhone} data-landing-reveal><Image src="/images/landing/app-current/home.v2.webp" width={393} height={852} alt={copy.screens.items[0].alt} priority sizes="300px" /><figcaption>{copy.preview.label}</figcaption></figure>
         </div>
         <div className={styles.proofRail}>
           {copy.proof.map((item, index) => <span key={item}><i>{String(index + 1).padStart(2, '0')}</i>{item}</span>)}
@@ -161,9 +161,9 @@ function AppScreens({ copy }: { copy: LandingV2Copy }) {
         return <figure className={styles.appScreen} key={screen} data-landing-reveal>
           <div className={styles.appScreenFrame}>
             <Image
-              src={`/images/landing/app-current/${screen}.v1.webp`}
-              width={780}
-              height={1688}
+              src={`/images/landing/app-current/${screen}.v2.webp`}
+              width={393}
+              height={852}
               alt={item.alt}
               sizes="(max-width: 640px) 72vw, (max-width: 980px) 42vw, 260px"
             />
@@ -181,21 +181,6 @@ function Header({ locale, copy, registerURL }: { locale: LandingV2Locale; copy: 
     <nav aria-label={copy.a11y.navigation}><a href="#product">{copy.nav.product}</a><a href="#method">{copy.nav.method}</a><a href="#pricing">{copy.nav.pricing}</a></nav>
     <div className={styles.headerActions}><a href={`${APP_URL}/login`}>{copy.nav.login}</a><a href={registerURL}>{copy.nav.start}</a></div>
   </header>
-}
-
-function DailyPreview({ copy }: { copy: LandingV2Copy }) {
-  return <div className={styles.previewWrap} data-landing-reveal>
-    <span className={styles.previewLabel}>{copy.preview.label}</span>
-    <div className={styles.previewCard}>
-      <div className={styles.previewHeader}><div><span>MOOVX</span><h2>{copy.preview.greeting}</h2><p>{copy.preview.day}</p></div><i>MX</i></div>
-      <div className={styles.statusGrid}>
-        <article><Dumbbell aria-hidden="true" /><span>{copy.preview.training}</span><strong>{copy.preview.trainingValue}</strong></article>
-        <article><UtensilsCrossed aria-hidden="true" /><span>{copy.preview.nutrition}</span><strong>{copy.preview.nutritionValue}</strong></article>
-        <article><Activity aria-hidden="true" /><span>{copy.preview.recovery}</span><strong>{copy.preview.recoveryValue}</strong></article>
-      </div>
-      <div className={styles.nextAction}><span>{copy.preview.next}</span><strong>{copy.preview.nextValue}</strong><button type="button" tabIndex={-1}>{copy.preview.cta}<ArrowRight size={15} /></button></div>
-    </div>
-  </div>
 }
 
 function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
