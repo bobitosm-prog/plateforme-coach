@@ -15,6 +15,7 @@ import { prepareSavedFood, resizeSavedFood, savedMealTotals, validSavedMeal } fr
 import { searchFoodCatalog } from '../../../lib/nutrition/food-search'
 import { normalizeFoodItem } from '../../../lib/utils/food'
 import ShoppingList from '../ShoppingList'
+import libraryStyles from '../NutritionLibrary.module.css'
 import NutritionPlanConsistencyNotice from '../nutrition-v2/NutritionPlanConsistencyNotice'
 import { RailOverlay } from '../ui/RailOverlay'
 import ModalHeader from '../ui/ModalHeader'
@@ -513,22 +514,22 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {/* Mes Repas sub-tab */}
       {subTab === 'meals' && (
-        <div className={overviewStyles.library}>
-          <SectionTitle noPadding title={nt('chrome.myMeals')} />
-          <div style={{ ...cardStyle, padding: 16 }}>
-            {myMealsError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 12px' }}>{myMealsError}</p>}
+        <div className={`${overviewStyles.library} ${libraryStyles.library}`}>
+          <h2 className={libraryStyles.title}>{nt('chrome.myMeals')}</h2>
+          <div style={{ ...appTheme.cardStyle, padding: 16 }}>
+            {myMealsError && <p role="status" style={{ ...appTheme.bodyStyle, color: appTheme.colors.error, margin: '0 0 12px' }}>{myMealsError}</p>}
             {/* Search */}
-            <input value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 13, outline: 'none', marginBottom: 12 }} />
+            <input aria-label={nt('chrome.searchMeal')} value={myMealsSearch} onChange={e => setMyMealsSearch(e.target.value)} placeholder={nt('chrome.searchMeal')} style={{ width: '100%', background: appTheme.colors.background, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: appTheme.colors.text, fontFamily: appTheme.fonts.body, fontSize: 14, outline: 'none', marginBottom: 12 }} />
             {/* Filter pills */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
               {[{ k: 'all', l: nt('filters.all') }, { k: 'petit_dejeuner', l: nt('filters.breakfast') }, { k: 'dejeuner', l: nt('filters.lunch') }, { k: 'diner', l: nt('filters.dinner') }, { k: 'collation', l: nt('filters.snack') }].map(({ k, l }) => (
-                <button key={k} onClick={() => setMyMealsFilter(k)} style={{
-                  fontSize: 9, fontFamily: fonts.alt, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.18em',
-                  padding: '8px 14px', borderRadius: 10, whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.15s',
-                  background: myMealsFilter === k ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
+                <button key={k} aria-pressed={myMealsFilter === k} onClick={() => setMyMealsFilter(k)} style={{
+                  fontSize: 14, fontFamily: appTheme.fonts.alt, fontWeight: 700, textTransform: 'none' as const, letterSpacing: 'normal',
+                  padding: '8px 14px', borderRadius: 10, whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer', transition: 'all 0.15s',
+                  background: myMealsFilter === k ? appTheme.colors.goldDim : appTheme.colors.surface2,
                   backdropFilter: 'blur(8px)',
-                  border: `1px solid ${myMealsFilter === k ? colors.gold : 'rgba(255,255,255,0.1)'}`,
-                  color: myMealsFilter === k ? colors.gold : colors.textDim,
+                  border: `1px solid ${myMealsFilter === k ? appTheme.colors.gold : appTheme.colors.divider}`,
+                  color: myMealsFilter === k ? appTheme.colors.gold : appTheme.colors.textDim,
                 }}>{l}</button>
               ))}
             </div>
@@ -545,32 +546,32 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                     const foods = meal.foods || []
                     const { total_calories: kcal, total_proteins: prot, total_carbs: carbs, total_fats: fat } = savedMealTotals(foods)
                     return (
-                      <div key={meal.id} style={{ background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: 12 }}>
+                      <div key={meal.id} style={{ background: appTheme.colors.surfaceHigh, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 20, padding: 16 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, fontFamily: fonts.body }}>{meal.name || 'Repas sans nom'}</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: appTheme.colors.text, fontFamily: appTheme.fonts.body }}>{meal.name || 'Repas sans nom'}</div>
                             <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-                              {meal.meal_type && <span style={{ fontSize: 9, fontFamily: fonts.body, fontWeight: 700, color: colors.gold, background: colors.goldDim, padding: '1px 6px', borderRadius: 999, textTransform: 'uppercase' }}>{MEAL_LABELS[meal.meal_type] || meal.meal_type}</span>}
+                              {meal.meal_type && <span style={{ fontSize: 14, fontFamily: appTheme.fonts.body, fontWeight: 700, color: appTheme.colors.gold, background: appTheme.colors.goldDim, padding: '1px 6px', borderRadius: 999, textTransform: 'none' }}>{MEAL_LABELS[meal.meal_type] || meal.meal_type}</span>}
                             </div>
-                            <div style={{ ...bodyStyle, marginTop: 4, fontSize: 11 }}>{Math.round(kcal)} kcal · {Math.round(prot)}g P · {Math.round(carbs)}g G · {Math.round(fat)}g L</div>
-                            <div style={{ ...mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString(locale) : ''}</div>
+                            <div style={{ ...appTheme.bodyStyle, marginTop: 4, fontSize: 14 }}>{Math.round(kcal)} kcal · {Math.round(prot)}g P · {Math.round(carbs)}g G · {Math.round(fat)}g L</div>
+                            <div style={{ ...appTheme.mutedStyle, marginTop: 2 }}>{meal.created_at ? new Date(meal.created_at).toLocaleDateString(locale) : ''}</div>
                           </div>
                           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                            <button aria-label={nt('editor.edit')} onClick={() => { setEditMealError(null); setEditMealSaved(false); setEditAddFoodQuery(''); setEditAddFoodResults([]); setEditingMeal({ ...meal, foods: (meal.foods || []).map(prepareSavedFood) }) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Pencil size={14} color={colors.textMuted} /></button>
+                            <button aria-label={nt('editor.edit')} onClick={() => { setEditMealError(null); setEditMealSaved(false); setEditAddFoodQuery(''); setEditAddFoodResults([]); setEditingMeal({ ...meal, foods: (meal.foods || []).map(prepareSavedFood) }) }} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Pencil size={14} color={appTheme.colors.textMuted} /></button>
                             {confirmDeleteMeal === meal.id ? (
-                              <button onClick={async () => { await supabase.from('saved_meals').delete().eq('id', meal.id); setMyMeals(prev => prev.filter(m => m.id !== meal.id)); setConfirmDeleteMeal(null) }} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 10, color: colors.error, fontFamily: fonts.body, fontWeight: 700 }}>CONFIRMER</button>
+                              <button onClick={async () => { await supabase.from('saved_meals').delete().eq('id', meal.id); setMyMeals(prev => prev.filter(m => m.id !== meal.id)); setConfirmDeleteMeal(null) }} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 14, color: appTheme.colors.error, fontFamily: appTheme.fonts.body, fontWeight: 700 }}>{nt('editor.confirm')}</button>
                             ) : (
-                              <button onClick={() => setConfirmDeleteMeal(meal.id)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Trash2 size={14} color={colors.error} /></button>
+                              <button aria-label={nt('editor.deleteMeal')} onClick={() => setConfirmDeleteMeal(meal.id)} style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 44, height: 44, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}><Trash2 size={14} color={appTheme.colors.error} /></button>
                             )}
                           </div>
                         </div>
-                        <button type="button" disabled={!foods.length} onClick={() => setMealToJournal(meal)} style={{ width: '100%', minHeight: 44, marginTop: 12, borderRadius: 10, background: colors.gold, color: colors.onGold, border: 'none', fontWeight: 700 }}>{nt('editor.addToJournal')}</button>
+                        <button type="button" disabled={!foods.length} onClick={() => setMealToJournal(meal)} style={{ width: '100%', minHeight: 44, marginTop: 12, borderRadius: 10, background: appTheme.colors.gold, color: appTheme.colors.onGold, border: 'none', fontWeight: 700 }}>{nt('editor.addToJournal')}</button>
                       </div>
                     )
                   })}
                 </div>
               ) : (
-                <div style={{ ...bodyStyle, textAlign: 'center', padding: '24px 16px', fontStyle: 'italic', lineHeight: 1.6 }}>
+                <div style={{ ...appTheme.bodyStyle, textAlign: 'center', padding: '24px 16px', fontStyle: 'italic', lineHeight: 1.6 }}>
                   Aucun repas sauvegardé. Ajoute un repas depuis l&apos;onglet Journal pour le retrouver ici.
                 </div>
               )
@@ -579,8 +580,8 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
             <button onClick={() => {
               setEditMealError(null); setEditMealSaved(false); setEditAddFoodQuery(''); setEditAddFoodResults([])
               setEditingMeal({ name: '', meal_type: 'dejeuner', foods: [] })
-            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, textAlign: 'center' }}>
-              + CRÉER UN REPAS
+            }} style={{ width: '100%', marginTop: 16, padding: '14px 0', background: appTheme.colors.gold, color: appTheme.colors.onGold, fontFamily: appTheme.fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'none', letterSpacing: 'normal', fontSize: 14, textAlign: 'center' }}>
+              {nt('editor.createMeal')}
             </button>
           </div>
         </div>
@@ -594,37 +595,36 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {/* Meal edit modal */}
       {editingMeal && (<RailOverlay>
-        <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, maxHeight: '85dvh', overflow: 'auto' }}>
-            <ModalHeader title={editingMeal.name || 'Modifier le repas'} onClose={() => { if (!saveMealLock.current) setEditingMeal(null) }} />
-            <fieldset disabled={editMealSaving} style={{ padding: '0 24px 24px', margin: 0, border: 0, minWidth: 0 }}>
-            <label style={{ display: 'block', color: colors.text, marginBottom: 12 }}>{nt('editor.name')}
-              <input aria-label={nt('editor.name')} maxLength={100} value={editingMeal.name} onChange={e => { setEditMealSaved(false); setEditingMeal({ ...editingMeal, name: e.target.value }) }} style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, fontSize: 16, background: colors.surfaceHigh, color: colors.text, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, padding: 10 }} />
+        <TrainingSheet viewportContained title={editingMeal.name || nt('editor.edit')} onClose={() => { if (!saveMealLock.current) setEditingMeal(null) }}>
+          <div className={libraryStyles.library}>
+            <fieldset disabled={editMealSaving} style={{ padding: 0, margin: 0, border: 0, minWidth: 0 }}>
+            <label style={{ display: 'block', color: appTheme.colors.text, marginBottom: 12 }}>{nt('editor.name')}
+              <input aria-label={nt('editor.name')} maxLength={100} value={editingMeal.name} onChange={e => { setEditMealSaved(false); setEditingMeal({ ...editingMeal, name: e.target.value }) }} style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, fontSize: 16, background: appTheme.colors.surfaceHigh, color: appTheme.colors.text, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 10, padding: 10 }} />
             </label>
-            <label style={{ display: 'block', color: colors.text, marginBottom: 16 }}>{nt('editor.type')}
-              <select aria-label={nt('editor.type')} value={editingMeal.meal_type} onChange={e => { setEditMealSaved(false); setEditingMeal({ ...editingMeal, meal_type: e.target.value }) }} style={{ width: '100%', minHeight: 44, fontSize: 16, background: colors.surfaceHigh, color: colors.text, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, padding: 10 }}>
+            <label style={{ display: 'block', color: appTheme.colors.text, marginBottom: 16 }}>{nt('editor.type')}
+              <select aria-label={nt('editor.type')} value={editingMeal.meal_type} onChange={e => { setEditMealSaved(false); setEditingMeal({ ...editingMeal, meal_type: e.target.value }) }} style={{ width: '100%', minHeight: 44, fontSize: 16, background: appTheme.colors.surfaceHigh, color: appTheme.colors.text, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 10, padding: 10 }}>
                 {MEAL_ORDER.map(key => <option key={key} value={key}>{MEAL_LABELS[key]}</option>)}
               </select>
             </label>
-            {editMealError && <p role="alert" style={{ color: colors.error }}>{editMealError}</p>}
+            {editMealError && <p role="alert" style={{ color: appTheme.colors.error }}>{editMealError}</p>}
             {/* Food items list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
               {(editingMeal.foods || []).map((food: any, idx: number) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, background: colors.surfaceHigh, borderRadius: 10, padding: '8px 10px', border: `1px solid ${colors.goldDim}` }}>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, background: appTheme.colors.surfaceHigh, borderRadius: 10, padding: '8px 10px', border: `1px solid ${appTheme.colors.goldDim}` }}>
                   <div style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body }}>{food.name}</div>
-                    <div style={{ fontSize: 10, color: colors.textDim, fontFamily: fonts.body }}>{Math.round(food.calories || 0)} kcal · {Math.round((food.protein || 0) * 10) / 10}g P</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: appTheme.colors.text, fontFamily: appTheme.fonts.body }}>{food.name}</div>
+                    <div style={{ fontSize: 14, color: appTheme.colors.textDim, fontFamily: appTheme.fonts.body }}>{Math.round(food.calories || 0)} kcal · {Math.round((food.protein || 0) * 10) / 10}g P</div>
                   </div>
                   <input type="number" inputMode="decimal" min="0.1" max="10000" step="any" aria-label={`${food.name} — ${nt('editor.grams')}`} value={food.quantity ?? ''} onChange={e => {
                     const newFoods = [...editingMeal.foods]
                     newFoods[idx] = resizeSavedFood(food, e.target.value)
                     setEditMealSaved(false); setEditingMeal({ ...editingMeal, foods: newFoods })
-                  }} style={{ width: 64, minHeight: 44, flexShrink: 0, textAlign: 'center', background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 8, padding: '4px', color: colors.text, fontFamily: fonts.body, fontSize: 16 }} />
-                  <span style={{ fontSize: 10, color: colors.textDim }}>g</span>
-                  <button onClick={() => {
+                  }} style={{ width: 64, minHeight: 44, flexShrink: 0, textAlign: 'center', background: appTheme.colors.background, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 8, padding: '4px', color: appTheme.colors.text, fontFamily: appTheme.fonts.body, fontSize: 16 }} />
+                  <span style={{ fontSize: 14, color: appTheme.colors.textDim }}>g</span>
+                  <button aria-label={`${nt('editor.removeFood')} : ${food.name}`} onClick={() => {
                     const newFoods = editingMeal.foods.filter((_: any, i: number) => i !== idx)
                     setEditMealSaved(false); setEditingMeal({ ...editingMeal, foods: newFoods })
-                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><Trash2 size={14} color={colors.error} /></button>
+                  }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}><Trash2 size={14} color={appTheme.colors.error} /></button>
                 </div>
               ))}
             </div>
@@ -643,18 +643,18 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 } catch {
                   if (request === editFoodRequest.current) setEditMealError(nt('composer.searchError'))
                 }
-              }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, background: colors.background, border: `1px solid ${colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: colors.text, fontFamily: fonts.body, fontSize: 16, outline: 'none' }} />
+              }} placeholder="+ Ajouter un aliment..." style={{ width: '100%', boxSizing: 'border-box', minHeight: 44, background: appTheme.colors.background, border: `1px solid ${appTheme.colors.goldBorder}`, borderRadius: 12, padding: '10px 14px', color: appTheme.colors.text, fontFamily: appTheme.fonts.body, fontSize: 16, outline: 'none' }} />
               {editAddFoodResults.length > 0 && (
-                <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: colors.surface, marginTop: 4 }}>
+                <div style={{ maxHeight: 150, overflowY: 'auto', borderRadius: 10, border: `1px solid ${appTheme.colors.goldBorder}`, background: appTheme.colors.surface, marginTop: 4 }}>
                   {editAddFoodResults.map((f: any) => (
                     <button key={f.id} onClick={() => {
                       const newFood = prepareSavedFood({ food_id: f.id, source: f.source, name: f.nom, calories: f.calories, protein: f.proteines, carbs: f.glucides, fat: f.lipides, quantity: 100 })
                       setEditMealSaved(false); setEditingMeal({ ...editingMeal, foods: [...(editingMeal.foods || []), newFood] })
                       setEditAddFoodQuery('')
                       setEditAddFoodResults([])
-                    }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, fontFamily: fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>{f.source === 'ANSES' ? 'CIQUAL' : f.source}</span>}</div>
-                      <div style={{ fontSize: 9, color: colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
+                    }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${appTheme.colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: appTheme.colors.text, fontFamily: appTheme.fonts.body, display: 'flex', alignItems: 'center', gap: 6 }}>{f.nom}{f.source === 'fitness' ? <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: appTheme.colors.goldDim, color: appTheme.colors.gold, border: `1px solid ${appTheme.colors.goldBorder}` }}>FITNESS</span> : <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: 'rgba(96,165,250,0.1)', color: appTheme.colors.blue, border: '1px solid rgba(96,165,250,0.2)' }}>{f.source === 'ANSES' ? 'CIQUAL' : f.source}</span>}</div>
+                      <div style={{ fontSize: 14, color: appTheme.colors.textDim }}>{f.calories} kcal · {f.proteines}g P · {f.glucides}g G · {f.lipides}g L</div>
                     </button>
                   ))}
                 </div>
@@ -677,7 +677,7 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 setEditMealSaved(true)
               } catch { setEditMealError(nt('editor.saveError')) }
               finally { saveMealLock.current = false; setEditMealSaving(false) }
-            }} disabled={editMealSaving || !validSavedMeal(editingMeal)} style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})`, color: colors.onGold, fontFamily: fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 13, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
+            }} disabled={editMealSaving || !validSavedMeal(editingMeal)} style={{ width: '100%', padding: '14px 0', background: appTheme.colors.gold, color: appTheme.colors.onGold, fontFamily: appTheme.fonts.headline, fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', textTransform: 'none', letterSpacing: 'normal', fontSize: 14, marginBottom: 8, opacity: editMealSaving ? 0.6 : 1 }}>
               {editMealSaving ? nt('actions.saving') : editMealSaved ? nt('actions.saved') : nt('actions.save')}
             </button>
             {editingMeal.id && <button onClick={async () => {
@@ -686,10 +686,10 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                 setMyMeals(prev => prev.filter(m => m.id !== editingMeal.id))
                 setEditingMeal(null)
               }
-            }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: colors.error, fontFamily: fonts.body, fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>SUPPRIMER LE REPAS</button>}
+            }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, color: appTheme.colors.error, fontFamily: appTheme.fonts.body, fontSize: 14, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>{nt('editor.deleteMeal')}</button>}
             </fieldset>
           </div>
-        </div>
+        </TrainingSheet>
       </RailOverlay>)}
 
       {/* Shopping list modal */}
@@ -837,32 +837,28 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {/* ═══ SAVED MEALS POPUP ═══ */}
       {showSavedMeals && (<RailOverlay>
-        <>
-          <div onClick={() => setShowSavedMeals(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '75vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)} />
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+        <TrainingSheet viewportContained title={nt('savedMeals.title')} onClose={() => setShowSavedMeals(false)}>
+            <div className={libraryStyles.library}>
               {savedMealsState === 'loading' ? (
-                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.loading')}</div>
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...appTheme.bodyStyle }}>{nt('savedMeals.loading')}</div>
               ) : savedMealsState === 'error' ? (
-                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>
+                <div role="status" style={{ textAlign: 'center', padding: '40px 0', ...appTheme.bodyStyle }}>
                   <p style={{ margin: '0 0 14px' }}>{nt('savedMeals.error')}</p>
-                  <button type="button" onClick={() => void loadSavedMeals(useSavedMealTarget)} style={{ minHeight: 44, padding: '8px 16px', borderRadius: 10, border: `1px solid ${colors.goldBorder}`, background: 'transparent', color: colors.gold, cursor: 'pointer' }}>{nt('savedMeals.retry')}</button>
+                  <button type="button" onClick={() => void loadSavedMeals(useSavedMealTarget)} style={{ minHeight: 44, padding: '8px 16px', borderRadius: 10, border: `1px solid ${appTheme.colors.goldBorder}`, background: 'transparent', color: appTheme.colors.gold, cursor: 'pointer' }}>{nt('savedMeals.retry')}</button>
                 </div>
               ) : savedMealsState === 'empty' ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', ...bodyStyle }}>{nt('savedMeals.empty')}</div>
+                <div style={{ textAlign: 'center', padding: '40px 0', ...appTheme.bodyStyle }}>{nt('savedMeals.empty')}</div>
               ) : savedMealsState === 'ready' ? savedMeals.map((meal: any) => (
-                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
+                <button key={meal.id} onClick={async () => { await applySavedMeal(meal, useSavedMealTarget); setShowSavedMeals(false) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', background: 'none', border: 'none', borderBottom: `1px solid ${appTheme.colors.goldDim}`, cursor: 'pointer', textAlign: 'left' }}>
                   <div>
-                    <div style={{ ...bodyStyle, color: colors.text, fontWeight: 500 }}>{meal.name}</div>
-                    <div style={{ ...mutedStyle, fontSize: 11, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}</div>
+                    <div style={{ ...appTheme.bodyStyle, color: appTheme.colors.text, fontWeight: 500 }}>{meal.name}</div>
+                    <div style={{ ...appTheme.mutedStyle, fontSize: 14, marginTop: 2 }}>{nt('savedMeals.foodCount', { count: (meal.foods || []).length })}</div>
                   </div>
-                  <div style={statSmallStyle}>{Math.round(meal.total_calories || 0)}</div>
+                  <div style={{ fontFamily: appTheme.fonts.body, fontSize: 18, fontWeight: 700, color: appTheme.colors.gold, flexShrink: 0 }}>{Math.round(meal.total_calories || 0)}</div>
                 </button>
               )) : null}
             </div>
-          </div>
-        </>
+        </TrainingSheet>
       </RailOverlay>)}
     </NutritionOverview>
   )

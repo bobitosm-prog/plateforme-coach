@@ -32,7 +32,7 @@ afterEach(()=>{cleanup();vi.unstubAllGlobals()})
 describe('saved meal screen runtime',()=>{
  it('creates locally, preserves macros while typing, saves name/type, reopens, and sends the meal to the journal composer',async()=>{
   mount();fireEvent.click(screen.getByRole('button',{name:'Mes repas'}))
-  fireEvent.click(await screen.findByRole('button',{name:/CRÉER UN REPAS/}))
+  fireEvent.click(await screen.findByRole('button',{name:/Créer un repas/i}))
   expect(state.writes).toHaveLength(0)
   fireEvent.change(screen.getByLabelText('Nom du repas'),{target:{value:'Petit déjeuner maison'}})
   fireEvent.change(screen.getByLabelText('Type de repas'),{target:{value:'petit_dejeuner'}})

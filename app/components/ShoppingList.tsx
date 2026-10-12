@@ -1,9 +1,10 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { X, Copy, Check, RotateCcw } from 'lucide-react'
+import { Copy, Check, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
-import { colors, fonts, Z_MODAL } from '../../lib/design-tokens'
+import TrainingSheet from './training-v2/TrainingSheet'
+import styles from './NutritionLibrary.module.css'
 import { RailOverlay } from './ui/RailOverlay'
 import { parseMealPlan } from '../../lib/meal-plan'
 
@@ -76,7 +77,8 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
     return { aisles: sorted, totalItems: Object.keys(agg).length }
   }, [planData])
 
-  const checkedCount = Object.values(checked).filter(Boolean).length
+  // Count only ingredients present in the current plan.
+  const checkedCount = aisles.reduce((count, [, aisle]) => count + aisle.items.filter(item => checked[item.name]).length, 0)
 
   function toggle(name: string) {
     const next = { ...checked, [name]: !checked[name] }
@@ -103,61 +105,26 @@ export default function ShoppingList({ planData, onClose }: ShoppingListProps) {
 
   return (
     <RailOverlay>
-    <div style={{ position: 'fixed', inset: 0, background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
-        <div>
-          <div style={{ fontFamily: fonts.alt, fontSize: '1.1rem', fontWeight: 800, color: colors.text, letterSpacing: '2px', textTransform: 'uppercase' }}>{t('title')}</div>
-          <div style={{ fontSize: '0.65rem', fontFamily: fonts.body, fontWeight: 300, color: colors.textMuted }}>{t('subtitle', { total: totalItems, checked: checkedCount })}</div>
+      <TrainingSheet viewportContained title={t('title')} description={t('subtitle', { total: totalItems, checked: checkedCount })} onClose={onClose}>
+        <div className={styles.library}>
+          <div className={styles.toolbar}>
+            <button type="button" className={styles.action} onClick={copyToClipboard}><Copy size={18} />{t('copy')}</button>
+            {checkedCount > 0 && <button type="button" className={styles.action} onClick={resetAll}><RotateCcw size={18} />{t('uncheckAll')}</button>}
+          </div>
+          {aisles.length === 0 ? <p role="status">{t('emptyState')}</p> : aisles.map(([aisleKey, { items, emoji }]) => (
+            <section key={aisleKey} className={styles.aisle}>
+              <h3>{emoji} {tAisle(aisleKey)}</h3>
+              {items.map(item => (
+                <button type="button" key={item.name} className={styles.item} aria-label={`${item.name} ${item.display}`} aria-pressed={!!checked[item.name]} onClick={() => toggle(item.name)}>
+                  <span className={styles.check} aria-hidden="true">{checked[item.name] && <Check size={16} />}</span>
+                  <span className={styles.itemName}>{item.name}</span>
+                  <span className={styles.quantity}>{item.display}</span>
+                </button>
+              ))}
+            </section>
+          ))}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={copyToClipboard} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
-            <Copy size={13} /> {t('copy')}
-          </button>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color={colors.textMuted} />
-          </button>
-        </div>
-      </div>
-
-      {/* List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 80px' }}>
-        {aisles.length === 0 ? (
-          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, padding: '40px 0' }}>{t('emptyState')}</p>
-        ) : (
-          aisles.map(([aisleKey, { items, emoji }]) => (
-            <div key={aisleKey} style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: fonts.alt, fontSize: '0.82rem', fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 8, position: 'sticky', top: 0, background: colors.background, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
-                {emoji} {tAisle(aisleKey)}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {items.map(item => {
-                  const done = !!checked[item.name]
-                  return (
-                    <button key={item.name} onClick={() => toggle(item.name)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, border: 'none', background: done ? 'rgba(74,222,128,0.04)' : colors.surface2, cursor: 'pointer', textAlign: 'left', transition: 'all 150ms', width: '100%' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 12, border: `2px solid ${done ? colors.success : colors.divider}`, background: done ? colors.success : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 150ms' }}>
-                        {done && <Check size={13} color={colors.onGold} strokeWidth={3} />}
-                      </div>
-                      <span style={{ flex: 1, fontSize: '0.88rem', fontFamily: fonts.body, fontWeight: 400, color: done ? colors.textMuted : colors.text, textDecoration: done ? 'line-through' : 'none', opacity: done ? 0.4 : 1, transition: 'all 150ms' }}>{item.name}</span>
-                      <span style={{ fontSize: '0.78rem', fontFamily: fonts.headline, color: done ? colors.textDim : colors.gold, fontWeight: 700, flexShrink: 0 }}>{item.display}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Footer */}
-      {checkedCount > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))', background: 'rgba(5,5,5,0.95)', borderTop: `1px solid ${colors.divider}`, display: 'flex', justifyContent: 'center' }}>
-          <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: colors.gold, fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
-            <RotateCcw size={14} /> {t('uncheckAll')}
-          </button>
-        </div>
-      )}
-    </div>
+      </TrainingSheet>
     </RailOverlay>
   )
 }
