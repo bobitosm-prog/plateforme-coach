@@ -3,3 +3,32 @@
 .panel button { min-height: 44px; }
 .panel input, .panel textarea { min-height: 48px; }
 .panel button:focus-visible, .panel input:focus-visible, .panel textarea:focus-visible { outline: 2px solid #dfbf70 !important; outline-offset: 3px; }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .75);
+  z-index: 1100;
+}
+.measureSheet {
+  position: fixed;
+  z-index: 1101;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 680px;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #211f18;
+  border: 1px solid #393326;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+}
+@media (min-width: 720px) {
+  .measureSheet { bottom: 24px; border-radius: 20px; padding: 28px; }
+}
+
+/* Keep the weight prominent above the global 16 px mobile input floor. */
+.panel input.weightValue { font-size: 48px !important; }

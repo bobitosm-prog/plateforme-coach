@@ -1,9 +1,12 @@
 'use client'
 import { useState } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
+import { RailOverlay } from '../ui/RailOverlay'
+import panelStyles from '../SecondaryPanels.module.css'
 import { X } from 'lucide-react'
 import {
-  BG_CARD, BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
-  FONT_DISPLAY, FONT_ALT, FONT_BODY, RADIUS_CARD, colors,
+  BG_CARD_2, BG_BASE, BORDER, TEXT_MUTED, TEXT_PRIMARY, GOLD, GOLD_RULE,
+  FONT_DISPLAY, FONT_ALT, FONT_BODY, colors,
 } from '../../../lib/app-design-tokens'
 
 interface WeightModalProps {
@@ -22,50 +25,57 @@ export default function WeightModal({ currentWeight, onSave, onClose }: WeightMo
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end' }}>
-      <div style={{ background: BG_CARD, borderTop: `1px solid ${BORDER}`, border: `1px solid ${BORDER}`, borderRadius: `${RADIUS_CARD}px ${RADIUS_CARD}px 0 0`, padding: '24px 20px 40px', width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.025em', margin: 0, color: TEXT_PRIMARY }}>Enregistrer mon poids</h3>
-          <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, flexShrink: 0, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={TEXT_MUTED} /></button>
-        </div>
-        <div style={{ position: 'relative', marginBottom: 16 }}>
-          <input
-            type="number"
-            step="0.1"
-            value={weightForm}
-            onChange={e => setWeightForm(e.target.value)}
-            placeholder="0.0"
-            autoFocus
-            style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 48px 20px 20px', color: GOLD, fontSize: '3rem', fontFamily: FONT_DISPLAY, fontWeight: 700, textAlign: 'center', outline: 'none' }}
-          />
-          <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 600, fontFamily: FONT_ALT }}>kg</span>
-        </div>
-        {currentWeight && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.75rem', marginBottom: 16, fontFamily: FONT_BODY, fontWeight: 300 }}>Précédent : <span style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{currentWeight}</span> kg</p>}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 11, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', color: TEXT_MUTED, marginBottom: 8 }}>Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '0.95rem', outline: 'none', colorScheme: 'dark', fontFamily: FONT_BODY }}
-          />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={onClose}
-            style={{ flex: 1, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, padding: '16px', borderRadius: 12, cursor: 'pointer', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'all 200ms' }}
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!weightForm}
-            style={{ flex: 2, background: weightForm ? GOLD : '#2A2A2A', color: weightForm ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: weightForm ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'all 200ms',  }}
-          >
-            Sauvegarder
-          </button>
-        </div>
-      </div>
-    </div>
+    <Dialog.Root open onOpenChange={open => { if (!open) onClose() }}>
+      <RailOverlay>
+        <Dialog.Overlay className={panelStyles.backdrop} />
+        <Dialog.Content className={`${panelStyles.panel} ${panelStyles.measureSheet}`} aria-describedby={undefined} onInteractOutside={event => event.preventDefault()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <Dialog.Title style={{ fontFamily: FONT_DISPLAY, fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.025em', margin: 0, color: TEXT_PRIMARY }}>Enregistrer mon poids</Dialog.Title>
+            <button onClick={onClose} aria-label="Fermer" style={{ width: 44, height: 44, flexShrink: 0, background: BG_CARD_2, borderRadius: 12, border: `1px solid ${BORDER}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} color={TEXT_MUTED} /></button>
+          </div>
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            <input
+              className={panelStyles.weightValue}
+              type="number"
+              aria-label="Poids en kilogrammes"
+              inputMode="decimal"
+              step="0.1"
+              value={weightForm}
+              onChange={e => setWeightForm(e.target.value)}
+              placeholder="0.0"
+              autoFocus
+              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 48px 20px 20px', color: GOLD, fontSize: '3rem', fontFamily: FONT_DISPLAY, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+            />
+            <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', color: TEXT_MUTED, fontSize: '0.9rem', fontWeight: 600, fontFamily: FONT_ALT }}>kg</span>
+          </div>
+          {currentWeight && <p style={{ textAlign: 'center', color: TEXT_MUTED, fontSize: '0.875rem', marginBottom: 16, fontFamily: FONT_BODY, fontWeight: 400 }}>Précédent : <span style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{currentWeight}</span> kg</p>}
+          <div style={{ marginBottom: 16 }}>
+            <label htmlFor="weight-date" style={{ display: 'block', fontSize: 14, fontFamily: FONT_ALT, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: TEXT_MUTED, marginBottom: 8 }}>Date</label>
+            <input
+              id="weight-date"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 16px', color: TEXT_PRIMARY, fontSize: '1rem', outline: 'none', colorScheme: 'dark', fontFamily: FONT_BODY }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={onClose}
+              style={{ flex: 1, background: 'transparent', border: `1px solid ${GOLD_RULE}`, color: TEXT_PRIMARY, fontFamily: FONT_ALT, fontWeight: 700, padding: '16px', borderRadius: 12, cursor: 'pointer', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'background-color 150ms' }}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!weightForm}
+              style={{ flex: 2, background: weightForm ? GOLD : '#2A2A2A', color: weightForm ? colors.onGold : TEXT_MUTED, fontFamily: FONT_ALT, fontWeight: 800, padding: '16px', borderRadius: 12, border: 'none', cursor: weightForm ? 'pointer' : 'default', fontSize: '1rem', letterSpacing: 0, textTransform: 'none', transition: 'background-color 150ms',  }}
+            >
+              Sauvegarder
+            </button>
+          </div>
+        </Dialog.Content>
+      </RailOverlay>
+    </Dialog.Root>
   )
 }
