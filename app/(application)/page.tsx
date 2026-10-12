@@ -508,7 +508,11 @@ function CoachAppContent() {
   ══════════════════════════════════════════════════════════════ */
   return (
     <ClientIntlProvider>
-    {h.nativePurchaseOpen && <RailOverlay><Paywall dismissible role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => h.setNativePurchaseOpen(false)} /></RailOverlay>}
+    {h.nativePurchaseOpen && <RailOverlay>
+      <div style={{ position: 'fixed', inset: 0, background: BG_BASE, zIndex: 1000, overflowY: 'auto' }}>
+        <Paywall dismissible role="client" userId={h.session.user.id} coachId={h.coachId} onSignOut={() => h.setNativePurchaseOpen(false)} />
+      </div>
+    </RailOverlay>}
     <div className="app-shell" style={{ display: 'flex', width: '100%', background: BG_BASE, color: TEXT_PRIMARY, fontFamily: FONT_BODY }}>
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="desktop-sidebar" style={{ display: 'none', width: 240, flexShrink: 0, flexDirection: 'column', height: '100dvh', position: 'fixed', top: 0, left: 0, background: BG_BASE, borderRight: `1px solid ${BORDER}`, zIndex: Z_NAV, padding: '24px 0' }}>
