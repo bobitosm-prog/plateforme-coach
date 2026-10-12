@@ -1,4 +1,7 @@
 'use client'
+import * as appTheme from '../../../lib/app-design-tokens'
+import TrainingSheet from '../training-v2/TrainingSheet'
+import panelStyles from '../SecondaryPanels.module.css'
 import FoodCatalogNotice from '../nutrition-v2/FoodCatalogNotice'
 import { AiConsentDeclinedError } from '@/lib/ai/consent-policy'
 import { aiFetch } from '@/lib/ai/consent-client'
@@ -699,36 +702,34 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
 
       {/* ═══ PHOTO MEAL SCAN ═══ */}
       {showPhotoCapture && (<RailOverlay>
-        <>
-          <div onClick={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: Z_MODAL }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: '80vh', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 16, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
-            <ModalHeader title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }} />
-            <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+        <TrainingSheet viewportContained title={nt('chrome.scanMeal')} onClose={() => { setShowPhotoCapture(false); setPhotoResults(null); setPhotoError(null) }}>
+          <div className={panelStyles.panel}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 0 }}>
               <AiQuotaBadge />
-              <p style={{ ...mutedStyle, margin: '0 0 14px', lineHeight: 1.5 }}>{nt('chrome.photoEstimate')}</p>
-              {photoError && <p role="status" style={{ ...bodyStyle, color: colors.error, margin: '0 0 14px' }}>{photoError}</p>}
+              <p style={{ ...appTheme.mutedStyle, fontSize: 15, margin: '0 0 14px', lineHeight: 1.5 }}>{nt('chrome.photoEstimate')}</p>
+              {photoError && <p role="status" style={{ ...appTheme.bodyStyle, color: appTheme.colors.error, margin: '0 0 14px' }}>{photoError}</p>}
               <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               {!photoResults && !analyzingPhoto && (
-                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: colors.goldDim, border: `2px dashed ${colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <Camera size={48} color={colors.gold} />
-                  <span style={{ ...statSmallStyle, letterSpacing: 2 }}>{nt('chrome.takePhoto')}</span>
-                  <span style={mutedStyle}>{nt('chrome.orGallery')}</span>
+                <button onClick={() => photoInputRef.current?.click()} style={{ width: '100%', padding: '40px 20px', background: appTheme.colors.goldDim, border: `2px dashed ${appTheme.colors.goldRule}`, borderRadius: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <Camera size={48} color={appTheme.colors.gold} />
+                  <span style={{ ...appTheme.statSmallStyle, letterSpacing: 0 }}>{nt('chrome.takePhoto')}</span>
+                  <span style={{ ...appTheme.mutedStyle, fontSize: 14 }}>{nt('chrome.orGallery')}</span>
                 </button>
               )}
               {analyzingPhoto && (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${colors.goldDim}`, borderTopColor: colors.gold, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                  <div style={{ ...statSmallStyle, letterSpacing: 2 }}>ANALYSE EN COURS...</div>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', border: `3px solid ${appTheme.colors.goldDim}`, borderTopColor: appTheme.colors.gold, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                  <div style={{ ...appTheme.statSmallStyle, letterSpacing: 0 }}>Analyse en cours…</div>
                 </div>
               )}
               {photoResults?.foods && (
                 <>
-                  <div style={{ ...labelStyle, fontSize: 10, letterSpacing: 3, marginBottom: 12 }}>{photoResults.foods.length} aliments detectes</div>
+                  <div style={{ ...appTheme.labelStyle, fontSize: 14, letterSpacing: 0, marginBottom: 12 }}>{photoResults.foods.length} aliments détectés</div>
                   {photoResults.foods.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${colors.goldDim}` : 'none' }}>
-                      <div>
-                        <div style={{ fontFamily: fonts.body, fontSize: 14, color: colors.text }}>{f.name}</div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontFamily: fonts.body, fontSize: 11, color: colors.textMuted }}>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < photoResults.foods.length - 1 ? `1px solid ${appTheme.colors.goldDim}` : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+                        <div style={{ fontFamily: appTheme.fonts.body, fontSize: 16, color: appTheme.colors.text }}>{f.name}</div>
+                        <label style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 6, fontFamily: appTheme.fonts.body, fontSize: 16, color: appTheme.colors.textMuted }}>
                           <span>{nt('chrome.quantityEstimate')}</span>
                           <input
                             type="number"
@@ -737,28 +738,28 @@ export default function NutritionTab({ profile, capabilities, coachRelationStatu
                             value={f.quantity_g}
                             aria-label={`${nt('chrome.quantityEstimate')} ${f.name}`}
                             onChange={event => updatePhotoFoodQuantity(i, Number(event.target.value))}
-                            style={{ width: 68, minHeight: 44, padding: '6px 8px', borderRadius: 8, border: `1px solid ${colors.goldBorder}`, background: colors.background, color: colors.text }}
+                            style={{ width: 68, minHeight: 44, padding: '6px 8px', borderRadius: 8, border: `1px solid ${appTheme.colors.goldBorder}`, background: appTheme.colors.background, color: appTheme.colors.text }}
                           />
                           <span>g · P:{f.proteins}g G:{f.carbs}g L:{f.fats}g</span>
                         </label>
                       </div>
-                      <span style={{ ...statSmallStyle, fontSize: 16 }}>{f.calories}</span>
+                      <span style={{ ...appTheme.statSmallStyle, fontSize: 16, flexShrink: 0, whiteSpace: 'nowrap' }}>{f.calories}</span>
                     </div>
                   ))}
-                  <div style={{ background: colors.goldDim, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
-                    <span style={{ ...statSmallStyle, fontSize: 24 }}>{photoResults.foods.reduce((total, food) => total + (food.calories || 0), 0)} KCAL</span>
+                  <div style={{ background: appTheme.colors.goldDim, borderRadius: 12, padding: '12px 16px', marginTop: 16, textAlign: 'center' }}>
+                    <span style={{ ...appTheme.statSmallStyle, fontSize: 24 }}>{photoResults.foods.reduce((total, food) => total + (food.calories || 0), 0)} KCAL</span>
                   </div>
                 </>
               )}
             </div>
             {photoResults?.foods && (
-              <div style={{ padding: '16px 20px', borderTop: `1px solid ${colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
-                <button onClick={() => { setPhotoResults(null); setPhotoError(null) }} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: colors.gold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
-                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: `linear-gradient(135deg, #E8C97A, #D4A843, ${colors.goldContainer}, #8B6914)`, borderRadius: 12, color: colors.onGold, fontFamily: fonts.headline, fontSize: 16, letterSpacing: 2, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
+              <div style={{ padding: '16px 0', borderTop: `1px solid ${appTheme.colors.goldDim}`, display: 'flex', gap: 12, flexShrink: 0 }}>
+                <button onClick={() => { setPhotoResults(null); setPhotoError(null) }} style={{ flex: 1, padding: 14, background: 'transparent', border: `1.5px solid rgba(212,168,67,0.5)`, borderRadius: 12, color: appTheme.colors.gold, fontFamily: appTheme.fonts.headline, fontSize: 16, letterSpacing: 0, cursor: 'pointer' }}>{nt('chrome.retake')}</button>
+                <button onClick={addPhotoFoods} style={{ flex: 1, padding: 14, border: 'none', background: appTheme.colors.gold, borderRadius: 12, color: appTheme.colors.onGold, fontFamily: appTheme.fonts.headline, fontSize: 16, letterSpacing: 0, cursor: 'pointer' }}>{nt('chrome.addAll')}</button>
               </div>
             )}
           </div>
-        </>
+        </TrainingSheet>
       </RailOverlay>)}
 
       {/* ═══ SAVE MEAL POPUP ═══ */}

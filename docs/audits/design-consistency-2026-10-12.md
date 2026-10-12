@@ -167,3 +167,11 @@ ImportPlanSheet actif dans NutritionTab : ancienne police et dégradé supprimé
 Validation : 23 tests runtime ciblés (import/annulation, titre coach, Échap, sources du composeur, journal). Navigateur local 393 × 852 sur fixtures : import simulé, sélection du contexte, composeur avec nom long, recalcul 150 → 200 g (195 → 260 kcal), confirmation d’abandon, sources d’ajout. Aucun débordement horizontal. Captures import-repas-mobile.png, composeur-repas-mobile.png, ajout-repas-mobile.png. Banc temporaire supprimé ; aucune donnée réelle enregistrée, caméra non activée.
 
 Restent à auditer séparément : FoodSearch, BarcodeScanner, recettes et affichage des photos. Le présent lot ne couvre pas encore ces contenus médias.
+
+## Lot recherche, scanner et analyse photo
+
+FoodSearch et BarcodeScanner utilisent les tokens app, commandes nommées >=44 px et champs lisibles. Quantité alimentaire : fenêtre défilante plafonnée au viewport, largeur 680 px, repas en grille 2 colonnes. Scanner : safe areas, contenu limité sur desktop, macros 2 colonnes, actions unies et message caméra accessible. Depuis FoodSearch, le scanner est téléporté hors du cadre transformé et passe au-dessus de celui-ci. La fenêtre photo de NutritionTab reprend TrainingSheet, thème app et boutons naturels FR/EN/DE ; les calories ne se coupent plus avec un nom long.
+
+Calculs, requêtes, consentement IA et sauvegardes conservés. 33 tests ciblés : refus caméra simulé, recherche manuelle, sélection scanner sans écriture, quantité recalculée, date/repas préservés, composeur. Validation navigateur 393 × 852 : liste et quantité réelle sur données fictives ; scanner avec adaptateur caméra refusée et données fictives ; bloc photo extrait temporairement du JSX avec résultat simulé, reprise vérifiée. Aucune caméra réelle, requête IA ni écriture utilisateur. Captures aliment-quantite-mobile.png, scanner-erreur-mobile.png, scanner-produit-mobile.png, photo-resultat-mobile.png ; fixtures retirées.
+
+Restent notamment recettes, repas enregistrés, liste de courses et photos de progression. Les fonctions caméra physiques et analyse IA réelle ne sont pas validées par ce lot de design.
