@@ -8,7 +8,8 @@ import { ArrowLeft, Check, Dumbbell, Target, ChevronDown, ChevronUp, Loader2 } f
 import { invalidateProfileCache } from '@/lib/profile-service'
 import { cache } from '@/lib/cache'
 import { diagnosticWeek } from '@/lib/weekly-diagnostic/week'
-import { colors, fonts, btnPrimary } from '@/lib/design-tokens'
+import styles from './WeeklyDiagnostic.module.css'
+import { colors, fonts, btnPrimary } from '@/lib/app-design-tokens'
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const SUPABASE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
@@ -32,17 +33,17 @@ function formatWeekRangeLong(weekStart: string, locale: string): string {
 const sectionCard: React.CSSProperties = {
   background: colors.surface2,
   border: `1px solid ${colors.divider}`,
-  borderRadius: 16,
-  padding: 16,
-  marginBottom: 12,
+  borderRadius: 20,
+  padding: 20,
+  marginBottom: 16,
 }
 
 const sectionHeading: React.CSSProperties = {
   fontFamily: fonts.headline,
-  fontSize: 11,
+  fontSize: 14,
   fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.15em',
+  letterSpacing: '.08em',
   marginBottom: 10,
 }
 
@@ -133,12 +134,13 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
   ]
 
   return (
-    <div style={{ minHeight: '100dvh', background: colors.background, maxWidth: 512, marginLeft: 'auto', marginRight: 'auto' }}>
+    <div className={styles.page} style={{ fontFamily: fonts.body, color: colors.textMuted, minHeight: '100dvh', background: colors.background, maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
       {/* ─── Toast regen meal plan ─── */}
       {regenMsg && (
         <div role="status" aria-live="polite" style={{
           position: 'fixed',
-          bottom: 24,
+          bottom: 'max(24px, env(safe-area-inset-bottom))',
+          width: 'calc(100% - 40px)', maxWidth: 600,
           left: '50%',
           transform: 'translateX(-50%)',
           background: colors.background,
@@ -157,18 +159,18 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
       {/* ─── Header ─── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', position: 'sticky', top: 0, background: colors.background, zIndex: 10 }}>
-        <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+        <button aria-label={t('back')} onClick={() => router.push('/')} style={{ background: colors.surfaceCard, border: `1px solid ${colors.goldBorder}`, borderRadius: 13, cursor: 'pointer', padding: 12, flexShrink: 0 }}>
           <ArrowLeft size={22} color={colors.text} />
         </button>
-        <span style={{ fontFamily: fonts.headline, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: colors.gold }}>
+        <h1 style={{ fontFamily: fonts.headline, fontSize: 'clamp(28px,7vw,36px)', lineHeight: 1.08, margin: 0, fontWeight: 700, letterSpacing: '-.04em', color: colors.gold }}>
           {t('title')}
-        </span>
+        </h1>
       </div>
 
       <div style={{ padding: '0 20px 32px' }}>
         {/* ─── Score hero ─── */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} style={{ textAlign: 'center', marginBottom: 24 }}>
-          <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, marginBottom: 16 }}>
+          <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textDim, marginBottom: 16 }}>
             {formatWeekRangeLong(diagnostic.week_start, locale)}
           </p>
           <div style={{ width: 120, height: 120, borderRadius: '50%', border: `4px solid ${scoreColor}`, background: `${scoreColor}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
@@ -181,13 +183,13 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
         {/* ─── Metrics grid ─── */}
         <div style={{ ...sectionHeading, color: colors.gold }}>{t('metrics_heading')}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
           {metrics.map((m, i) => (
             <div key={i} style={{ ...sectionCard, marginBottom: 0, textAlign: 'center' }}>
               <p style={{ fontFamily: fonts.headline, fontSize: 22, fontWeight: 700, color: colors.text, margin: 0 }}>
                 {m.value}
               </p>
-              <p style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
+              <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
                 {m.label}
               </p>
             </div>
@@ -199,7 +201,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
           <div style={sectionCard}>
             <div style={{ ...sectionHeading, color: '#10B981' }}>{t('points_forts_heading')}</div>
             {diagnostic.points_forts.map((p: string, i: number) => (
-              <p key={i} style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted, margin: '4px 0', lineHeight: 1.5 }}>
+              <p key={i} style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted, margin: '4px 0', lineHeight: 1.5 }}>
                 {p}
               </p>
             ))}
@@ -211,7 +213,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
           <div style={sectionCard}>
             <div style={{ ...sectionHeading, color: '#F59E0B' }}>{t('points_alerte_heading')}</div>
             {diagnostic.points_alerte.map((p: string, i: number) => (
-              <p key={i} style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted, margin: '4px 0', lineHeight: 1.5 }}>
+              <p key={i} style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted, margin: '4px 0', lineHeight: 1.5 }}>
                 {p}
               </p>
             ))}
@@ -236,7 +238,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
                 <AdjRow label="Fat" current={null} next={adj.fat_goal_new} unit="g" />
               )}
               {adj.training_volume_delta_pct && (
-                <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
+                <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted }}>
                   {diagnostic.adjustment_preview?.setsBefore != null
                     ? at('sets', { before: diagnostic.adjustment_preview.setsBefore, after: diagnostic.adjustment_preview.setsAfter, percent: diagnostic.adjustment_preview.actualPct })
                     : at('legacyVolume', { percent: adj.training_volume_delta_pct })}
@@ -244,7 +246,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
               )}
             </div>
           ) : (
-            <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted, marginBottom: 12 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted, marginBottom: 12 }}>
               {t('adjustments_none')}
             </p>
           )}
@@ -284,7 +286,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
             <Dumbbell size={20} color={colors.gold} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ ...sectionHeading, color: colors.gold, marginBottom: 4 }}>{t('exercise_to_add')}</div>
-              <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>
                 {diagnostic.exercice_a_ajouter}
               </p>
             </div>
@@ -297,7 +299,7 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
             <Target size={20} color={colors.gold} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ ...sectionHeading, color: colors.gold, marginBottom: 4 }}>{t('next_week_objective')}</div>
-              <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted, margin: 0, lineHeight: 1.5 }}>
                 {diagnostic.objectif_semaine_prochaine}
               </p>
             </div>
@@ -308,6 +310,8 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
         {diagnostic.raisonnement && (
           <div style={sectionCard}>
             <button
+              aria-expanded={raisonnementOpen}
+              aria-controls="diagnostic-reasoning"
               onClick={() => setRaisonnementOpen(!raisonnementOpen)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: 0 }}
             >
@@ -316,14 +320,14 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
             </button>
             <AnimatePresence>
               {raisonnementOpen && (
-                <motion.div
+                <motion.div id="diagnostic-reasoning"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.25 }}
                   style={{ overflow: 'hidden' }}
                 >
-                  <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, fontStyle: 'italic', lineHeight: 1.6, marginTop: 10 }}>
+                  <p style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textDim, fontStyle: 'italic', lineHeight: 1.6, marginTop: 10 }}>
                     {diagnostic.raisonnement}
                   </p>
                 </motion.div>
@@ -334,11 +338,11 @@ export default function WeeklyDiagnosticDetailContent({ id }: { id: string }) {
 
         {/* ─── Footer ─── */}
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <p style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDim }}>
+          <p style={{ fontFamily: fonts.body, fontSize: 14, color: colors.textDim }}>
             {t('ai_footer')}
           </p>
           {diagnostic.ai_tokens_used > 0 && (
-            <p style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, opacity: 0.6 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, opacity: 0.6 }}>
               {t('tokens_used')}: {diagnostic.ai_tokens_used}
             </p>
           )}
@@ -353,11 +357,11 @@ function AdjRow({ label, current, next, unit }: { label: string; current: number
   const delta = current ? next - Math.round(current) : null
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>{label}</span>
+      <span style={{ fontFamily: fonts.body, fontSize: 15, color: colors.textMuted }}>{label}</span>
       <span style={{ fontFamily: fonts.headline, fontSize: 14, color: colors.text }}>
         {current ? `${Math.round(current)} → ` : ''}{next} {unit}
         {delta !== null && delta !== 0 && (
-          <span style={{ fontSize: 11, color: delta > 0 ? '#10B981' : '#F59E0B', marginLeft: 4 }}>
+          <span style={{ fontSize: 14, color: delta > 0 ? '#10B981' : '#F59E0B', marginLeft: 4 }}>
             ({delta > 0 ? '+' : ''}{delta})
           </span>
         )}

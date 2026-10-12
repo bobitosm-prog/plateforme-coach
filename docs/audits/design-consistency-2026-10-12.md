@@ -127,3 +127,11 @@ Montants, catalogue Apple, appels de paiement, logique de suppression, consentem
 Validation : 25 tests ciblés (historique vide/statuts, mot exact de suppression et annulation sans requête, relances par domaine/finalisation, consentement différé, erreurs de profil), TypeScript et parité i18n. Prévisualisation locale mobile 393 × 852 sur données fictives : historique, ouverture/annulation de confirmation, préparation interrompue et relance simulée, erreur profil ; pas de débordement. Banc temporaire supprimé. Captures conservées ; pas de validation physique iPhone ni de suppression réelle.
 
 Prochain lot : abonnement web et diagnostic hebdomadaire ; conserver les limites du présent audit pour les états connectés et les médias.
+
+## Lot abonnement web et diagnostic hebdomadaire
+
+Paywall web et WeeklyDiagnosticDetailContent utilisent les tokens app : Outfit, cartes 20 px, boutons 48 px et focus visible. Prix mensuel et annuel mis en avant, boutons sans découpe, titres naturels FR/EN/DE. Le diagnostic conserve ses couleurs de score, avec textes plus lisibles, grille sans débordement, retour nommé et accordéon accessible. Animations d’entrée du paywall supprimées pour afficher immédiatement les offres.
+
+Tarifs, choix Apple natif, checkout Stripe, données et application des ajustements inchangés. Validation locale : 15 tests ciblés, dont choix annuel simulé et prévention du double clic, branche native Apple, diagnostic expiré non applicable, accordéon et retour. TypeScript, parité i18n et diff vérifiés. Paywall vu dans le navigateur local à 393 px : Outfit, boutons >=48 px et aucun débordement ; capture desktop conservée. Le diagnostic est vérifié par rendu runtime simulé, pas sur un compte réel ni iPhone physique. Banc local retiré avant commit.
+
+Prochain lot : modals secondaires Training/Nutrition et parcours Athena ; conserver un audit séparé des médias et des écrans coach/admin.
