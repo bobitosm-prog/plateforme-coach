@@ -1,8 +1,10 @@
 'use client'
 
-import { colors, fonts } from '../../../lib/design-tokens'
+import * as app from '../../../lib/app-design-tokens'
+import { colors as legacyColors, fonts as legacyFonts } from '../../../lib/design-tokens'
 
 interface SectionTitleProps {
+  appTheme?: boolean
   title: string
   action?: { label: string; onClick: () => void }
   trailing?: string
@@ -11,7 +13,8 @@ interface SectionTitleProps {
   icon?: React.ReactNode
 }
 
-export default function SectionTitle({ title, action, trailing, trailingNode, noPadding, icon }: SectionTitleProps) {
+export default function SectionTitle({ appTheme = false, title, action, trailing, trailingNode, noPadding, icon }: SectionTitleProps) {
+  const { colors, fonts } = appTheme ? app : { colors: legacyColors, fonts: legacyFonts }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28, marginBottom: 20, padding: noPadding ? 0 : '0 20px' }}>
       <div style={{ width: 3, height: 16, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />

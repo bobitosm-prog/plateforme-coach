@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { aiConsentCopy } from '@/lib/ai/consent-copy'
 import { AiConsentDeclinedError, ensureAiConsent, getAiConsent, setAiConsent } from '@/lib/ai/consent-client'
-import { colors, cardStyle } from '@/lib/design-tokens'
+import { colors, cardStyle } from '@/lib/app-design-tokens'
 
 export default function AiConsentPreferences({ userId }: { userId?: string }) {
   const locale = useLocale()
@@ -38,7 +38,7 @@ export default function AiConsentPreferences({ userId }: { userId?: string }) {
     } catch (err) { if (!(err instanceof AiConsentDeclinedError)) setError(true) }
     finally { setBusy(false) }
   }
-  return <section style={{ ...cardStyle, padding: 20 }} aria-label={t.settings}>
+  return <section style={{ ...cardStyle, padding: 20, marginBottom: 20 }} aria-label={t.settings}>
     <h3 style={{ color: colors.gold, fontSize: 18, margin: '0 0 8px' }}>{t.settings}</h3>
     <p aria-live="polite">{granted === null ? t.loading : granted ? t.active : t.inactive}</p>
     <button type="button" onClick={() => void change()} disabled={busy || !userId || (granted === null && !error)}

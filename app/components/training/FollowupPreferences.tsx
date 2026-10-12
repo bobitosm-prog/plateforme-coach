@@ -1,4 +1,5 @@
 "use client";
+import { cardStyle, colors, fonts } from "@/lib/app-design-tokens";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useTrainingFollowup } from "@/app/hooks/useTrainingFollowup";
@@ -34,8 +35,8 @@ export default function FollowupPreferences() {
     }
   }
   return (
-    <section aria-labelledby="followup-title" style={{ marginBottom: 24 }}>
-      <h2 id="followup-title">{t("title")}</h2>
+    <section aria-labelledby="followup-title" style={{ ...cardStyle, padding: 18, marginBottom: 20, fontFamily: fonts.body, color: colors.textMuted }}>
+      <h2 id="followup-title" style={{ color: colors.gold, fontSize: 16, fontWeight: 700, marginBottom: 12 }}>{t("title")}</h2>
       <p>{t("description")}</p>
       {state === "loading" && <p role="status">{t("loading")}</p>}
       {state === "error" && <p role="alert">{t("error")}</p>}
