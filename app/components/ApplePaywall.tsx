@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { applePurchaseErrorKey, applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
 import LegalDocumentDialog from './LegalDocumentDialog'
-import { BG_BASE, BG_CARD, GOLD, TEXT_PRIMARY, TEXT_MUTED, FONT_BODY, FONT_DISPLAY } from '@/lib/design-tokens'
+import { Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
+import styles from './ApplePaywall.module.css'
+import homeStyles from './home-v2/HomeV2.module.css'
 export default function ApplePaywall({ userId, onSignOut, dismissible = false, supported = true }: { userId: string; onSignOut: () => void; dismissible?: boolean; supported?: boolean }) {
   const t = useTranslations('applePurchases')
+  const common = useTranslations('common')
   const [products, setProducts] = useState<NativeProduct[]>([])
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -23,18 +26,28 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
       setMessage(t(result.status === 'pending' ? 'pending' : result.status === 'cancelled' ? 'cancelled' : result.count === 0 ? 'empty' : result.sandbox ? 'sandbox' : 'success'))
     } catch (error) { setMessage(t(applePurchaseErrorKey(error))) } finally { setBusy(false) }
   }
-  const button = { minHeight: 48, borderRadius: 14, padding: '12px 20px', border: 'none', background: GOLD, color: BG_BASE, cursor: 'pointer', fontWeight: 700 } as const
-  return <section style={{ background: BG_BASE, color: TEXT_PRIMARY, padding: 24, minHeight: '100dvh', fontFamily: FONT_BODY }}>
-    <h1 style={{ fontFamily: FONT_DISPLAY, color: GOLD }}>{t('title')}</h1><p style={{ color: TEXT_MUTED }}>{t('trial')}</p>
-    {products.map((product, i) => <div key={product.id} style={{ background: BG_CARD, borderRadius: 22, padding: 20, marginTop: 16 }}>
-      <h2>{t(['monthly', 'yearly'][i])}</h2>
-      <p>{product.displayPrice} {t(i === 0 ? 'perMonth' : 'perYear')}</p>
-      <button style={button} disabled={busy} onClick={() => run('purchase', product.id)}>{t('buy')}</button>
-    </div>)}
-    <p style={{ color: TEXT_MUTED }}>{t('renewal')}</p>
-    <button style={button} disabled={busy || !supported || !applePurchaseBridge()} onClick={() => run('restore')}>{t('restore')}</button>
-    <p role="status" aria-live="polite">{busy ? t('processing') : message}</p>
-    <p><LegalDocumentDialog document="cgu">{t('terms')}</LegalDocumentDialog> · <LegalDocumentDialog document="privacy">{t('privacy')}</LegalDocumentDialog></p>
-    <button onClick={onSignOut} style={{ ...button, background: BG_CARD, color: TEXT_PRIMARY }}>{dismissible ? t('close') : t('signOut')}</button>
+  return <section className={styles.page} aria-busy={busy}>
+    <div className={styles.shell}>
+      <header className={styles.header}>
+        {dismissible && <button className={styles.back} onClick={onSignOut} aria-label={t('close')}><ArrowLeft size={22} /></button>}
+        <h1 className={homeStyles.title}>{t('titleLead')}<br /><em>{t('titleAccent')}</em></h1>
+        <p className={styles.intro}>{t('trial')}</p>
+      </header>
+      <div className={styles.offers}>
+        {products.map((product, i) => <article key={product.id} className={styles.card}>
+          <div className={styles.label}><Sparkles size={20} aria-hidden="true" /><h2>{t(i === 0 ? 'monthly' : 'yearly')}</h2></div>
+          <p className={styles.price}>{product.displayPrice} <span>{t(i === 0 ? 'perMonth' : 'perYear')}</span></p>
+          <button className={styles.primary} disabled={busy} onClick={() => run('purchase', product.id)}>{t('buy')}</button>
+        </article>)}
+      </div>
+      {!products.length && supported && !message && <p role="status" className={styles.message}>{common('loading')}</p>}
+      <div className={styles.details}>
+        <p>{t('renewal')}</p>
+        <button className={styles.restore} disabled={busy || !supported || !applePurchaseBridge()} onClick={() => run('restore')}><RotateCcw size={18} aria-hidden="true" />{t('restore')}</button>
+        <p role="status" aria-live="polite" className={styles.message}>{busy ? t('processing') : message}</p>
+        <div className={styles.legal}><LegalDocumentDialog document="cgu">{t('terms')}</LegalDocumentDialog><LegalDocumentDialog document="privacy">{t('privacy')}</LegalDocumentDialog></div>
+        {!dismissible && <button className={styles.restore} onClick={onSignOut}>{t('signOut')}</button>}
+      </div>
+    </div>
   </section>
 }

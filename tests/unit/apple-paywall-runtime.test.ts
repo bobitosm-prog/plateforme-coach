@@ -18,7 +18,7 @@ const mount = () => render(React.createElement(NextIntlClientProvider, { locale:
 describe('iPhone purchase screen runtime', () => {
   it('renders localized Apple prices and purchases only after an explicit click', async () => {
     mount()
-    await screen.findByText('CHF 79.90 / an')
+    await screen.findByText((_, element) => element?.tagName === 'P' && element.textContent === 'CHF 79.90 / an')
     expect(screen.getAllByRole('button', { name: 'Continuer avec Apple' })).toHaveLength(2)
     expect(screen.queryByText('À vie')).toBeNull()
     expect(native.purchase).not.toHaveBeenCalled()
