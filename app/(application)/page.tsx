@@ -586,7 +586,7 @@ function CoachAppContent() {
         }
       `}</style>
 
-      <InitialGenerationStatus generation={initialGen} />
+      <InitialGenerationStatus key={h.session?.user?.id} generation={initialGen} />
 
       {/* ── WorkoutSession fullscreen ── */}
       {h.workoutSession && (
