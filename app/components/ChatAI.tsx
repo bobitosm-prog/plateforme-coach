@@ -48,7 +48,7 @@ export default function ChatAI({ session, profile, capabilities, externalOpen, o
   useEffect(() => {
     if (open) {
       const frame = requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
       })
       return () => cancelAnimationFrame(frame)
     }
@@ -119,7 +119,7 @@ export default function ChatAI({ session, profile, capabilities, externalOpen, o
             </div>}
             {messages.map(msg=><article key={msg.id} className={msg.role==='user'?styles.userMessage:styles.assistantMessage}>
               <div className={styles.messageLabel}>{msg.role==='assistant'?'Athena':firstName}</div>
-              <div className={styles.messageBody}>{msg.role==='assistant'?<AthenaMessageContent content={msg.content}/>:msg.content}</div>
+              <div className={styles.messageBody}>{msg.role==='assistant'?<AthenaMessageContent content={msg.content} />:msg.content}</div>
               <time>{new Date(msg.created_at).toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})}</time>
             </article>)}
             {sending && <p role="status" className={styles.pending}>Athena…</p>}
