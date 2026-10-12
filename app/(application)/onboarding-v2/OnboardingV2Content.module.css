@@ -122,4 +122,12 @@
 .app input:not([type=checkbox]):not([type=radio]),.app select,.app textarea { font-size:16px; }
 .app button { cursor:pointer; }
 .app button:disabled { cursor:default; }
+@media (max-width:767px) {
+  /* Inline field styles must not trigger the iOS focus zoom. */
+  .app input:not([type=checkbox]):not([type=radio]),.app select,.app textarea { font-size:16px !important; }
+  /* Keep the action bar in document flow while the software keyboard is up. */
+  .app:has(.content input:not([type=checkbox]):not([type=radio]):focus) .nav,
+  .app:has(.content textarea:focus) .nav,
+  .app:has(.content select:focus) .nav { position:static; }
+}
 @media(min-width:768px){.app{min-height:min(900px,calc(100dvh - 64px))}}
