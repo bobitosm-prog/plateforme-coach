@@ -3832,6 +3832,8 @@
     }
   },
   "applePurchases": {
+    "titleLead": "Mon",
+    "titleAccent": "abonnement.",
     "title": "Athena avec Apple",
     "trial": "Tes 14 jours gratuits restent sans engagement. Un achat ne démarre que si tu le confirmes avec Apple.",
     "monthly": "Mensuel",
