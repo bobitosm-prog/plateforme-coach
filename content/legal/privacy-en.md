@@ -1,7 +1,7 @@
 # Privacy Policy — MoovX
 
-**Last updated: 4 October 2026**
-**Version: 1.2**
+**Last updated: 12 October 2026**
+**Version: 1.3**
 
 ---
 

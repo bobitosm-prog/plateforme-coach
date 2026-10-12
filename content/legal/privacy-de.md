@@ -1,7 +1,7 @@
 # Datenschutzerklärung — MoovX
 
-**Letzte Aktualisierung: 4. Oktober 2026**
-**Version: 1.2**
+**Letzte Aktualisierung: 12. Oktober 2026**
+**Version: 1.3**
 
 ---
 
