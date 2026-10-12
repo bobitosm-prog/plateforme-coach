@@ -151,3 +151,11 @@ Le précédent lot avait couvert le cadre SessionDetailModal mais pas TrainingSe
 Athena reçoit une vraie nouvelle disposition : titre Athena., colonne jusqu’à 800 px, réponses en cartes larges, marges 20–24 px, saisie multiligne, résumé repliable et suggestions verticales sur mobile. Suppression du statut toujours « en ligne » non lié à une présence. Le panneau est téléporté via RailOverlay ; scroll automatique sans animation et callback nettoyé. Rendu Markdown conservé, tokens harmonisés. Consentement, modèle, endpoints, historique et suppression restent inchangés.
 
 Vérification : tests runtime envoi/fermeture/refus IA et conversation, rendu mobile 393 × 852 sur données fictives pour le chat et le contenu complet de séance. Pas de débordement ; captures athena-aere-mobile.png et seance-detail-mobile.png conservées. Réduction des animations vérifiée ; disparition du gel sur iPhone physique non confirmée. Banc temporaire supprimé, aucun message envoyé ni donnée réelle modifiée.
+
+## Lot poids et mensurations
+
+WeightModal et MeasureModal : fenêtres au thème app, largeur limitée à 680 px, hauteur adaptée au contenu avec défilement et safe area. Suppression du minimum 90vh. Titres 28 px en casse naturelle (mensurations FR/EN/DE), champs 16 px, poids 48 px, historique lisible. Radix Dialog et RailOverlay reprennent les patterns existants pour le focus, Échap, le portail et le blocage du rail ; clic extérieur ignoré pour ne pas perdre une saisie accidentellement. Labels reliés aux champs.
+
+Contrats de sauvegarde, dates et champs conservés ; aucune modification DB. Sept tests runtime locaux du groupe secondary-panels, dont poids/date et mensuration partielle avec sauvegardes simulées. Vérification visuelle à 393 × 852 : pas de débordement horizontal, historique défilant, saisies et retours fonctionnels. Captures poids-mobile.png et mensurations-mobile.png. Aucun profil réel modifié, pas de test physique iPhone. Banc temporaire retiré.
+
+Audit exercices : ExerciseSearchModal ne possède aucun appel dans app ; conservé sans suppression. Le catalogue actif est ExerciseCatalogCard → ExerciseInfoPopup, déjà en Outfit et cartes dorées. Prochaine passe : modals repas et médias actifs, avec vérification de leur contenu complet.

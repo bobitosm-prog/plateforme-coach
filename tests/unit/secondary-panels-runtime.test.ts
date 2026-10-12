@@ -32,3 +32,19 @@ it('renders a long conversation with the new Athena heading and readable message
  render(React.createElement(ChatAI,{session:{},profile:{},capabilities:{ai:true} as any,externalOpen:true}))
  expect(await screen.findByRole('heading',{name:'Athena.'})).toBeTruthy();expect(screen.getByText('du texte important')).toBeTruthy();expect(screen.queryByText('header.online')).toBeNull()
 })
+
+it('saves weight and date through the existing callback from the accessible dialog',async()=>{
+ const {default:WeightModal}=await import('@/app/components/modals/WeightModal');const save=vi.fn().mockResolvedValue(undefined)
+ render(React.createElement(WeightModal,{currentWeight:70,onSave:save,onClose:vi.fn()}))
+ expect(screen.getByRole('dialog',{name:'Enregistrer mon poids'})).toBeTruthy()
+ fireEvent.change(screen.getByRole('spinbutton',{name:'Poids en kilogrammes'}),{target:{value:'72.5'}})
+ fireEvent.change(screen.getByLabelText('Date'),{target:{value:'2026-10-11'}})
+ fireEvent.click(screen.getByRole('button',{name:'Sauvegarder'}));await waitFor(()=>expect(save).toHaveBeenCalledWith(72.5,'2026-10-11'))
+})
+it('saves only entered measurements and closes on Escape without another save',async()=>{
+ const {default:MeasureModal}=await import('@/app/components/modals/MeasureModal');const save=vi.fn().mockResolvedValue(undefined);const close=vi.fn()
+ render(React.createElement(MeasureModal,{measurements:[],onSave:save,onClose:close}))
+ fireEvent.change(screen.getByLabelText('tab.measureLabels.waist'),{target:{value:'81.5'}})
+ fireEvent.click(screen.getByRole('button',{name:'measureModal.save'}));await waitFor(()=>expect(save).toHaveBeenCalledWith({waist:81.5},expect.any(String)))
+ fireEvent.keyDown(screen.getByRole('dialog'),{key:'Escape',code:'Escape'});expect(close).toHaveBeenCalledOnce();expect(save).toHaveBeenCalledOnce()
+})
