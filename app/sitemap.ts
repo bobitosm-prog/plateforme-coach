@@ -21,7 +21,6 @@ const PAGES: Array<{
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
   const entries: MetadataRoute.Sitemap = [];
 
   for (const page of PAGES) {
@@ -34,7 +33,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
       entries.push({
         url: `${SITE_URL}/${locale}${page.path}`,
-        lastModified,
         changeFrequency: page.changeFrequency,
         priority: page.priority,
         alternates: { languages },

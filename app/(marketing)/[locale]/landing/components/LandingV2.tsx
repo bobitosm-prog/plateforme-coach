@@ -132,13 +132,17 @@ export default function LandingV2({ locale, trialDays, nativeSource = false, inv
       </section>
       {locale === 'fr' && <section className={styles.resourcesSection} aria-labelledby="landing-resources-title">
         <h2 id="landing-resources-title">Ressources gratuites pour ton entraînement et ta nutrition</h2>
-        <p>Prépare tes séances et trouve des repères pour ton alimentation avec nos guides et outils.</p>
-        <nav aria-label="Guides et outils MoovX" className={styles.resourceLinks}>
+        <p>Prépare tes séances et trouve des repères pour ton alimentation avec nos guides, outils et articles.</p>
+        <nav aria-label="Ressources MoovX" className={styles.resourceLinks}>
           <Link href="/fr/programmes/musculation/3-jours">Programme de musculation sur 3 jours</Link>
           <Link href="/fr/programmes/musculation/debutant">Programme de musculation pour débutant</Link>
           <Link href="/fr/outils/calculateur-calories-macros">Calculateur de calories et macros</Link>
           <Link href="/fr/guides/nutrition">Guide de la nutrition sportive</Link>
           <Link href="/fr/guides/musculation">Guide de la musculation</Link>
+          <Link href="/fr/blog/combien-de-proteines-prise-de-muscle">Combien de protéines pour prendre du muscle ?</Link>
+          <Link href="/fr/blog/frequence-entrainement-combien-de-fois-par-semaine">À quelle fréquence s’entraîner ?</Link>
+          <Link href="/fr/blog/creatine-musculation-dosage-science">Créatine et musculation : que dit la science ?</Link>
+          <Link href="/fr/blog/sommeil-recuperation-musculaire-performance">Sommeil et récupération musculaire</Link>
         </nav>
       </section>}
     </main>

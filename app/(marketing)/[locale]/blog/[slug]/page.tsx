@@ -58,15 +58,20 @@ export default async function BlogArticle({
   const post = getPost(slug)
   if (!post) notFound()
 
+  const posts = getAllPosts()
+  const postIndex = posts.findIndex(candidate => candidate.slug === slug)
+  const furtherReading = [1, 2]
+    .slice(0, Math.max(0, posts.length - 1))
+    .map(offset => posts[(postIndex + offset) % posts.length])
   const c = post.content[loc] || post.content.fr
   const dateFormatted = new Date(post.date).toLocaleDateString(
     loc === 'de' ? 'de-CH' : loc === 'en' ? 'en-GB' : 'fr-CH',
     { day: 'numeric', month: 'long', year: 'numeric' },
   )
-  const labels: Record<Locale, { back: string; min: string; refs: string; cta: string }> = {
-    fr: { back: '← Blog', min: 'min de lecture', refs: 'Références scientifiques', cta: 'Commencer maintenant' },
-    en: { back: '← Blog', min: 'min read', refs: 'Scientific references', cta: 'Start now' },
-    de: { back: '← Blog', min: 'Min. Lesezeit', refs: 'Wissenschaftliche Referenzen', cta: 'Jetzt starten' },
+  const labels: Record<Locale, { back: string; min: string; refs: string; cta: string; more: string }> = {
+    fr: { back: '← Blog', min: 'min de lecture', refs: 'Références scientifiques', cta: 'Commencer maintenant', more: 'À lire aussi' },
+    en: { back: '← Blog', min: 'min read', refs: 'Scientific references', cta: 'Start now', more: 'Read next' },
+    de: { back: '← Blog', min: 'Min. Lesezeit', refs: 'Wissenschaftliche Referenzen', cta: 'Jetzt starten', more: 'Weiterlesen' },
   }
   const l = labels[loc] || labels.fr
 
@@ -157,6 +162,21 @@ export default async function BlogArticle({
                 <li key={link.href}>
                   <Link href={link.href} style={{ color: 'var(--gold)', fontSize: 15, lineHeight: 1.7, textUnderlineOffset: 4 }}>
                     {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
+        {furtherReading.length > 0 && (
+          <nav aria-label={l.more} style={{ margin: '40px 0' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--gold)', marginBottom: 16 }}>{l.more}</h2>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: 0, padding: 0, listStyle: 'none' }}>
+              {furtherReading.map(related => (
+                <li key={related.slug}>
+                  <Link href={`/${locale}/blog/${related.slug}`} style={{ color: 'var(--gold)', fontSize: 15, lineHeight: 1.7, textUnderlineOffset: 4 }}>
+                    {related.content[loc]?.title || related.content.fr.title}
                   </Link>
                 </li>
               ))}
