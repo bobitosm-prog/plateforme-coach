@@ -14,3 +14,8 @@
 .message { color: #aaa69b; font-size: .85rem; line-height: 1.5; }
 .page button:focus-visible { outline: 2px solid #dfbf70; outline-offset: 3px; }
 @media(max-width:380px) { .page { padding-inline:16px; } .card { padding:14px; } }
+
+.confirmOverlay { font-family: var(--font-body), 'Outfit', sans-serif; }
+.confirmOverlay button { min-height: 48px; }
+.confirmOverlay input { box-sizing: border-box; min-height: 48px; }
+.confirmOverlay :is(button, input):focus-visible { outline: 2px solid #dfbf70; outline-offset: 3px; }

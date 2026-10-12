@@ -874,9 +874,9 @@
     },
     "routing": {
       "loading": "Vérification du profil",
-      "profileErrorTitle": "PROFIL TEMPORAIREMENT INDISPONIBLE",
+      "profileErrorTitle": "Profil temporairement indisponible",
       "profileErrorBody": "Nous ne pouvons pas vérifier ton profil pour le moment. Aucune configuration ne sera modifiée.",
-      "profileMissingTitle": "PROFIL INTROUVABLE",
+      "profileMissingTitle": "Profil introuvable",
       "profileMissingBody": "Ton compte est connecté, mais son profil n’est pas encore disponible.",
       "retry": "Réessayer"
     },
@@ -1557,15 +1557,15 @@
     "billing": {
       "title": "Historique des paiements",
       "empty": "Aucun paiement enregistre",
-      "statusPaid": "Paye",
-      "statusRefunded": "Rembourse",
+      "statusPaid": "Payé",
+      "statusRefunded": "Remboursé",
       "statusFailed": "Echoue",
       "noDate": "Tentative"
     },
     "delete": {
       "button": "Supprimer mon compte",
-      "title": "SUPPRIMER MON COMPTE",
-      "warning": "Toutes tes donnees seront supprimees definitivement. Cette action est irreversible.",
+      "title": "Supprimer mon compte",
+      "warning": "Toutes tes données seront supprimées définitivement. Cette action est irréversible.",
       "confirmPrompt": "Tape <bold>{word}</bold> pour confirmer :",
       "confirmWord": "SUPPRIMER",
       "placeholder": "SUPPRIMER",
