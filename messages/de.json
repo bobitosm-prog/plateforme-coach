@@ -770,7 +770,7 @@
   },
   "cookieConsent": {
     "title": "Cookies",
-    "description": "Wir verwenden Cookies, um die Plattform zu betreiben und Ihre Erfahrung zu verbessern. Ihre Daten werden nie verkauft.",
+    "description": "Wir verwenden notwendige Cookies sowie mit Ihrer Einwilligung Tools zur Reichweiten- und Werbemessung. Ihre Daten werden nie verkauft.",
     "necessaryOnly": "Ablehnen",
     "acceptAll": "Alle akzeptieren",
     "customize": "Anpassen",
@@ -786,6 +786,10 @@
       "analytics": {
         "title": "Reichweitenmessung",
         "description": "Helfen uns zu verstehen, wie Sie die Website nutzen (Vercel Analytics, Speed Insights). Anonymisierte Daten."
+      },
+      "marketing": {
+        "title": "Werbemessung",
+        "description": "Google Ads misst Besuche und Abonnements aus unseren Anzeigen. Nur mit Ihrer Einwilligung aktiviert."
       },
       "functional": {
         "title": "Funktional (Stripe)",

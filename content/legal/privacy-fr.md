@@ -111,6 +111,7 @@ Aucune donnée n'est obtenue auprès de tiers ou de courtiers en données.
 | Communication transactionnelle (confirmation, factures, support) | Email | Exécution du contrat |
 | Amélioration des services | Données techniques anonymisées, conversations Athena anonymisées | Intérêt légitime (art. 6.1.f RGPD) |
 | Statistiques anonymisées (analytics) | Données techniques | Consentement (art. 6.1.a RGPD) |
+| Mesure des publicités Google Ads | Visite du site, abonnement confirmé et montant | Consentement (art. 6.1.a RGPD) |
 | Communication commerciale (newsletter) | Email | Consentement opt-in explicite (art. 6.1.a RGPD) |
 | Respect des obligations légales (comptabilité, lutte anti-fraude) | Toutes données concernées | Obligation légale (art. 6.1.c RGPD) |
 
@@ -126,6 +127,7 @@ MoovX fait appel à plusieurs prestataires techniques agissant en qualité de so
 |---------------|---------------|--------------------------|--------------------|
 | **Supabase Inc.** | Hébergement de base de données, authentification | Union européenne (région EU) | CCT + Adéquation Suisse-UE |
 | **Vercel Inc.** | Hébergement web, CDN, analytics | États-Unis / Mondial (CDN) | EU-US Data Privacy Framework |
+| **Google (Google Ads)** | Mesure des visites et abonnements provenant des annonces, après consentement | Traitement possible hors Suisse / UE | Consentement de l'utilisateur |
 | **Stripe Payments Europe Ltd.** | Traitement des paiements | Irlande (UE) / États-Unis | CCT + EU-US Data Privacy Framework |
 | **Anthropic PBC** | Technologie IA pour Athena | États-Unis | Voir les conditions de traitement et de transfert applicables au fournisseur |
 | **Resend Inc.** *(le cas échéant)* | Envoi d'emails transactionnels | États-Unis | EU-US Data Privacy Framework |
@@ -150,7 +152,7 @@ Les Utilisateurs sont invités à **ne pas communiquer de données médicales se
 
 ### 5.4 Aucune vente de données
 
-Le Prestataire **ne vend, ne loue, ni ne cède** les données personnelles des Utilisateurs à des tiers à des fins commerciales ou publicitaires.
+Le Prestataire **ne vend ni ne loue** les données personnelles des Utilisateurs. Après consentement à la mesure des publicités, les données limitées décrites ci-dessus sont transmises à Google Ads pour attribuer les visites et abonnements aux annonces.
 
 ---
 
@@ -198,7 +200,7 @@ L'Utilisateur peut demander à recevoir ses données dans un format structuré, 
 L'Utilisateur peut s'opposer, à tout moment et pour des raisons tenant à sa situation particulière, au traitement de ses données fondé sur l'intérêt légitime du Prestataire. L'Utilisateur peut également s'opposer à tout moment et sans motif à l'utilisation de ses données à des fins de prospection commerciale.
 
 ### 7.7 Droit de retirer son consentement *(art. 7.3 RGPD)*
-Lorsque le traitement est fondé sur le consentement (cookies analytiques, newsletter, données de santé sensibles), l'Utilisateur peut retirer ce consentement à tout moment, sans que cela n'affecte la licéité du traitement antérieur.
+Lorsque le traitement est fondé sur le consentement (cookies analytiques ou publicitaires, newsletter, données de santé sensibles), l'Utilisateur peut retirer ce consentement à tout moment, sans que cela n'affecte la licéité du traitement antérieur.
 
 ### 7.8 Droit de ne pas faire l'objet d'une décision automatisée *(art. 22 RGPD / art. 21 nLPD)*
 Les recommandations d'Athena ne constituent pas des « décisions automatisées produisant des effets juridiques » au sens de l'article 22 RGPD. Elles ne sont fournies qu'à titre informatif et ne se substituent pas à un jugement humain. L'Utilisateur peut néanmoins demander une intervention humaine pour toute question soulevée par les recommandations d'Athena.
@@ -260,7 +262,7 @@ L'utilisation des cookies est détaillée dans la **Politique de Cookies**, acce
 **Principes clés :**
 - Les cookies strictement nécessaires (authentification, préférences linguistiques, panier) sont déposés sans consentement (base légale : intérêt légitime / exécution du contrat) ;
 - Les cookies analytiques (Vercel Analytics, Speed Insights) ne sont déposés **qu'après consentement explicite** (opt-in) ;
-- Aucun cookie publicitaire / marketing n'est utilisé à ce jour ;
+- La balise Google Ads n'est chargée qu'après consentement à la mesure des publicités. Elle mesure les visites et, après paiement confirmé, les abonnements issus des annonces ; aucun nom, email ou donnée de santé n'est transmis dans l'événement de conversion ;
 - L'Utilisateur peut modifier ses choix à tout moment via le bandeau de gestion accessible en pied de page.
 
 ---

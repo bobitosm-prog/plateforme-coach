@@ -111,6 +111,7 @@ Es werden keine Daten von Dritten oder Datenhändlern bezogen.
 | Transaktionskommunikation (Bestätigung, Rechnungen, Support) | E-Mail | Vertragserfüllung |
 | Verbesserung der Dienste | Anonymisierte technische Daten, anonymisierte Athena-Gespräche | Berechtigtes Interesse (Art. 6.1.f DSGVO) |
 | Anonymisierte Statistiken (Analytics) | Technische Daten | Einwilligung (Art. 6.1.a DSGVO) |
+| Google Ads Werbemessung | Website-Besuche, bestätigtes Abonnement und Betrag | Einwilligung (Art. 6.1.a DSGVO) |
 | Werbekommunikation (Newsletter) | E-Mail | Ausdrückliche Opt-in-Einwilligung (Art. 6.1.a DSGVO) |
 | Einhaltung gesetzlicher Verpflichtungen (Buchhaltung, Betrugsbekämpfung) | Alle betroffenen Daten | Rechtliche Verpflichtung (Art. 6.1.c DSGVO) |
 
@@ -126,6 +127,7 @@ MoovX nutzt mehrere technische Dienstleister, die als Auftragsverarbeiter im Sin
 |---------------------|---------------------|---------------|------------------------|
 | **Supabase Inc.** | Datenbankhosting, Authentifizierung | Europäische Union (EU-Region) | SCC + Schweiz-EU-Angemessenheit |
 | **Vercel Inc.** | Web-Hosting, CDN, Analytics | Vereinigte Staaten / Weltweit (CDN) | EU-US Data Privacy Framework |
+| **Google (Google Ads)** | Misst Besuche und Abonnements aus Anzeigen nach Einwilligung | Verarbeitung kann ausserhalb der Schweiz / EU erfolgen | Einwilligung der Nutzer |
 | **Stripe Payments Europe Ltd.** | Zahlungsabwicklung | Irland (EU) / Vereinigte Staaten | SCC + EU-US Data Privacy Framework |
 | **Anthropic PBC** | KI-Technologie für Athena | Vereinigte Staaten | Siehe die geltenden Verarbeitungs- und Übermittlungsbedingungen des Anbieters |
 | **Resend Inc.** *(gegebenenfalls)* | Versand transaktionaler E-Mails | Vereinigte Staaten | EU-US Data Privacy Framework |
@@ -150,7 +152,7 @@ Die Nutzer werden gebeten, **keine sensiblen medizinischen Daten** in ihren Gesp
 
 ### 5.4 Kein Datenverkauf
 
-Der Anbieter **verkauft, vermietet oder überträgt** personenbezogene Daten der Nutzer **nicht** an Dritte für kommerzielle oder werbliche Zwecke.
+Der Anbieter **verkauft oder vermietet** personenbezogene Daten der Nutzer **nicht**. Nach Einwilligung zur Werbemessung werden die oben beschriebenen begrenzten Daten an Google Ads übermittelt, um Besuche und Abonnements Anzeigen zuzuordnen.
 
 ---
 
@@ -198,7 +200,7 @@ Der Nutzer kann verlangen, seine Daten in einem strukturierten, gängigen und ma
 Der Nutzer kann jederzeit und aus Gründen, die sich aus seiner besonderen Situation ergeben, der auf das berechtigte Interesse des Anbieters gestützten Verarbeitung seiner Daten widersprechen. Der Nutzer kann zudem jederzeit und ohne Angabe von Gründen der Verwendung seiner Daten zu Direktwerbezwecken widersprechen.
 
 ### 7.7 Recht auf Widerruf der Einwilligung *(Art. 7.3 DSGVO)*
-Wenn die Verarbeitung auf einer Einwilligung beruht (Analytics-Cookies, Newsletter, sensible Gesundheitsdaten), kann der Nutzer diese Einwilligung jederzeit widerrufen, ohne dass die Rechtmässigkeit der vorherigen Verarbeitung berührt wird.
+Wenn die Verarbeitung auf einer Einwilligung beruht (Analytics- oder Werbe-Cookies, Newsletter, sensible Gesundheitsdaten), kann der Nutzer diese Einwilligung jederzeit widerrufen, ohne dass die Rechtmässigkeit der vorherigen Verarbeitung berührt wird.
 
 ### 7.8 Recht, keiner automatisierten Entscheidung unterworfen zu werden *(Art. 22 DSGVO / Art. 21 revDSG)*
 Die Empfehlungen von Athena stellen keine „automatisierten Entscheidungen mit rechtlicher Wirkung" im Sinne von Artikel 22 DSGVO dar. Sie werden lediglich zu Informationszwecken bereitgestellt und ersetzen keine menschliche Beurteilung. Der Nutzer kann dennoch ein menschliches Eingreifen für jede Frage im Zusammenhang mit Athenas Empfehlungen verlangen.
@@ -260,7 +262,7 @@ Die Nutzung von Cookies wird in der **Cookie-Richtlinie** detailliert beschriebe
 **Schlüsselprinzipien:**
 - Streng notwendige Cookies (Authentifizierung, Spracheinstellungen, Warenkorb) werden ohne Einwilligung gesetzt (Rechtsgrundlage: berechtigtes Interesse / Vertragserfüllung);
 - Analytics-Cookies (Vercel Analytics, Speed Insights) werden **nur nach ausdrücklicher Einwilligung** (Opt-in) gesetzt;
-- Es werden derzeit keine Werbe- / Marketing-Cookies verwendet;
+- Das Google Ads Tag wird erst nach Einwilligung zur Werbemessung geladen. Es misst Besuche und nach bestätigter Zahlung Abonnements aus Anzeigen; im Conversion-Ereignis werden weder Name, E-Mail-Adresse noch Gesundheitsdaten übermittelt;
 - Der Nutzer kann seine Einstellungen jederzeit über das im Footer zugängliche Banner ändern.
 
 ---

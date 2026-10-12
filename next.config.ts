@@ -37,16 +37,18 @@ const nextConfig: NextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV === 'development'
     const localSupabaseCspSources = getLocalSupabaseCspSources()
+    const googleAdsScripts = 'https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com'
+    const googleAdsBeacons = 'https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.ch'
 
     const cspDirectives = [
       `default-src 'self'`,
-      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.stripe.com https://*.vercel-insights.com https://vercel-scripts.com https://*.vercel-scripts.com`,
+      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.stripe.com https://*.vercel-insights.com https://vercel-scripts.com https://*.vercel-scripts.com ${googleAdsScripts}`,
       `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-      `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch https://moovx.ch https://*.googleusercontent.com`,
+      `img-src 'self' data: blob: https://*.supabase.co https://*.stripe.com https://app.moovx.ch https://moovx.ch https://*.googleusercontent.com ${googleAdsBeacons}`,
       `font-src 'self' data: https://fonts.gstatic.com`,
-      `connect-src 'self' https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com${localSupabaseCspSources.length ? ` ${localSupabaseCspSources.join(' ')}` : ''}`,
+      `connect-src 'self' https://app.moovx.ch https://moovx.ch https://api.stripe.com https://*.stripe.com https://*.supabase.co wss://*.supabase.co https://*.vercel-insights.com ${googleAdsBeacons} https://ad.doubleclick.net${localSupabaseCspSources.length ? ` ${localSupabaseCspSources.join(' ')}` : ''}`,
       `media-src 'self' https://*.supabase.co blob:`,
-      `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com`,
+      `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://www.googletagmanager.com`,
       `frame-ancestors 'none'`,
       `base-uri 'self'`,
       `form-action 'self' https://checkout.stripe.com`,

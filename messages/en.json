@@ -770,7 +770,7 @@
   },
   "cookieConsent": {
     "title": "Cookies",
-    "description": "We use cookies to operate the platform and improve your experience. Your data is never sold.",
+    "description": "We use essential cookies and, with your permission, audience and advertising measurement tools. Your data is never sold.",
     "necessaryOnly": "Decline",
     "acceptAll": "Accept all",
     "customize": "Customize",
@@ -786,6 +786,10 @@
       "analytics": {
         "title": "Analytics",
         "description": "Help us understand how you use the site (Vercel Analytics, Speed Insights). Anonymized data."
+      },
+      "marketing": {
+        "title": "Ad measurement",
+        "description": "Google Ads measures visits and subscriptions from our ads. Enabled only with your permission."
       },
       "functional": {
         "title": "Functional (Stripe)",

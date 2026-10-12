@@ -111,6 +111,7 @@ No data is obtained from third parties or data brokers.
 | Transactional communication (confirmation, invoices, support) | Email | Performance of contract |
 | Service improvement | Anonymized technical data, anonymized Athena conversations | Legitimate interest (Art. 6.1.f GDPR) |
 | Anonymized statistics (analytics) | Technical data | Consent (Art. 6.1.a GDPR) |
+| Google Ads measurement | Website visits, confirmed subscription and amount | Consent (Art. 6.1.a GDPR) |
 | Commercial communication (newsletter) | Email | Explicit opt-in consent (Art. 6.1.a GDPR) |
 | Compliance with legal obligations (accounting, anti-fraud) | All concerned data | Legal obligation (Art. 6.1.c GDPR) |
 
@@ -126,6 +127,7 @@ MoovX uses several technical service providers acting as processors within the m
 |--------------|------------------|---------------|----------------|
 | **Supabase Inc.** | Database hosting, authentication | European Union (EU region) | SCCs + Switzerland-EU Adequacy |
 | **Vercel Inc.** | Web hosting, CDN, analytics | United States / Worldwide (CDN) | EU-US Data Privacy Framework |
+| **Google (Google Ads)** | Measures visits and subscriptions from ads after consent | Processing may occur outside Switzerland / EU | User consent |
 | **Stripe Payments Europe Ltd.** | Payment processing | Ireland (EU) / United States | SCCs + EU-US Data Privacy Framework |
 | **Anthropic PBC** | AI technology for Athena | United States | See the provider’s applicable processing and transfer terms |
 | **Resend Inc.** *(if applicable)* | Transactional email sending | United States | EU-US Data Privacy Framework |
@@ -150,7 +152,7 @@ Users are advised **not to communicate sensitive medical data** in their exchang
 
 ### 5.4 No data sale
 
-The Provider **does not sell, rent, or transfer** Users' personal data to third parties for commercial or advertising purposes.
+The Provider **does not sell or rent** Users' personal data. After consent to ad measurement, the limited data described above is sent to Google Ads to attribute visits and subscriptions to ads.
 
 ---
 
@@ -198,7 +200,7 @@ The User may request to receive their data in a structured, commonly used, and m
 The User may object, at any time and for reasons relating to their particular situation, to the processing of their data based on the Provider's legitimate interest. The User may also object at any time and without reason to the use of their data for commercial prospecting.
 
 ### 7.7 Right to withdraw consent *(Art. 7.3 GDPR)*
-When processing is based on consent (analytics cookies, newsletter, sensitive health data), the User may withdraw this consent at any time, without affecting the lawfulness of prior processing.
+When processing is based on consent (analytics or advertising cookies, newsletter, sensitive health data), the User may withdraw this consent at any time, without affecting the lawfulness of prior processing.
 
 ### 7.8 Right not to be subject to automated decision-making *(Art. 22 GDPR / Art. 21 revFADP)*
 Athena's recommendations do not constitute "automated decisions producing legal effects" within the meaning of Article 22 GDPR. They are provided for informational purposes only and do not replace human judgment. The User may nevertheless request human intervention for any question raised by Athena's recommendations.
@@ -260,7 +262,7 @@ The use of cookies is detailed in the **Cookie Policy**, accessible via the cons
 **Key principles:**
 - Strictly necessary cookies (authentication, language preferences, cart) are placed without consent (legal basis: legitimate interest / contract performance);
 - Analytics cookies (Vercel Analytics, Speed Insights) are placed **only after explicit consent** (opt-in);
-- No advertising / marketing cookies are used at this date;
+- The Google Ads tag is loaded only after consent to ad measurement. It measures visits and, after payment is confirmed, subscriptions from ads; no name, email, or health data is sent in the conversion event;
 - The User may modify their choices at any time via the management banner accessible in the footer.
 
 ---
