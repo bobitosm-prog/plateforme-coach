@@ -10,7 +10,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const loc = locale as Locale
-  const titles: Record<Locale, string> = { fr: 'Blog — MoovX', en: 'Blog — MoovX', de: 'Blog — MoovX' }
+  const titles: Record<Locale, string> = {
+    fr: 'Guides musculation et nutrition | MoovX',
+    en: 'Strength Training and Nutrition Guides | MoovX',
+    de: 'Ratgeber für Krafttraining und Ernährung | MoovX',
+  }
   const descriptions: Record<Locale, string> = {
     fr: 'Articles nutrition et entraînement basés sur la science. Par MoovX, plateforme fitness Swiss Made.',
     en: 'Science-based nutrition and training articles. By MoovX, Swiss Made fitness platform.',
@@ -31,10 +35,10 @@ export default async function BlogIndex({
   const { locale } = await params
   const loc = (locale || 'fr') as Locale
   const posts = getAllPosts()
-  const labels: Record<Locale, { back: string; read: string; min: string }> = {
-    fr: { back: 'Retour', read: 'Lire', min: 'min de lecture' },
-    en: { back: 'Back', read: 'Read', min: 'min read' },
-    de: { back: 'Zurück', read: 'Lesen', min: 'Min. Lesezeit' },
+  const labels: Record<Locale, { back: string; read: string; min: string; heading: string }> = {
+    fr: { back: 'Retour', read: 'Lire', min: 'min de lecture', heading: 'Guides musculation et nutrition' },
+    en: { back: 'Back', read: 'Read', min: 'min read', heading: 'Strength Training and Nutrition Guides' },
+    de: { back: 'Zurück', read: 'Lesen', min: 'Min. Lesezeit', heading: 'Ratgeber für Krafttraining und Ernährung' },
   }
   const l = labels[loc] || labels.fr
 
@@ -49,7 +53,7 @@ export default async function BlogIndex({
 
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '40px 20px' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 40 }}>
-          Blog MoovX
+          {l.heading}
         </h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
