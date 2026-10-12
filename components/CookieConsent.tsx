@@ -24,40 +24,50 @@ export type ConsentChoice = {
   necessary: true;
   analytics: boolean;
   functional: boolean;
+  marketing: boolean;
   timestamp: number;
-  version: '1.0';
+  version: '2.0';
 };
 
 const COOKIE_NAME = 'moovx_consent';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 12 mois
-const CONSENT_VERSION = '1.0';
+const CONSENT_VERSION = '2.0';
 
 // === HELPERS ===
 
 export function getConsent(): ConsentChoice | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(?:^|; )' + COOKIE_NAME + '=([^;]+)'));
-  if (!match) return null;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(match[1])) as ConsentChoice;
-    if (parsed.version !== CONSENT_VERSION) return null;
-    return parsed;
-  } catch {
-    return null;
+  // A host-only v1 cookie may coexist with the shared-domain v2 cookie.
+  for (const entry of document.cookie.split('; ')) {
+    if (!entry.startsWith(`${COOKIE_NAME}=`)) continue;
+    try {
+      const parsed = JSON.parse(decodeURIComponent(entry.slice(COOKIE_NAME.length + 1))) as ConsentChoice;
+      if (parsed.version === CONSENT_VERSION && typeof parsed.marketing === 'boolean') return parsed;
+    } catch {
+      // Ignore malformed or obsolete consent records.
+    }
   }
+  return null;
 }
 
 function setConsent(choice: Omit<ConsentChoice, 'timestamp' | 'version'>) {
+  const previous = getConsent();
   const full: ConsentChoice = {
     ...choice,
     necessary: true,
     timestamp: Date.now(),
     version: CONSENT_VERSION,
   };
+  // Remove the former host-only cookie before sharing consent across moovx.ch and app.moovx.ch.
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax; Secure`;
+  const domain = location.hostname === 'moovx.ch' || location.hostname.endsWith('.moovx.ch')
+    ? '; domain=moovx.ch' : '';
   document.cookie = `${COOKIE_NAME}=${encodeURIComponent(
     JSON.stringify(full)
-  )}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax; Secure`;
+  )}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax; Secure${domain}`;
   window.dispatchEvent(new CustomEvent('moovx-consent-changed', { detail: full }));
+  // A loaded third-party script cannot be unloaded; refresh after withdrawing permission.
+  if (previous?.marketing && !full.marketing) window.location.reload();
 }
 
 export function useConsent(): ConsentChoice | null {
@@ -86,6 +96,7 @@ export default function CookieConsent() {
   const [showCustomize, setShowCustomize] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [functional, setFunctional] = useState(true);
+  const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
     const existing = getConsent();
@@ -98,6 +109,7 @@ export default function CookieConsent() {
     } else {
       setAnalytics(existing.analytics);
       setFunctional(existing.functional);
+      setMarketing(existing.marketing);
     }
   }, []);
 
@@ -107,6 +119,7 @@ export default function CookieConsent() {
       if (existing) {
         setAnalytics(existing.analytics);
         setFunctional(existing.functional);
+        setMarketing(existing.marketing);
       }
       setShowCustomize(true);
       setIsVisible(true);
@@ -126,11 +139,11 @@ export default function CookieConsent() {
   };
 
   const handleAcceptAll = () =>
-    handleClose(() => setConsent({ necessary: true, analytics: true, functional: true }));
+    handleClose(() => setConsent({ necessary: true, analytics: true, functional: true, marketing: true }));
   const handleDeclineAll = () =>
-    handleClose(() => setConsent({ necessary: true, analytics: false, functional: true }));
+    handleClose(() => setConsent({ necessary: true, analytics: false, functional: true, marketing: false }));
   const handleSaveCustom = () =>
-    handleClose(() => setConsent({ necessary: true, analytics, functional }));
+    handleClose(() => setConsent({ necessary: true, analytics, functional, marketing }));
 
   if (!isVisible) return null;
 
@@ -319,6 +332,12 @@ export default function CookieConsent() {
                     description={t('categories.analytics.description')}
                     checked={analytics}
                     onChange={setAnalytics}
+                  />
+                  <CategoryRow
+                    title={t('categories.marketing.title')}
+                    description={t('categories.marketing.description')}
+                    checked={marketing}
+                    onChange={setMarketing}
                   />
                 </div>
 

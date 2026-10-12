@@ -1,6 +1,7 @@
 'use client'
 
 import { useReportWebVitals } from 'next/web-vitals'
+import { getConsent } from '@/components/CookieConsent'
 
 /**
  * Real User Monitoring — Core Web Vitals
@@ -10,17 +11,7 @@ import { useReportWebVitals } from 'next/web-vitals'
 export function WebVitals() {
   useReportWebVitals((metric) => {
     // Respect cookie consent — only send if analytics accepted
-    const consentMatch = document.cookie.match(/moovx_consent=([^;]+)/)
-    if (consentMatch) {
-      try {
-        const consent = JSON.parse(decodeURIComponent(consentMatch[1]))
-        if (!consent.analytics) return
-      } catch {
-        return
-      }
-    }
-    // No consent cookie at all = first visit, don't send (RGPD safe)
-    if (!consentMatch) return
+    if (!getConsent()?.analytics) return
 
     const body = JSON.stringify({
       name: metric.name,

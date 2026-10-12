@@ -3,6 +3,7 @@ import { Bebas_Neue, Barlow_Condensed, Outfit, DM_Sans, Anton } from "next/font/
 import "@/app/globals.css";
 import { Toaster } from "sonner";
 import AnalyticsGate from "@/components/AnalyticsGate";
+import GoogleAdsGate from "@/components/GoogleAdsGate";
 import { WebVitals } from "@/app/web-vitals";
 import AppErrorBoundary from "@/app/components/ui/AppErrorBoundary";
 
@@ -75,6 +76,18 @@ export default function RootDocument({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta property="og:image" content="https://app.moovx.ch/logo-moovx.png" />
         <style dangerouslySetInnerHTML={{ __html: 'html,body{background:#0D0B08!important;margin:0}' }} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function () { try {
+            const returnUrl = new URL(location.href);
+            const checkoutId = returnUrl.searchParams.get('session_id');
+            if (returnUrl.searchParams.get('payment') === 'success' && checkoutId &&
+                checkoutId.length <= 256 && /^cs_[A-Za-z0-9_]+$/.test(checkoutId)) {
+              sessionStorage.setItem('moovx_pending_ads_checkout', checkoutId);
+              returnUrl.searchParams.delete('session_id');
+              history.replaceState(history.state, '', returnUrl.pathname + returnUrl.search + returnUrl.hash);
+            }
+          } catch (error) { /* Tracking must never interrupt checkout navigation. */ } })();
+        ` }} />
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
@@ -91,6 +104,7 @@ export default function RootDocument({
         </AppErrorBoundary>
         <Toaster position="top-center" richColors theme="dark" />
         <AnalyticsGate />
+        <GoogleAdsGate />
         <WebVitals />
       </body>
     </html>
