@@ -921,10 +921,14 @@
 
 .mealChooser {
   position: relative;
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  box-sizing: border-box;
   width: min(100%, 420px);
-  padding: 18px;
+  padding: 24px;
   border: 1px solid rgba(230, 195, 100, .18);
-  border-radius: 18px;
+  border-radius: 20px;
   background: #171511;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
 }
@@ -937,9 +941,11 @@
 }
 
 .mealChooserHeader h2 {
+  font-weight: 700;
+  letter-spacing: -.025em;
   margin: 2px 0 0;
-  color: #eee9df;
-  font-size: 1.15rem;
+  color: #f5f2ea;
+  font-size: 28px;
 }
 
 .mealChooserClose {
@@ -958,8 +964,8 @@
 
 .mealChooserDescription {
   margin: 12px 0 16px;
-  color: #948c80;
-  font-size: .78rem;
+  color: #b7b0a0;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -975,10 +981,10 @@
   padding: 10px;
   border: 1px solid rgba(230, 195, 100, .16);
   border-radius: 12px;
-  color: #d8c27d;
+  color: #dfbf70;
   background: rgba(230, 195, 100, .06);
   font: inherit;
-  font-size: .78rem;
+  font-size: 15px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -1114,3 +1120,5 @@
 .compactJournal .mealActionArea { position: relative; }
 .compactJournal .mealActionBar { position: static; width: auto; justify-content: flex-end; }
 .compactJournal .mealOverflowMenu { top: auto; bottom: 48px; right: 0; }
+
+.mealChooser { background: #211f18; border: 1px solid #393326; }
