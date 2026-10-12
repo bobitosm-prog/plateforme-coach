@@ -1380,11 +1380,11 @@
   },
   "paywall": {
     "client": {
-      "title": "WÄHLE DEINEN PLAN",
+      "title": "Mein Abonnement.",
       "subtitle": "Starte deine Transformation mit deinem persönlichen Coach"
     },
     "coach": {
-      "title": "AKTIVIERE DEIN DASHBOARD",
+      "title": "Mein Coach-Abonnement.",
       "subtitle": "Zugang zu deinem Coach-Bereich und Kundenverwaltung"
     },
     "coachCard": {
@@ -3632,7 +3632,7 @@
   },
   "weekly_diagnostic_detail": {
     "back": "Zurück",
-    "title": "Meine Woche",
+    "title": "Mein Wochenrückblick.",
     "metrics_heading": "Meine Kennzahlen",
     "metric_adherence": "Einhaltung",
     "metric_weight_delta": "Gewichtsänderung",

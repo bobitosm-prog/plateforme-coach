@@ -1380,11 +1380,11 @@
   },
   "paywall": {
     "client": {
-      "title": "CHOOSE YOUR PLAN",
+      "title": "My subscription.",
       "subtitle": "Start your transformation with your personal coach"
     },
     "coach": {
-      "title": "ACTIVATE YOUR DASHBOARD",
+      "title": "My coach subscription.",
       "subtitle": "Access your coach space and manage your clients"
     },
     "coachCard": {
@@ -3632,7 +3632,7 @@
   },
   "weekly_diagnostic_detail": {
     "back": "Back",
-    "title": "My week",
+    "title": "My weekly review.",
     "metrics_heading": "My metrics",
     "metric_adherence": "Adherence",
     "metric_weight_delta": "Weight change",
