@@ -874,9 +874,9 @@
     },
     "routing": {
       "loading": "Profil wird geprüft",
-      "profileErrorTitle": "PROFIL VORÜBERGEHEND NICHT VERFÜGBAR",
+      "profileErrorTitle": "Profil vorübergehend nicht verfügbar",
       "profileErrorBody": "Dein Profil kann derzeit nicht geprüft werden. Es werden keine Einrichtungsdaten geändert.",
-      "profileMissingTitle": "PROFIL NICHT GEFUNDEN",
+      "profileMissingTitle": "Profil nicht gefunden",
       "profileMissingBody": "Dein Konto ist angemeldet, aber das Profil ist noch nicht verfügbar.",
       "retry": "Erneut versuchen"
     },
@@ -1564,7 +1564,7 @@
     },
     "delete": {
       "button": "Mein Konto löschen",
-      "title": "MEIN KONTO LÖSCHEN",
+      "title": "Mein Konto löschen",
       "warning": "Alle deine Daten werden dauerhaft gelöscht. Diese Aktion ist unwiderruflich.",
       "confirmPrompt": "Tippe <bold>{word}</bold> zum Bestätigen:",
       "confirmWord": "LÖSCHEN",

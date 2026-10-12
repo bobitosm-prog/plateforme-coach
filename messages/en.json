@@ -874,9 +874,9 @@
     },
     "routing": {
       "loading": "Checking profile",
-      "profileErrorTitle": "PROFILE TEMPORARILY UNAVAILABLE",
+      "profileErrorTitle": "Profile temporarily unavailable",
       "profileErrorBody": "We cannot verify your profile right now. No setup data will be changed.",
-      "profileMissingTitle": "PROFILE NOT FOUND",
+      "profileMissingTitle": "Profile not found",
       "profileMissingBody": "Your account is signed in, but its profile is not available yet.",
       "retry": "Try again"
     },
@@ -1564,7 +1564,7 @@
     },
     "delete": {
       "button": "Delete my account",
-      "title": "DELETE MY ACCOUNT",
+      "title": "Delete my account",
       "warning": "All your data will be permanently deleted. This action is irreversible.",
       "confirmPrompt": "Type <bold>{word}</bold> to confirm:",
       "confirmWord": "DELETE",

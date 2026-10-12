@@ -117,3 +117,13 @@ Les appels réseau, destinataires, payloads, limites de saisie, lecture des rapp
 Validation : 23 tests ciblés réussis, dont édition/envoi simulé et retour de la messagerie, absence de coach, deux sens de messages, chargement/erreur/retry/vide/réponse des rapports, bascule du modal et payload de signalement simulé. TypeScript, diff et parité i18n contrôlés. Navigateur local à 393 × 852 avec données fictives : champs 16 px, pas de débordement, consultation des réponses et fermeture du modal ; captures enregistrées. Les endpoints de rapports sont simulés uniquement dans le banc local temporaire, retiré avant commit. Aucun message, rapport ou donnée réelle envoyé. Pas de validation physique iPhone ni d’envoi de photo réel dans ce lot.
 
 Prochaine passe : historique de paiements, confirmation de suppression et états génération/erreur ; vérifier aussi le zoom des images jointes et les retours vidéo coach dans leur contexte actif.
+
+## Lot paiements, confirmation et états de préparation
+
+PaymentHistory, DeleteAccountSection, les styles résiduels de AccountSection, InitialGenerationStatus et PostAuthFatalState passent au thème app. Historique plus lisible, confirmation avec titre naturel, champ 16 px et commandes 48 px, cartes de préparation/erreur rayon 20 px et focus visible. Titres de suppression et erreurs profil en casse naturelle FR/EN/DE. Le calque de suppression utilise Z_MODAL (1100) au lieu de 60, inférieur à Z_NAV (999) ; rôle dialog et description accessibles ajoutés. La préparation respecte la safe area supérieure.
+
+Montants, catalogue Apple, appels de paiement, logique de suppression, consentement et génération inchangés. Aucun achat, aucune suppression ni requête réelle de génération.
+
+Validation : 25 tests ciblés (historique vide/statuts, mot exact de suppression et annulation sans requête, relances par domaine/finalisation, consentement différé, erreurs de profil), TypeScript et parité i18n. Prévisualisation locale mobile 393 × 852 sur données fictives : historique, ouverture/annulation de confirmation, préparation interrompue et relance simulée, erreur profil ; pas de débordement. Banc temporaire supprimé. Captures conservées ; pas de validation physique iPhone ni de suppression réelle.
+
+Prochain lot : abonnement web et diagnostic hebdomadaire ; conserver les limites du présent audit pour les états connectés et les médias.
