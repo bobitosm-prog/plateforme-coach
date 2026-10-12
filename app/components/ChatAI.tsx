@@ -1,10 +1,10 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, Heart, Dumbbell, BarChart3, UtensilsCrossed, Trash2 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { RailOverlay } from './ui/RailOverlay'
 import { useTranslations, useLocale } from 'next-intl'
-import { colors, fonts, titleStyle, bodyStyle, mutedStyle, subtitleStyle, cardStyle, Z_MODAL, Z_FAB } from '../../lib/app-design-tokens'
-import styles from './SecondaryPanels.module.css'
+import { colors, fonts, titleStyle, bodyStyle, Z_MODAL, Z_FAB } from '../../lib/app-design-tokens'
+import styles from './ChatAI.module.css'
 import { useChatAI } from '../hooks/useChatAI'
 import AthenaMessageContent from './AthenaMessageContent'
 import type { UserCapabilities } from '../../lib/entitlements/capabilities'
@@ -23,7 +23,7 @@ interface ChatAIProps {
 export default function ChatAI({ session, profile, capabilities, externalOpen, onExternalClose, hideFloatingButton }: ChatAIProps) {
   const t = useTranslations('chat')
   const locale = useLocale()
-  const common = useTranslations()
+  const common = useTranslations('training_tab.sessionDetail')
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -47,9 +47,10 @@ export default function ChatAI({ session, profile, capabilities, externalOpen, o
 
   useEffect(() => {
     if (open) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-      }, 100)
+      const frame = requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
+      })
+      return () => cancelAnimationFrame(frame)
     }
   }, [messages.length, sending, open])
 
@@ -93,208 +94,43 @@ export default function ChatAI({ session, profile, capabilities, externalOpen, o
   const calorieContext = profile?.calorie_goal ? t('welcomeCalorie', { calorieGoal: profile.calorie_goal }) : ''
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 40 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className={`chat-ai-panel ${styles.panel}`}
-        role="dialog" aria-modal="true" aria-label={t('header.title')}
-        style={{ position: 'fixed', inset: 0, width: '100%', height: '100dvh', background: colors.background, zIndex: Z_MODAL, display: 'flex', flexDirection: 'column' }}
-      >
-        <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-
-          {/* Header */}
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'max(24px, env(safe-area-inset-top, 24px))', marginBottom: 20 }}>
-            <div style={{ position: 'absolute', top: 'max(16px, env(safe-area-inset-top, 16px))', right: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-              {messages.length > 0 && (
-                <button
-                  onClick={async () => {
-                    if (confirm(t('clearConfirm'))) {
-                      await clearHistory()
-                    }
-                  }}
-                  aria-label={t('clearLabel')}
-                  title={t('clearLabel')}
-                  style={{ width: 44, height: 44, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 1, transition: 'opacity 200ms' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-                >
-                  <Trash2 size={14} color={colors.textMuted} />
-                </button>
-              )}
-              <button aria-label={common('close')} onClick={handleClose} style={{ width: 44, height: 44, borderRadius: 12, background: colors.surfaceHigh, border: `1px solid ${colors.goldBorder}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: 16, color: colors.textMuted, lineHeight: 1 }}>&times;</span>
-              </button>
-            </div>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: `${colors.gold}1a`, border: `1px solid ${colors.gold}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-              <Bot size={28} color={colors.gold} strokeWidth={2} />
-            </div>
-            <div style={{ fontFamily: fonts.headline, fontSize: 28, fontWeight: 700, color: colors.gold, letterSpacing: '-.03em', marginBottom: 6 }}>{t('header.title')}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.success }} />
-              <span style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.success }}>{t('header.online')}</span>
-            </div>
+    <RailOverlay>
+      <section className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="athena-title">
+        <header className={styles.header}>
+          <div><span className={styles.eyebrow}>MOOVX</span><h1 id="athena-title">Athena<span>.</span></h1></div>
+          <div className={styles.actions}>
+            {hasConversation && <button aria-label={t('clearLabel')} onClick={async()=>{if(confirm(t('clearConfirm'))) await clearHistory()}}><Trash2 size={20}/></button>}
+            <button onClick={handleClose} aria-label={common('close')}>✕</button>
           </div>
-
-          {/* Profile summary */}
-          <div style={{ ...cardStyle, padding: 14, marginBottom: 16 }}>
-            <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.gold, letterSpacing: '0.12em', marginBottom: 10 }}>{t('summary.title')}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center' }}>
-              <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.current_weight || '—'}<span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 2 }}>{t('summary.kg')}</span></div>
-              </div>
-              <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.gold }}>{profile?.calorie_goal || profile?.tdee || '—'}<span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 2 }}>{t('summary.kcalDay')}</span></div>
-              </div>
-              <div>
-                <div style={{ fontFamily: fonts.headline, fontSize: 16, fontWeight: 800, color: colors.text }}>{profile?.sessions_per_week || '—'}<span style={{ fontSize: 12, color: colors.textMuted, marginLeft: 2 }}>{t('summary.sessions')}</span></div>
-              </div>
-            </div>
+        </header>
+        <div ref={scrollRef} className={styles.scroll}>
+          <div className={styles.content}>
+            {!hasConversation && <>
+              <div className={styles.welcome}><Bot size={28}/><p>{t('welcome', { firstName, calorieContext })}</p></div>
+              <details className={styles.summary}><summary>{t('summary.title')}</summary><div>
+                <span>{profile?.current_weight || '—'} {t('summary.kg')}</span>
+                <span>{profile?.calorie_goal || profile?.tdee || '—'} {t('summary.kcalDay')}</span>
+                <span>{profile?.sessions_per_week || '—'} {t('summary.sessions')}</span>
+              </div></details>
+            </>}
+            {historyLoading && <p role="status">{t('loading')}</p>}
+            {!historyLoading && !hasConversation && <div className={styles.suggestions}>
+              {[0,1,2,3].map(i=>{const Icon=SUGGESTION_ICONS[i];return <button key={i} onClick={()=>handleSend(t(`suggestions.cards.${i}.msg`))}><Icon size={22}/><span><strong>{t(`suggestions.cards.${i}.label`)}</strong><small>{t(`suggestions.cards.${i}.sub`)}</small></span></button>})}
+            </div>}
+            {messages.map(msg=><article key={msg.id} className={msg.role==='user'?styles.userMessage:styles.assistantMessage}>
+              <div className={styles.messageLabel}>{msg.role==='assistant'?'Athena':firstName}</div>
+              <div className={styles.messageBody}>{msg.role==='assistant'?<AthenaMessageContent content={msg.content}/>:msg.content}</div>
+              <time>{new Date(msg.created_at).toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})}</time>
+            </article>)}
+            {sending && <p role="status" className={styles.pending}>Athena…</p>}
+            {hookError && <p role="alert" className={styles.error}>{hookError}</p>}
           </div>
-
-          {/* Loading */}
-          {historyLoading && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 32, color: colors.textMuted, fontSize: 13, fontFamily: fonts.body }}>
-              {t('loading')}
-            </div>
-          )}
-
-          {/* Suggestions */}
-          {!historyLoading && !hasConversation && (
-            <>
-              <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', textAlign: 'center', marginBottom: 10 }}>{t('suggestions.title')}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-                {[0, 1, 2, 3].map(i => {
-                  const Icon = SUGGESTION_ICONS[i]
-                  return (
-                    <button key={i} onClick={() => handleSend(t(`suggestions.cards.${i}.msg`))} style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: 14, padding: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <Icon size={16} color={colors.gold} strokeWidth={2} />
-                      <div style={{ fontFamily: fonts.headline, fontSize: 14, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>{t(`suggestions.cards.${i}.label`)}</div>
-                      <div style={{ fontSize: 13, color: colors.textMuted }}>{t(`suggestions.cards.${i}.sub`)}</div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-                {[0, 1, 2, 3, 4].map(i => (
-                  <button key={i} onClick={() => handleSend(t(`suggestions.pills.${i}`))} style={{ fontSize: 13, fontFamily: fonts.headline, fontWeight: 700, color: colors.gold, background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 999, padding: '6px 12px', cursor: 'pointer' }}>
-                    {t(`suggestions.pills.${i}`)}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Welcome */}
-          {!historyLoading && !hasConversation && (
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Bot size={14} color={colors.gold} />
-              </div>
-              <div style={{ background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px', padding: '12px 14px' }}>
-                <div style={{ fontSize: 15, color: colors.textMuted, lineHeight: 1.5 }}>
-                  {t('welcome', { firstName, calorieContext })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Messages */}
-          {messages.map((msg) => (
-            <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, marginBottom: 12 }}>
-              {msg.role === 'assistant' && (
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                  <Bot size={14} color={colors.gold} />
-                </div>
-              )}
-              <div>
-                {msg.role === 'assistant' ? (
-                  <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}`, borderRadius: '4px 14px 14px 14px' }}>
-                    <div style={{ ...bodyStyle, fontSize: 15, color: colors.textMuted, lineHeight: 1.6 }}>
-                      <AthenaMessageContent content={msg.content} />
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ maxWidth: 280, padding: '12px 14px', background: colors.gold, border: `1px solid ${colors.gold}33`, borderRadius: '14px 14px 4px 14px', ...bodyStyle, fontSize: 15, color: colors.onGold, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {msg.content}
-                  </div>
-                )}
-                <div style={{ fontSize: 13, color: colors.textDim, marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                  {new Date(msg.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Sending indicator */}
-          {sending && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${colors.gold}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Bot size={14} color={colors.gold} />
-              </div>
-              <div style={{ padding: '12px 14px', borderRadius: '4px 14px 14px 14px', background: colors.surface, border: `1px solid ${colors.goldBorder}` }}>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: colors.gold, opacity: 0.5, animation: `dotPulse 1.2s ${i * 0.2}s ease-in-out infinite` }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error */}
-          {hookError && (
-            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#fca5a5', fontSize: 12, marginBottom: 12, fontFamily: fonts.body }}>
-              {hookError}
-            </div>
-          )}
-
-          <div style={{ height: 1 }} />
         </div>
-
-        {/* Input */}
-        <div style={{
-          display: 'flex', gap: 10, alignItems: 'center',
-          padding: '12px 20px',
-          paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
-          background: colors.surface,
-          borderTop: `1px solid ${colors.goldBorder}`,
-          flexShrink: 0,
-        }}>
-          <textarea aria-label={t('input.placeholder')} ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-            placeholder={t('input.placeholder')}
-            rows={1}
-            style={{
-              flex: 1, minWidth: 0, padding: '12px 16px',
-              background: colors.surfaceHigh,
-              border: `1px solid ${colors.goldBorder}`,
-              borderRadius: 14,
-              color: colors.text, fontSize: 16,
-              fontFamily: fonts.body, outline: 'none',
-              resize: 'none', maxHeight: 80,
-            }}
-          />
-          <button aria-label={t('input.send')} onClick={() => handleSend()} disabled={!input.trim() || sending}
-            style={{
-              width: 44, height: 44, borderRadius: 14,
-              background: input.trim() && !sending ? `linear-gradient(135deg, ${colors.gold}, ${colors.goldContainer})` : `${colors.gold}1a`,
-              border: 'none', cursor: input.trim() && !sending ? 'pointer' : 'default',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, opacity: input.trim() && !sending ? 1 : 0.3,
-            }}>
-            <Send size={18} color={input.trim() && !sending ? '#0D0B08' : colors.textMuted} strokeWidth={2.5} />
-          </button>
-        </div>
-
-        <style>{`
-          @keyframes dotPulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-          @media (min-width: 768px) { .chat-ai-panel { height: calc(100dvh - 80px) !important; bottom: 0 !important; border-radius: 20px 0 0 20px !important; } }
-        `}</style>
-      </motion.div>
-    </AnimatePresence>
+        <div className={styles.composer}><div>
+          <textarea ref={inputRef} aria-label={t('input.placeholder')} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();handleSend()}}} placeholder={t('input.placeholder')} rows={2}/>
+          <button aria-label={t('input.send')} onClick={()=>handleSend()} disabled={!input.trim()||sending}><Send size={22}/></button>
+        </div></div>
+      </section>
+    </RailOverlay>
   )
 }

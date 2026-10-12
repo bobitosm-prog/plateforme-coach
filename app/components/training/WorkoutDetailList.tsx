@@ -2,7 +2,7 @@
 
 import { setTonnage } from '@/lib/training/load-volume'
 import { useLocale, useTranslations } from 'next-intl'
-import { colors, fonts } from '../../../lib/design-tokens'
+import { colors, fonts } from '../../../lib/app-design-tokens'
 
 interface WorkoutDetailListProps {
   detail: { name: string; sets: any[] }[]
@@ -11,16 +11,16 @@ interface WorkoutDetailListProps {
 
 const statCard: React.CSSProperties = {
   background: colors.surface2, border: `1px solid ${colors.divider}`,
-  borderRadius: 12, padding: 14, textAlign: 'center',
+  borderRadius: 20, padding: 16, textAlign: 'center',
 }
 
 const exerciseCard: React.CSSProperties = {
   background: colors.surface2, border: `1px solid ${colors.divider}`,
-  borderRadius: 14, padding: 14, marginBottom: 10,
+  borderRadius: 20, padding: 20, marginBottom: 16,
 }
 
 const gridHeader: React.CSSProperties = {
-  fontFamily: fonts.body, fontSize: 9, fontWeight: 700,
+  fontFamily: fonts.body, fontSize: 12, fontWeight: 700,
   color: colors.textDim, letterSpacing: 1,
 }
 
@@ -48,15 +48,15 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
         <div style={statCard}>
           <div style={{ fontFamily: fonts.headline, fontSize: 26, color: colors.gold }}>{totalSets}</div>
-          <div style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>SETS</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: 12, fontWeight: 700, letterSpacing: '.04em', color: colors.textDim, textTransform: 'none' }}>SETS</div>
         </div>
         <div style={statCard}>
           <div style={{ fontFamily: fonts.headline, fontSize: 26, color: colors.gold }}>{totalExercises}</div>
-          <div style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>EXERCICES</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: 12, fontWeight: 700, letterSpacing: '.04em', color: colors.textDim, textTransform: 'none' }}>EXERCICES</div>
         </div>
         <div style={statCard}>
           <div style={{ fontFamily: fonts.headline, fontSize: 26, color: colors.gold }}>{totalVolume.toLocaleString(locale)}</div>
-          <div style={{ fontFamily: fonts.alt, fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: colors.textDim, textTransform: 'uppercase' }}>KG VOLUME</div>
+          <div style={{ fontFamily: fonts.alt, fontSize: 12, fontWeight: 700, letterSpacing: '.04em', color: colors.textDim, textTransform: 'none' }}>KG VOLUME</div>
         </div>
       </div>
 
@@ -66,14 +66,14 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
           {/* Exercise header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{ width: 3, height: 14, background: colors.gold, borderRadius: 2, flexShrink: 0 }} />
-            <span style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 700, color: colors.gold, textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>{ex.name}</span>
-            <span style={{ fontFamily: fonts.alt, fontSize: 10, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', flexShrink: 0 }}>{ex.sets.length} SETS</span>
+            <span style={{ fontFamily: fonts.body, fontSize: 18, fontWeight: 700, color: colors.gold, textTransform: 'none', letterSpacing: '0.06em', flex: 1 }}>{ex.name}</span>
+            <span style={{ fontFamily: fonts.alt, fontSize: 13, fontWeight: 700, color: colors.textDim, letterSpacing: '0.1em', flexShrink: 0 }}>{ex.sets.length} SETS</span>
           </div>
           {/* Column headers */}
           <small style={{ display: 'block', color: colors.textMuted, fontFamily: fonts.body, fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>
             {Array.from(new Set(ex.sets.map(set=>set.load_mode ?? 'legacy'))).map(mode=>tLoad(mode)).join(' · ')}
           </small>
-          <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr 1fr 1.2fr', gap: 6, padding: '0 0 4px', marginBottom: 2 }}>
             <span style={gridHeader}>SET</span>
             <span style={gridHeader}>KG</span>
             <span style={gridHeader}>{ex.sets.some(set => set.duration_seconds) ? t('v2.durationSeconds') : 'REPS'}</span>
@@ -81,7 +81,7 @@ export default function WorkoutDetailList({ detail, loading }: WorkoutDetailList
           </div>
           {/* Set rows */}
           {ex.sets.map((set: any, si: number) => (
-            <div key={si} style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '5px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
+            <div key={si} style={{ display: 'grid', gridTemplateColumns: '44px 1fr 1fr 1.2fr', gap: 6, alignItems: 'center', padding: '12px 0', borderTop: `1px solid ${colors.goldBorder}` }}>
               <span style={{ fontFamily: fonts.headline, fontSize: 13, color: colors.gold, minWidth: 22, minHeight: 22, borderRadius: 6, background: colors.goldDim, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{set.side ? `${set.round_number ?? set.set_number} ${leg(set.side+'Short')}` : si + 1}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{(set.weight || 0).toLocaleString(locale)}</span>
               <span style={{ fontFamily: fonts.headline, fontSize: 17, color: colors.text }}>{set.duration_seconds ? `${set.duration_seconds} s` : set.reps || 0}</span>

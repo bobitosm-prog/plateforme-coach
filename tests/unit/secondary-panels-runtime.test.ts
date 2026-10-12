@@ -2,14 +2,14 @@
 import React from 'react'
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
 import {afterEach,expect,it,vi} from 'vitest'
-const mocks=vi.hoisted(()=>({send:vi.fn(),update:vi.fn().mockResolvedValue({}),clear:vi.fn()}))
+const mocks=vi.hoisted(()=>({send:vi.fn(),update:vi.fn().mockResolvedValue({}),clear:vi.fn(),messages:[] as any[]}))
 vi.mock('next-intl',()=>({useLocale:()=> 'fr',useTranslations:()=> (key:string)=>key}))
-vi.mock('@/app/hooks/useChatAI',()=>({useChatAI:()=>({messages:[],loading:false,sending:false,error:null,sendMessage:mocks.send,clearHistory:mocks.clear})}))
+vi.mock('@/app/hooks/useChatAI',()=>({useChatAI:()=>({messages:mocks.messages,loading:false,sending:false,error:null,sendMessage:mocks.send,clearHistory:mocks.clear})}))
 vi.mock('@/lib/profile-service',()=>({updateProfile:mocks.update}))
 import ChatAI from '@/app/components/ChatAI'
 import BmrModal from '@/app/components/modals/BmrModal'
 import SessionDetailModal from '@/app/components/training/SessionDetailModal'
-afterEach(()=>{cleanup();vi.clearAllMocks()})
+afterEach(()=>{cleanup();vi.clearAllMocks();mocks.messages=[]})
 it('opens and closes without a hook-order error when AI access is denied',async()=>{
  const close=vi.fn();render(React.createElement(ChatAI,{session:{},profile:{},capabilities:{ai:false} as any,externalOpen:true,onExternalClose:close}))
  expect(await screen.findByRole('dialog',{name:'coachManaged.title'})).toBeTruthy()
@@ -25,4 +25,10 @@ it('calculates and preserves the profile payload with a simulated save',async()=
 })
 it('session detail displays its content and closes',async()=>{
  const close=vi.fn();render(React.createElement(SessionDetailModal,{isOpen:true,onClose:close,sessionTitle:'PUSH A',dayStatus:'done'},React.createElement('p',null,'Historique de test')));expect(await screen.findByRole('dialog')).toBeTruthy();expect(screen.getByText('Historique de test')).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'close'}));expect(close).toHaveBeenCalledOnce()
+})
+
+it('renders a long conversation with the new Athena heading and readable message content',async()=>{
+ mocks.messages=[{id:'one',role:'assistant',content:'## Conseils\nUne réponse détaillée avec **du texte important**.',created_at:'2026-10-12T10:00:00Z'}]
+ render(React.createElement(ChatAI,{session:{},profile:{},capabilities:{ai:true} as any,externalOpen:true}))
+ expect(await screen.findByRole('heading',{name:'Athena.'})).toBeTruthy();expect(screen.getByText('du texte important')).toBeTruthy();expect(screen.queryByText('header.online')).toBeNull()
 })

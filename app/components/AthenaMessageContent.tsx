@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { colors, fonts } from '../../lib/design-tokens'
+import { colors, fonts } from '../../lib/app-design-tokens'
 
 function renderBold(text: string): ReactNode[] {
   const nodes: ReactNode[] = []
@@ -44,7 +44,7 @@ export default function AthenaMessageContent({ content }: { content: string }) {
                 color: colors.gold,
                 letterSpacing: 1,
                 margin: '10px 0 4px',
-                textTransform: 'uppercase',
+                textTransform: 'none',
               }}
             >
               {renderBold(line.slice(4))}
@@ -60,7 +60,7 @@ export default function AthenaMessageContent({ content }: { content: string }) {
                 fontFamily: fonts.headline,
                 fontSize: 18,
                 color: colors.gold,
-                letterSpacing: 2,
+                letterSpacing: 0,
                 margin: '12px 0 6px',
               }}
             >
