@@ -29,7 +29,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
   return <section className={styles.page} aria-busy={busy}>
     <div className={styles.shell}>
       <header className={styles.header}>
-        <button className={styles.back} onClick={onSignOut} aria-label={t(dismissible ? 'close' : 'signOut')}><ArrowLeft size={22} /></button>
+        {dismissible && <button className={styles.back} onClick={onSignOut} aria-label={t('close')}><ArrowLeft size={22} /></button>}
         <h1 className={homeStyles.title}>{t('titleLead')}<br /><em>{t('titleAccent')}</em></h1>
         <p className={styles.intro}>{t('trial')}</p>
       </header>
@@ -46,6 +46,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
         <button className={styles.restore} disabled={busy || !supported || !applePurchaseBridge()} onClick={() => run('restore')}><RotateCcw size={18} aria-hidden="true" />{t('restore')}</button>
         <p role="status" aria-live="polite" className={styles.message}>{busy ? t('processing') : message}</p>
         <div className={styles.legal}><LegalDocumentDialog document="cgu">{t('terms')}</LegalDocumentDialog><LegalDocumentDialog document="privacy">{t('privacy')}</LegalDocumentDialog></div>
+        {!dismissible && <button className={styles.restore} onClick={onSignOut}>{t('signOut')}</button>}
       </div>
     </div>
   </section>
