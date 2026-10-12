@@ -12,7 +12,7 @@ import { invitationTerminalState, shouldClearInvitationIntent } from './invitati
 import {
   BG_BASE, BG_CARD, BORDER, FONT_ALT, FONT_BODY, FONT_DISPLAY, GOLD, GREEN,
   RED, RADIUS_CARD, TEXT_DIM, TEXT_MUTED, TEXT_PRIMARY,
-} from '../../../lib/design-tokens'
+} from '../../../lib/app-design-tokens'
 
 const STORAGE_KEY = 'moovx_coach_invitation'
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/
@@ -238,11 +238,11 @@ function JoinContent() {
 
   return (
     <main className="join-page" style={{ minHeight: '100dvh', background: BG_BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;min-height:48px;background:${BG_BASE};border:1px solid ${BORDER};border-radius:12px;padding:12px 16px;color:${TEXT_PRIMARY};font-size:15px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}@media(max-width:480px){.join-page{align-items:flex-start!important;padding:16px!important}.join-card{padding:24px!important}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .join-input{width:100%;min-height:48px;background:${BG_BASE};border:1px solid ${BORDER};border-radius:12px;padding:12px 16px;color:${TEXT_PRIMARY};font-size:16px;font-family:${FONT_BODY};font-weight:300;outline:none;box-sizing:border-box}.join-input:focus{border-color:${GOLD}}.join-input::placeholder{color:${TEXT_DIM}}@media(max-width:480px){.join-page{align-items:flex-start!important;padding:16px!important}.join-card{padding:24px!important}}`}</style>
       <section className="join-card" style={{ width: '100%', maxWidth: 420, background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: RADIUS_CARD, padding: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Image src="/logo-moovx-96.png" alt="MoovX" width={56} height={56} style={{ borderRadius: 12, marginBottom: 16 }} />
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '2px' }}>{t('title')}</h1>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 32, fontWeight: 750, color: TEXT_PRIMARY, margin: '0 0 8px', letterSpacing: '-.04em' }}>{t('title')}</h1>
           <p style={{ fontFamily: FONT_BODY, fontWeight: 300, fontSize: 13, color: TEXT_MUTED, margin: 0 }}>{t('subtitle')}</p>
           {maskedEmail && <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: GOLD, margin: '12px 0 0' }}>{t('invitedEmail', { email: maskedEmail })}</p>}
         </div>

@@ -818,7 +818,7 @@
         "login": "Me connecter",
         "browserHint": "L’inscription s’ouvre dans ton navigateur. Après confirmation de ton e-mail, tu pourras revenir dans l’app."
       },
-      "title": "CONTENT DE TE REVOIR",
+      "title": "Content de te revoir.",
       "subtitle": "Connecte-toi à ton espace",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Mot de passe",
@@ -835,7 +835,7 @@
       "backToHome": "← Retour à l'accueil",
       "backToLogin": "← Retour à la connexion",
       "forgot": {
-        "title": "MOT DE PASSE OUBLIE",
+        "title": "Mot de passe oublié.",
         "subtitle": "Entre ton email pour recevoir un lien de réinitialisation.",
         "sendLink": "Envoyer le lien",
         "emailSent": "Email envoyé à",
@@ -881,7 +881,7 @@
       "retry": "Réessayer"
     },
     "resetPassword": {
-      "title": "NOUVEAU MOT DE PASSE",
+      "title": "Nouveau mot de passe.",
       "subtitle": "Choisis un nouveau mot de passe sécurisé.",
       "passwordLabel": "Nouveau mot de passe",
       "confirmationLabel": "Confirmer le nouveau mot de passe",
@@ -898,26 +898,26 @@
     },
     "register": {
       "choose": {
-        "title": "REJOINS MOOVX",
+        "title": "Rejoins MoovX.",
         "subtitle": "Choisis ton profil",
         "hasAccount": "Déjà un compte ?",
         "loginLink": "Se connecter"
       },
       "client": {
-        "roleTitle": "JE SUIS CLIENT",
+        "roleTitle": "Je suis client",
         "roleDesc": "Je veux transformer mon corps avec un programme personnalisé",
         "feat1": "Plans nutrition personnalises",
         "feat2": "Programme PPL",
         "feat3": "Suivi progression",
         "feat4": "Coach personnel 24/7",
         "cta": "Commencer — {days} jours gratuits",
-        "title": "CREER TON COMPTE",
+        "title": "Crée ton compte.",
         "subtitle": "Commence ta transformation",
         "submitButton": "Créer mon compte",
         "loadingButton": "Création du compte..."
       },
       "coach": {
-        "roleTitle": "JE SUIS COACH",
+        "roleTitle": "Je suis coach",
         "roleDesc": "Je veux gérer mes clients avec les outils pro de MoovX",
         "feat1": "Dashboard coach",
         "feat2": "Plans personnalises pour tes clients",
@@ -925,7 +925,7 @@
         "feat4": "Analytics",
         "price": "CHF 50/mois",
         "cta": "Devenir Coach Pro",
-        "title": "DEVENIR COACH PRO",
+        "title": "Deviens Coach Pro.",
         "subtitle": "Gère tes clients avec nos outils pro",
         "fullNamePlaceholder": "Nom complet",
         "specialityPlaceholder": "Spécialité",
@@ -965,7 +965,7 @@
         "privacyLink": "politique de confidentialité"
       },
       "emailSent": {
-        "title": "VERIFIE TA BOITE MAIL",
+        "title": "Vérifie ta boîte mail.",
         "message": "Un email de confirmation a été envoyé à",
         "instruction": "Clique sur le lien pour activer ton compte et commencer.",
         "backButton": "Retour"
@@ -1082,7 +1082,7 @@
       }
     },
     "join": {
-      "title": "REJOINS MOOVX",
+      "title": "Rejoins MoovX.",
       "coachInvitation": "Invitation de coach {coachName}",
       "subtitle": "Connecte-toi ou crée ton compte pour accepter l'invitation de ton coach.",
       "invitedEmail": "Invitation destinée à {email}",
@@ -1120,7 +1120,7 @@
         "register": "Créer un compte client"
       },
       "emailSent": {
-        "title": "VERIFIE TA BOITE MAIL",
+        "title": "Vérifie ta boîte mail.",
         "message": "Un email de confirmation a ete envoye a",
         "instruction": "Clique sur le lien pour activer ton compte et commencer.",
         "messageWithEmail": "Un email de confirmation a été envoyé à {email}. L'invitation reprendra après confirmation."
