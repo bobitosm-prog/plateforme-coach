@@ -159,3 +159,11 @@ WeightModal et MeasureModal : fenêtres au thème app, largeur limitée à 680 p
 Contrats de sauvegarde, dates et champs conservés ; aucune modification DB. Sept tests runtime locaux du groupe secondary-panels, dont poids/date et mensuration partielle avec sauvegardes simulées. Vérification visuelle à 393 × 852 : pas de débordement horizontal, historique défilant, saisies et retours fonctionnels. Captures poids-mobile.png et mensurations-mobile.png. Aucun profil réel modifié, pas de test physique iPhone. Banc temporaire retiré.
 
 Audit exercices : ExerciseSearchModal ne possède aucun appel dans app ; conservé sans suppression. Le catalogue actif est ExerciseCatalogCard → ExerciseInfoPopup, déjà en Outfit et cartes dorées. Prochaine passe : modals repas et médias actifs, avec vérification de leur contenu complet.
+
+## Lot fenêtres de repas
+
+ImportPlanSheet actif dans NutritionTab : ancienne police et dégradé supprimés, cartes aliments lisibles, commandes harmonisées, suppression de l’espace de 80 px sous les boutons. Réutilisation de TrainingSheet viewportContained pour le focus, Échap et le défilement. Ce cadre reçoit le thème app (Outfit, titre 28 px, largeur 680 px, contraste des descriptions), ce qui harmonise aussi MealAddSheet et MealComposer. Choix du repas et styles internes du composeur alignés ; quantités, calories et callbacks inchangés. Aucun schéma ni requête DB modifié.
+
+Validation : 23 tests runtime ciblés (import/annulation, titre coach, Échap, sources du composeur, journal). Navigateur local 393 × 852 sur fixtures : import simulé, sélection du contexte, composeur avec nom long, recalcul 150 → 200 g (195 → 260 kcal), confirmation d’abandon, sources d’ajout. Aucun débordement horizontal. Captures import-repas-mobile.png, composeur-repas-mobile.png, ajout-repas-mobile.png. Banc temporaire supprimé ; aucune donnée réelle enregistrée, caméra non activée.
+
+Restent à auditer séparément : FoodSearch, BarcodeScanner, recettes et affichage des photos. Le présent lot ne couvre pas encore ces contenus médias.

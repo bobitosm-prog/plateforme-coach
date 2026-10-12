@@ -950,7 +950,12 @@
 }
 
 .viewportTrainingSheet {
-  width: min(calc(100vw - 24px), 560px);
+  width: min(calc(100vw - 24px), 680px);
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  background: #211f18;
+  color: #f5f2ea;
+  border-color: #393326;
+  border-radius: 20px 20px 0 0;
   max-width: calc(100vw - 24px);
   max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
   min-width: 0;
@@ -969,6 +974,35 @@
 
 .viewportTrainingSheet .trainingSheetBody {
   overflow-x: hidden;
+}
+
+.viewportTrainingSheet .trainingSheetHeader {
+  padding: 24px 20px;
+  border-color: #393326;
+  flex-shrink: 0;
+}
+.viewportTrainingSheet .trainingSheetHeader h2 {
+  font-family: var(--font-body), 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.025em;
+  color: #f5f2ea;
+}
+.viewportTrainingSheet .trainingSheetHeader p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #b7b0a0;
+  margin-top: 10px;
+}
+.viewportTrainingSheet .trainingSheetHeader > button {
+  border-color: #393326;
+  background: #28251d;
+  color: #dfbf70;
+}
+.viewportTrainingSheet .trainingSheetBody {
+  min-height: 0;
+  padding: 20px 20px max(24px, env(safe-area-inset-bottom, 0px));
 }
 
 .toolState,

@@ -1,14 +1,14 @@
-.body { display: grid; gap: 16px; min-width: 0; color: #f5f0e8; }
+.body { font-family: var(--font-body), 'Outfit', sans-serif; display: grid; gap: 16px; min-width: 0; color: #f5f2ea; }
 .search { display: flex; gap: 8px; }
-.body input { min-width: 0; background: #0d0b08; border: 1px solid #51462c; border-radius: 10px; padding: 12px; color: #f5f0e8; font: inherit; font-size: max(16px, 1em); }
+.body input { min-width: 0; background: #0d0b08; border: 1px solid #51462c; border-radius: 13px; padding: 12px; color: #f5f2ea; font: inherit; font-size: max(16px, 1em); }
 .search input { flex: 1; width: 100%; }
-.body button { min-height: 44px; border: 1px solid #51462c; border-radius: 10px; background: #211d14; color: #e6c364; font: inherit; cursor: pointer; padding: 10px 12px; }
+.body button { min-height: 44px; border: 1px solid #51462c; border-radius: 13px; background: #211d14; color: #dfbf70; font: inherit; cursor: pointer; padding: 10px 12px; }
 .body button:disabled { opacity: .5; cursor: not-allowed; }
-.body button:focus-visible, .body input:focus-visible { outline: 2px solid #e6c364; outline-offset: 3px; }
-.sheet header button { color: #e6c364; }
+.body button:focus-visible, .body input:focus-visible { outline: 2px solid #dfbf70; outline-offset: 3px; }
+.sheet header button { color: #dfbf70; }
 .sources { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 3px; }
 .sources button { white-space: nowrap; }
-.sources button[aria-pressed=true] { background: #e6c364; color: #171208; }
+.sources button[aria-pressed=true] { background: #dfbf70; color: #171208; }
 /* Do not compress long food names into fixed grid tracks. The sheet owns scrolling. */
 .choices { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .choices button { flex: 0 0 auto; min-width: 0; text-align: left; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
@@ -16,42 +16,42 @@
 .draft { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
 .draft li { display: grid; grid-template-columns: minmax(0,1fr) 88px 44px; gap: 8px; align-items: center; }
 .draft li > div { min-width: 0; overflow-wrap: anywhere; }
-.draft small { display: block; color: #beb6a7; margin-top: 4px; }
-.draft label { font-size: 12px; }
+.draft small { display: block; color: #b7b0a0; margin-top: 4px; }
+.draft label { font-size: 14px; }
 .draft input { width: 100%; box-sizing: border-box; }
 /* Keep confirmation after the selection, never over search results or focused inputs. */
 .footer { position: static; background: #19160f; border-top: 1px solid #51462c; padding: 12px 0; display: grid; gap: 10px; }
-.footer button { background: #e6c364; color: #171208; font-weight: 700; }
-.muted { color: #beb6a7; font-size: 13px; margin: 0; line-height: 1.5; }
+.footer button { background: #dfbf70; color: #171208; font-weight: 700; }
+.muted { color: #b7b0a0; font-size: 14px; margin: 0; line-height: 1.5; }
 .error { color: #ffb4b4; }
 .body h3 { font-size: 16px; margin: 0; }
-.inlineCard { min-width: 0; padding: 18px; border-radius: 24px; background: #1d1c19; }
+.inlineCard { min-width: 0; padding: 18px; border-radius: 20px; background: #211f18; }
 .inlineBody { gap: 14px; }
 .inlineBody .sources { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-.inlineBody .sources button { flex: 0 0 auto; padding-inline: 11px; font-size: 12px; }
+.inlineBody .sources button { flex: 0 0 auto; padding-inline: 11px; font-size: 14px; }
 
 .inlineBody .footer { position: static; background: transparent; border-top: 0; padding: 0; }
 .inlineBody .footer button { border: 0; min-height: 52px; }
 @media (max-width: 380px) { .inlineCard { padding: 14px; } .draft li { grid-template-columns: minmax(0,1fr) 72px 44px; } }
 
 /* Match the flat, content-sized Home and Training cards in the inline flow. */
-.inlineCard { background: #1d1c19; box-shadow: none; }
+.inlineCard { background: #211f18; box-shadow: none; }
 .inlineBody { color: #f7f4ed; }
-.inlineBody input { border: 0; background: #27251f; }
+.inlineBody input { border: 0; background: #28251d; }
 .inlineBody button { border: 0; background: #2b271e; }
-.inlineBody .sources button { color: #aaa294; }
-.inlineBody .sources button[aria-pressed='true'] { color: #e6c364; background: #393121; }
-.inlineBody .choices button { background: #27251f; color: #eee9df; }
-.inlineBody .choices button span { color: #e6c364; }
+.inlineBody .sources button { color: #b7b0a0; }
+.inlineBody .sources button[aria-pressed='true'] { color: #dfbf70; background: #393121; }
+.inlineBody .choices button { background: #28251d; color: #eee9df; }
+.inlineBody .choices button span { color: #dfbf70; }
 .inlineBody h3 { color: #eee9df; font-size: 1.1rem; font-weight: 750; }
-.inlineBody .draft li { padding: 10px; border-radius: 12px; background: #27251f; }
-.inlineBody .draft input { background: #1d1c19; }
-.inlineBody .footer button { background: #e6c364; color: #17130b; }
+.inlineBody .draft li { padding: 10px; border-radius: 12px; background: #28251d; }
+.inlineBody .draft input { background: #211f18; }
+.inlineBody .footer button { background: #dfbf70; color: #17130b; }
 
 /* Shared flat surfaces and gold actions with Home and Training. */
-.body input { background: #27251f; border-color: transparent; }
+.body input { background: #28251d; border-color: transparent; }
 .body button { border: 0; background: #2b271e; }
-.choices button { background: #27251f; color: #eee9df; }
-.sources button[aria-pressed='true'] { background: #393121; color: #e6c364; }
-.footer { background: #1d1c19; border-color: #393121; }
-.footer button { background: #e6c364; color: #17130b; }
+.choices button { background: #28251d; color: #eee9df; }
+.sources button[aria-pressed='true'] { background: #393121; color: #dfbf70; }
+.footer { background: #211f18; border-color: #393121; }
+.footer button { background: #dfbf70; color: #17130b; }
