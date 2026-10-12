@@ -1,9 +1,10 @@
 'use client'
+import styles from './ProfilePages.module.css'
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useTranslations } from 'next-intl'
 import { Bell, Volume2, Activity, Globe, ArrowLeft } from 'lucide-react'
-import { colors, fonts, cardStyle } from '../../../../lib/design-tokens'
+import { colors, fonts, cardStyle } from '../../../../lib/app-design-tokens'
 import { isTimerSoundEnabled, setTimerSoundEnabled } from '../../../../lib/timer-audio'
 import SectionTitle from '../../ui/SectionTitle'
 import LocaleSelector from '@/components/LocaleSelector'
@@ -24,14 +25,14 @@ interface PreferencesSectionProps {
   onBack: () => void
 }
 
-const Toggle = ({ active, onToggle }: { active: boolean; onToggle: () => void }) => (
-  <button onClick={onToggle} style={{ width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', background: active ? colors.gold : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 200ms', flexShrink: 0 }}>
-    <div style={{ width: 16, height: 16, borderRadius: '50%', background: active ? '#fff' : 'rgba(255,255,255,0.5)', position: 'absolute', top: 3, left: active ? 21 : 3, transition: 'left 200ms' }} />
+const Toggle = ({ active, onToggle, label }: { active: boolean; onToggle: () => void; label: string }) => (
+  <button role="switch" aria-checked={active} aria-label={label} onClick={onToggle} style={{ width: 48, height: 44, borderRadius: 22, border: 'none', cursor: 'pointer', background: active ? colors.gold : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 200ms', flexShrink: 0 }}>
+    <div style={{ width: 16, height: 16, borderRadius: '50%', background: active ? '#fff' : 'rgba(255,255,255,0.5)', position: 'absolute', top: 14, left: active ? 27 : 5, transition: 'left 200ms' }} />
   </button>
 )
 
 const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
-  <button onClick={onClick} style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${active ? `${colors.gold}4d` : `${colors.gold}1a`}`, background: active ? colors.goldBorder : 'transparent', color: active ? colors.gold : 'rgba(255,255,255,0.3)', fontSize: 9, fontFamily: fonts.headline, fontWeight: 700, cursor: 'pointer' }}>
+  <button aria-pressed={active} onClick={onClick} style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${active ? `${colors.gold}4d` : `${colors.gold}1a`}`, background: active ? colors.goldBorder : 'transparent', color: active ? colors.gold : colors.textMuted, fontSize: 13, fontFamily: fonts.headline, fontWeight: 700, cursor: 'pointer' }}>
     {label}
   </button>
 )
@@ -85,23 +86,21 @@ export default function PreferencesSection({
   }
 
   return (
-    <div style={{ padding: '20px 20px calc(160px + env(safe-area-inset-bottom, 0px))', minHeight: '100vh', background: colors.background }}>
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+    <div className={styles.page}>
+      <div style={{ maxWidth: 680, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <button className={styles.back} onClick={onBack} aria-label={t('badges.backToAccount')}>
             <ArrowLeft size={20} color={colors.gold} />
           </button>
-          <div style={{ fontFamily: fonts.headline, fontSize: 24, fontWeight: 400, color: colors.gold, letterSpacing: '0.02em', lineHeight: 1, textTransform: 'uppercase' }}>
-            {t('sections.preferences')}
-          </div>
+          <h1 className={styles.title}>{t('sections.preferences')}<span>.</span></h1>
         </div>
 
         {/* ═══ LANGUE ═══ */}
         <AiConsentPreferences key={session?.user?.id} userId={session?.user?.id} />
         <FollowupPreferences />
-        <SectionTitle noPadding title={t('sections.language')} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
+        <SectionTitle appTheme noPadding title={t('sections.language')} />
+        <div style={{ ...cardStyle, padding: 16, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Globe size={14} color={colors.gold} />
@@ -112,18 +111,18 @@ export default function PreferencesSection({
         </div>
 
         {/* ═══ RAPPELS ═══ */}
-        <SectionTitle noPadding title={t('sections.reminders')} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
+        <SectionTitle appTheme noPadding title={t('sections.reminders')} />
+        <div style={{ ...cardStyle, padding: 16, marginBottom: 20 }}>
           {/* Push notifications toggle */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={pushEnabled ? colors.success : colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <div>
                 <div style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.text }}>{t('reminders.pushNotifications')}</div>
-                <div style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDim, marginTop: 1 }}>{t('reminders.pushDescription')}</div>
+                <div style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textDim, marginTop: 1 }}>{t('reminders.pushDescription')}</div>
               </div>
             </div>
-            <Toggle active={pushEnabled} onToggle={async () => {
+            <Toggle label={t('reminders.pushNotifications')} active={pushEnabled} onToggle={async () => {
               if (pushLoading) return
               setPushLoading(true)
               if (pushEnabled) {
@@ -153,9 +152,9 @@ export default function PreferencesSection({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Bell size={14} color={profile?.reminder_enabled ? colors.success : colors.textMuted} />
-              <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('reminders.sessionReminders')}</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 600, color: colors.text }}>{t('reminders.sessionReminders')}</span>
             </div>
-            <Toggle active={!!profile?.reminder_enabled} onToggle={async () => {
+            <Toggle label={t('reminders.sessionReminders')} active={!!profile?.reminder_enabled} onToggle={async () => {
               const newVal = !profile?.reminder_enabled
               if (newVal && 'Notification' in window && Notification.permission !== 'granted') {
                 const perm = await Notification.requestPermission()
@@ -168,19 +167,19 @@ export default function PreferencesSection({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Volume2 size={14} color={timerSound ? colors.success : colors.textMuted} />
-              <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('reminders.timerSound')}</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 600, color: colors.text }}>{t('reminders.timerSound')}</span>
             </div>
-            <Toggle active={timerSound} onToggle={() => { const next = !timerSound; setTimerSound(next); setTimerSoundEnabled(next) }} />
+            <Toggle label={t('reminders.timerSound')} active={timerSound} onToggle={() => { const next = !timerSound; setTimerSound(next); setTimerSoundEnabled(next) }} />
           </div>
           {/* Training time */}
-          <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8, marginTop: 14 }}>{t('reminders.trainingTime')}</div>
+          <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', marginBottom: 8, marginTop: 14 }}>{t('reminders.trainingTime')}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
             {['06:00', '08:00', '12:00', '17:00', '19:00'].map(time => (
               <Pill key={time} label={time} active={(profile?.preferred_training_time || '08:00') === time} onClick={() => updateReminderSettings({ preferred_training_time: time })} />
             ))}
           </div>
           {/* Reminder delay */}
-          <div style={{ fontFamily: fonts.headline, fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', marginBottom: 8 }}>{t('reminders.reminderBefore')}</div>
+          <div style={{ fontFamily: fonts.headline, fontSize: 13, fontWeight: 700, color: colors.textMuted, letterSpacing: '0.1em', marginBottom: 8 }}>{t('reminders.reminderBefore')}</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {[{ label: '15 min', value: 15 }, { label: '30 min', value: 30 }, { label: '1h', value: 60 }].map(opt => (
               <Pill key={opt.value} label={opt.label} active={(profile?.reminder_minutes_before ?? 30) === opt.value} onClick={() => updateReminderSettings({ reminder_minutes_before: opt.value })} />
@@ -189,7 +188,7 @@ export default function PreferencesSection({
           {/* Preview */}
           {profile?.reminder_enabled && (
             <div style={{ background: colors.goldDim, border: `1px solid ${colors.goldBorder}`, borderRadius: 10, padding: 10, marginTop: 14 }}>
-              <span style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textMuted }}>
+              <span style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textMuted }}>
                 {t('reminders.reminderPreview', {
                   time: (() => { const [h, m] = (profile?.preferred_training_time || '08:00').split(':').map(Number); const tt = h * 60 + m - (profile?.reminder_minutes_before ?? 30); return `${String(Math.floor(tt / 60)).padStart(2, '0')}:${String(tt % 60).padStart(2, '0')}` })(),
                   sessionTime: profile?.preferred_training_time || '08:00',
@@ -200,14 +199,14 @@ export default function PreferencesSection({
         </div>
 
         {/* ═══ EFFORT (RIR) ═══ */}
-        <SectionTitle noPadding title={t('sections.effort')} />
-        <div style={{ ...cardStyle, padding: 16, marginBottom: 24 }}>
+        <SectionTitle appTheme noPadding title={t('sections.effort')} />
+        <div style={{ ...cardStyle, padding: 16, marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Activity size={14} color={profile?.rir_tracking_enabled ? colors.success : colors.textMuted} />
-              <span style={{ fontFamily: fonts.body, fontSize: 12, fontWeight: 600, color: colors.text }}>{t('rir.tracking')}</span>
+              <span style={{ fontFamily: fonts.body, fontSize: 14, fontWeight: 600, color: colors.text }}>{t('rir.tracking')}</span>
             </div>
-            <Toggle active={!!profile?.rir_tracking_enabled} onToggle={async () => {
+            <Toggle label={t('rir.tracking')} active={!!profile?.rir_tracking_enabled} onToggle={async () => {
               await updateRirSettings({ rir_tracking_enabled: !profile?.rir_tracking_enabled })
             }} />
           </div>
@@ -215,9 +214,9 @@ export default function PreferencesSection({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingLeft: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Activity size={12} color={profile?.rir_scale_advanced ? colors.gold : colors.textMuted} />
-                <span style={{ fontFamily: fonts.body, fontSize: 11, fontWeight: 600, color: colors.textMuted }}>{t('rir.advancedScale')}</span>
+                <span style={{ fontFamily: fonts.body, fontSize: 13, fontWeight: 600, color: colors.textMuted }}>{t('rir.advancedScale')}</span>
               </div>
-              <Toggle active={!!profile?.rir_scale_advanced} onToggle={async () => {
+              <Toggle label={t('rir.advancedScale')} active={!!profile?.rir_scale_advanced} onToggle={async () => {
                 await updateRirSettings({ rir_scale_advanced: !profile?.rir_scale_advanced })
               }} />
             </div>

@@ -1466,14 +1466,14 @@
       "kcal": "KCAL/DAY"
     },
     "sections": {
-      "myProfile": "MY PROFILE",
+      "myProfile": "My profile",
       "phone": "PHONE",
       "tools": "TOOLS",
       "reminders": "REMINDERS",
       "myCoach": "MY COACH",
       "subscription": "MY SUBSCRIPTION",
       "badges": "MY BADGES",
-      "preferences": "PREFERENCES",
+      "preferences": "Preferences",
       "language": "LANGUAGE",
       "effort": "EFFORT",
       "account": "ACCOUNT"
@@ -1584,7 +1584,7 @@
     "avatarAlt": "Profile photo"
   },
   "goals": {
-    "pageTitle": "GOALS",
+    "pageTitle": "Goals",
     "objectiveSection": "MY OBJECTIVE",
     "targetsSection": "TARGETS",
     "macrosSection": "MACROS",

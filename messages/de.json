@@ -1466,14 +1466,14 @@
       "kcal": "KCAL/TAG"
     },
     "sections": {
-      "myProfile": "MEIN PROFIL",
+      "myProfile": "Mein Profil",
       "phone": "TELEFON",
       "tools": "WERKZEUGE",
       "reminders": "ERINNERUNGEN",
       "myCoach": "MEIN COACH",
       "subscription": "MEIN ABONNEMENT",
       "badges": "MEINE ABZEICHEN",
-      "preferences": "EINSTELLUNGEN",
+      "preferences": "Einstellungen",
       "language": "SPRACHE",
       "effort": "ANSTRENGUNG",
       "account": "KONTO"
@@ -1584,7 +1584,7 @@
     "avatarAlt": "Profilbild"
   },
   "goals": {
-    "pageTitle": "ZIELE",
+    "pageTitle": "Ziele",
     "objectiveSection": "MEIN ZIEL",
     "targetsSection": "ZIELWERTE",
     "macrosSection": "MAKROS",

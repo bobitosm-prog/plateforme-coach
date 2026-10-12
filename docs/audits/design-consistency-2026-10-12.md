@@ -97,3 +97,13 @@ Le nettoyage reste ouvert. Aucun écran protégé n’est déclaré conforme uni
 15 tests ciblés réussis (dont interactions runtime du bouton Apple), TypeScript sans erreur et parité i18n 3773 clés × 3 langues. Navigateur local 393 × 852 : connexion → mot de passe oublié → retour → choix du profil → formulaire client ; police Outfit calculée, champs 16 px, aucun débordement horizontal. Modal CGU chargé puis refermé avec retour au formulaire. Vue grand écran inspectée. Aucun compte créé, mot de passe changé ou achat déclenché.
 
 Invitation avec jeton et nouveau mot de passe avec session de récupération : non rejoués de bout en bout ; seules leur présentation et les protections existantes ont été vérifiées par le code et les tests. Ces limites ne sont pas une validation 4/4 de toute l’app.
+
+## Lot Profil, Objectifs et Préférences
+
+Les trois sous-pages utilisent le thème app (Outfit, cartes brun sombre rayon 20 px, or commun). Titres en casse naturelle FR/EN/DE, petits textes remontés à 13 px minimum, champs 16 px, boutons au moins 44 px, focus visible. Objectifs et outils du profil sont de vrais boutons. Les switches des préférences sont nommés et exposent leur état. Les cartes IA et suivi Athena utilisent le même thème. SectionTitle propose un thème app explicite sans changer ses autres consommateurs.
+
+Le padding bas redondant et minHeight 100vh sont retirés : le parent client-main-scroll réserve déjà la place du menu. Calculs, appels de sauvegarde, droits et logique de consentement inchangés. Aucune suppression du plan de nettoyage.
+
+Validation locale : 20 tests runtime ciblés, TypeScript et parité des traductions. Banc de prévisualisation temporaire avec données fictives, retiré avant commit : trois pages rendues, ouverture/annulation des champs calories et téléphone, retour profil ; largeur DOM 393 px, champs 16 px et absence de débordement horizontal. Capture grand écran conservée dans le dossier de visualisations. Ce banc ne valide pas la persistance réelle ni le parcours connecté iPhone ; les actions de sauvegarde et réglages sont testées avec dépendances simulées. Le suivi Athena sans session affiche son erreur prévue.
+
+Prochain sous-lot : Messages, retours coach, historique de paiements et modals du compte ; puis états de génération/erreur.
