@@ -1,10 +1,11 @@
 'use client'
+import styles from './client/SupportPages.module.css'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
 import { X, Send, Bug, Lightbulb, HelpCircle, MessageSquare, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL } from '../../lib/design-tokens'
+import { BG_BASE, BG_CARD, BG_CARD_2, BORDER, GOLD, RED, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, FONT_DISPLAY, FONT_ALT, FONT_BODY, Z_MODAL } from '../../lib/app-design-tokens'
 import { useMyFeedback, type MyFeedbackReport } from '@/app/hooks/useMyFeedback'
 import { useMyFeedbackBadge } from '@/app/hooks/useMyFeedbackBadge'
 
@@ -16,7 +17,7 @@ interface BugReportProps {
 
 const TYPES = [
   { id: 'bug', label: 'Bug', icon: Bug, color: RED },
-  { id: 'amelioration', label: 'Amelioration', icon: Lightbulb, color: GOLD },
+  { id: 'amelioration', label: 'Suggestion', icon: Lightbulb, color: GOLD },
   { id: 'autre', label: 'Autre', icon: HelpCircle, color: TEXT_MUTED },
 ]
 
@@ -29,9 +30,9 @@ function formatDate(iso: string): string {
 }
 
 function statusLabel(status: string | null): string {
-  if (!status || status === 'nouveau') return 'Recu'
+  if (!status || status === 'nouveau') return 'Reçu'
   if (status === 'en_cours') return 'En traitement'
-  if (status === 'resolu') return 'Resolu'
+  if (status === 'resolu') return 'Résolu'
   if (status === 'rejete') return 'Clos'
   return status
 }
@@ -48,10 +49,10 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
   const isUnread = hasReply && report.read_by_user === false
 
   return (
-    <div style={{
-      background: isUnread ? 'rgba(212, 168, 67, 0.04)' : BG_BASE,
-      border: `1px solid ${isUnread ? 'rgba(212, 168, 67, 0.25)' : BORDER}`,
-      borderRadius: 14, padding: 14, position: 'relative',
+    <div className={styles.report} style={{
+      background: BG_CARD,
+      border: `1px solid ${isUnread ? GOLD : BORDER}`,
+      borderRadius: 20, padding: 18, position: 'relative',
     }}>
       {isUnread && (
         <div style={{
@@ -62,7 +63,7 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.7rem', color: TEXT_DIM }}>
+      <div className={styles.reportMeta} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 13, color: TEXT_DIM }}>
         {report.type === 'bug' ? <Bug size={12} color="#fb7185" /> : report.type === 'amelioration' ? <Lightbulb size={12} color={GOLD} /> : <HelpCircle size={12} color={TEXT_DIM} />}
         <span>{report.type === 'bug' ? 'Bug' : report.type === 'amelioration' ? 'Suggestion' : 'Autre'}</span>
         <span>·</span>
@@ -89,15 +90,15 @@ function ReportCard({ report }: { report: MyFeedbackReport }) {
           border: '1px solid rgba(212, 168, 67, 0.2)',
           borderRadius: 10, padding: '10px 12px', marginTop: 8,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6, fontSize: '0.7rem', color: GOLD, fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6, fontSize: 13, color: GOLD, fontWeight: 600 }}>
             <CheckCircle2 size={12} />
-            Reponse de l'equipe MoovX
+            Réponse de l’équipe MoovX
           </div>
           <div style={{ fontSize: '0.8rem', color: TEXT_PRIMARY, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
             {report.admin_reply}
           </div>
           {report.replied_at && (
-            <div style={{ fontSize: '0.6rem', color: TEXT_DIM, marginTop: 6 }}>
+            <div style={{ fontSize: 13, color: TEXT_DIM, marginTop: 6 }}>
               {formatDate(report.replied_at)}
             </div>
           )}
@@ -126,8 +127,8 @@ function HistoryView() {
       <div style={{ color: TEXT_PRIMARY, fontSize: 14, marginBottom: 4, fontFamily: FONT_BODY }}>
         Aucun rapport pour l'instant
       </div>
-      <div style={{ color: TEXT_MUTED, fontSize: 12, fontFamily: FONT_BODY }}>
-        Utilisez l'onglet "Nouveau rapport" pour nous ecrire.
+      <div style={{ color: TEXT_MUTED, fontSize: 13, fontFamily: FONT_BODY }}>
+        Ouvre l’onglet « Nouveau rapport » pour nous écrire.
       </div>
     </div>
   )
@@ -172,26 +173,26 @@ export default function BugReport({ session, open, onOpenChange }: BugReportProp
     flex: 1, padding: '10px 0', background: 'transparent', border: 'none',
     borderBottom: `2px solid ${active ? GOLD : 'transparent'}`,
     color: active ? GOLD : TEXT_DIM,
-    fontSize: '0.7rem', letterSpacing: '1.5px', textTransform: 'uppercase',
+    fontSize: 13, letterSpacing: 0, textTransform: 'none',
     fontWeight: 700, fontFamily: FONT_ALT, cursor: 'pointer',
     transition: 'all 0.2s',
   })
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Signaler un problème" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 480, padding: '0 20px 40px', maxHeight: '85vh', overflowY: 'auto' }}>
+    <div className={styles.dialog} role="dialog" aria-modal="true" aria-label="Signaler un problème" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: Z_MODAL, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 680, padding: '0 20px max(24px, env(safe-area-inset-bottom))', maxHeight: '90dvh', overflowY: 'auto' }}>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, background: BG_CARD, zIndex: 2, paddingTop: 16 }}>
-              <button type="button" onClick={() => setMode('submit')} style={tabStyle(mode === 'submit')}>
+            <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, background: BG_BASE, zIndex: 2, paddingTop: 16 }}>
+              <button type="button" aria-pressed={mode === 'submit'} onClick={() => setMode('submit')} style={tabStyle(mode === 'submit')}>
                 Nouveau rapport
               </button>
-              <button type="button" onClick={() => setMode('history')} style={tabStyle(mode === 'history')}>
+              <button type="button" aria-pressed={mode === 'history'} onClick={() => setMode('history')} style={tabStyle(mode === 'history')}>
                 Mes rapports
                 {unreadCount > 0 && (
                   <span style={{
                     marginLeft: 6, background: GOLD, color: '#0D0B08',
-                    fontSize: '0.6rem', padding: '1px 6px', borderRadius: 8, fontWeight: 700,
+                    fontSize: 13, padding: '1px 6px', borderRadius: 8, fontWeight: 700,
                   }}>
                     {unreadCount}
                   </span>
@@ -201,10 +202,10 @@ export default function BugReport({ session, open, onOpenChange }: BugReportProp
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0' }}>
-              <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '1.4rem', letterSpacing: '3px', color: TEXT_PRIMARY, margin: 0 }}>
-                {mode === 'submit' ? 'SIGNALER' : 'MES RAPPORTS'}
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: 700, letterSpacing: '-.04em', color: TEXT_PRIMARY, margin: 0 }}>
+                {mode === 'submit' ? 'Signaler un problème.' : 'Mes rapports.'}
               </h3>
-              <button onClick={() => onOpenChange(false)} aria-label="Fermer" style={{ width: 32, height: 32, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => onOpenChange(false)} aria-label="Fermer" style={{ width: 44, height: 44, background: BG_CARD_2, border: `1px solid ${BORDER}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={14} color={TEXT_MUTED} />
               </button>
             </div>
@@ -218,14 +219,14 @@ export default function BugReport({ session, open, onOpenChange }: BugReportProp
                     const active = type === t.id
                     const Icon = t.icon
                     return (
-                      <button key={t.id} onClick={() => setType(t.id)} style={{
+                      <button key={t.id} aria-pressed={active} onClick={() => setType(t.id)} style={{
                         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         padding: '10px 8px', borderRadius: 12, cursor: 'pointer',
                         background: active ? `${t.color}15` : BG_BASE,
                         border: `1px solid ${active ? t.color + '40' : BORDER}`,
                         color: active ? t.color : TEXT_MUTED,
-                        fontSize: '0.75rem', fontWeight: 800, fontFamily: FONT_ALT,
-                        letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.2s',
+                        fontSize: 13, fontWeight: 800, fontFamily: FONT_ALT,
+                        letterSpacing: 0, textTransform: 'none', transition: 'all 0.2s',
                       }}>
                         <Icon size={14} /> {t.label}
                       </button>
@@ -234,19 +235,19 @@ export default function BugReport({ session, open, onOpenChange }: BugReportProp
                 </div>
 
                 {/* Title */}
-                <input value={title} onChange={e => setTitle(e.target.value.slice(0, 100))} placeholder="Titre (obligatoire)"
-                  style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.9rem', outline: 'none', marginBottom: 10, transition: 'border-color 0.3s', fontFamily: FONT_BODY }}
+                <input aria-label="Titre du rapport" value={title} onChange={e => setTitle(e.target.value.slice(0, 100))} placeholder="Titre (obligatoire)"
+                  style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: 16, marginBottom: 10, transition: 'border-color 0.3s', fontFamily: FONT_BODY }}
                   onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = BORDER} />
-                <div style={{ textAlign: 'right', fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 8, marginTop: -6 }}>{title.length}/100</div>
+                <div style={{ textAlign: 'right', fontSize: 13, color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 8, marginTop: -6 }}>{title.length}/100</div>
 
                 {/* Description */}
-                <textarea value={desc} onChange={e => setDesc(e.target.value.slice(0, 1000))} placeholder="Decris le probleme ou l'idee en detail..."
-                  rows={5} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: '0.85rem', outline: 'none', resize: 'vertical', minHeight: 100, fontFamily: FONT_BODY, transition: 'border-color 0.3s', lineHeight: 1.6 }}
+                <textarea aria-label="Description du rapport" value={desc} onChange={e => setDesc(e.target.value.slice(0, 1000))} placeholder="Décris le problème ou l’idée en détail…"
+                  rows={5} style={{ width: '100%', background: BG_BASE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '13px 16px', color: TEXT_PRIMARY, fontSize: 16, resize: 'vertical', minHeight: 100, fontFamily: FONT_BODY, transition: 'border-color 0.3s', lineHeight: 1.6 }}
                   onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = BORDER} />
-                <div style={{ textAlign: 'right', fontSize: '0.6rem', color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 16, marginTop: 4 }}>{desc.length}/1000</div>
+                <div style={{ textAlign: 'right', fontSize: 13, color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 16, marginTop: 4 }}>{desc.length}/1000</div>
 
                 {/* Page captured */}
-                <div style={{ fontSize: '0.68rem', color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 13, color: TEXT_DIM, fontFamily: FONT_BODY, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ color: TEXT_MUTED }}>Page :</span> {typeof window !== 'undefined' ? window.location.pathname : ''}
                 </div>
 
@@ -257,9 +258,8 @@ export default function BugReport({ session, open, onOpenChange }: BugReportProp
                     background: (title.trim() && desc.trim()) ? GOLD : BG_CARD_2,
                     color: (title.trim() && desc.trim()) ? '#0D0B08' : TEXT_MUTED,
                     fontFamily: FONT_ALT, fontSize: '0.95rem', fontWeight: 800,
-                    letterSpacing: '1px', textTransform: 'uppercase',
+                    letterSpacing: 0, textTransform: 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    clipPath: (title.trim() && desc.trim()) ? 'polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%)' : 'none',
                     transition: 'all 0.2s',
                   }}>
                   <Send size={16} /> {sending ? 'Envoi...' : 'Envoyer le rapport'}

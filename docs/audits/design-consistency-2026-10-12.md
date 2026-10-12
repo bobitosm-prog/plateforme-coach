@@ -107,3 +107,13 @@ Le padding bas redondant et minHeight 100vh sont retirés : le parent client-mai
 Validation locale : 20 tests runtime ciblés, TypeScript et parité des traductions. Banc de prévisualisation temporaire avec données fictives, retiré avant commit : trois pages rendues, ouverture/annulation des champs calories et téléphone, retour profil ; largeur DOM 393 px, champs 16 px et absence de débordement horizontal. Capture grand écran conservée dans le dossier de visualisations. Ce banc ne valide pas la persistance réelle ni le parcours connecté iPhone ; les actions de sauvegarde et réglages sont testées avec dépendances simulées. Le suivi Athena sans session affiche son erreur prévue.
 
 Prochain sous-lot : Messages, retours coach, historique de paiements et modals du compte ; puis états de génération/erreur.
+
+## Lot Messages et rapports
+
+MessagesTab, FeedbackTab et le modal BugReport (accès actuel depuis Compte) utilisent désormais Outfit, les fonds/cartes/bordures MoovX, des titres en casse naturelle avec point, des commandes de 44 px et des champs de 16 px. Les bulles sortantes sont dorées unies, les accusés de lecture contrastés ; les longues chaînes peuvent revenir à la ligne. Le faux statut « En ligne », qui n’était lié à aucune présence réelle, est remplacé par une description neutre. L’instruction obsolète du bouton flottant des rapports renvoie désormais au point d’entrée Compte.
+
+Les appels réseau, destinataires, payloads, limites de saisie, lecture des rapports et marquage comme lu restent inchangés. Les rapports sont des retours de l’équipe MoovX (bugs/suggestions), pas des retours coach vidéo. Ces derniers restent à recouper avec le parcours actif avant modification.
+
+Validation : 23 tests ciblés réussis, dont édition/envoi simulé et retour de la messagerie, absence de coach, deux sens de messages, chargement/erreur/retry/vide/réponse des rapports, bascule du modal et payload de signalement simulé. TypeScript, diff et parité i18n contrôlés. Navigateur local à 393 × 852 avec données fictives : champs 16 px, pas de débordement, consultation des réponses et fermeture du modal ; captures enregistrées. Les endpoints de rapports sont simulés uniquement dans le banc local temporaire, retiré avant commit. Aucun message, rapport ou donnée réelle envoyé. Pas de validation physique iPhone ni d’envoi de photo réel dans ce lot.
+
+Prochaine passe : historique de paiements, confirmation de suppression et états génération/erreur ; vérifier aussi le zoom des images jointes et les retours vidéo coach dans leur contexte actif.
