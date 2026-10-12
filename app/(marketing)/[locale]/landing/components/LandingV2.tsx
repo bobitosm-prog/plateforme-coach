@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { ManageCookiesButton } from '@/components/CookieConsent'
 import { ArrowRight, BrainCircuit, Check, ChevronRight, ShieldCheck, Sparkles } from 'lucide-react'
 import type { LandingV2Copy, LandingV2Locale } from '../landing-v2-copy'
 import { LANDING_V2_COPY } from '../landing-v2-copy'
@@ -192,7 +193,7 @@ function Footer({ locale, copy }: { locale: LandingV2Locale; copy: LandingV2Copy
     <div className={styles.footerBrand}><Image src="/logo-moovx-48.png" width={32} height={32} alt="" /><strong>MOOVX</strong><p>{copy.footer.note}</p></div>
     <div><strong>{copy.footer.product}</strong><a href="#product">{copy.nav.product}</a><a href="#pricing">{copy.nav.pricing}</a><a href="#install">{copy.install.link}</a><a href={`${APP_URL}/login`}>{copy.footer.login}</a></div>
     <div><strong>{copy.footer.resources}</strong><Link href={`/${locale}/blog`}>Blog</Link><Link href={`/${locale}/coach-sportif-ia`}>Athena</Link><a href={`${APP_URL}/onboarding-coach`}>{copy.footer.coach}</a></div>
-    <div><strong>{copy.footer.legal}</strong><Link href={`/${locale}/privacy`}>{copy.footer.privacy}</Link><Link href={`/${locale}/cgu`}>{copy.footer.terms}</Link></div>
+    <div><strong>{copy.footer.legal}</strong><Link href={`/${locale}/privacy`}>{copy.footer.privacy}</Link><Link href={`/${locale}/cgu`}>{copy.footer.terms}</Link><ManageCookiesButton /></div>
     <small>© 2026 MoovX</small>
   </footer>
 }
