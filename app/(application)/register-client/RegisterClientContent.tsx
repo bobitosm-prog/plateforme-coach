@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
+import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/app-design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
 
@@ -165,7 +165,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
           <div style={{ width: 72, height: 72, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: RADIUS_CARD, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <CheckCircle size={36} color={GREEN} strokeWidth={1.5} />
           </div>
-          <h1 style={{ ...pageTitleStyle, fontSize: '2.2rem', letterSpacing: '2px', margin: '0 0 12px' }}>{t('emailSent.title')}</h1>
+          <h1 style={{ ...pageTitleStyle, fontSize: '2.2rem', letterSpacing: '-.04em', margin: '0 0 12px' }}>{t('emailSent.title')}</h1>
           <p style={{ ...bodyStyle, fontSize: '0.9rem', lineHeight: 1.7, margin: '0 0 8px' }}>
             {t('emailSent.message')} <strong style={{ color: GOLD }}>{email}</strong>.
           </p>
@@ -197,21 +197,21 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: BG_BASE, fontFamily: fonts.body, position: 'relative' }}>
-      <Image src="/images/hero-gym.webp" alt={t('shared.heroAlt')} fill priority sizes="100vw" style={{ position: 'fixed', objectFit: 'cover', zIndex: 0 }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}><Image src="/images/hero-gym.webp" alt={t('shared.heroAlt')} fill priority sizes="100vw" style={{ objectFit: 'cover' }} /></div>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,8,0.92)', zIndex: 0 }} />
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes panelIn{from{opacity:0}to{opacity:1}}
-        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};box-sizing:border-box}
+        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:16px;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};box-sizing:border-box}
         .auth-input:focus{border-color:${GOLD};box-shadow:none}
         .auth-input::placeholder{color:${TEXT_DIM}}
-        .auth-select{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};appearance:none;cursor:pointer;box-sizing:border-box}
+        .auth-select{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:16px;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};appearance:none;cursor:pointer;box-sizing:border-box}
         .auth-select:focus{border-color:${GOLD};box-shadow:none}
         .auth-select option{background:${BG_BASE};color:${TEXT_PRIMARY}}
         .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s}
         .oauth-btn:hover{transform:translateY(-1px)}
-        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, ${colors.goldContainer} 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
+        .gold-btn{width:100%;padding:15px 20px;background:${GOLD};border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s;box-shadow:none}
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
         .ghost-btn{width:100%;padding:15px 20px;background:transparent;border:1px solid ${GOLD_RULE};border-radius:12px;color:${GOLD};font-size:0.95rem;font-weight:700;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s,background 0.2s}
@@ -220,6 +220,8 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
         .role-card:hover{border-color:${GOLD_RULE};transform:translateY(-4px);box-shadow:0 16px 48px ${colors.goldDim}}
         .back-btn{background:none;border:none;color:${TEXT_MUTED};font-size:0.85rem;cursor:pointer;font-family:${fonts.body};padding:0;margin-bottom:20px;transition:color 0.2s;display:flex;align-items:center;gap:6px}
         .back-btn:hover{color:${GOLD}}
+        .oauth-btn:focus-visible,.gold-btn:focus-visible,.ghost-btn:focus-visible,.back-btn:focus-visible{outline:2px solid ${GOLD};outline-offset:3px}
+        @media(prefers-reduced-motion:reduce){.auth-right *{animation:none!important;transition:none!important}}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}.role-grid{grid-template-columns:1fr!important}}
       `}</style>
 
@@ -243,7 +245,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
         {step === 'choose' && (
           <div style={{ maxWidth: 800, width: '100%', animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('choose.title')}</h1>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '-.04em', margin: '0 0 6px', lineHeight: 1.08 }}>{t('choose.title')}</h1>
               <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: 0 }}>{t('choose.subtitle')}</p>
             </div>
 
@@ -251,7 +253,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
               {/* Card CLIENT */}
               <button type="button" role="radio" aria-checked={selectedRole === 'client'} className="role-card" onClick={() => { setSelectedRole('client'); setStep('client') }} style={{ width: '100%', color: TEXT_PRIMARY, fontFamily: fonts.body }}>
                 <ClientIcon />
-                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>{t('client.roleTitle')}</h2>
+                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '-.04em', margin: 0 }}>{t('client.roleTitle')}</h2>
                 <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>{t('client.roleDesc')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
                   {[t('client.feat1'), t('client.feat2'), t('client.feat3'), t('client.feat4')].map(f => (
@@ -268,7 +270,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
               {/* Card COACH */}
               <button type="button" role="radio" aria-checked={selectedRole === 'coach'} className="role-card" onClick={() => { setSelectedRole('coach'); setStep('coach') }} style={{ width: '100%', color: TEXT_PRIMARY, fontFamily: fonts.body }}>
                 <CoachIcon />
-                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '2px', margin: 0 }}>{t('coach.roleTitle')}</h2>
+                <h2 style={{ ...pageTitleStyle, fontSize: 22, letterSpacing: '-.04em', margin: 0 }}>{t('coach.roleTitle')}</h2>
                 <p style={{ ...bodyStyle, margin: 0, lineHeight: 1.6 }}>{t('coach.roleDesc')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: '100%' }}>
                   {[t('coach.feat1'), t('coach.feat2'), t('coach.feat3'), t('coach.feat4')].map(f => (
@@ -300,7 +302,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             <button className="back-btn" onClick={() => setStep('choose')}>{t('shared.changeProfile')}</button>
 
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('client.title')}</h1>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '-.04em', margin: '0 0 6px', lineHeight: 1.08 }}>{t('client.title')}</h1>
               <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>{t('client.subtitle')}</p>
             </div>
 
@@ -373,7 +375,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             <button className="back-btn" onClick={() => setStep('choose')}>{t('shared.changeProfile')}</button>
 
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('coach.title')}</h1>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '-.04em', margin: '0 0 6px', lineHeight: 1.08 }}>{t('coach.title')}</h1>
               <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>{t('coach.subtitle')}</p>
             </div>
 

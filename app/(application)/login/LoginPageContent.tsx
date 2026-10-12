@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/design-tokens'
+import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BORDER, GOLD, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/app-design-tokens'
 import { signInWithApple } from '@/lib/auth/apple-sign-in'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
 
@@ -164,14 +164,16 @@ export default function LoginPageContent() {
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @keyframes panelIn{from{opacity:0}to{opacity:1}}
-        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:0.9rem;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body}}
+        .auth-input{width:100%;background:rgba(13,11,8,0.8);border:1px solid ${BORDER};border-radius:12px;padding:14px 14px 14px 44px;color:${TEXT_PRIMARY};font-size:16px;outline:none;transition:border-color 0.3s,box-shadow 0.3s;font-family:${fonts.body};box-sizing:border-box}
         .auth-input:focus{border-color:${GOLD};box-shadow:none}
         .auth-input::placeholder{color:${TEXT_DIM}}
         .oauth-btn{width:100%;padding:14px 20px;border-radius:12px;font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s}
         .oauth-btn:hover{transform:translateY(-1px)}
-        .gold-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg, #E8C97A 0%, #D4A843 40%, #C9A84C 70%, #8B6914 100%);border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 24px rgba(212,168,67,0.25)}
+        .gold-btn{width:100%;padding:15px 20px;background:${GOLD};border:none;border-radius:12px;color:${BG_BASE};font-size:0.95rem;font-weight:800;cursor:pointer;font-family:${fonts.body};transition:transform 0.2s,box-shadow 0.2s;box-shadow:none}
         .gold-btn:hover{transform:translateY(-2px)}
         .gold-btn:disabled{opacity:0.6;cursor:wait;transform:none;box-shadow:none}
+        .oauth-btn:focus-visible,.gold-btn:focus-visible,.ghost-btn:focus-visible,.back-btn:focus-visible{outline:2px solid ${GOLD};outline-offset:3px}
+        @media(prefers-reduced-motion:reduce){.auth-right *{animation:none!important;transition:none!important}}
         @media(max-width:768px){.auth-left{display:none!important}.auth-right{min-height:100dvh!important}}
       `}</style>
 
@@ -205,7 +207,7 @@ export default function LoginPageContent() {
           ) : forgotMode ? (
             /* ── Forgot password ── */
             <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('forgot.title')}</h1>
+              <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(1.8rem,4vw,2.4rem)', letterSpacing: '-.04em', margin: '0 0 6px', lineHeight: 1.08 }}>{t('forgot.title')}</h1>
               <p style={{ ...bodyStyle, fontSize: '0.88rem', fontWeight: 300, margin: '0 0 28px', lineHeight: 1.6 }}>{t('forgot.subtitle')}</p>
 
               {resetSent ? (
@@ -264,7 +266,7 @@ export default function LoginPageContent() {
                 </div>
               )}
               <div style={{ animation: 'fadeUp 0.7s cubic-bezier(0.16,1,0.3,1)' }}>
-                <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '2px', margin: '0 0 6px', lineHeight: 1 }}>{t('title')}</h1>
+                <h1 style={{ ...pageTitleStyle, fontSize: 'clamp(2rem,4vw,2.8rem)', letterSpacing: '-.04em', margin: '0 0 6px', lineHeight: 1.08 }}>{t('title')}</h1>
                 <p style={{ ...bodyStyle, fontSize: '0.9rem', fontWeight: 300, margin: '0 0 32px' }}>{t('subtitle')}</p>
               </div>
 
