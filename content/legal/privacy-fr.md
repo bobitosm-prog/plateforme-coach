@@ -1,7 +1,7 @@
 # Politique de Confidentialité — MoovX
 
-**Dernière mise à jour : 4 octobre 2026**
-**Version : 1.2**
+**Dernière mise à jour : 12 octobre 2026**
+**Version : 1.3**
 
 ---
 
