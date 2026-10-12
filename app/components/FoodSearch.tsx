@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Search, X, Plus, Minus, Star, Camera } from 'lucide-react'
 import { normalizeFoodItem } from '../../lib/utils/food'
 import BarcodeScanner from './BarcodeScanner'
-import { colors, fonts } from '../../lib/design-tokens'
+import panelStyles from './SecondaryPanels.module.css'
+import { colors, fonts } from '../../lib/app-design-tokens'
 import { RailOverlay } from './ui/RailOverlay'
 import { useTranslations } from 'next-intl'
 
@@ -133,24 +134,24 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
     return (
       <RailOverlay><>
       <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: '24px 20px', zIndex: 1101, boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h3 style={{ fontFamily: fonts.alt, fontSize: '1.2rem', fontWeight: 800, margin: 0, color: colors.text, letterSpacing: '1px', textTransform: 'uppercase' }}>{selected.nom}</h3>
-            <button onClick={() => setSelected(null)} style={{ width: 32, height: 32, background: colors.surfaceHigh, borderRadius: 12, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={14} color={colors.textMuted} />
+      <div className={panelStyles.panel} role="dialog" aria-modal="true" aria-label={selected ? selected.nom : 'Ajouter un aliment'} style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'calc(100% - 32px)', maxWidth: 680, maxHeight: 'calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))', overflowY: 'auto', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, padding: '24px 20px', zIndex: 1101, boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 style={{ fontFamily: fonts.alt, fontSize: '1.5rem', fontWeight: 700, margin: 0, color: colors.text, letterSpacing: 0, textTransform: 'none' }}>{selected.nom}</h3>
+            <button aria-label="Retour aux aliments" onClick={() => setSelected(null)} style={{ width: 44, height: 44, flexShrink: 0, background: colors.surfaceHigh, borderRadius: 12, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X size={20} color={colors.textMuted} />
             </button>
           </div>
           <FoodCatalogNotice />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 20 }}>
-            <button onClick={() => setQuantityStr(String(Math.max(0, quantity - 25)))} style={{ width: 44, height: 44, borderRadius: 12, background: colors.background, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button aria-label="Diminuer de 25 grammes" onClick={() => setQuantityStr(String(Math.max(0, quantity - 25)))} style={{ width: 44, height: 44, borderRadius: 12, background: colors.background, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Minus size={18} color={colors.text} />
             </button>
             <div style={{ textAlign: 'center' }}>
-              <input type="text" inputMode="numeric" pattern="[0-9]*" value={quantityStr} onChange={e => setQuantityStr(e.target.value.replace(/[^0-9]/g, ''))} onFocus={e => e.target.select()}
+              <input aria-label="Quantité en grammes" type="text" inputMode="numeric" pattern="[0-9]*" value={quantityStr} onChange={e => setQuantityStr(e.target.value.replace(/[^0-9]/g, ''))} onFocus={e => e.target.select()}
                 style={{ width: 80, background: 'transparent', border: 'none', color: colors.gold, fontSize: '2.4rem', fontFamily: fonts.headline, fontWeight: 700, textAlign: 'center', outline: 'none' }} />
-              <div style={{ fontSize: '0.72rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, marginTop: -4, letterSpacing: '1px', textTransform: 'uppercase' }}>grammes</div>
+              <div style={{ fontSize: '0.875rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, marginTop: -4, letterSpacing: 0, textTransform: 'none' }}>grammes</div>
             </div>
-            <button onClick={() => setQuantityStr(String(quantity + 25))} style={{ width: 44, height: 44, borderRadius: 12, background: colors.background, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button aria-label="Augmenter de 25 grammes" onClick={() => setQuantityStr(String(quantity + 25))} style={{ width: 44, height: 44, borderRadius: 12, background: colors.background, border: `1px solid ${colors.divider}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={18} color={colors.text} />
             </button>
           </div>
@@ -163,16 +164,16 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
             ].map(m => (
               <div key={m.l} style={{ background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, padding: '8px 4px', textAlign: 'center' }}>
                 <div style={{ fontFamily: fonts.headline, fontSize: '1.1rem', fontWeight: 700, color: m.c }}>{m.v}</div>
-                <div style={{ fontSize: '0.55rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{m.l}</div>
+                <div style={{ fontSize: '0.75rem', fontFamily: fonts.alt, color: colors.textMuted, fontWeight: 700, textTransform: 'none', letterSpacing: 0 }}>{m.l}</div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginBottom: 20 }}>
             {MEAL_OPTIONS.map(m => (
               <button key={m.id} type="button" aria-pressed={mealType === m.id} onClick={() => setMealType(m.id)} style={{
                 flex: 1, minHeight: 44, padding: '8px 4px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: fonts.alt, fontSize: '0.68rem', fontWeight: 700,
-                letterSpacing: '0.15em', textTransform: 'uppercase' as const,
+                fontFamily: fonts.alt, fontSize: '0.8125rem', fontWeight: 700,
+                letterSpacing: 0, textTransform: 'none' as const,
                 background: mealType === m.id ? 'rgba(230,195,100,0.15)' : 'rgba(255,255,255,0.06)',
                 backdropFilter: 'blur(8px)',
                 border: `1px solid ${mealType === m.id ? colors.gold : 'rgba(255,255,255,0.1)'}`,
@@ -184,7 +185,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
             width: '100%', padding: '16px', borderRadius: 12, border: 'none', cursor: saving ? 'wait' : 'pointer',
             background: colors.gold, color: colors.onGold,
             fontFamily: fonts.alt, fontSize: '1rem', fontWeight: 800,
-            letterSpacing: '1px', textTransform: 'uppercase', opacity: saving ? 0.6 : 1,
+            letterSpacing: 0, textTransform: 'none', opacity: saving ? 0.6 : 1,
 
           }}>{saving ? 'Ajout...' : 'Ajouter au repas'}</button>
       </div>
@@ -196,40 +197,40 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
   return (
     <RailOverlay><>
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1100 }} />
-    <div style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 440, maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 24px)', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+    <div className={panelStyles.panel} role="dialog" aria-modal="true" aria-label={selected ? selected.nom : 'Ajouter un aliment'} style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 680, maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 24px)', background: colors.surface2, border: `1px solid ${colors.divider}`, borderRadius: 20, zIndex: 1101, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
       <div style={{ padding: '20px 20px 14px', borderBottom: `1px solid ${colors.divider}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontFamily: fonts.headline, fontSize: 20, letterSpacing: 2, color: colors.text }}>AJOUTER UN ALIMENT</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', padding: 4 }}><X size={18} /></button>
+          <span style={{ fontFamily: fonts.headline, fontSize: 28, fontWeight: 700, letterSpacing: '-.025em', color: colors.text }}>Ajouter un aliment</span>
+          <button aria-label="Fermer" onClick={onClose} style={{ width: 44, height: 44, flexShrink: 0, background: colors.surfaceHigh, border: `1px solid ${colors.divider}`, borderRadius: 13, color: colors.textMuted, cursor: 'pointer', padding: 4 }}><X size={18} /></button>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={16} color={colors.gold} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-            <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un aliment..." autoFocus
+            <input aria-label="Rechercher un aliment" ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher un aliment..." autoFocus
               style={{ width: '100%', padding: '12px 12px 12px 38px', background: colors.background, border: `1px solid ${colors.divider}`, borderRadius: 12, color: colors.text, fontSize: 15, fontFamily: fonts.body, outline: 'none' }} />
           </div>
-          <button onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}><Camera size={16} color={colors.gold} /></button>
+          <button aria-label="Scanner un code-barres" onClick={() => setShowScanner(true)} style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}><Camera size={16} color={colors.gold} /></button>
         </div>
       </div>
 
       {/* Barcode Scanner */}
       {showScanner && (
-        <BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType}
+        <RailOverlay><BarcodeScanner supabase={supabase} userId={userId} defaultMealType={mealType}
           onProductAdded={() => { setShowScanner(false); onAdded() }}
-          onClose={() => setShowScanner(false)} />
+          onClose={() => setShowScanner(false)} /></RailOverlay>
       )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 24px' }}>
         <FoodCatalogNotice />
-        {loading && <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem', padding: '32px 0' }}>Chargement...</p>}
+        {loading && <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.9375rem', padding: '32px 0' }}>Chargement...</p>}
 
         {/* Favorites section */}
         {favorites.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'sticky', top: 0, background: colors.surface2, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
               <Star size={14} color={colors.gold} fill={colors.gold} />
-              <span style={{ fontFamily: fonts.alt, fontSize: '0.78rem', fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'uppercase' }}>Mes favoris</span>
-              <span style={{ fontSize: '0.6rem', fontFamily: fonts.body, color: colors.textMuted }}>({favorites.length})</span>
+              <span style={{ fontFamily: fonts.alt, fontSize: '0.875rem', fontWeight: 800, color: colors.gold, letterSpacing: '2px', textTransform: 'none' }}>Mes favoris</span>
+              <span style={{ fontSize: '0.75rem', fontFamily: fonts.body, color: colors.textMuted }}>({favorites.length})</span>
             </div>
             {favorites.map(food => (
               <FoodRow key={food.id} food={food} isFav onSelect={() => { setSelected(food); setQuantityStr('100') }} />
@@ -242,8 +243,8 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
           <div key={cat.key} style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, position: 'sticky', top: 0, background: colors.surface2, paddingTop: 4, paddingBottom: 4, zIndex: 1 }}>
               <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
-              <span style={{ fontFamily: fonts.alt, fontSize: '0.75rem', fontWeight: 800, color: colors.textMuted, letterSpacing: '2px', textTransform: 'uppercase' }}>{cat.label}</span>
-              <span style={{ fontSize: '0.6rem', fontFamily: fonts.body, color: colors.textMuted }}>({cat.foods.length})</span>
+              <span style={{ fontFamily: fonts.alt, fontSize: '0.75rem', fontWeight: 800, color: colors.textMuted, letterSpacing: '2px', textTransform: 'none' }}>{cat.label}</span>
+              <span style={{ fontSize: '0.75rem', fontFamily: fonts.body, color: colors.textMuted }}>({cat.foods.length})</span>
             </div>
             {cat.foods.map((food: any) => (
               <FoodRow key={food.id} food={food} onSelect={() => { setSelected(food); setQuantityStr('100') }} />
@@ -252,7 +253,7 @@ export default function FoodSearch({ supabase, userId, defaultMealType, dateOver
         ))}
 
         {!loading && query.length >= 1 && filtered.length === 0 && (
-          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.82rem', padding: '32px 0' }}>Aucun resultat pour &quot;{query}&quot;</p>
+          <p style={{ textAlign: 'center', color: colors.textMuted, fontFamily: fonts.body, fontSize: '0.9375rem', padding: '32px 0' }}>Aucun resultat pour &quot;{query}&quot;</p>
         )}
       </div>
     </div>
@@ -265,12 +266,12 @@ function FoodRow({ food, isFav, onSelect }: { food: any; isFav?: boolean; onSele
     <button onClick={onSelect}
       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '10px 0', background: 'none', border: 'none', borderBottom: `1px solid ${colors.divider}`, cursor: 'pointer', textAlign: 'left' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.86rem', fontFamily: fonts.body, fontWeight: 400, color: colors.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ fontSize: '1rem', fontFamily: fonts.body, fontWeight: 400, color: colors.text, display: 'flex', alignItems: 'center', gap: 6 }}>
           {isFav && <Star size={10} color={colors.gold} fill={colors.gold} style={{ flexShrink: 0 }} />}
           <span>{food.nom}</span>
-          {food.source === 'ANSES' && <span style={{ fontFamily: fonts.alt, fontSize: 7, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldRule}`, flexShrink: 0 }}>CIQUAL</span>}
+          {food.source === 'ANSES' && <span style={{ fontFamily: fonts.alt, fontSize: 11, fontWeight: 700, letterSpacing: 1, padding: '1px 5px', borderRadius: 4, background: colors.goldDim, color: colors.gold, border: `1px solid ${colors.goldRule}`, flexShrink: 0 }}>CIQUAL</span>}
         </div>
-        <div style={{ fontSize: '0.65rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, marginTop: 2, display: 'flex', gap: 6 }}>
+        <div style={{ fontSize: '0.8125rem', fontFamily: fonts.alt, fontWeight: 700, color: colors.textMuted, marginTop: 2, display: 'flex', gap: 6 }}>
           <span style={{ color: colors.gold }}>{food.calories} kcal</span>
           <span>P{food.proteines}</span>
           <span>G{food.glucides}</span>

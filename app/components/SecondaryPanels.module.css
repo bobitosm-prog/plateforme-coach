@@ -32,3 +32,8 @@
 
 /* Keep the weight prominent above the global 16 px mobile input floor. */
 .panel input.weightValue { font-size: 48px !important; }
+
+.scannerPanel { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.scannerPanel > div { width: 100%; max-width: 720px; margin-inline: auto; min-width: 0; }
+.scannerPanel button { font-family: inherit; }
+.scannerPanel input { min-width: 0; font-size: 16px; }
