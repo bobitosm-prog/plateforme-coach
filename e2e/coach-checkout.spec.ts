@@ -43,6 +43,10 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
     const anonymous = await browser.newContext()
     try { expect((await anonymous.request.post('/api/stripe/coach-checkout', { data: {} })).status()).toBe(401); expect(await calls()).toHaveLength(0) } finally { await anonymous.close() }
     await login(page, client.email)
+    // Let the paywall read the active relation before the authorization cases
+    // below temporarily change that relation and the coach's role.
+    const coachOffer = page.getByRole('button', { name: /75/ })
+    await expect(coachOffer).toBeVisible({ timeout: 20_000 })
 
     for (const body of [{ clientId: foreignClientId }, { coachId: foreignCoachId }, { stripeAccountId: 'acct_local_foreign' }]) {
       expect(await post(page, body)).toBe(400); expect(await calls()).toHaveLength(0)
@@ -72,8 +76,7 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
     await fetch(`${stripeUrl}/__requests`, { method: 'DELETE' })
 
     const checkoutResponse = page.waitForResponse(response => response.url().endsWith('/api/stripe/coach-checkout') && response.request().method() === 'POST')
-    await expect(page.getByRole('button', { name: /75/ })).toBeVisible({ timeout: 20_000 })
-    await page.getByRole('button', { name: /75/ }).click()
+    await coachOffer.click()
     expect((await checkoutResponse).status()).toBe(200)
     await expect(page).toHaveURL(/^http:\/\/127\.0\.0\.1:55326\/checkout\//)
 
