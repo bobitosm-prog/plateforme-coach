@@ -165,6 +165,11 @@ jobs:
           docker info --format '{{.ServerVersion}}'
           psql --version
 
+      - name: Cache postgres-meta from GHCR for type generation
+        run: |
+          docker pull ghcr.io/supabase/postgres-meta:v0.96.6
+          docker tag ghcr.io/supabase/postgres-meta:v0.96.6 public.ecr.aws/supabase/postgres-meta:v0.96.6
+
       - name: Reset canonical local Supabase
         run: npm run supabase:local:reset
 
