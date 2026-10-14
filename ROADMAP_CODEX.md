@@ -875,7 +875,7 @@ Monitoring restant :
 
 #### 10.2 REAL_CORPUS_VALIDATION Training
 
-**Statut : `REAL_CORPUS_VALIDATION_BLOCKED`**
+**Statut : `REAL_CORPUS_VALIDATION_PENDING`**
 
 **Validation technique : `PASS`**
 
@@ -888,7 +888,12 @@ Résultats :
 - aucune mutation ;
 - aucun impact UI.
 
-Blocage : aucun corpus Training organique n'est disponible. Le statut
+Un premier programme coach organique est disponible dans le staging depuis le
+14 octobre 2026. La création, la relecture après rafraîchissement et l'édition
+sont validées. Son [diagnostic en lecture seule](docs/PHASE_10_ORGANIC_STAGING_CHECK_2026-10-14.md)
+donne `WARNING` et `legacy-fallback` sur trois évaluations locales : références
+d'exercice par nom, `split` et `duration` non mappés. Les trois parcours du
+runner authentifié restent à faire après correction ; le statut
 `REAL_CORPUS_VALIDATION_PENDING` reste actif.
 
 #### 10.3 Staging Readiness Audit
