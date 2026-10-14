@@ -117,6 +117,7 @@ describe('coach-template staging assessment runner', () => {
       coachTemplateRow('canonical'),
       coachTemplateRow('warning', {
         split: 'PPL',
+        legacy_extra: 'not represented',
         days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
       }),
       coachTemplateRow('critical'),

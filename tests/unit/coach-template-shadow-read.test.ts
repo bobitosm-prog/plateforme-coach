@@ -49,6 +49,7 @@ describe('coach template legacy-to-canonical shadow read', () => {
   it('classifies adapter warnings and unmapped fields without treating them as critical', () => {
     const input = row({
       split: 'PPL',
+      legacy_extra: 'not represented',
       days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP' }] }],
     })
     const result = compareCoachTemplateShadow(input, 'coach-1')

@@ -134,9 +134,12 @@ La capture doit établir :
 - stabilité de l'ordre, `hasMore` et `nextCursor` ;
 - zéro erreur Supabase supplémentaire et une seule lecture par page.
 
-Les templates comportant `split` ou `duration` sont actuellement susceptibles
-de rester en `WARNING` car ces champs affichés ne sont pas canoniques. Ils ne
-doivent pas être comptés comme lignes canoniques éligibles.
+Les labels `split` et `duration` des templates coach sont représentés dans
+`templatePresentation` et reconstruits à l'identique. L'éditeur coach
+enregistre certains exercices uniquement par nom : leur référence legacy typée
+reste admissible si le comparateur sémantique et la projection UI sont tous deux
+identiques. Un champ inconnu, une valeur ambiguë ou toute différence conserve
+le fallback et ne compte pas comme ligne canonique éligible.
 
 ## GO technique staging et validation réelle pending
 

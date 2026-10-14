@@ -124,6 +124,8 @@ export type TrainingProgram = {
   name: string
   description?: string
   tags: string[]
+  /** Labels shown by the legacy coach template editor and list. */
+  templatePresentation?: { split?: string; duration?: string }
   status: 'draft' | 'active' | 'archived'
   weeks: TrainingWeek[]
   createdAt: string

@@ -42,3 +42,18 @@ les références d'exercice ou d'expliciter leur compatibilité dans le contrat.
 Après cette correction, exécuter les trois parcours organiques avec un reader
 staging authentifié et réévaluer les seuils. Aucune promotion Production ne
 découle de ce contrôle.
+
+## Correctif local ultérieur
+
+L'adaptateur des templates coach conserve désormais `split` et `duration`
+dans `templatePresentation`. Pour ce format uniquement, une référence
+d'exercice par nom est acceptée comme référence legacy typée lorsque la
+projection sémantique et l'affichage restent identiques. Les champs inconnus,
+les valeurs ambiguës et les différences d'affichage gardent le fallback.
+
+La même ligne organique, relue sans mutation depuis staging puis évaluée avec
+le code corrigé en local, donne `MATCH`, zéro warning, zéro champ non mappé et
+une ligne reconstruite profondément égale à la ligne de départ. Les tests
+ciblés et la suite complète passent. Cette vérification locale ne remplace
+toujours pas les trois parcours du runner avec le reader authentifié après
+déploiement du correctif en staging ; le statut reste en attente.

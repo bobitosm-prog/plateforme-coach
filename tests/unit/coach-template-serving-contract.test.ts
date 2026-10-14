@@ -89,10 +89,23 @@ describe('future coach-template canonical serving contract', () => {
     expect(input).toEqual(snapshot)
   })
 
-  it('falls back by identity for WARNING rows carrying legacy-only displayed fields', () => {
+  it('serves coach-editor labels and name-only exercise references without changing the UI', () => {
+    const input = row('coach-editor', {
+      split: 'Full Body',
+      duration: '4 semaines',
+      days: [{ name: 'Full Body A', exercises: [{ name: 'Goblet squat', sets: 3, reps: '10-12', rest: 90 }] }],
+    })
+    const result = prepareCoachTemplatePageForServing(page([input]), 'coach-1', 'canonical-when-identical')
+    expect(result.decisions).toEqual([{ id: 'coach-editor', source: 'canonical', shadowResult: 'MATCH' }])
+    expect(result.page.items[0]).toEqual(input)
+    expect(result.page.items[0]).not.toBe(input)
+  })
+
+  it('falls back by identity for WARNING rows carrying unknown fields', () => {
     const input = row('warning', {
       split: 'PPL',
       duration: '8 semaines',
+      legacy_extra: 'not represented',
       days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
     })
     const result = prepareCoachTemplatePageForServing(page([input]), 'coach-1', 'canonical-when-identical')

@@ -46,7 +46,9 @@ function programFromDays(
     'id', 'name', 'program_name', 'description', 'days', 'program', 'split', 'duration', 'tags', 'source',
     'created_at', 'updated_at', 'is_template', 'is_active', 'total_weeks', 'current_week', 'phases', 'scheduled', 'start_date',
   ])
+  const isCoachTemplate = format === 'coach-template-envelope-v1'
   for (const field of ['split', 'duration', 'total_weeks', 'current_week', 'phases', 'scheduled', 'start_date']) {
+    if (isCoachTemplate && (field === 'split' || field === 'duration') && typeof raw[field] === 'string') continue
     if (raw[field] !== undefined && raw[field] !== null && !unmappedFields.includes(field)) unmappedFields.push(field)
   }
   unmappedFields.sort()
@@ -66,12 +68,18 @@ function programFromDays(
       name,
       description: context.description ?? (typeof raw.description === 'string' ? raw.description : undefined),
       tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+      ...(isCoachTemplate ? { templatePresentation: {
+        ...(typeof raw.split === 'string' ? { split: raw.split } : {}),
+        ...(typeof raw.duration === 'string' ? { duration: raw.duration } : {}),
+      } } : {}),
       status: raw.is_active === true ? 'active' : 'draft',
       weeks: [converted.week],
       createdAt: typeof raw.created_at === 'string' ? raw.created_at : context.now,
       updatedAt: typeof raw.updated_at === 'string' ? raw.updated_at : context.now,
     },
-    warnings,
+    // The coach editor persists exercises by name. Their typed legacy references
+    // preserve that exact name, so they do not imply data loss for this template.
+    warnings: isCoachTemplate ? warnings.filter(warning => warning.code !== 'legacy_name_reference') : warnings,
     unmappedFields,
   }
 }

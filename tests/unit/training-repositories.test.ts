@@ -509,6 +509,7 @@ describe('Training repositories', () => {
   it('keeps WARNING and UNSUPPORTED template rows on the identical legacy references in internal mode', async () => {
     const warning = coachTemplateRow('template-warning', {
       split: 'PPL',
+      legacy_extra: 'not represented',
       days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
     })
     const warningMock = clientWith({ data: [warning], error: null })
@@ -550,6 +551,7 @@ describe('Training repositories', () => {
       coachTemplateRow('canonical'),
       coachTemplateRow('warning', {
         split: 'PPL',
+        legacy_extra: 'not represented',
         days: [{ name: 'Push', exercises: [{ name: 'Pompes', sets: 2, reps: 'AMRAP', rest: 60 }] }],
       }),
       coachTemplateRow('critical'),

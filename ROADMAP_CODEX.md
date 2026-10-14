@@ -893,7 +893,8 @@ Un premier programme coach organique est disponible dans le staging depuis le
 sont validées. Son [diagnostic en lecture seule](docs/PHASE_10_ORGANIC_STAGING_CHECK_2026-10-14.md)
 donne `WARNING` et `legacy-fallback` sur trois évaluations locales : références
 d'exercice par nom, `split` et `duration` non mappés. Les trois parcours du
-runner authentifié restent à faire après correction ; le statut
+runner authentifié restent à faire après déploiement du correctif local
+(`MATCH`, zéro warning et projection identique sur la ligne organique) ; le statut
 `REAL_CORPUS_VALIDATION_PENDING` reste actif.
 
 #### 10.3 Staging Readiness Audit

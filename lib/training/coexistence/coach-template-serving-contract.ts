@@ -290,7 +290,11 @@ function canonicalProgramEnvelope(program: TrainingProgram): JsonObject | null {
     }
     days.push({ name: day.label, exercises })
   }
-  return { days }
+  return {
+    days,
+    ...(program.templatePresentation?.split !== undefined ? { split: program.templatePresentation.split } : {}),
+    ...(program.templatePresentation?.duration !== undefined ? { duration: program.templatePresentation.duration } : {}),
+  }
 }
 
 function canonicalBackedRow(program: TrainingProgram, legacy: CoachProgramRow): CoachProgramRow | null {
