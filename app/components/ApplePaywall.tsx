@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { applePurchaseErrorKey, applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
+import { applePurchaseDiagnosticCode, applePurchaseErrorKey, applePurchaseBridge, loadNativeAppleProducts, nativeApplePurchase, type NativeProduct } from '@/lib/apple/native-purchases'
 import LegalDocumentDialog from './LegalDocumentDialog'
 import { Sparkles, RotateCcw, ArrowLeft } from 'lucide-react'
 import styles from './ApplePaywall.module.css'
@@ -26,7 +26,10 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
     try {
       const result = await nativeApplePurchase(userId, action, productId)
       setMessage(t(result.status === 'pending' ? 'pending' : result.status === 'cancelled' ? 'cancelled' : result.count === 0 ? 'empty' : result.sandbox ? 'sandbox' : 'success'))
-    } catch (error) { setMessage(t(applePurchaseErrorKey(error))) } finally { setBusy(false) }
+    } catch (error) {
+      const code = applePurchaseDiagnosticCode(error)
+      setMessage(`${t(applePurchaseErrorKey(error))}${code ? ` (${code})` : ''}`)
+    } finally { setBusy(false) }
   }
   return <section className={styles.page} aria-busy={busy}>
     <div className={styles.shell}>
