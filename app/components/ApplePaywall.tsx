@@ -12,6 +12,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
   const [products, setProducts] = useState<NativeProduct[]>([])
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [activeProductId, setActiveProductId] = useState<string | null>(null)
   useEffect(() => {
     let alive = true
     if (!supported) { setMessage(t('unavailable')); return }
@@ -20,6 +21,7 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
   }, [t, supported])
   async function run(action: 'purchase' | 'restore', productId?: string) {
     if (busy) return
+    setActiveProductId(action === 'purchase' ? productId ?? null : null)
     setBusy(true); setMessage('')
     try {
       const result = await nativeApplePurchase(userId, action, productId)
@@ -37,14 +39,15 @@ export default function ApplePaywall({ userId, onSignOut, dismissible = false, s
         {products.map((product, i) => <article key={product.id} className={styles.card}>
           <div className={styles.label}><Sparkles size={20} aria-hidden="true" /><h2>{t(i === 0 ? 'monthly' : 'yearly')}</h2></div>
           <p className={styles.price}>{product.displayPrice} <span>{t(i === 0 ? 'perMonth' : 'perYear')}</span></p>
-          <button className={styles.primary} disabled={busy} onClick={() => run('purchase', product.id)}>{t('buy')}</button>
+          <button className={styles.primary} disabled={busy} onClick={() => run('purchase', product.id)}>{busy && activeProductId === product.id ? t('processing') : t('buy')}</button>
+          {activeProductId === product.id && <p role="status" aria-live="polite" className={styles.offerMessage}>{busy ? t('processing') : message}</p>}
         </article>)}
       </div>
       {!products.length && supported && !message && <p role="status" className={styles.message}>{common('loading')}</p>}
       <div className={styles.details}>
         <p>{t('renewal')}</p>
         <button className={styles.restore} disabled={busy || !supported || !applePurchaseBridge()} onClick={() => run('restore')}><RotateCcw size={18} aria-hidden="true" />{t('restore')}</button>
-        <p role="status" aria-live="polite" className={styles.message}>{busy ? t('processing') : message}</p>
+        {activeProductId === null && <p role="status" aria-live="polite" className={styles.message}>{busy ? t('processing') : message}</p>}
         <div className={styles.legal}><LegalDocumentDialog document="cgu">{t('terms')}</LegalDocumentDialog><LegalDocumentDialog document="privacy">{t('privacy')}</LegalDocumentDialog></div>
         {!dismissible && <button className={styles.restore} onClick={onSignOut}>{t('signOut')}</button>}
       </div>

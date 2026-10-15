@@ -1,6 +1,7 @@
 import XCTest
 import StoreKit
 import StoreKitTest
+import UIKit
 @testable import MoovXPrototype
 
 final class AthenaCatalogTests: XCTestCase {
@@ -80,6 +81,19 @@ final class AthenaCatalogTests: XCTestCase {
             if case .verified(let transaction) = result, transaction.id == id { entitled = true }
         }
         XCTAssertTrue(entitled)
+    }
+
+    @MainActor
+    func testUIKitPurchaseUsesTheActiveWindowScene() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let manager = ApplePurchaseManager()
+        let owner = UUID()
+        let reply = try await manager.purchase(productID: AthenaOffer.monthly.rawValue, token: owner, scene: scene)
+        XCTAssertEqual(reply["status"] as? String, "success")
+        let transactions = try XCTUnwrap(reply["transactions"] as? [[String: String]])
+        XCTAssertEqual(transactions.count, 1)
+        let id = try XCTUnwrap(UInt64(transactions[0]["id"] ?? ""))
+        try await manager.finish(id: id, token: owner)
     }
 
     @MainActor

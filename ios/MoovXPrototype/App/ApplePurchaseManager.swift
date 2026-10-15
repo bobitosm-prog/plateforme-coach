@@ -1,5 +1,6 @@
 import StoreKit
 import Foundation
+import UIKit
 
 /// StoreKit owns the durable unfinished queue. No credentials or JWS are written to disk.
 @MainActor
@@ -25,14 +26,20 @@ final class ApplePurchaseManager {
         pending[transaction.id] = result
         NotificationCenter.default.post(name: Self.changed, object: nil)
     }
-    func purchase(productID: String, token: UUID, canPresent: () -> Bool = { true }) async throws -> [String: Any] {
+    func purchase(productID: String, token: UUID, scene: UIWindowScene? = nil, canPresent: () -> Bool = { true }) async throws -> [String: Any] {
         guard !purchasing else { throw PurchaseError.busy }
         purchasing = true
         defer { purchasing = false }
         let products = try await AthenaCatalog.load()
         guard let product = products.first(where: { $0.id == productID }) else { throw PurchaseError.invalid }
         guard canPresent() else { throw PurchaseError.invalid }
-        switch try await product.purchase(options: [.appAccountToken(token)]) {
+        // UIKit must give StoreKit the scene that owns the tapped purchase button.
+        // The no-scene path is retained for the StoreKit test harness only.
+        let outcome = try await { () async throws -> Product.PurchaseResult in
+            if let scene { return try await product.purchase(confirmIn: scene, options: [.appAccountToken(token)]) }
+            return try await product.purchase(options: [.appAccountToken(token)])
+        }()
+        switch outcome {
         case .success(let result):
             guard case .verified(let transaction) = result, transaction.appAccountToken == token else { throw PurchaseError.invalid }
             remember(result)

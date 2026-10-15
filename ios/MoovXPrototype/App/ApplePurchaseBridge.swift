@@ -42,7 +42,8 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
                     switch action {
                     case "purchase":
                         guard let productID = body["productId"], AthenaOffer(rawValue: productID) != nil else { throw ApplePurchaseManager.PurchaseError.invalid }
-                        result = try await manager.purchase(productID: productID, token: token, canPresent: { [weak self] in
+                        guard let scene = message.webView?.window?.windowScene else { throw ApplePurchaseManager.PurchaseError.invalid }
+                        result = try await manager.purchase(productID: productID, token: token, scene: scene, canPresent: { [weak self] in
                             self?.generation == requestGeneration && UIApplication.shared.applicationState == .active
                         })
                     case "restore", "pending": result = try await manager.collect(token: token, restore: action == "restore")
