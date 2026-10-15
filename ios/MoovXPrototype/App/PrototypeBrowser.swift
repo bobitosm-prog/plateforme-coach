@@ -83,7 +83,8 @@ struct PrototypeWebView: UIViewRepresentable {
         let denied = Self.cameraAccessDenied
         let script = """
         (() => {
-          window.__moovxExternalRegistration = true;
+          window.__moovxNativeWelcome = true;
+          window.__moovxNativeApp = true;
           window.__moovxPrivacyLinks = true;
           window.__moovxSignedAppleEnvironment = true;
           window.__moovxCameraDenied = \(denied ? "true" : "false");
@@ -250,11 +251,6 @@ struct PrototypeWebView: UIViewRepresentable {
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             if action.sourceFrame.isMainFrame, action.navigationType == .linkActivated,
                NavigationPolicy.opensPrivacyDocument(action.request.url), let url = action.request.url {
-                UIApplication.shared.open(url)
-                decisionHandler(.cancel)
-                return
-            }
-            if action.sourceFrame.isMainFrame && NavigationPolicy.opensRegistration(action.request.url), let url = action.request.url {
                 UIApplication.shared.open(url)
                 decisionHandler(.cancel)
                 return

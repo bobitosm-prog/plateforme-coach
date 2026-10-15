@@ -36,7 +36,7 @@ export default function LoginPageContent() {
   const [resetError, setResetError] = useState('')
 
   useEffect(() => {
-    const native = Boolean((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration)
+    const native = Boolean((window as Window & { __moovxNativeWelcome?: boolean }).__moovxNativeWelcome)
     setShowWelcome(native && !searchParams.get('confirmed') && !searchParams.get('reset') && !searchParams.get('auth_error'))
     if (searchParams.get('confirmed') === '1') {
       setSuccessBanner('confirmed')
@@ -68,15 +68,11 @@ export default function LoginPageContent() {
   }, [nextTarget, router, t])
 
   function openRegistration() {
-    if ((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) {
-      window.location.href = 'https://moovx.ch/?source=ios' + (nextTarget === '/join' ? '&next=%2Fjoin' : '')
-    } else {
-      router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')
-    }
+    router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')
   }
 
   function returnToWelcome(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (!(window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) return
+    if (!(window as Window & { __moovxNativeWelcome?: boolean }).__moovxNativeWelcome) return
     event.preventDefault()
     setForgotMode(false)
     setShowWelcome(true)
