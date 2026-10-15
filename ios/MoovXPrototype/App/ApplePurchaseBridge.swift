@@ -42,7 +42,7 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
                     switch action {
                     case "purchase":
                         guard let productID = body["productId"], AthenaOffer(rawValue: productID) != nil else { throw ApplePurchaseManager.PurchaseError.invalid }
-                        guard let scene = message.webView?.window?.windowScene else { throw ApplePurchaseManager.PurchaseError.invalid }
+                        guard let scene = message.webView?.window?.windowScene else { throw ApplePurchaseManager.PurchaseError.presentationUnavailable }
                         result = try await manager.purchase(productID: productID, token: token, scene: scene, canPresent: { [weak self] in
                             self?.generation == requestGeneration && UIApplication.shared.applicationState == .active
                         })
@@ -56,6 +56,18 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
                 }
                 guard self?.generation == requestGeneration else { replyHandler(nil, "apple_purchase_navigation_changed"); return }
                 replyHandler(result, nil)
+            } catch let error as ApplePurchaseManager.PurchaseError {
+                let code: String
+                switch error {
+                case .busy: code = "busy"
+                case .invalid: code = "invalid"
+                case .catalogUnavailable: code = "catalog_unavailable"
+                case .presentationUnavailable: code = "presentation_unavailable"
+                case .unverified: code = "unverified"
+                case .accountMismatch: code = "account_mismatch"
+                case .storeKit(let value): code = "storekit_\(value)"
+                }
+                replyHandler(nil, "apple_purchase_\(code)")
             } catch { replyHandler(nil, "apple_purchase_unavailable") }
         }
     }
