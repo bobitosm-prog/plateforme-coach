@@ -1074,6 +1074,7 @@
         "firstNamePlaceholder": "John",
         "birthDateLabel": "Date of birth",
         "genderLabel": "Gender",
+        "optional": "Optional",
         "male": "Male",
         "female": "Female"
       },
@@ -3690,6 +3691,7 @@
       "firstNamePlaceholder": "John",
       "birthDateLabel": "Date of birth",
       "genderLabel": "Gender",
+      "optional": "Optional",
       "male": "Male",
       "female": "Female"
     },
@@ -3805,7 +3807,7 @@
       "profile": { "title": "Your profile", "subtitle": "The essentials we need to personalize your targets." },
       "training": { "title": "Your training", "subtitle": "A pace and environment that fit your routine." },
       "nutrition": { "title": "Your nutrition", "subtitle": "Choose your approach. You can adjust everything later.", "habit": "Your current tracking", "dietaryPattern": "Your diet", "patterns": { "omnivore": "Omnivore", "flexitarian": "Flexitarian", "pescatarian": "Pescatarian", "vegetarian": "Vegetarian", "vegan": "Vegan" }, "advanced": "Advanced preferences (optional)", "restrictions": "Food allergies or restrictions", "none": "None", "some": "I have restrictions", "details": "Describe your restrictions" },
-      "summary": { "title": "Everything is ready", "subtitle": "Review your answers before creating your space.", "macros": "Indicative daily target" },
+      "summary": { "title": "Everything is ready", "subtitle": "Review your answers before creating your space.", "macros": "Indicative daily target", "macrosLater": "Personalized nutrition targets can be calculated later if you add your date of birth and gender. You can create your space now." },
       "coach": { "profile": "The essentials for your coaching experience.", "optional": "This step is optional." },
       "errors": { "profile": "We could not load your profile. Try again in a moment.", "save": "Saving failed. Your answers are still here — please retry.", "photo": "The photo could not be saved." },
       "a11y": { "progress": "Onboarding progress" }

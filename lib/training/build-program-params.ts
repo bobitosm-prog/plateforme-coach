@@ -36,7 +36,7 @@ export interface ProgramParams {
   equipment: string
   priorities: string[]
   notes: string
-  gender: Gender
+  gender?: Gender
 }
 
 /**
@@ -70,11 +70,12 @@ function normalizeLevel(experienceLevel: string | null | undefined): Level {
  * Normalize gender to the API enum (male | female).
  * Profile may store various phrasings ("Homme", "Femme", "male", "female").
  */
-function normalizeGender(gender: string | null | undefined): Gender {
-  if (!gender) return 'male'
+function normalizeGender(gender: string | null | undefined): Gender | undefined {
+  if (!gender) return undefined
   const g = gender.toLowerCase().trim()
   if (g === 'female' || g === 'femme' || g === 'f') return 'female'
-  return 'male'
+  if (g === 'male' || g === 'homme' || g === 'm') return 'male'
+  return undefined
 }
 
 /**

@@ -131,3 +131,7 @@
   .app:has(.content select:focus) .nav { position:static; }
 }
 @media(min-width:768px){.app{min-height:min(900px,calc(100dvh - 64px))}}
+
+/* Keep save failures visible above the persistent action, including on iPhone. */
+.nav { flex-wrap: wrap; }
+.nav .error { flex: 0 0 100%; margin: 0; }

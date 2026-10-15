@@ -8,7 +8,7 @@ interface InvitedStep1ProfileProps {
   birthDate: string
   setBirthDate: (v: string) => void
   gender: 'male' | 'female' | ''
-  setGender: (v: 'male' | 'female') => void
+  setGender: (v: 'male' | 'female' | '') => void
 }
 
 export default function InvitedStep1Profile({
@@ -63,7 +63,7 @@ export default function InvitedStep1Profile({
             display: 'block',
           }}
         >
-          {t('profile.birthDateLabel')}
+          {t('profile.birthDateLabel')} · {t('profile.optional')}
         </label>
         <input
           id="coach-onboarding-birth-date"
@@ -92,7 +92,7 @@ export default function InvitedStep1Profile({
             display: 'block',
           }}
         >
-          {t('profile.genderLabel')}
+          {t('profile.genderLabel')} · {t('profile.optional')}
         </div>
         <div role="group" aria-label={t('profile.genderLabel')} style={{ display: 'flex', gap: 12 }}>
           {(['male', 'female'] as const).map((g) => (
@@ -100,7 +100,7 @@ export default function InvitedStep1Profile({
               type="button"
               aria-pressed={gender === g}
               key={g}
-              onClick={() => setGender(g)}
+              onClick={() => setGender(gender === g ? '' : g)}
               style={{
                 ...cardStyle,
                 flex: 1,
