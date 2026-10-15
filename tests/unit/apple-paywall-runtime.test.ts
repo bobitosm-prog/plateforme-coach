@@ -48,7 +48,7 @@ describe('iPhone purchase screen runtime', () => {
     mount()
     const restore = await screen.findByRole('button', { name: 'Restaurer mes achats' })
     fireEvent.click(restore)
-    await screen.findByText(/Impossible de confirmer ton achat/)
+    await screen.findByText(/L’achat Apple n’a pas abouti/)
     await waitFor(() => expect((restore as HTMLButtonElement).disabled).toBe(false))
     expect(native.purchase).toHaveBeenCalledWith('user-a', 'restore', undefined)
   })

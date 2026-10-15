@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { applePurchaseErrorKey, nativeApplePurchase, loadNativeAppleProducts } from '@/lib/apple/native-purchases'
+import { applePurchaseDiagnosticCode, applePurchaseErrorKey, nativeApplePurchase, loadNativeAppleProducts } from '@/lib/apple/native-purchases'
 const userId = 'account-a'
 const token = '00000000-0000-4000-8000-000000000001'
 const bridge = { postMessage: vi.fn() }
@@ -79,5 +79,13 @@ describe('purchase error guidance', () => {
   })
   it('keeps restoration guidance after a transaction fails to synchronize', () => {
     expect(applePurchaseErrorKey(new Error('APPLE_SYNC_UNAVAILABLE'))).toBe('retry')
+  })
+  it('distinguishes native account, catalogue, presentation and StoreKit failures', () => {
+    expect(applePurchaseErrorKey(new Error('apple_purchase_account_mismatch'))).toBe('accountMismatch')
+    expect(applePurchaseErrorKey(new Error('apple_purchase_catalog_unavailable'))).toBe('catalogUnavailable')
+    expect(applePurchaseErrorKey(new Error('apple_purchase_presentation_unavailable'))).toBe('presentationUnavailable')
+    expect(applePurchaseErrorKey(new Error('apple_purchase_storekit_2'))).toBe('appleRejected')
+    expect(applePurchaseDiagnosticCode(new Error('apple_purchase_storekit_2'))).toBe('IAP-2')
+    expect(applePurchaseDiagnosticCode(new Error('apple_purchase_account_mismatch'))).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 import StoreKit
 import Foundation
 import UIKit
+import os
 
 /// StoreKit owns the durable unfinished queue. No credentials or JWS are written to disk.
 @MainActor
@@ -10,6 +11,7 @@ final class ApplePurchaseManager {
     private var listener: Task<Void, Never>?
     private var pending: [UInt64: VerificationResult<Transaction>] = [:]
     private var purchasing = false
+    private let logger = Logger(subsystem: "ch.moovx.app", category: "ApplePurchases")
 
     func start() {
         guard listener == nil else { return }
@@ -30,18 +32,35 @@ final class ApplePurchaseManager {
         guard !purchasing else { throw PurchaseError.busy }
         purchasing = true
         defer { purchasing = false }
-        let products = try await AthenaCatalog.load()
-        guard let product = products.first(where: { $0.id == productID }) else { throw PurchaseError.invalid }
-        guard canPresent() else { throw PurchaseError.invalid }
+        let products: [Product]
+        do { products = try await AthenaCatalog.load() }
+        catch {
+            let failure = error as NSError
+            logger.error("Catalog reload failed: \(failure.domain, privacy: .public) / \(failure.code, privacy: .public)")
+            throw PurchaseError.catalogUnavailable
+        }
+        guard let product = products.first(where: { $0.id == productID }) else { throw PurchaseError.catalogUnavailable }
+        guard canPresent() else { throw PurchaseError.presentationUnavailable }
         // UIKit must give StoreKit the scene that owns the tapped purchase button.
         // The no-scene path is retained for the StoreKit test harness only.
-        let outcome = try await { () async throws -> Product.PurchaseResult in
-            if let scene { return try await product.purchase(confirmIn: scene, options: [.appAccountToken(token)]) }
-            return try await product.purchase(options: [.appAccountToken(token)])
-        }()
+        let outcome: Product.PurchaseResult
+        do {
+            outcome = try await { () async throws -> Product.PurchaseResult in
+                if let scene { return try await product.purchase(confirmIn: scene, options: [.appAccountToken(token)]) }
+                return try await product.purchase(options: [.appAccountToken(token)])
+            }()
+        } catch {
+            let failure = error as NSError
+            logger.error("StoreKit purchase failed: \(failure.domain, privacy: .public) / \(failure.code, privacy: .public)")
+            throw PurchaseError.storeKit(failure.code)
+        }
         switch outcome {
         case .success(let result):
-            guard case .verified(let transaction) = result, transaction.appAccountToken == token else { throw PurchaseError.invalid }
+            guard case .verified(let transaction) = result else { throw PurchaseError.unverified }
+            guard transaction.appAccountToken == token else {
+                logger.error("StoreKit returned a transaction owned by another MoovX account")
+                throw PurchaseError.accountMismatch
+            }
             remember(result)
             return ["status": "success", "transactions": try payloads(token: token)]
         case .pending: return ["status": "pending"]
@@ -77,5 +96,8 @@ final class ApplePurchaseManager {
         await transaction.finish()
         pending.removeValue(forKey: id)
     }
-    enum PurchaseError: Error { case busy, invalid }
+    enum PurchaseError: Error {
+        case busy, invalid, catalogUnavailable, presentationUnavailable, unverified, accountMismatch
+        case storeKit(Int)
+    }
 }

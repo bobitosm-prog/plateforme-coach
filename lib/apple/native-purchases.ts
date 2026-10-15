@@ -51,7 +51,20 @@ export async function nativeApplePurchase(userId: string, action: 'purchase' | '
 }
 
 /** Failures before StoreKit opens must not ask users to restore a nonexistent purchase. */
-export function applePurchaseErrorKey(error: unknown): 'unavailable' | 'retry' {
-  return error instanceof Error && ['APPLE_UNAVAILABLE', 'APPLE_BRIDGE_UNAVAILABLE', 'APPLE_ACCOUNT_CHANGED', 'APPLE_PRODUCT_INVALID'].includes(error.message)
+export function applePurchaseErrorKey(error: unknown): 'unavailable' | 'retry' | 'accountMismatch' | 'catalogUnavailable' | 'presentationUnavailable' | 'appleRejected' {
+  const message = error instanceof Error ? error.message : String(error)
+  if (message.includes('apple_purchase_account_mismatch')) return 'accountMismatch'
+  if (message.includes('apple_purchase_catalog_unavailable')) return 'catalogUnavailable'
+  if (message.includes('apple_purchase_presentation_unavailable')) return 'presentationUnavailable'
+  if (message.includes('apple_purchase_navigation_changed')) return 'presentationUnavailable'
+  if (message.includes('apple_purchase_storekit_')) return 'appleRejected'
+  return ['APPLE_UNAVAILABLE', 'APPLE_BRIDGE_UNAVAILABLE', 'APPLE_ACCOUNT_CHANGED', 'APPLE_PRODUCT_INVALID', 'apple_purchase_unavailable', 'apple_purchase_invalid'].some(code => message.includes(code))
     ? 'unavailable' : 'retry'
+}
+
+/** Only a numeric StoreKit status is shown; signed receipts and account tokens stay private. */
+export function applePurchaseDiagnosticCode(error: unknown): string | null {
+  const message = error instanceof Error ? error.message : String(error)
+  const match = message.match(/apple_purchase_storekit_(-?\d{1,5})(?!\d)/)
+  return match ? `IAP-${match[1]}` : null
 }
