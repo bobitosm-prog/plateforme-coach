@@ -17,6 +17,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import styles from './CookieConsent.module.css';
 
 // === TYPES ===
 
@@ -152,28 +153,13 @@ export default function CookieConsent() {
       role="dialog"
       aria-modal="false"
       aria-labelledby="cookie-consent-title"
-      className="fixed inset-x-0 bottom-0 z-[9999] flex justify-center px-4 pb-4 sm:pb-6 pointer-events-none"
+      className={styles.overlay}
     >
       <div
-        className={`
-          pointer-events-auto
-          w-full max-w-xl
-          transition-all duration-400 ease-out
-          ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-        `}
-        style={{ transitionDuration: '400ms' }}
+        className={`${styles.panel} ${isMounted ? styles.entered : styles.leaving}`}
       >
         <div
-          className="
-            relative overflow-hidden
-            bg-black/95 backdrop-blur-xl
-            border border-white/[0.08]
-            rounded-xl
-          "
-          style={{
-            boxShadow:
-              '0 1px 0 0 rgba(212, 168, 67, 0.1) inset, 0 24px 60px -12px rgba(0, 0, 0, 0.9), 0 8px 24px -8px rgba(0, 0, 0, 0.6)',
-          }}
+          className={styles.card}
         >
           {/* Accent gold ultra-fin en top */}
           <div
@@ -184,71 +170,43 @@ export default function CookieConsent() {
             }}
           />
 
-          <div className="px-8 py-7 sm:px-12 sm:py-10">
+          <div className={styles.content}>
             {!showCustomize ? (
               // ===== VUE PRINCIPALE =====
               <>
                 {/* Titre label-style, discret */}
                 <h2
                   id="cookie-consent-title"
-                  className="
-                    text-[11px] sm:text-xs
-                    uppercase tracking-[0.2em]
-                    text-[#D4A843]
-                    font-semibold
-                    mb-4
-                  "
+                  className={styles.title}
                 >
                   {t('title')}
                 </h2>
 
                 {/* Description : lecture confortable, line-height aéré */}
-                <p className="text-white/75 text-[15px] leading-[1.65] mb-8 max-w-md">
+                <p className={styles.description}>
                   {t('description')}
                 </p>
 
                 {/* Boutons : Customize à gauche, actions à droite */}
-                <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
+                <div className={styles.actions}>
                   <button
                     onClick={() => setShowCustomize(true)}
-                    className="
-                      sm:mr-auto
-                      text-white/55 hover:text-white
-                      text-sm transition-colors
-                      py-2 -mx-1 px-1
-                      underline-offset-4 hover:underline
-                      text-left sm:text-center
-                    "
+                    className={styles.customize}
                   >
                     {t('customize')}
                   </button>
 
-                  <div className="flex gap-3">
+                  <div className={styles.choices}>
                     <button
                       onClick={handleDeclineAll}
-                      className="
-                        flex-1 sm:flex-initial
-                        border border-white/15 hover:border-white/30
-                        bg-transparent hover:bg-white/[0.04]
-                        text-white/85 font-medium
-                        px-5 py-3 rounded-lg
-                        text-sm
-                        transition-all
-                      "
+                      className={styles.decline}
                     >
                       {t('necessaryOnly')}
                     </button>
 
                     <button
                       onClick={handleAcceptAll}
-                      className="
-                        flex-1 sm:flex-initial
-                        bg-[#D4A843] hover:bg-[#E5BC56]
-                        text-black font-semibold
-                        px-6 py-3 rounded-lg
-                        text-sm
-                        transition-all
-                      "
+                      className={styles.accept}
                     >
                       {t('acceptAll')}
                     </button>
@@ -256,7 +214,7 @@ export default function CookieConsent() {
                 </div>
 
                 {/* Liens : très discrets, séparés par espace généreux */}
-                <div className="mt-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/30">
+                <div className={styles.links}>
                   <Link
                     href={`/${locale}/privacy`}
                     className="hover:text-white/60 transition-colors"
@@ -276,16 +234,11 @@ export default function CookieConsent() {
               // ===== VUE PERSONNALISATION =====
               <>
                 {/* Header avec back button */}
-                <div className="flex items-center gap-3 mb-7">
+                <div className={styles.customHeader}>
                   <button
                     onClick={() => setShowCustomize(false)}
                     aria-label={t('back')}
-                    className="
-                      -ml-2
-                      w-9 h-9 flex items-center justify-center rounded-lg
-                      text-white/50 hover:text-white hover:bg-white/[0.04]
-                      transition-all
-                    "
+                    className={styles.backButton}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -302,19 +255,14 @@ export default function CookieConsent() {
                     </svg>
                   </button>
                   <h2
-                    className="
-                      text-[11px] sm:text-xs
-                      uppercase tracking-[0.2em]
-                      text-[#D4A843]
-                      font-semibold
-                    "
+                    className={styles.title}
                   >
                     {t('customize')}
                   </h2>
                 </div>
 
                 {/* Liste des catégories — espacement généreux */}
-                <div className="space-y-5 mb-8 max-h-[50vh] overflow-y-auto pr-1 -mr-1">
+                <div className={styles.categoryList}>
                   <CategoryRow
                     title={t('categories.necessary.title')}
                     description={t('categories.necessary.description')}
@@ -341,29 +289,10 @@ export default function CookieConsent() {
                   />
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row gap-3">
-                  <button
-                    onClick={() => setShowCustomize(false)}
-                    className="
-                      sm:mr-auto
-                      text-white/55 hover:text-white
-                      text-sm transition-colors
-                      py-2 -mx-1 px-1
-                      underline-offset-4 hover:underline
-                      text-left sm:text-center
-                    "
-                  >
-                    {t('back')}
-                  </button>
+                <div className={styles.customActions}>
                   <button
                     onClick={handleSaveCustom}
-                    className="
-                      bg-[#D4A843] hover:bg-[#E5BC56]
-                      text-black font-semibold
-                      px-6 py-3 rounded-lg
-                      text-sm
-                      transition-all
-                    "
+                    className={styles.save}
                   >
                     {t('save')}
                   </button>
@@ -399,14 +328,14 @@ function CategoryRow({
   lockedLabel?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-5">
-      <div className="flex-1 min-w-0">
-        <h3 className="text-white text-[14px] font-medium mb-1">{title}</h3>
-        <p className="text-white/45 text-[13px] leading-[1.6]">{description}</p>
+    <div className={styles.categoryRow}>
+      <div className={styles.categoryText}>
+        <h3>{title}</h3>
+        <p>{description}</p>
       </div>
-      <div className="shrink-0 mt-0.5">
+      <div className={styles.categoryControl}>
         {locked ? (
-          <span className="text-[10px] uppercase tracking-[0.15em] text-[#D4A843]/70 font-medium whitespace-nowrap">
+          <span className={styles.categoryLock}>
             {lockedLabel}
           </span>
         ) : (
@@ -430,21 +359,10 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`
-        relative inline-flex h-6 w-11 shrink-0 cursor-pointer
-        rounded-full border-2 border-transparent
-        transition-colors duration-200 ease-in-out
-        focus:outline-none focus:ring-2 focus:ring-[#D4A843]/60 focus:ring-offset-2 focus:ring-offset-black
-        ${checked ? 'bg-[#D4A843]' : 'bg-white/[0.12]'}
-      `}
+      className={`${styles.toggle} ${checked ? styles.toggleOn : ''}`}
     >
       <span
-        className={`
-          pointer-events-none inline-block h-5 w-5
-          transform rounded-full bg-white shadow
-          transition duration-200 ease-in-out
-          ${checked ? 'translate-x-5' : 'translate-x-0'}
-        `}
+        className={styles.toggleThumb}
       />
     </button>
   );

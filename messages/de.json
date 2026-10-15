@@ -3692,6 +3692,7 @@
       "birthDateLabel": "Geburtsdatum",
       "genderLabel": "Geschlecht",
       "optional": "Optional",
+      "metabolismHint": "Hilft, deinen Stoffwechsel und Kalorienbedarf einzuschätzen.",
       "male": "Mann",
       "female": "Frau"
     },

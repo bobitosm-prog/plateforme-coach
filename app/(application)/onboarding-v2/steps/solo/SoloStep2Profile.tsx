@@ -65,6 +65,9 @@ export default function SoloStep2Profile({
         >
           {t('profile.birthDateLabel')} · {t('profile.optional')}
         </label>
+        <p style={{ fontFamily: fonts.body, fontSize: 12, lineHeight: 1.4, color: colors.textMuted, margin: '0 0 10px' }}>
+          {t('profile.metabolismHint')}
+        </p>
         <input
           id="onboarding-birth-date"
           type="date"
@@ -94,6 +97,9 @@ export default function SoloStep2Profile({
         >
           {t('profile.genderLabel')} · {t('profile.optional')}
         </div>
+        <p style={{ fontFamily: fonts.body, fontSize: 12, lineHeight: 1.4, color: colors.textMuted, margin: '0 0 10px' }}>
+          {t('profile.metabolismHint')}
+        </p>
         <div role="group" aria-label={t('profile.genderLabel')} style={{ display: 'flex', gap: 12 }}>
           {(['male', 'female'] as const).map((g) => (
             <button
