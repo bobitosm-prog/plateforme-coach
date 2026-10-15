@@ -10,6 +10,7 @@ type GoogleWindow = Window & { dataLayer?: unknown[][]; gtag?: Gtag }
 /** Load the Google tag only after explicit advertising consent. */
 export function enableGoogleAds(consent: ConsentChoice): void {
   if (!consent.marketing || typeof window === 'undefined') return
+  if ((window as Window & { __moovxNativeApp?: boolean }).__moovxNativeApp) return
   const googleWindow = window as GoogleWindow
   if (!googleWindow.gtag) {
     googleWindow.dataLayer = googleWindow.dataLayer || []
@@ -41,6 +42,7 @@ export function enableGoogleAds(consent: ConsentChoice): void {
 /** Payment IDs are used by Google Ads to deduplicate repeat page visits. */
 export function reportSubscriptionConversion(payment: { id: string; amount: number }, consent: ConsentChoice): void {
   if (typeof window === 'undefined' || !consent.marketing || !payment.id || !Number.isFinite(payment.amount) || payment.amount <= 0) return
+  if ((window as Window & { __moovxNativeApp?: boolean }).__moovxNativeApp) return
   enableGoogleAds(consent)
   ;(window as GoogleWindow).gtag?.('event', 'conversion', {
     send_to: SUBSCRIPTION_SEND_TO,
