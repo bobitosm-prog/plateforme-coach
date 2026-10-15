@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import messages from '@/messages/fr.json'
 import Paywall from '@/app/components/Paywall'
@@ -37,7 +37,9 @@ describe('iPhone purchase screen runtime', () => {
     mount()
     const buttons = await screen.findAllByRole('button', { name: 'Continuer avec Apple' })
     fireEvent.click(buttons[0])
-    await screen.findByText(/Les achats Apple ne sont pas encore disponibles/)
+    const chosenOffer = buttons[0].closest('article')!
+    await within(chosenOffer).findByText(/Les achats Apple ne sont pas encore disponibles/)
+    expect(within(chosenOffer).getByRole('status').textContent).toContain('Les achats Apple')
     expect(screen.queryByText(/Impossible de confirmer ton achat/)).toBeNull()
     await waitFor(() => expect((buttons[0] as HTMLButtonElement).disabled).toBe(false))
   })
