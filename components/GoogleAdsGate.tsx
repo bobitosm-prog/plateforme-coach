@@ -7,6 +7,8 @@ import { enableGoogleAds } from '@/lib/marketing/google-ads'
 export default function GoogleAdsGate() {
   const consent = useConsent()
   useEffect(() => {
+    // Native iOS keeps account and health flows free of advertising tags.
+    if ((window as Window & { __moovxNativeApp?: boolean }).__moovxNativeApp) return
     const isMarketingHost = ['moovx.ch', 'www.moovx.ch'].includes(window.location.hostname)
       || /^\/(fr|en|de)\/landing(?:\/|$)/.test(window.location.pathname)
     if (!isMarketingHost) return

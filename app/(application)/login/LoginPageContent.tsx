@@ -25,6 +25,7 @@ export default function LoginPageContent() {
   const [successBanner, setSuccessBanner] = useState<'confirmed' | 'reset' | null>(null)
   const [checking, setChecking] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [nativeApp, setNativeApp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -36,7 +37,8 @@ export default function LoginPageContent() {
   const [resetError, setResetError] = useState('')
 
   useEffect(() => {
-    const native = Boolean((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration)
+    const native = Boolean((window as Window & { __moovxNativeWelcome?: boolean }).__moovxNativeWelcome)
+    setNativeApp(Boolean((window as Window & { __moovxNativeApp?: boolean }).__moovxNativeApp))
     setShowWelcome(native && !searchParams.get('confirmed') && !searchParams.get('reset') && !searchParams.get('auth_error'))
     if (searchParams.get('confirmed') === '1') {
       setSuccessBanner('confirmed')
@@ -68,15 +70,11 @@ export default function LoginPageContent() {
   }, [nextTarget, router, t])
 
   function openRegistration() {
-    if ((window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) {
-      window.location.href = 'https://moovx.ch/?source=ios' + (nextTarget === '/join' ? '&next=%2Fjoin' : '')
-    } else {
-      router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')
-    }
+    router.push(nextTarget ? `/register-client?next=${encodeURIComponent(nextTarget)}` : '/register-client')
   }
 
   function returnToWelcome(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (!(window as Window & { __moovxExternalRegistration?: boolean }).__moovxExternalRegistration) return
+    if (!(window as Window & { __moovxNativeWelcome?: boolean }).__moovxNativeWelcome) return
     event.preventDefault()
     setForgotMode(false)
     setShowWelcome(true)
@@ -271,10 +269,10 @@ export default function LoginPageContent() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } })}
+                {!nativeApp && <button className="oauth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectUrl } })}
                   style={{ background: '#fff', border: 'none', color: '#000', animation: 'fadeUp 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
                   <GoogleIcon /> {t('continueGoogle')}
-                </button>
+                </button>}
 
                 <button className="oauth-btn" disabled={submitting} aria-busy={submitting} onClick={handleAppleLogin}
                   style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>

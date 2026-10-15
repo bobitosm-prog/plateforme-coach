@@ -71,6 +71,12 @@ describe('Athena objective adaptation', () => {
     expect(params.equipment).toContain('bandes élastiques')
   })
 
+  it('does not invent a gender when the optional profile field is blank', () => {
+    const params = buildProgramParams({ id: 'client', gender: null } as Profile)
+    expect(params.gender).toBeUndefined()
+    expect(JSON.stringify(params)).not.toContain('"gender"')
+  })
+
   it('loads profile and onboarding server-side for both generation prompts', async () => {
     const single = vi.fn(async () => ({
       data: {

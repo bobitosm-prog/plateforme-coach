@@ -1074,6 +1074,7 @@
         "firstNamePlaceholder": "Max",
         "birthDateLabel": "Geburtsdatum",
         "genderLabel": "Geschlecht",
+        "optional": "Optional",
         "male": "Mann",
         "female": "Frau"
       },
@@ -3690,6 +3691,7 @@
       "firstNamePlaceholder": "Max",
       "birthDateLabel": "Geburtsdatum",
       "genderLabel": "Geschlecht",
+      "optional": "Optional",
       "male": "Mann",
       "female": "Frau"
     },
@@ -3805,7 +3807,7 @@
       "profile": { "title": "Dein Profil", "subtitle": "Die wichtigsten Angaben für persönliche Richtwerte." },
       "training": { "title": "Dein Training", "subtitle": "Ein Rhythmus und Umfeld, die zu deinem Alltag passen." },
       "nutrition": { "title": "Deine Ernährung", "subtitle": "Wähle deinen Ansatz. Du kannst später alles anpassen.", "habit": "Deine aktuelle Erfassung", "dietaryPattern": "Deine Ernährungsform", "patterns": { "omnivore": "Omnivor", "flexitarian": "Flexitarisch", "pescatarian": "Pescetarisch", "vegetarian": "Vegetarisch", "vegan": "Vegan" }, "advanced": "Erweiterte Präferenzen (optional)", "restrictions": "Allergien oder Ernährungseinschränkungen", "none": "Keine", "some": "Ich habe Einschränkungen", "details": "Beschreibe deine Einschränkungen" },
-      "summary": { "title": "Alles ist bereit", "subtitle": "Prüfe deine Antworten, bevor du deinen Bereich erstellst.", "macros": "Unverbindlicher Tagesrichtwert" },
+      "summary": { "title": "Alles ist bereit", "subtitle": "Prüfe deine Antworten, bevor du deinen Bereich erstellst.", "macros": "Unverbindlicher Tagesrichtwert", "macrosLater": "Personalisierte Ernährungsziele können später berechnet werden, wenn du Geburtsdatum und Geschlecht angibst. Du kannst deinen Bereich jetzt erstellen." },
       "coach": { "profile": "Die wichtigsten Angaben für deine Betreuung.", "optional": "Dieser Schritt ist optional." },
       "errors": { "profile": "Dein Profil konnte nicht geladen werden. Versuche es gleich erneut.", "save": "Speichern fehlgeschlagen. Deine Antworten bleiben erhalten — versuche es erneut.", "photo": "Das Foto konnte nicht gespeichert werden." },
       "a11y": { "progress": "Onboarding-Fortschritt" }

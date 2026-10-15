@@ -4,14 +4,6 @@ import Foundation
 enum NavigationPolicy {
     static let entryURL = URL(string: "https://app.moovx.ch/login")!
 
-    // Only the public registration landing may leave the app in the system browser.
-    static func opensRegistration(_ url: URL?) -> Bool {
-        guard let url, url.scheme == "https", url.host == "moovx.ch",
-              url.user == nil, url.password == nil, url.port == nil,
-              url.path.isEmpty || url.path == "/" else { return false }
-        return URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains(URLQueryItem(name: "source", value: "ios")) == true
-    }
-
     // Legal links leave the webview only after a user tap. Keep the allowlist
     // limited to public policy documents; never allow arbitrary external pages.
     static func opensPrivacyDocument(_ url: URL?) -> Bool {

@@ -49,10 +49,18 @@ describe('client onboarding v2 redesign', () => {
     expect(source).toContain('setError')
   })
 
-  it('writes completion and initial generation only in successful finalization', () => {
+  it('allows a complete profile without birth date or gender and defers calculated targets', () => {
     expect(source).toContain('onboarding_completed:true')
-    expect(source).toContain('needs_initial_generation:true')
-    expect(source.indexOf('if(step===5&&macros)')).toBeLessThan(source.indexOf('needs_initial_generation:true'))
+    expect(source).toContain('birth_date:birthDate||null,gender:gender||null')
+    expect(source).toContain('needs_initial_generation:Boolean(macros)')
+    expect(source).toContain('),true][step-1]')
+    expect(source).not.toContain('&&!!birthDate&&!!gender')
+    expect(source).toContain("t('redesign.summary.macrosLater')")
+    for (const variant of ['solo/SoloStep2Profile.tsx', 'invited/InvitedStep1Profile.tsx']) {
+      const step = read(`app/(application)/onboarding-v2/steps/${variant}`)
+      expect(step).toContain("t('profile.optional')")
+      expect(step).toContain("setGender(gender === g ? '' : g)")
+    }
   })
 
   it('uses the real active coach relation and forbids personal generation in that branch', () => {

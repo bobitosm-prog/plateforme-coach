@@ -19,7 +19,7 @@ export interface GenerateProgramInput {
   equipment: string
   priorities: string[]
   notes: string
-  gender: string
+  gender?: string
   clientContext?: string
 }
 

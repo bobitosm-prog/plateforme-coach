@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: m.replace }), u
 vi.mock('next/image', () => ({ default: () => null }))
 vi.mock('@supabase/ssr', () => ({ createBrowserClient: () => ({ auth: { getSession: async () => ({ data: { session: null } }) } }) }))
 beforeEach(() => { vi.resetAllMocks(); vi.stubGlobal('React', React) })
-afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); Reflect.deleteProperty(window, '__moovxNativeApp') })
 async function setup() {
   render(React.createElement(NextIntlClientProvider, { locale: 'fr', messages, timeZone: 'Europe/Zurich', children: React.createElement(LoginPageContent) }))
   return screen.findByRole('button', { name: /Apple/ })
@@ -41,4 +41,9 @@ it('renders a translated error without leaking provider details', async () => {
   await screen.findByText(messages.auth.login.callbackErrors.oauth_error)
   expect(screen.queryByText('synthetic-private-detail')).toBeNull()
   expect(m.replace).not.toHaveBeenCalled()
+})
+it('keeps unsupported Google OAuth out of the native login screen', async () => {
+  Object.defineProperty(window, '__moovxNativeApp', { configurable: true, value: true })
+  await setup()
+  await waitFor(() => expect(screen.queryByRole('button', { name: /Google/ })).toBeNull())
 })

@@ -31,6 +31,13 @@ describe('Google Ads conversion tag', () => {
     expect((window as Window & { dataLayer?: unknown }).dataLayer).toBeUndefined()
   })
 
+  it('never loads the advertising tag inside the iOS app', () => {
+    vi.stubGlobal('window', { __moovxNativeApp: true })
+    enableGoogleAds(consent)
+    reportSubscriptionConversion({ id: 'payment-1', amount: 10 }, consent)
+    expect(scripts).toHaveLength(0)
+  })
+
   it('queues consent before the tag and sends only a confirmed payment ID and amount', () => {
     enableGoogleAds(consent)
     reportSubscriptionConversion({ id: 'payment-1', amount: 10 }, consent)
