@@ -10,6 +10,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../../lib/app-design-tokens'
 import { capitalizeFullName } from '@/lib/utils/capitalize-name'
 import { resolveClientPostAuth } from '@/lib/auth/client-post-auth'
+import { signInWithApple } from '@/lib/auth/apple-sign-in'
 
 const supabase = createBrowserClient((process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim(), (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim())
 const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }
@@ -43,6 +44,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const searchParams = useSearchParams()
   const nextTarget = searchParams.get('next') === '/join' ? '/join' : null
   const [checking, setChecking] = useState(true)
+  const [nativeApp, setNativeApp] = useState(false)
   const initialRole = searchParams.get('role') === 'coach' ? 'coach' : 'client'
   const [step, setStep] = useState<'choose' | 'client' | 'coach'>(initialRole === 'coach' ? 'coach' : 'choose')
   const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>(initialRole)
@@ -74,6 +76,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   ]
 
   useEffect(() => {
+    setNativeApp(Boolean((window as Window & { __moovxNativeApp?: boolean }).__moovxNativeApp))
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const result = await resolveClientPostAuth({ supabase, user: session.user, joinIntent: Boolean(nextTarget) })
@@ -105,8 +108,27 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
       setError(t('errors.oauthRole'))
       return
     }
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: redirectUrl } })
-    if (oauthError) setError(t('errors.oauthRole'))
+    try {
+      if (provider === 'apple') {
+        const result = await signInWithApple(supabase, redirectUrl)
+        if (result.kind !== 'signed-in') return
+        // Native Sign in with Apple bypasses /auth/callback, so set the
+        // initial role through the same guarded RPC used by the web callback.
+        const { data: roleResult, error: roleError } = await supabase.rpc('set_role', { p_role: selectedRole })
+        if (roleError || (roleResult?.set !== true && roleResult?.reason !== 'role_already_set')) {
+          setError(t('errors.oauthRole'))
+          return
+        }
+        const resolved = await resolveClientPostAuth({ supabase, user: result.user, joinIntent: Boolean(nextTarget) })
+        if (resolved.decision.route) router.replace(resolved.decision.route)
+        else setError(t('errors.profileUnavailable'))
+        return
+      }
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: redirectUrl } })
+      if (oauthError) setError(t('errors.oauthRole'))
+    } catch {
+      setError(t('errors.oauthRole'))
+    }
   }
 
   function validate(): string | null {
@@ -307,10 +329,10 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="oauth-btn" onClick={() => void handleOAuth('google')}
+              {!nativeApp && <button className="oauth-btn" onClick={() => void handleOAuth('google')}
                 style={{ background: '#fff', border: 'none', color: '#000', animation: 'fadeUp 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <GoogleIcon /> {t('shared.continueGoogle')}
-              </button>
+              </button>}
               <button className="oauth-btn" onClick={() => void handleOAuth('apple')}
                 style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <AppleIcon /> {t('shared.continueApple')}
@@ -380,10 +402,10 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="oauth-btn" onClick={() => void handleOAuth('google')}
+              {!nativeApp && <button className="oauth-btn" onClick={() => void handleOAuth('google')}
                 style={{ background: '#fff', border: 'none', color: '#000', animation: 'fadeUp 0.7s 0.1s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <GoogleIcon /> {t('shared.continueGoogle')}
-              </button>
+              </button>}
               <button className="oauth-btn" onClick={() => void handleOAuth('apple')}
                 style={{ background: '#000', border: `1px solid ${BORDER}`, color: '#fff', animation: 'fadeUp 0.7s 0.15s cubic-bezier(0.16,1,0.3,1) both' }}>
                 <AppleIcon /> {t('shared.continueApple')}
