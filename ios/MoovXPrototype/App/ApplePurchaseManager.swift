@@ -59,6 +59,12 @@ final class ApplePurchaseManager {
             guard case .verified(let transaction) = result else { throw PurchaseError.unverified }
             guard transaction.appAccountToken == token else {
                 logger.error("StoreKit returned a transaction owned by another MoovX account")
+                if isExpiredSandboxSubscription(transaction) {
+                    let jws = result.jwsRepresentation
+                    guard jws.utf8.count <= 32768 else { throw PurchaseError.invalid }
+                    remember(result)
+                    return ["status": "archivedCandidate", "transaction": ["id": String(transaction.id), "signedTransaction": jws]]
+                }
                 throw PurchaseError.accountMismatch
             }
             remember(result)
@@ -95,6 +101,20 @@ final class ApplePurchaseManager {
               transaction.appAccountToken == token else { throw PurchaseError.invalid }
         await transaction.finish()
         pending.removeValue(forKey: id)
+    }
+    /// The server must first acknowledge recorded evidence from a deleted account.
+    func finishArchived(id: UInt64, token: UUID) async throws {
+        guard let result = pending[id], case .verified(let transaction) = result,
+              transaction.appAccountToken != token,
+              isExpiredSandboxSubscription(transaction) else { throw PurchaseError.invalid }
+        await transaction.finish()
+        pending.removeValue(forKey: id)
+    }
+    private func isExpiredSandboxSubscription(_ transaction: Transaction) -> Bool {
+        guard transaction.environment == .sandbox,
+              (transaction.productID == AthenaOffer.monthly.rawValue || transaction.productID == AthenaOffer.yearly.rawValue),
+              let expiry = transaction.expirationDate else { return false }
+        return expiry < Date().addingTimeInterval(-300)
     }
     enum PurchaseError: Error {
         case busy, invalid, catalogUnavailable, presentationUnavailable, unverified, accountMismatch

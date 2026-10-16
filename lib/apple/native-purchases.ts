@@ -1,13 +1,14 @@
 export const APPLE_PRODUCTS = ['ch.moovx.app.athena.monthly', 'ch.moovx.app.athena.yearly'] as const
 export interface NativeProduct { id: string; displayPrice: string }
 type TransactionReply = { id: string; signedTransaction: string }
-type BridgeReply = { status: string; signedAppTransaction?: string; products?: NativeProduct[]; transactions?: TransactionReply[] }
+type BridgeReply = { status: string; signedAppTransaction?: string; products?: NativeProduct[]; transactions?: TransactionReply[]; transaction?: TransactionReply }
 type Bridge = { postMessage(message: Record<string, string>): Promise<BridgeReply> }
+type NativeWindow = Window & { webkit?: { messageHandlers?: { moovxApplePurchases?: Bridge; moovxAppleAuth?: unknown } }; __moovxSignedAppleEnvironment?: boolean }
 export function applePurchaseBridge(): Bridge | undefined {
-  return typeof window === 'undefined' ? undefined : (window as any).webkit?.messageHandlers?.moovxApplePurchases
+  return typeof window === 'undefined' ? undefined : (window as NativeWindow).webkit?.messageHandlers?.moovxApplePurchases
 }
 export function isNativeMoovx(): boolean {
-  return !!applePurchaseBridge() || (typeof window !== 'undefined' && !!(window as any).webkit?.messageHandlers?.moovxAppleAuth)
+  return !!applePurchaseBridge() || (typeof window !== 'undefined' && !!(window as NativeWindow).webkit?.messageHandlers?.moovxAppleAuth)
 }
 export async function loadNativeAppleProducts(): Promise<NativeProduct[]> {
   const result = await applePurchaseBridge()?.postMessage({ action: 'products' })
@@ -19,7 +20,7 @@ export async function nativeApplePurchase(userId: string, action: 'purchase' | '
   if (!bridge) throw Error('APPLE_BRIDGE_UNAVAILABLE')
   // Build 23+ supplies Apple's signed app receipt; older builds retain their QA binding.
   let signedAppTransaction: string | undefined
-  if ((window as any).__moovxSignedAppleEnvironment === true) {
+  if ((window as NativeWindow).__moovxSignedAppleEnvironment === true) {
     const proof = await bridge.postMessage({ action: 'environment' })
     if (typeof proof?.signedAppTransaction !== 'string' || proof.signedAppTransaction.length > 32768) throw Error('APPLE_UNAVAILABLE')
     signedAppTransaction = proof.signedAppTransaction
@@ -30,8 +31,25 @@ export async function nativeApplePurchase(userId: string, action: 'purchase' | '
   if (!configResponse.ok) throw Error('APPLE_UNAVAILABLE')
   const config = await configResponse.json()
   if (config.userId !== userId || typeof config.appAccountToken !== 'string') throw Error('APPLE_ACCOUNT_CHANGED')
-  if (action === 'purchase' && !APPLE_PRODUCTS.includes(productId as any)) throw Error('APPLE_PRODUCT_INVALID')
-  const result = await bridge.postMessage({ action, appAccountToken: config.appAccountToken, ...(productId ? { productId } : {}) })
+  if (action === 'purchase' && !APPLE_PRODUCTS.some(id => id === productId)) throw Error('APPLE_PRODUCT_INVALID')
+  let result = await bridge.postMessage({ action, appAccountToken: config.appAccountToken, ...(productId ? { productId } : {}) })
+  if (action === 'purchase' && result?.status === 'archivedCandidate') {
+    const old = result.transaction
+    if (!signedAppTransaction || !old || !/^\d{1,40}$/.test(old.id) ||
+        typeof old.signedTransaction !== 'string' || old.signedTransaction.length > 32768) throw Error('apple_purchase_account_mismatch')
+    const response = await fetch('/api/apple/purchases', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+      body: JSON.stringify({ action: 'acknowledgeArchived', userId, signedAppTransaction, signedTransaction: old.signedTransaction }),
+    })
+    if (!response.ok) throw Error('apple_purchase_account_mismatch')
+    const acknowledgement = await response.json()
+    if (acknowledgement.status !== 'archived' || acknowledgement.transactionId !== old.id) throw Error('APPLE_INVALID_ACKNOWLEDGEMENT')
+    const finished = await bridge.postMessage({ action: 'finishArchived', appAccountToken: config.appAccountToken, transactionId: old.id })
+    if (finished?.status !== 'success') throw Error('APPLE_PURCHASE_UNAVAILABLE')
+    // Only one retry: another mismatched purchase still belongs to its original owner.
+    result = await bridge.postMessage({ action, appAccountToken: config.appAccountToken, productId: productId! })
+    if (result?.status === 'archivedCandidate') throw Error('apple_purchase_account_mismatch')
+  }
   if (!result || !['cancelled', 'pending', 'success'].includes(result.status)) throw Error('APPLE_PURCHASE_UNAVAILABLE')
   if (result.status !== 'success') return { status: result.status, count: 0, sandbox: config.environment === 'Sandbox' }
   if (!Array.isArray(result.transactions) || result.transactions.length > 20) throw Error('APPLE_INVALID_REPLY')

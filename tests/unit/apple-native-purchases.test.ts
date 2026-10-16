@@ -17,7 +17,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 describe('native Apple purchase coordination', () => {
   it('sends the signed app environment for preparation and synchronization on build 23+', async () => {
-    ;(window as any).__moovxSignedAppleEnvironment = true
+    ;(window as unknown as { __moovxSignedAppleEnvironment: boolean }).__moovxSignedAppleEnvironment = true
     bridge.postMessage.mockResolvedValueOnce({ status: 'success', signedAppTransaction: 'signed.app.proof' })
     request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'recorded', transactionId: '123' }) })
     await nativeApplePurchase(userId, 'restore')
@@ -52,6 +52,29 @@ describe('native Apple purchase coordination', () => {
     request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'recorded', transactionId: 'other' }) })
     await expect(nativeApplePurchase(userId, 'restore')).rejects.toThrow('APPLE_INVALID_ACKNOWLEDGEMENT')
     expect(bridge.postMessage).toHaveBeenCalledOnce()
+  })
+  it('finishes only an acknowledged archived transaction before one fresh purchase retry', async () => {
+    ;(window as unknown as { __moovxSignedAppleEnvironment: boolean }).__moovxSignedAppleEnvironment = true
+    const old = { id: '99', signedTransaction: 'signed-archived-proof' }
+    bridge.postMessage.mockResolvedValueOnce({ status: 'success', signedAppTransaction: 'signed.app.proof' })
+      .mockResolvedValueOnce({ status: 'archivedCandidate', transaction: old })
+      .mockResolvedValueOnce({ status: 'success' })
+      .mockResolvedValueOnce({ status: 'cancelled' })
+    request.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'archived', transactionId: old.id }) })
+    const result = await nativeApplePurchase(userId, 'purchase', 'ch.moovx.app.athena.monthly')
+    expect(result.status).toBe('cancelled')
+    expect(JSON.parse(request.mock.calls[1][1].body)).toMatchObject({ action: 'acknowledgeArchived', signedTransaction: old.signedTransaction })
+    expect(bridge.postMessage).toHaveBeenNthCalledWith(3, { action: 'finishArchived', appAccountToken: token, transactionId: old.id })
+    expect(bridge.postMessage).toHaveBeenCalledTimes(4)
+    expect(dispatch).not.toHaveBeenCalled()
+  })
+  it('keeps another account’s transaction unfinished when the server refuses it', async () => {
+    ;(window as unknown as { __moovxSignedAppleEnvironment: boolean }).__moovxSignedAppleEnvironment = true
+    bridge.postMessage.mockResolvedValueOnce({ status: 'success', signedAppTransaction: 'signed.app.proof' })
+      .mockResolvedValueOnce({ status: 'archivedCandidate', transaction: { id: '99', signedTransaction: 'old' } })
+    request.mockResolvedValueOnce({ ok: false, status: 409 })
+    await expect(nativeApplePurchase(userId, 'purchase', 'ch.moovx.app.athena.monthly')).rejects.toThrow('apple_purchase_account_mismatch')
+    expect(bridge.postMessage).toHaveBeenCalledTimes(2)
   })
 })
 
