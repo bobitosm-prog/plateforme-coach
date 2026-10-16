@@ -85,9 +85,23 @@ export async function verifyAppleTransaction(
   verifier?: Pick<SignedDataVerifier, 'verifyAndDecodeTransaction'>,
 ): Promise<VerifiedAppleTransaction> {
   const { environment, expectedAccountToken } = context
+  if (!UUID.test(expectedAccountToken)) invalid()
+  const evidence = await verifyAppleTransactionEvidence(signedTransaction, environment, verifier)
+  if (evidence.appAccountToken !== expectedAccountToken.toLowerCase()) {
+    throw new AppleTransactionVerificationError('APPLE_ACCOUNT_MISMATCH')
+  }
+  return evidence
+}
+
+/** Verify Apple's signature and app identity without assigning the purchase to a user. */
+export async function verifyAppleTransactionEvidence(
+  signedTransaction: string,
+  environment: AppleEnvironment,
+  verifier?: Pick<SignedDataVerifier, 'verifyAndDecodeTransaction'>,
+): Promise<VerifiedAppleTransaction> {
   // The Apple library skips signature checks for Xcode/LocalTesting: never allow them.
   if (environment !== Environment.PRODUCTION && environment !== Environment.SANDBOX) invalid()
-  if (!UUID.test(expectedAccountToken) || typeof signedTransaction !== 'string' ||
+  if (typeof signedTransaction !== 'string' ||
       signedTransaction.length > 32768 || signedTransaction.split('.').length !== 3) invalid()
 
   let payload: JWSTransactionDecodedPayload
@@ -110,10 +124,7 @@ export async function verifyAppleTransaction(
       !timestamp(purchaseDate) || !timestamp(signedDate) || purchaseDate > signedDate ||
       signedDate > Date.now() + 300_000) invalid()
 
-  if (!appAccountToken || !UUID.test(appAccountToken) ||
-      appAccountToken.toLowerCase() !== expectedAccountToken.toLowerCase()) {
-    throw new AppleTransactionVerificationError('APPLE_ACCOUNT_MISMATCH')
-  }
+  if (!appAccountToken || !UUID.test(appAccountToken)) invalid()
   const subscription = payload.type === Type.AUTO_RENEWABLE_SUBSCRIPTION
   if (subscription && (payload.subscriptionGroupIdentifier !== GROUP_ID ||
       !timestamp(payload.expiresDate) || payload.expiresDate <= purchaseDate)) invalid()

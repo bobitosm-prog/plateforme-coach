@@ -4,7 +4,7 @@ import {
   Environment, SignedDataVerifier, Type, VerificationException, VerificationStatus,
 } from '@apple/app-store-server-library'
 import { createAppleTestChain } from './helpers/apple-test-chain'
-import { verifyAppleTransaction, type AppleEnvironment } from '@/lib/apple/transaction-verification'
+import { verifyAppleTransaction, verifyAppleTransactionEvidence, type AppleEnvironment } from '@/lib/apple/transaction-verification'
 import roots from '@/lib/apple/root-certificates.json'
 
 vi.mock('server-only', () => ({}))
@@ -62,8 +62,16 @@ describe('Apple transaction cryptographic runtime verification', () => {
     await expect(verify(patch)).rejects.toMatchObject({ code: 'APPLE_INVALID_TRANSACTION' })
   })
 
-  it.each([undefined, '00000000-0000-4000-8000-000000000002', 'bad-token'])('rejects an unbound/different account %s', async appAccountToken => {
-    await expect(verify({ appAccountToken })).rejects.toMatchObject({ code: 'APPLE_ACCOUNT_MISMATCH' })
+  it('rejects a different valid account while preserving signed ownership evidence', async () => {
+    const other = '00000000-0000-4000-8000-000000000002'
+    const signed = chain.sign({ ...payload(), appAccountToken: other, expiresDate: now - 1 })
+    await expect(verifyAppleTransaction(signed, context, verifier)).rejects.toMatchObject({ code: 'APPLE_ACCOUNT_MISMATCH' })
+    const evidence = await verifyAppleTransactionEvidence(signed, Environment.SANDBOX, verifier)
+    expect(evidence).toMatchObject({ appAccountToken: other, expiresDate: now - 1 })
+  })
+
+  it.each([undefined, 'bad-token'])('rejects missing or malformed ownership evidence %s', async appAccountToken => {
+    await expect(verify({ appAccountToken })).rejects.toMatchObject({ code: 'APPLE_INVALID_TRANSACTION' })
   })
 
   it('normalizes UUID case', async () => {

@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
-const mocks = vi.hoisted(() => ({ user: vi.fn(), binding: vi.fn(), proof: vi.fn(), sync: vi.fn(), rate: vi.fn() }))
+const mocks = vi.hoisted(() => ({ user: vi.fn(), binding: vi.fn(), proof: vi.fn(), sync: vi.fn(), archived: vi.fn(), rate: vi.fn() }))
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseRouteClient: async () => ({ auth: { getUser: mocks.user } }) }))
 vi.mock('@/lib/apple/purchase-ledger', () => ({ prepareAppleAccountBinding: mocks.binding }))
 vi.mock('@/lib/apple/purchase-service', () => ({ purchaseEnvironment: () => 'Production', syncApplePurchase: mocks.sync }))
+vi.mock('@/lib/apple/archived-transaction', () => ({ acknowledgeArchivedAppleTransaction: mocks.archived }))
 vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: mocks.rate }))
 vi.mock('@/lib/apple/environment', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/apple/environment')>(), verifiedPurchaseEnvironment: mocks.proof }))
 import { GET, POST } from '@/app/api/apple/purchases/route'
@@ -17,6 +18,7 @@ beforeEach(() => {
   mocks.user.mockResolvedValue({ data: { user: { id } }, error: null })
   mocks.binding.mockResolvedValue('00000000-0000-4000-8000-000000000010')
   mocks.sync.mockResolvedValue({ status: 'recorded', transactionId: '1', environment: 'Production' })
+  mocks.archived.mockResolvedValue(null)
 })
 afterEach(() => vi.unstubAllEnvs())
 describe('authenticated Apple purchase transport', () => {
@@ -82,5 +84,16 @@ describe('authenticated Apple purchase transport', () => {
     const response = await POST(post({ userId: id, signedTransaction: 'test' }))
     expect(response.status).toBe(200)
     expect(mocks.sync).toHaveBeenCalledWith(id, 'test', 'Production')
+  })
+  it('allows archived cleanup only after signed environment proof and a server match', async () => {
+    vi.stubEnv('APPLE_IAP_SANDBOX_ENABLED', 'true')
+    mocks.archived.mockResolvedValueOnce({ status: 'archived', transactionId: '99' })
+    const body = { action: 'acknowledgeArchived', userId: id, signedAppTransaction: 'app.proof', signedTransaction: 'transaction.proof' }
+    const success = await POST(post(body))
+    expect(success.status).toBe(200)
+    expect(mocks.archived).toHaveBeenCalledWith(id, 'transaction.proof', 'Sandbox')
+    expect((await POST(post(body))).status).toBe(409)
+    expect((await POST(post({ ...body, signedAppTransaction: undefined }))).status).toBe(400)
+    expect(mocks.sync).not.toHaveBeenCalled()
   })
 })

@@ -51,6 +51,10 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
                         guard let value = body["transactionId"], let id = UInt64(value) else { throw ApplePurchaseManager.PurchaseError.invalid }
                         try await manager.finish(id: id, token: token)
                         result = ["status": "success"]
+                    case "finishArchived":
+                        guard let value = body["transactionId"], let id = UInt64(value) else { throw ApplePurchaseManager.PurchaseError.invalid }
+                        try await manager.finishArchived(id: id, token: token)
+                        result = ["status": "success"]
                     default: throw ApplePurchaseManager.PurchaseError.invalid
                     }
                 }

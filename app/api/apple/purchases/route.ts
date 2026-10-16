@@ -4,6 +4,7 @@ import { prepareAppleAccountBinding } from '@/lib/apple/purchase-ledger'
 import { purchaseEnvironment, syncApplePurchase } from '@/lib/apple/purchase-service'
 import { AppleTransactionVerificationError } from '@/lib/apple/transaction-verification'
 import { verifiedPurchaseEnvironment, purchaseEnvironmentEnabled } from '@/lib/apple/environment'
+import { acknowledgeArchivedAppleTransaction } from '@/lib/apple/archived-transaction'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
@@ -57,6 +58,11 @@ export async function POST(request: Request) {
       return reply({ userId, environment, appAccountToken: await prepareAppleAccountBinding(userId, environment) })
     }
     if (typeof body?.signedTransaction !== 'string' || body.signedTransaction.length > 32768) return reply({ error: 'APPLE_INVALID_BODY' }, 400)
+    if (body.action === 'acknowledgeArchived') {
+      if (body.signedAppTransaction === undefined) return reply({ error: 'APPLE_INVALID_BODY' }, 400)
+      const acknowledgement = await acknowledgeArchivedAppleTransaction(userId, body.signedTransaction, environment)
+      return acknowledgement ? reply(acknowledgement) : reply({ error: 'APPLE_ACCOUNT_MISMATCH' }, 409)
+    }
     return reply(await syncApplePurchase(userId, body.signedTransaction, environment))
   } catch (error) {
     const invalid = error instanceof AppleTransactionVerificationError && error.code !== 'APPLE_VERIFICATION_UNAVAILABLE'
