@@ -84,5 +84,7 @@ export function applePurchaseErrorKey(error: unknown): 'unavailable' | 'retry' |
 export function applePurchaseDiagnosticCode(error: unknown): string | null {
   const message = error instanceof Error ? error.message : String(error)
   const match = message.match(/apple_purchase_storekit_(-?\d{1,5})(?!\d)/)
-  return match ? `IAP-${match[1]}` : null
+  if (match) return `IAP-${match[1]}`
+  const mismatch = message.match(/apple_purchase_account_mismatch_(environment|product|no_expiry|not_expired)\b/)
+  return mismatch ? `IAP-${({ environment: 'E', product: 'P', no_expiry: 'X', not_expired: 'A' } as const)[mismatch[1] as 'environment' | 'product' | 'no_expiry' | 'not_expired']}` : null
 }
