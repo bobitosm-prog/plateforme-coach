@@ -58,14 +58,14 @@ final class ApplePurchaseManager {
         case .success(let result):
             guard case .verified(let transaction) = result else { throw PurchaseError.unverified }
             guard transaction.appAccountToken == token else {
-                logger.error("StoreKit returned a transaction owned by another MoovX account")
-                if isExpiredSandboxSubscription(transaction) {
-                    let jws = result.jwsRepresentation
-                    guard jws.utf8.count <= 32768 else { throw PurchaseError.invalid }
-                    remember(result)
-                    return ["status": "archivedCandidate", "transaction": ["id": String(transaction.id), "signedTransaction": jws]]
+                if let mismatch = archivedMismatchReason(transaction) {
+                    logger.error("StoreKit returned another account's transaction; reason: \(mismatch.rawValue, privacy: .public)")
+                    throw PurchaseError.accountMismatch(mismatch)
                 }
-                throw PurchaseError.accountMismatch
+                let jws = result.jwsRepresentation
+                guard jws.utf8.count <= 32768 else { throw PurchaseError.invalid }
+                remember(result)
+                return ["status": "archivedCandidate", "transaction": ["id": String(transaction.id), "signedTransaction": jws]]
             }
             remember(result)
             return ["status": "success", "transactions": try payloads(token: token)]
@@ -111,13 +111,21 @@ final class ApplePurchaseManager {
         pending.removeValue(forKey: id)
     }
     private func isExpiredSandboxSubscription(_ transaction: Transaction) -> Bool {
-        guard transaction.environment == .sandbox,
-              (transaction.productID == AthenaOffer.monthly.rawValue || transaction.productID == AthenaOffer.yearly.rawValue),
-              let expiry = transaction.expirationDate else { return false }
-        return expiry < Date().addingTimeInterval(-300)
+        archivedMismatchReason(transaction) == nil
+    }
+    private func archivedMismatchReason(_ transaction: Transaction) -> AccountMismatchReason? {
+        if transaction.environment != .sandbox { return .environment }
+        if transaction.productID != AthenaOffer.monthly.rawValue && transaction.productID != AthenaOffer.yearly.rawValue { return .product }
+        guard let expiry = transaction.expirationDate else { return .noExpiry }
+        if expiry >= Date().addingTimeInterval(-300) { return .notExpired }
+        return nil
+    }
+    enum AccountMismatchReason: String {
+        case environment, product, noExpiry = "no_expiry", notExpired = "not_expired"
     }
     enum PurchaseError: Error {
-        case busy, invalid, catalogUnavailable, presentationUnavailable, unverified, accountMismatch
+        case busy, invalid, catalogUnavailable, presentationUnavailable, unverified
+        case accountMismatch(AccountMismatchReason)
         case storeKit(Int)
     }
 }

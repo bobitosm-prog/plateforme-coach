@@ -68,7 +68,7 @@ final class ApplePurchaseBridge: NSObject, WKScriptMessageHandlerWithReply {
                 case .catalogUnavailable: code = "catalog_unavailable"
                 case .presentationUnavailable: code = "presentation_unavailable"
                 case .unverified: code = "unverified"
-                case .accountMismatch: code = "account_mismatch"
+                case .accountMismatch(let reason): code = "account_mismatch_\(reason.rawValue)"
                 case .storeKit(let value): code = "storekit_\(value)"
                 }
                 replyHandler(nil, "apple_purchase_\(code)")
