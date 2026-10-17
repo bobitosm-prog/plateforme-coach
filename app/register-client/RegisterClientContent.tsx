@@ -3,6 +3,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/browser'
 import type { TablesUpdate } from '@/lib/supabase/types'
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { colors, fonts, titleStyle, subtitleStyle, bodyStyle, labelStyle, mutedStyle, pageTitleStyle, BG_BASE, BG_CARD, BORDER, GOLD, GOLD_DIM, GOLD_RULE, RED, GREEN, TEXT_PRIMARY, TEXT_MUTED, TEXT_DIM, RADIUS_CARD } from '../../lib/design-tokens'
@@ -37,8 +38,8 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [checking, setChecking] = useState(true)
-  const [step, setStep] = useState<'choose' | 'client' | 'coach'>('choose')
-  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>('client')
+  const [step, setStep] = useState<'choose' | 'client' | 'coach'>(() => searchParams.get('role') === 'coach' ? 'coach' : 'choose')
+  const [selectedRole, setSelectedRole] = useState<'client' | 'coach'>(() => searchParams.get('role') === 'coach' ? 'coach' : 'client')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -66,14 +67,6 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
   ]
 
   useEffect(() => {
-    const roleParam = searchParams.get('role')
-    if (roleParam === 'coach') {
-      setSelectedRole('coach')
-      setStep('coach')
-    }
-  }, [searchParams])
-
-  useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const { data: prof } = await supabase.from('profiles').select('role, coach_onboarding_complete').eq('id', session.user.id).maybeSingle()
@@ -82,7 +75,7 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
       }
       setChecking(false)
     })
-  }, [])
+  }, [router])
 
   // Route via /auth/callback pour exchange PKCE + signOut + banner sur /login
   // Le flag type=signup signale à la callback de forcer un re-login (vs auto-login)
@@ -110,7 +103,14 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl, data: { role: selectedRole } } })
     if (signUpError) {
       setSubmitting(false)
-      setError(signUpError.message.includes('already registered') ? t('errors.emailAlreadyUsed') : signUpError.message)
+      const message = signUpError.message?.trim() ?? ''
+      setError(
+        message.includes('already registered')
+          ? t('errors.emailAlreadyUsed')
+          : (signUpError.status ?? 0) >= 500 || signUpError.code === 'unexpected_failure' || !message || message === '{}'
+            ? t('errors.signupTemporarilyUnavailable')
+            : message,
+      )
       return
     }
     if (data?.user) {
@@ -197,13 +197,13 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
 
         {/* Mobile logo + back link */}
         <div className="auth-mobile-logo" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <a href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
+          <Link href="/fr/landing" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', marginBottom: 16 }}>
             <img src="/logo-moovx-96.png" alt="MoovX Logo" width={48} height={48} style={{ borderRadius: RADIUS_CARD, marginBottom: 12 }} />
             <span style={{ ...T, fontSize: 18, letterSpacing: 3 }}>MOOVX</span>
-          </a>
-          <a href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
+          </Link>
+          <Link href="/fr/landing" style={{ display: 'flex', alignItems: 'center', gap: 6, color: TEXT_MUTED, fontSize: '0.8rem', textDecoration: 'none', fontFamily: fonts.body, transition: 'color 0.2s' }}>
             {t('shared.backToHome')}
-          </a>
+          </Link>
         </div>
         <style>{`@media(max-width:768px){.auth-mobile-logo{display:flex!important}}`}</style>
 

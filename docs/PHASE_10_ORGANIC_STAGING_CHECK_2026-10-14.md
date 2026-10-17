@@ -57,3 +57,48 @@ une ligne reconstruite profondément égale à la ligne de départ. Les tests
 ciblés et la suite complète passent. Cette vérification locale ne remplace
 toujours pas les trois parcours du runner avec le reader authentifié après
 déploiement du correctif en staging ; le statut reste en attente.
+
+## Validation complémentaire du 17 octobre 2026
+
+Le preview associé à l'alias `moovx-phase-6-staging.vercel.app` a été vérifié
+via l'API Vercel : déploiement prêt de `phase-6-staging` au SHA
+`a2f37e93a120aba4de78248b4eef18085d851381`, qui contient le correctif
+ci-dessus. La cible Supabase est exclusivement le projet staging
+`cycbnnojcymjnaqomlyj`.
+
+Un nouveau compte coach de test, confirmé uniquement dans Auth staging, a
+terminé l'onboarding sans connexion Stripe. Depuis l'interface coach, il a
+créé puis rouvert un template non-fixture de 4 semaines, 2 jours et
+2 exercices. Le nom, le split, la durée, les jours et les exercices étaient
+conservés à la relecture. Aucun programme n'a été écrit en Production.
+
+Le runner `runCoachTemplateStagingAssessment`, relié au client Supabase
+authentifié de ce coach et au repository réel, a ensuite parcouru trois fois
+l'intégralité de **son** corpus. Chaque parcours a atteint la page terminale.
+
+| Mesure | Run 1 | Run 2 | Run 3 |
+| --- | ---: | ---: | ---: |
+| Pages / lignes | 1 / 1 | 1 / 1 | 1 / 1 |
+| `canonical_eligible` | 1 | 1 | 1 |
+| `warning` | 0 | 0 | 0 |
+| `critical_mismatch` / `unsupported` | 0 / 0 | 0 / 0 | 0 / 0 |
+| `presentation_mismatch` / `adaptation_error` / `observer_error` | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Les trois identifiants de run sont distincts. Avec `nonFixtureTemplateCount = 1`
+pour ce compte, l'évaluateur du contrat retourne `REAL_CORPUS_VALIDATED`,
+`nextAction = NONE` et
+`PRODUCTION_PROMOTION_NOT_AUTHORIZED_BY_THIS_CONTRACT`, sans raison de refus.
+Cette preuve couvre ce nouveau compte coach et son template créé dans l'UI ;
+elle ne prétend pas évaluer le template pilote appartenant à l'autre coach.
+Le serving demeure `legacy-only` ; aucune activation ou promotion Production
+n'a été effectuée.
+
+L'inscription publique d'un autre compte coach sur ce preview a échoué côté
+Supabase Auth (`/signup`, HTTP 500, `unexpected_failure`) parce que le serveur
+SMTP a rejeté l'authentification (`535`). Le manifeste du preview classe SMTP
+parmi les intégrations désactivées. Le compte interne confirmé a permis la
+validation ci-dessus sans assouplir l'authentification ni modifier la
+configuration SMTP. Le Preview au SHA `a2f37e93` affiche `{}` pour cette erreur.
+Un sous-batch distinct de cette tranche remplace ce texte par un message
+localisé ; il ne réactive pas SMTP. Vérifier le déploiement avant de considérer
+le message corrigé sur l'alias staging.

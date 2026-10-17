@@ -808,7 +808,8 @@
         "fullNameRequired": "Nom complet requis",
         "specialityRequired": "Spécialité requise",
         "experienceRequired": "Expérience requise",
-        "emailAlreadyUsed": "Cet email est déjà utilisé. Connecte-toi."
+        "emailAlreadyUsed": "Cet email est déjà utilisé. Connecte-toi.",
+        "signupTemporarilyUnavailable": "Inscription momentanément indisponible. Réessaie plus tard."
       }
     },
     "onboarding": {
