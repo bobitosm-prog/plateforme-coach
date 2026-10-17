@@ -380,7 +380,7 @@ jobs:
           fi
           node --input-type=module <<'NODE'
           import { connect } from 'node:net'
-          const ports = [3210, 54329, 55320, 55321, 55322, 55323, 55324, 55325, 55326, 55327, 55328, 55329, 55330]
+          const ports = [3210, 54329, 55320, 55321, 55322, 55323, 55324, 55325, 55327, 55328, 55329, 55330]
           const open = await Promise.all(ports.map(port => new Promise(resolve => {
             const socket = connect({ host: '127.0.0.1', port })
             const finish = value => { socket.destroy(); resolve(value) }

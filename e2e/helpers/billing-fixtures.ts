@@ -2,7 +2,7 @@ import type { APIRequestContext } from '@playwright/test'
 import Stripe from 'stripe'
 import { assertLocalE2eUrl } from '../../scripts/e2e-local-contract.mjs'
 
-export const LOCAL_STRIPE_URL = 'http://127.0.0.1:55326'
+export const LOCAL_STRIPE_URL = process.env.STRIPE_E2E_BASE_URL?.replace(/\/$/, '') || ''
 
 export type FakeStripeRequest = {
   method: string
@@ -68,8 +68,8 @@ type SignedEvent = {
 
 function assertFakeStripeBoundary() {
   const url = assertLocalE2eUrl(LOCAL_STRIPE_URL, 'fake Stripe URL')
-  if (url.protocol !== 'http:' || url.port !== '55326') {
-    throw new Error('Billing E2E requires the canonical fake Stripe boundary')
+  if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port) {
+    throw new Error('Billing E2E requires a loopback fake Stripe boundary')
   }
 }
 
@@ -129,7 +129,7 @@ export function createLocalStripeClient(secretKey: string): Stripe {
   assertFakeStripeBoundary()
   return new Stripe(secretKey, {
     host: '127.0.0.1',
-    port: 55326,
+    port: Number(new URL(LOCAL_STRIPE_URL).port),
     protocol: 'http',
   })
 }

@@ -3,7 +3,7 @@ import { closeSync, openSync, readFileSync, unlinkSync, writeFileSync } from 'no
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost'])
 
-export const E2E_TEMPORARY_PORTS = [3210, 55326, 55328, 55329, 55330]
+export const E2E_TEMPORARY_PORTS = [3210, 55328, 55329, 55330]
 
 export const CRITICAL_E2E_TARGET_MATRIX = Object.freeze([
   { name: 'Invitation coach', spec: 'e2e/coach-invitation.spec.ts', flags: [], integrated: true },
