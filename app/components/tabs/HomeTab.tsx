@@ -18,6 +18,7 @@ import type { NextBestAction } from '../../../lib/home/next-best-action'
 import RecoveryModal from '../home/modals/RecoveryModal'
 import { subscribeNutritionJournal } from '../../../lib/nutrition/journal-events'
 import WeeklyCompletionControls from '../home/WeeklyCompletionControls'
+import { diagnosticWeek } from '../../../lib/weekly-diagnostic/week'
 
 interface HomeTabProps {
   pausedWorkoutName?: string
@@ -73,22 +74,24 @@ export default function HomeTab({
   const [waterToday, setWaterToday] = useState(0)
 
   const [generatingDiag, setGeneratingDiag] = useState(false)
-  const [diagnosticGenerationError, setDiagnosticGenerationError] = useState(false)
+  const [diagnosticGenerationError, setDiagnosticGenerationError] = useState<string | null>(null)
+  const currentDiagnostic = latestDiagnostic?.week_start === diagnosticWeek().weekStart ? latestDiagnostic : null
 
   async function handleGenerateDiagnostic() {
-    setDiagnosticGenerationError(false)
+    setDiagnosticGenerationError(null)
     setGeneratingDiag(true)
     try {
       const res = await aiFetch('/api/weekly-diagnostic', { method: 'POST' }, session?.user?.id)
       const data = await res.json()
-      if (!res.ok || !data.diagnostic) throw new Error('Diagnostic generation failed')
+      if (!res.ok || !data.diagnostic?.id) throw new Error(typeof data.error === 'string' ? data.error : ht('v2.diagnostic.error'))
       if (data.diagnostic && setLatestDiagnostic) {
         setLatestDiagnostic(data.diagnostic)
       }
+      router.push(`/weekly-diagnostic/${data.diagnostic.id}`)
     } catch (e) {
       if (!(e instanceof AiConsentDeclinedError)) {
         console.error('Generate diagnostic failed:', e)
-        setDiagnosticGenerationError(true)
+        setDiagnosticGenerationError(e instanceof Error ? e.message : ht('v2.diagnostic.error'))
       }
     } finally {
       setGeneratingDiag(false)
@@ -231,7 +234,7 @@ export default function HomeTab({
         setActiveTab('nutrition')
         return
       case 'open_diagnostic':
-        if (latestDiagnostic) router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)
+        if (currentDiagnostic) router.push(`/weekly-diagnostic/${currentDiagnostic.id}`)
         else handleGenerateDiagnostic()
         return
       case 'open_recovery':
@@ -277,7 +280,8 @@ export default function HomeTab({
         }}
       >
         <HomeV2LowerSections
-          diagnosticControls={<WeeklyCompletionControls generating={generatingDiag} onGenerate={handleGenerateDiagnostic} />}
+          diagnosticControls={currentDiagnostic ? undefined : <WeeklyCompletionControls generating={generatingDiag} onGenerate={handleGenerateDiagnostic}
+            onViewDiagnostic={id => router.push(`/weekly-diagnostic/${id}`)} />}
           key={`${session?.user?.id}:${homeModel.today.localDateKey}`}
           ref={lowerSectionsRef}
           waterAvailable={waterAvailable}
@@ -288,7 +292,7 @@ export default function HomeTab({
           model={homeModel}
           waterToday={waterToday}
           waterTarget={homeModel.hydration.targetMl ?? profile?.water_goal ?? 3000}
-          diagnostic={latestDiagnostic}
+          diagnostic={currentDiagnostic}
           generatingDiagnostic={generatingDiag}
           diagnosticGenerationError={diagnosticGenerationError}
           coachProgram={coachProgram}
@@ -298,7 +302,7 @@ export default function HomeTab({
           onSaveCheckIn={saveCheckin}
           onAddWater={addWater}
           onGenerateDiagnostic={handleGenerateDiagnostic}
-          onViewDiagnostic={() => latestDiagnostic && router.push(`/weekly-diagnostic/${latestDiagnostic.id}`)}
+          onViewDiagnostic={() => currentDiagnostic && router.push(`/weekly-diagnostic/${currentDiagnostic.id}`)}
           onOpenTraining={() => setActiveTab('training')}
         />
       </HomeV2>

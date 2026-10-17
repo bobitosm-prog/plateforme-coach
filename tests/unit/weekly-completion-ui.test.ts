@@ -16,10 +16,16 @@ function setup(overrides = {}) {
   })
   vi.stubGlobal('fetch', request)
   const generate = vi.fn(async () => {})
-  render(React.createElement(WeeklyCompletionControls, { generating: false, onGenerate: generate }))
-  return { request, generate }
+  const view = vi.fn()
+  render(React.createElement(WeeklyCompletionControls, { generating: false, onGenerate: generate, onViewDiagnostic: view }))
+  return { request, generate, view }
 }
 describe('Sunday completion controls runtime', () => {
+  it('opens the completed report when the dashboard has not loaded it', async () => {
+    const f = setup({ diagnosticId: 'report-123' })
+    fireEvent.click(await screen.findByRole('button', { name: fr.weeklyCompletion.view }))
+    expect(f.view).toHaveBeenCalledWith('report-123')
+  })
   it('requires the meal declaration even on rest days, then opens generation', async () => {
     const f = setup()
     const confirm = await screen.findByRole('button', { name: fr.weeklyCompletion.confirm }) as HTMLButtonElement
@@ -49,7 +55,7 @@ describe('Sunday completion controls runtime', () => {
   })
   it('fails closed when status loading fails', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 503 })))
-    render(React.createElement(WeeklyCompletionControls, { generating: false, onGenerate: vi.fn() }))
+    render(React.createElement(WeeklyCompletionControls, { generating: false, onGenerate: vi.fn(), onViewDiagnostic: vi.fn() }))
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(screen.queryByRole('button', { name: fr.weeklyCompletion.generate })).toBeNull()
   })

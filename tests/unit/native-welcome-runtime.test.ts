@@ -13,9 +13,9 @@ vi.mock('next/image', () => ({ default: () => null }))
 vi.mock('@supabase/ssr', () => ({ createBrowserClient: () => ({ auth: { getSession: async () => ({ data: { session: m.session } }) } }) }))
 beforeEach(() => {
   vi.resetAllMocks(); vi.stubGlobal('React', React); m.query = ''; m.session = null
-  Object.assign(window, { __moovxExternalRegistration: true })
+  Object.assign(window, { __moovxNativeWelcome: true })
 })
-afterEach(() => { cleanup(); delete (window as any).__moovxExternalRegistration; vi.unstubAllGlobals() })
+afterEach(() => { cleanup(); delete (window as any).__moovxNativeWelcome; vi.unstubAllGlobals() })
 function setup() {
   render(React.createElement(NextIntlClientProvider, { locale: 'fr', messages, timeZone: 'Europe/Zurich', children: React.createElement(LoginPageContent) }))
 }

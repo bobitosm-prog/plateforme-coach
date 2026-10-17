@@ -13,6 +13,18 @@ function phasedFixture() {
       phases: { p1: { sets: 2, reps: 12 },p2: { sets: 4, reps: 8 },p3: { sets: 3, reps: 6 } } })) })) } }
 }
 describe('historical and phased weekly adaptation', () => {
+  it('changes only the following week for a program without phases', () => {
+    const f=weeklyFixture(); const before=structuredClone(f.program)
+    const result=prepareWeeklyAdjustment(f.profile,f.program,f.mealPlan,{training_volume_delta_pct:20},'2026-09-21')
+    expect(result.changes).toMatchObject({setsBefore:15,setsAfter:18,effectiveWeekStart:'2026-09-21'})
+    expect(f.program).toEqual(before)
+    const program={...f.program,days:result.days}
+    const total=(date:string) => resolveProgramDays(program,new Date(date)).reduce((sum,day)=>sum+(day.exercises as {sets:number}[]).reduce((s,e)=>s+e.sets,0),0)
+    expect(total('2026-09-14T12:00:00Z')).toBe(15)
+    expect(total('2026-09-21T12:00:00Z')).toBe(18)
+    expect(total('2026-09-28T12:00:00Z')).toBe(15)
+    expect(result.days![0].exercises![0].sets).toBe(before.days[0].exercises[0].sets)
+  })
   it.each([3,4])('preserves a %s-day program without filling or moving weekdays', length => {
     const f = weeklyFixture(); f.program.days=f.program.days.slice(0,length)
     const result=prepareWeeklyAdjustment(f.profile,f.program,f.mealPlan,{ training_volume_delta_pct: 10 })

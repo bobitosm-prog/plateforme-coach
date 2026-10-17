@@ -114,18 +114,16 @@ export function prepareWeeklyAdjustment(profile: Profile, program: ProgramBaseli
     || programWeekAt(program,at)>Number(program.total_weeks) || !phaseKeyAt(program,at)
     || programWeekAt(program,end)>Number(program.total_weeks) || phaseKeyAt(program,at)!==phaseKeyAt(program,end)
     || program.start_date>effectiveWeekStart)) throw new WeeklyAdjustmentError('unsupported_program')
-  const training = adjustTrainingSets(phased ? resolveProgramDays(program,at) : program.days, adjustment.training_volume_delta_pct ?? 0)
-  let days = training.days
-  if (phased) {
-    // Date-scoped override: never rewrite p1/p2/p3 or later weeks.
-    days = structuredClone(parsed.data)
-    days.forEach((day,i) => day.exercises?.forEach((ex,j) => {
-      if (day.is_rest || day.repos || ex.is_warmup || ex.warmup) return
-      const previous = ex._weekly_sets && typeof ex._weekly_sets === 'object' && !Array.isArray(ex._weekly_sets) ? ex._weekly_sets : {}
-      ex._weekly_sets = { ...previous, [effectiveWeekStart]: training.days[i].exercises![j].sets }
-    }))
-  }
+  const training = adjustTrainingSets(resolveProgramDays(program,at), adjustment.training_volume_delta_pct ?? 0)
+  // Scope the prescription to next week, even for programs without phases.
+  // Rewriting base sets would silently change every later week as well.
+  const days = structuredClone(parsed.data)
+  days.forEach((day,i) => day.exercises?.forEach((ex,j) => {
+    if (day.is_rest || day.repos || ex.is_warmup || ex.warmup) return
+    const previous = ex._weekly_sets && typeof ex._weekly_sets === 'object' && !Array.isArray(ex._weekly_sets) ? ex._weekly_sets : {}
+    ex._weekly_sets = { ...previous, [effectiveWeekStart]: training.days[i].exercises![j].sets }
+  }))
   return { domain: 'training' as const, plan: null, days,
     changes: { programId: program.id, setsBefore: training.before, setsAfter: training.after,
-      requestedPct: training.requestedPct, actualPct: training.actualPct, effectiveWeekStart: phased ? effectiveWeekStart : null } }
+      requestedPct: training.requestedPct, actualPct: training.actualPct, effectiveWeekStart } }
 }

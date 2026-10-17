@@ -35,7 +35,7 @@ describe('Home weekly disclosure', () => {
           diagnostic: null,
           diagnosticControls: React.createElement('button', { type: 'button' }, 'Diagnostic controls'),
           generatingDiagnostic: false,
-          diagnosticGenerationError: false,
+          diagnosticGenerationError: null,
           coachProgram: null,
           nextSession: null,
           todayKey: 'dimanche',

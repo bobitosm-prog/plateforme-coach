@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl'
 import type { WeeklyCompletionStatus } from '@/lib/weekly-diagnostic/completion'
 import styles from '../home-v2/HomeV2.module.css'
 
-export default function WeeklyCompletionControls({ generating, onGenerate }: {
-  generating: boolean; onGenerate: () => Promise<void>
+export default function WeeklyCompletionControls({ generating, onGenerate, onViewDiagnostic }: {
+  generating: boolean; onGenerate: () => Promise<void>; onViewDiagnostic: (id: string) => void
 }) {
   const t = useTranslations('weeklyCompletion')
   const id = useId()
@@ -49,7 +49,8 @@ export default function WeeklyCompletionControls({ generating, onGenerate }: {
   return <div aria-busy={busy || generating}>
     {error && <p role="alert">{t('error')}</p>}
     {!status ? <button type="button" className={styles.textButton} onClick={() => void refresh()}>{t(error ? 'retry' : 'loading')}</button>
-      : status.diagnosticId ? null
+      : status.diagnosticId ? <button type="button" className={styles.textButton}
+          onClick={() => onViewDiagnostic(status.diagnosticId!)}>{t('view')}</button>
         : !status.eligible ? <p>{t('waitSunday')}</p>
           : <>
             <p>{t('period', { start: status.weekStart, end: status.sunday })}</p>
