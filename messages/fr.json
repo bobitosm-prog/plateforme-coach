@@ -68,7 +68,7 @@
     "waitSunday": "Ton premier bilan s’ouvrira après confirmation de ta journée du dimanche.",
     "period": "Semaine du {start} au {end} inclus",
     "ready": "Dimanche confirmé : tu peux générer ton bilan.",
-    "generate": "Générer le bilan de cette semaine", "generating": "Génération…",
+    "generate": "Générer le bilan de cette semaine", "generating": "Génération…", "view": "Voir le bilan de la semaine",
     "explanation": "Après ton dernier repas du dimanche, confirme la journée. Une modification du journal avant génération demandera une nouvelle confirmation.",
     "missingMeals": "Enregistre d’abord tes repas du dimanche dans le journal nutrition.",
     "meals": "J’ai enregistré tous mes repas du dimanche et terminé ma journée alimentaire.",

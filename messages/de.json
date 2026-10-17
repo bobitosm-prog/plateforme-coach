@@ -68,7 +68,7 @@
     "waitSunday": "Dein erster Wochenbericht wird nach der Bestätigung deines abgeschlossenen Sonntags freigeschaltet.",
     "period": "Woche vom {start} bis einschließlich {end}",
     "ready": "Sonntag bestätigt: Du kannst deinen Bericht erstellen.",
-    "generate": "Wochenbericht erstellen", "generating": "Wird erstellt…",
+    "generate": "Wochenbericht erstellen", "generating": "Wird erstellt…", "view": "Wochenbericht ansehen",
     "explanation": "Bestätige nach deiner letzten Sonntagsmahlzeit. Änderungen am Tagebuch vor der Erstellung erfordern eine erneute Bestätigung.",
     "missingMeals": "Trage zuerst deine Sonntagsmahlzeiten ins Ernährungstagebuch ein.",
     "meals": "Ich habe alle Sonntagsmahlzeiten eingetragen und meinen Ernährungstag abgeschlossen.",

@@ -52,7 +52,7 @@ interface HomeV2LowerSectionsProps {
   waterTarget: number
   diagnostic: Diagnostic
   generatingDiagnostic: boolean
-  diagnosticGenerationError: boolean
+  diagnosticGenerationError: string | null
   coachProgram: Record<string, { name?: string; day_name?: string; exercises?: unknown[]; repos?: boolean; is_rest?: boolean }> | null
   nextSession: CoachSession
   completedThisWeek?: Map<number, string>
@@ -401,7 +401,7 @@ const HomeV2LowerSections = forwardRef<HomeV2LowerSectionsHandle, HomeV2LowerSec
             </div>
             <span className={styles.lowerIcon}><Sparkles size={19} aria-hidden="true" /></span>
           </div>
-          {diagnosticGenerationError && <p className={styles.inlineError} role="status">{t('diagnostic.error')}</p>}
+          {diagnosticGenerationError && <p className={styles.inlineError} role="status">{diagnosticGenerationError}</p>}
           {diagnosticControls}
           {(diagnostic || !diagnosticControls) && <button
             type="button"

@@ -68,7 +68,7 @@
     "waitSunday": "Your first review opens after you confirm your Sunday is complete.",
     "period": "Week from {start} through {end}, inclusive",
     "ready": "Sunday confirmed: you can generate your review.",
-    "generate": "Generate this week’s review", "generating": "Generating…",
+    "generate": "Generate this week’s review", "generating": "Generating…", "view": "View this week’s review",
     "explanation": "Confirm after your last Sunday meal. Changes to your journal before generation require confirmation again.",
     "missingMeals": "First record your Sunday meals in the nutrition journal.",
     "meals": "I recorded all my Sunday meals and finished eating for the day.",
