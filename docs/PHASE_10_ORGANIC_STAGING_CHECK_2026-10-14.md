@@ -98,5 +98,7 @@ Supabase Auth (`/signup`, HTTP 500, `unexpected_failure`) parce que le serveur
 SMTP a rejeté l'authentification (`535`). Le manifeste du preview classe SMTP
 parmi les intégrations désactivées. Le compte interne confirmé a permis la
 validation ci-dessus sans assouplir l'authentification ni modifier la
-configuration SMTP. L'interface d'inscription affiche actuellement `{}` pour
-cette erreur et mérite un correctif de message dans un sous-batch distinct.
+configuration SMTP. Le Preview au SHA `a2f37e93` affiche `{}` pour cette erreur.
+Un sous-batch distinct de cette tranche remplace ce texte par un message
+localisé ; il ne réactive pas SMTP. Vérifier le déploiement avant de considérer
+le message corrigé sur l'alias staging.
