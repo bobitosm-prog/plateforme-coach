@@ -89,9 +89,11 @@ describe('weekly diagnostic audit regressions', () => {
   })
   it('excludes current-week weight from the previous-week diagnostic', async () => {
     const f = fixture()
+    f.rows.weekly_diagnostics[0].training_volume_total = 1420
     await generateWeeklyDiagnostic('audit', f.db)
     expect(f.inserts[0].weight_delta_kg).toBe(-1)
     expect(f.reads.find(read => read.table === 'weight_logs')?.filters).toContainEqual(['lt', 'date', '2026-09-14'])
+    expect(JSON.parse(String(f.provider.mock.calls[0]?.[1]?.body)).messages[0].content).toContain('Tonnage S-1: 1420 kg')
   })
   it('allows bounded calorie adaptation with seven days and three in-week weights', async () => {
     const f = fixture()

@@ -80,7 +80,7 @@ export async function generateWeeklyDiagnostic(
         .gte('date', weekStartStr)
         .lt('date', weekEndStr),
       supabase.from('weekly_diagnostics')
-        .select('week_start, score_semaine, calorie_avg_real, calorie_avg_target, protein_avg_g, weight_delta_kg, sessions_done, sessions_planned, ajustements, objectif_semaine_prochaine, applied_changes')
+        .select('week_start, score_semaine, calorie_avg_real, calorie_avg_target, protein_avg_g, weight_delta_kg, training_volume_total, sessions_done, sessions_planned, ajustements, objectif_semaine_prochaine, applied_changes')
         .eq('user_id', userId)
         .lt('week_start', weekStartStr)
         .order('week_start', { ascending: false })
@@ -229,6 +229,7 @@ ${prevDiagRes.data?.week_start === addNutritionDays(weekStartStr, -7) ? `<previo
 Score S-1: ${prevDiagRes.data.score_semaine}
 Calories moyennes / cible S-1: ${prevDiagRes.data.calorie_avg_real ?? '?'} / ${prevDiagRes.data.calorie_avg_target ?? '?'}
 Séances faites / prévues S-1: ${prevDiagRes.data.sessions_done ?? '?'} / ${prevDiagRes.data.sessions_planned ?? '?'}
+Tonnage S-1: ${prevDiagRes.data.training_volume_total ?? '?'} kg (à comparer seulement si séances et charges comparables)
 Variation poids S-1: ${prevDiagRes.data.weight_delta_kg ?? '?'} kg
 Ajustements appliqués: ${prevDiagRes.data.applied_changes ? 'Oui' : 'Non'}
 Objectif S-1: ${prevDiagRes.data.objectif_semaine_prochaine}
