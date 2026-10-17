@@ -23,8 +23,15 @@ describe('initial onboarding trial', () => {
   })
   it('activates before solo completion and leaves the coach branch untouched', () => {
     const source = readFileSync('app/(application)/onboarding-v2/OnboardingV2Content.tsx', 'utf8')
-    const solo = source.slice(source.indexOf('if(step===5&&macros)'))
-    expect(solo.indexOf('if(!await initializeTrial(supabase))return false')).toBeLessThan(solo.indexOf('onboarding_completed:true'))
-    expect(source.slice(source.indexOf("if(flow==='coachManaged')"), source.indexOf('if(step===1&&goal'))).not.toContain('initializeTrial')
+    const coachStart = source.indexOf("if(flow==='coachManaged')")
+    const soloStart = source.indexOf('if(step===5){', coachStart)
+    const trialCall = source.indexOf('if(!await initializeTrial(supabase))return false', soloStart)
+    const soloCompletion = source.indexOf('onboarding_completed:true', soloStart)
+
+    expect(coachStart).toBeGreaterThanOrEqual(0)
+    expect(soloStart).toBeGreaterThan(coachStart)
+    expect(trialCall).toBeGreaterThan(soloStart)
+    expect(soloCompletion).toBeGreaterThan(trialCall)
+    expect(source.slice(coachStart, soloStart)).not.toContain('initializeTrial')
   })
 })
