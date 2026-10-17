@@ -2,11 +2,12 @@
 
 > Feuille de route officielle du projet.  
 > Contexte de réalisation : **1 développeur assisté par Codex et ChatGPT**.  
-> Dernière mise à jour : **14 août 2026**.
+> Dernière mise à jour : **17 octobre 2026**.
 > Référence initiale : commit `aa53a6e`.
 > Phase 9 : **`PHASE_9_COMPLETE_WITH_MONITORING_PENDING`** — travaux
-> structurels terminés ; stabilité CI et validation Training sur corpus réel
-> maintenues en monitoring.
+> structurels terminés ; stabilité CI maintenue en monitoring. Validation
+> Training acquise sur le nouveau corpus coach staging, avec le pilote initial
+> encore hors de cette preuve.
 > Suivi de session : **obligatoire dans `SESSION_LOG_CODEX.md`**.
 
 ---
@@ -831,7 +832,7 @@ La roadmap n'est réussie que si les pratiques restent reproductibles lorsque le
 | [x] Ajouter les quality gates CI progressifs — Gates A/B/C1/C2, collecte automatique, artefact importable et registre append-only sont opérationnels; statut courant `CI_STABILITY_CANDIDATE`, progression `1/150` runs primaires et `1/7` jours UTC sur un seuil formel de 150 runs et 7 jours UTC selon le [contrat](docs/CI_STABILITY_STATISTICAL_CONTRACT.md); la transition statistique relève désormais du monitoring temporel et aucune stabilité n'est revendiquée | 2 j | Moyenne | Moyen | Élevé | Tests stables |
 | [x] Supprimer les feature flags arrivés à expiration — les deux pseudo-flags Invitation ont été retirés; `SEEDANCE_LOCAL_STORAGE_FALLBACK_ENABLED` reste `TEMPORARY_ACTIVE`, borné au développement local et conservé faute de parcours local canonique de remplacement; aucun flag runtime supprimé sans preuve | 1 j | Moyenne | Moyen | Moyen | Métriques de trafic |
 | [x] Supprimer les adaptateurs legacy sans trafic — tous les candidats démontrés `LEGACY_NO_TRAFFIC_REMOVE` ont été retirés : `formatCurrency`, `legacyCoachStreak`, `aggregateLegacyNutritionByDate`, `normalizeEquipment`, `getLegacyValuesForEquipment` et `EQUIPMENT_LEGACY_MAP`. Cette clôture ne signifie pas que tout le legacy a disparu : le mapping d'erreurs API reste `LEGACY_TEST_ONLY_KEEP`, les tombstones et compatibilités runtime actives restent conservés, et `lib/training/adapters/*` reste `FUTURE_MIGRATION_RESERVED` | 2 j | Élevée | Élevé | Moyen | Audit d'usage |
-| [x] [Établir la coexistence et la frontière de serving canonique Training prévues pour Phase 9](docs/TRAINING_LEGACY_ADAPTERS.md#statut-de-la-migration-runtime) — couverture shadow du périmètre planifié terminée, frontière `listCoachProgramPage`, assessment, runner et fixture validés, puis activation `canonical-when-identical` et rollback même SHA prouvés en Preview; état final `legacy-only`, `REAL_CORPUS_VALIDATION_PENDING` et `PRODUCTION_PROMOTION_FORBIDDEN`; la validation organique restante relève du monitoring et non d'un développement structurel | À estimer | Élevée | Élevé | Critique | Modèle et adaptateurs Training |
+| [x] [Établir la coexistence et la frontière de serving canonique Training prévues pour Phase 9](docs/TRAINING_LEGACY_ADAPTERS.md#statut-de-la-migration-runtime) — couverture shadow du périmètre planifié terminée, frontière `listCoachProgramPage`, assessment, runner et fixture validés, puis activation `canonical-when-identical` et rollback même SHA prouvés en Preview; état final `legacy-only` et `PRODUCTION_PROMOTION_FORBIDDEN`; validation organique acquise le 17 octobre sur le nouveau compte coach staging, tandis que le pilote initial reste hors de cette preuve | À estimer | Élevée | Élevé | Critique | Modèle et adaptateurs Training |
 | [x] Retirer les dépendances réellement inutilisées — audit initial de 55 dépendances directes ramenées à 41 : 14 dépendances directes et 124 nœuds du lockfile retirés, aucun package ajouté et aucun `UNUSED_REMOVE` restant; verdict `DEPENDENCY_CLEANUP_COMPLETE`. `server-only` reste fourni par le contrat compilateur Next, `react-is` reste `PEER_REQUIRED` via Recharts et aucun peer cassé nouveau n'est observé | 1 j | Faible | Faible | Faible | Vérification imports |
 | [x] Exécuter un test de charge ciblé — deux scénarios locaux reproductibles (`GET /api/feedback/mine` et read model Nutrition), observabilité corrélée, points de montée en charge identifiés et cleanup démontré; aucune saturation au profil testé et aucun seuil de capacité maximale revendiqué | 2 j | Élevée | Faible | Élevé | Observabilité |
 | [x] [Produire la baseline finale](docs/PHASE_9_FINAL_BASELINE.md) et la [roadmap suivante](docs/ROADMAP_NEXT.md) — capture historique au SHA `25c7426` conservée, puis réconciliation additive au SHA `554575c`; staging `145/145 ALIGNED`, Training techniquement validé avec retour `legacy-only`, CI `CI_STABILITY_CANDIDATE` à `1/150` runs et `1/7` jours, verdict global `PHASE_9_COMPLETE_WITH_MONITORING_PENDING` | 1 j | Moyenne | Faible | Élevé | Toutes phases retenues |
@@ -875,7 +876,7 @@ Monitoring restant :
 
 #### 10.2 REAL_CORPUS_VALIDATION Training
 
-**Statut : `REAL_CORPUS_VALIDATION_PENDING`**
+**Statut : `REAL_CORPUS_VALIDATED` pour le corpus du coach de test staging**
 
 **Validation technique : `PASS`**
 
@@ -888,14 +889,16 @@ Résultats :
 - aucune mutation ;
 - aucun impact UI.
 
-Un premier programme coach organique est disponible dans le staging depuis le
-14 octobre 2026. La création, la relecture après rafraîchissement et l'édition
-sont validées. Son [diagnostic en lecture seule](docs/PHASE_10_ORGANIC_STAGING_CHECK_2026-10-14.md)
-donne `WARNING` et `legacy-fallback` sur trois évaluations locales : références
-d'exercice par nom, `split` et `duration` non mappés. Les trois parcours du
-runner authentifié restent à faire après déploiement du correctif local
-(`MATCH`, zéro warning et projection identique sur la ligne organique) ; le statut
-`REAL_CORPUS_VALIDATION_PENDING` reste actif.
+Le [diagnostic initial du 14 octobre](docs/PHASE_10_ORGANIC_STAGING_CHECK_2026-10-14.md)
+a révélé des avertissements sur le premier programme organique. Le correctif
+`a2f37e93` a été déployé sur l'alias Preview. Le 17 octobre, un nouveau compte
+coach staging a créé un template par l'interface et l'a relu : 4 semaines,
+2 jours, 2 exercices. Trois parcours complets avec le runner et un client
+Supabase authentifié donnent chacun `canonical_eligible = 1`, zéro warning,
+zéro mismatch et zéro erreur. L'évaluateur retourne `REAL_CORPUS_VALIDATED`
+pour ce corpus d'une ligne. Le programme pilote de l'autre coach n'a pas été
+parcouru par ce compte et reste hors de cette preuve. Le serving demeure
+`legacy-only` et la promotion Production n'est pas autorisée.
 
 #### 10.3 Staging Readiness Audit
 
@@ -913,7 +916,9 @@ Validations `PASS` :
 Bloqueurs :
 
 - `CI_STABILITY_CANDIDATE` n'est pas encore confirmé statistiquement ;
-- `REAL_CORPUS_VALIDATION_PENDING` reste actif.
+- l'activation canonique reste suspendue à la décision de readiness globale ;
+  le programme pilote de l'autre coach n'est pas couvert par le run du compte
+  de test.
 
 #### 10.4 Unlock Conditions
 
@@ -924,9 +929,9 @@ Bloqueurs actuels et conditions de levée :
 - CI — `CI_STABILITY_CANDIDATE` : au moins 150 runs primaires sur au moins
   7 jours UTC, p95 strictement inférieur à 20 minutes, flaky rate strictement
   inférieur à 2 %, zéro échec non résolu et zéro classification `UNKNOWN` ;
-- corpus — `REAL_CORPUS_VALIDATION_PENDING` : au moins un template coach
-  staging organique hors fixtures, assessment read-only complet, zéro mismatch
-  critique, projection UI identique et fallback legacy maîtrisé.
+- corpus — `REAL_CORPUS_VALIDATED` est acquis sur un template coach staging
+  non-fixture créé par l'interface ; élargir la couverture au programme pilote
+  de l'autre coach avant toute décision de serving au-delà de ce compte.
 
 Actions autorisées :
 
