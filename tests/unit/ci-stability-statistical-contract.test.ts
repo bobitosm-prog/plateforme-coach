@@ -6,6 +6,7 @@ import {
   CI_STABILITY_MINIMUM_COMPLETE_RUNS,
   CI_STABILITY_P95_LIMIT_MS,
   evaluateCiStability,
+  evaluateCiStabilityV2,
   nearestRank,
   parseCiStabilityRegistry,
   type CiStabilityObservation,
@@ -44,6 +45,14 @@ const stableRuns = () => Array.from(
   { length: CI_STABILITY_MINIMUM_COMPLETE_RUNS },
   (_, index) => observation(index + 1),
 )
+
+const v2Observation = (sequence: number, overrides: Partial<CiStabilityObservation> = {}): CiStabilityObservation => observation(sequence, {
+  observation_contract_version: 2,
+  execution_sha: 'b'.repeat(40),
+  base_sha: 'c'.repeat(40),
+  sha: 'a'.repeat(40),
+  ...overrides,
+})
 
 describe('Phase 9 CI stability statistical contract', () => {
   it('keeps the one-run versioned registry as a candidate without backfilling incomplete history', () => {
@@ -143,6 +152,44 @@ describe('Phase 9 CI stability statistical contract', () => {
     const degraded = evaluateCiStability(registry([...initial, ...appended]))
     expect(degraded.status).toBe('CI_STABILITY_CANDIDATE')
     expect(degraded.reasons).toContain('P95_NOT_BELOW_LIMIT')
+  })
+
+  it('evaluates exactly the last 150 V2 primaries after activation, without historical V1 failures', () => {
+    const oldFailures = stableRuns().slice(0, 20).map(item => ({
+      ...item, result: 'FAIL' as const, failure_classification: 'TEST' as const,
+      gates: { ...item.gates, B: 'FAIL' as const },
+    }))
+    const v2 = Array.from({ length: 151 }, (_, index) => v2Observation(index + 21, {
+      started_at: `2026-09-${String(Math.floor(index / 22) + 1).padStart(2, '0')}T12:00:00Z`,
+      ...(index === 0 ? {
+        result: 'FAIL' as const, failure_classification: 'E2E' as const,
+        gates: { A: 'PASS' as const, B: 'PASS' as const, C1: 'PASS' as const, C2: 'FAIL' as const },
+      } : {}),
+    }))
+    const result = evaluateCiStabilityV2(registry([...oldFailures, ...v2]), {
+      sha: 'a'.repeat(40), startedAt: '2026-09-01T00:00:00Z',
+    })
+    expect(result).toMatchObject({
+      status: 'CI_STABLE', completeRunCount: 150, calendarDayCount: 7,
+      passCount: 150, failCount: 0,
+    })
+  })
+
+  it('fails closed when the observed SHA changes and starts a new window on that SHA', () => {
+    const old = Array.from({ length: 150 }, (_, index) => v2Observation(index + 1))
+    const changed = v2Observation(151, {
+      sha: 'd'.repeat(40), started_at: '2026-09-01T12:00:00Z',
+    })
+    const all = registry([...old, changed])
+    expect(evaluateCiStabilityV2(all, {
+      sha: 'a'.repeat(40), startedAt: '2026-08-01T00:00:00Z',
+    }).reasons).toContain('V2_SHA_CHANGED_DURING_WINDOW')
+    expect(evaluateCiStabilityV2(all, {
+      sha: 'd'.repeat(40), startedAt: '2026-09-01T00:00:00Z',
+    })).toMatchObject({
+      status: 'CI_STABILITY_CANDIDATE', completeRunCount: 1,
+      reasons: expect.arrayContaining(['MINIMUM_RUNS_NOT_MET', 'MINIMUM_DAYS_NOT_MET']),
+    })
   })
 
   it('documents append-only collection and does not claim current stability', () => {
