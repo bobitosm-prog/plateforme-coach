@@ -2,7 +2,8 @@ name: Phase 9 Observation Scheduler
 
 on:
   schedule:
-    - cron: '17 * * * *'
+    # GitHub can drop scheduled ticks; the guard below limits accepted runs to one per 45 minutes.
+    - cron: '7,17,27,37,47,57 * * * *'
 
 permissions:
   actions: read
@@ -40,8 +41,27 @@ jobs:
             | select(.status == "queued" or .status == "in_progress"
               or .status == "pending" or .status == "waiting" or .status == "requested")
           ] | length' <<<"$runs")"
-          if (( active_count > 0 )); then
-            echo "An observation is already active; skipping this hourly tick"
+          cutoff="$(date -u -d '45 minutes ago' +%s)"
+          recent_runs="$(jq --arg current "$GITHUB_RUN_ID" --argjson cutoff "$cutoff" -r '[
+            .workflow_runs[]
+            | select((.id | tostring) != $current)
+            | select((.created_at | fromdateiso8601) >= $cutoff)
+            | .id
+          ] | .[]' <<<"$runs")"
+          recent_observation=0
+          for run_id in $recent_runs; do
+            jobs="$(curl --fail --silent --show-error --location \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "$api/actions/runs/$run_id/jobs?per_page=100")"
+            if jq --exit-status '.jobs[] | select(.name | startswith("Run Statistical Observation /"))' <<<"$jobs" >/dev/null; then
+              recent_observation=1
+              break
+            fi
+          done
+          if (( active_count > 0 || recent_observation > 0 )); then
+            echo "An observation is already active or started within 45 minutes; skipping this tick"
             echo 'should_run=false' >> "$GITHUB_OUTPUT"
           else
             echo 'should_run=true' >> "$GITHUB_OUTPUT"
