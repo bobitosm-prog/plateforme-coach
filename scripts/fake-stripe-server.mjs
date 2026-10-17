@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 
 const host = '127.0.0.1'
-const port = 55326
+let port = process.argv.includes('--ephemeral') ? 0 : 55326
 const requests = []
 const customers = new Map()
 const checkoutSessions = new Map()
@@ -276,4 +276,8 @@ const server = createServer(async (request, response) => {
   return json(response, 404, { error: 'unsupported fake Stripe operation' })
 })
 
-server.listen(port, host, () => console.log(`Fake Stripe local ready on ${host}:${port}`))
+server.listen(port, host, () => {
+  port = server.address().port
+  process.send?.({ type: 'ready', port })
+  console.log(`Fake Stripe local ready on ${host}:${port}`)
+})

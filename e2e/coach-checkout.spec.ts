@@ -4,7 +4,7 @@ import { cleanupLocalPersonas, createLocalAdminClient, createLocalPersona, upser
 
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
-const stripeUrl = 'http://127.0.0.1:55326'
+const stripeUrl = process.env.STRIPE_E2E_BASE_URL?.replace(/\/$/, '') || ''
 const password = 'Local-E2E-Password-42!'
 type StripeCall = { path: string; params: Record<string, string>; idempotencyKey: string | null }
 
@@ -75,7 +75,7 @@ test('checkout coach: relation active, Connect local et isolation serveur', asyn
     await expect(page.getByRole('button', { name: /75/ })).toBeVisible({ timeout: 20_000 })
     await page.getByRole('button', { name: /75/ }).click()
     expect((await checkoutResponse).status()).toBe(200)
-    await expect(page).toHaveURL(/^http:\/\/127\.0\.0\.1:55326\/checkout\//)
+    await expect(page).toHaveURL(new RegExp(`^${stripeUrl.replaceAll('.', '\\.').replaceAll('/', '\\/')}/checkout/`))
 
     const stripeCalls = await calls()
     expect(stripeCalls.map(call => call.path)).toEqual(['/v1/customers', '/v1/checkout/sessions'])

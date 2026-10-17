@@ -125,7 +125,7 @@ let suiteFailed = false
 
 try {
   assertNoRemoteProject()
-  for (const value of ['http://127.0.0.1:3210', 'http://127.0.0.1:55321', LOCAL_MAILPIT_URL, 'http://127.0.0.1:55326', 'https://127.0.0.1:55328', 'http://127.0.0.1:55329', 'http://127.0.0.1:55330']) {
+  for (const value of ['http://127.0.0.1:3210', 'http://127.0.0.1:55321', LOCAL_MAILPIT_URL, 'https://127.0.0.1:55328', 'http://127.0.0.1:55329', 'http://127.0.0.1:55330']) {
     assertLocalE2eUrl(value)
   }
   rmSync(artifactsPath, { recursive: true, force: true })

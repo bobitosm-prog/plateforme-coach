@@ -4,7 +4,7 @@ import { assertOnlyConfiguredLocalOrigins } from '../scripts/e2e-local-contract.
 
 const supabaseUrl = process.env.API_URL!
 const serviceKey = process.env.SERVICE_ROLE_KEY!
-const stripeUrl = 'http://127.0.0.1:55326'
+const stripeUrl = process.env.STRIPE_E2E_BASE_URL?.replace(/\/$/, '') || ''
 const password = 'Local-E2E-Password-42!'
 
 type StripeRequest = { method: string; path: string; params: Record<string, string>; idempotencyKey: string | null }
