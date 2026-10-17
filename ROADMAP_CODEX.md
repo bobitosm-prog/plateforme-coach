@@ -866,6 +866,10 @@ contrôlée.
 
 **Résultat : `CI_STABILITY_CANDIDATE`**
 
+Le [rerun C2 du 17 octobre](docs/PHASE_9_C2_RERUN_2026-10-17.md) est `PASS`
+sur le même SHA après un échec primaire d'infrastructure. Il qualifie ce run
+sans augmenter le nombre d'observations primaires ni lever le seuil statistique.
+
 Validations :
 
 - migration Node 24 saine ;
