@@ -806,6 +806,11 @@ le 30 juillet 2026. Phase 9 est autorisée et active.**
 
 ## Phase 9 — Industrialisation et équipe future
 
+Le verdict historique de cette phase conservait
+`REAL_CORPUS_VALIDATION_PENDING`. La validation du 17 octobre sur le nouveau
+corpus coach staging est enregistrée dans la Phase 10 ci-dessous ; elle ne
+modifie pas rétroactivement la baseline de Phase 9.
+
 **Statut : `PHASE_9_COMPLETE_WITH_MONITORING_PENDING` — travaux structurels
 terminés; seules les fenêtres d'observation CI et corpus Training restent
 ouvertes.**
