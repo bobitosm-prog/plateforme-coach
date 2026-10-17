@@ -57,6 +57,11 @@ export type CiStabilityEvaluation = {
   readonly reasons: readonly string[]
 }
 
+export type CiStabilityV2Window = {
+  readonly sha: string
+  readonly startedAt: string
+}
+
 const HEADER = {
   record_type: 'registry',
   schema_version: 1,
@@ -180,8 +185,11 @@ function evaluationWindow(observations: readonly CiStabilityObservation[]): CiSt
   return roots.slice(start)
 }
 
-export function evaluateCiStability(registry: CiStabilityRegistry): CiStabilityEvaluation {
-  const window = evaluationWindow(registry.observations)
+function evaluateWindow(
+  registry: CiStabilityRegistry,
+  window: readonly CiStabilityObservation[],
+  extraReasons: readonly string[] = [],
+): CiStabilityEvaluation {
   const windowIds = new Set(window.map(observation => observation.run_id))
   const reruns = registry.observations.filter(observation => (
     observation.rerun_of !== null && windowIds.has(observation.rerun_of)
@@ -197,7 +205,7 @@ export function evaluateCiStability(registry: CiStabilityRegistry): CiStabilityE
   const unresolvedFailures = window.filter(observation => (
     observation.result === 'FAIL' && !flakyRoots.has(observation.run_id)
   )).length
-  const reasons = [...registry.issues]
+  const reasons = [...registry.issues, ...extraReasons]
   if (window.length < CI_STABILITY_MINIMUM_COMPLETE_RUNS) reasons.push('MINIMUM_RUNS_NOT_MET')
   if (calendarDayCount < CI_STABILITY_MINIMUM_CALENDAR_DAYS) reasons.push('MINIMUM_DAYS_NOT_MET')
   if (p95DurationMs === null || p95DurationMs >= CI_STABILITY_P95_LIMIT_MS) reasons.push('P95_NOT_BELOW_LIMIT')
@@ -218,4 +226,33 @@ export function evaluateCiStability(registry: CiStabilityRegistry): CiStabilityE
     p95DurationMs,
     reasons,
   }
+}
+
+export function evaluateCiStability(registry: CiStabilityRegistry): CiStabilityEvaluation {
+  return evaluateWindow(registry, evaluationWindow(registry.observations))
+}
+
+export function evaluateCiStabilityV2(
+  registry: CiStabilityRegistry,
+  activation: CiStabilityV2Window,
+): CiStabilityEvaluation {
+  const validSha = /^[0-9a-f]{40}$/.test(activation.sha)
+  const validStart = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(activation.startedAt)
+    && !Number.isNaN(Date.parse(activation.startedAt))
+  if (!validSha || !validStart) {
+    return evaluateWindow(registry, [], ['INVALID_V2_ACTIVATION'])
+  }
+
+  const afterActivation = registry.observations.filter(observation => (
+    observation.rerun_of === null
+      && observation.observation_contract_version === 2
+      && Date.parse(observation.started_at) >= Date.parse(activation.startedAt)
+  ))
+  const shaChanged = afterActivation.some(observation => observation.sha !== activation.sha)
+  const eligible = afterActivation.filter(observation => observation.sha === activation.sha)
+  return evaluateWindow(
+    registry,
+    eligible.slice(-CI_STABILITY_MINIMUM_COMPLETE_RUNS),
+    shaChanged ? ['V2_SHA_CHANGED_DURING_WINDOW'] : [],
+  )
 }

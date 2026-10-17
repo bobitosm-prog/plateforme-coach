@@ -111,9 +111,23 @@ sorties de la fenêtre roulante restent dans le registre append-only. Un FAIL,
 un incomplete ou un cancelled n'est jamais caché : tout artefact admissible est
 conservé ; seuls les primaires complets entrent dans le dénominateur des 150.
 
-Cette sémantique V2 sera implémentée et testée dans le lot workflow/évaluateur
-approprié avant activation. Jusqu'alors, l'évaluateur V1 reste l'autorité
-exécutable et aucune fenêtre V2 ne peut être déclarée ouverte.
+Cette sémantique V2 est implémentée et testée dans l'évaluateur. L'évaluateur
+V1 reste l'autorité par défaut tant qu'aucune fenêtre V2 n'est activée et
+consignée explicitement.
+
+L'évaluateur V2 dispose désormais d'un mode explicite, sans activation implicite :
+
+```bash
+npm run ci:stability:check -- ci/stability/observations.jsonl \
+  --v2-sha=<SHA_CANONIQUE_40_CARACTÈRES> \
+  --v2-started-at=<DATE_UTC_ISO_8601>
+```
+
+Il retient les 150 derniers primaires V2 de ce SHA depuis la date enregistrée,
+échoue si un autre SHA apparaît dans cette fenêtre et conserve le registre
+historique intact. Le mode sans ces deux paramètres reste l'évaluateur V1.
+Ce mode de calcul ne constitue pas l'activation de 9R.5 ; le SHA et l'heure
+effectifs doivent être consignés après validation du code observé.
 
 ### Conditions de démarrage, arrêt et reprise
 
