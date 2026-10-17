@@ -110,7 +110,14 @@ function RegisterContent({ trialDays = 14 }: { trialDays?: number }) {
     const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl, data: { role: selectedRole } } })
     if (signUpError) {
       setSubmitting(false)
-      setError(signUpError.message.includes('already registered') ? t('errors.emailAlreadyUsed') : signUpError.message)
+      const message = signUpError.message?.trim() ?? ''
+      setError(
+        message.includes('already registered')
+          ? t('errors.emailAlreadyUsed')
+          : (signUpError.status ?? 0) >= 500 || signUpError.code === 'unexpected_failure' || !message || message === '{}'
+            ? t('errors.signupTemporarilyUnavailable')
+            : message,
+      )
       return
     }
     if (data?.user) {

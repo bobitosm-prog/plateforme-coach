@@ -808,7 +808,8 @@
         "fullNameRequired": "Full name required",
         "specialityRequired": "Speciality required",
         "experienceRequired": "Experience required",
-        "emailAlreadyUsed": "This email is already in use. Sign in instead."
+        "emailAlreadyUsed": "This email is already in use. Sign in instead.",
+        "signupTemporarilyUnavailable": "Sign-up is temporarily unavailable. Please try again later."
       }
     },
     "join": {

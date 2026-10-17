@@ -808,7 +808,8 @@
         "fullNameRequired": "Vollständiger Name erforderlich",
         "specialityRequired": "Spezialisierung erforderlich",
         "experienceRequired": "Erfahrung erforderlich",
-        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an."
+        "emailAlreadyUsed": "Diese E-Mail wird bereits verwendet. Melde dich an.",
+        "signupTemporarilyUnavailable": "Die Registrierung ist vorübergehend nicht verfügbar. Bitte versuche es später erneut."
       }
     },
     "join": {
