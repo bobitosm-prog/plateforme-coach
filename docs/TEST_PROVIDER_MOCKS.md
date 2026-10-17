@@ -60,7 +60,7 @@ La clé VAPID privée n'est jamais conservée. Les messages SMTP expurgent les j
 - Utiliser `scripts/fake-*-server.mjs`, Mailpit et les commandes E2E dédiées lorsqu'il faut traverser le vrai SDK ou transport réseau de l'application.
 - Ne jamais appeler un test « E2E » lorsque Stripe, Anthropic, SMTP, Web Push, Supabase ou une autre frontière principale est remplacée dans le processus par `vi.mock`.
 
-Les faux serveurs E2E restent volontairement distincts : Stripe `55326`, Web Push `55328/55329`, Anthropic `55330` et Mailpit `55324/55325`.
+Les faux serveurs E2E restent volontairement distincts : Stripe sur port local libre, Web Push `55328/55329`, Anthropic `55330` et Mailpit `55324/55325`.
 
 ## Inventaire au 14 juillet 2026
 
